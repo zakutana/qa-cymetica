@@ -38,7 +38,10 @@
       "claim": "an evidence-only result overwrites the row's detail and provenance at any level (above the level-V gate), though it adjudicates nothing; live: CYM-a2a-first-pass-not-grounded's detail reads 'not asked ... QA_ALLOW_A2A_SEND' with provenance a level-R run, which submit.py prints as MEASURED VALUES and verify.py takes as measured_at",
       "source": "reread",
       "area": "core",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -49,7 +52,10 @@
       "claim": "results keyed by nodeid keep only the last per check, so a call-phase failure followed by a teardown error (report_plugin emits both) is dropped: a measured regression and its reopen are lost (latent: 0 of 562 records have two)",
       "source": "reread",
       "area": "core",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -60,7 +66,10 @@
       "claim": "a row created by split_report with a nodeid lacking '::' becomes UNVERIFIABLE check_not_a_nodeid with no transition on the second no-run fold (the structural pass runs before _apply_events builds the row): a CHECK move with neither run_id nor event_id, and two folds disagree",
       "source": "reread",
       "area": "core",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -71,7 +80,10 @@
       "claim": "roles == {'evidence'} is decided per row: a row with a passing verdict check and an evidence check whose measurement is inconclusive moves to PASSING, against 'adjudicated every check the row declares' (latent: no mixed row today)",
       "source": "reread",
       "area": "core",
-      "votes": null,
+      "votes": {
+        "t1": "false_positive",
+        "t2": "false_positive"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -82,7 +94,10 @@
       "claim": "the 10,000/day ceiling (_Counted) exists only inside run(); the lab's _fomo_round (scripts/lab.py:3812) calls watch.tick(watch._client()) uncounted, a new process every 20 min, ~9,700 quotes/day at the median and ~40,000 at p99; the per-process count cannot cover it (dormant since 2026-10-16)",
       "source": "reread",
       "area": "memecoins",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -93,7 +108,10 @@
       "claim": "resolve() puts error dicts into written/readings, so 'checked' counts failed reads as checkpoints; a search outage (503 x5) reads as 5 checkpoints with 0 rows written",
       "source": "reread",
       "area": "memecoins",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -104,7 +122,10 @@
       "claim": "capture() still uses _quote, which returns None on any non-200 (rule 8): a 503 writes the signal row with price_usd None and no error, read later as 'the terminal did not know the coin' and counted unpriced",
       "source": "reread",
       "area": "memecoins",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -115,7 +136,10 @@
       "claim": "compare() counts a path read only partway as a miss (peak over what was read); 72% of hot coins and 62% of controls have no reading past 54 h at the 3x-in-72h readout, so the rates are understated and the lift biased, unlike stop_study and ten_dollars which exclude unfinished paths",
       "source": "reread",
       "area": "memecoins",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -126,7 +150,10 @@
       "claim": "entry retries call _listing directly, outside the per-round cap the docstring promises and not de-duplicated with the checkpoint quote",
       "source": "reread",
       "area": "memecoins",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -137,7 +164,10 @@
       "claim": "no lock around a whole round: two overlapping rounds both write the same reading (416 duplicated study rows on 2026-09-24/25, none since); the same race on checkpoints would double-count",
       "source": "reread",
       "area": "memecoins",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -147,8 +177,12 @@
       "nodeid": "tests/rest/test_documented_gets_accept_the_agent_key.py::test_every_documented_get_accepts_the_key_its_own_document_issues",
       "claim": "today's #93 repair (f0098d59) leaves out a route whose own [GET] line says '(session JWT)', but live llms.txt line 736 says 'All cloned-bots routes accept the same credential: a session JWT or your X-API-Key' (no [GET link, so never read): the document promises the key on backtest/quote, it answers 401, and the check now passes it -- the planned PASS correction to #93 would be false",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -157,8 +191,12 @@
       "nodeid": "tests/rest/test_a_live_crypto_card_index_history_has_no_multi_day_hole.py::test_live_crypto_card_index_history_has_no_multi_day_hole",
       "claim": "cards whose history read fails go to unread and never stop a pass (only 'if not judged' does): a 500 on the BTC proxy's history passes as 'all N open crypto cards' Second auditor (b) concurs, and adds: when 12 full pages are read the loop ends with no check, so a cut list passes.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -167,8 +205,12 @@
       "nodeid": "tests/rest/test_account_claim_deposit_reachable.py::test_the_claim_form_opens_when_nothing_is_pending",
       "claim": "_hides_when_empty returns False (passed) for hiding code it does not recognise (classList.toggle('hidden', !rows.length), a lookup through a helper), and _calls passes on any literal opener call, even one reachable only with pending rows Second auditor concurs, and adds: a card hidden by default in markup (style display:none, hidden) that a script shows only when rows exist also reads False and passes; and the in-card button's own wiring counts as a way in.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -177,8 +219,12 @@
       "nodeid": "tests/rest/test_agent_tournaments_link_preview_draws_its_title.py::test_the_agent_tournaments_link_preview_draws_the_title_its_page_passes",
       "claim": "the A/A control reads the page's own (cache-warm) preview twice while the sentinel URL is always a fresh render, so a fresh-vs-cached byte difference reads as 'changes with t' and a preview that ignores t passes (structural)",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "false_positive",
+        "t3": "false_positive"
+      },
+      "verdict": "minority",
       "fixed": false,
       "commit": null
     },
@@ -187,8 +233,12 @@
       "nodeid": "tests/rest/test_company_charter_cap_agrees_with_its_docs.py::test_company_charter_cap_agrees_with_its_docs",
       "claim": "(a) _CLASS matches only double-quoted class attributes and _PROP only a variable/line named 'charter', so a cap set as ta.maxLength=1500 on a className'd textarea is invisible and another recognised cap >= 2000 passes; (b) the likeliest fix (no maxlength) reads Inconclusive though the docstring says an uncapped field is not judged, so the row can never verify",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -197,8 +247,12 @@
       "nodeid": "tests/rest/test_agent_league_prize_log.py::test_the_prize_log_reaches_every_prize_it_recorded",
       "claim": "whole() checks only the two server windows seen (50, 200), against a docstring of 'shorter than every window': a silent new cap at 100 reads as the whole log and passes; the FAIL reason assumes ids start at 1 Second auditor concurs (also scripts/league.py:329), and adds the reverse case: exactly 50 records with limit=200 honoured reads as a full window and FAILs.",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -207,8 +261,12 @@
       "nodeid": "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_a_twelve_month_dilution_names_where_its_new_tokens_come_from",
       "claim": "DILUTION_LINE (qa/gemaudit.py:769) stops at .join(, so a fallback after the join reads as none and a repaired page with kinds [] FAILs (#217's shape); kinds [''] counts as a named source and passes while the page shows nothing",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -217,8 +275,12 @@
       "nodeid": "tests/rest/test_build_it_better_board.py::test_a_build_ships_inside_the_24_hours_it_publishes",
       "claim": "today's repair (4ba0ff36) holds a build to its first BB-SHIPPED, so a stub shipped at 15 h, FAILed by the requester, then really built at 99 h passes although their own record says on_time false; and if a requester's verdict is cleared while rework is open, line 561 skips it and the moved resolved_at is judged (a false FAIL)",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "false_positive",
+        "t1": "false_positive",
+        "t3": "false_positive"
+      },
+      "verdict": "dropped",
       "fixed": false,
       "commit": null
     },
@@ -227,8 +289,12 @@
       "nodeid": "tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing",
       "claim": "the listing is paged only up to the total /event-cards/movers states (the endpoint under test) and the 0.95 completeness guard uses that same number; the listing's own total is never read, so movers saying 600 of 647 hides a top-ten card among the 47 unread and passes (latent: both 647 today)",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -237,8 +303,12 @@
       "nodeid": "tests/rest/test_nexus_answer_markers_are_true.py::test_nexus_answer_markers_are_true_and_leave_the_answer_usable",
       "claim": "PATH_RUN judges only a 'not served' marker directly behind the path inside the code span; a marker moved outside the backticks is never compared with openapi and the check passes 'none on a served route'",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -247,8 +317,12 @@
       "nodeid": "tests/mcp/test_trust_ladder.py::test_higher_tier_is_a_superset_of_lower",
       "claim": "tools_list() (qa/client.py:452) returns [] for any JSON reply without an 'error' key (a 401/429/5xx {detail}), so an anonymous read that failed passes on an unread list and a trusted read that failed reports every tool as lost (a false red row)",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -257,8 +331,12 @@
       "nodeid": "tests/rest/test_usage_dynamic_card_takes_a_cookie_session.py::test_the_dynamic_plan_card_takes_a_cookie_session_as_signed_in",
       "claim": "a helper counts as session-aware when a session word appears anywhere in its body, comments and strings included, never what it returns for a session (presence vs value); a compound gate condition is never judged (latent: fixed live today)",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
@@ -267,26 +345,137 @@
       "nodeid": "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal",
       "claim": "the include_internal list is read at limit 200 with no full-page guard (the public list has one): an internal launch past row 200 that the MCP tool lists is not known internal and passes (latent: 6 rows today)",
       "source": "audit",
-      "votes": null,
-      "verdict": null,
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
       "fixed": false,
       "commit": null
     },
-    {"id": "C01", "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails", "claim": "every expected FAIL there is pytest.raises(AssertionError), which does not catch Inconclusive (lines 535, 545, 1175, 1179, 1462, 1466, 1468, 1491; and the bare expected pass at 551): an inconclusive on a defect escapes, report_plugin records the whole host test as skipped, exit 0, and every later _the_*_readings() never runs; 82ad8f20 fixed only the three expected-pass sites", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C02", "nodeid": "tests/meta/test_pipeline_build_it_better.py::test_a_build_that_shipped_late_once_does_not_hold_the_verdict_red_for_good", "claim": "lines 471-474 (run, not wrapped) feed 484 (expected pass) and 502/508 (pytest.raises(AssertionError)) before run_with: an Inconclusive there skips the whole test with the new ET-31818 cases (96667c33 covered only the later part)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C03", "nodeid": "tests/meta/test_pipeline_verify.py::test_a_fail_says_which_reading_failed", "claim": "the fixture's reason contains the route as well as left, so 'what was read' passes off the reason even if failing_readings dropped left (read: null); line 229 matches only the word 'expected', never the value", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C04", "nodeid": "tests/meta/test_pipeline_crew.py::test_the_auditor_counts_what_each_department_cost_and_produced", "claim": "'the patrol carries it' is asserted as 'crew_section(' in processes.py, which the definition line itself matches: deleting the call leaves it green; the stuck half has no positive fixture", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C05", "nodeid": "tests/meta/test_pipeline_repaired_checks.py::test_three_checks_repaired_on_2026_10_21_stay_repaired", "claim": "the stop-loss check (tests/rest/test_a_bot_stop_loss_holds_its_budget.py:70) drops a balance <= 0 row without counting it unread: a paused bot whose stop failed outright (balance 0, profit -budget) disappears and the check passes on the others, naming nothing", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C06", "nodeid": "tests/rest/test_build_recipes.py:355", "claim": "today's open-position repair (f0f1a37c) counts any non-200 card read (a 503, a 429) as 'no longer resolves', a FAIL; the reading only drives a 404 and a raised exception", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C07", "nodeid": "tests/repo/test_grid_capacity.py::test_the_cap_is_read_from_the_newest_capacity_refusal", "claim": "no fixture has a kind row, so removing qa/lab.py:2999's kind filter (an accepted pause after a refusal then reads 'no cap') stays green (cleanup of a guard)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
-    {"id": "C08", "nodeid": "tests/repo/test_outsider_alone.py::test_a_folder_that_would_hand_it_any_of_ours_is_refused", "claim": "the expected memory path is built with mod.slug(), the function under test, and ~/.claude/projects holds a second MSIX-virtualised slug for the outsider's folder that foreign() never inspects (both empty today)", "source": "audit", "votes": null, "verdict": null, "fixed": false, "commit": null},
+    {
+      "id": "C01",
+      "nodeid": "tests/meta/test_pipeline_check_subjects.py::test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails",
+      "claim": "every expected FAIL there is pytest.raises(AssertionError), which does not catch Inconclusive (lines 535, 545, 1175, 1179, 1462, 1466, 1468, 1491; and the bare expected pass at 551): an inconclusive on a defect escapes, report_plugin records the whole host test as skipped, exit 0, and every later _the_*_readings() never runs; 82ad8f20 fixed only the three expected-pass sites",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C02",
+      "nodeid": "tests/meta/test_pipeline_build_it_better.py::test_a_build_that_shipped_late_once_does_not_hold_the_verdict_red_for_good",
+      "claim": "lines 471-474 (run, not wrapped) feed 484 (expected pass) and 502/508 (pytest.raises(AssertionError)) before run_with: an Inconclusive there skips the whole test with the new ET-31818 cases (96667c33 covered only the later part)",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C03",
+      "nodeid": "tests/meta/test_pipeline_verify.py::test_a_fail_says_which_reading_failed",
+      "claim": "the fixture's reason contains the route as well as left, so 'what was read' passes off the reason even if failing_readings dropped left (read: null); line 229 matches only the word 'expected', never the value",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C04",
+      "nodeid": "tests/meta/test_pipeline_crew.py::test_the_auditor_counts_what_each_department_cost_and_produced",
+      "claim": "'the patrol carries it' is asserted as 'crew_section(' in processes.py, which the definition line itself matches: deleting the call leaves it green; the stuck half has no positive fixture",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C05",
+      "nodeid": "tests/meta/test_pipeline_repaired_checks.py::test_three_checks_repaired_on_2026_10_21_stay_repaired",
+      "claim": "the stop-loss check (tests/rest/test_a_bot_stop_loss_holds_its_budget.py:70) drops a balance <= 0 row without counting it unread: a paused bot whose stop failed outright (balance 0, profit -budget) disappears and the check passes on the others, naming nothing",
+      "source": "audit",
+      "votes": {
+        "t2": "false_positive",
+        "t1": "real",
+        "t3": "false_positive"
+      },
+      "verdict": "minority",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C06",
+      "nodeid": "tests/rest/test_build_recipes.py:355",
+      "claim": "today's open-position repair (f0f1a37c) counts any non-200 card read (a 503, a 429) as 'no longer resolves', a FAIL; the reading only drives a 404 and a raised exception",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C07",
+      "nodeid": "tests/repo/test_grid_capacity.py::test_the_cap_is_read_from_the_newest_capacity_refusal",
+      "claim": "no fixture has a kind row, so removing qa/lab.py:2999's kind filter (an accepted pause after a refusal then reads 'no cap') stays green (cleanup of a guard)",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
+    {
+      "id": "C08",
+      "nodeid": "tests/repo/test_outsider_alone.py::test_a_folder_that_would_hand_it_any_of_ours_is_refused",
+      "claim": "the expected memory path is built with mod.slug(), the function under test, and ~/.claude/projects holds a second MSIX-virtualised slug for the outsider's folder that foreign() never inspects (both empty today)",
+      "source": "audit",
+      "votes": {
+        "t2": "real",
+        "t1": "real",
+        "t3": "real"
+      },
+      "verdict": "real",
+      "fixed": false,
+      "commit": null
+    },
     {
       "id": "O01",
       "nodeid": "scripts/verify.py:121",
       "claim": "owed() builds a FAIL from the pinned fingerprint and the adjudicating run only, never checking last_exploratory_pass or a changed check: live, #217 (paid) owes a FAIL from level-R run 8a403f54 while run 631598c5 passed the repaired check (c47f1e55) under a new fingerprint; the next --confirm sends a false FAIL",
       "source": "reread",
       "area": "outbound",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -297,7 +486,10 @@
       "claim": "_run_line says 'at commit X' for a level-R run without a prereg and drops level_reasons, so a git_dirty run is described as that commit",
       "source": "reread",
       "area": "outbound",
-      "votes": null,
+      "votes": {
+        "t1": "false_positive",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -308,7 +500,10 @@
       "claim": "every non-2xx-with-id but 409, and every exception before or during the POST (a SafetyViolation, a connect error), is recorded 'unknown', which filed_in_journal counts as possibly filed, so the finding is refused for ever and --reconcile can never clear a refusal the server never listed (a 4xx, e.g. an over-long description, which validate() does not cap)",
       "source": "reread",
       "area": "outbound",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -319,7 +514,10 @@
       "claim": "the docstring (and qa/config.py:38) promise a trade-scoped key is refused on non-MUTATE tests via X-API-Key-Scope; no code reads that header (no effect today: every identity is scope read)",
       "source": "reread",
       "area": "outbound",
-      "votes": null,
+      "votes": {
+        "t1": "false_positive",
+        "t2": "false_positive"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -329,7 +527,10 @@
       "nodeid": "scripts/lab.py:5116",
       "claim": "the index-at dispatch replaced the 'surface' branch: lab.py surface is still registered and now prints nothing",
       "source": "review",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -339,7 +540,10 @@
       "nodeid": "qa/lab.py:1813",
       "claim": "verdict() returns 'waiting' on a benchmark short of the window's end before the refutations that need no benchmark (ret <= 0, drawdown past stop): a lost room waits, and forever if the proxy stops publishing",
       "source": "review",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -349,7 +553,10 @@
       "nodeid": "outbox/company-live/u3d.js:2731",
       "claim": "PV_SKY disposes the bright stars' InstancedMesh geometry, which is the module-wide G.plane shared by every renderer's pools and planes",
       "source": "review",
-      "votes": null,
+      "votes": {
+        "t1": "false_positive",
+        "t2": "false_positive"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -359,7 +566,10 @@
       "nodeid": "scripts/verify.py:563",
       "claim": "the WHAT FAILED cap loop keeps the cap-0 body even when it still exceeds 8000 characters, so an oversized FAIL is POSTed (422 as #130)",
       "source": "review",
-      "votes": null,
+      "votes": {
+        "t1": "false_positive",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -369,7 +579,10 @@
       "nodeid": "outbox/company-live/start.js:104",
       "claim": "the lane bands rely on CanvasRenderingContext2D.filter, unsupported in Safari, where they render as hard rings",
       "source": "review",
-      "votes": null,
+      "votes": {
+        "t1": "false_positive",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -379,7 +592,10 @@
       "nodeid": "qa/manifest.py:166",
       "claim": "a second lock implementation beside qa.state.file_lock on the same lock file and byte (cleanup)",
       "source": "review",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -389,7 +605,10 @@
       "nodeid": "scripts/commit.py:93",
       "claim": "one git ls-files subprocess per named path under the commit lock (cleanup)",
       "source": "review",
-      "votes": null,
+      "votes": {
+        "t1": "real",
+        "t2": "real"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -399,7 +618,10 @@
       "nodeid": "scripts/lab.py:1033",
       "claim": "index-at is missing from lab.py's documented commands (docs)",
       "source": "review",
-      "votes": null,
+      "votes": {
+        "t1": "false_positive",
+        "t2": "false_positive"
+      },
       "verdict": null,
       "fixed": false,
       "commit": null
@@ -527,5 +749,34 @@
     "end": null,
     "reason": "0b added tests/meta/test_pipeline_verify.py::test_a_fail_says_which_reading_failed and folded test_a_check_with_hundreds_of_captures_still_fits_their_evidence_field (#130) into it (7e118a43); 0b's lab work replaced test_a_verdict_reads_the_whole_index_history_not_the_last_five_days with test_a_verdict_reads_the_finest_interval_that_reaches_its_window (4403c058)"
   },
-  "finished": false
+  "finished": false,
+  "week": {
+    "numbers": "521 commits in 7 days (424 Opus 5.5, 68 Sonnet 5.5; 301 the /company mockup, 54 journal); tests 1820: 1614 guard us (meta 1149, repo 465), 191 measure Cymetica (rest 163, mcp 24, pinned 4); laboratory 0 sessions, company idle all week; 14 verifications sent (8 PASS, 6 FAIL on 10-21), 5 reports filed",
+    "conduct": [
+      "every 10-21 FAIL (#46, #93, #112/#136, #132/#137) quoted the finding's September wording, not what run dfa86d0b measured; their 10-22 reply (a2a_5acd73f6) answers the old text and asks for a re-run; nothing went back; dc34427b fixed the FAIL text four days later",
+      "#46: our filing promised a docs defect if the listing is intentional and calls are refused; on 10-22 they said exactly that; the row is still REPRODUCING and the next sweep sends the same FAIL; NEXT 10-15 held it until a keyless call that never happened",
+      "#132/#137 went out past our own hold (read past the 200-message inbox first); their 89 of 92 answered; our 10-24 run passes; no PASS sent",
+      "#136/#137 are 'recurred' copies of #112/#132: 26 verdicts since 09-24 alternating FAIL/PASS; the build-deadline check judges whatever is newest on the board, so our own late requests (ET-31953, ET-32463) reopen paid September tickets",
+      "a false FAIL to #217 (paid 10-22) is queued (O01)",
+      "Telegram near-duplicates recorded as both sent (MSG-0197/0198, 0223/0225, 0227/0230, 0231/0232); five messages and their a2a twins in 12 min on 10-22; a seven-item bug report sent by Telegram (MSG-0211/0213), not submit.py; tone in MSG-0233 and MSG-0193",
+      "volume fine this week (peak 5,840/day, <= 60/min); the new daily ceiling 25,000 is four times this week; M01 lets the lab's round past the 10,000 counter; bounty.py's probe POSTs 12 empty bodies a week (422); 111 calls to /chart-analyzer/analyze, which writes their public ledger"
+    ],
+    "documents": [
+      "HIGH: u3d.js quoted the operator's word for how the brown head read (twice) and an insult for the visor, in a file spec 4 links the vendor into; removed tonight (182246f7); older request texts quote his harsh verdicts on their pages (company-office/request.md:5, chart-analyzer-one-number/request.md:5)",
+      "six telegram_sent events were drafts that never went out (MSG-0197, 0223, 0227-0229, 0231), corrected only in later notes; channels count them as unanswered questions; no event type retracts one",
+      "the a2a-twin rule (channels/SKILL.md, [operator 2026-09-24]) against the operator's 10-18 'prez a2a nic neposilej', recorded only in a commit message (129e70b4); MSG-0215, 0221-0234 skipped the twin on 'a2a send was denied', 0216/0217 did not: the a2a/Telegram comparison is wrong for the week",
+      "spec 4's improvements.txt is 8,778 characters against the form's 8,000 (scripts/bb.py:19); README says ready to file; NEXT 10-22 still says pushed and pinned at e74d4f3e",
+      "Build a Company bugs went as Telegram messages (8a014a86, MSG-0210/0211, MSG-0218, 673c9de7), not submit.py, against CLAUDE.md 2026-09-13; REPLY-0197 then said fixed and spec item D was dropped on it, with no check of ours",
+      "the operator said on 10-19 'outsider a agent league uplne vyhod ty uz nechci pouzivat' (a405d10d), applied to the mockup only; tonight built new outsider guards (2f259031, 88a0d46e) and NEXT still schedules the outsider and the league from 1 Nov",
+      "tone of MSG-0233; origin/company-perf holds 6 pushed commits the deep pass never reviews (CLAUDE.md: no feature branch)"
+    ],
+    "architecture": [
+      "no verifying run for 3.5 days: all 19 run records after PRE-0289 are git_dirty, no prereg; report_plugin counts untracked files as dirty and the 97 MB of renders blocked every prereg (fixed tonight, c5451d42); the 10-23 sweep refreshed the tracker before preregistering, against the skill's order",
+      "repair debt: rows with repair_check 15 -> 17 this week, all FIX_CLAIMED on paid/fixed reports (#128, #156 inconclusive since 10-04; #180, #186, #187 since 10-11); rule 10 says retire promptly",
+      "drafts recorded as sent (same as documents 2): 6 of the week's 31 'unanswered' threads",
+      "tests that stay red hide new reds: the ceiling guard red since 10-18, rule 12's dashboard red joined unseen; pack +4 MiB/day against the ceiling's 1 MB/day; the 1.6 MB dashboard committed in 85 of 521 commits, the 11.7 MB manifest in 40",
+      "a seven-item bug report sent as prose (MSG-0211/0213) and confirmed and fixed by them, with no ledger row",
+      "the tests/meta ceiling is met by nesting unrelated guards in one test (17 helpers in test_a_card_that_is_closed_on_rest_and_open_on_mcp_fails, three this week): the first failure masks the rest (C01 is its symptom)"
+    ]
+  }
 }
