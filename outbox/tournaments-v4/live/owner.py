@@ -14,6 +14,8 @@ from pathlib import Path
 
 import lxml.html as L
 
+import art
+
 HERE = Path(__file__).resolve().parent
 OWNER = json.loads((HERE / "fixtures" / "owner.json").read_text(encoding="utf-8"))
 MINE = "lab Wave 2 Perceptron Oracle"
@@ -45,26 +47,6 @@ LOG = [  # the first row is the silence that followed our last trade; the rest r
 ]
 
 
-# Their Agent Tournaments logo is a poker chip; the coach is that chip in a deerstalker with a magnifying glass (the
-# operator: "nejake logo toho zetonu v klobouku jak nejaky sherlock"). Line art in their colours, no face.
-_CHECKS = "".join(f'<line x1="{x}" y1="12" x2="{x + 34}" y2="46"></line><line x1="{x + 34}" y1="12" x2="{x}" y2="46"></line>'
-                  for x in range(4, 90, 7))
-COACH_SVG = f"""<svg class="v4-coach-ico" viewBox="0 0 120 120" aria-hidden="true">
- <defs><clipPath id="v4-hatclip"><path d="M33 42 C33 16, 79 16, 79 42 Z"></path></clipPath></defs>
- <circle class="c-face" cx="56" cy="74" r="32"></circle><circle class="c-rim" cx="56" cy="74" r="32"></circle>
- <circle class="c-dash" cx="56" cy="74" r="32"></circle><circle class="c-in" cx="56" cy="74" r="22.6"></circle>
- <rect class="c-b1" x="44.4" y="65.8" width="8.3" height="16.4" rx="4.15"></rect><rect class="c-b2" x="59.3" y="65.8" width="8.3" height="16.4" rx="4.15"></rect>
- <g transform="rotate(-12 56 42)">
-  <path class="h-peak" d="M74 38.5 C89 37.5, 100 41.5, 104 48 C93 47, 83 46, 71 45 Z"></path>
-  <path class="h-peak" d="M38 38.5 C23 37.5, 12 41.5, 8 48 C19 47, 29 46, 41 45 Z"></path>
-  <path class="h-crown" d="M33 42 C33 16, 79 16, 79 42 Z"></path>
-  <g class="h-check" clip-path="url(#v4-hatclip)">{_CHECKS}</g>
-  <path class="h-band" d="M33.6 38.6 Q56 33.6 78.4 38.6"></path>
-  <path class="h-bow" d="M56 21 C49 13, 41 18, 48 23 Z M56 21 C63 13, 71 18, 64 23 Z"></path><circle class="h-knot" cx="56" cy="21" r="2.6"></circle>
- </g>
- <line class="g-h" x1="97" y1="101" x2="110" y2="114"></line><circle class="g-r" cx="89" cy="93" r="12"></circle><path class="g-s" d="M82.5 90 A7.5 7.5 0 0 1 88 85.2"></path>
-</svg>"""
-
 RISK_WORDS = {1: "Calm", 2: "Calm", 3: "Steady", 4: "Steady", 5: "Balanced", 6: "Balanced", 7: "Bold", 8: "Bold", 9: "All in", 10: "All in"}
 
 
@@ -74,11 +56,12 @@ def coach_card(end: str) -> str:
     seat = OWNER["my_seat"]
     return f"""<section class="at-card v4-coach" data-v4="coach" data-v4-as="pro">
  <div class="v4-coach-h"><span class="v4-plan" data-v4-plan>PRO</span><label class="at-sw v4-sw-lg"><input type="checkbox" checked data-v4-sw aria-label="NEXUS coach on or off"><i></i></label></div>
- <div class="v4-coach-ico-w">{COACH_SVG}</div>
+ <div class="v4-coach-ico-w">{art.coach_icon()}</div>
  <div class="v4-coach-n">NEXUS <b>COACH</b></div>
- <div class="v4-risk" data-v4-on><div class="v4-risk-v"><b data-v4-risk-v>5</b><span data-v4-risk-w>{RISK_WORDS[5]}</span></div>
+ <div class="v4-risk" data-v4-on data-level="5"><div class="v4-gauge-w">{art.gauge(5)}
+   <div class="v4-risk-v"><b data-v4-risk-v>5</b><span data-v4-risk-w>{RISK_WORDS[5]}</span></div></div>
   <input type="range" min="1" max="10" step="1" value="5" data-v4-risk aria-label="Risk">
-  <div class="v4-risk-f"><span>SAFE</span><span>ALL IN</span></div></div>
+  <div class="v4-risk-f"><span>SAFE</span><span>RISK</span><span>ALL IN</span></div></div>
  <div data-v4-off hidden><span class="at-btn ghost wide">See plans ›</span></div>
  <div class="v4-ctx"><span><b>#{seat["rank"]}</b>/6</span><span><b data-end="{end}">10H</b> left</span></div>
  <div class="v4-view" aria-label="Preview as"><button type="button" class="on" data-v4-as="pro">Pro</button><button type="button" data-v4-as="free">Free</button></div>

@@ -174,25 +174,38 @@ def test_the_race_keeps_only_the_six_lines(table):
 def test_the_live_cards_and_the_wallet_panel_are_there(lobby):
     live = lobby.xpath('//*[@id="atLiveV4"]')[0]
     assert [b.text_content() for b in live.xpath('.//span[contains(@class,"v4-buy")]')] == ["$1", "$1", "$5"]
-    assert [b.text_content() for b in live.xpath('.//div[contains(@class,"v4-clock")]/b')] == ["1H", "5H", "1D"]
+    assert [b.text_content() for b in live.xpath('.//span[contains(@class,"v4-dur")]/b')] == ["1H", "5H", "1D"]
     assert lobby.xpath('//*[@id="atWalletV4"]')
 
 
 # The operator, 2026-10-26, on the cards: "v levem vrchnim rohu sou duplicity, staci jen jednou 100 ET10 napsat, pak
 # je tam zbytecne navic zase tag ET10. to same u flash ... staci jen tag flash, nemusi zase psat Flash pro znova.
 # a nejaky novy top vzhled hodinek ktere ukazi jaky je to flash turnaj jestli 1H 5H".
+# And the second look: "ty stopky jsou amaterske a cele to zabira moc mista. spis to dej malym doleva pod to 100 ET10 a to
+# flash tam nepis misto toho bude spis ty hodinky. pro ET10 vytvor nejake."
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_a_card_says_its_buy_in_once_and_its_length_on_a_stopwatch(lobby):
+def test_a_card_says_its_buy_in_once_and_its_length_on_a_small_clock_under_it(lobby):
     cards = lobby.xpath('//a[contains(@class,"at-tcard")]')
     assert len(cards) >= 14
     for c in cards:
         head = c.xpath('.//div[contains(@class,"at-thead")]')[0]
         assert len(head.xpath('.//span[contains(@class,"v4-buy")]')) == 1
         assert not head.xpath('.//*[contains(@class,"at-tname") or contains(@class,"at-buyin") or contains(@class,"at-kind")]')
-        clock = head.xpath('.//div[contains(@class,"v4-clock")]/b')
-        assert len(clock) == 1 and re.fullmatch(r"\d+[HD]", clock[0].text_content())
-        flash = bool(set(c.get("class").split()) & {"fmicro", "fpro"}) or c.get("data-v4-live")
-        assert bool(head.xpath('.//*[contains(@class,"v4-flash")]')) == bool(flash), c.get("class")
+        assert "FLASH" not in head.text_content()
+        dur = head.xpath('.//div[contains(@class,"v4-tl")]//span[contains(@class,"v4-dur")]/b')
+        assert len(dur) == 1 and re.fullmatch(r"\d+[HD]", dur[0].text_content())
+        assert not head.xpath('.//*[contains(@class,"v4-clock")]')          # the big stopwatch is gone
+        et10 = "ET10" in head.xpath('.//span[contains(@class,"v4-buy")]')[0].text_content()
+        assert bool(head.xpath('.//*[contains(@class,"v4-coin")]')) == et10
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_hero_tiles_have_icons_and_no_week(lobby):
+    kinds = lobby.xpath('//div[contains(@class,"v4-kinds")]')[0]
+    text = kinds.text_content()
+    assert "Week" not in text and "7 days" not in text
+    assert all(d in text for d in ("1H", "5H", "1D"))
+    assert len(kinds.xpath('.//svg')) >= 5
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -204,9 +217,11 @@ def test_the_lobby_starts_with_a_paper_live_switch(lobby):
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_table_page_header_says_it_once_and_the_rules_strip_is_gone(table):
     head = table.xpath('//div[contains(@class,"at-rhead")]')[0]
-    assert head.xpath('.//h1')[0].text_content().startswith("100 ET10")
+    title = head.xpath('.//h1')[0].text_content().replace(" ", "")
+    assert title.startswith("100ET10") and title.count("ET10") == 1
     assert not head.xpath('.//*[contains(@class,"at-buyin") or contains(@class,"at-kind")]')
-    assert head.xpath('.//div[contains(@class,"v4-clock")]/b')[0].text_content() == "7D"
+    assert head.xpath('.//span[contains(@class,"v4-dur")]/b')[0].text_content() == "7D"
+    assert head.xpath('.//*[contains(@class,"v4-coin")]')
     assert not table.xpath('//*[contains(@class,"at-rstrip")]')
 
 
@@ -220,6 +235,10 @@ def test_the_coach_tab_comes_first_and_holds_only_the_coach(table):
     assert pane.get("hidden") is None
     coach = pane.xpath('.//*[@data-v4="coach"]')[0]
     assert coach.xpath('.//svg') and coach.xpath('.//input[@data-v4-sw]') and coach.xpath('.//input[@type="range"][@data-v4-risk]')
+    # "ma to byt 5x lepsi top krasna ikonka tak do 3D a ten risk panel barevny": shaded, not line art; a coloured gauge
+    ico = coach.xpath('.//svg[contains(@class,"v4-coach-ico")]')[0]
+    assert len(ico.xpath('.//*[starts-with(@fill,"url(#v4-")]')) >= 6
+    assert len(coach.xpath('.//*[contains(@class,"v4-seg")]')) == 10
     words = " ".join(coach.text_content().split())
     assert len(words) < 140, words              # a panel, not a paragraph
     assert not table.xpath('//div[@data-pane="settings"]//*[@data-v4="tune" or @data-v4="coach"]')
