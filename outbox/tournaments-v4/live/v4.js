@@ -78,17 +78,13 @@
     each('[data-pane]', function (p) { p.hidden = p.getAttribute('data-pane') !== b.getAttribute('data-tab'); }, root);
   });
 
-  // 6. the coach: on or off, on a paid plan (locked on the free one)
-  function coach(card, tried) {
-    var sw = card.querySelector('[data-v4-sw]'), free = card.getAttribute('data-v4-as') === 'free';
-    if (free && sw.checked) {          // on the free plan the switch answers: it springs back and points at the plans
-      sw.checked = false;
-      var plans = card.querySelector('[data-v4-off] .at-btn');
-      if (plans && tried) { plans.classList.remove('v4-nudge'); void plans.offsetWidth; plans.classList.add('v4-nudge'); }
-    }
-    card.querySelector('[data-v4-off]').hidden = !free;
-    card.classList.toggle('v4-off', !sw.checked);
-    card.querySelector('[data-v4-plan]').textContent = free ? 'PRO · LOCKED' : 'PRO';
+  // 6. the coach: on or off; its line says what it is doing (the paid-plan lock is the spec's, not this preview's)
+  function coach(panel) {
+    var c = panel.querySelector('[data-v4="coach"]'), r = panel.querySelector('[data-v4-risk]');
+    if (!c) return;
+    var on = c.querySelector('[data-v4-sw]').checked;
+    c.classList.toggle('v4-off', !on);
+    c.querySelector('[data-v4-st]').textContent = on ? 'Tuning your bot inside risk ' + (r ? r.value : '') : 'Off: your bot runs as you set it';
   }
   // 7. the risk: every owner sets it, coach or not
   var WORDS = ['', 'Calm', 'Calm', 'Steady', 'Steady', 'Balanced', 'Balanced', 'Bold', 'Bold', 'All in', 'All in'];
@@ -104,15 +100,9 @@
     card.querySelector('.v4-risk').setAttribute('data-level', v);
   }
   function onChange(e) {
-    var c = e.target.closest && e.target.closest('[data-v4="coach"]'); if (c) coach(c, true);
     var r = e.target.closest && e.target.closest('[data-v4="risk"]'); if (r) risk(r);
+    var p = e.target.closest && e.target.closest('.v4-coachpanel'); if (p) coach(p);
   }
   document.addEventListener('input', onChange);
   document.addEventListener('change', onChange);
-  // the free-plan look, for the spec's picture: ?plan=free
-  function freePlan() {
-    if (!/[?&]plan=free\b/.test(location.search)) return;
-    each('[data-v4="coach"]', function (c) { c.setAttribute('data-v4-as', 'free'); coach(c); });
-  }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', freePlan); else freePlan();
 })();

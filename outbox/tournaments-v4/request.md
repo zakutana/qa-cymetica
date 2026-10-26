@@ -32,7 +32,7 @@ Real: everything on their pages, and our seat's bot settings, lock and 17 closed
 5. `changelog-1440.png`: the Tune log and who changed what, in the Changelog tab.
 6. `race-1440.png`: the race with touching trade markers merged.
 
-Also in `pictures/`: `lobby-paper-*`, `coach-risk9-1440.png` (slider at 9), `coach-free-1440.png` (locked on the free plan), `head-1440.png`.
+Also in `pictures/`: `lobby-paper-*`, `coach-on-1440.png`, `coach-off-1440.png`, `head-1440.png`. The copy lets the coach switch on and off whatever the plan; the paid-plan lock is this spec's, not the preview's.
 
 ## Filing
 

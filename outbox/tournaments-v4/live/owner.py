@@ -56,13 +56,13 @@ def coach_card(end: str) -> str:
     the coach -- the icon and on/off, on a paid plan -- and under it the risk, which every owner sets, coach or not
     (an hour before the end, not first: more risk). With the coach on, NEXUS tunes the bot inside that risk."""
     seat = OWNER["my_seat"]
-    # set straight into the page, the switch beside it ("nechci v zadne kostce ... jen plain vlozeny do stranky
-    # vedle switche on off"); the free-plan look is /agent-tournaments/table/15?plan=free
-    coach = f"""<section class="v4-coach" data-v4="coach" data-v4-as="pro">
+    # one row: the coach, its name and state, its switch -- and the switch always works here, so the operator can see
+    # both looks ("povol mi to switch on udelat lokalne at vidim jak to vypada"); the paid-plan lock is in the spec
+    coach = f"""<section class="v4-coach" data-v4="coach">
  <div class="v4-coach-ico-w">{art.coach_icon()}</div>
- <div class="v4-coach-n">NEXUS <b>COACH</b></div>
- <div class="v4-coach-h"><label class="at-sw v4-sw-lg"><input type="checkbox" checked data-v4-sw aria-label="NEXUS coach on or off"><i></i></label><span class="v4-plan" data-v4-plan>PRO</span></div>
- <div data-v4-off hidden><span class="at-btn ghost wide">See plans ›</span></div>
+ <div class="v4-coach-t"><div class="v4-coach-n">NEXUS <b>COACH</b><span class="v4-plan">PRO</span></div>
+  <div class="v4-coach-st" data-v4-st>Tuning your bot inside risk 5</div></div>
+ <label class="at-sw v4-sw-lg"><input type="checkbox" checked data-v4-sw aria-label="NEXUS coach on or off"><i></i></label>
 </section>"""
     risk = f"""<section class="v4-riskcard" data-v4="risk">
  <div class="v4-risk-h"><span class="at-lbl">Risk</span><span class="v4-ctx"><span><b>#{seat["rank"]}</b>/6</span><span><b data-end="{end}">10H</b> left</span></span></div>
@@ -70,7 +70,7 @@ def coach_card(end: str) -> str:
    <div class="v4-risk-v"><b data-v4-risk-v>5</b><span data-v4-risk-w>{RISK_WORDS[5]}</span></div></div>
   <input type="range" min="1" max="10" step="1" value="5" data-v4-risk aria-label="Risk">
   <div class="v4-risk-f"><span>SAFE</span><span>ALL IN</span></div></div>
- <p class="v4-risk-say">How hard your bot plays: trade size, stop loss and take profit. Change it any time.</p>
+ <p class="v4-risk-say">How hard your bot plays: trade size, stop loss, take profit. Any time.</p>
 </section>"""
     # one panel, the coach on top and the risk under it ("dej to cele do 1 panelu spolecne s tim metrem")
     return f'<div class="at-card v4-coachpanel">{coach}{risk}</div>'

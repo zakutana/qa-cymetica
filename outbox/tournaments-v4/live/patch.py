@@ -164,6 +164,7 @@ def stacks(tbl) -> None:
         sx, sy = 50 + (x - 50) * 0.66, 50 + (y - 50) * 0.60
         flip = " flip" if x > 50 else ""
         tbl.append(frag(f'<span class="v4-stack{flip}" style="left:{sx:.1f}%;top:{sy:.1f}%" aria-hidden="true">{art.seat_stack(k)}</span>')[0])
+    tbl.append(frag(f'<span class="v4-deck" aria-hidden="true">{art.deck()}</span>')[0])
 
 
 # ------------------------------------------------------------------------------------------------ cards

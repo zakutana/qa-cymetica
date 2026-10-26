@@ -36,31 +36,41 @@ body::before { content: ""; position: absolute; left: 0; right: 0; top: 0; heigh
 body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .05; mix-blend-mode: screen;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>"); }
 
-/* the table: a metal rail round the felt, a lit inner edge from cyan to green, cards and chips at the side seats */
-.at-tbl .at-felt { border: 7px solid transparent !important;
-  background: radial-gradient(ellipse at 50% 36%, color-mix(in srgb, var(--at-cyan) 12%, var(--at-panel)) 0%, var(--at-panel) 55%, var(--at-sunk) 100%) padding-box,
-    linear-gradient(180deg, color-mix(in srgb, var(--at-hi) 45%, transparent), transparent 45%, color-mix(in srgb, var(--at-sunk) 70%, transparent)) border-box,
-    conic-gradient(from 210deg, var(--at-ink2), var(--at-muted) 10%, var(--at-panel2) 22%, var(--at-ink2) 34%, var(--at-muted) 47%, var(--at-panel2) 60%, var(--at-ink2) 72%, var(--at-muted) 86%, var(--at-ink2)) border-box !important;
-  box-shadow: 0 0 0 2px var(--at-sunk), 0 18px 40px -14px var(--at-sunk), 0 0 34px -4px color-mix(in srgb, var(--at-t) 30%, transparent),
-    inset 0 0 26px color-mix(in srgb, var(--at-sunk) 80%, transparent) !important; }
-.at-big .at-tbl .at-felt { border-width: 18px !important; }
-.at-tbl .at-felt::after { inset: 2px !important; border: 2px solid transparent !important; border-radius: 999px;
-  background: linear-gradient(90deg, var(--at-cyan), var(--at-green)) border-box;
+/* the table, after his render ("ten stul ... at vypada jak na tom obrazku"): a thick gunmetal rail lit from above with
+   a dark outer lip, a glowing cyan-to-green line where the felt meets it, the felt's honeycomb over the whole cloth,
+   cards and chips in front of the side seats and the deck under BEST ROI WINS */
+.at-tbl .at-felt { border: 8px solid transparent !important;
+  background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--at-cyan) 14%, var(--at-panel)) 0%, color-mix(in srgb, var(--at-cyan) 5%, var(--at-panel)) 50%, var(--at-sunk) 100%) padding-box,
+    linear-gradient(180deg, color-mix(in srgb, var(--at-hi) 55%, transparent) 0%, transparent 32%, transparent 62%, color-mix(in srgb, var(--at-sunk) 85%, transparent) 100%) border-box,
+    linear-gradient(100deg, transparent 18%, color-mix(in srgb, var(--at-hi) 22%, transparent) 30%, transparent 42%, transparent 66%, color-mix(in srgb, var(--at-hi) 14%, transparent) 76%, transparent 86%) border-box,
+    conic-gradient(from 200deg, var(--at-muted), var(--at-panel2) 14%, var(--at-ink2) 26%, var(--at-muted) 38%, var(--at-panel2) 52%, var(--at-muted) 64%, var(--at-ink2) 76%, var(--at-panel2) 88%, var(--at-muted)) border-box !important;
+  box-shadow: 0 0 0 2px var(--at-sunk), 0 0 0 4px color-mix(in srgb, var(--at-muted) 35%, transparent), 0 30px 60px -18px var(--at-sunk),
+    0 0 50px -6px color-mix(in srgb, var(--at-cyan) 28%, transparent),
+    inset 0 10px 22px color-mix(in srgb, var(--at-sunk) 85%, transparent), inset 0 -6px 18px color-mix(in srgb, var(--at-sunk) 60%, transparent) !important; }
+.at-big .at-tbl .at-felt { border-width: 30px !important; }
+.at-big .at-tbl .at-felt::before { opacity: .26 !important;
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, transparent 30%, var(--at-sunk) 85%) !important; mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, transparent 30%, var(--at-sunk) 85%) !important; }
+.at-tbl .at-felt::after { inset: 1px !important; border: 2px solid transparent !important; border-radius: 999px;
+  background: linear-gradient(90deg, var(--at-cyan), color-mix(in srgb, var(--at-cyan) 50%, var(--at-green)) 50%, var(--at-green)) border-box;
   -webkit-mask: linear-gradient(var(--at-sunk) 0 0) padding-box, linear-gradient(var(--at-sunk) 0 0); -webkit-mask-composite: xor; mask: linear-gradient(var(--at-sunk) 0 0) padding-box exclude, linear-gradient(var(--at-sunk) 0 0);
-  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--at-cyan) 70%, transparent)); }
-.v4-stack { position: absolute; z-index: 1; width: 92px; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 6px 8px var(--at-sunk)); }
+  filter: drop-shadow(0 0 5px var(--at-cyan)) drop-shadow(0 0 12px color-mix(in srgb, var(--at-cyan) 60%, transparent)); }
+.at-big .at-tbl .at-felt::after { border-width: 3px !important; }
+.v4-stack { position: absolute; z-index: 1; width: 112px; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 8px 10px var(--at-sunk)); }
 .v4-stack.flip { transform: translate(-50%, -50%) scaleX(-1); }
-.v4-stack-svg { display: block; width: 100%; height: auto; overflow: visible; }
-.v4-stack .cb { fill: url(#v4-cardback); stroke: var(--at-muted); stroke-width: 1.2; }
-.v4-stack .cbi { fill: none; stroke: var(--at-cyan); stroke-opacity: .45; stroke-width: 1; }
-.v4-stack .cbm { fill: var(--at-cyan); fill-opacity: .35; }
-.v4-stack .cs { stroke: var(--at-sunk); stroke-width: .6; }
-.v4-stack .ct { stroke: color-mix(in srgb, var(--at-hi) 50%, transparent); stroke-width: .6; }
-.v4-stack .cd { fill: none; stroke: var(--at-hi); stroke-width: 1.4; stroke-dasharray: 2.4 2.6; opacity: .75; }
-.v4-stack .cs.cy { fill: color-mix(in srgb, var(--at-cyan) 55%, var(--at-sunk)); } .v4-stack .ct.cy { fill: var(--at-cyan); }
-.v4-stack .cs.gr { fill: color-mix(in srgb, var(--at-green) 55%, var(--at-sunk)); } .v4-stack .ct.gr { fill: var(--at-green); }
-.v4-stack .cs.bl { fill: color-mix(in srgb, var(--at-blue) 55%, var(--at-sunk)); } .v4-stack .ct.bl { fill: var(--at-blue); }
-.v4-stack .cs.wh { fill: var(--at-muted); } .v4-stack .ct.wh { fill: var(--at-ink); }
+.v4-stack-svg, .v4-deck-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.v4-deck { position: absolute; z-index: 1; left: 50%; top: 63.4%; width: 56px; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 8px 10px var(--at-sunk)); }
+.v4-stack .cb, .v4-deck .cb { fill: url(#v4-cardback); stroke: color-mix(in srgb, var(--at-ink2) 60%, transparent); stroke-width: 1.1; }
+.v4-stack .cbi, .v4-deck .cbi { fill: none; stroke: var(--at-cyan); stroke-opacity: .5; stroke-width: .9; }
+.v4-stack .cl1, .v4-deck .cl1 { fill: var(--at-cyan); } .v4-stack .cl2, .v4-deck .cl2 { fill: var(--at-green); }
+.v4-stack .csh, .v4-deck .csh { fill: var(--at-hi); fill-opacity: .08; }
+.v4-stack .cs { stroke: var(--at-sunk); stroke-width: .7; }
+.v4-stack .ce { stroke: var(--at-hi); stroke-width: 2; opacity: .8; }
+.v4-stack .ct { stroke: color-mix(in srgb, var(--at-hi) 45%, transparent); stroke-width: .7; }
+.v4-stack .cd { fill: none; stroke: var(--at-hi); stroke-width: 1.2; stroke-dasharray: 2.2 2.4; opacity: .7; }
+.v4-stack .cs.cy { fill: color-mix(in srgb, var(--at-cyan) 50%, var(--at-sunk)); } .v4-stack .ct.cy { fill: var(--at-cyan); }
+.v4-stack .cs.gr { fill: color-mix(in srgb, var(--at-green) 50%, var(--at-sunk)); } .v4-stack .ct.gr { fill: var(--at-green); }
+.v4-stack .cs.bl { fill: color-mix(in srgb, var(--at-blue) 50%, var(--at-sunk)); } .v4-stack .ct.bl { fill: var(--at-blue); }
+.v4-stack .cs.wh { fill: var(--at-muted); } .v4-stack .ct.wh { fill: var(--at-ink); } .v4-stack .ct.wh + .cd { stroke: var(--at-panel); }
 
 .at-card, .at-tcard, .at-me, .v4-kind, .at-rstrip, .at-tabbar {
   background: linear-gradient(165deg, color-mix(in srgb, var(--at-panel2) 94%, transparent), color-mix(in srgb, var(--at-sunk) 94%, transparent)) !important;
@@ -159,20 +169,21 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 @media (max-width: 800px) { .v4-cols, .v4-steps { grid-template-columns: 1fr; } }
 
 /* the NEXUS coach: their chip in a deerstalker, set straight into the page (no box), the switch beside it */
-.v4-coach { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: 2px 16px; padding: 14px 4px 6px 14px; }
-.v4-coach-ico-w { grid-column: 1; grid-row: 1 / span 2; width: 150px; height: 150px; }
-.v4-coach-ico { width: 100%; height: 100%; overflow: visible; }
-.v4-coach-n { grid-column: 2; grid-row: 1; align-self: end; font: 700 12px var(--at-num); letter-spacing: .3em; color: var(--at-muted); }
-.v4-coach-n b { color: var(--at-hi); }
-.v4-coach-h { grid-column: 2; grid-row: 2; align-self: start; display: flex; align-items: center; gap: 12px; margin-top: 8px; }
-.v4-coach [data-v4-off] { grid-column: 1 / -1; }
-.v4-nudge { animation: v4-nudge .5s ease; box-shadow: 0 0 0 2px var(--at-cyan), 0 0 22px rgba(0, 207, 255, .55) !important; }
-@keyframes v4-nudge { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
-.v4-coach.v4-off .v4-coach-ico-w { opacity: .35; filter: grayscale(.6); }
 .v4-plan { font: 800 10.5px var(--at-num); letter-spacing: .12em; padding: 4px 9px; border-radius: 99px; color: var(--at-cyan); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); white-space: nowrap; }
-.v4-sw-lg { transform: scale(1.3); transform-origin: left center; margin-right: 10px; }
-.v4-risk { width: 100%; margin-top: 8px; }
-.v4-gauge-w { position: relative; width: 100%; max-width: 290px; margin: 0 auto; }
+.v4-sw-lg { transform: scale(1.35); transform-origin: right center; justify-self: end; }
+/* one row: the coach, its name and what it is doing, its switch */
+.v4-coach { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 6px 2px 14px; }
+.v4-coach-ico-w { width: 112px; height: 112px; }
+.v4-coach-ico { width: 100%; height: 100%; overflow: visible; transition: opacity .2s, filter .2s; }
+.v4-coach-t { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.v4-coach-n { display: flex; align-items: center; gap: 10px; font: 700 12.5px var(--at-num); letter-spacing: .28em; color: var(--at-muted); white-space: nowrap; }
+.v4-coach-n b { color: var(--at-hi); }
+.v4-coach-n .v4-plan { letter-spacing: .12em; }
+.v4-coach-st { font: 600 12.5px/1.4 var(--at-num); color: var(--at-green); }
+.v4-coach.v4-off .v4-coach-ico { opacity: .35; filter: grayscale(.7); }
+.v4-coach.v4-off .v4-coach-st { color: var(--at-muted); }
+.v4-risk { width: 100%; margin-top: 2px; }
+.v4-gauge-w { position: relative; width: 100%; max-width: 320px; margin: 0 auto; }
 .v4-gauge { display: block; width: 100%; height: auto; overflow: visible; }
 .v4-seg { fill: none; stroke-width: 17; opacity: .15; transition: opacity .2s; }
 .v4-seg.on { opacity: 1; filter: drop-shadow(0 0 5px rgba(0, 207, 255, .55)); }
@@ -193,7 +204,7 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-event
 
 /* the risk: its own panel under the coach, for every owner */
 .v4-riskcard { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding: 14px 2px 0; border-top: 1px solid var(--at-line); }
-.v4-coachpanel { padding: 6px 16px 16px; border-color: rgba(0, 207, 255, .45) !important;
+.v4-coachpanel { padding: 12px 18px 16px; border-color: rgba(0, 207, 255, .45) !important;
   background: radial-gradient(110% 45% at 25% 0%, rgba(0, 207, 255, .16), transparent 65%), linear-gradient(170deg, var(--at-panel2), var(--at-sunk)) !important; }
 .v4-risk-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .v4-riskcard .v4-ctx { margin-top: 0; padding: 5px 10px; }

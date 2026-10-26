@@ -164,23 +164,45 @@ def coach_icon() -> str:
 # The operator, 2026-10-26, with a render of the table he wants ("a stul nejak vylepsi aspon takto"): a metal rail, a
 # glowing inner edge, and at the side seats two face-down cards and a short stack of chips on the felt.
 
-CHIP_TONES = ("cy", "gr", "bl", "wh")
+CHIP_TONES = ("cy", "gr", "wh", "bl")
+
+
+def card_back(x: float, y: float, rot: float, w: float = 26, h: float = 36) -> str:
+    """A face-down card: a dark back with a cyan frame and their two-bar logo in the middle."""
+    cx, cy = x + w / 2, y + h / 2
+    return (f'<g transform="rotate({rot} {cx} {cy})"><rect class="cb" x="{x}" y="{y}" width="{w}" height="{h}" rx="3.4"></rect>'
+            f'<rect class="cbi" x="{x + 3}" y="{y + 3}" width="{w - 6}" height="{h - 6}" rx="2"></rect>'
+            f'<rect class="cl1" x="{cx - 4.6}" y="{cy - 5}" width="3.6" height="10" rx="1.8"></rect>'
+            f'<rect class="cl2" x="{cx + 1}" y="{cy - 5}" width="3.6" height="10" rx="1.8"></rect>'
+            f'<path class="csh" d="M{x + 2} {y + 2} L{x + w * .6} {y + 2} L{x + 2} {y + h * .45} Z"></path></g>')
+
+
+def chip_stack(x: float, base: float, n: int, k: int, r: float = 10.5) -> str:
+    """n poker chips standing on base: each a side band with its edge inserts and a top with a dashed ring."""
+    ry, h, out = r * .42, 4.4, ""
+    for j in range(n):
+        tone = CHIP_TONES[(k + j) % len(CHIP_TONES)]
+        y = base - j * h
+        out += (f'<path class="cs {tone}" d="M{x - r} {y - h} v{h} a{r} {ry} 0 0 0 {2 * r} 0 v{-h} z"></path>'
+                f'<path class="ce" d="M{x - r * .62} {y - h + ry * .79} v{h} M{x} {y - h + ry} v{h} M{x + r * .62} {y - h + ry * .79} v{h}"></path>'
+                f'<ellipse class="ct {tone}" cx="{x}" cy="{y - h}" rx="{r}" ry="{ry}"></ellipse>'
+                f'<ellipse class="cd" cx="{x}" cy="{y - h}" rx="{r * .72}" ry="{ry * .72}"></ellipse>')
+    return out
 
 
 def seat_stack(k: int) -> str:
-    cards = ""
-    for dx, rot in ((0, -14), (9, 6)):
-        cards += (f'<g transform="translate({dx} 0) rotate({rot} 22 25)"><rect class="cb" x="9" y="8" width="25" height="34" rx="3.6"></rect>'
-                  f'<rect class="cbi" x="12.4" y="11.4" width="18.2" height="27.2" rx="2.2"></rect>'
-                  f'<path class="cbm" d="M21.5 17.5 l4.6 7.5 -4.6 7.5 -4.6 -7.5 z"></path></g>')
-    chips = ""
-    for j in range(2 + k % 3):
-        tone = CHIP_TONES[(k + j) % len(CHIP_TONES)]
-        cy = 41 - j * 3.9
-        chips += (f'<ellipse class="cs {tone}" cx="58" cy="{cy + 2.6:.1f}" rx="10" ry="4.2"></ellipse>'
-                  f'<ellipse class="ct {tone}" cx="58" cy="{cy:.1f}" rx="10" ry="4.2"></ellipse>'
-                  f'<ellipse class="cd" cx="58" cy="{cy:.1f}" rx="7.6" ry="3" pathLength="40"></ellipse>')
-    return f'<svg class="v4-stack-svg" viewBox="0 0 72 52" aria-hidden="true">{cards}{chips}</svg>'
+    """At a side seat: two cards and two stacks of chips, the taller behind."""
+    cards = card_back(6, 10, -16) + card_back(18, 8, 7)
+    chips = chip_stack(66, 44, 3 + k % 3, k) + chip_stack(84, 52, 2 + (k + 1) % 2, k + 2)
+    return f'<svg class="v4-stack-svg" viewBox="0 0 100 62" aria-hidden="true">{cards}{chips}</svg>'
+
+
+def deck() -> str:
+    """The deck, fanned, in the middle of the felt's lower half."""
+    return (f'<svg class="v4-deck-svg" viewBox="0 0 70 50" aria-hidden="true">'
+            f'{card_back(10, 9, -14)}{card_back(22, 6, 0)}{card_back(34, 9, 14)}</svg>')
+
+
 
 
 # ------------------------------------------------------------------------------------------------ the risk gauge
