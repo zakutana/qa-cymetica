@@ -6,19 +6,19 @@
 <title>Promo Market · EventTrader</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=20261026b">
+<link rel="stylesheet" href="style.css?v=20261026d">
 </head>
 <body>
 <!-- The loader is in the page itself, so it is on screen with the first bytes: the shell comes first, the data after it
      (today the signed-in dashboard sends nothing for 6 to 8 s, then 787 KB at once). Each request the page waits for
      carries a share of the number; the cube's faces light up as they come back. -->
 <div class="boot" id="boot">
-  <div class="brand2"><svg class="mark" viewBox="0 0 32 32"><use href="#mk"/></svg>Promo Market</div>
+  <div class="brand2"><div class="holo mini fast" style="--s:16px" aria-hidden="true"><div class="cam"><div class="bob"><div class="stage"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div></div></div>Promo Market</div>
   <div class="bin">
     <div class="holo fast" style="--s:150px"><div class="aura"></div><div class="pool"></div><div class="beam"></div>
       <div class="cam"><div class="bob"><div class="stage">
         <div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div>
-        <div class="inner"><i class="g g1"></i><i class="g g2"></i><i class="g g3"></i><i class="g g4"></i><i class="g g5"></i><i class="g g6"></i></div><div class="core"></div>
+        <div class="core"></div>
       </div></div></div>
     </div>
     <div class="pct" id="bpct">0<small>%</small></div>
@@ -28,21 +28,8 @@
   </div>
 </div>
 
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <linearGradient id="mkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
-    <!-- the mark: the hologram cube, seen from its corner -->
-    <symbol id="mk" viewBox="0 0 32 32">
-      <path d="M16 3 28 9.5v13L16 29 4 22.5v-13z" fill="rgba(0,207,255,.12)" stroke="url(#mkg)" stroke-width="1.6" stroke-linejoin="round"/>
-      <path d="M4 9.5 16 16l12-6.5 M16 16v13" fill="none" stroke="url(#mkg)" stroke-width="1.4" stroke-linejoin="round"/>
-      <path d="M16 3v13" stroke="#00cfff" stroke-opacity=".35" stroke-width="1"/>
-      <circle cx="16" cy="16" r="2.6" fill="#e8fbff"/><circle cx="16" cy="16" r="5" fill="#00cfff" opacity=".25"/>
-    </symbol>
-  </defs>
-</svg>
-
 <header class="top"><div class="wrap">
-  <a class="brand" href="#market"><svg class="mark" viewBox="0 0 32 32"><use href="#mk"/></svg><div><b>Promo Market</b><small>EventTrader</small></div></a>
+  <a class="brand" href="#market"><div class="holo mini fast" style="--s:16px" aria-hidden="true"><div class="cam"><div class="bob"><div class="stage"><div class="f f1"></div><div class="f f2"></div><div class="f f3"></div><div class="f f4"></div><div class="f f5"></div><div class="f f6"></div></div></div></div></div><div><b>Promo Market</b><small>EventTrader</small></div></a>
   <nav class="tnav" id="tnav"></nav>
   <span class="sp"></span>
   <span class="livechip" id="livechip"></span>
@@ -57,7 +44,7 @@
 <div class="toast" id="toast"></div>
 <div class="mock" id="mock"></div>
 
-<script src="data.js?v=20261026b"></script>
-<script src="app.js?v=20261026b"></script>
+<script src="data.js?v=20261026d"></script>
+<script src="app.js?v=20261026d"></script>
 </body>
 </html>

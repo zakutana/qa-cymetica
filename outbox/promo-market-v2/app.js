@@ -145,11 +145,11 @@
   /* ---------------- the hologram cube ---------------- */
   // the six faces are screens, each showing a product's page (the Universe building's screens, in the page's colours)
   const FACES = ['/gem-screener', '/chart-analyzer', '/agent-tournaments', '/supply-analyzer', '/company', '/airdrop-farmer'];
-  const HOLO_INNER = '<div class="inner">' + [1, 2, 3, 4, 5, 6].map((n) => '<i class="g g' + n + '"></i>').join('') + '</div><div class="core"></div>';
+  const HOLO_INNER = '<div class="core"></div>';
   function holo(size, cls) {
     let sp = '';
     for (let k = 0; k < 10; k++) sp += '<i class="sp" style="left:' + (18 + (k * 37) % 64) + '%;bottom:' + (18 + (k * 13) % 18) + '%;animation-delay:' + (k * 0.5).toFixed(2) + 's"></i>';
-    const faces = FACES.map((path, k) => '<div class="f f' + (k + 1) + '"><img alt="" src="' + pic(path) + '"></div>').join('');
+    const faces = FACES.map((path, k) => '<div class="f f' + (k + 1) + '"><img alt="" class="' + (k % 3 ? 'on' : '') + '" src="' + pic(path) + '"></div>').join('');
     return '<div class="holo ' + (cls || '') + '" style="--s:' + size + 'px"><div class="aura"></div><div class="pool"></div><div class="beam"></div>' + sp +
       '<div class="cam"><div class="bob"><div class="stage">' + faces + HOLO_INNER + '</div></div></div></div>';
   }
@@ -169,7 +169,7 @@
     ['/api/v1/promo/briefs', 'the briefs', 610], ['/api/v1/creator/expire76/links', 'your visitors', 820]];
   function boot(shellMs) {
     const el = $('boot'), pct = $('bpct'), lbl = $('blbl'), bar = $('bbar'), chips = $('breqs');
-    const faces = el.querySelectorAll('.f');
+    const faces = el.querySelectorAll('.bin .f');
     faces.forEach((f, k) => { f.innerHTML = '<img alt="" src="' + pic(FACES[k]) + '">'; });
     el.classList.remove('gone');
     chips.innerHTML = '<span id="rq-page">page</span>' + REQS.map((r, k) => '<span id="rq' + k + '">' + r[1] + '</span>').join('');
@@ -248,13 +248,14 @@
         '<h1>' + h1 + '</h1><p class="lead">' + esc(H.sub) + '</p>' +
         '<div class="ctas"><a class="btn g lg" href="#board">Earn: take a brief ' + ic('arrow') + '</a>' +
         '<a class="btn c lg" href="#new">' + ic('plus') + 'Promote my product</a>' +
-        '<button class="btn gh lg" data-act="agent">' + ic('agent') + 'From your AI agent</button></div></div>' +
-        '<div class="vis">' + holo(140) +
-          '<div class="tag t1"><div class="k">USDC up for grabs</div><div class="v pos">' + usd(st.up_for_grabs_usdc) + '<small>USDC</small></div></div>' +
-          '<div class="tag t2"><div class="k">Open briefs</div><div class="v">' + st.open_briefs + '</div></div>' +
-          '<div class="tag t3"><div class="k">Top pay per new user</div><div class="v">' + usd(st.top_per_user_usdc) + '<small>USDC</small></div>' +
-            (st.top_per_user_name ? '<div class="k" style="margin-top:2px">' + esc(shortName(st.top_per_user_name)) + '</div>' : '') + '</div>' +
-        '</div></section>' +
+        '<button class="btn gh lg" data-act="agent">' + ic('agent') + 'From your AI agent</button></div>' +
+        // the market's three numbers in one row under the buttons, not scattered round the cube
+        '<div class="tiles hstats" style="--n:3">' +
+          tile('coin', 'USDC up for grabs', '<span class="pos">' + usd(st.up_for_grabs_usdc) + '</span><small>USDC</small>', 'every open brief', '#00ff88') +
+          tile('briefs', 'Open briefs', fmt(st.open_briefs), 'funds checked on-chain') +
+          tile('users', 'Top pay per new user', usd(st.top_per_user_usdc) + '<small>USDC</small>', st.top_per_user_name ? esc(shortName(st.top_per_user_name)) : 'no brief yet', '#3b82f6') +
+        '</div></div>' +
+        '<div class="vis">' + holo(150) + '</div></section>' +
       '<section class="steps4">' + H.steps.map((s, k) => '<div class="st"><span class="no">' + (k + 1) + '</span><div><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div></div>').join('') + '</section>' +
       '<section id="board"><div class="bhead"><h2>Open briefs</h2><span class="cnt">' + list.length + '</span><span class="sp"></span>' +
         '<div class="seg" id="bsort">' + [['left', 'Most up for grabs'], ['user', 'Best per new user'], ['ending', 'Ending soon']].map((s) =>

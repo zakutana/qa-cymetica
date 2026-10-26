@@ -26,7 +26,6 @@ svg { display: block; }
 ::-webkit-scrollbar { width: 10px; height: 10px; } ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 10px; border: 2px solid var(--bg); }
 
 /* ---------------- the hologram cube: the Promo Market's mark (the Universe's building, in the page's colours) ---------------- */
-.mark { width: 30px; height: 30px; flex: none; filter: drop-shadow(0 0 8px rgba(0,207,255,.45)); }
 /* The cube stands on one corner, tilted (the operator, 2026-10-26: "moc rovne hrany ... toci se moc rychle a jen dokola"):
    glass faces with soft glowing edges instead of drawn lines, each face a screen showing a product's page, a smaller
    cube turning inside it, and it sways and floats slowly instead of spinning. Every part moves by transform and opacity. */
@@ -59,18 +58,16 @@ svg { display: block; }
 .holo .f4 { transform: rotateY(-90deg) translateZ(calc(var(--s) / 2)); }
 .holo .f5 { transform: rotateX(90deg) translateZ(calc(var(--s) / 2)); }
 .holo .f6 { transform: rotateX(-90deg) translateZ(calc(var(--s) / 2)); }
-/* the heart: a small green cube turning on its own inside the glass */
-.holo .inner { position: absolute; left: 50%; top: 50%; width: calc(var(--s) * .34); height: calc(var(--s) * .34); margin: calc(var(--s) * -.17);
-  transform-style: preserve-3d; animation: holo-inner 14s linear infinite; }
-@keyframes holo-inner { to { transform: rotateX(360deg) rotateY(720deg); } }
-.holo .g { position: absolute; inset: 0; border-radius: 22%; background: rgba(0,255,136,.16);
-  box-shadow: inset 0 0 0 1px rgba(0,255,136,.6), inset 0 0 calc(var(--s) * .06) rgba(0,255,136,.5), 0 0 calc(var(--s) * .08) rgba(0,255,136,.45); }
-.holo .g1 { transform: translateZ(calc(var(--s) * .17)); } .holo .g2 { transform: rotateY(90deg) translateZ(calc(var(--s) * .17)); }
-.holo .g3 { transform: rotateY(180deg) translateZ(calc(var(--s) * .17)); } .holo .g4 { transform: rotateY(-90deg) translateZ(calc(var(--s) * .17)); }
-.holo .g5 { transform: rotateX(90deg) translateZ(calc(var(--s) * .17)); } .holo .g6 { transform: rotateX(-90deg) translateZ(calc(var(--s) * .17)); }
-.holo .core { position: absolute; left: 50%; top: 50%; width: calc(var(--s) * .2); height: calc(var(--s) * .2); margin: calc(var(--s) * -.1); border-radius: 50%;
-  background: radial-gradient(circle, #e8fbff 0%, rgba(0,255,136,.8) 32%, rgba(0,207,255,0) 70%); animation: holo-core 2.6s ease-in-out infinite; }
-@keyframes holo-core { 50% { transform: scale(1.35); opacity: .7; } }
+/* a soft light inside the glass, not an object */
+.holo .core { position: absolute; left: 50%; top: 50%; width: calc(var(--s) * .55); height: calc(var(--s) * .55); margin: calc(var(--s) * -.275); border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,251,255,.5) 0%, rgba(0,207,255,.26) 30%, rgba(0,207,255,0) 70%); animation: holo-core 3.4s ease-in-out infinite; }
+@keyframes holo-core { 50% { transform: scale(1.18); opacity: .65; } }
+/* the mark: the same cube, small, in the header and over the loader */
+.holo.mini { width: 34px; height: 34px; perspective: 260px; flex: none; }
+.holo.mini .aura, .holo.mini .pool, .holo.mini .beam, .holo.mini .sp, .holo.mini .core, .holo.mini .f img, .holo.mini .f::before { display: none; }
+.holo.mini .f { border-radius: 3px; background: linear-gradient(140deg, rgba(0,207,255,.42), rgba(0,207,255,.08) 50%, rgba(0,255,136,.30));
+  box-shadow: inset 0 0 0 1px rgba(232,251,255,.45), inset 0 0 6px rgba(0,207,255,.5), 0 0 6px rgba(0,207,255,.45); }
+.holo.mini .cam { transform: rotateX(-12deg); }
 /* the light around it: a glow that breathes out from the heart, a pool under it and a beam rising from the pool */
 .holo .aura { position: absolute; left: 50%; top: 45%; width: calc(var(--s) * 1.5); height: calc(var(--s) * 1.5); margin: calc(var(--s) * -.75); border-radius: 50%;
   background: radial-gradient(circle, rgba(0,207,255,.22), rgba(0,255,136,.06) 42%, transparent 68%); animation: holo-aura 4.2s ease-out infinite; pointer-events: none; }
@@ -85,7 +82,7 @@ svg { display: block; }
 @keyframes holo-rise { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: .9; } 100% { transform: translateY(calc(var(--s) * -1)); opacity: 0; } }
 .holo:hover .f { box-shadow: inset 0 0 0 1px rgba(230,237,247,.32), inset 0 0 calc(var(--s) * .26) rgba(0,207,255,.42), 0 0 calc(var(--s) * .2) rgba(0,207,255,.3); }
 @media (prefers-reduced-motion: reduce) {
-  .holo .bob, .holo .stage, .holo .inner, .holo .core, .holo .aura, .holo .pool, .holo .sp, .holo .f::after { animation: none; }
+  .holo .bob, .holo .stage, .holo .core, .holo .aura, .holo .pool, .holo .sp, .holo .f::after { animation: none; }
   .holo .stage { transform: rotateY(-20deg) rotateX(-35.264deg) rotateZ(45deg); } }
 
 /* ---------------- the loader: the cube wakes up as the page's requests come back ---------------- */
@@ -222,12 +219,8 @@ details.fold .fb { padding: 0 18px 18px; }
 .hero p.lead { font-size: 17px; color: var(--text2); margin: 0 0 26px; max-width: 560px; }
 .hero .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
 .hero .vis { position: relative; display: grid; place-items: center; min-height: 420px; }
-.hero .vis .holo { --s: 140px; }
-.hero .vis .tag { position: absolute; padding: 10px 14px; border-radius: 12px; background: rgba(6,9,15,.82); border: 1px solid var(--line2); backdrop-filter: blur(8px); box-shadow: 0 14px 40px rgba(0,0,0,.4); }
-.hero .vis .tag .k { font: 600 10px var(--mono); letter-spacing: 1px; text-transform: uppercase; color: var(--text3); }
-.hero .vis .tag .v { font: 24px/1.15 var(--display); margin-top: 2px; white-space: nowrap; }
-.hero .vis .tag .v small { font: 600 12px var(--mono); color: var(--text3); margin-left: 4px; }
-.hero .vis .t1 { left: 0; top: 10%; } .hero .vis .t2 { right: 0; top: 40%; } .hero .vis .t3 { left: 4%; bottom: 6%; }
+.hero .hstats { margin-top: 30px; max-width: 720px; }
+.hero .hstats .tile .v { font-size: 26px; }
 .steps4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 26px 0 40px; position: relative; }
 .steps4 .st { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 14px; background: rgba(13,21,32,.7); border: 1px solid var(--line); position: relative; }
 .steps4 .st + .st::before { content: ''; position: absolute; left: -15px; top: 50%; width: 16px; height: 1px; background: linear-gradient(90deg, var(--line2), var(--cyan)); }
