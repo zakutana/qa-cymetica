@@ -1,0 +1,77 @@
+/* v4 layer on top of their Agent Tournaments pages. Colours come from THEIR variables (--at-*), none of its own. */
+[hidden] { display: none !important; }
+
+/* their header shows the PAPER | LIVE pill only when signed in; this copy is not, so it is shown */
+#headerModeIndicator { display: inline-flex !important; }
+#headerModeIndicator .mode-label { display: inline !important; }
+
+/* Live mode (their header's PAPER | LIVE pill): the Paper tables give way to the three Live tables */
+#atLiveNote { display: none !important; }
+#atLiveV4 { display: none; }
+html.v4-live #atLiveV4 { display: block; }
+html.v4-live #tables, html.v4-live #tables + .at-secnote, html.v4-live #atLive,
+html.v4-live #open, html.v4-live #open + .at-secnote, html.v4-live #atOpen, html.v4-live .at-done { display: none; }
+.v4-band { color: var(--at-cyan); background: transparent; box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); }
+.at-tcard[data-v4-live] .at-pot .s { color: var(--at-green); }
+
+/* the join-with-a-wallet panel */
+.at-tcard[data-v4-live] .at-tsub { min-height: 64px; align-content: flex-start; }
+.v4-modal { position: fixed; inset: 0; z-index: 100000; display: grid; place-items: start center; overflow-y: auto; padding: 40px 16px; }
+.v4-modal-bg { position: fixed; inset: 0; background: rgba(13, 21, 32, .86); }
+.v4-wallet { position: relative; width: min(1080px, 100%); background: var(--at-panel); border-color: rgba(0, 207, 255, .45); }
+.v4-x { position: absolute; right: 14px; top: 10px; border: 0; background: none; color: var(--at-muted); font-size: 26px; cursor: pointer; }
+.v4-h { font-family: var(--font-display); font-size: 40px; line-height: 1.05; margin: 12px 0 6px; color: var(--at-hi); }
+.v4-lead { margin: 0 0 18px; color: var(--at-ink2); font-size: 14px; }
+.v4-lead b { color: var(--at-cyan); }
+.v4-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.v4-steps > div { padding: 10px 12px; border-radius: 12px; background: var(--at-sunk); border: 1px solid var(--at-line2); font: 500 12.5px/1.5 var(--at-num); color: var(--at-ink2); }
+.v4-steps b { display: flex; align-items: center; gap: 8px; color: var(--at-hi); margin-bottom: 2px; }
+.v4-steps i { font-style: normal; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; color: var(--at-bg); background: var(--at-cyan); }
+.v4-steps .done i { background: var(--at-green); }
+.v4-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; align-items: start; }
+.v4-cols > .at-ctl-box { margin-top: 0; }
+.v4-chains { display: inline-flex; gap: 6px; }
+.v4-chains b { font: 700 11px var(--at-num); letter-spacing: .08em; padding: 5px 10px; border-radius: 8px; color: var(--at-muted); box-shadow: inset 0 0 0 1px var(--at-line); }
+.v4-chains b.on { color: var(--at-cyan); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); }
+.v4-addr { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 12px; background: var(--at-panel); border: 1px solid var(--at-line2); margin: 6px 0 10px; }
+.v4-addr b { font: 700 16px var(--at-num); color: var(--at-hi); }
+.v4-addr span { margin-left: auto; font: 700 12px var(--at-num); color: var(--at-green); }
+.v4-chal { font: 500 12px/1.5 var(--at-num); color: var(--at-ink2); padding: 8px 12px; border-radius: 10px; border: 1px dashed var(--at-line); margin-bottom: 12px; word-break: break-word; }
+.v4-chal span { display: block; font: 700 10px var(--at-num); letter-spacing: .12em; color: var(--at-muted); }
+.v4-rec { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 8px; }
+.v4-rec b { font-size: 22px; }
+.v4-band-box { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--at-cyan-soft); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .5); }
+.v4-band-box b { font-family: var(--font-display); font-size: 18px; color: var(--at-cyan); }
+.v4-band-box span { font: 500 12px/1.5 var(--at-num); color: var(--at-ink2); }
+.v4-trow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--at-line2); }
+.v4-trow b { display: block; font-family: var(--font-display); font-size: 15px; color: var(--at-hi); }
+.v4-trow em { display: block; font: normal 500 11.5px var(--at-num); color: var(--at-ink2); }
+.v4-trow > span:nth-child(2) { font: 600 12.5px var(--at-num); color: var(--at-ink2); }
+.v4-join { padding: 9px 12px; border-radius: 10px; font: 800 12px var(--at-num); color: var(--at-on-green); background: var(--at-green); white-space: nowrap; }
+.v4-terms { font: 500 12px/1.7 var(--at-num); color: var(--at-ink2); margin: 12px 0 0; border-top: 1px solid var(--at-line2); padding-top: 12px; }
+.v4-terms b { color: var(--at-hi); }
+.v4-api { margin: 14px 0 0; padding: 14px 16px; border-radius: 14px; background: var(--at-sunk); border: 1px solid var(--at-line2); font: 500 12px/1.7 var(--at-num); color: var(--at-ink2); white-space: pre-wrap; word-break: break-all; }
+.v4-api i { font-style: normal; color: var(--at-green); }
+@media (max-width: 800px) { .v4-cols, .v4-steps { grid-template-columns: 1fr; } }
+
+/* NEXUS Tune: a switch on a paid plan, a check on a clock, every check a row */
+.at-nexus[data-v4] .at-nx-h { gap: 12px; }
+.at-nexus[data-v4] .at-nx-h .at-lbl { flex: 1; }
+.v4-plan { font: 800 10.5px var(--at-num); letter-spacing: .12em; padding: 4px 9px; border-radius: 99px; color: var(--at-cyan); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); white-space: nowrap; }
+.at-nexus[data-v4] .sub { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--at-ink2); }
+.v4-trig { margin-top: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.v4-trig b { color: var(--at-green); font-size: 20px; }
+.v4-trig span { display: block; margin-top: 4px; font-size: 11px; line-height: 1.4; white-space: normal; }
+.at-nexus[data-v4] .at-nx-log li { display: block; line-height: 1.5; }
+.at-nexus[data-v4] .at-nx-log .at-tag { margin-right: 6px; vertical-align: 1px; }
+.at-nexus[data-v4] .at-nx-log b { color: var(--at-hi); }
+.at-nexus[data-v4] [data-v4-on].v4-dim { opacity: .45; }
+.v4-view { display: flex; align-items: center; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--at-line); font: 600 11px var(--at-num); color: var(--at-muted); }
+.v4-view span { margin-right: auto; }
+.v4-view button { border: 0; border-radius: 8px; padding: 6px 10px; font: 700 11px var(--at-num); color: var(--at-muted); background: transparent; box-shadow: inset 0 0 0 1px var(--at-line); cursor: pointer; }
+.v4-view button.on { color: var(--at-cyan); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); }
+.v4-who { display: inline-block; font: 800 9.5px var(--at-num); letter-spacing: .08em; padding: 3px 6px; border-radius: 6px; color: var(--at-bg); background: var(--at-cyan); vertical-align: 1px; }
+.v4-who.o { color: var(--at-ink2); background: transparent; box-shadow: inset 0 0 0 1px var(--at-line); }
+
+/* the race legend's merged-trades entry */
+.at-race-legend i.v4-n { display: inline-grid; place-items: center; width: 16px; height: 16px; font: 800 9px var(--at-num); color: var(--at-ink); }
