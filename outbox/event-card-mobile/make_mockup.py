@@ -429,18 +429,30 @@ h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:30px}
 """
 
 
-def page():
+# The same deck as an Artifact the operator opens on his phone (2026-10-26, "dej mi to do artifactu at si to muzu na mobilu
+# otevrit a zaswipovat"): the viewer supplies the document skeleton and its own viewport meta, keeps a 16 px side gutter,
+# and passes no query string, so the deck opens on his ESTC card and the five kinds are reached by swiping.
+ARTIFACT_CSS = """
+:root{color-scheme:dark}
+.deck{left:16px;right:16px}.top{padding-left:20px}
+"""
+
+
+def page(artifact=False):
     order = [c["tier"] for c in CARDS]
     order = ["warm"] + [k for k in order if k != "warm"]          # his ESTC card on top when opened
     tiers = "".join(f".card.t-{k}{{--t:{v}}}" for k, v in TIERS.items())
-    return f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Event Cards on a phone</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
-<style>{CSS}{tiers}</style></head><body>
-<header class="top"><span class="lv"><i></i>LIVE</span><span class="prog">0 / {D["deck_size"]}<i><b></b></i></span></header>
+    head = ('<title>Event Card Swipe Deck</title>\n'
+            '<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">\n'
+            f'<style>{CSS}{tiers}{ARTIFACT_CSS if artifact else ""}</style>')
+    body = f"""<header class="top"><span class="lv"><i></i>LIVE</span><span class="prog">0 / {D["deck_size"]}<i><b></b></i></span></header>
 <span class="menu" aria-label="Menu"><i></i></span>
 <main class="deck">{"".join(card_html(c) for c in CARDS)}<div class="scrim"></div>{"".join(buy_sheet(c) for c in CARDS)}</main>
-<script>const ORDER = {json.dumps(order)};{JS}</script></body></html>"""
+<script>const ORDER = {json.dumps(order)};{JS}</script>"""
+    if artifact:
+        return head + "\n" + body + "\n"
+    return (f'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,'
+            f'initial-scale=1,maximum-scale=1,user-scalable=no">\n{head}</head><body>\n{body}</body></html>')
 
 
 def board():
@@ -462,6 +474,7 @@ def board():
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     (HERE / "index.html").write_text(page(), encoding="utf-8")
+    (HERE / "artifact.html").write_text(page(artifact=True), encoding="utf-8")
     (HERE / "board.html").write_text(board(), encoding="utf-8")
     print("written;", ", ".join(f'{c["tier"]} {c["id"][:8]} impact {c.get("headline_impact_score")} sentiment {signed(sent(c))} '
                                 f'share ${share(c):.4f} 1d {pct(day(c))}' for c in CARDS))
