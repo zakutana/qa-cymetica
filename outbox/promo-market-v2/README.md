@@ -9,6 +9,10 @@ It is built to be copied, not redrawn: **every screen reads the live API's own a
 through one function, `api(path)`; on cymetica.com it becomes `fetch(path).then(r => r.json())` and every render
 function stays as it is. `style.css` is self-contained (the site's palette, Archivo Black, JetBrains Mono, Inter).
 
+Colours: cyan `#00cfff`, green `#00ff88`, red `#ff4444`, blue `#3b82f6` and the site's greys. Four tints of those
+are used and nothing else: `#33ffa0` (green button hover), `#e8fbff` (the cube's lit core), `#0f1c2e` and `#05070c`
+(the loader's ground). `render.py` refuses any other hex.
+
 ## What changed against the live build (2026-10-26)
 
 | Live today | v2 |
@@ -41,7 +45,7 @@ function stays as it is. `style.css` is self-contained (the site's palette, Arch
 | Kits | `GET /api/v1/creator/post-kit` | `kit.hashtags`, `kit.{x,reddit,telegram,discord}.rule`, `playbook[]` |
 | Pages & links | `GET /api/v1/creator/expire76/links` | `links[].title, kind, slug, clicks, reads, likes, unique_visitors, last_activity, top_referrers, children[]` |
 | Rewards | `GET /api/v1/creator/rewards` | `summary{paid,unverifiable,pending,et10,etlp,per_post}`, `recent[]` |
-| Radar apps, Agent key, Start an app and a company | the page's own texts | as the live page shows them (`page.json`) |
+| Radar apps, Agent key, Start an app and a company | the page's own texts | as the live page shows them (`page.json`, read 2026-10-26; the queue prompt on Agent key was read 2026-10-22) |
 
 ## New fields this needs (nothing else is new)
 

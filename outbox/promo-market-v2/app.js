@@ -539,7 +539,7 @@
     const K = api('/api/v1/creator/post-kit'), k = K.kit, cat = catalogue();
     const sel = '<select class="in">' + cat.map((c, i) => '<option' + (i === S.kitTool ? ' selected' : '') + '>' + esc(c[0]) + ' · ' + c[1] + '</option>').join('') + '</select>';
     return '<div class="kits">' +
-      '<div class="card"><span class="kick">Page</span><h3>Create a Claude artifact page</h3><span class="dim" style="font-size:13px">' + esc(PAGE.create_page_lead) + '</span>' +
+      '<div class="card"><span class="kick">Page <span class="i tipl" data-tip="' + esc(PAGE.create_page_lead) + '">i</span></span><h3>Create a Claude artifact page</h3>' +
         '<label class="f">Tool, app, product or service <span class="dim">(' + cat.length + ')</span>' + sel + '</label><label class="f">Headline (optional)<input class="in"></label>' +
         '<label class="f">Your pitch (optional — the page\'s opening line)<textarea class="in" rows="3"></textarea></label><button class="btn g" data-act="pagemade">' + ic('plus') + 'Create artifact page</button></div>' +
       '<div class="card"><span class="kick">Post kit</span><h3>Hashtags and tags per outlet</h3><label class="f">Tool, app, product or service' + sel + '</label>' +
@@ -549,7 +549,7 @@
         '<button class="btn c" data-copytext="' + esc(k.x.post) + '">' + ic('copy') + 'Copy X post</button>' +
         '<details class="fold"><summary>' + ic('today') + 'Playbook <span class="dim num">' + K.playbook.length + '</span>' + ic('down', 'chev') + '</summary><div class="fb"><ol class="steps">' +
           K.playbook.map((p) => '<li><span><b>' + esc(p.title) + '.</b> ' + esc(p.text) + '</span></li>').join('') + '</ol></div></details></div>' +
-      '<div class="card"><span class="kick">Community kit</span><h3>Bring Build it Better to a crypto community</h3><span class="dim" style="font-size:13px">' + esc(PAGE.community_lead) + '</span>' +
+      '<div class="card"><span class="kick">Community kit <span class="i tipr" data-tip="' + esc(PAGE.community_lead) + '">i</span></span><h3>Bring Build it Better to a crypto community</h3>' +
         '<label class="f">Community (coin or project)<input class="in" placeholder="e.g. Akash Network"></label><label class="f">Its hashtag (optional)<input class="in" placeholder="#AKT"></label>' +
         '<label class="f">Narrative it rides<select class="in">' + PAGE.narratives.map((n) => '<option>' + esc(n) + '</option>').join('') + '</select></label>' +
         '<button class="btn g" data-act="kitmade">Make the kit</button></div></div>';

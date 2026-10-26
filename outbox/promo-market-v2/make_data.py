@@ -81,7 +81,7 @@ def live():
     for q in j["requests"]:
         d = {k: q.get(k) for k in ["id", "platform", "outlet", "outlet_tier", "category", "subject", "topics",
                                    "relevance", "deadline_at", "hours_left", "status"]}
-        d["query"] = EMAIL.sub("(their address is on the request)", q.get("query") or "")
+        d["query"] = EMAIL.sub("[address on the request]", re.sub(r"\s*\(mailto:[^)]*\)", "", q.get("query") or ""))
         reqs.append(d)
     out["/api/v1/creator/journalist-requests"] = {"stats": j["stats"], "requests": reqs, "pitched": j.get("pitched") or []}
 
