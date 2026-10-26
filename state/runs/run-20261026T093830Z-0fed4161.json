@@ -1,0 +1,163 @@
+{
+  "schema": 2,
+  "run_id": "run-20261026T093830Z-0fed4161",
+  "started_at": "2026-10-26T09:38:39+00:00",
+  "finished_at": "2026-10-26T09:38:51+00:00",
+  "git_head": "0fed4161521a65027f588b9921df6770ae15df70",
+  "git_short": "0fed4161",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:a936a323fa6bbd70f23f841be102f904088760a41911d0a60b513420b309a118",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "882eee762fe8a86233ef5c31ec09b06cb0ceaf59d84d0ce482dd26e91f80bfb4",
+    "/.well-known/agent-card.json": "ec49fd608fdbe1beccd8b4f771e2db4a1d4e060d6a940946a43280b174b553f7",
+    "/.well-known/agent-skills.json": "b0592b7e51942365f9c61fd46bd233118cabf591f7ff46d7387f9311b5a3a7c6",
+    "/.well-known/ai-plugin.json": "6ab78de3594c4cc3eeac74e02d88e28841bc38ca87933cc14172115bf7c1dded",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "1e1b7e2efeaff813451d647f88f52353e50627b882e63a65842dd1238b8e108c",
+    "/openapi-public.json": "c5f7be7e999c33f52262d164dceb45681fde2c25d6d32b79ce46ad14d69905fb",
+    "/llms.txt": "1ac80148e83730ed2aa0c5a8b60ed08f6032fe54d1b92648da85c2d01b4d4e7c",
+    "mcp:tools/list:none": "b4e37c12cf958cfd7d19fc86970f252e6919134bb6a7d781af48503532ff24bf"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_event_cards_swipe_stamp_names_what_the_swipe_does.py -q --no-header --tb=line -p no:cacheprovider",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_event_cards_swipe_stamp_names_what_the_swipe_does.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_event_cards_swipe_stamp_names_what_the_swipe_does.py::test_event_cards_swipe_stamp_names_what_the_swipe_does"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_event_cards_swipe_stamp_names_what_the_swipe_does.py::test_event_cards_swipe_stamp_names_what_the_swipe_does",
+      "component": "rest.event_cards",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 2247,
+      "evidence_ids": [
+        "ff9aa74d2df3415ec3b7ca05cd207b9732b5e480fd3c97169d4dfd9110db2342",
+        "face5d7085b1c9c8965b485cac93ef1f87180026481d48045868ee639c569ab8"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "dragging a card left shows the stamp 'SELL', but letting go runs animateSwipe 'skip' and opens no sheet: the card is skipped, nothing is sold. On /events a visitor who drags a card left reads 'SELL' on it and, letting go, has skipped the card instead",
+        "left": {
+          "left_drag_stamp": "SELL"
+        },
+        "right": {
+          "left_release": {
+            "action": "skip",
+            "sheets": []
+          }
+        },
+        "sources": {
+          "page": "/events (the script tags)",
+          "scripts": [
+            "/static/js/event-cards.js?v=20261022-1"
+          ]
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "scripts_that_build_stamps": [
+            "/static/js/event-cards.js?v=20261022-1"
+          ],
+          "stamps": {
+            "bull": "BUY",
+            "skip": "SELL"
+          },
+          "drag_shows": {
+            "right": "bull",
+            "left": "skip"
+          },
+          "release_does": {
+            "right": {
+              "action": "bull",
+              "sheets": [
+                "openBuySheet"
+              ]
+            },
+            "left": {
+              "action": "skip",
+              "sheets": []
+            }
+          },
+          "sides": {
+            "left": {
+              "stamp": "SELL",
+              "names": "sell",
+              "release": {
+                "action": "skip",
+                "sheets": []
+              },
+              "consistent": false,
+              "why": "dragging a card left shows the stamp 'SELL', but letting go runs animateSwipe 'skip' and opens no sheet"
+            },
+            "right": {
+              "stamp": "BUY",
+              "names": "buy",
+              "release": {
+                "action": "bull",
+                "sheets": [
+                  "openBuySheet"
+                ]
+              },
+              "consistent": true,
+              "why": "the stamp 'BUY' and the release (bull, ['openBuySheet']) agree"
+            }
+          },
+          "scripts_read": 25,
+          "scripts_unread": [],
+          "page_date": "Mon, 26 Oct 2026 09:38:41 GMT"
+        }
+      },
+      "check_fingerprint": "bb1edca8b457ce03ea661fc3fb813226700c4fc892aa85c3530c432a116f00b8",
+      "helpers_fingerprint": "a05df200aad2f2b90c83884973d604c53b5af92afb8708e87663e7656b21b788",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "E   AssertionError: dragging a card left shows the stamp 'SELL', but letting go runs animateSwipe 'skip' and opens no sheet: the card is skipped, nothing is sold. On /events a visitor who drags a card left reads 'SELL' on it and, letting go, has skipped the card instead\n      left  = {'left_drag_stamp': 'SELL'}\n      right = {'left_release': {'action': 'skip', 'sheets': []}}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 2,
+    "limit": 2000,
+    "remaining": 1990,
+    "fraction_used": 0.005,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:a936a323fa6bbd70f23f841be102f904088760a41911d0a60b513420b309a118",
+  "exit_status": 1
+}

@@ -6808,6 +6808,40 @@ reports:
       only.
 
 
+  - key: event-cards-left-swipe-stamp-says-sell-but-skips
+    findings: [CYM-event_cards_swipe_stamp_names_what_the_swipe_does]
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/events
+    title: "/events: dragging an Event Card left shows a red SELL stamp, but letting go only skips the card"
+    expected: >
+      The stamp that fades in while a card is dragged names what letting go will do. On
+      https://cymetica.com/events a right drag shows BUY and a right swipe opens the Buy sheet, so that side is
+      right. A left swipe skips the card (the keyboard hint on /events/{id} says "Skip" for the left arrow), so
+      the left stamp names no trade, or a left swipe sells.
+    actual: >
+      Read on 2026-10-26 at 09:38 UTC. The deck script /events loads (event-cards.js?v=20261022-1) builds the
+      left stamp with the class ec-stamp--skip and the text "SELL", fades it in while the card is dragged more
+      than 20 px left, and on a release past the threshold runs animateSwipe(el, 'skip'), whose own comment says
+      "left = skip (fly off)": the card leaves, the next card comes, no Sell sheet opens and nothing is sold. In a
+      browser, signed out: held 40 px to the left, the red stamp read SELL across the card's top left corner, at
+      1440 px and at 390 px alike (further left it slides off with the card's left edge, at 70 px only "LL"
+      shows); held 220 px, its opacity was 1 and the card had ec-card--glow-skip; let go, the deck showed the
+      next card and no sheet was open.
+    steps:
+      - 'Open https://cymetica.com/events, press on the top card and drag it about 40 px to the left without letting go -> a red stamp "SELL" fades in at the card''s top left corner'
+      - 'Drag it past about 120 px and let go -> the card flies off and the next card shows; no Sell sheet opens and no order is placed'
+      - 'GET https://cymetica.com/static/js/event-cards.js?v=20261022-1 -> skipLabel.className = ''ec-stamp ec-stamp--skip''; skipLabel.textContent = ''SELL''; ... } else if (curX < -20) { skipStamp.style.opacity = ratio; ... if (dir === ''right'') { animateSwipe(el, ''bull''); openBuySheet(card); } else { animateSwipe(el, ''skip''); }'
+    body: >
+      A trader who holds the card and drags it left to sell sees SELL on the card, lets go, and still holds the
+      position; one who only meant to pass on the card is told they are selling. Changing the left stamp's text to
+      SKIP (or an icon), or making a left swipe sell, would fix it. Low: nothing is traded by mistake, the label
+      is wrong. Our check reads the script /events loads and fails while a stamp that names a trade shows on a
+      side whose release neither makes that trade nor opens its sheet; it passes when the left stamp names no
+      trade, when a left swipe sells or opens the Sell sheet, or when no stamp shows on a left drag; it is
+      inconclusive if the page or the script cannot be read, or the stamps, the drag handler or the release
+      cannot be found. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
