@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build it Better, the comparison block</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e17; --ink: #e8eef7; --dim: #8b97ab; --green: #00ff88; --cyan: #00cfff; --red: #ff4444;
+  --row: 104px;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; }
+body {
+  background:
+    radial-gradient(900px 380px at 50% -80px, rgba(0, 207, 255, .10), transparent 70%),
+    linear-gradient(rgba(0, 207, 255, .035) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(90deg, rgba(0, 207, 255, .035) 1px, transparent 1px) 0 0 / 56px 56px,
+    var(--bg);
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding: 36px 28px 64px; }
+.hero { text-align: center; }
+.pill {
+  display: inline-flex; align-items: center; gap: 10px; padding: 8px 20px; border-radius: 999px;
+  border: 1px solid rgba(0, 207, 255, .38); background: rgba(0, 207, 255, .06);
+  color: var(--cyan); font-weight: 800; font-size: 12px; letter-spacing: .26em; text-transform: uppercase;
+}
+.pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
+h1 { font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-weight: 400; font-size: clamp(34px, 5.6vw, 66px); line-height: 1.08; margin: 22px 0 0; letter-spacing: -.01em; }
+h1 .c { color: var(--cyan); display: block; }
+.lead { margin: 20px auto 0; max-width: 780px; color: var(--dim); font-size: 15px; line-height: 1.6; }
+.lead b { display: block; margin-top: 6px; color: var(--green); font-weight: 600; }
+.cta { display: flex; align-items: center; justify-content: center; gap: 28px; margin-top: 26px; flex-wrap: wrap; }
+.btn {
+  display: inline-block; padding: 15px 30px; border-radius: 14px; font-weight: 800; font-size: 15px; color: #04121a; text-decoration: none;
+  background: linear-gradient(90deg, var(--cyan), var(--green)); box-shadow: 0 0 34px rgba(0, 255, 136, .28);
+}
+.link { color: var(--cyan); text-decoration: none; font-size: 15px; }
+.link b { color: #fff; font-size: 22px; padding: 0 4px; }
+.pulse { margin: 34px 0 -2px; height: 44px; }
+.pulse svg { width: 100%; height: 44px; display: block; }
+
+.cmp { display: grid; grid-template-columns: 1fr 112px 1fr; align-items: start; }
+.panel { border-radius: 22px; padding: 0 30px; position: relative; overflow: hidden; }
+.panel.bad { background: linear-gradient(180deg, rgba(255, 68, 68, .09), rgba(255, 68, 68, .02)); border: 1px dashed rgba(255, 68, 68, .34); }
+.panel.good { background: linear-gradient(180deg, rgba(0, 255, 136, .10), rgba(0, 255, 136, .03)); border: 1px solid rgba(0, 255, 136, .42); box-shadow: 0 0 44px rgba(0, 255, 136, .10) inset; }
+.head { height: 132px; display: flex; align-items: center; gap: 18px; border-bottom: 1px dashed rgba(139, 151, 171, .22); }
+.head .t small { display: block; font-size: 11px; letter-spacing: .3em; font-weight: 800; text-transform: uppercase; }
+.head .t h2 { font-family: 'Archivo Black', 'Arial Black', Impact, sans-serif; font-weight: 400; margin: 6px 0 6px; font-size: 25px; letter-spacing: .01em; white-space: nowrap; }
+.head .t p { margin: 0; font-size: 12.5px; color: var(--dim); }
+.bad .head small, .bad .head h2 { color: var(--red); }
+.good .head small, .good .head h2 { color: var(--green); }
+.badge { flex: none; width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; }
+.bad .badge { border: 1px solid rgba(255, 68, 68, .4); background: rgba(255, 68, 68, .08); }
+.good .badge { border: 1px solid rgba(0, 255, 136, .5); background: rgba(0, 255, 136, .08); }
+.row { height: var(--row); display: flex; align-items: center; gap: 18px; border-bottom: 1px dashed rgba(139, 151, 171, .14); }
+.row:last-child { border-bottom: 0; }
+.row svg.ic { flex: none; width: 46px; height: 46px; }
+.row p { margin: 0; font-size: 14px; line-height: 1.5; color: #c9d3e2; }
+.row p b { color: #fff; font-weight: 800; }
+.bad .row .x { margin-left: auto; flex: none; width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(255, 68, 68, .5); background: rgba(255, 68, 68, .1); display: grid; place-items: center; }
+.good .row .ok { flex: none; width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(0, 255, 136, .55); background: rgba(0, 255, 136, .1); display: grid; place-items: center; }
+
+.mid { position: relative; padding-top: 0; }
+.vs { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); width: 76px; height: 76px; border-radius: 50%; display: grid; place-items: center; font-family: 'Archivo Black', sans-serif; font-size: 22px; background: #0a0e17;
+  border: 2px solid transparent; background-clip: padding-box; box-shadow: 0 0 0 2px rgba(255, 68, 68, .65), 0 0 22px rgba(0, 255, 136, .35); }
+.arrows { position: absolute; left: 0; right: 0; top: 132px; }
+.arrows div { height: var(--row); display: flex; align-items: center; }
+.arrows svg { width: 100%; height: 20px; overflow: visible; }
+
+@media (max-width: 980px) {
+  .cmp { grid-template-columns: 1fr; gap: 18px; }
+  .mid { display: none; }
+  .head { height: auto; padding: 22px 0; }
+  .row { height: auto; padding: 18px 0; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="hero">
+    <span class="pill"><i></i>Autonomous software engineering</span>
+    <h1>Beyond raw prompts.<span class="c">Production-grade apps, shipped.</span></h1>
+    <p class="lead">Standard AI coding tools give you the kit, not the surgeon.<b>Specify your application: Cymetica designs, builds, and deploys it end-to-end.</b></p>
+    <div class="cta">
+      <a class="btn" href="#">Deploy an app &rarr;</a>
+      <a class="link" href="#">Explore <b>132</b> production builds &rarr;</a>
+    </div>
+  </section>
+
+  <div class="pulse" aria-hidden="true">
+    <svg viewBox="0 0 1200 44" preserveAspectRatio="none">
+      <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#ff4444" stop-opacity=".75"/><stop offset=".48" stop-color="#ff4444" stop-opacity=".5"/><stop offset=".52" stop-color="#00ff88" stop-opacity=".5"/><stop offset="1" stop-color="#00ff88" stop-opacity=".85"/></linearGradient></defs>
+      <path d="M0 24 H70 l10 -9 l9 9 H150 l9 -17 l10 31 l10 -14 H250 l8 -8 l8 8 H330 l9 -17 l10 31 l10 -14 H430 l9 -9 l9 9 H520 l9 -17 l10 31 l10 -14 H600 H680 l9 -17 l10 31 l10 -14 H770 l9 -9 l9 9 H860 l9 -17 l10 31 l10 -14 H950 l9 -9 l9 9 H1040 l9 -17 l10 31 l10 -14 H1200" fill="none" stroke="url(#g)" stroke-width="1.6" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <section class="cmp">
+
+    <!-- ON YOUR OWN -->
+    <div class="panel bad">
+      <div class="head">
+        <div class="badge"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff4444" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4.5l5 5"/><path d="M4 20l1.2-4.4L16.7 4.1a1.6 1.6 0 0 1 2.2 0l1 1a1.6 1.6 0 0 1 0 2.2L8.4 18.8z"/><path d="M13 7l4 4"/></svg></div>
+        <div class="t"><small>On your own</small><h2>PROMPT AND GUESS</h2><p>AI gives you the kit, not the surgeon</p></div>
+      </div>
+
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#ff4444" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M24 5l15 5.5v11.2c0 9-6 16.3-15 20.3C15 38 9 30.700 9 21.700V10.500z"/><rect x="18" y="21" width="12" height="9.500" rx="2"/><path d="M20.500 21v-3.200a3.500 3.500 0 0 1 7 0V21"/></svg>
+        <p><b>Unaudited security:</b> you manage all API keys, permissions, and patches manually</p>
+        <span class="x"><svg width="12" height="12" viewBox="0 0 12 12" stroke="#ff4444" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></span>
+      </div>
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#ff4444" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="12" r="4.500"/><circle cx="11" cy="36" r="4.500"/><circle cx="37" cy="24" r="4.500"/><circle cx="24" cy="24" r="3"/><path d="M15.200 13.800L21.500 22M15.200 34.200L21.500 26M27 24h5.500"/><path d="M30 8l5 3-1 5.500" stroke-dasharray="2 3"/></svg>
+        <p><b>Fragile execution:</b> agents get caught in loops or stall, requiring manual intervention</p>
+        <span class="x"><svg width="12" height="12" viewBox="0 0 12 12" stroke="#ff4444" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></span>
+      </div>
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#ff4444" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 35a8.500 8.500 0 0 1-.8-17A11 11 0 0 1 34.500 15.500 8 8 0 0 1 35 35z"/><path d="M24 31V22M20 25.500l4-4.500 4 4.500"/><path d="M18.500 40.500c1.200 1.800 3 1.800 5.500 0s4.300-1.800 5.500 0" /></svg>
+        <p><b>High maintenance overhead:</b> keeping pace with evolving agent tooling drains time</p>
+        <span class="x"><svg width="12" height="12" viewBox="0 0 12 12" stroke="#ff4444" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></span>
+      </div>
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#ff4444" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="22" cy="12" rx="11" ry="4.500"/><path d="M11 12v9c0 2.500 4.900 4.500 11 4.500M33 12v6"/><path d="M11 21v9c0 2.500 4.900 4.500 11 4.500"/><path d="M34 27v-3.500M40 27v-3.500M31.500 27h11v4.500a5.500 5.500 0 0 1-11 0zM37 37v4.500"/></svg>
+        <p><b>Manual data integration:</b> you source and maintain every market data feed yourself</p>
+        <span class="x"><svg width="12" height="12" viewBox="0 0 12 12" stroke="#ff4444" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></span>
+      </div>
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#ff4444" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="4"/><circle cx="9" cy="14" r="3"/><circle cx="39" cy="14" r="3"/><circle cx="9" cy="35" r="3"/><circle cx="39" cy="35" r="3"/><circle cx="24" cy="6.500" r="2.500"/><path d="M20.500 22L11.500 15.500M27.500 22l9-6.500M20.500 26l-9 6.500M27.500 26l9 6.500M24 20v-11" stroke-dasharray="3 2.500"/></svg>
+        <p><b>Blind to market sentiment:</b> no native tooling to quantify community trends</p>
+        <span class="x"><svg width="12" height="12" viewBox="0 0 12 12" stroke="#ff4444" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></span>
+      </div>
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#ff4444" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="22" cy="27" r="14"/><path d="M18 7h8M22 7v6M35 13l2.500-2.500"/><path d="M16 27.500l4.500 4.500L29 23"/><circle cx="37" cy="37" r="7" fill="#0a0e17"/><path d="M34 34l6 6M40 34l-6 6"/></svg>
+        <p><b>Undefined deliverables:</b> no formal specification, automated testing, or SLA</p>
+        <span class="x"><svg width="12" height="12" viewBox="0 0 12 12" stroke="#ff4444" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></span>
+      </div>
+    </div>
+
+    <!-- middle: VS and arrows -->
+    <div class="mid">
+      <div class="vs">VS</div>
+      <div class="arrows">
+        <div><svg viewBox="0 0 100 20" preserveAspectRatio="none"><defs><linearGradient id="a" gradientUnits="userSpaceOnUse" x1="2" y1="0" x2="92" y2="0"><stop offset="0" stop-color="#ff4444" stop-opacity=".7"/><stop offset="1" stop-color="#00ff88"/></linearGradient></defs><path d="M2 10H92" stroke="url(#a)" stroke-width="1.5"/><path d="M88 5l8 5-8 5" fill="none" stroke="#00ff88" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="52" cy="10" r="3" fill="#e8fff4"/></svg></div>
+        <div><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M2 10H92" stroke="url(#a)" stroke-width="1.5"/><path d="M88 5l8 5-8 5" fill="none" stroke="#00ff88" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="38" cy="10" r="3" fill="#e8fff4"/></svg></div>
+        <div><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M2 10H92" stroke="url(#a)" stroke-width="1.5"/><path d="M88 5l8 5-8 5" fill="none" stroke="#00ff88" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="10" r="3" fill="#e8fff4"/></svg></div>
+        <div><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M2 10H92" stroke="url(#a)" stroke-width="1.5"/><path d="M88 5l8 5-8 5" fill="none" stroke="#00ff88" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="46" cy="10" r="3" fill="#e8fff4"/></svg></div>
+        <div><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M2 10H92" stroke="url(#a)" stroke-width="1.5"/><path d="M88 5l8 5-8 5" fill="none" stroke="#00ff88" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="10" r="3" fill="#e8fff4"/></svg></div>
+        <div><svg viewBox="0 0 100 20" preserveAspectRatio="none"><path d="M2 10H92" stroke="url(#a)" stroke-width="1.5"/><path d="M88 5l8 5-8 5" fill="none" stroke="#00ff88" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="70" cy="10" r="3" fill="#e8fff4"/></svg></div>
+      </div>
+    </div>
+
+    <!-- WITH CYMETICA -->
+    <div class="panel good">
+      <div class="head">
+        <div class="badge"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.500"/><path d="M5 12.500h3.500l2-5 3 9 2-4H19"/></svg></div>
+        <div class="t"><small>With Cymetica</small><h2>THE CYMETICA PIPELINE</h2><p>The surgeon that ships production software</p></div>
+      </div>
+
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#00ff88" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M24 5l15 5.5v11.2c0 9-6 16.3-15 20.3C15 38 9 30.700 9 21.700V10.500z"/><path d="M17 23l5 5 9-10"/></svg>
+        <p><b>Security by default:</b> apps run read-only, with human-in-the-loop review for financial actions</p>
+        <span class="ok"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="#00ff88" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.500l2.800 2.800L10 3.500"/></svg></span>
+      </div>
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#00ff88" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="12" r="4.500"/><circle cx="11" cy="36" r="4.500"/><circle cx="37" cy="24" r="4.500"/><circle cx="24" cy="24" r="3"/><path d="M15.200 13.800L21.500 22M15.200 34.200L21.500 26M27 24h5.500"/><path d="M30 8l5 3-1 5.500" stroke-dasharray="2 3"/></svg>
+        <p><b>Deterministic orchestration:</b> automated recovery prevents stalls, backed by strict SLA monitoring</p>
+        <span class="ok"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="#00ff88" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.500l2.800 2.800L10 3.500"/></svg></span>
+      </div>
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#00ff88" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 35a8.500 8.500 0 0 1-.8-17A11 11 0 0 1 34.500 15.500 8 8 0 0 1 35 35z"/><path d="M24 31V22M20 25.500l4-4.500 4 4.500"/><path d="M18.500 40.500c1.200 1.800 3 1.800 5.500 0s4.300-1.800 5.500 0"/></svg>
+        <p><b>Zero-maintenance infrastructure:</b> continuous backend upgrades without managing workflows</p>
+        <span class="ok"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="#00ff88" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.500l2.800 2.800L10 3.500"/></svg></span>
+      </div>
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#00ff88" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="22" cy="12" rx="11" ry="4.500"/><path d="M11 12v9c0 2.500 4.900 4.500 11 4.500M33 12v6"/><path d="M11 21v9c0 2.500 4.900 4.500 11 4.500"/><path d="M34 27v-3.500M40 27v-3.500M31.500 27h11v4.500a5.500 5.500 0 0 1-11 0zM37 37v4.500"/></svg>
+        <p><b>Pre-integrated data layer:</b> instant access to real-time pricing, news, and market APIs</p>
+        <span class="ok"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="#00ff88" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.500l2.800 2.800L10 3.500"/></svg></span>
+      </div>
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#00ff88" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="24" r="4"/><circle cx="9" cy="14" r="3"/><circle cx="39" cy="14" r="3"/><circle cx="9" cy="35" r="3"/><circle cx="39" cy="35" r="3"/><circle cx="24" cy="6.500" r="2.500"/><path d="M20.500 22L11.500 15.500M27.500 22l9-6.500M20.500 26l-9 6.500M27.500 26l9 6.500M24 20v-11"/></svg>
+        <p><b>Quantified market intelligence:</b> Belief Network engine analyzes real-time crypto sentiment</p>
+        <span class="ok"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="#00ff88" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.500l2.800 2.800L10 3.500"/></svg></span>
+      </div>
+      <div class="row">
+        <svg class="ic" viewBox="0 0 48 48" fill="none" stroke="#00ff88" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="22" cy="27" r="14"/><path d="M18 7h8M22 7v6M35 13l2.500-2.500"/><path d="M16 27.500l4.500 4.500L29 23"/><circle cx="37" cy="37" r="7" fill="#0a0e17"/><path d="M33.500 37l2.500 2.500 4-5"/></svg>
+        <p><b>Guaranteed delivery &amp; QA:</b> locked specification, a 24h SLA clock, and strict acceptance testing</p>
+        <span class="ok"><svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="#00ff88" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.500l2.800 2.800L10 3.500"/></svg></span>
+      </div>
+    </div>
+
+  </section>
+</div>
+</body>
+</html>
