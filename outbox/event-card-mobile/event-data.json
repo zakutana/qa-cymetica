@@ -1,0 +1,1684 @@
+{
+ "read_at": "2026-10-26T08:59:38+00:00",
+ "deck_size": 50,
+ "deck_position": 0,
+ "card": {
+  "id": "9b46ad13-1bdc-4db6-a3d6-89031c2fa07e",
+  "title": "ESTC — SAIB: CRM to acquire Braze ($5.7B)",
+  "summary": "CRM is acquiring Braze (a $5.7B deal). This Single AI Index Basket (SAIB) tracks the deal's ripple effect through the one public company most exposed to it (shown below) — a competitor, supplier or sector peer — so you can trade the market reaction beyond the headline itself.",
+  "image_url": "https://cymetica.com/uploads/headline-images/ma-ripple-1052.png",
+  "source_url": "https://www.streetinsider.com/Corporate+News/Salesforce+to+acquire+Braze+for+%245.66+billion/27206870.html",
+  "report_url": "/marr/estc-20261020-1722",
+  "status": "live",
+  "visibility": "public",
+  "listed_in_default_feed": true,
+  "listing_params": null,
+  "card_url": "/events/9b46ad13-1bdc-4db6-a3d6-89031c2fa07e",
+  "share_url": "https://cymetica.com/events/9b46ad13-1bdc-4db6-a3d6-89031c2fa07e",
+  "share_price_usd": null,
+  "index_base": 100.0,
+  "current_index": 106.831456,
+  "pw_index": 102.43,
+  "pw_base": 95.88,
+  "pw_live": true,
+  "bull_notional_usdc": 0.0,
+  "bear_notional_usdc": 0.0,
+  "created_at": "2026-10-20T17:18:21.500654+00:00",
+  "is_featured": true,
+  "published_at": null,
+  "basket": [
+   {
+    "symbol": "ESTC",
+    "weight": 1.0,
+    "venue": "finnhub",
+    "asset_type": "stock",
+    "image_url": "https://financialmodelingprep.com/image-stock/ESTC.png",
+    "is_direct": null,
+    "association_score": 0.0
+   }
+  ],
+  "effective_relevance": 0.0,
+  "vehicle_structure": "SAIB",
+  "vehicle_structure_name": "SAIB - Single AI Index Basket (SAIB)",
+  "pons_coin": null,
+  "arc_coin": null,
+  "evcdx_symbol": null,
+  "pro_terminal_url": null,
+  "short_execution": "perp",
+  "perp_symbol": "EVCDX-ESTC-SAIB-CRM-TO-ACQ",
+  "headline_sentiment_score": -0.6,
+  "headline_impact_score": null,
+  "headline_impact_score_is_ai_scored": null,
+  "direction": null,
+  "strategy_name": null,
+  "contract_spec": {
+   "resolution_source": null,
+   "fallback_source": null,
+   "methodology": null,
+   "resolution_at_utc": null,
+   "dispute_window": "1h",
+   "appellate_body": "Cymetica Operations",
+   "max_price_staleness": null,
+   "notes": null,
+   "version": 1,
+   "resolution_basis": "perpetual"
+  },
+  "trading_closes_at": null,
+  "seconds_to_close": null,
+  "user_position": null,
+  "tradeable_now": false,
+  "trading_blocked_reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7.",
+  "has_stock_legs": true,
+  "us_market_open": false,
+  "stock_tokenized_live": false,
+  "stock_backed_live": false,
+  "stock_backed_capacity_usdc": 0.0,
+  "upvotes": 0,
+  "upvoted_by_me": false
+ },
+ "behind": [
+  {
+   "id": "50eb3e84-88ce-4b3b-8a09-32687bb18e0d",
+   "title": "ACIC — SAIB: SFTBY to acquire Allied Universal ($18.0B)",
+   "summary": "SFTBY is acquiring Allied Universal (a $18.0B deal). This Single AI Index Basket (SAIB) tracks the deal's ripple effect through the one public company most exposed to it (shown below) — a competitor, supplier or sector peer — so you can trade the market reaction beyond the headline itself.",
+   "image_url": "https://cymetica.com/uploads/headline-images/ma-ripple-1038.png",
+   "source_url": "https://www.investing.com/news/company-news/softbank-in-early-talks-to-acquire-allied-universal-for-up-to-18-billion--wsj-4955709",
+   "report_url": "/marr/acic-20261019-1912",
+   "status": "live",
+   "visibility": "public",
+   "listed_in_default_feed": true,
+   "listing_params": null,
+   "card_url": "/events/50eb3e84-88ce-4b3b-8a09-32687bb18e0d",
+   "share_url": "https://cymetica.com/events/50eb3e84-88ce-4b3b-8a09-32687bb18e0d",
+   "share_price_usd": null,
+   "index_base": 100.0,
+   "current_index": 99.19427,
+   "pw_index": 11.08,
+   "pw_base": 11.17,
+   "pw_live": true,
+   "bull_notional_usdc": 0.0,
+   "bear_notional_usdc": 0.0,
+   "created_at": "2026-10-19T19:10:51.312278+00:00",
+   "is_featured": true,
+   "published_at": null,
+   "basket": [
+    {
+     "symbol": "ACIC",
+     "weight": 1.0,
+     "venue": "finnhub",
+     "asset_type": "stock",
+     "image_url": "https://financialmodelingprep.com/image-stock/ACIC.png",
+     "is_direct": null,
+     "association_score": 0.0
+    }
+   ],
+   "effective_relevance": 0.0,
+   "vehicle_structure": "SAIB",
+   "vehicle_structure_name": "SAIB - Single AI Index Basket (SAIB)",
+   "pons_coin": null,
+   "arc_coin": null,
+   "evcdx_symbol": null,
+   "pro_terminal_url": null,
+   "short_execution": "perp",
+   "perp_symbol": "EVCDX-ACIC-SAIB-SFTBY-TO-A",
+   "headline_sentiment_score": 0.4,
+   "headline_impact_score": null,
+   "headline_impact_score_is_ai_scored": null,
+   "direction": null,
+   "strategy_name": null,
+   "contract_spec": {
+    "resolution_source": null,
+    "fallback_source": null,
+    "methodology": null,
+    "resolution_at_utc": null,
+    "dispute_window": "1h",
+    "appellate_body": "Cymetica Operations",
+    "max_price_staleness": null,
+    "notes": null,
+    "version": 1,
+    "resolution_basis": "perpetual"
+   },
+   "trading_closes_at": null,
+   "seconds_to_close": null,
+   "user_position": null,
+   "tradeable_now": false,
+   "trading_blocked_reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7.",
+   "has_stock_legs": true,
+   "us_market_open": false,
+   "stock_tokenized_live": false,
+   "stock_backed_live": false,
+   "stock_backed_capacity_usdc": 0.0,
+   "upvotes": 0,
+   "upvoted_by_me": false
+  },
+  {
+   "id": "19df97e4-902a-4483-b148-283f8cda99f5",
+   "title": "RMR — SAIB: LXP Industrial Trust acquisition ($5.2B)",
+   "summary": "LXP Industrial Trust is being acquired (a $5.2B deal). This Single AI Index Basket (SAIB) tracks the deal's ripple effect through the one public company most exposed to it (shown below) — a competitor, supplier or sector peer — so you can trade the market reaction beyond the headline itself.",
+   "image_url": "https://cymetica.com/uploads/headline-images/ma-ripple-1037-og.jpg",
+   "source_url": "http://www.renx.ca/index.php/brookfield-cpp-to-acquires-lxp-industrial-for-52-billion",
+   "report_url": "/reports/ai-analyst/2026-10-20-deal1037-rmr",
+   "status": "live",
+   "visibility": "public",
+   "listed_in_default_feed": true,
+   "listing_params": null,
+   "card_url": "/events/19df97e4-902a-4483-b148-283f8cda99f5",
+   "share_url": "https://cymetica.com/events/19df97e4-902a-4483-b148-283f8cda99f5",
+   "share_price_usd": null,
+   "index_base": 100.0,
+   "current_index": 98.868778,
+   "pw_index": 17.48,
+   "pw_base": 17.68,
+   "pw_live": true,
+   "bull_notional_usdc": 0.0,
+   "bear_notional_usdc": 0.0,
+   "created_at": "2026-10-19T16:07:40.184197+00:00",
+   "is_featured": false,
+   "published_at": null,
+   "basket": [
+    {
+     "symbol": "RMR",
+     "weight": 1.0,
+     "venue": "finnhub",
+     "asset_type": "stock",
+     "image_url": "https://financialmodelingprep.com/image-stock/RMR.png",
+     "is_direct": null,
+     "association_score": 0.0
+    }
+   ],
+   "effective_relevance": 0.0,
+   "vehicle_structure": "SAIB",
+   "vehicle_structure_name": "SAIB - Single AI Index Basket (SAIB)",
+   "pons_coin": null,
+   "arc_coin": null,
+   "evcdx_symbol": null,
+   "pro_terminal_url": null,
+   "short_execution": "perp",
+   "perp_symbol": "EVCDX-RMR-SAIB-LXP-INDUSTR",
+   "headline_sentiment_score": 0.35,
+   "headline_impact_score": null,
+   "headline_impact_score_is_ai_scored": null,
+   "direction": null,
+   "strategy_name": null,
+   "contract_spec": {
+    "resolution_source": null,
+    "fallback_source": null,
+    "methodology": null,
+    "resolution_at_utc": null,
+    "dispute_window": "1h",
+    "appellate_body": "Cymetica Operations",
+    "max_price_staleness": null,
+    "notes": null,
+    "version": 1,
+    "resolution_basis": "perpetual"
+   },
+   "trading_closes_at": null,
+   "seconds_to_close": null,
+   "user_position": null,
+   "tradeable_now": false,
+   "trading_blocked_reason": "US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7.",
+   "has_stock_legs": true,
+   "us_market_open": false,
+   "stock_tokenized_live": false,
+   "stock_backed_live": false,
+   "stock_backed_capacity_usdc": 0.0,
+   "upvotes": 0,
+   "upvoted_by_me": false
+  }
+ ],
+ "hist": {
+  "card_id": "9b46ad13-1bdc-4db6-a3d6-89031c2fa07e",
+  "interval": "1d",
+  "index_base": 100.0,
+  "nav_base_usd": 1.0,
+  "gaps": [],
+  "gaps_note": "A gap is a stretch with no recorded index reading for this card. No values are filled in for it; returns measured across a gap compare the readings on either side.",
+  "points": [
+   {
+    "t": "2026-10-25T08:59:54.101489+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:04:32.706827+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:09:53.222515+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:14:43.463827+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:19:57.877206+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:24:56.627779+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:29:59.082675+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:34:53.449294+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:39:59.077020+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:44:53.021074+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:49:55.456990+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:54:27.917904+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T09:59:49.514761+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:04:54.655366+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:09:38.514128+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:14:28.123653+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:19:46.038814+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:24:58.990771+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:29:59.636133+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:34:30.076056+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:39:31.407650+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:44:31.375067+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:49:46.369373+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:54:32.488264+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T10:59:05.434775+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:04:33.151013+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:09:48.115866+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:14:49.028138+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:19:21.550662+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:24:36.896183+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:29:36.101790+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:34:46.620468+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:39:07.808894+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:44:37.811456+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:49:38.976173+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:54:19.940015+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T11:59:45.326273+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T12:04:21.116986+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T12:09:37.803396+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T12:14:22.434089+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T12:19:21.583158+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T12:23:09.287722+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T12:29:51.575284+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T12:34:43.690563+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-25T12:38:43.410542+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T12:44:23.893376+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T12:49:20.530132+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T12:54:31.237761+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T12:59:48.899155+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:04:55.329409+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:09:16.454162+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:14:44.608418+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:19:42.302947+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:24:55.777544+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:29:54.901775+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:34:41.878651+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:39:23.136972+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:44:53.636540+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:49:53.781821+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:54:54.602333+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T13:58:57.558386+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:04:55.195278+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:09:42.892102+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:14:37.316123+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:19:21.275280+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:24:49.464945+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:29:37.253425+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:34:38.792732+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:39:57.373932+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:44:20.238587+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:49:47.268542+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:54:31.820609+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T14:59:50.776465+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:04:56.137302+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:09:53.091262+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:14:35.528732+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:19:14.702340+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:24:59.463201+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:29:53.775587+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:34:23.019903+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:39:33.232254+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:44:30.106638+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:49:42.883866+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:54:39.884398+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T15:59:39.756495+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:04:40.053802+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:09:28.974446+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:14:41.484261+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:19:41.581954+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:24:52.679057+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:29:36.534374+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:34:38.894462+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:39:57.528758+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:44:28.632920+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:49:36.083761+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:54:40.545840+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T16:59:54.608912+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:04:20.213985+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:09:43.115146+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:14:48.524133+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:19:37.361788+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:24:17.648941+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:29:45.671664+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:34:46.441620+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:39:45.105044+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:44:59.988067+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:49:58.730737+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:54:59.368451+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T17:59:42.765721+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:04:53.938302+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:09:43.579154+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:14:43.921011+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:19:38.133029+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:24:44.689899+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:29:45.852235+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:34:24.126226+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:39:50.930694+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:44:50.402489+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:49:26.789278+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:54:52.375257+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T18:59:52.153714+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:04:53.579398+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:09:53.146082+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:14:53.652409+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:19:53.909621+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:24:54.330476+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:29:25.628731+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:34:59.584790+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:39:50.052865+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:44:50.360368+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:49:29.363340+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:54:49.838665+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T19:59:45.338290+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:04:52.916429+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:09:33.421890+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:14:36.704771+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:19:37.302941+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:24:35.803929+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:29:36.359918+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:34:39.328924+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:39:37.843031+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:44:45.108979+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:49:08.000249+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:54:43.906773+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T20:59:33.632104+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:04:54.903500+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:09:39.197097+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:14:37.665869+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:19:41.942445+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:24:27.763668+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:29:28.543131+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:34:56.359154+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:39:49.352132+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:44:27.323532+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:49:51.774854+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:54:57.881668+00:00",
+    "index": 102.430121,
+    "share_price": 1.024301
+   },
+   {
+    "t": "2026-10-25T21:59:43.647799+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:04:55.400062+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:09:15.102467+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:14:30.637098+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:19:45.736731+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:24:46.564359+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:29:46.678706+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:34:46.198777+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:39:35.574227+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:44:35.586103+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:49:37.783308+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:54:36.828919+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T22:59:44.149142+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:04:38.065318+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:09:39.537685+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:14:36.985449+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:19:35.339262+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:24:37.466881+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:29:37.749614+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:34:39.249021+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:39:13.348284+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:44:56.299701+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:49:56.245173+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:54:49.935403+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-25T23:59:57.592965+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T00:04:29.568304+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T00:09:51.810670+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T00:14:58.830850+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T00:19:50.522201+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T00:24:54.388039+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T00:29:55.025816+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T00:34:39.398908+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T00:39:57.919326+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T00:44:28.502537+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T00:49:56.767369+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T00:54:27.808549+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T00:59:41.218552+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:04:27.212700+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:09:54.893974+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:14:33.478649+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:19:44.077237+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:24:51.484209+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:29:44.585095+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:34:33.512702+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:39:49.231267+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:44:46.445310+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:49:33.666922+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:54:17.772361+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T01:59:45.645622+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:04:18.569574+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:09:45.270727+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:14:36.543279+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:19:55.234638+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:24:57.895075+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:29:28.567130+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:34:42.995022+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:39:38.820727+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:44:51.268852+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:49:21.129722+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:54:43.529361+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T02:59:54.767934+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:04:45.222868+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:09:16.274038+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:14:46.585812+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:19:38.377679+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:24:36.484114+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:29:28.155777+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:34:06.596555+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:39:32.504930+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:44:20.734703+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:49:37.550393+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:54:35.995200+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T03:59:36.795398+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:04:59.768209+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:09:10.691186+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:14:54.623951+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:19:37.914933+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:24:09.027026+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:29:40.536455+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:34:44.623457+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:39:47.209708+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:44:30.811759+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:49:51.332170+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:54:45.333285+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T04:59:45.777270+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:04:32.201033+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:09:44.268803+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:14:52.417315+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:19:53.498043+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:24:52.799906+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:29:53.376580+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:34:45.842301+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:39:53.997652+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:44:39.860653+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:49:51.853992+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:54:38.727654+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T05:59:35.476020+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:04:33.542696+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:09:47.602840+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:14:54.364052+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:19:39.656459+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:24:37.312135+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:29:54.624914+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:34:48.552575+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:39:56.384622+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:44:56.783064+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:49:57.187504+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:54:52.562521+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T06:59:59.143397+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:04:59.768649+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:09:09.054975+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:14:22.362726+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:19:27.420490+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:24:45.386243+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:29:43.078885+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:34:41.558911+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:39:59.991571+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:44:40.468744+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:49:30.780509+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:54:31.280036+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T07:59:32.043267+00:00",
+    "index": 104.755006,
+    "share_price": 1.04755
+   },
+   {
+    "t": "2026-10-26T08:04:34.281682+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T08:09:33.337805+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T08:14:01.476036+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T08:19:32.653814+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T08:24:41.710371+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T08:29:32.919735+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T08:34:06.016879+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T08:39:51.044749+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T08:44:35.712427+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T08:49:45.690579+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T08:54:28.309090+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   },
+   {
+    "t": "2026-10-26T08:59:28.313528+00:00",
+    "index": 106.831456,
+    "share_price": 1.068315
+   }
+  ]
+ }
+}
