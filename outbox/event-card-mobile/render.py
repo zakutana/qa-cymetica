@@ -23,12 +23,15 @@ for name in ("index.html", "board.html"):
         raise SystemExit(f"{name}: off-palette colours {bad}")
 print("colours ok")
 
-FACE = ["Drop rate", "INFO", "STATS", "LIVE", "ago", "NEWS SENTIMENT", "NEGATIVE", "NEUTRAL", "POSITIVE", "LINKED ASSETS",
-        "weight", "1d", "5d", "30d", "BACK", "SKIP", "WATCH", "BUY", "SELL"]
-TIER = {"hot": ["HOT", "SSL", "+0.70", "cnbc.com"], "warm": ["WARM", "ESTC", "−0.60", "streetinsider.com", "$1.0683"],
-        "quiet": ["QUIET", "Penske", "+0.15"]}
+FACE = ["INFO", "STATS", "LIVE", "ago", "LINKED ASSETS", "weight", "1d", "5d", "30d", "BACK", "SKIP", "WATCH", "BUY", "SELL"]
+PANEL = ["NEWS SENTIMENT", "NEGATIVE", "NEUTRAL", "POSITIVE", "IMPACT"]
+TIER = {"hot": PANEL + ["Drop rate", "HOT", "Varonis", "+0.65", "8.6"],
+        "warm": PANEL + ["Drop rate", "WARM", "ESTC", "−0.60", "6.9", "streetinsider.com", "$1.0"],
+        "quiet": PANEL + ["Drop rate", "QUIET", "SoftBank", "+0.33", "6.0", "more"],
+        "unscored": PANEL + ["NOT SCORED YET", "SSL", "—"],
+        "basket": ["INDEX BASKET", "Gem Screener RWA", "more"]}
 BUY = ["Buy", "Paper", "Live", "$100,000.00 available", "0%", "25%", "50%", "75%", "100%", "$0.00", "Confirm Buy", "Cancel"]
-STATS = ["Since launch", "+6.83%", "100 → 106.83", "Card index", "Index price", "$102.43", "launch $95.88", "Symbol", "EVCDX-ESTC",
+STATS = ["Since launch", "100 → ", "Card index", "Index price", "launch $95.88", "Symbol", "EVCDX-ESTC",
          "Market cap", "not minted yet", "ripple effect", "Per-asset split", "SAIB · Single AI Index Basket", "History", "Share", "Embed"]
 SPILL = """() => { const out = [];
  document.querySelectorAll('.card.a .strip, .card.a .tabs, .card.a .sent .sh, .card.a .as, .card.a .price, .card.a .act, .card.a .kv>div, .card.a .links .btn, .top, .sheet.open .pc span, .sheet.open .seg2 span').forEach(c => {
@@ -87,7 +90,7 @@ with sync_playwright() as p:
     back = t.evaluate("() => document.querySelector('.card.a').dataset.key")
     print(f"swipe right from {top0}: stamp {stamp}, now on top {after[0]}, sheet open {after[1]} {after[2]}; Back -> {back}")
     t.close()
-    t = b.new_page(viewport={"width": 1364, "height": 3420}, device_scale_factor=1.25)
+    t = b.new_page(viewport={"width": 1766, "height": 3420}, device_scale_factor=1.25)
     t.goto((here / "board.html").as_uri())
     t.wait_for_load_state("networkidle")
     t.wait_for_timeout(2500)

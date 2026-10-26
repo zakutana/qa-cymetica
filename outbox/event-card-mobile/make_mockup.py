@@ -15,8 +15,12 @@ his picture part for part, in his order and proportions (measured at 450 px a ca
   - the hues: his violet and gold are forbidden by Cymetica's colour rule, which their build check enforces. The page
     therefore uses blue for his violet tier, cyan for his gold and green for his common. He saw both side by side and
     chose these ("Nech modrou, azurovou a zelenou z jejich palety", 2026-10-26), so the comparison in his hues is gone.
-The tier is the news sentiment's strength, |headline_sentiment_score|: HOT from 0.7, WARM from 0.3, QUIET below; DROP RATE
-is the share of live cards in it (snapshot.py counts all of them).
+Round 6, after Cymetica's answer (REPLY-0222 to MSG-0251): impact was never switched off -- news cards are scored, M&A-ripple
+cards are being scored now, index baskets have no headline and are never scored, and null means "not scored" (0.00 is a
+scored neutral). So the impact row is back, as he drew it, and the tier is the impact score, how big the news is: HOT from
+8, WARM from 6.5, QUIET below (his own picture graded Legendary 9.0, Rare 7.0, Common 4.0). DROP RATE is the share of live
+cards in that tier (snapshot.py counts all of them). A card with no impact score yet reads NOT SCORED YET with its panel
+empty ("—"), and a card with no source headline reads INDEX BASKET with no sentiment panel at all, its assets in the room.
 
 On a phone it is a deck you swipe: right flies the card off and opens the Buy sheet (as the live deck does), left skips,
 Back returns it, INFO / STATS switch the card's face. ?c=hot|warm|quiet picks the top card; ?s=swipe|buy|stats freezes a
@@ -38,7 +42,8 @@ READ = datetime.fromisoformat(D["read_at"])
 esc = lambda s: html.escape(str(s), quote=True)
 
 PAPER = "$100,000.00"                       # paper balance, as the page shows it
-GLYPH = {"hot": "◆", "warm": "★", "quiet": "●"}
+GLYPH = {"hot": "◆", "warm": "★", "quiet": "●", "unscored": "○", "basket": "▦"}
+NAME = {"hot": "HOT", "warm": "WARM", "quiet": "QUIET", "unscored": "NOT SCORED YET", "basket": "INDEX BASKET"}
 
 
 def pct(v, d=2):
@@ -76,7 +81,12 @@ def structure(c):
 
 
 def sent(c):
-    return c.get("headline_sentiment_score") or 0
+    """The news sentiment, or None: not scored (Cymetica: null is not scored, 0.00 is a scored neutral)."""
+    return c.get("headline_sentiment_score")
+
+
+def signed(v, d=2):
+    return "—" if v is None else f"{v:+.{d}f}".replace("-", "−")
 
 
 def drop_rate(t):
@@ -115,28 +125,35 @@ def icon(name, cls="ic"):
 
 
 def card_html(c):
-    sv, d, s = sent(c), day(c), since(c)
-    sd = "pos" if sv > 0 else ("neg" if sv < 0 else "neu")
-    arrow = {"pos": "▲", "neg": "▼", "neu": "■"}[sd]
-    knob = (sv + 1) / 2 * 100
+    sv, d, s, iv = sent(c), day(c), since(c), c.get("headline_impact_score")
+    sd = "none" if sv is None else ("pos" if sv > 0 else ("neg" if sv < 0 else "neu"))
+    arrow = {"pos": "▲", "neg": "▼", "neu": "■", "none": "■"}[sd]
     n = len(c["basket"])
     chips = "".join(f'<div class="as"><div class="a1"><b>{esc(a["symbol"])}</b><i>{esc(a.get("asset_type") or "")}</i></div>'
                     f'<div class="a2">weight {a["weight"] * 100:.0f}%</div></div>' for a in c["basket"][:3])
-    swipe = '<span class="sw">swipe →</span>' if n > 3 else ""
+    more = f'<span class="sw">+{n - 3} more</span>' if n > 3 else ""
+    scored = c["tier"] in ("hot", "warm", "quiet")
+    dr = f'<span class="dr"><span>Drop rate</span><b>{drop_rate(c["tier"])}</b></span>' if scored else ""
+    knob = "" if sv is None else f'<i class="knob" style="left:{(sv + 1) / 2 * 100:.1f}%"></i>'
+    squares = "".join(f'<i class="{"on" if iv is not None and k < round(iv) else ""}"></i>' for k in range(10))
+    panel = "" if c["tier"] == "basket" else (
+        f'<div class="sent {sd}"><div class="sh"><span class="sl">{arrow}&nbsp;NEWS SENTIMENT</span><b>{signed(sv)}</b></div>'
+        f'<div class="track">{knob}</div><div class="ticks"><span>NEGATIVE</span><span>NEUTRAL</span><span>POSITIVE</span></div>'
+        f'<div class="imp"><span>IMPACT</span><div class="sq">{squares}</div><b>{"—" if iv is None else f"{iv:.1f}"}</b></div></div>')
+    src = f'<span class="src">{esc(source(c))}</span>' if source(c) else ""
     sym = c.get("evcdx_symbol") or f'EVCDX-{c["basket"][0]["symbol"]}'
     cap = "— not minted yet" if not c.get("arc_coin") and not c.get("pons_coin") else "—"
     split = "".join(f'<div class="srow"><b>{esc(a["symbol"])}</b><span class="bar"><b style="width:{a["weight"] * 100:.0f}%"></b></span>'
                     f'<span>{a["weight"] * 100:.0f}%</span></div>' for a in c["basket"][:3])
     return f"""<article class="card t-{c['tier']} {'c-up' if d >= 0 else 'c-down'}" data-key="{c['tier']}">
 <div class="stamp bull">BUY</div><div class="stamp skip">SKIP</div>
-<div class="strip"><span class="nm"><i>{GLYPH[c['tier']]}</i>{c['tier'].upper()}</span><span class="dr"><span>Drop rate</span><b>{drop_rate(c['tier'])}</b></span></div>
+<div class="strip"><span class="nm"><i>{GLYPH[c['tier']]}</i>{NAME[c['tier']]}</span>{dr}</div>
 <div class="tabs"><span class="tab on" data-tab="info">INFO</span><span class="tab" data-tab="stats">STATS</span><span class="live"><i></i>LIVE</span></div>
 <div class="view info-view">
- <div class="art"><span class="orb"></span><span class="ago">{icon('clock', 'ic s')}{ago(c)}</span><span class="src">{esc(source(c))}</span></div>
+ <div class="art"><span class="orb"></span><span class="ago">{icon('clock', 'ic s')}{ago(c)}</span>{src}</div>
  <h1 class="title">{esc(c['title'])}</h1>
- <div class="sent {sd}"><div class="sh"><span class="sl">{arrow}&nbsp;NEWS SENTIMENT</span><b>{f'{sv:+.2f}'.replace('-', '−')}</b></div>
-  <div class="track"><i class="knob" style="left:{knob:.1f}%"></i></div><div class="ticks"><span>NEGATIVE</span><span>NEUTRAL</span><span>POSITIVE</span></div></div>
- <div class="la"><div class="lh"><span>LINKED ASSETS</span>{swipe}</div><div class="chips n{min(n, 3)}">{chips}</div></div>
+ {panel}
+ <div class="la"><div class="lh"><span>LINKED ASSETS</span>{more}</div><div class="chips n{min(n, 3)}">{chips}</div></div>
  <div class="price"><div><b>${share(c):,.4f}</b><span class="{'g' if d >= 0 else 'r'}">{'▲' if d >= 0 else '▼'} {abs(d):.2f}%</span></div>
   <div class="tog"><span class="on">1d</span><span>5d</span><span>30d</span></div></div>
  <div class="chart">{chart(c)}</div>
@@ -171,7 +188,8 @@ def buy_sheet(c):
             '<span class="cta">Confirm Buy</span><span class="cancel" data-close>Cancel</span></section>')
 
 
-TIERS = {"hot": "59,130,246", "warm": "0,207,255", "quiet": "0,255,136"}        # blue, cyan, green: the site's palette
+TIERS = {"hot": "59,130,246", "warm": "0,207,255", "quiet": "0,255,136",       # blue, cyan, green: the site's palette
+         "unscored": "127,147,173", "basket": "127,147,173"}                     # slate: no score, no colour
 
 CSS = """
 :root{--bg:#0a0e17;--deep:#06090f;--navy:#0d1520;--navy2:#111a28;--line2:#1a2a44;--line3:#1e3050;
@@ -233,6 +251,16 @@ body{position:relative;overscroll-behavior:none}
 .track{position:relative;height:4px;margin:13px 1px 0;border-radius:99px;background:linear-gradient(90deg,#ff4444,rgba(127,147,173,.38) 50%,#00ff88)}
 .knob{position:absolute;top:50%;width:15px;height:15px;transform:translate(-50%,-50%);border-radius:50%;background:#e6edf7;box-shadow:0 0 0 3px rgba(var(--sd),.45),0 0 14px rgba(var(--sd),.95)}
 .ticks{display:flex;justify-content:space-between;margin-top:8px;font-size:7.5px;letter-spacing:.16em;color:var(--dim2)}
+.sent.none .sl{color:var(--dim2)}.sent.none .sh b{color:var(--dim2)}.sent.none .track{opacity:.35}
+/* his impact row: ten squares in the tier's colour */
+.imp{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:9px;border-top:1px solid rgba(230,237,247,.06)}
+.imp>span{font-size:8.5px;letter-spacing:.2em;color:var(--dim2)}
+.sq{flex:1;display:flex;gap:4px}.sq i{flex:1;height:10px;border-radius:2px;background:rgba(230,237,247,.07)}
+.sq i.on{background:rgb(var(--t));box-shadow:0 0 6px rgba(var(--t),.55)}
+.imp b{min-width:26px;text-align:right;font-size:13px;color:rgb(var(--t))}
+.t-unscored .imp b,.t-basket .imp b{color:var(--dim2)}
+.t-unscored .nm,.t-basket .nm{color:var(--dim)}.t-unscored .orb,.t-basket .orb{opacity:.45}
+.card.bx{transform:translateY(20px) scale(.91);visibility:hidden}
 /* linked assets */
 .la{flex:none;margin:13px 18px 0}
 .lh{display:flex;justify-content:space-between;font-size:8.5px;letter-spacing:.2em;color:var(--dim2)}.lh .sw{letter-spacing:.06em}
@@ -291,9 +319,10 @@ body{position:relative;overscroll-behavior:none}
 .amt{margin:16px 0;text-align:center;font-weight:700;font-size:40px}
 .cta{display:block;text-align:center;color:var(--green);border:1px solid rgba(0,255,136,.45);background:rgba(0,255,136,.10);font-weight:700;letter-spacing:.12em;border-radius:12px;padding:16px;font-size:13px}
 .cancel{display:block;text-align:center;margin-top:12px;color:var(--dim2);font-weight:700;font-size:11.5px;cursor:pointer}
-@media (max-height:780px){.art{height:84px}.title{font-size:22px;-webkit-line-clamp:2}.la{margin-top:11px}.price{margin-top:11px}}
-@media (max-height:700px){.art{height:58px}.title{font-size:20px;margin-top:11px}.sent{margin-top:10px;padding:10px 13px 9px}.track{margin-top:10px}
- .tabs{height:40px}.strip{height:36px}.act{height:58px}.act small{display:none}.chips .a2{display:none}.as{padding:8px 10px}}
+@media (max-height:780px){.art{height:76px}.title{font-size:22px;-webkit-line-clamp:2}.la{margin-top:11px}.price{margin-top:11px}
+ .ticks{display:none}.chips .a2{display:none}.as{padding:8px 10px}.act{height:64px}}
+@media (max-height:700px){.art{height:50px}.title{font-size:20px;margin-top:10px}.sent{margin-top:10px;padding:9px 13px 8px}.track{margin-top:9px}
+ .imp{margin-top:8px;padding-top:7px}.tabs{height:40px}.strip{height:36px}.act{height:56px}.act small{display:none}.la{margin-top:9px}.price{margin-top:9px}}
 /* opened on a computer: the phone, 390 x 844, in the middle of the window */
 @media (min-width:600px){html{height:auto;overflow:auto;background:#06090f}
  body{width:390px;height:844px;margin:24px auto;border:1px solid var(--line3);border-radius:34px;overflow:hidden}}
@@ -310,9 +339,9 @@ const scrim = document.querySelector('.scrim');
 function layout() {
   order.forEach((k, i) => {
     const el = byKey[k];
-    el.classList.remove('a', 'b1', 'b2', 'drag-right');
+    el.classList.remove('a', 'b1', 'b2', 'bx', 'drag-right');
     el.style.transform = ''; el.style.opacity = '';
-    el.classList.add(i === 0 ? 'a' : i === 1 ? 'b1' : 'b2');
+    el.classList.add(i === 0 ? 'a' : i === 1 ? 'b1' : i === 2 ? 'b2' : 'bx');
     el.style.zIndex = 10 - i;
     el.querySelectorAll('.stamp').forEach(s => s.style.opacity = 0);
   });
@@ -388,7 +417,7 @@ else if (s === 'stats') { byKey[order[0]].querySelector('.tab[data-tab=stats]').
 
 BOARD_CSS = """
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#06090f;color:#e6edf7;font-family:'Space Mono',monospace;padding:28px 32px 34px;width:1300px}
+body{background:#06090f;color:#e6edf7;font-family:'Space Mono',monospace;padding:28px 32px 34px;width:1702px}
 h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:30px}
 .sub{color:#7f93ad;font-size:12px;margin-top:6px;line-height:1.6}
 .lab{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#a9b8cc;margin:28px 0 10px}.lab b{color:#00ff88}.lab i{font-style:normal;color:#ff4444}
@@ -421,12 +450,12 @@ def board():
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
 <style>{BOARD_CSS}</style></head><body>
 <h1>Event Cards on a phone</h1>
-<div class="sub">Tier = news sentiment strength (HOT ≥ 0.7, WARM ≥ 0.3, QUIET below) · {D["live_cards"]} live cards: {t["hot"]} hot, {t["warm"]} warm, {t["quiet"]} quiet · never scrolls</div>
+<div class="sub">Tier = impact score (HOT ≥ 8, WARM ≥ 6.5, QUIET below) · {D["live_cards"]} live cards: {t["hot"]} hot, {t["warm"]} warm, {t["quiet"]} quiet, {t["unscored"]} not scored yet, {t["basket"]} index baskets · never scrolls</div>
 <div class="lab">His design</div><img class="his" src="his-design.webp" alt="">
-<div class="lab"><b>Built</b> · HOT · WARM · QUIET · the site's palette</div>
-<div class="row">{ph("c=hot")}{ph("c=warm")}{ph("c=quiet")}</div>
-<div class="lab"><b>Built</b> · swipe right · Buy sheet · STATS tab</div>
-<div class="row">{ph("s=swipe", "Right: Buy sheet opens · Left: Skip")}{ph("s=buy", "Allocation, amount, Paper | Live")}{ph("s=stats", "Since launch, index, price, symbol, market cap, description, split")}</div>
+<div class="lab"><b>Built</b> · HOT · WARM · QUIET · not scored yet</div>
+<div class="row">{ph("c=hot")}{ph("c=warm")}{ph("c=quiet")}{ph("c=unscored")}</div>
+<div class="lab"><b>Built</b> · index basket · swipe right · Buy sheet · STATS tab</div>
+<div class="row">{ph("c=basket")}{ph("s=swipe", "Right: Buy sheet opens · Left: Skip")}{ph("s=buy", "Allocation, amount, Paper | Live")}{ph("s=stats", "Since launch, index, price, symbol, market cap, description, split")}</div>
 </body></html>"""
 
 
@@ -434,7 +463,8 @@ def main():
     sys.stdout.reconfigure(encoding="utf-8")
     (HERE / "index.html").write_text(page(), encoding="utf-8")
     (HERE / "board.html").write_text(board(), encoding="utf-8")
-    print("written;", ", ".join(f'{c["tier"]} {c["id"][:8]} sentiment {sent(c):+.2f} share ${share(c):.4f} 1d {pct(day(c))}' for c in CARDS))
+    print("written;", ", ".join(f'{c["tier"]} {c["id"][:8]} impact {c.get("headline_impact_score")} sentiment {signed(sent(c))} '
+                                f'share ${share(c):.4f} 1d {pct(day(c))}' for c in CARDS))
 
 
 if __name__ == "__main__":
