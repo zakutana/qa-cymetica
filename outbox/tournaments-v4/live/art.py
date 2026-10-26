@@ -84,17 +84,16 @@ def mini_clock(frac: float, live: bool) -> str:
 
 def hero_tiles() -> str:
     clocks = "".join(f'<div class="v4-durbig">{stopwatch(f, d)}</div>' for d, f in (("1H", 1 / 24), ("5H", 5 / 24), ("1D", 1.0)))
+    # the top 2 share the pot: 1st gets 4 buy-ins, 2nd gets 2 (the operator, 2026-10-26)
     podium = ('<svg class="v4-podium" viewBox="0 0 150 74" aria-hidden="true">'
-              '<rect x="6" y="30" width="40" height="44" rx="6" fill="url(#v4-pod-2)"></rect>'
-              '<rect x="55" y="8" width="40" height="66" rx="6" fill="url(#v4-pod-1)"></rect>'
-              '<rect x="104" y="48" width="40" height="26" rx="6" fill="url(#v4-pod-3)"></rect>'
-              '<path d="M6 36 h40 M55 14 h40 M104 54 h40" stroke="#F3F7FC" stroke-opacity=".35" stroke-width="2"></path>'
-              '<text x="26" y="58" text-anchor="middle">30</text><text x="75" y="46" text-anchor="middle">60</text>'
-              '<text x="124" y="68" text-anchor="middle">10</text></svg>')
+              '<rect x="28" y="8" width="44" height="66" rx="6" fill="url(#v4-pod-1)"></rect>'
+              '<rect x="80" y="38" width="44" height="36" rx="6" fill="url(#v4-pod-2)"></rect>'
+              '<path d="M28 14 h44 M80 44 h44" stroke="#F3F7FC" stroke-opacity=".35" stroke-width="2"></path>'
+              '<text x="50" y="46" text-anchor="middle">4×</text><text x="102" y="64" text-anchor="middle">2×</text></svg>')
     stack = (f'<div class="v4-coins">{coin("v4-coin c3")}{coin("v4-coin c2")}{coin("v4-coin c1")}</div>')
     return (f'<div class="at-kinds v4-kinds" role="list" aria-label="How tables work">'
             f'<div class="v4-kind" role="listitem"><span class="at-lbl">How long</span><div class="v4-durs">{clocks}</div><p>Flash tables only.</p></div>'
-            f'<div class="v4-kind" role="listitem"><span class="at-lbl">The pot</span>{podium}<p>Top 3 by ROI split the buy-ins.</p></div>'
+            f'<div class="v4-kind" role="listitem"><span class="at-lbl">The pot</span>{podium}<p>Top 2 by ROI: 4× and 2× the buy-in.</p></div>'
             f'<div class="v4-kind" role="listitem"><span class="at-lbl">On top</span><div class="v4-ontop">{stack}<b>+ ET10</b></div><p>Extra for the top 3.</p></div></div>')
 
 

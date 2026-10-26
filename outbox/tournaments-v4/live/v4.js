@@ -98,6 +98,16 @@
     each('.v4-seg', function (s) { s.classList.toggle('on', +s.getAttribute('data-i') <= v); }, card);
     var n = card.querySelector('.v4-needle'); if (n) n.style.transform = 'rotate(' + ((v - 0.5) * 18 - 90) + 'deg)';
     card.querySelector('.v4-risk').setAttribute('data-level', v);
+    // the level SETS the bot (owner.RISK_SET): the three numbers here, and the Settings tab's own sliders
+    var set = JSON.parse(card.getAttribute('data-v4-map'))[v];
+    each('[data-v4-set]', function (b) { b.textContent = set[b.getAttribute('data-v4-set')] + '%'; }, card);
+    [['Stop loss %', set.stop], ['Take profit %', set.take]].forEach(function (p) {
+      var r = document.querySelector('input[aria-label="' + p[0] + '"]'); if (!r) return;
+      r.value = p[1];
+      var b = r.closest('.at-rng') && r.closest('.at-rng').querySelector('.rh b'); if (b) b.textContent = p[1] + '%';
+    });
+    var ch = document.querySelector('.at-this p');
+    if (ch) ch.textContent = 'Set by Risk ' + v + ': size ' + set.size + '%, stop loss ' + set.stop + '%, take profit ' + set.take + '%. In force now.';
   }
   function onChange(e) {
     var r = e.target.closest && e.target.closest('[data-v4="risk"]'); if (r) risk(r);

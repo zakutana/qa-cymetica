@@ -7,6 +7,7 @@ clock, every check a row), the changelog saying who changed what, and the race's
 """
 from __future__ import annotations
 
+import html
 import json
 import re
 from datetime import datetime
@@ -48,6 +49,10 @@ LOG = [  # the first row is the silence that followed our last trade; the rest r
 
 
 RISK_WORDS = {1: "Calm", 2: "Calm", 3: "Steady", 4: "Steady", 5: "Balanced", 6: "Balanced", 7: "Bold", 8: "Bold", 9: "All in", 10: "All in"}
+# what each level SETS on the bot ("ten risk panel musi ... menit settings toho bota"): level 5 is what it runs now
+# (stop loss 5 %, take profit 20 %); trade size up to their fixed 10 % max position, every value inside the Settings
+# tab's own slider ranges. One model: the panel, the Settings tab (v4.js) and the spec read it from here.
+RISK_SET = {k: {"size": k, "stop": float(k), "take": float(max(5, 4 * k))} for k in range(1, 11)}
 
 
 def coach_card(end: str) -> str:
@@ -64,12 +69,15 @@ def coach_card(end: str) -> str:
   <div class="v4-coach-st" data-v4-st>Tuning your bot inside risk 5</div></div>
  <label class="at-sw v4-sw-lg"><input type="checkbox" checked data-v4-sw aria-label="NEXUS coach on or off"><i></i></label>
 </section>"""
-    risk = f"""<section class="v4-riskcard" data-v4="risk">
+    m = html.escape(json.dumps({str(k): v for k, v in RISK_SET.items()}), quote=True)
+    now = RISK_SET[5]
+    risk = f"""<section class="v4-riskcard" data-v4="risk" data-v4-map="{m}">
  <div class="v4-risk-h"><span class="at-lbl">Risk</span><span class="v4-ctx"><span><b>#{seat["rank"]}</b>/6</span><span><b data-end="{end}">10H</b> left</span></span></div>
  <div class="v4-risk" data-level="5"><div class="v4-gauge-w">{art.gauge(5)}
    <div class="v4-risk-v"><b data-v4-risk-v>5</b><span data-v4-risk-w>{RISK_WORDS[5]}</span></div></div>
   <input type="range" min="1" max="10" step="1" value="5" data-v4-risk aria-label="Risk">
   <div class="v4-risk-f"><span>SAFE</span><span>ALL IN</span></div></div>
+ <div class="v4-risk-set"><span>SIZE <b data-v4-set="size">{now["size"]:g}%</b></span> <span>STOP LOSS <b data-v4-set="stop">{now["stop"]:g}%</b></span> <span>TAKE PROFIT <b data-v4-set="take">{now["take"]:g}%</b></span></div>
  <p class="v4-risk-say">How hard your bot plays: trade size, stop loss, take profit. Any time.</p>
 </section>"""
     # one panel, the coach on top and the risk under it ("dej to cele do 1 panelu spolecne s tim metrem")

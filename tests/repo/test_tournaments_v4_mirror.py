@@ -99,13 +99,27 @@ def test_the_mirror_refuses_every_write_and_does_not_touch_their_platform(server
 def test_a_get_returns_their_page_with_the_v4_layer_and_without_their_security_headers(server):
     port, calls = server
     c = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
-    c.request("GET", "/agent-tournaments")
+    c.request("GET", "/agent-casino")              # the new address; their page still lives at /agent-tournaments
     r = c.getresponse()
     body = r.read().decode("utf-8")
     assert r.status == 200 and calls == ["/agent-tournaments"]
     assert "/__v4/v4.js" in body and "/__v4/v4.css" in body
     assert r.getheader("content-security-policy") is None
     assert r.getheader("content-security-policy-report-only") is None
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_old_address_moves_to_agent_casino(server):
+    """ "at to cele prejmenuji na agent casino ... a taky url at daji apk novou na agent-casino" (2026-10-26): the old
+    page addresses answer with a permanent redirect to the same page under /agent-casino; the API keeps its paths."""
+    port, calls = server
+    for old, new in (("/agent-tournaments", "/agent-casino"), ("/agent-tournaments/table/15?x=1", "/agent-casino/table/15?x=1")):
+        c = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+        c.request("GET", old)
+        r = c.getresponse()
+        r.read()
+        assert r.status == 301 and r.getheader("location") == new
+    assert calls == []
 
 
 # ---- six seats, no ten left ------------------------------------------------------------------------------------
@@ -136,7 +150,8 @@ def test_the_lobby_headline_says_six(lobby):
 def test_an_open_cards_pot_and_prizes_are_six_buy_ins(lobby):
     card = lobby.xpath('//a[contains(@class,"at-tcard") and contains(@class,"micro")]')[0]    # $5, ten seats live
     assert card.xpath('.//*[@data-at-pot]')[0].text_content() == "$30"
-    assert [b.text_content().split("+")[0] for b in card.xpath('.//div[contains(@class,"at-c3")]//b')] == ["$18", "$9", "$3"]
+    # the top 2 only since 2026-10-26: 4 and 2 of the six buy-ins (was 60 / 30 / 10: $18, $9, $3)
+    assert [b.text_content().split("+")[0] for b in card.xpath('.//div[contains(@class,"at-c3")]//b')] == ["$20", "$10"]
     assert "6 seats left" in card.text_content()
     et = lobby.xpath('//a[contains(@class,"at-tcard") and contains(@class,"et1k")]')[0]       # 1,000 ET10 a seat
     assert et.xpath('.//*[@data-at-pot]')[0].text_content() == "6,000"
@@ -220,6 +235,82 @@ def test_every_page_has_a_green_button_to_the_casino_in_the_universe(lobby, tabl
         assert {"at-btn", "go", "sm", "v4-uni"} <= set(uni.get("class").split())
         assert len(page.xpath('//a[contains(@class,"v4-uni")]')) == 1
     assert not lobby.xpath('//div[contains(@class,"at-cta")]//a[contains(@class,"v4-uni")]')
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_whole_thing_is_called_agent_casino(lobby, table):
+    """The name on every page -- the logo, the title, the felt, the copy -- is Agent Casino, and every link to a page
+    of it goes to /agent-casino; only the API keeps /api/v1/agent-tournaments."""
+    for page in (lobby, table, L.fromstring(patch.patch_html("how", fixture("how")))):
+        logo = page.xpath('//a[contains(@class,"at-logo")]')[0]
+        assert " ".join(t.strip() for t in logo.itertext() if t.strip()) == "AGENT CASINO" and logo.get("href") == "/agent-casino"
+        assert page.xpath("//title")[0].text.startswith("Agent Casino")
+        for e in page.iter():
+            if not isinstance(e.tag, str) or e.tag in ("script", "style"):
+                continue
+            for s in [e.text, e.tail] + [e.get(a) for a in ("aria-label", "title", "content", "alt")]:
+                if s and "/api/" not in s and "/og/" not in s:
+                    assert not re.search(r"Agent Tournaments|AGENT TOURNAMENTS|^\s*TOURNAMENTS\s*$|cymetica\.com/agent-tournaments", s), s
+        for h in page.xpath("//@href"):
+            assert "/api/" in h or "agent-tournaments" not in h, h
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_pot_pays_only_the_top_two_four_and_two_buy_ins(lobby, table):
+    """ "pot se bude delit jen mezi prvni dva ... kdyz je buy in 1$ tak prvni pak vyhraje 4$ a druhy 2$" (2026-10-26):
+    six buy-ins, 1st gets 4 of them and 2nd gets 2; no 3rd place, no 60 / 30 / 10 (the ET10 extra on top, 600 / 300 /
+    100, is a separate programme and stays)."""
+    how = L.fromstring(patch.patch_html("how", fixture("how")))
+    for page in (lobby, table, how):
+        text = " ".join(page.text_content().split())
+        assert "60 / 30 / 10" not in text and "top three qualified members (" not in text
+        assert not page.xpath('//div[contains(@class,"at-c3")]/div[contains(.,"3RD")]')
+        assert not page.xpath('//span[contains(@class,"at-spots")]/span[contains(.,"3RD")]')      # the felt's spots too
+        for spots in page.xpath('//span[contains(@class,"at-spots")]'):
+            first, second = (patch.num(b.text) for b in spots.xpath('./span/b'))
+            assert abs(first - 2 * second) <= 1, (first, second)
+        for c3 in page.xpath('//div[contains(@class,"at-c3")]'):
+            cells = c3.xpath('./div')
+            assert [" ".join(d.xpath('./span[@class="k"]')[0].text.split()) for d in cells] == ["1ST", "2ND"]
+            first, second = (patch.num(d.xpath('./b')[0].text) for d in cells)
+            assert abs(first - 2 * second) <= 1, (first, second)
+            pot = c3.xpath('preceding::*[@data-at-pot][1]')
+            if pot:
+                assert abs(first + second - patch.num(pot[0].text)) <= 1, (first, second, pot[0].text)
+    for card in lobby.xpath('//a[@data-v4-live]'):        # the operator's own example: a $1 table pays $4 and $2
+        buy = float(re.search(r"\bb(\d+)\b", card.get("data-tags")).group(1))
+        assert [patch.num(b.text) for b in card.xpath('.//div[contains(@class,"at-c3")]//b')] == [4 * buy, 2 * buy]
+    pod = lobby.xpath('//svg[contains(@class,"v4-podium")]')[0]
+    assert [t.text for t in pod.xpath('.//text')] == ["4×", "2×"]
+    for st in how.xpath('//div[contains(@class,"at-stake")]'):
+        buy = patch.num(st.xpath('.//div[@class="big"]')[0].text)
+        assert patch.num(st.xpath('.//span[@class="win"]')[0].text) == 4 * buy
+        assert patch.num(st.xpath('.//span[starts-with(.,"pot")]/b')[0].text) == 6 * buy
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_risk_level_sets_the_bots_own_settings(table):
+    """ "ten risk panel musi oni sprovoznit at funguje, ze podle toho musi menit settings toho bota" (2026-10-26): every
+    level is a trade size, a stop loss and a take profit; level 5 is what the bot runs now, every value fits the
+    Settings tab's own sliders and the fixed 10 % max position, and the panel shows the three numbers."""
+    import json
+    risk = table.xpath('//*[@data-v4="risk"]')[0]
+    m = {int(k): v for k, v in json.loads(risk.get("data-v4-map")).items()}
+    assert sorted(m) == list(range(1, 11))
+    pane = table.xpath('//div[@data-pane="settings"]')[0]
+    stop = pane.xpath('.//input[@aria-label="Stop loss %"]')[0]
+    take = pane.xpath('.//input[@aria-label="Take profit %"]')[0]
+    assert m[5] == {"size": 5, "stop": float(stop.get("value")), "take": float(take.get("value"))}
+    for k in range(1, 11):
+        assert 1 <= m[k]["size"] <= 10
+        assert float(stop.get("min")) <= m[k]["stop"] <= float(stop.get("max"))
+        assert float(take.get("min")) <= m[k]["take"] <= float(take.get("max"))
+        if k > 1:
+            assert all(m[k][f] >= m[k - 1][f] for f in ("size", "stop", "take"))
+    shown = " ".join(risk.xpath('.//*[contains(@class,"v4-risk-set")]')[0].text_content().split())
+    assert shown == "SIZE 5% STOP LOSS 5% TAKE PROFIT 20%", shown
+    js = (LIVE / "v4.js").read_text(encoding="utf-8")
+    assert "Stop loss %" in js and "Take profit %" in js       # the slider moves the Settings tab's own controls
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

@@ -28,6 +28,7 @@ CHECK = """() => { const out = [];
  const mk = [...document.querySelectorAll('circle.v4-mk')].map(c => { const r = c.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2, r.width / 2]; });
  for (let i = 0; i < mk.length; i++) for (let j = i + 1; j < mk.length; j++) if (Math.hypot(mk[i][0] - mk[j][0], mk[i][1] - mk[j][1]) < mk[i][2] + mk[j][2]) out.push('markers touch');
  const t = document.body.innerText; const m = t.match(/\\b10 (seats|SEATS|agents\\.|AI agents)|\\b10th\\b|\\b10\\/10\\b/); if (m) out.push('still says ten: ' + m[0]);
+ const n = t.match(/Agent Tournaments|AGENT TOURNAMENTS|60 \\/ 30 \\/ 10|\\b3RD\\b/); if (n) out.push('old name or split: ' + n[0]);
  return out.slice(0, 12); }"""
 
 
@@ -48,7 +49,7 @@ def main():
                 ctx = b.new_context(viewport={"width": w, "height": 900})
                 ctx.add_init_script(f"try{{localStorage.setItem('v4mode','{mode}')}}catch(e){{}}")
                 pg = ctx.new_page()
-                pg.goto(BASE + "/agent-tournaments", wait_until="networkidle")
+                pg.goto(BASE + "/agent-casino", wait_until="networkidle")
                 pg.wait_for_timeout(1500)
                 pg.evaluate(HIDE)
                 print(f"lobby {mode} {w}: wide={pg.evaluate('document.documentElement.scrollWidth > innerWidth')} problems={pg.evaluate(CHECK)}")
@@ -61,7 +62,7 @@ def main():
                 ctx.close()
             ctx = b.new_context(viewport={"width": w, "height": 900})
             pg = ctx.new_page()
-            pg.goto(BASE + "/agent-tournaments/table/15", wait_until="networkidle")
+            pg.goto(BASE + "/agent-casino/table/15", wait_until="networkidle")
             pg.wait_for_timeout(1500)
             pg.evaluate(HIDE)
             print(f"table {w}: wide={pg.evaluate('document.documentElement.scrollWidth > innerWidth')} problems={pg.evaluate(CHECK)}")
@@ -73,6 +74,15 @@ def main():
                 pg.locator('[data-v4="risk"] [data-v4-risk]').fill("9")
                 pg.wait_for_timeout(400)
                 shot(pg, "coach-risk9-1440", '[data-pane="coach"]')
+                # the level must have SET the bot: the Settings tab's own sliders now read risk 9's values
+                got = pg.evaluate("""() => [...['Stop loss %', 'Take profit %']].map(l => +document.querySelector(`input[aria-label="${l}"]`).value)""")
+                want = pg.evaluate("""() => { const m = JSON.parse(document.querySelector('[data-v4="risk"]').getAttribute('data-v4-map'))['9']; return [m.stop, m.take]; }""")
+                print(f"risk 9 sets the bot: settings {got}, map {want}, problems={[] if got == want else ['risk did not set the bot']}")
+                pg.locator('.at-tabbar button[data-tab="settings"]').click()
+                pg.wait_for_timeout(200)
+                shot(pg, "settings-risk9-1440", '[data-pane="settings"]')
+                pg.locator('.at-tabbar button[data-tab="coach"]').click()
+                pg.wait_for_timeout(200)
                 pg.locator('[data-v4-sw]').evaluate('e => { e.checked = false; e.dispatchEvent(new Event("change", {bubbles: true})); }')
                 pg.wait_for_timeout(200)
                 shot(pg, "coach-off-1440", '[data-pane="coach"]')

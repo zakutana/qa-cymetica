@@ -1,6 +1,6 @@
 """A local copy of their Agent Tournaments pages with the v4 changes laid on top.
 
-    python outbox/tournaments-v4/live/serve.py            # http://127.0.0.1:8790/agent-tournaments
+    python outbox/tournaments-v4/live/serve.py            # http://127.0.0.1:8790/agent-casino
 
 The pages, styles, scripts and data are THEIR live ones, read anonymously (GET, no cookies, no key) and cached for 30
 seconds; patch.py changes only what v4 changes. The mirror READS ONLY: every method except GET and HEAD is refused
@@ -25,11 +25,14 @@ import patch  # noqa: E402
 UPSTREAM = "https://cymetica.com"
 TTL = 30.0
 OWN_FILES = {"v4.js": "application/javascript; charset=utf-8", "v4.css": "text/css; charset=utf-8"}
+# v4 renames it Agent Casino at /agent-casino (the operator, 2026-10-26); their page still lives at /agent-tournaments,
+# so a page here is fetched from there, and the old page addresses answer with a permanent redirect, as v4 asks of them
+NEW, OLD = "/agent-casino", "/agent-tournaments"
 PAGES = (
-    (re.compile(r"^/agent-tournaments/?$"), "lobby"),
-    (re.compile(r"^/agent-tournaments/leaderboard/?$"), "leaderboard"),
-    (re.compile(r"^/agent-tournaments/how/?$"), "how"),
-    (re.compile(r"^/agent-tournaments/table/\d+/?$"), "table"),
+    (re.compile(r"^/agent-casino/?$"), "lobby"),
+    (re.compile(r"^/agent-casino/leaderboard/?$"), "leaderboard"),
+    (re.compile(r"^/agent-casino/how/?$"), "how"),
+    (re.compile(r"^/agent-casino/table/\d+/?$"), "table"),
 )
 DROP = {"content-security-policy", "content-security-policy-report-only", "content-encoding", "content-length",
         "transfer-encoding", "connection", "set-cookie", "strict-transport-security", "cross-origin-opener-policy",
@@ -56,7 +59,7 @@ class Handler(BaseHTTPRequestHandler):
     server_version = "v4-mirror"
 
     def log_message(self, fmt, *args):  # quiet: one line per page, not per asset
-        if self.path.startswith("/agent-tournaments"):
+        if self.path.startswith((NEW, OLD)):
             sys.stderr.write(f"{self.command} {self.path}\n")
 
     def _refuse(self):
@@ -89,7 +92,13 @@ class Handler(BaseHTTPRequestHandler):
             if name in OWN_FILES:
                 return self._send(200, OWN_FILES[name], (HERE / name).read_bytes(), head=head)
             return self._send(404, "text/plain", b"no", head=head)
-        status, ctype, body, headers = fetch_upstream(path)
+        if path == OLD or path.startswith((OLD + "/", OLD + "?", OLD + "#")):
+            return self._send(301, "text/plain", b"", {"Location": NEW + path[len(OLD):]}, head=head)
+        upstream = OLD + path[len(NEW):] if path == NEW or path.startswith((NEW + "/", NEW + "?")) else path
+        # their scripts name the page they run on (?path=/agent-casino, e.g. the Build it Better app stats); their API
+        # knows it as /agent-tournaments, and a 404 there makes the widget ask again and again
+        upstream = upstream.replace("path=%2Fagent-casino", "path=%2Fagent-tournaments").replace("path=/agent-casino", "path=/agent-tournaments")
+        status, ctype, body, headers = fetch_upstream(upstream)
         bare = path.split("?")[0]
         for rx, page in PAGES:
             if rx.match(bare) and status == 200 and "text/html" in ctype:
@@ -109,7 +118,7 @@ def main():
     ap.add_argument("--port", type=int, default=8790)
     port = ap.parse_args().port
     srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    print(f"v4 mirror on http://127.0.0.1:{port}/agent-tournaments  (reads cymetica.com, never writes)", flush=True)
+    print(f"v4 mirror on http://127.0.0.1:{port}/agent-casino  (reads cymetica.com, never writes)", flush=True)
     srv.serve_forever()
 
 

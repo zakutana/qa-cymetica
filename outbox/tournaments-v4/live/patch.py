@@ -42,6 +42,9 @@ RETEXT = [
     (re.compile(r"ROI of the 10 agents"), "ROI of the 6 agents"),
     (re.compile(r"\b10 SEATS LEFT"), "6 SEATS LEFT"),
     (re.compile(r"\b10 seats left"), "6 seats left"),
+    # the pot pays the top 2 only, 4 and 2 of the 6 buy-ins (the operator, 2026-10-26); the ET10 extra on top stays
+    (re.compile(r"to the top three qualified members \(60 / 30 / 10\)"), "to the top two qualified members (2/3 and 1/3)"),
+    (re.compile(r"Best ROI takes it; the top 3 also win ET10\."), "The top 2 by ROI take it: 4× and 2× the buy-in; the top 3 also win ET10."),
 ]
 
 
@@ -80,6 +83,37 @@ def retext(root) -> None:
                 for rx, to in RETEXT:
                     v = rx.sub(to, v)
                 e.set(a, v)
+
+
+# v4 renames it Agent Casino, at /agent-casino (the operator, 2026-10-26: "at to cele prejmenuji na agent casino, zmen ten
+# napis v logu ... a taky url"); the API keeps /api/v1/agent-tournaments, so agents and their tools do not break
+RENAME = [
+    (re.compile(r"Agent Tournaments"), "Agent Casino"),
+    (re.compile(r"AGENT TOURNAMENTS"), "AGENT CASINO"),
+    (re.compile(r"^(\s*)TOURNAMENTS(\s*)$"), r"\1CASINO\2"),          # the logo's big word, under its small AGENT
+    (re.compile(r"cymetica\.com/agent-tournaments"), "cymetica.com/agent-casino"),
+]
+
+
+def rename(root) -> None:
+    for e in root.iter():
+        if not isinstance(e.tag, str) or e.tag in ("script", "style"):
+            continue
+        for attr in ("text", "tail"):
+            s = getattr(e, attr)
+            if s and ("OURNAMENTS" in s or "ournaments" in s or "agent-tournaments" in s):
+                for rx, to in RENAME:
+                    s = rx.sub(to, s)
+                setattr(e, attr, s)
+        for a in ("aria-label", "title", "content", "alt"):
+            v = e.get(a)
+            if v and "/og/" not in v:
+                for rx, to in RENAME:
+                    v = rx.sub(to, v)
+                e.set(a, v)
+        h = e.get("href")
+        if h and "/api/" not in h and "/agent-tournaments" in h:
+            e.set("href", h.replace("/agent-tournaments", "/agent-casino"))
 
 
 def money(v: float, usd: bool) -> str:
@@ -186,13 +220,55 @@ def card(c, six_buyins: bool) -> None:
         e.text = re.sub(r"^\d+ SEATS? LEFT", f"{left} SEAT{'' if left == 1 else 'S'} LEFT", e.text)
     for e in c.xpath('.//span[contains(@class,"who") and contains(text(),"seats left")]'):
         e.text = re.sub(r"^\d+ seats? left", seats_left_text(left), e.text)
-    if six_buyins:       # an open table shows what it will pay when FULL: six buy-ins, not ten
+    if six_buyins:       # an open table shows what it will pay when FULL: six buy-ins, not ten (prizes: two_prizes)
         for v in c.xpath('.//*[@data-at-pot]'):
             usd = v.text.strip().startswith("$")
             v.text = money(num(v.text) * 0.6, usd)
-        for b in c.xpath('.//div[contains(@class,"at-c3")]//b'):
-            usd = (b.text or "").strip().startswith("$")
-            b.text = money(num(b.text or "") * 0.6, usd)
+
+
+SHARES = (("1ST", 2 / 3), ("2ND", 1 / 3))     # the pot pays the top 2 only: 4 and 2 of the 6 buy-ins ($1: $4 and $2)
+
+
+def two_prizes(doc) -> None:
+    """Every prize row, cards and table page alike: 1st and 2nd from the pot shown above it, no 3rd."""
+    for c3 in doc.xpath('//div[contains(@class,"at-c3")]'):
+        pot = c3.xpath('preceding::*[@data-at-pot][1]')
+        cells = c3.xpath('./div')
+        if not pot or len(cells) < 2:
+            continue
+        usd = (pot[0].text or "").strip().startswith("$")
+        total = num(pot[0].text or "")
+        for d in cells[2:]:
+            c3.remove(d)
+        for d, (_, share) in zip(cells, SHARES):
+            d.xpath('./b')[0].text = money(round(total * share, 2) if usd else round(total * share), usd)
+        c3.set("class", c3.get("class") + " v4-two")
+        c3.set("aria-label", "Prizes, 1st and 2nd")
+    for spots in doc.xpath('//span[contains(@class,"at-spots")]'):      # the big table's felt: the same two spots
+        pot = spots.xpath('preceding::*[@data-at-pot][1]')
+        cells = spots.xpath('./span[contains(@class,"sp")]')
+        if not pot or len(cells) < 2:
+            continue
+        usd = (pot[0].text or "").strip().startswith("$")
+        total = num(pot[0].text or "")
+        for d in cells[2:]:
+            spots.remove(d)
+        for d, (_, share) in zip(cells, SHARES):
+            d.xpath('./b')[0].text = money(round(total * share, 2) if usd else round(total * share), usd)
+        spots.set("aria-label", "Prizes, 1st and 2nd")
+
+
+def how(doc) -> None:
+    """The How it works stakes: 1st prize is 4 buy-ins, the pot 6."""
+    for st in doc.xpath('//div[contains(@class,"at-stake")]'):
+        big = st.xpath('.//div[@class="big"]')
+        if not big:
+            continue
+        buy = num(big[0].text or "")
+        for w in st.xpath('.//span[@class="win"]'):
+            w.text = money(4 * buy, True)
+        for b in st.xpath('.//span[starts-with(normalize-space(.),"pot")]/b'):
+            b.text = money(6 * buy, True)
 
 
 # ------------------------------------------------------------------------------------------------ the head: the buy-in once, a small clock
@@ -308,8 +384,8 @@ def live_card(tid, name, buy, runs, taken, band) -> str:
                  f'<use href="#at-bot-{BOTS[i % len(BOTS)]}"></use></svg></span>' if i < taken else '<span class="at-ava"></span>')
         seats.append(f'<span class="{c}" style="{style}">{inner}</span>')
     cells = "".join(
-        f'<div role="listitem"{" class=w" if k == 0 else ""}><span class="k">{p}</span><b>{money(pot * share, True)}</b></div>'
-        for k, (p, share) in enumerate((("1ST", .6), ("2ND", .3), ("3RD", .1))))
+        f'<div role="listitem"{" class=w" if k == 0 else ""}><span class="k">{p}</span><b>{money(round(pot * share, 2), True)}</b></div>'
+        for k, (p, share) in enumerate(SHARES))
     left = SEATS - taken
     dur_tag = {"HOUR": "h", "HOURS": "h", "DAY": "d"}[runs.split()[1]] + runs.split()[0]
     return (f'<a class="at-tcard pro" href="#wallet" data-v4-live="{tid}" data-table-id="{tid}" data-v4-dur="{runs.split()[0]}{runs.split()[1][0]}" '
@@ -321,7 +397,7 @@ def live_card(tid, name, buy, runs, taken, band) -> str:
             f'<div class="at-tbl" aria-label="The table"><div class="at-felt"><span class="at-trk" aria-hidden="true"><i class="t">AGENT TOURNAMENTS</i>'
             f'<i class="b">BEST ROI WINS</i></span><div class="at-pot"><span class="k">PRIZE POOL · WHEN FULL</span>'
             f'<span class="v" data-at-pot>${pot}</span><span class="s">real USDC</span></div></div>{"".join(seats)}</div>'
-            f'<div class="at-c3" role="list" aria-label="Prizes, 1st to 3rd">{cells}</div>'
+            f'<div class="at-c3 v4-two" role="list" aria-label="Prizes, 1st and 2nd">{cells}</div>'
             f'<div class="at-tfoot"><span class="who">{seats_left_text(left)}</span><span class="v cy">TAKE A SEAT</span></div></a>')
 
 
@@ -474,8 +550,12 @@ def patch_html(page: str, html: str) -> str:
         lobby(doc)
     elif page == "table":
         table(doc)
+    elif page == "how":
+        how(doc)
+    two_prizes(doc)
     for bar in doc.xpath('//header[contains(@class,"at-bar")]')[:1]:   # every page: the Universe, at the bar's right end
         bar.append(frag(UNIVERSE)[0])
     retext(doc)
+    rename(doc)
     inject(doc)
     return L.tostring(doc, encoding="unicode", method="html", doctype="<!DOCTYPE html>")

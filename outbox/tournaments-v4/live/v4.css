@@ -107,6 +107,9 @@ section.at-big.at-o-tbl { box-shadow: inset 0 0 50px color-mix(in srgb, var(--at
   box-shadow: 0 0 0 1px rgba(0, 255, 136, .6), 0 4px 14px -6px rgba(0, 255, 136, .5); }
 .at-bar .at-btn.v4-uni svg { width: 12px; height: 12px; }
 
+/* the pot pays the top 2 only: two prize cells, not three */
+.at-c3.v4-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
 /* the hero's three tiles, with icons */
 .v4-kinds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 24px 0 26px; }
 .v4-kind { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 16px 12px 14px; border-radius: 18px; border: 1px solid var(--at-line); text-align: center; overflow: hidden; }
@@ -223,6 +226,11 @@ main.content-main:has(.at)::before {
   background: radial-gradient(110% 45% at 25% 0%, rgba(0, 207, 255, .16), transparent 65%), linear-gradient(170deg, var(--at-panel2), var(--at-sunk)) !important; }
 .v4-risk-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .v4-riskcard .v4-ctx { margin-top: 0; padding: 5px 10px; }
+/* what the level sets on the bot, in numbers, right under the slider */
+.v4-risk-set { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+.v4-risk-set span { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 4px; border-radius: 10px;
+  background: var(--at-sunk); border: 1px solid var(--at-line2); font: 700 9px var(--at-num); letter-spacing: .14em; color: var(--at-muted); }
+.v4-risk-set b { font: 400 15px var(--font-display); letter-spacing: 0; color: var(--at-ink); }
 .v4-risk-say { margin: 2px 0 0; font: 500 12.5px/1.5 var(--at-num); color: var(--at-ink2); text-align: center; }
 
 /* the Tune log in the Changelog tab, and who changed what */
