@@ -207,16 +207,19 @@ def test_a_card_says_its_buy_in_once_and_its_length_on_a_small_clock_under_it(lo
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_hero_has_a_green_button_to_the_casino_in_the_universe(lobby):
+def test_every_page_has_a_green_button_to_the_casino_in_the_universe(lobby, table):
     """ "pridej nekde nejake tlacitko zelene viditelne ze see in the universe a otevre to
-    https://cymetica.com/company/app#universe kde uvidi agent casino" (2026-10-26): beside PICK A TABLE, green."""
-    pick = lobby.xpath('//a[@id="atPick"]')[0]
-    uni = pick.getnext()
-    assert uni is not None and uni.get("href") == "https://cymetica.com/company/app#universe"
-    assert " ".join(uni.text_content().split()) == "SEE IN THE UNIVERSE"
-    assert "v4-uni" in uni.get("class").split() and "at-btn" in uni.get("class").split()
-    css = (LIVE / "v4.css").read_text(encoding="utf-8")
-    assert re.search(r"\.at-btn\.v4-uni\s*\{[^}]*color: var\(--at-green\)", css)
+    https://cymetica.com/company/app#universe kde uvidi agent casino", then "ne to tlacitko dej stejne jak pick a table
+    barvy a dej ho mensi nahoru nekde do te listy na kraj" (2026-10-26): PICK A TABLE's filled green (their .go), small
+    (their .sm), at the right end of the top bar on every page, and no longer in the hero."""
+    for page in (lobby, table, L.fromstring(patch.patch_html("leaderboard", fixture("leaderboard")))):
+        bar = page.xpath('//header[contains(@class,"at-bar")]')[0]
+        uni = bar[-1]
+        assert uni.get("href") == "https://cymetica.com/company/app#universe"
+        assert " ".join(uni.text_content().split()) == "SEE IN THE UNIVERSE"
+        assert {"at-btn", "go", "sm", "v4-uni"} <= set(uni.get("class").split())
+        assert len(page.xpath('//a[contains(@class,"v4-uni")]')) == 1
+    assert not lobby.xpath('//div[contains(@class,"at-cta")]//a[contains(@class,"v4-uni")]')
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
