@@ -24,7 +24,8 @@ import patch  # noqa: E402
 
 UPSTREAM = "https://cymetica.com"
 TTL = 30.0
-OWN_FILES = {"v4.js": "application/javascript; charset=utf-8", "v4.css": "text/css; charset=utf-8"}
+OWN_FILES = {"v4.js": "application/javascript; charset=utf-8", "v4.css": "text/css; charset=utf-8",
+             "space-bg.jpg": "image/jpeg"}
 PAGES = (
     (re.compile(r"^/agent-tournaments/?$"), "lobby"),
     (re.compile(r"^/agent-tournaments/leaderboard/?$"), "leaderboard"),

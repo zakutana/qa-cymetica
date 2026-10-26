@@ -446,8 +446,6 @@ def table(doc) -> None:
     for t in doc.xpath('//section[contains(@class,"at-o-tbl")]//div[contains(@class,"at-tbl")]'):
         reseat(t, keep_titles=names)
         stacks(t)
-    for sec in doc.xpath('//section[contains(@class,"at-o-tbl")]'):     # the light and orbits round the table
-        sec.insert(0, frag('<div class="v4-space" aria-hidden="true"></div>')[0])
     race(doc, names)
     picks = doc.xpath('//*[@id="atPicks"]/@data-table')
     if picks and int(picks[0]) == OWNER_TABLE:
