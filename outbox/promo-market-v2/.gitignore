@@ -1,0 +1,4 @@
+# Raw API answers (queues hold strangers' posts, journalists' addresses): not for git. make_data.py keeps only what the
+# page shows.
+snap/
+shots/
