@@ -31,7 +31,8 @@ SPRITE = """<svg class="v4-sprite" aria-hidden="true" focusable="false" style="p
 <linearGradient id="v4-pod-1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#66ffb8"></stop><stop offset="1" stop-color="#00995a"></stop></linearGradient>
 <linearGradient id="v4-pod-2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FE6FF"></stop><stop offset="1" stop-color="#007a99"></stop></linearGradient>
 <linearGradient id="v4-pod-3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93c5fd"></stop><stop offset="1" stop-color="#1d4ed8"></stop></linearGradient>
-<linearGradient id="v4-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3F7FC" stop-opacity=".42"></stop><stop offset="1" stop-color="#F3F7FC" stop-opacity="0"></stop></linearGradient>
+<linearGradient id="v4-cardback" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1e3050"></stop><stop offset=".55" stop-color="#111a28"></stop><stop offset="1" stop-color="#06090f"></stop></linearGradient>
+<linearGradient id="v4-glass"x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3F7FC" stop-opacity=".42"></stop><stop offset="1" stop-color="#F3F7FC" stop-opacity="0"></stop></linearGradient>
 <filter id="v4-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"></feGaussianBlur></filter>
 <filter id="v4-glowf" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
 <symbol id="v4-et10" viewBox="0 0 32 32">
@@ -157,6 +158,29 @@ def coach_icon() -> str:
   <circle cx="190" cy="196" r="2.6" fill="#F3F7FC" fill-opacity=".6"></circle>
  </g>
 </svg>"""
+
+
+# ------------------------------------------------------------------------------------------------ cards and chips at a seat
+# The operator, 2026-10-26, with a render of the table he wants ("a stul nejak vylepsi aspon takto"): a metal rail, a
+# glowing inner edge, and at the side seats two face-down cards and a short stack of chips on the felt.
+
+CHIP_TONES = ("cy", "gr", "bl", "wh")
+
+
+def seat_stack(k: int) -> str:
+    cards = ""
+    for dx, rot in ((0, -14), (9, 6)):
+        cards += (f'<g transform="translate({dx} 0) rotate({rot} 22 25)"><rect class="cb" x="9" y="8" width="25" height="34" rx="3.6"></rect>'
+                  f'<rect class="cbi" x="12.4" y="11.4" width="18.2" height="27.2" rx="2.2"></rect>'
+                  f'<path class="cbm" d="M21.5 17.5 l4.6 7.5 -4.6 7.5 -4.6 -7.5 z"></path></g>')
+    chips = ""
+    for j in range(2 + k % 3):
+        tone = CHIP_TONES[(k + j) % len(CHIP_TONES)]
+        cy = 41 - j * 3.9
+        chips += (f'<ellipse class="cs {tone}" cx="58" cy="{cy + 2.6:.1f}" rx="10" ry="4.2"></ellipse>'
+                  f'<ellipse class="ct {tone}" cx="58" cy="{cy:.1f}" rx="10" ry="4.2"></ellipse>'
+                  f'<ellipse class="cd" cx="58" cy="{cy:.1f}" rx="7.6" ry="3" pathLength="40"></ellipse>')
+    return f'<svg class="v4-stack-svg" viewBox="0 0 72 52" aria-hidden="true">{cards}{chips}</svg>'
 
 
 # ------------------------------------------------------------------------------------------------ the risk gauge

@@ -22,16 +22,46 @@ html.v4-live #open, html.v4-live #open + .at-secnote, html.v4-live #atOpen, html
 .v4-band { font: 800 10.5px var(--at-num); letter-spacing: .1em; padding: 5px 9px; border-radius: 99px; color: var(--at-cyan); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); white-space: nowrap; }
 .at-tcard[data-v4-live] .at-pot .s { color: var(--at-green); }
 
-/* the page: depth and light instead of one flat blue */
+/* the page: near-black with soft light, the table's honeycomb weave fading out under the top (the operator liked it,
+   2026-10-18), and a fine grain so the gradients do not band. No grid ("to modre pozadi ... je to takove divne"). */
 body { background:
-    radial-gradient(1100px 620px at 6% -8%, rgba(0, 207, 255, .14), transparent 62%),
-    radial-gradient(900px 760px at 102% 22%, rgba(0, 255, 136, .08), transparent 60%),
-    radial-gradient(1300px 820px at 40% 112%, rgba(59, 130, 246, .14), transparent 62%),
-    linear-gradient(180deg, var(--at-bg), var(--at-sunk)) !important;
+    radial-gradient(900px 520px at 12% 0%, rgba(0, 207, 255, .16), transparent 70%),
+    radial-gradient(800px 640px at 96% 14%, rgba(0, 255, 136, .09), transparent 70%),
+    radial-gradient(1200px 700px at 50% 108%, rgba(59, 130, 246, .12), transparent 70%),
+    radial-gradient(ellipse 120% 90% at 50% 40%, var(--at-bg) 40%, var(--at-sunk) 100%) !important;
   background-attachment: fixed !important; }
-body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background-image: linear-gradient(rgba(0, 207, 255, .045) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 207, 255, .045) 1px, transparent 1px);
-  background-size: 46px 46px; -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 15%, transparent 75%); mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 15%, transparent 75%); }
+body::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1100px; z-index: -1; pointer-events: none; opacity: .07;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='42' height='24.25'><path d='M0 12.12 L7 0 H21 L28 12.12 L21 24.25 H7 Z M28 12.12 H42' fill='none' stroke='%2300ff88' stroke-width='1'/></svg>");
+  -webkit-mask-image: radial-gradient(ellipse 70% 100% at 50% 0%, black 30%, transparent 85%); mask-image: radial-gradient(ellipse 70% 100% at 50% 0%, black 30%, transparent 85%); }
+body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .05; mix-blend-mode: screen;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>"); }
+
+/* the table: a metal rail round the felt, a lit inner edge from cyan to green, cards and chips at the side seats */
+.at-tbl .at-felt { border: 7px solid transparent !important;
+  background: radial-gradient(ellipse at 50% 36%, color-mix(in srgb, var(--at-cyan) 12%, var(--at-panel)) 0%, var(--at-panel) 55%, var(--at-sunk) 100%) padding-box,
+    linear-gradient(180deg, color-mix(in srgb, var(--at-hi) 45%, transparent), transparent 45%, color-mix(in srgb, var(--at-sunk) 70%, transparent)) border-box,
+    conic-gradient(from 210deg, var(--at-ink2), var(--at-muted) 10%, var(--at-panel2) 22%, var(--at-ink2) 34%, var(--at-muted) 47%, var(--at-panel2) 60%, var(--at-ink2) 72%, var(--at-muted) 86%, var(--at-ink2)) border-box !important;
+  box-shadow: 0 0 0 2px var(--at-sunk), 0 18px 40px -14px var(--at-sunk), 0 0 34px -4px color-mix(in srgb, var(--at-t) 30%, transparent),
+    inset 0 0 26px color-mix(in srgb, var(--at-sunk) 80%, transparent) !important; }
+.at-big .at-tbl .at-felt { border-width: 18px !important; }
+.at-tbl .at-felt::after { inset: 2px !important; border: 2px solid transparent !important; border-radius: 999px;
+  background: linear-gradient(90deg, var(--at-cyan), var(--at-green)) border-box;
+  -webkit-mask: linear-gradient(var(--at-sunk) 0 0) padding-box, linear-gradient(var(--at-sunk) 0 0); -webkit-mask-composite: xor; mask: linear-gradient(var(--at-sunk) 0 0) padding-box exclude, linear-gradient(var(--at-sunk) 0 0);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--at-cyan) 70%, transparent)); }
+.v4-stack { position: absolute; z-index: 1; width: 92px; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 6px 8px var(--at-sunk)); }
+.v4-stack.flip { transform: translate(-50%, -50%) scaleX(-1); }
+.v4-stack-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.v4-stack .cb { fill: url(#v4-cardback); stroke: var(--at-muted); stroke-width: 1.2; }
+.v4-stack .cbi { fill: none; stroke: var(--at-cyan); stroke-opacity: .45; stroke-width: 1; }
+.v4-stack .cbm { fill: var(--at-cyan); fill-opacity: .35; }
+.v4-stack .cs { stroke: var(--at-sunk); stroke-width: .6; }
+.v4-stack .ct { stroke: color-mix(in srgb, var(--at-hi) 50%, transparent); stroke-width: .6; }
+.v4-stack .cd { fill: none; stroke: var(--at-hi); stroke-width: 1.4; stroke-dasharray: 2.4 2.6; opacity: .75; }
+.v4-stack .cs.cy { fill: color-mix(in srgb, var(--at-cyan) 55%, var(--at-sunk)); } .v4-stack .ct.cy { fill: var(--at-cyan); }
+.v4-stack .cs.gr { fill: color-mix(in srgb, var(--at-green) 55%, var(--at-sunk)); } .v4-stack .ct.gr { fill: var(--at-green); }
+.v4-stack .cs.bl { fill: color-mix(in srgb, var(--at-blue) 55%, var(--at-sunk)); } .v4-stack .ct.bl { fill: var(--at-blue); }
+.v4-stack .cs.wh { fill: var(--at-muted); } .v4-stack .ct.wh { fill: var(--at-ink); }
+
 .at-card, .at-tcard, .at-me, .v4-kind, .at-rstrip, .at-tabbar {
   background: linear-gradient(165deg, color-mix(in srgb, var(--at-panel2) 94%, transparent), color-mix(in srgb, var(--at-sunk) 94%, transparent)) !important;
   box-shadow: inset 0 1px 0 rgba(0, 207, 255, .12), 0 24px 48px -30px rgba(0, 207, 255, .35); }

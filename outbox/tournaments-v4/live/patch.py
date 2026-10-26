@@ -151,6 +151,21 @@ def reseat(tbl, keep_titles: set[str] | None = None) -> int:
     return sum(1 for s in kept if is_filled(s))
 
 
+def stacks(tbl) -> None:
+    """Two face-down cards and a few chips on the felt in front of each side seat (top and bottom seats sit where
+    the felt carries its own words and the prize cells)."""
+    for k, s in enumerate(c for c in tbl if isinstance(c.tag, str) and has(c, "at-seat")):
+        m = re.search(r"--x:([\d.]+)%;--y:([\d.]+)%", s.get("style") or "")
+        if not m:
+            continue
+        x, y = float(m.group(1)), float(m.group(2))
+        if abs(x - 50) < 5:
+            continue
+        sx, sy = 50 + (x - 50) * 0.66, 50 + (y - 50) * 0.60
+        flip = " flip" if x > 50 else ""
+        tbl.append(frag(f'<span class="v4-stack{flip}" style="left:{sx:.1f}%;top:{sy:.1f}%" aria-hidden="true">{art.seat_stack(k)}</span>')[0])
+
+
 # ------------------------------------------------------------------------------------------------ cards
 
 def seats_left_text(k: int) -> str:
@@ -429,6 +444,7 @@ def table(doc) -> None:
             cell.text = str(i)
     for t in doc.xpath('//section[contains(@class,"at-o-tbl")]//div[contains(@class,"at-tbl")]'):
         reseat(t, keep_titles=names)
+        stacks(t)
     race(doc, names)
     picks = doc.xpath('//*[@id="atPicks"]/@data-table')
     if picks and int(picks[0]) == OWNER_TABLE:

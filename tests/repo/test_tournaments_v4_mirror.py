@@ -163,6 +163,13 @@ def test_the_table_page_has_six_seats_and_six_standings_rows(table):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_big_table_has_cards_and_chips_at_its_side_seats(table):
+    # "a stul nejak vylepsi aspon takto": his render had cards and chips in front of the side seats, none at top or bottom
+    big = table.xpath('//section[contains(@class,"at-o-tbl")]//div[contains(@class,"at-tbl")]')[0]
+    assert len(big.xpath('./span[contains(@class,"v4-stack")]')) == 4
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_race_keeps_only_the_six_lines(table):
     lines = table.xpath('//section[contains(@class,"at-race")]//polyline')
     assert 1 <= len(lines) <= 6
