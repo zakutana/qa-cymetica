@@ -280,6 +280,12 @@ MODE_SWITCH = ('<div class="v4-mode" role="group" aria-label="Paper or Live tabl
                '<button type="button" class="on" data-v4-mode="paper">PAPER</button>'
                '<button type="button" data-v4-mode="live"><i></i>LIVE · USDC</button></div>')
 
+# the hero's second button: the Agent Casino where it stands in their Universe (a globe, no orbit rings)
+UNIVERSE = ('<a class="at-btn xl v4-uni" href="https://cymetica.com/company/app#universe">'
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+            'aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9'
+            'M12 3c-2.6 2.6-3.8 5.6-3.8 9s1.2 6.4 3.8 9"/></svg>SEE IN THE UNIVERSE</a>')
+
 
 # ------------------------------------------------------------------------------------------------ Live tables
 
@@ -414,6 +420,8 @@ def lobby(doc) -> None:
         filters[0].addprevious(frag(MODE_SWITCH)[0])
     for kinds in doc.xpath('//div[contains(@class,"at-kinds")]'):     # the hero's three tiles, with icons, no Week
         kinds.getparent().replace(kinds, frag(art.hero_tiles())[0])
+    for pick in doc.xpath('//a[@id="atPick"]'):     # beside it: the Agent Casino in their Universe, in green
+        pick.addnext(frag(UNIVERSE)[0])
     anchor = doc.xpath('//details[contains(@class,"at-done")]')
     if anchor:
         parent = anchor[0].getparent()

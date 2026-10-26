@@ -207,6 +207,19 @@ def test_a_card_says_its_buy_in_once_and_its_length_on_a_small_clock_under_it(lo
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_hero_has_a_green_button_to_the_casino_in_the_universe(lobby):
+    """ "pridej nekde nejake tlacitko zelene viditelne ze see in the universe a otevre to
+    https://cymetica.com/company/app#universe kde uvidi agent casino" (2026-10-26): beside PICK A TABLE, green."""
+    pick = lobby.xpath('//a[@id="atPick"]')[0]
+    uni = pick.getnext()
+    assert uni is not None and uni.get("href") == "https://cymetica.com/company/app#universe"
+    assert " ".join(uni.text_content().split()) == "SEE IN THE UNIVERSE"
+    assert "v4-uni" in uni.get("class").split() and "at-btn" in uni.get("class").split()
+    css = (LIVE / "v4.css").read_text(encoding="utf-8")
+    assert re.search(r"\.at-btn\.v4-uni\s*\{[^}]*color: var\(--at-green\)", css)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_hero_tiles_have_icons_and_no_week(lobby):
     kinds = lobby.xpath('//div[contains(@class,"v4-kinds")]')[0]
     text = kinds.text_content()
