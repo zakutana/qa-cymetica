@@ -38,12 +38,14 @@ svg { display: block; }
 @keyframes holo-sway {
   0%, 100% { transform: rotateY(-34deg) rotateX(-35.264deg) rotateZ(45deg); }
   50% { transform: rotateY(36deg) rotateX(-35.264deg) rotateZ(45deg); } }
-.holo .f { position: absolute; inset: 0; border-radius: calc(var(--s) * .015); overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden;
-  background: linear-gradient(140deg, rgba(0,207,255,.32), rgba(0,207,255,.08) 46%, rgba(0,255,136,.18));
-  box-shadow: inset 0 0 0 1px rgba(232,251,255,.42), inset 0 0 calc(var(--s) * .16) rgba(0,207,255,.42), 0 0 calc(var(--s) * .16) rgba(0,207,255,.30); }
-/* scan lines, the hologram's own texture */
+/* the edges are light, not lines: no hairline, a glow that is brightest at the rim and fades inward and outward;
+   corners nearly square so the faces still meet, and only the faces turned to the viewer are drawn */
+.holo .f { position: absolute; inset: 0; border-radius: calc(var(--s) * .035); overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  background: linear-gradient(140deg, rgba(0,207,255,.30), rgba(0,207,255,.09) 46%, rgba(0,255,136,.17));
+  box-shadow: inset 0 0 calc(var(--s) * .05) rgba(0,207,255,.55), inset 0 0 calc(var(--s) * .22) rgba(0,207,255,.26), 0 0 calc(var(--s) * .2) rgba(0,207,255,.24); }
+/* scan lines, the hologram's own texture, faint */
 .holo .f::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background: repeating-linear-gradient(0deg, rgba(0,207,255,.08) 0 1px, transparent 1px 4px); }
+  background: repeating-linear-gradient(0deg, rgba(0,207,255,.04) 0 1px, transparent 1px 4px); }
 /* a sheen passing over the glass now and then */
 .holo .f::after { content: ''; position: absolute; inset: -50%; z-index: 2; pointer-events: none; transform: translateX(-70%);
   background: linear-gradient(115deg, transparent 42%, rgba(230,237,247,.22) 50%, transparent 58%); animation: holo-sheen 8s ease-in-out infinite; }
