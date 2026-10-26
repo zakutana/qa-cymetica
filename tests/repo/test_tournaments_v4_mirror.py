@@ -403,6 +403,19 @@ def test_the_grid_runs_the_whole_width_and_the_back_arrow_is_centred():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_form_block_fits_their_box_with_room_to_spare():
+    """ "tvuj text ma pry pres 8000 characteru" (2026-10-26) about a block we measured at 7,921: their box is a textarea
+    with maxlength 8000 and their API takes 8,000 characters and 40 lines, but however the count was made it went over.
+    So the block keeps 500 characters spare even with every line break counted twice, and is plain ASCII."""
+    text = (LIVE.parent / "request.md").read_text(encoding="utf-8").split("\n")
+    fences = [i for i, l in enumerate(text) if l == "```"]
+    block = "\n".join(text[fences[2] + 1:fences[3]])
+    assert len(block) + block.count("\n") <= 7500, len(block) + block.count("\n")
+    assert block.count("\n") + 1 <= 40
+    assert block.isascii(), sorted({c for c in block if not c.isascii()})
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_v4_stylesheet_adds_no_colour_of_its_own():
     css = (LIVE / "v4.css").read_text(encoding="utf-8")
     assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", css), "colours come from their variables"
