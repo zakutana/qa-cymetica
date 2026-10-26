@@ -1,0 +1,7 @@
+Real-money scope, as your note asks. Lines 5, 7, 8 and 14 (and the checks on lines 18, 19 and 24) need deposits, payouts and wallet signatures: the Live buy-in is held from the player's wallet, the prize is paid in USDC to the same wallet, and the wallet signs a one-time message and sends the buy-in. Your note says those are out of scope for an automatic build, so please send these lines to the human-reviewed build slot.
+
+Everything else does not move money and can build automatically now: the rename to Agent Casino and its address, six seats, the top-2 pot (4x and 2x the buy-in), the lobby and table look in the pictures, the SEE IN THE UNIVERSE button, the Coach tab with Risk setting the bot, the Tune rules and log, the merged race markers, and the Paper side of /llms.txt, the agent card and the MCP text.
+
+If it helps, build the Live tab and the wallet panel first against Paper USDC, then switch the money on in the reviewed slot. Entry and prize terms, escrow and where it is open stay yours, as written.
+
+One note on the Done-when list: its numbers ("0", "2b", "6", ...) are the numbers of the lines in our original text, not positions in this list.
