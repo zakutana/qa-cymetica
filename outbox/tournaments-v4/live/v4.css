@@ -44,11 +44,11 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .v4-coin { width: 24px; height: 24px; flex: none; filter: drop-shadow(0 0 6px rgba(0, 207, 255, .5)); }
 .v4-coin.lg { width: 34px; height: 34px; }
 .v4-sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.v4-dur { display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px 3px 5px; border-radius: 99px; background: var(--at-sunk); box-shadow: inset 0 0 0 1px var(--at-line); }
-.v4-dur > svg { width: 22px; height: 24px; flex: none; overflow: visible; }
-.v4-dur b { font-family: var(--font-display); font-size: 12.5px; letter-spacing: .04em; color: var(--at-hi); }
-.v4-dur.is-live { box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .55), 0 0 12px rgba(0, 255, 136, .18); }
-.v4-dur.is-open { box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .5); }
+/* the length: the stopwatch and its label, no pill around them ("jen je nedavej do toho ohraniceni") */
+.v4-dur { display: inline-flex; align-items: center; gap: 7px; }
+.v4-dur > svg { width: 28px; height: 30px; flex: none; overflow: visible; }
+.v4-dur.is-live > svg { filter: drop-shadow(0 0 6px rgba(0, 255, 136, .35)); }
+.v4-dur b { font-family: var(--font-display); font-size: 14px; letter-spacing: .04em; color: var(--at-hi); }
 .v4-dur .v4-watch .tr, .v4-dur .v4-watch .pg { stroke-width: 7; }
 .v4-dur.is-open .v4-watch .pg, .v4-dur.is-open .v4-watch .tip { display: none; }
 .v4-dur.is-open .v4-watch .tr { stroke: var(--at-cyan); stroke-dasharray: 3.2 3.6; opacity: .9; }
@@ -136,6 +136,8 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .v4-coach-n b { color: var(--at-hi); }
 .v4-coach-h { grid-column: 2; grid-row: 2; align-self: start; display: flex; align-items: center; gap: 12px; margin-top: 8px; }
 .v4-coach [data-v4-off] { grid-column: 1 / -1; }
+.v4-nudge { animation: v4-nudge .5s ease; box-shadow: 0 0 0 2px var(--at-cyan), 0 0 22px rgba(0, 207, 255, .55) !important; }
+@keyframes v4-nudge { 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
 .v4-coach.v4-off .v4-coach-ico-w { opacity: .35; filter: grayscale(.6); }
 .v4-plan { font: 800 10.5px var(--at-num); letter-spacing: .12em; padding: 4px 9px; border-radius: 99px; color: var(--at-cyan); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); white-space: nowrap; }
 .v4-sw-lg { transform: scale(1.3); transform-origin: left center; margin-right: 10px; }
@@ -160,7 +162,9 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .v4-ctx b { color: var(--at-hi); }
 
 /* the risk: its own panel under the coach, for every owner */
-.v4-riskcard { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; border-color: rgba(0, 207, 255, .35) !important; }
+.v4-riskcard { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; padding: 14px 2px 0; border-top: 1px solid var(--at-line); }
+.v4-coachpanel { padding: 6px 16px 16px; border-color: rgba(0, 207, 255, .45) !important;
+  background: radial-gradient(110% 45% at 25% 0%, rgba(0, 207, 255, .16), transparent 65%), linear-gradient(170deg, var(--at-panel2), var(--at-sunk)) !important; }
 .v4-risk-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .v4-riskcard .v4-ctx { margin-top: 0; padding: 5px 10px; }
 .v4-risk-say { margin: 2px 0 0; font: 500 12.5px/1.5 var(--at-num); color: var(--at-ink2); text-align: center; }

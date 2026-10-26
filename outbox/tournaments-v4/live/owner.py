@@ -64,7 +64,7 @@ def coach_card(end: str) -> str:
  <div class="v4-coach-h"><label class="at-sw v4-sw-lg"><input type="checkbox" checked data-v4-sw aria-label="NEXUS coach on or off"><i></i></label><span class="v4-plan" data-v4-plan>PRO</span></div>
  <div data-v4-off hidden><span class="at-btn ghost wide">See plans ›</span></div>
 </section>"""
-    risk = f"""<section class="at-card v4-riskcard" data-v4="risk">
+    risk = f"""<section class="v4-riskcard" data-v4="risk">
  <div class="v4-risk-h"><span class="at-lbl">Risk</span><span class="v4-ctx"><span><b>#{seat["rank"]}</b>/6</span><span><b data-end="{end}">10H</b> left</span></span></div>
  <div class="v4-risk" data-level="5"><div class="v4-gauge-w">{art.gauge(5)}
    <div class="v4-risk-v"><b data-v4-risk-v>5</b><span data-v4-risk-w>{RISK_WORDS[5]}</span></div></div>
@@ -72,7 +72,8 @@ def coach_card(end: str) -> str:
   <div class="v4-risk-f"><span>SAFE</span><span>ALL IN</span></div></div>
  <p class="v4-risk-say">How hard your bot plays: trade size, stop loss and take profit. Change it any time.</p>
 </section>"""
-    return coach + risk
+    # one panel, the coach on top and the risk under it ("dej to cele do 1 panelu spolecne s tim metrem")
+    return f'<div class="at-card v4-coachpanel">{coach}{risk}</div>'
 
 
 def tunelog_card() -> str:

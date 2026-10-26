@@ -79,9 +79,13 @@
   });
 
   // 6. the coach: on or off, on a paid plan (locked on the free one)
-  function coach(card) {
+  function coach(card, tried) {
     var sw = card.querySelector('[data-v4-sw]'), free = card.getAttribute('data-v4-as') === 'free';
-    sw.disabled = free; if (free) sw.checked = false;
+    if (free && sw.checked) {          // on the free plan the switch answers: it springs back and points at the plans
+      sw.checked = false;
+      var plans = card.querySelector('[data-v4-off] .at-btn');
+      if (plans && tried) { plans.classList.remove('v4-nudge'); void plans.offsetWidth; plans.classList.add('v4-nudge'); }
+    }
     card.querySelector('[data-v4-off]').hidden = !free;
     card.classList.toggle('v4-off', !sw.checked);
     card.querySelector('[data-v4-plan]').textContent = free ? 'PRO · LOCKED' : 'PRO';
@@ -100,7 +104,7 @@
     card.querySelector('.v4-risk').setAttribute('data-level', v);
   }
   function onChange(e) {
-    var c = e.target.closest && e.target.closest('[data-v4="coach"]'); if (c) coach(c);
+    var c = e.target.closest && e.target.closest('[data-v4="coach"]'); if (c) coach(c, true);
     var r = e.target.closest && e.target.closest('[data-v4="risk"]'); if (r) risk(r);
   }
   document.addEventListener('input', onChange);

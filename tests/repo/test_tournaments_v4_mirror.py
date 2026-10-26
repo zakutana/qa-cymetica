@@ -263,6 +263,8 @@ def test_the_coach_tab_comes_first_and_holds_only_the_coach(table):
     assert not coach.xpath('.//input[@type="range"]') and not coach.xpath('.//*[contains(@class,"v4-seg")]')
     risk = pane.xpath('.//*[@data-v4="risk"]')[0]
     assert risk.getprevious() is not None and risk.getprevious().get("data-v4") == "coach"      # under the coach
+    # and then "dej to cele do 1 panelu spolecne s tim metrem": the coach and the risk share one panel
+    assert risk.getparent() is coach.getparent() and "at-card" in risk.getparent().get("class").split()
     assert risk.xpath('.//input[@type="range"][@data-v4-risk]') and len(risk.xpath('.//*[contains(@class,"v4-seg")]')) == 10
     note = " ".join(risk.xpath('.//p[contains(@class,"v4-risk-say")]')[0].text_content().split())
     assert 20 < len(note) < 120, note
