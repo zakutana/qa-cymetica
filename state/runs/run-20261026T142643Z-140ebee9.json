@@ -1,0 +1,176 @@
+{
+  "schema": 2,
+  "run_id": "run-20261026T142643Z-140ebee9",
+  "started_at": "2026-10-26T14:26:53+00:00",
+  "finished_at": "2026-10-26T14:27:57+00:00",
+  "git_head": "140ebee94715cedace176cf0fe1d26ea7d004ab3",
+  "git_short": "140ebee9",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:ca38e00fa46d50776fdf2acea8db3c742672a3d466b1519d41541a2f42c17b38",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "882eee762fe8a86233ef5c31ec09b06cb0ceaf59d84d0ce482dd26e91f80bfb4",
+    "/.well-known/agent-card.json": "ec49fd608fdbe1beccd8b4f771e2db4a1d4e060d6a940946a43280b174b553f7",
+    "/.well-known/agent-skills.json": "b0592b7e51942365f9c61fd46bd233118cabf591f7ff46d7387f9311b5a3a7c6",
+    "/.well-known/ai-plugin.json": "6ab78de3594c4cc3eeac74e02d88e28841bc38ca87933cc14172115bf7c1dded",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "1e1b7e2efeaff813451d647f88f52353e50627b882e63a65842dd1238b8e108c",
+    "/openapi-public.json": "a3e412a1e20581d6a6f15a4b3c5a32c06a631f066d5b7ae0ba989e0f5e699dcd",
+    "/llms.txt": "289e04d480a620824b5419f88d726aec2fe70c0a2a7f57a0af5a95a3623d9bec",
+    "mcp:tools/list:none": "b4e37c12cf958cfd7d19fc86970f252e6919134bb6a7d781af48503532ff24bf"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_traffic_agent_visits_are_the_agents_requests.py -q --no-header --tb=line -p no:cacheprovider",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_traffic_agent_visits_are_the_agents_requests.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_traffic_agent_visits_are_the_agents_requests.py::test_traffic_agent_visits_are_the_agents_requests"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_traffic_agent_visits_are_the_agents_requests.py::test_traffic_agent_visits_are_the_agents_requests",
+      "component": "rest.traffic",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "traffic-agent-visits-are-the-agents-requests",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "passed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 40766,
+      "evidence_ids": [
+        "4f1fe07045b8301df1caaf5f383a0d8a38b03b08471e1c6154f97e6f23739e69",
+        "0a1234dcf6030ae2c7ae60456ef7a8eaaa8b622ada328db484916ed02fe4f60e",
+        "22ae39f899426a13957d15ac2453f950794833f5ddfef4986da95e68030814d8"
+      ],
+      "measurement": {
+        "verdict": "passed",
+        "reason": "AI-agent visits 105,642 and the agents' requests by area 105,642 agree over the same range",
+        "left": {
+          "ai_agent_visits": 105642
+        },
+        "right": {
+          "ai_agent_requests_by_area": 105642
+        },
+        "sources": {
+          "page": "/traffic (#k-agents, #tl-do-agent, the <strong>Visits</strong> = paragraph and the 'grouped by product area' paragraph)",
+          "tile": "/api/v1/traffic/public?days=14 -> ai_agents.total",
+          "list": "/api/v1/traffic/activity?days=14 -> requests.ai_agent.range"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "traffic-agent-visits-are-the-agents-requests",
+        "role": "verdict",
+        "population": {
+          "agent_visits": 105642,
+          "agent_requests_by_area": 105642,
+          "gap": 0,
+          "gap_share": 0.0,
+          "remainder_row": "Everything else",
+          "rows": 11,
+          "since": [
+            "2026-10-13T07:00:00+00:00",
+            "2026-10-13T07:00:00+00:00"
+          ],
+          "days": [
+            14,
+            14
+          ],
+          "generated_at": [
+            "2026-10-26T14:26:57.591731+00:00",
+            "2026-10-26T14:27:00.239081+00:00"
+          ],
+          "tile_definition": "every request an agent makes (one crawler reading 300 pages is 300 requests). It is the same number as the AI agents total under What visitors do.",
+          "list_definition": "Every request, arrivals AND the pages opened after them (for AI agents also their API calls), grouped by product area. These counts are larger than the arrival counts above. Humans and AI agents are counted separately.",
+          "area_rows": [
+            {
+              "area": "MCP (agent protocol)",
+              "requests": 26613
+            },
+            {
+              "area": "Rarely requested paths",
+              "requests": 21422
+            },
+            {
+              "area": "Other pages",
+              "requests": 17538
+            },
+            {
+              "area": "Coin dashboards",
+              "requests": 16245
+            },
+            {
+              "area": "Screeners & analyzers",
+              "requests": 6667
+            },
+            {
+              "area": "Funds",
+              "requests": 3132
+            },
+            {
+              "area": "Feature board",
+              "requests": 3076
+            },
+            {
+              "area": "Account",
+              "requests": 2086
+            },
+            {
+              "area": "Build it Better",
+              "requests": 1228
+            },
+            {
+              "area": "Event cards",
+              "requests": 1047
+            },
+            {
+              "area": "Everything else",
+              "requests": 6588
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "e977a7c76b7b46769a5a06ea518b3f043fb05795f3feecb95d94021c17d87f99",
+      "helpers_fingerprint": "9578bce2bb258bcfad21973ead52265907690cbff7c07fa76e4252adcdfdcf72",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": null
+    }
+  ],
+  "totals": {
+    "passed": 1
+  },
+  "ratelimit": {
+    "requests": 4,
+    "limit": 2000,
+    "remaining": 1996,
+    "fraction_used": 0.002,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:ca38e00fa46d50776fdf2acea8db3c742672a3d466b1519d41541a2f42c17b38",
+  "exit_status": 0
+}
