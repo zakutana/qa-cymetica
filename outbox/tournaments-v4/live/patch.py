@@ -222,7 +222,9 @@ def buy_html(buy: str, big: bool = False) -> str:
     m = re.fullmatch(r"([\d,.]+)\s*ET10", buy.strip())
     if not m:
         return buy.strip()
-    return f'{m.group(1)}{art.coin("v4-coin lg" if big else "v4-coin")}<small>ET10</small>'
+    # no coin icon between the number and its unit: a "10" in a circle read as nothing ("nechapu co to tam je za desitku
+    # v kolecku")
+    return f'{m.group(1)} <small>ET10</small>'
 
 
 def restyle_head(c, head, big: bool = False) -> None:

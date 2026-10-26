@@ -42,13 +42,16 @@ html.v4-live #open, html.v4-live #open + .at-secnote, html.v4-live #atOpen, html
   -webkit-mask: linear-gradient(var(--at-sunk) 0 0) padding-box, linear-gradient(var(--at-sunk) 0 0); -webkit-mask-composite: xor; mask: linear-gradient(var(--at-sunk) 0 0) padding-box exclude, linear-gradient(var(--at-sunk) 0 0);
   filter: drop-shadow(0 0 5px var(--at-cyan)) drop-shadow(0 0 12px color-mix(in srgb, var(--at-cyan) 60%, transparent)); }
 .at-big .at-tbl .at-felt::after { border-width: 3px !important; }
-/* behind the table only, Cymetica's own 3D Universe, the render the Cymetica Quest flyer uses (space_bg.py): the
-   panel keeps their frame and its space fades into a dark edge, so it reads as a window, not a pasted picture; the
-   rest of the page keeps their background ("ale mas menit jen pozadi u stolu ne u cele stranky") */
-section.at-big.at-o-tbl { position: relative; overflow: hidden;
-  background: radial-gradient(ellipse 75% 70% at 50% 50%, transparent 55%, rgba(13, 21, 32, .85) 100%),
-    url("/__v4/space-bg.jpg") center / cover no-repeat, var(--at-sunk) !important;
-  box-shadow: inset 0 0 60px var(--at-sunk), 0 24px 48px -30px rgba(0, 207, 255, .35) !important; }
+/* the blue made suede, like the surface of a poker table (the operator, 2026-10-26: "vrat to pozadi na to puvodni jak
+   bylo, ale jen tu modrou udelej takovou semisovou"): their own navy, a fine fibre grain brushed one way, softer and
+   darker patches where the nap lies differently, and light falling from the top */
+section.at-big.at-o-tbl, a.at-tcard {
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.75 1.5' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .65  0 0 0 0 .95  0 0 0 .2 -.03'/></filter><rect width='240' height='240' filter='url(%23g)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 900 600' preserveAspectRatio='none'><filter id='n' x='0' y='0' width='100%25' height='100%25'><feTurbulence type='fractalNoise' baseFrequency='0.0045 0.011' numOctaves='3' seed='4'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .7 -.22'/></filter><rect width='900' height='600' filter='url(%23n)'/></svg>") center / 100% 100% no-repeat,
+    radial-gradient(ellipse 90% 60% at 35% 0%, color-mix(in srgb, var(--at-cyan) 9%, transparent), transparent 70%),
+    var(--at-panel) !important; }
+section.at-big.at-o-tbl { box-shadow: inset 0 0 50px color-mix(in srgb, var(--at-sunk) 70%, transparent) !important; }
 .v4-stack { position: absolute; z-index: 1; width: 112px; transform: translate(-50%, -50%); pointer-events: none; filter: drop-shadow(0 8px 10px var(--at-sunk)); }
 .v4-stack.flip { transform: translate(-50%, -50%) scaleX(-1); }
 .v4-stack-svg, .v4-deck-svg { display: block; width: 100%; height: auto; overflow: visible; }

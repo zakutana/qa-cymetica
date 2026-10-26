@@ -203,7 +203,7 @@ def test_a_card_says_its_buy_in_once_and_its_length_on_a_small_clock_under_it(lo
         assert len(dur) == 1 and re.fullmatch(r"\d+[HD]", dur[0].text_content())
         assert not head.xpath('.//*[contains(@class,"v4-clock")]')          # the big stopwatch is gone
         et10 = "ET10" in head.xpath('.//span[contains(@class,"v4-buy")]')[0].text_content()
-        assert bool(head.xpath('.//*[contains(@class,"v4-coin")]')) == et10
+        assert not head.xpath(".//*[contains(@class,\"v4-coin\")]")      # "nechapu co to tam je za desitku v kolecku"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -243,7 +243,7 @@ def test_the_table_page_header_says_it_once_and_the_rules_strip_is_gone(table):
     assert title.startswith("100ET10") and title.count("ET10") == 1
     assert not head.xpath('.//*[contains(@class,"at-buyin") or contains(@class,"at-kind")]')
     assert head.xpath('.//span[contains(@class,"v4-dur")]/b')[0].text_content() == "7D"
-    assert head.xpath('.//*[contains(@class,"v4-coin")]')
+    assert not head.xpath(".//*[contains(@class,\"v4-coin\")]")
     assert not table.xpath('//*[contains(@class,"at-rstrip")]')
 
 
