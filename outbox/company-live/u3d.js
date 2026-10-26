@@ -2064,7 +2064,9 @@ class Universe3D {
     // the stars of light on the orbits: where they were (an orbit each), each now trailing a tail along its lane
     const TC = { 203: '#80c8d0', 178: '#7fb8ff', 136: '#7fe8c0', 105: '#c8f0e6' };
     this.laneDefs = Object.keys(TC).map((r) => ({ r: +r, col: TC[r], speed: Gx.omega(+r) * 6 }));
-    this.ships = [[203, -1.0, 24, 1.5], [136, 0.42, 9, 0.9], [178, -1.47, 8, 0.7], [203, 2.3, 16, 1.2], [105, 3.9, 13, 1.1]].map(([r, ang0, size, k]) => {
+    // 2026-10-26 (the operator: the smoky comet and the bright stars riding the orbits are ugly): none of them. Their code
+    // stays below so the look can be had back by listing them again.
+    this.ships = [].map(([r, ang0, size, k]) => {
       const L = this.laneDefs.find((x) => x.r === r) || this.laneDefs[0], col = new THREE.Color(L.col).lerp(new THREE.Color(0xffffff), 0.6);
       const head = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: col.clone().multiplyScalar(k), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
       head.scale.setScalar(size); this.scene.add(head);
@@ -2099,7 +2101,7 @@ class Universe3D {
     // the stars of light on the orbits, where his are at the first look (sent back through his camera): a big one
     // top left on the outer pair, a small green one on the green-grey line, a faint one high on the blue; two more
     // round the far side
-    this.ships = [[203, -1.0, 24, 1.5], [136, 0.42, 9, 0.9], [178, -1.47, 8, 0.7], [203, 2.3, 16, 1.2], [105, 3.9, 13, 1.1]].map(([r, a, size, k]) => {
+    this.ships = [].map(([r, a, size, k]) => {
       const L = this.laneDefs.find((x) => x.r === r) || this.laneDefs[0];
       const head = new THREE.Sprite(new THREE.SpriteMaterial({ map: flareTex(), color: new THREE.Color(L.col).lerp(new THREE.Color(0xffffff), 0.6).multiplyScalar(k), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
       head.scale.setScalar(size); this.scene.add(head);
