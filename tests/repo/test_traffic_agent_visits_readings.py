@@ -109,6 +109,26 @@ def test_the_page_saying_what_one_figure_leaves_out_passes():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_page_as_fixed_on_2026_10_26_still_holds_its_promise():
+    # Their fix renamed the tile and its definition, and said the two are the same number. With the list now
+    # adding up it passes; the renamed definition is still read as the promise, so a gap that comes back fails
+    # instead of passing as "no longer claimed".
+    fixed = (LIVE_HTML
+             .replace("<strong>Visits</strong> = every request an agent makes (one crawler reading 300 pages is 300 visits).",
+                      "<strong>Requests</strong> = every request an agent makes (one crawler reading 300 pages is 300 "
+                      "requests). It is the same number as the AI agents total under What visitors do.")
+             .replace("Every request, landings AND the pages and API calls after them,",
+                      "Every request, arrivals AND the pages opened after them (for AI agents also their API calls),"))
+    facts = page_facts(fixed)
+    assert facts["promise"] and "same number" in facts["tile_definition"]
+    tail = [("Rarely requested paths", 21419)]
+    assert _verdict(html=fixed, public=_public(total=105625),
+                    activity=_activity(areas=[("MCP (agent protocol)", 26613), ("Other pages", 17527)] + tail
+                                       + [("Coin dashboards", 16245), ("Everything else", 23821)])) == "passed"
+    assert _verdict(html=fixed) == "failed"
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_what_the_check_cannot_decide_is_inconclusive():
     # The sections gone: nothing on the page to judge.
     assert _verdict(html=LIVE_HTML.replace('id="k-agents"', 'id="k-x"')) is None

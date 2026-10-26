@@ -58,10 +58,13 @@ FLOOR = 50
 MAX_SKEW_S = 30 * 60
 
 # Anchored on their markup: the tile's id, the list's id, and the <strong>Visits</strong> = definition.
+# Their fix of 2026-10-26 renamed the tile "AI-agent requests" and the definition <strong>Requests</strong> =,
+# adding "It is the same number as the AI agents total under What visitors do": both names are the tile's,
+# or the renamed definition would read as no promise and a later gap would pass.
 TILE_ID = re.compile(r'\bid="k-agents"')
 LIST_ID = re.compile(r'\bid="tl-do-agent"')
 PARAGRAPH = re.compile(r"<p\b[^>]*>(.*?)</p>", re.S | re.I)
-VISITS_DEF = re.compile(r"<strong>\s*Visits\s*</strong>\s*=(.*?)(?:<strong>|$)", re.S | re.I)
+VISITS_DEF = re.compile(r"<strong>\s*(?:Visits|Requests)\s*</strong>\s*=(.*?)(?:<strong>|$)", re.S | re.I)
 EVERY = re.compile(r"\b(?:every|all|each)\b[^.<]{0,40}?\brequests?\b", re.I)
 EXCEPT = re.compile(r"\b(?:except\w*|exclud\w*|only|apart from|other than|leaves? out|left out|omit\w*"
                     r"|not (?:counted|included|in (?:it|this|the list|these)))\b", re.I)
