@@ -10,7 +10,7 @@ The pictures are screenshots of THEIR live pages with only the v4 changes on the
 python outbox/tournaments-v4/live/serve.py       # http://127.0.0.1:8790/agent-tournaments
 ```
 
-A read-only local copy: it fetches their pages anonymously (GET, no cookies, no key) and refuses every other method, so nothing can reach their platform. Click their header's PAPER | LIVE pill to switch the lobby; click a Live table for the wallet panel; on `/agent-tournaments/table/15` the owner column has the Tune switch ("Preview as: Pro plan | Free plan"). `live/render.py` retakes the pictures, `tests/repo/test_tournaments_v4_mirror.py` holds the changes in place.
+A read-only local copy: it fetches their pages anonymously (GET, no cookies, no key) and refuses every other method, so nothing can reach their platform. Use the PAPER | LIVE switch at the top of the lobby (or their header pill); click a Live table for the wallet panel; on `/agent-tournaments/table/15` the owner column opens on the Coach tab (Pro | Free preview at its foot). `live/render.py` retakes the pictures, `tests/repo/test_tournaments_v4_mirror.py` holds the changes in place.
 
 ## What the live read found (2026-10-26)
 
@@ -25,12 +25,14 @@ Real: everything on their pages, and our seat's bot settings, lock and 17 closed
 
 ## The pictures (the form takes at most 6), in `pictures/`
 
-1. `lobby-live-1440.png`: PAPER | LIVE pill on LIVE: three Live Flash tables (1 hour, 5 hours, 1 day), 6 seats, the owner's "Your agent" hero.
+1. `lobby-live-1440.png`: the Paper | Live switch on LIVE: three Live Flash tables, each card with its buy-in once, the Flash tag and a stopwatch (1H, 5H, 1D).
 2. `wallet-1440.png`: an outside agent joining with a wallet.
-3. `table-1440.png`: the table page for the seat owner, 6 seats, the Tune switch above the bot panel.
-4. `tune-on-1440.png`: the Tune card on a paid plan (triggers, the log).
-5. `tune-free-1440.png`: the same card locked on the free plan.
+3. `table-1440.png`: the table page for the seat owner, 15 % smaller, 6 seats, no rules strip, the Coach tab first.
+4. `coach-on-1440.png`: the NEXUS coach: the chip in a deerstalker, on/off, the risk slider.
+5. `changelog-1440.png`: the Tune log and who changed what, in the Changelog tab.
 6. `race-1440.png`: the race with touching trade markers merged.
+
+Also in `pictures/`: `lobby-paper-*`, `coach-risk9-1440.png` (slider at 9), `coach-free-1440.png` (locked on the free plan), `head-1440.png`.
 
 ## Filing
 
@@ -39,19 +41,21 @@ On the form, "I have a link" with `https://cymetica.com/agent-tournaments`, the 
 ```
 Follow-up to ET-31702: upgrade the live Agent Tournaments itself, not a new page beside it; it keeps its name, logo, copy, fonts and colours. The pictures are the live pages with only these changes on them. Goals, not methods; the template lines about rebuilding someone else's app do not apply. Colours: the site's own. English, numbers before words.
 1. Six seats: every table, in the lobby, the create form, the table page and How it works, has 6 seats instead of 10 (headline: "6 agents. 1 table."). It starts when the 6th seat is approved; house bots fill to 6 as today. The pot still splits 60 / 30 / 10 to the top 3.
-2. Lobby: the PAPER | LIVE pill that is already in the site header decides which tables the lobby lists, with no reload. PAPER is today's tables; LIVE is real USDC and replaces the "Live tables are not open yet" note.
+2. Lobby: a PAPER | LIVE switch at the top of the lobby, the same setting as the pill already in the site header, decides which tables the lobby lists, with no reload. PAPER is today's tables; LIVE is real USDC and replaces the "Live tables are not open yet" note.
+2b. Table cards and the table page header say the buy-in once (no name like "Flash Pro #19", no ET10 tag beside "100 ET10"); Flash tables keep only their FLASH tag; the length is a stopwatch in the top-right corner (1H, 5H, 1D, 7D) whose ring fills as a running table's time goes, with LIVE and the countdown beside it. The table page drops the strip of seven rules and is drawn 15 % smaller.
 3. Live tables, all Flash, all real USDC: Flash 1 hour ($1 buy-in), Flash 5 hours ($1 for now), Flash 1 day ($5). 6 paid seats, no house bots, the pot is the buy-ins. The buy-in is held from the player's wallet until the table starts (leaving before the start returns it); the prize is paid in USDC to the same wallet when the table ends. Entry and prize terms, escrow and where it is open are yours. Paper tables stay as they are, with 6 seats.
 4. Outside agents: any agent can take a seat at a Live table with a wallet alone. Ownership is proven, not typed in: the wallet signs a one-time message that names the table, carries a nonce and expires in minutes (Ethereum wallets, smart-contract wallets by ERC-1271, Solana by ed25519, as your venue rules already do), so nobody can enter a wallet they do not hold. The buy-in must arrive from that same wallet, and the prize is paid only to it. No account, no API key, no approval step; the API and MCP do the same. One wallet, one seat per table.
 5. The wallet's record places it: the platform reads the wallet's DEX swaps from the chain (last 90 days) and shows swaps, volume, realised ROI and active days. A wallet with a record sits at the $5 table ("PROVEN"), one without sits at the $1 tables ("ANY WALLET"); the thresholds are yours. The record places a wallet, it never replaces the buy-in or the signature. Each Live card shows its band.
-6. NEXUS Tune becomes a switch in the seat owner's column, on a paid NEXUS plan (Pro, Max 5x, Max 20x); the ET10 lock goes. On the free plan the switch shows locked with "See plans".
+6. NEXUS Tune becomes the NEXUS coach: a new first tab, Coach, in the seat owner's column, holding only the coach icon (the Agent Tournaments chip in a deerstalker with a magnifying glass), an on/off switch and a risk slider 1 to 10 (Safe to All in) that the owner can move any time; NEXUS tunes the bot inside that risk. Example: an hour before the end and not first, the owner raises it. On a paid NEXUS plan (Pro, Max 5x, Max 20x); the ET10 lock and its paragraph go. On the free plan the switch and slider show locked with "See plans".
 7. Tune reacts to how the bot is doing, not to a count of closed trades. Today the seat above waits for "5 closed trades since the last tune" and, once its bot stops trading, is never tuned again (seat 87: one tune on 21 Oct, no closed trade since 20 Oct 14:10, ROI -20.27 %). Goals: a bot with 2 losses in a row is tuned within 5 minutes; a bot that falls a rank within 15 minutes; a bot with no trade for a fifth of the table's length is tuned too (6 hours is the example on a 7-day table; the same rules apply on Flash). It changes markets, stop loss and take profit.
-8. Every check is a row in the Tune log, CHECKED (nothing changed, and why) or TUNED (what changed, and why in numbers), so the log is never empty while the table runs. The table's changelog, and the owner's "Your changes", say who changed each setting: NEXUS or OWNER.
+8. Every check is a row in the Tune log (in the Changelog tab, not on the coach), CHECKED (nothing changed, and why) or TUNED (what changed, and why in numbers), so the log is never empty while the table runs. The table's changelog, and the owner's "Your changes", say who changed each setting: NEXUS or OWNER.
 9. The race: trade markers that would touch merge into one marker with the number of trades; nothing overlaps.
 Done when:
 [ ] 1 No page, card or text says 10 seats; a table starts with 6.
 [ ] 2-3 The header pill lists only Paper or only Live tables; Live shows three Flash tables (1 hour $1, 5 hours $1, 1 day $5) in USDC, held and paid back to the wallet.
 [ ] 4-5 An agent with only a wallet can sit at a Live table through the page, the API or MCP; a signature over a fresh message and a buy-in from the same wallet are both needed, and a wallet it does not hold is refused; its record sets $1 or $5.
-[ ] 6 The switch works on a paid plan and shows locked on the free one.
+[ ] 2b Each card and table header shows its buy-in once and a stopwatch with its length; no rules strip on the table page.
+[ ] 6 Coach is the first tab: the icon, the switch and the risk slider, nothing to read; it works on a paid plan and shows locked on the free one.
 [ ] 7-8 A bot with 2 losses in a row is tuned within 5 minutes; a bot with no trade for a fifth of the table's length is tuned; every check is a row with its reason and who.
 [ ] 9 No two race markers touch at 1440 and 1920 px.
 [ ] The pages keep today's look; only layout and content change.

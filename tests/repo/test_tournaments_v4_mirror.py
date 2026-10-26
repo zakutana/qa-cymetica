@@ -137,7 +137,7 @@ def test_an_open_cards_pot_and_prizes_are_six_buy_ins(lobby):
     card = lobby.xpath('//a[contains(@class,"at-tcard") and contains(@class,"micro")]')[0]    # $5, ten seats live
     assert card.xpath('.//*[@data-at-pot]')[0].text_content() == "$30"
     assert [b.text_content().split("+")[0] for b in card.xpath('.//div[contains(@class,"at-c3")]//b')] == ["$18", "$9", "$3"]
-    assert "6 SEATS LEFT" in card.text_content()
+    assert "6 seats left" in card.text_content()
     et = lobby.xpath('//a[contains(@class,"at-tcard") and contains(@class,"et1k")]')[0]       # 1,000 ET10 a seat
     assert et.xpath('.//*[@data-at-pot]')[0].text_content() == "6,000"
 
@@ -171,14 +171,59 @@ def test_the_race_keeps_only_the_six_lines(table):
 # ---- what v4 adds -----------------------------------------------------------------------------------------------
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_live_cards_the_wallet_panel_and_the_tune_panel_are_there(lobby, table):
+def test_the_live_cards_and_the_wallet_panel_are_there(lobby):
     live = lobby.xpath('//*[@id="atLiveV4"]')[0]
-    names = [n.text_content() for n in live.xpath('.//span[contains(@class,"at-tname")]')]
-    assert [n.split("#")[0].strip() for n in names] == ["Flash 1 h", "Flash 5 h", "Flash 1 d"]
-    assert [b.text_content() for b in live.xpath('.//span[contains(@class,"at-buyin")]')] == ["$1", "$1", "$5"]
+    assert [b.text_content() for b in live.xpath('.//span[contains(@class,"v4-buy")]')] == ["$1", "$1", "$5"]
+    assert [b.text_content() for b in live.xpath('.//div[contains(@class,"v4-clock")]/b')] == ["1H", "5H", "1D"]
     assert lobby.xpath('//*[@id="atWalletV4"]')
-    assert table.xpath('//*[@data-v4="tune"]')
-    assert table.xpath('//*[@data-v4="tune"]//input[@data-v4-sw]')
+
+
+# The operator, 2026-10-26, on the cards: "v levem vrchnim rohu sou duplicity, staci jen jednou 100 ET10 napsat, pak
+# je tam zbytecne navic zase tag ET10. to same u flash ... staci jen tag flash, nemusi zase psat Flash pro znova.
+# a nejaky novy top vzhled hodinek ktere ukazi jaky je to flash turnaj jestli 1H 5H".
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_card_says_its_buy_in_once_and_its_length_on_a_stopwatch(lobby):
+    cards = lobby.xpath('//a[contains(@class,"at-tcard")]')
+    assert len(cards) >= 14
+    for c in cards:
+        head = c.xpath('.//div[contains(@class,"at-thead")]')[0]
+        assert len(head.xpath('.//span[contains(@class,"v4-buy")]')) == 1
+        assert not head.xpath('.//*[contains(@class,"at-tname") or contains(@class,"at-buyin") or contains(@class,"at-kind")]')
+        clock = head.xpath('.//div[contains(@class,"v4-clock")]/b')
+        assert len(clock) == 1 and re.fullmatch(r"\d+[HD]", clock[0].text_content())
+        flash = bool(set(c.get("class").split()) & {"fmicro", "fpro"}) or c.get("data-v4-live")
+        assert bool(head.xpath('.//*[contains(@class,"v4-flash")]')) == bool(flash), c.get("class")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_lobby_starts_with_a_paper_live_switch(lobby):
+    bar = lobby.xpath('//header[contains(@class,"at-bar")]')[0]
+    assert [b.get("data-v4-mode") for b in bar.xpath('.//button[@data-v4-mode]')] == ["paper", "live"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_table_page_header_says_it_once_and_the_rules_strip_is_gone(table):
+    head = table.xpath('//div[contains(@class,"at-rhead")]')[0]
+    assert head.xpath('.//h1')[0].text_content().startswith("100 ET10")
+    assert not head.xpath('.//*[contains(@class,"at-buyin") or contains(@class,"at-kind")]')
+    assert head.xpath('.//div[contains(@class,"v4-clock")]/b')[0].text_content() == "7D"
+    assert not table.xpath('//*[contains(@class,"at-rstrip")]')
+
+
+# "NEXUS tunes it for you bude jen nejaka top ikonka coache ... a switch on off. a pridat novy tab ktery bude defaultne
+# jako prvni a jen tam bude ten nexus coach logo a pak jen nejaky slider na risk pod jakym ma ten bot hrat."
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_coach_tab_comes_first_and_holds_only_the_coach(table):
+    tabs = table.xpath('//div[contains(@class,"at-tabbar")]/button')
+    assert tabs[0].get("data-tab") == "coach" and "on" in tabs[0].get("class").split()
+    pane = table.xpath('//div[@data-pane="coach"]')[0]
+    assert pane.get("hidden") is None
+    coach = pane.xpath('.//*[@data-v4="coach"]')[0]
+    assert coach.xpath('.//svg') and coach.xpath('.//input[@data-v4-sw]') and coach.xpath('.//input[@type="range"][@data-v4-risk]')
+    words = " ".join(coach.text_content().split())
+    assert len(words) < 140, words              # a panel, not a paragraph
+    assert not table.xpath('//div[@data-pane="settings"]//*[@data-v4="tune" or @data-v4="coach"]')
+    assert len(table.xpath('//div[@data-pane="log"]//*[@data-v4="tunelog"]//li')) == 4
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

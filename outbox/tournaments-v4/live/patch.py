@@ -19,6 +19,7 @@ from __future__ import annotations
 import math
 import re
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import lxml.html as L
@@ -177,6 +178,99 @@ def card(c, six_buyins: bool) -> None:
             b.text = money(num(b.text or "") * 0.6, usd)
 
 
+# ------------------------------------------------------------------------------------------------ the head: one buy-in, a stopwatch
+# The operator, 2026-10-26: the name, the buy-in chip and the kind tag said the same thing three times ("ET10 100 #15",
+# "100 ET10", "ET10"); the buy-in is said once, Flash keeps its tag, and the length is a stopwatch (1H, 5H, 1D, 7D).
+
+FLASH_TIERS = {"fmicro", "fpro"}
+BOLT = ('<svg viewBox="0 0 12 16" aria-hidden="true"><path class="bolt" d="M7.4 0 1 9.3h4.4L4.5 16 11 6.6H6.7z"></path></svg>')
+
+
+def dur_label(seconds: float) -> str:
+    h = round(seconds / 3600)
+    return f"{h}H" if h < 24 else f"{round(h / 24)}D"
+
+
+def clock(dur: str, status: str, start: str | None = None, end: str | None = None, big: bool = False) -> str:
+    p = 1.0 if status == "done" else 0.0
+    if status == "live" and start and end:
+        a, b = datetime.fromisoformat(start), datetime.fromisoformat(end)
+        p = min(1.0, max(0.0, (datetime.now(a.tzinfo) - a) / (b - a)))
+    ticks = "".join(f'<line x1="32" y1="14.6" x2="32" y2="{19.2 if i % 3 == 0 else 17.4}" transform="rotate({i * 30} 32 38)"></line>'
+                    for i in range(12))
+    hx, hy = 32 + 21 * math.sin(2 * math.pi * p), 38 - 21 * math.cos(2 * math.pi * p)
+    # not data-end: their page ticker rewrites the text of every [data-end] element, and would erase the dial
+    data = f' data-v4-start="{start}" data-v4-end="{end}"' if start and end else ""
+    return (f'<div class="v4-clock is-{status}{" big" if big else ""}"{data}><svg viewBox="0 0 64 66" aria-hidden="true">'
+            f'<rect class="cr" x="27" y="1" width="10" height="5" rx="2"></rect><rect class="cr" x="30.5" y="5" width="3" height="6"></rect>'
+            f'<rect class="cr" x="49.5" y="11" width="7" height="4" rx="1.5" transform="rotate(45 53 13)"></rect>'
+            f'<circle class="face" cx="32" cy="38" r="26"></circle><g class="tk">{ticks}</g>'
+            f'<circle class="tr" cx="32" cy="38" r="21"></circle>'
+            f'<circle class="pg" cx="32" cy="38" r="21" pathLength="100" stroke-dasharray="{p * 100:.1f} 100" transform="rotate(-90 32 38)"></circle>'
+            f'<circle class="hd" cx="{hx:.2f}" cy="{hy:.2f}" r="2.6"></circle></svg><b>{dur}</b></div>')
+
+
+def buy_html(buy: str) -> str:
+    m = re.fullmatch(r"([\d,.]+)\s*ET10", buy.strip())
+    return f'{m.group(1)} <small>ET10</small>' if m else buy.strip()
+
+
+def restyle_head(c, head, big: bool = False) -> None:
+    """Replace the name, buy-in chip, kind tag and corner of a card (or of the table page header) with the buy-in once,
+    the Flash tag, and a stopwatch that carries the length and, while the table runs, how far it has gone."""
+    tl = head.xpath('.//*[contains(@class,"at-buyin")]')[0]
+    buy = tl.text_content().strip()
+    kinds = head.xpath('.//*[contains(@class,"at-kind")]')
+    flash = bool(set((c.get("class") or "").split()) & FLASH_TIERS) or bool(c.get("data-v4-live")) or any(
+        "flash" in cls(k) for k in kinds)
+    corner = head.xpath('./div[contains(@class,"at-corner")]')[0]
+    st = corner.xpath('./span[contains(@class,"at-st")]')[0]
+    status = "live" if "live" in cls(st) else ("open" if "open" in cls(st) else "done")
+    pb = corner.xpath('.//*[@data-pb]')
+    start, end = (pb[0].get("data-start"), pb[0].get("data-end")) if pb else (None, None)
+    runs = " ".join(corner.xpath('.//span[contains(@class,"at-cdl")]/text()'))
+    m = re.search(r"RUNS (\d+) (DAY|HOUR)", runs)
+    dur = (c.get("data-v4-dur") or (dur_label((datetime.fromisoformat(end) - datetime.fromisoformat(start)).total_seconds()) if start else None)
+           or (f'{m.group(1)}{m.group(2)[0]}' if m else None) or ("1D" if flash else "7D"))
+    if status == "live":
+        note = L.tostring(corner.xpath('./span[contains(@class,"at-cdn")]')[0], encoding="unicode")
+    elif status == "open":
+        note = '<span class="v4-note">starts when full</span>'
+    else:
+        ended = re.search(r"ENDED [\d/]+", runs)
+        note = f'<span class="v4-note">{ended.group(0).lower() if ended else ""}</span>'
+    st_html = L.tostring(st, encoding="unicode", with_tail=False)
+    band = head.xpath('.//*[contains(@class,"v4-band")]')
+    band_html = f'<span class="v4-band">{band[0].text_content()}</span>' if band else ""
+    new_corner = frag(f'<div class="at-corner v4-corner"><div class="v4-ct">{st_html}{note}</div>{clock(dur, status, start, end, big)}</div>')[0]
+    corner.getparent().replace(corner, new_corner)
+    if big:                      # the table page: the title is the buy-in, the table number beside it
+        h1 = head.xpath('.//h1')[0]
+        tid = re.search(r"#\d+", h1.text_content())
+        for e in head.xpath('.//*[contains(@class,"at-buyin") or contains(@class,"at-kind")]'):
+            e.getparent().remove(e)
+        new_h1 = frag(f'<h1 class="at-rtitle v4-title">{buy_html(buy)}<span class="v4-id">{tid.group(0) if tid else ""}</span></h1>')[0]
+        h1.getparent().replace(h1, new_h1)
+        if flash:
+            new_h1.addnext(frag(f'<span class="v4-flash">{BOLT}FLASH</span>')[0])
+        return
+    old_tl = head.xpath('./div[contains(@class,"at-tl")]')[0]
+    new_tl = frag(f'<div class="at-tl v4-tl"><span class="v4-buy">{buy_html(buy)}</span>'
+                  f'{f"<span class=v4-flash>{BOLT}FLASH</span>" if flash else ""}{band_html}</div>')[0]
+    old_tl.getparent().replace(old_tl, new_tl)
+
+
+def restyle_card(c) -> None:
+    head = c.xpath('.//div[contains(@class,"at-thead")]')
+    if head:
+        restyle_head(c, head[0])
+
+
+MODE_SWITCH = ('<div class="v4-mode" role="group" aria-label="Paper or Live tables">'
+               '<button type="button" class="on" data-v4-mode="paper">PAPER</button>'
+               '<button type="button" data-v4-mode="live"><i></i>LIVE · USDC</button></div>')
+
+
 # ------------------------------------------------------------------------------------------------ Live tables
 
 LIVE_TABLES = [  # id, name, buy-in, runs, seats taken, band; invented, and said so in request.md
@@ -200,10 +294,10 @@ def live_card(tid, name, buy, runs, taken, band) -> str:
         f'<div role="listitem"{" class=w" if k == 0 else ""}><span class="k">{p}</span><b>{money(pot * share, True)}</b></div>'
         for k, (p, share) in enumerate((("1ST", .6), ("2ND", .3), ("3RD", .1))))
     left = SEATS - taken
-    return (f'<a class="at-tcard pro" href="#wallet" data-v4-live="{tid}" data-table-id="{tid}">'
+    return (f'<a class="at-tcard pro" href="#wallet" data-v4-live="{tid}" data-table-id="{tid}" data-v4-dur="{runs.split()[0]}{runs.split()[1][0]}">'
             f'<div class="at-thead"><div class="at-tl"><span class="at-tname">{name} #{tid}</span><div class="at-tsub">'
             f'<span class="at-buyin">${buy}</span><span class="at-kind flash" title="Real USDC">FLASH</span>'
-            f'<span class="at-kind v4-band">{band}</span></div></div><div class="at-corner"><span class="at-st open">OPEN</span>'
+            f'<span class="v4-band">{band}</span></div></div><div class="at-corner"><span class="at-st open">OPEN</span>'
             f'<span class="at-cdl big">starts when full</span><span class="at-cdl">{left} SEAT{"" if left == 1 else "S"} LEFT · RUNS {runs}</span></div></div>'
             f'<div class="at-tbl" aria-label="The table"><div class="at-felt"><span class="at-trk" aria-hidden="true"><i class="t">AGENT TOURNAMENTS</i>'
             f'<i class="b">BEST ROI WINS</i></span><div class="at-pot"><span class="k">PRIZE POOL · WHEN FULL</span>'
@@ -250,7 +344,10 @@ def live_section() -> list:
            f'<p class="dim at-secnote">Real USDC. 6 paid seats, no house bots, and a table starts when it is full. '
            f'Join with a wallet: sign a message, no account and no approval. Preview: nothing here moves money.</p>'
            f'<div class="at-tables">{cards}</div></div>')
-    return frag(sec) + frag(WALLET.replace("{rows}", rows))
+    nodes = frag(sec)
+    for c in nodes[0].xpath('.//a[contains(@class,"at-tcard")]'):
+        restyle_card(c)
+    return nodes + frag(WALLET.replace("{rows}", rows))
 
 
 # ------------------------------------------------------------------------------------------------ the race
@@ -291,6 +388,11 @@ def lobby(doc) -> None:
     for c in doc.xpath('//a[contains(@class,"at-tcard") or contains(@class,"at-feat")]'):
         card(c, six_buyins=True)
     owner.install_lobby(doc)        # their signed-in hero ("Your agent") and the YOU marks on our card
+    for c in doc.xpath('//a[contains(@class,"at-tcard") or contains(@class,"at-feat")]'):
+        restyle_card(c)
+    live_pill = doc.xpath('//header[contains(@class,"at-bar")]/span[contains(@class,"at-live")]')
+    if live_pill:                   # the Paper | Live switch, at the top of the lobby (synced with their header pill)
+        live_pill[0].addprevious(frag(MODE_SWITCH)[0])
     anchor =doc.xpath('//details[contains(@class,"at-done")]')
     if anchor:
         parent = anchor[0].getparent()
@@ -330,6 +432,11 @@ def table(doc) -> None:
         owner.install(doc)          # the seat owner's view, in their markup
     else:
         owner.who_tags(doc)
+    head = doc.xpath('//div[contains(@class,"at-rhead")]')
+    if head:                        # said once, the stopwatch beside it; the strip of seven rules goes
+        restyle_head(head[0], head[0], big=True)
+    for strip in doc.xpath('//div[contains(@class,"at-rstrip")]'):
+        strip.getparent().remove(strip)
 
 
 def patch_html(page: str, html: str) -> str:

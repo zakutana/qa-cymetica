@@ -1,5 +1,5 @@
-/* v4 layer on top of their Agent Tournaments pages: the Paper | Live view, the wallet panel, the owner's tabs and the
-   Tune switch. A preview: nothing here writes anywhere; every request that is not a read is refused. */
+/* v4 layer on top of their Agent Tournaments pages: the Paper | Live view, the stopwatches, the wallet panel, the
+   owner's tabs and the NEXUS coach. A preview: nothing here writes anywhere; every request that is not a read is refused. */
 (function () {
   'use strict';
 
@@ -18,8 +18,9 @@
     if (String(method).toUpperCase() !== 'GET' && String(method).toUpperCase() !== 'HEAD') { arguments[0] = 'GET'; arguments[1] = 'about:blank'; }
     return xhrOpen.apply(this, arguments);
   };
+  function each(sel, fn, root) { Array.prototype.forEach.call((root || document).querySelectorAll(sel), fn); }
 
-  // 2. their header's PAPER | LIVE pill drives the lobby (they fire tradingModeChanged themselves)
+  // 2. Paper | Live: the switch at the top of the lobby and their header pill are one setting
   var KEY = 'v4mode';
   function isPaper() { try { return localStorage.getItem(KEY) !== 'live'; } catch (e) { return true; } }
   function applyMode() {
@@ -30,19 +31,36 @@
       pill.classList.toggle('paper', paper); pill.classList.toggle('live', !paper);
       var l = pill.querySelector('.mode-label'); if (l) l.textContent = paper ? 'PAPER' : 'LIVE';
     }
+    each('[data-v4-mode]', function (b) { b.classList.toggle('on', (b.getAttribute('data-v4-mode') === 'paper') === paper); });
+  }
+  function setMode(live) {
+    try { localStorage.setItem(KEY, live ? 'live' : 'paper'); } catch (x) { /* private window: the switch still works on this page */ }
+    applyMode();
+    window.dispatchEvent(new CustomEvent('tradingModeChanged', { detail: { isPaper: !live } }));
   }
   document.addEventListener('click', function (e) {
-    var pill = e.target.closest && e.target.closest('#headerModeIndicator');
-    if (!pill) return;
+    var t = e.target.closest && e.target.closest('#headerModeIndicator, [data-v4-mode]');
+    if (!t) return;
     e.preventDefault(); e.stopImmediatePropagation();
-    try { localStorage.setItem(KEY, isPaper() ? 'live' : 'paper'); } catch (x) { /* private window: the switch still works for this page */ }
-    applyMode();
-    window.dispatchEvent(new CustomEvent('tradingModeChanged', { detail: { isPaper: isPaper() } }));
+    setMode(t.id === 'headerModeIndicator' ? isPaper() : t.getAttribute('data-v4-mode') === 'live');
   }, true);
   applyMode();
   document.addEventListener('DOMContentLoaded', applyMode);
 
-  // 3. the wallet panel, opened from a Live card
+  // 3. the stopwatches: a running table's ring fills as its time goes
+  function clocks() {
+    var now = Date.now();
+    each('.v4-clock[data-v4-end]', function (c) {
+      var a = Date.parse(c.getAttribute('data-v4-start')), b = Date.parse(c.getAttribute('data-v4-end'));
+      if (isNaN(a) || isNaN(b) || b <= a) return;
+      var p = Math.max(0, Math.min(1, (now - a) / (b - a))), pg = c.querySelector('.pg'), hd = c.querySelector('.hd');
+      if (pg) pg.setAttribute('stroke-dasharray', (p * 100).toFixed(2) + ' 100');
+      if (hd) { hd.setAttribute('cx', (32 + 21 * Math.sin(2 * Math.PI * p)).toFixed(2)); hd.setAttribute('cy', (38 - 21 * Math.cos(2 * Math.PI * p)).toFixed(2)); }
+    });
+  }
+  clocks(); setInterval(clocks, 1000);
+
+  // 4. the wallet panel, opened from a Live card
   function wallet(open) { var m = document.getElementById('atWalletV4'); if (m) m.hidden = !open; }
   document.addEventListener('click', function (e) {
     var card = e.target.closest && e.target.closest('[data-v4-live]');
@@ -51,34 +69,37 @@
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') wallet(false); });
 
-  // 4. the owner's tabs (Settings, Trade log, Changelog)
+  // 5. the owner's tabs (Coach, Settings, Trade log, Changelog)
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('.at-tabbar button[data-tab]');
     if (!b) return;
     var bar = b.parentNode, root = bar.parentNode;
     Array.prototype.forEach.call(bar.children, function (x) { var on = x === b; x.classList.toggle('on', on); x.setAttribute('aria-selected', on); });
-    Array.prototype.forEach.call(root.querySelectorAll('[data-pane]'), function (p) { p.hidden = p.getAttribute('data-pane') !== b.getAttribute('data-tab'); });
+    each('[data-pane]', function (p) { p.hidden = p.getAttribute('data-pane') !== b.getAttribute('data-tab'); }, root);
   });
 
-  // 5. the Tune switch: on a paid plan it turns Tune on and off; on the free plan it is locked
-  function tune(card) {
-    var sw = card.querySelector('[data-v4-sw]'), on = card.querySelector('[data-v4-on]'), off = card.querySelector('[data-v4-off]'),
-      plan = card.querySelector('[data-v4-plan]'), free = card.getAttribute('data-v4-as') === 'free';
-    sw.disabled = free; if (free) sw.checked = false;
-    on.hidden = free; off.hidden = !free;
-    on.classList.toggle('v4-dim', !sw.checked && !free);
-    plan.textContent = free ? 'PRO · LOCKED' : 'PRO';
+  // 6. the coach: on or off, and the risk the bot may take; on the free plan it is locked
+  var WORDS = ['', 'Calm', 'Calm', 'Steady', 'Steady', 'Balanced', 'Balanced', 'Bold', 'Bold', 'All in', 'All in'];
+  function coach(card) {
+    var sw = card.querySelector('[data-v4-sw]'), r = card.querySelector('[data-v4-risk]'), free = card.getAttribute('data-v4-as') === 'free';
+    sw.disabled = free; r.disabled = free || !sw.checked; if (free) sw.checked = false;
+    card.querySelector('[data-v4-on]').hidden = free; card.querySelector('[data-v4-off]').hidden = !free;
+    card.classList.toggle('v4-off', !sw.checked && !free);
+    card.querySelector('[data-v4-plan]').textContent = free ? 'PRO · LOCKED' : 'PRO';
+    var v = +r.value;
+    card.querySelector('[data-v4-risk-v]').textContent = v;
+    card.querySelector('[data-v4-risk-w]').textContent = WORDS[v];
+    card.querySelector('.v4-risk').classList.toggle('hot', v >= 8);
   }
-  document.addEventListener('change', function (e) {
-    if (e.target.matches && e.target.matches('[data-v4-sw]')) tune(e.target.closest('[data-v4="tune"]'));
-  });
+  document.addEventListener('input', function (e) { var c = e.target.closest && e.target.closest('[data-v4="coach"]'); if (c) coach(c); });
+  document.addEventListener('change', function (e) { var c = e.target.closest && e.target.closest('[data-v4="coach"]'); if (c) coach(c); });
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-v4-as]');
-    if (!b) return;
-    var card = b.closest('[data-v4="tune"]');
+    if (!b || b.matches('[data-v4="coach"]')) return;
+    var card = b.closest('[data-v4="coach"]');
     card.setAttribute('data-v4-as', b.getAttribute('data-v4-as'));
     if (b.getAttribute('data-v4-as') === 'pro') card.querySelector('[data-v4-sw]').checked = true;
-    Array.prototype.forEach.call(card.querySelectorAll('[data-v4-as]'), function (x) { x.classList.toggle('on', x === b); });
-    tune(card);
+    each('button[data-v4-as]', function (x) { x.classList.toggle('on', x === b); }, card);
+    coach(card);
   });
 })();

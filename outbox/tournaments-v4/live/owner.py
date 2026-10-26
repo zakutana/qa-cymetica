@@ -45,23 +45,53 @@ LOG = [  # the first row is the silence that followed our last trade; the rest r
 ]
 
 
-def tune_card() -> str:
+# Their Agent Tournaments logo is a poker chip; the coach is that chip in a deerstalker with a magnifying glass (the
+# operator: "nejake logo toho zetonu v klobouku jak nejaky sherlock"). Line art in their colours, no face.
+_CHECKS = "".join(f'<line x1="{x}" y1="12" x2="{x + 34}" y2="46"></line><line x1="{x + 34}" y1="12" x2="{x}" y2="46"></line>'
+                  for x in range(4, 90, 7))
+COACH_SVG = f"""<svg class="v4-coach-ico" viewBox="0 0 120 120" aria-hidden="true">
+ <defs><clipPath id="v4-hatclip"><path d="M33 42 C33 16, 79 16, 79 42 Z"></path></clipPath></defs>
+ <circle class="c-face" cx="56" cy="74" r="32"></circle><circle class="c-rim" cx="56" cy="74" r="32"></circle>
+ <circle class="c-dash" cx="56" cy="74" r="32"></circle><circle class="c-in" cx="56" cy="74" r="22.6"></circle>
+ <rect class="c-b1" x="44.4" y="65.8" width="8.3" height="16.4" rx="4.15"></rect><rect class="c-b2" x="59.3" y="65.8" width="8.3" height="16.4" rx="4.15"></rect>
+ <g transform="rotate(-12 56 42)">
+  <path class="h-peak" d="M74 38.5 C89 37.5, 100 41.5, 104 48 C93 47, 83 46, 71 45 Z"></path>
+  <path class="h-peak" d="M38 38.5 C23 37.5, 12 41.5, 8 48 C19 47, 29 46, 41 45 Z"></path>
+  <path class="h-crown" d="M33 42 C33 16, 79 16, 79 42 Z"></path>
+  <g class="h-check" clip-path="url(#v4-hatclip)">{_CHECKS}</g>
+  <path class="h-band" d="M33.6 38.6 Q56 33.6 78.4 38.6"></path>
+  <path class="h-bow" d="M56 21 C49 13, 41 18, 48 23 Z M56 21 C63 13, 71 18, 64 23 Z"></path><circle class="h-knot" cx="56" cy="21" r="2.6"></circle>
+ </g>
+ <line class="g-h" x1="97" y1="101" x2="110" y2="114"></line><circle class="g-r" cx="89" cy="93" r="12"></circle><path class="g-s" d="M82.5 90 A7.5 7.5 0 0 1 88 85.2"></path>
+</svg>"""
+
+RISK_WORDS = {1: "Calm", 2: "Calm", 3: "Steady", 4: "Steady", 5: "Balanced", 6: "Balanced", 7: "Bold", 8: "Bold", 9: "All in", 10: "All in"}
+
+
+def coach_card(end: str) -> str:
+    """The coach, and nothing to read: on or off, and how much risk the bot may take. The owner moves the slider
+    (an hour before the end, not first: more risk) and NEXUS tunes the bot inside it."""
+    seat = OWNER["my_seat"]
+    return f"""<section class="at-card v4-coach" data-v4="coach" data-v4-as="pro">
+ <div class="v4-coach-h"><span class="v4-plan" data-v4-plan>PRO</span><label class="at-sw v4-sw-lg"><input type="checkbox" checked data-v4-sw aria-label="NEXUS coach on or off"><i></i></label></div>
+ <div class="v4-coach-ico-w">{COACH_SVG}</div>
+ <div class="v4-coach-n">NEXUS <b>COACH</b></div>
+ <div class="v4-risk" data-v4-on><div class="v4-risk-v"><b data-v4-risk-v>5</b><span data-v4-risk-w>{RISK_WORDS[5]}</span></div>
+  <input type="range" min="1" max="10" step="1" value="5" data-v4-risk aria-label="Risk">
+  <div class="v4-risk-f"><span>SAFE</span><span>ALL IN</span></div></div>
+ <div data-v4-off hidden><span class="at-btn ghost wide">See plans ›</span></div>
+ <div class="v4-ctx"><span><b>#{seat["rank"]}</b>/6</span><span><b data-end="{end}">10H</b> left</span></div>
+ <div class="v4-view" aria-label="Preview as"><button type="button" class="on" data-v4-as="pro">Pro</button><button type="button" data-v4-as="free">Free</button></div>
+</section>"""
+
+
+def tunelog_card() -> str:
+    """Every check NEXUS makes is a row, with who and why; it lives in the Changelog tab, not on the coach."""
     rows = "".join(
         f'<li><span class="tm">{tm}</span><span class="at-tag {"ok" if t else "house"}">{"TUNED" if t else "CHECKED"}</span> '
         f'<b>{what}</b> · {why}</li>' for tm, t, what, why in LOG)
-    return f"""<section class="at-card at-nexus" id="atNexus" data-seat="87" data-v4="tune">
- <div class="at-nx-h"><span class="at-lbl">NEXUS tunes it for you</span>
-  <span class="v4-plan" data-v4-plan>PRO</span><label class="at-sw"><input type="checkbox" checked data-v4-sw aria-label="NEXUS Tune on or off"><i></i></label></div>
- <p class="sub">NEXUS watches this bot's trades while the table runs and changes its markets, stop loss and take profit.</p>
- <div data-v4-on>
-  <div class="at-tiles v4-trig"><div><b>2</b><span>losses in a row: tune within 5 min</span></div><div><b>−1 rank</b><span>falls behind: tune within 15 min</span></div><div><b>6 h</b><span>no trade: tune</span></div></div>
-  <p class="dim" style="margin-top:10px"><b>Every 5 min</b> a check, listed even when nothing changes.</p>
-  <ul class="at-nx-log">{rows}</ul>
-  <p class="dim" style="margin-top:6px">Last check 10-26 10:05 UTC · next check in 5 min</p></div>
- <div data-v4-off hidden><p class="dim" style="margin-top:10px">Included in Pro, Max 5x and Max 20x. Turn it on and NEXUS keeps this bot tuned until the table ends.</p>
-  <span class="at-btn ghost wide" style="margin-top:10px">See plans ›</span></div>
- <div class="v4-view" aria-label="Preview as"><span>Preview as</span><button type="button" class="on" data-v4-as="pro">Pro plan</button><button type="button" data-v4-as="free">Free plan</button></div>
-</section>"""
+    return (f'<section class="at-card at-cl" data-v4="tunelog"><h3><span>NEXUS tunes</span><span class="dim">'
+            f'{sum(1 for x in LOG if x[1])}</span></h3><ul class="at-nx-log">{rows}</ul></section>')
 
 
 def lanes_html() -> str:
@@ -91,18 +121,16 @@ def trades_html() -> str:
     return rows
 
 
-def aside() -> str:
-    seat, st, lock = OWNER["my_seat"], OWNER["my_bot_settings"], OWNER["my_nexus_lock"]
+def aside(end: str) -> str:
+    seat, st = OWNER["my_seat"], OWNER["my_bot_settings"]
     fx = st["fixed"]
     cap = 25.0
     pnl = seat["pnl_usdc"]
     cells = "<i></i>" * 20
-    tune = lock["tunes"][0]
-    nx_text = "; ".join(tune["reasons"])
     return f"""<aside class="at-side2" id="atSide"><div class="at-tabs" id="atTabs">
-<div class="at-tabbar" role="tablist" aria-label="Your bot"><button type="button" role="tab" class="on" aria-selected="true" data-tab="settings">Settings</button><button type="button" role="tab" aria-selected="false" data-tab="trades" tabindex="-1">Trade log</button><button type="button" role="tab" aria-selected="false" data-tab="log" tabindex="-1">Changelog</button></div>
-<div class="at-pane" role="tabpanel" data-pane="settings">
-{tune_card()}
+<div class="at-tabbar" role="tablist" aria-label="Your bot"><button type="button" role="tab" class="on" aria-selected="true" data-tab="coach">Coach</button><button type="button" role="tab" aria-selected="false" data-tab="settings" tabindex="-1">Settings</button><button type="button" role="tab" aria-selected="false" data-tab="trades" tabindex="-1">Trade log</button><button type="button" role="tab" aria-selected="false" data-tab="log" tabindex="-1">Changelog</button></div>
+<div class="at-pane" role="tabpanel" data-pane="coach">{coach_card(end)}</div>
+<div class="at-pane" role="tabpanel" data-pane="settings" hidden>
 <section class="at-card at-ctl" id="atCtl" data-seat="87">
  <div class="at-ctl-h"><span class="at-ava you" style="--c:#7FE6FF"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#at-bot-d"></use></svg></span><div class="who"><span class="at-lbl">Your bot</span><b>{seat["bot"]}</b></div><span class="at-tag you">YOU</span></div>
  <div class="at-capline"><span class="at-lbl">Capital at this table</span><b>${cap:.0f}</b> <span class="cl">P&amp;L <em class="neg">{usd(pnl)}</em> · now <b>${cap + pnl:.2f}</b></span></div>
@@ -120,7 +148,7 @@ def aside() -> str:
 </section></div>
 <div class="at-pane" role="tabpanel" data-pane="trades" hidden><section class="at-card" id="atLast"><h3><span>Recent trades</span><span class="dim">{len(OWNER["your_trades"])} so far</span></h3><div class="at-last">{trades_html()}</div></section></div>
 <div class="at-pane" role="tabpanel" data-pane="log" hidden>
- <section class="at-card at-cl"><h3><span>NEXUS tunes</span><span class="dim">{lock["tune_count"]}</span></h3><ul class="at-nx-log"><li><span class="tm">{tune["at"][5:16].replace("T", " ")} UTC</span>{nx_text}</li></ul></section>
+ {tunelog_card()}
  <section class="at-card at-cl"><h3><span>Your changes</span><span class="dim">2</span></h3><div class="at-chl"><div class="ch"><time datetime="2026-10-23T20:53:50+00:00">20:53</time><span>{MINE} changed markets</span></div><div class="ch"><time datetime="2026-10-21T07:56:23+00:00">07:56</time><span>{MINE} changed markets</span></div></div></section></div>
 </div></aside>"""
 
@@ -255,7 +283,8 @@ def install_lobby(doc) -> None:
 def install(doc) -> None:
     mark_mine(doc)
     owner_race(doc)
+    end = (doc.xpath('//span[contains(@class,"at-pb")]/@data-end') or [""])[0]
     room = doc.xpath('//*[@id="atRoom"]')[0]
     room.set("class", (room.get("class") or "") + " has-side")
-    room.append(L.fragment_fromstring(aside()))
+    room.append(L.fragment_fromstring(aside(end)))
     who_tags(doc)
