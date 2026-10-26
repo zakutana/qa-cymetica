@@ -6842,6 +6842,39 @@ reports:
       inconclusive if the page or the script cannot be read, or the stamps, the drag handler or the release
       cannot be found. GET requests only.
 
+  - key: event-cards-past-their-close-stay-live
+    findings: [CYM-a_card_past_its_close_is_not_live]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/events
+    title: "Event Cards: six news cards whose contracts closed 6 to 10 weeks ago still read status live, and one is still tradeable"
+    expected: >
+      llms.txt: "A card is tradeable when status=live; trading_closes_at is null on open-ended cards (they trade until
+      they resolve)". A card whose contract resolves at trading close (contract_spec.resolution_basis "trading_close")
+      stops being live at its trading_closes_at, the same moment as its resolution_at_utc, and leaves the live list that
+      /events deals its deck from. Your own answer on Telegram the same day: news cards leave the live list after 72
+      hours.
+    actual: >
+      Read on 2026-10-26 at 13:40 UTC, all 647 cards of GET /api/v1/event-cards/ (limit 200, offset 0 to 600). Six news
+      cards with resolution_basis "trading_close" closed between 15 August and 15 September and still read status "live":
+      17ffc5da (Launch HN: Discovered Materials, closed 2026-08-15), 95a368ab (SK Hynix and SanDisk Climb 8%, 2026-08-16),
+      ecffc892 (Moderna, Merck cancer vaccine, 2026-08-22), 8395df1f (Chinese automakers following Tesla's bet,
+      2026-09-02), 65bd2864 (Utilities racing to link up with fusion startups, 2026-09-07) and e1de450c (SpaceX CFO sets
+      timeline for orbital data centers, 2026-09-15). 95a368ab reads tradeable_now true with no trading_blocked_reason, 71
+      days after its contract resolved. The other five read tradeable_now false, with the reason "This card's price is
+      not currently available", never that trading has closed. All six sit in the live list at positions 503 to 616.
+    steps:
+      - 'GET https://cymetica.com/api/v1/event-cards/?limit=200&offset=600 -> cards[id=95a368ab-...]: status "live", trading_closes_at "2026-08-16T14:26:50", contract_spec.resolution_basis "trading_close", contract_spec.resolution_at_utc the same, tradeable_now true'
+      - 'The same pages, offset 0 to 600 (total 647) -> five more cards with resolution_basis "trading_close", status "live" and trading_closes_at between 2026-08-15 and 2026-09-15'
+      - 'GET https://cymetica.com/llms.txt -> "A card is tradeable when status=live"'
+    body: >
+      A contract that resolved weeks ago is still offered as live, and one of them can still be bought, at a price whose
+      contract has already ended. Settling these cards (or closing them) when their trading_closes_at passes would fix
+      it. Medium: a resolved contract is tradeable. Our check reads every page of the live list and fails while a live
+      card's close (trading_closes_at, or resolution_at_utc on a "trading_close" contract) is more than 24 hours past; it
+      passes when every such card is settled, closed or gone from the list, within a day of its close, or open-ended; it
+      is inconclusive if the list cannot be read whole, is empty, or holds a close it cannot parse. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

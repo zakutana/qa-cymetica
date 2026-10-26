@@ -1,0 +1,169 @@
+{
+  "schema": 2,
+  "run_id": "run-20261026T133947Z-5cbfd124",
+  "started_at": "2026-10-26T13:40:08+00:00",
+  "finished_at": "2026-10-26T13:41:17+00:00",
+  "git_head": "5cbfd124a36a979246cc3539ebc53fd0c6d32e7c",
+  "git_short": "5cbfd124",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:ca38e00fa46d50776fdf2acea8db3c742672a3d466b1519d41541a2f42c17b38",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "882eee762fe8a86233ef5c31ec09b06cb0ceaf59d84d0ce482dd26e91f80bfb4",
+    "/.well-known/agent-card.json": "ec49fd608fdbe1beccd8b4f771e2db4a1d4e060d6a940946a43280b174b553f7",
+    "/.well-known/agent-skills.json": "b0592b7e51942365f9c61fd46bd233118cabf591f7ff46d7387f9311b5a3a7c6",
+    "/.well-known/ai-plugin.json": "6ab78de3594c4cc3eeac74e02d88e28841bc38ca87933cc14172115bf7c1dded",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "1e1b7e2efeaff813451d647f88f52353e50627b882e63a65842dd1238b8e108c",
+    "/openapi-public.json": "a3e412a1e20581d6a6f15a4b3c5a32c06a631f066d5b7ae0ba989e0f5e699dcd",
+    "/llms.txt": "289e04d480a620824b5419f88d726aec2fe70c0a2a7f57a0af5a95a3623d9bec",
+    "mcp:tools/list:none": "b4e37c12cf958cfd7d19fc86970f252e6919134bb6a7d781af48503532ff24bf"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_a_card_past_its_close_is_not_live.py -q --no-header --tb=line -p no:cacheprovider",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_a_card_past_its_close_is_not_live.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_a_card_past_its_close_is_not_live.py::test_a_card_past_its_close_is_not_live"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_a_card_past_its_close_is_not_live.py::test_a_card_past_its_close_is_not_live",
+      "component": "rest.event_cards",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": null,
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 25060,
+      "evidence_ids": [
+        "2076ed77e4c19cc4b38453437d0b2f89005d0a676c8787e8aeaec01b1d693d19",
+        "c39bc611c704c0a6bd97b41b34b6cd2546423824f7ea444807d8927f82f9832a",
+        "c3bd4fcf9ba1b1c3edcbca2adeb90e7f6c2c41fa161398bc2035e139cf95f36e",
+        "ed156c17778b281e3f43c833462b351b4cd283bbb919b0ee5d4e98e69f37427a"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "6 of 647 live cards closed more than 24 h ago and still read status live, the oldest closed 2026-08-15 (72.1 days): 17ffc5da closed 2026-08-15; 95a368ab closed 2026-08-16; ecffc892 closed 2026-08-22; 8395df1f closed 2026-09-02; 65bd2864 closed 2026-09-07; e1de450c closed 2026-09-15. llms.txt says a card is tradeable when status=live; these are past the close their own contract names and still sit in the list /events deals its deck from",
+        "left": {
+          "live_cards_past_close": 6
+        },
+        "right": {
+          "live_cards_past_close": 0
+        },
+        "sources": {
+          "listing": "/api/v1/event-cards/?limit=200&offset=0..",
+          "fields": "status, trading_closes_at, contract_spec.resolution_basis, contract_spec.resolution_at_utc"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": null,
+        "role": "verdict",
+        "population": {
+          "past": [
+            {
+              "card": "17ffc5da",
+              "position": 616,
+              "title": "Launch HN: Discovered Materials (YC P26) – AI agents to disc",
+              "close": "2026-08-15T11:52:33.896942+00:00",
+              "days_past": 72.1,
+              "tradeable_now": false,
+              "trading_blocked_reason": "This card's price is not currently available — its index has not refreshed recently. Tradi"
+            },
+            {
+              "card": "95a368ab",
+              "position": 612,
+              "title": "SK Hynix and SanDisk Climb 8%, Western Digital Gains 4% as M",
+              "close": "2026-08-16T14:26:50.952706+00:00",
+              "days_past": 71.0,
+              "tradeable_now": true,
+              "trading_blocked_reason": ""
+            },
+            {
+              "card": "ecffc892",
+              "position": 605,
+              "title": "Moderna, Merck cancer vaccine shows initial late-stage melan",
+              "close": "2026-08-22T13:17:30.858185+00:00",
+              "days_past": 65.0,
+              "tradeable_now": false,
+              "trading_blocked_reason": "This card's price is not currently available — its index has not refreshed recently. Tradi"
+            },
+            {
+              "card": "8395df1f",
+              "position": 598,
+              "title": "Chinese automakers are following Tesla’s bet that robots are",
+              "close": "2026-09-02T00:05:02.062469+00:00",
+              "days_past": 54.6,
+              "tradeable_now": false,
+              "trading_blocked_reason": "This card's price is not currently available — its index has not refreshed recently. Tradi"
+            },
+            {
+              "card": "65bd2864",
+              "position": 593,
+              "title": "Utilities are racing to link up with fusion startups, with R",
+              "close": "2026-09-07T18:47:05.923879+00:00",
+              "days_past": 48.8,
+              "tradeable_now": false,
+              "trading_blocked_reason": "This card's price is not currently available — its index has not refreshed recently. Tradi"
+            },
+            {
+              "card": "e1de450c",
+              "position": 503,
+              "title": "SpaceX CFO sets timeline for orbital data centers: first com",
+              "close": "2026-09-15T01:51:09.076858+00:00",
+              "days_past": 41.5,
+              "tradeable_now": false,
+              "trading_blocked_reason": "This card's price is not currently available — its index has not refreshed recently. Tradi"
+            }
+          ],
+          "live_cards": 647,
+          "total": 647,
+          "read_at": "2026-10-26T13:40:33+00:00"
+        }
+      },
+      "check_fingerprint": "831356a8cb2be41c4230f7c1c01b6d0f749c07ec40fbe34bcfb2ea0e6a7ecd7b",
+      "helpers_fingerprint": "ec2a92802d37e057b30428e35ab6a34f5f52fc19633add600379095646abbd46",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "E   AssertionError: 6 of 647 live cards closed more than 24 h ago and still read status live, the oldest closed 2026-08-15 (72.1 days): 17ffc5da closed 2026-08-15; 95a368ab closed 2026-08-16; ecffc892 closed 2026-08-22; 8395df1f closed 2026-09-02; 65bd2864 closed 2026-09-07; e1de450c closed 2026-09-15. llms.txt says a card is tradeable when status=live; these are past the close their own contract names and still sit in the list /events deals its deck from\n      left  = {'live_cards_past_close': 6}\n      right = {'live_cards_past_close': 0}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 4,
+    "limit": 300,
+    "remaining": 296,
+    "fraction_used": 0.0133,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:d9d1e9d0a4c95cd2a502c5938e73de5c555133fce20380ea051ee852e9e97b1d",
+  "exit_status": 1
+}
