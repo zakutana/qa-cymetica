@@ -1,29 +1,24 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Event Cards on a phone, today and new</title>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Event Cards on a phone: his design, built</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:#06090f;color:#e6edf7;font-family:'JetBrains Mono',monospace;padding:28px 32px 34px}
-h1{font-family:'Archivo Black',sans-serif;font-weight:400;font-size:26px}h1 b{color:#00cfff;font-weight:400}
-.sub{color:#7f93ad;font-size:13px;margin-top:6px}
-.row{display:flex;gap:26px;margin-top:22px;align-items:flex-start}
-.ph{width:390px;flex:none}.ph .lab{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#a9b8cc;margin-bottom:10px;height:16px}
-.ph .lab b{color:#00ff88}.ph .lab.old{color:#7f93ad}
-.ph iframe,.ph img{display:block;width:390px;height:844px;border:1px solid #1e3050;border-radius:28px;background:#0a0e17}
-.ph .note{color:#7f93ad;font-size:11.5px;margin-top:10px;line-height:1.5}
+body{background:#06090f;color:#e6edf7;font-family:'Space Mono',monospace;padding:28px 32px 34px;width:1300px}
+h1{font-family:'Source Serif 4',serif;font-weight:600;font-size:30px}
+.sub{color:#7f93ad;font-size:12px;margin-top:6px;line-height:1.6}
+.lab{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#a9b8cc;margin:28px 0 10px}.lab b{color:#00ff88}.lab i{font-style:normal;color:#ff4444}
+.his{display:block;width:1176px;border-radius:14px}
+.row{display:flex;gap:26px;align-items:flex-start}
+.ph{width:390px;flex:none}
+.ph iframe{display:block;width:390px;height:844px;border:1px solid #1e3050;border-radius:28px;background:#06090f}
+.ph .note{color:#7f93ad;font-size:11px;margin-top:8px}
 </style></head><body>
-<h1>EVENT<b>CARDS</b> · on a phone</h1>
-<div class="sub">The frame burns as hard as the news sentiment is strong (HOT from 0.7, WARM from 0.3, QUIET below), in its colour · 647 live cards: 12 hot, 47 warm, 588 quiet · it never scrolls</div>
-<div class="row">
-<div class="ph"><div class="lab old">Today · /events (signed out)</div><img src="today-card.png" alt=""></div>
-<div class="ph"><div class="lab"><b>New</b> · HOT · sentiment +0.70</div><iframe src="index.html?c=hot"></iframe></div>
-<div class="ph"><div class="lab"><b>New</b> · WARM · sentiment −0.60</div><iframe src="index.html?c=warm"></iframe></div>
-<div class="ph"><div class="lab"><b>New</b> · QUIET · sentiment +0.15</div><iframe src="index.html?c=quiet"></iframe></div>
-</div>
-<div class="row">
-<div class="ph"><div class="lab"><b>New</b> · swipe right</div><iframe src="index.html?s=swipe"></iframe>
- <div class="note">Right: Buy sheet opens · Left: Skip</div></div>
-<div class="ph"><div class="lab"><b>New</b> · Buy sheet</div><iframe src="index.html?s=buy"></iframe>
- <div class="note">Allocation, amount, Paper | Live</div></div>
-<div class="ph"><div class="lab"><b>New</b> · (i) details</div><iframe src="index.html?s=info"></iframe>
- <div class="note">Description, symbol, market cap, split, History, Share, Embed</div></div>
-</div></body></html>
+<h1>Event Cards on a phone</h1>
+<div class="sub">Tier = news sentiment strength (HOT ≥ 0.7, WARM ≥ 0.3, QUIET below) · 647 live cards: 12 hot, 47 warm, 588 quiet · never scrolls</div>
+<div class="lab">His design</div><img class="his" src="his-design.webp" alt="">
+<div class="lab"><b>Built</b> · HOT · WARM · QUIET · the site's palette</div>
+<div class="row"><div class="ph"><iframe src="index.html?c=hot"></iframe></div><div class="ph"><iframe src="index.html?c=warm"></iframe></div><div class="ph"><iframe src="index.html?c=quiet"></iframe></div></div>
+<div class="lab"><b>Built</b> · his hues <i>· not submittable: violet and gold are outside Cymetica's palette</i></div>
+<div class="row"><div class="ph"><iframe src="index.html?c=hot&pal=his"></iframe></div><div class="ph"><iframe src="index.html?c=warm&pal=his"></iframe></div><div class="ph"><iframe src="index.html?c=quiet&pal=his"></iframe></div></div>
+<div class="lab"><b>Built</b> · swipe right · Buy sheet · STATS tab</div>
+<div class="row"><div class="ph"><iframe src="index.html?s=swipe"></iframe><div class=note>Right: Buy sheet opens · Left: Skip</div></div><div class="ph"><iframe src="index.html?s=buy"></iframe><div class=note>Allocation, amount, Paper | Live</div></div><div class="ph"><iframe src="index.html?s=stats"></iframe><div class=note>Since launch, index, price, symbol, market cap, description, split</div></div></div>
+</body></html>
