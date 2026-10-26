@@ -221,6 +221,8 @@ details.fold .fb { padding: 0 18px 18px; }
 .hero p.lead { font-size: 17px; color: var(--text2); margin: 0 0 26px; max-width: 560px; }
 .hero .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
 .hero .vis { position: relative; display: grid; place-items: center; min-height: 420px; }
+.hero .vis .univ { margin-top: -18px; }
+.hero .vis .univ svg { width: 18px; height: 18px; }
 .hero .hstats { margin-top: 30px; max-width: 720px; }
 .hero .hstats .tile .v { font-size: 26px; }
 .steps4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 26px 0 40px; position: relative; }

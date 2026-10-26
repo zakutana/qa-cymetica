@@ -77,7 +77,8 @@
     funnel: '<path d="M3 4h14l-5.5 6.5V16l-3-1.5v-4z"/>',
     globe: '<circle cx="10" cy="10" r="6.5"/><path d="M3.5 10h13 M10 3.5c2 2 2.8 4 2.8 6.5S12 14.5 10 16.5 M10 3.5C8 5.5 7.2 7.5 7.2 10s.8 4.5 2.8 6.5"/>',
     search: '<circle cx="8.8" cy="8.8" r="5.3"/><path d="M12.8 12.8 16.5 16.5"/>',
-    replay: '<path d="M4 10a6 6 0 1 0 2-4.5 M4 3.5V7h3.5"/>'
+    replay: '<path d="M4 10a6 6 0 1 0 2-4.5 M4 3.5V7h3.5"/>',
+    orbit: '<circle cx="10" cy="10" r="3.4"/><ellipse cx="10" cy="10" rx="8" ry="3.2" transform="rotate(-20 10 10)"/>'
   };
   const ic = (k, cls) => '<svg' + (cls ? ' class="' + cls + '"' : '') + ' width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (I[k] || '') + '</svg>';
 
@@ -255,7 +256,9 @@
           tile('briefs', 'Open briefs', fmt(st.open_briefs), 'funds checked on-chain') +
           tile('users', 'Top pay per new user', usd(st.top_per_user_usdc) + '<small>USDC</small>', st.top_per_user_name ? esc(shortName(st.top_per_user_name)) : 'no brief yet', '#3b82f6') +
         '</div></div>' +
-        '<div class="vis">' + holo(150) + '</div></section>' +
+        // the Promo Market's building stands in the /company Universe: one green button under the cube goes there
+        '<div class="vis">' + holo(150) + '<a class="btn g lg univ" href="https://cymetica.com/company/app#universe" target="_blank" rel="noopener">' +
+          ic('orbit') + 'See in the Universe ↗</a></div></section>' +
       '<section class="steps4">' + H.steps.map((s, k) => '<div class="st"><span class="no">' + (k + 1) + '</span><div><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div></div>').join('') + '</section>' +
       '<section id="board"><div class="bhead"><h2>Open briefs</h2><span class="cnt">' + list.length + '</span><span class="sp"></span>' +
         '<div class="seg" id="bsort">' + [['left', 'Most up for grabs'], ['user', 'Best per new user'], ['ending', 'Ending soon']].map((s) =>
