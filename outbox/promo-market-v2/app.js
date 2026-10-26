@@ -205,6 +205,8 @@
     $('tnav').innerHTML = '<a href="#market" class="' + (onMarket ? 'on' : '') + '">' + ic('market') + 'Market</a>' +
       '<a href="#me/products" class="' + (onMarket ? '' : 'on') + '">' + ic('dash') + 'My dashboard</a>';
     $('topnew').innerHTML = ic('plus') + 'Post a brief';
+    // the Promo Market's building stands in the /company Universe
+    $('topuniv').innerHTML = ic('orbit') + 'See in the Universe ↗';
     const as = LIVE['/api/v1/promo/briefs'].stats.as_of;
     $('livechip').innerHTML = '<i class="live"></i>' + (S.mode === 'sample' ? 'sample briefs · live data' : 'live · read ' + when(as).slice(11));
     $('mock').innerHTML = 'MOCKUP <div class="seg">' + [['live', 'Live data'], ['sample', 'Sample briefs']].map((m) =>
@@ -256,9 +258,7 @@
           tile('briefs', 'Open briefs', fmt(st.open_briefs), 'funds checked on-chain') +
           tile('users', 'Top pay per new user', usd(st.top_per_user_usdc) + '<small>USDC</small>', st.top_per_user_name ? esc(shortName(st.top_per_user_name)) : 'no brief yet', '#3b82f6') +
         '</div></div>' +
-        // the Promo Market's building stands in the /company Universe: one green button under the cube goes there
-        '<div class="vis">' + holo(150) + '<a class="btn g lg univ" href="https://cymetica.com/company/app#universe" target="_blank" rel="noopener">' +
-          ic('orbit') + 'See in the Universe ↗</a></div></section>' +
+        '<div class="vis">' + holo(150) + '</div></section>' +
       '<section class="steps4">' + H.steps.map((s, k) => '<div class="st"><span class="no">' + (k + 1) + '</span><div><b>' + esc(s[0]) + '</b><span>' + esc(s[1]) + '</span></div></div>').join('') + '</section>' +
       '<section id="board"><div class="bhead"><h2>Open briefs</h2><span class="cnt">' + list.length + '</span><span class="sp"></span>' +
         '<div class="seg" id="bsort">' + [['left', 'Most up for grabs'], ['user', 'Best per new user'], ['ending', 'Ending soon']].map((s) =>

@@ -31,7 +31,9 @@ On cymetica.com, `api(path)` becomes `fetch(path).then(r => r.json())` and the r
 ## 2. One app (all pictures)
 
 `/creator-dashboard` and `/<username>` are one page: a sticky top bar (66 px) with the mark and **Promo Market**, two
-tabs **Market | My dashboard**, the live chip, **Post a brief** (green) and the account. No second header, no link in
+tabs **Market | My dashboard**, the live chip, **Post a brief** (green) and, at the right end, **See in the Universe ↗**
+(green) to `https://cymetica.com/company/app#universe`, where the Promo Market's building stands. The account is not
+in the bar: it shows at the top of My dashboard's rail. No second header, no link in
 the browser's visited purple. What a signed-out visitor and another creator's visitor see stays as today, in the new look.
 
 ## 3. Speed and the loader (picture 10)
@@ -57,8 +59,7 @@ Glass, standing on one corner, in the page's colours. Exactly as `style.css` `.h
 1. Hero, two columns: chip **PROMO MARKET** with the live dot; the headline in Archivo Black 64 px, its second line
    **Get paid in USDC.** in solid green; the lead 17 px; three large buttons (**Earn: take a brief** green,
    **Promote my product** cyan, **From your AI agent** ghost); under them **one row of three tiles**: USDC up for
-   grabs (green), Open briefs, Top pay per new user. The cube on the right, and under it one large green button
-   **See in the Universe ↗** to `https://cymetica.com/company/app#universe`, where the Promo Market's building stands.
+   grabs (green), Open briefs, Top pay per new user. The cube on the right, alone.
 2. Four steps in one row, round numbered badges, joined by short lines.
 3. **Open briefs** with the count and the three sorts (Most up for grabs, Best per new user, Ending soon); three cards
    a row. With none open: the empty state (small cube, one line, **Post the first brief**).
