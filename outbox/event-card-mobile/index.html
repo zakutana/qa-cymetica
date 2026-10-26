@@ -226,7 +226,6 @@ body{position:relative;overscroll-behavior:none}
 const byKey = {};
 document.querySelectorAll('.card').forEach(c => byKey[c.dataset.key] = c);
 const q = new URLSearchParams(location.search);
-if (q.get('pal') === 'his') { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'his-colours.css'; document.head.appendChild(l); }
 let order = ORDER.slice();
 const first = q.get('c');
 if (first && order.includes(first)) while (order[0] !== first) order.push(order.shift());

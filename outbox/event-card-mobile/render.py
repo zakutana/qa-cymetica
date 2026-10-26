@@ -1,6 +1,5 @@
-"""Render the phone mockup (index.html, this folder): each tier card on top, his hues for comparison, the swipe, the Buy
-sheet and the STATS tab, and the board under his own picture, after a palette scan of the page (his-colours.css, the
-comparison, is left out of it on purpose). Checks that each face carries what his card carries, that no card scrolls at
+"""Render the phone mockup (index.html, this folder): each tier card on top, the swipe, the Buy sheet and the STATS tab,
+and the board under his own picture, after a palette scan of the page. Checks that each face carries what his card carries, that no card scrolls at
 any phone height, that nothing spills out of its box, that the chart keeps a usable height, and that a swipe on the page
 really moves the deck."""
 import re
@@ -88,7 +87,7 @@ with sync_playwright() as p:
     back = t.evaluate("() => document.querySelector('.card.a').dataset.key")
     print(f"swipe right from {top0}: stamp {stamp}, now on top {after[0]}, sheet open {after[1]} {after[2]}; Back -> {back}")
     t.close()
-    t = b.new_page(viewport={"width": 1364, "height": 4400}, device_scale_factor=1.25)
+    t = b.new_page(viewport={"width": 1364, "height": 3420}, device_scale_factor=1.25)
     t.goto((here / "board.html").as_uri())
     t.wait_for_load_state("networkidle")
     t.wait_for_timeout(2500)

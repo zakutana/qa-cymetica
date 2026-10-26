@@ -1,4 +1,4 @@
-"""Build index.html, his-colours.css and board.html (this folder): the Event Cards deck (/events) on a phone, as the
+"""Build index.html and board.html (this folder): the Event Cards deck (/events) on a phone, as the
 operator designed the card himself, on Cymetica's live data.
 
 The operator, 2026-10-26. His own card (his-design.webp, three cards graded Legendary / Rare / Common) is the spec: "muj
@@ -13,14 +13,14 @@ his picture part for part, in his order and proportions (measured at 450 px a ca
     API's association_score is 0 on 646 of 647 cards and there is no per-asset change in it; the price row is the
     card's share price and its change over the period, the row the live card fills ("$1.0683 (+4.30%)");
   - the hues: his violet and gold are forbidden by Cymetica's colour rule, which their build check enforces. The page
-    therefore uses blue for his violet tier, cyan for his gold and green for his common; his-colours.css (?pal=his)
-    draws his exact hues for comparison only.
+    therefore uses blue for his violet tier, cyan for his gold and green for his common. He saw both side by side and
+    chose these ("Nech modrou, azurovou a zelenou z jejich palety", 2026-10-26), so the comparison in his hues is gone.
 The tier is the news sentiment's strength, |headline_sentiment_score|: HOT from 0.7, WARM from 0.3, QUIET below; DROP RATE
 is the share of live cards in it (snapshot.py counts all of them).
 
 On a phone it is a deck you swipe: right flies the card off and opens the Buy sheet (as the live deck does), left skips,
 Back returns it, INFO / STATS switch the card's face. ?c=hot|warm|quiet picks the top card; ?s=swipe|buy|stats freezes a
-moment for the pictures; ?pal=his loads his hues.
+moment for the pictures.
 """
 from __future__ import annotations
 
@@ -172,7 +172,6 @@ def buy_sheet(c):
 
 
 TIERS = {"hot": "59,130,246", "warm": "0,207,255", "quiet": "0,255,136"}        # blue, cyan, green: the site's palette
-HIS = {"hot": "150,110,250", "warm": "245,180,50", "quiet": "30,215,140"}       # his violet, gold, green: comparison only
 
 CSS = """
 :root{--bg:#0a0e17;--deep:#06090f;--navy:#0d1520;--navy2:#111a28;--line2:#1a2a44;--line3:#1e3050;
@@ -304,7 +303,6 @@ JS = """
 const byKey = {};
 document.querySelectorAll('.card').forEach(c => byKey[c.dataset.key] = c);
 const q = new URLSearchParams(location.search);
-if (q.get('pal') === 'his') { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'his-colours.css'; document.head.appendChild(l); }
 let order = ORDER.slice();
 const first = q.get('c');
 if (first && order.includes(first)) while (order[0] !== first) order.push(order.shift());
@@ -427,8 +425,6 @@ def board():
 <div class="lab">His design</div><img class="his" src="his-design.webp" alt="">
 <div class="lab"><b>Built</b> · HOT · WARM · QUIET · the site's palette</div>
 <div class="row">{ph("c=hot")}{ph("c=warm")}{ph("c=quiet")}</div>
-<div class="lab"><b>Built</b> · his hues <i>· not submittable: violet and gold are outside Cymetica's palette</i></div>
-<div class="row">{ph("c=hot&pal=his")}{ph("c=warm&pal=his")}{ph("c=quiet&pal=his")}</div>
 <div class="lab"><b>Built</b> · swipe right · Buy sheet · STATS tab</div>
 <div class="row">{ph("s=swipe", "Right: Buy sheet opens · Left: Skip")}{ph("s=buy", "Allocation, amount, Paper | Live")}{ph("s=stats", "Since launch, index, price, symbol, market cap, description, split")}</div>
 </body></html>"""
@@ -437,8 +433,6 @@ def board():
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     (HERE / "index.html").write_text(page(), encoding="utf-8")
-    (HERE / "his-colours.css").write_text("/* his violet, gold and green: for comparison only, outside Cymetica's palette */\n"
-                                          + "\n".join(f".card.t-{k}{{--t:{v}}}" for k, v in HIS.items()) + "\n", encoding="utf-8")
     (HERE / "board.html").write_text(board(), encoding="utf-8")
     print("written;", ", ".join(f'{c["tier"]} {c["id"][:8]} sentiment {sent(c):+.2f} share ${share(c):.4f} 1d {pct(day(c))}' for c in CARDS))
 
