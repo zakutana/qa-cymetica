@@ -22,7 +22,8 @@ are used and nothing else: `#33ffa0` (green button hover), `#e8fbff` (the cube's
 | Dark screen with "Loading your products…" | **Loader**: the Promo Market's hologram cube, a real percentage from the reads it waits for (page, `/promo/house`, `/promo/mine`, `/promo/briefs`, the creator's links) |
 | Today still has the old blocks stacked | The post of the day first; the agent prompt behind **Agent prompts**; "Why post" and the steps in a fold |
 | Pages & links: 5,913 px of nested blocks | **One sortable table**; a row opens the links under it |
-| My products: plain cards, 5 of 13 with another product's picture | Each product its own picture (`art/`, 4 new: Events, Airdrop Farmer, Build it Better hub, Usage; Agent Tournaments uses `casino.svg`) |
+| My products: plain cards, 5 of 13 with another product's picture | Every product picture is the shot of its own page that Build it Better already shows (`preview_url` of `/api/v1/build-it-better/apps/leaderboard`, keyed by `path`): on the cards, the market, the drawers, Post a brief and the cube's screens. `art/` is only the fallback for a product without a shot |
+| No word on what happens when several promoters take one brief | Said where it matters: one budget for every promoter, first come first paid; when it is spent nothing more is counted or owed (the live reason `budget_spent`) |
 | "See the Promo Market" in visited purple | Gone: the Market is a tab |
 | Post a brief: a popup you scroll | **A page that fits one 1080 screen**: product and pay · materials · the card as promoters see it |
 | No brief detail | **The brief's own page**: spent, visitors, new visitors, new users, posts, by day, click → user funnel, promoters with Pay, where visitors came from, not counted with reasons, materials used, quotes |
@@ -49,7 +50,10 @@ are used and nothing else: `#33ffa0` (green button hover), `#e8fbff` (the cube's
 
 ## New fields this needs (nothing else is new)
 
-* **Materials on a brief.** `POST /api/v1/promo/uploads` (multipart, image or video, up to 50 MB) → `{file_id, url, size}`.
+* **The page shot on the products and briefs.** Simplest: add `preview_url` (the Build it Better one) to each product in
+  `promo/mine` and each brief in `promo/briefs`; the mockup looks it up by path in the leaderboard today.
+* **Materials on a brief.** The first one is the **picture for posts**, the product's page shot by default, which a
+  promoter attaches to the post (X does not always draw the link's card). `POST /api/v1/promo/uploads` (multipart, image or video, up to 50 MB) → `{file_id, url, size}`.
   `BriefIn.materials: [{kind: "image"|"video"|"text"|"link", title, file_id?, body?, url?}]`; every brief object
   carries `materials[]` (`kind, title, url, size, body`). The promoter downloads or copies them from the brief.
 * **On `…/results`:** `clicks` (clicks on the promoters' links), `users_by_day` (beside `visitors_by_day`),

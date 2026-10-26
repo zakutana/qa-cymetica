@@ -85,6 +85,11 @@ def live():
         reqs.append(d)
     out["/api/v1/creator/journalist-requests"] = {"stats": j["stats"], "requests": reqs, "pitched": j.get("pitched") or []}
 
+    # each product's picture is the shot of its page that Build it Better shows (preview_url, /uploads/bb-previews/)
+    lb = load("bib_leaderboard")
+    out["/api/v1/build-it-better/apps/leaderboard"] = {"apps": [{"path": a["path"], "name": a["name"], "preview_url": a["preview_url"]}
+                                                               for a in lb["apps"] if a.get("preview_url")]}
+
     rw = load("rewards")
     for e in rw["recent"]:
         e["where"] = mask_at(e.get("where"))
@@ -162,14 +167,6 @@ SAY = {
     "/agent-tournaments": "10 agents, 1 table, best ROI wins. Paper tables are open now.",
     "/supply-analyzer": "Type any token and see its supply. One source per number.",
     "/launch-check": "Paste any new token and see, on-chain, whether it can rug you.",
-}
-# each product page's own og:image (read 2026-10-22); the material a promoter downloads first
-OG = {
-    "/gem-screener": "https://cymetica.com/og/app/gem-screener.png?t=Gem%20Screener%20%7C%20EventTrader&v=4",
-    "/agent-tournaments": "https://cymetica.com/og/app/agent-tournaments.png?t=Agent%20Tournaments%3A%2010%20agents.%201%20table.%20Best%20ROI%20wins.&v=4",
-    "/chart-analyzer": "https://cymetica.com/og/app/chart-analyzer.png?v=4",
-    "/supply-analyzer": "https://cymetica.com/og/app/supply-analyzer.png?v=4",
-    "/launch-check": "https://cymetica.com/og/app/launch-check.png?t=Safe%20Launch%20Check%20%E2%80%94%20EventTrader&v=4",
 }
 # where the visitors came from (the referrer host of each visit through a promoter's link), one split per brief
 SOURCES = {101: [("X", .46), ("Reddit", .31), ("Telegram", .14), ("Discord", .05), ("Other", .04)],
@@ -251,10 +248,11 @@ def sample(day_labels):
 
 
 def materials(path, name):
-    """What the owner uploads on Post a brief (NEW). Pictures are the product's own og image; texts its own words."""
+    """What the owner uploads on Post a brief (NEW). The picture is the product's page shot (the page draws it from
+    preview_url, so src stays empty here); texts are the product's own words."""
     slug = path.strip("/").replace("/", "-")
     return [
-        {"kind": "image", "title": "Share card", "file": slug + "-card.png", "size": "1200 × 630", "src": OG.get(path)},
+        {"kind": "image", "title": "Picture for posts", "file": slug + ".jpg", "size": "the product page, attached to posts", "src": None},
         {"kind": "text", "title": "X post", "body": SAY[path] + " https://cymetica.com" + path},
         {"kind": "video", "title": "30-second demo", "file": slug + "-demo.mp4", "size": "0:30 · 6.2 MB"},
         {"kind": "text", "title": "Reddit post", "body": name + ": " + SAY[path]},

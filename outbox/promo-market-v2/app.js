@@ -87,6 +87,13 @@
     '/supply-analyzer': 'supply', '/agent-tournaments': 'casino', '/infiltrator': 'infil', '/company': 'company', '/my-agents': 'agents',
     '/events': 'events', '/airdrop-farmer': 'airdrop', '/build-it-better': 'bib', '/usage': 'usage', '/launch-check': 'launch' };
   const art = (path) => 'art/' + (ART[path] || 'gem') + '.svg';
+  // the product's picture is the shot of its page that Build it Better shows (preview_url, the leaderboard's own field);
+  // a product without one (Safe Launch Check is no Build it Better app) shows its share image, then our drawing
+  const SHOT = {}, BACK = {};
+  (LIVE['/api/v1/build-it-better/apps/leaderboard'].apps || []).forEach((a) => { SHOT[a.path] = 'https://cymetica.com' + a.preview_url; });
+  const OGPIC = { '/launch-check': 'https://cymetica.com/og/app/launch-check.png?t=Safe%20Launch%20Check%20%E2%80%94%20EventTrader&v=4' };
+  const pic = (path) => { const u = SHOT[path] || OGPIC[path] || art(path); BACK[u] = art(path); return u; };
+  document.addEventListener('error', (e) => { const t = e.target; if (t.tagName === 'IMG' && BACK[t.src] && t.src !== BACK[t.src]) t.src = BACK[t.src]; }, true);
   const shortName = (n) => String(n || '').split(':')[0];
 
   function toast(msg) {
@@ -136,22 +143,24 @@
   }
 
   /* ---------------- the hologram cube ---------------- */
-  const FACES = ['/gem-screener', '/chart-analyzer', '/agent-tournaments', '/supply-analyzer'];
+  // the six faces are screens, each showing a product's page (the Universe building's screens, in the page's colours)
+  const FACES = ['/gem-screener', '/chart-analyzer', '/agent-tournaments', '/supply-analyzer', '/company', '/airdrop-farmer'];
+  const HOLO_INNER = '<div class="inner">' + [1, 2, 3, 4, 5, 6].map((n) => '<i class="g g' + n + '"></i>').join('') + '</div><div class="core"></div>';
   function holo(size, cls) {
     let sp = '';
-    for (let k = 0; k < 10; k++) sp += '<i class="sp" style="left:' + (18 + (k * 37) % 64) + '%;bottom:' + (22 + (k * 13) % 18) + '%;animation-delay:' + (k * 0.41).toFixed(2) + 's"></i>';
-    const faces = [1, 2, 3, 4].map((n, k) => '<div class="f f' + n + '"><img alt="" src="' + art(FACES[k]) + '"></div>').join('') + '<div class="f f5"></div><div class="f f6"></div>';
-    return '<div class="holo ' + (cls || '') + '" style="--s:' + size + 'px"><div class="beam"></div><div class="pad"></div>' + sp +
-      '<div class="stage">' + faces + '<div class="core"></div><div class="scan"></div></div></div>';
+    for (let k = 0; k < 10; k++) sp += '<i class="sp" style="left:' + (18 + (k * 37) % 64) + '%;bottom:' + (18 + (k * 13) % 18) + '%;animation-delay:' + (k * 0.5).toFixed(2) + 's"></i>';
+    const faces = FACES.map((path, k) => '<div class="f f' + (k + 1) + '"><img alt="" src="' + pic(path) + '"></div>').join('');
+    return '<div class="holo ' + (cls || '') + '" style="--s:' + size + 'px"><div class="aura"></div><div class="pool"></div><div class="beam"></div>' + sp +
+      '<div class="cam"><div class="bob"><div class="stage">' + faces + HOLO_INNER + '</div></div></div></div>';
   }
-  // the faces show the products' pictures in turn, the way the Universe building's screens do
+  // the screens light in turn, four of six at a time
   setInterval(() => {
     document.querySelectorAll('.holo:not(.fast) .stage').forEach((st) => {
-      const imgs = st.querySelectorAll('img'); if (!imgs.length) return;
-      const k = (+st.dataset.k || 0) % imgs.length; st.dataset.k = k + 1;
-      imgs.forEach((im, j) => im.classList.toggle('on', j === k || j === (k + 2) % imgs.length));
+      const imgs = st.querySelectorAll('.f img'); if (!imgs.length) return;
+      const k = (+st.dataset.k || 0); st.dataset.k = k + 1;
+      imgs.forEach((im, j) => im.classList.toggle('on', (j + k) % 3 !== 0));
     });
-  }, 1800);
+  }, 2400);
 
   /* ---------------- the loader ---------------- */
   // what the page waits for, and how long each took on 2026-10-26 (our reads, signed in): the shell first, then the
@@ -161,7 +170,7 @@
   function boot(shellMs) {
     const el = $('boot'), pct = $('bpct'), lbl = $('blbl'), bar = $('bbar'), chips = $('breqs');
     const faces = el.querySelectorAll('.f');
-    faces.forEach((f, k) => { f.innerHTML = k < 4 ? '<img alt="" src="' + art(FACES[k]) + '">' : ''; });
+    faces.forEach((f, k) => { f.innerHTML = '<img alt="" src="' + pic(FACES[k]) + '">'; });
     el.classList.remove('gone');
     chips.innerHTML = '<span id="rq-page">page</span>' + REQS.map((r, k) => '<span id="rq' + k + '">' + r[1] + '</span>').join('');
     const t0 = performance.now(), end = shellMs + Math.max(...REQS.map((r) => r[2]));
@@ -175,6 +184,7 @@
         reqs += f / REQS.length;
         const c = $('rq' + k); if (c) c.className = done ? 'ok' : (t > shellMs ? 'run' : '');
         if (done && faces[k]) { const im = faces[k].querySelector('img'); if (im) im.classList.add('on'); }
+        if (t >= end) faces.forEach((f) => { const im = f.querySelector('img'); if (im) im.classList.add('on'); });
         if (!done && t > shellMs && (!running || r[2] > running[2])) running = r;
       });
       const pg = $('rq-page'); if (pg) pg.className = page >= 1 ? 'ok' : 'run';
@@ -209,7 +219,7 @@
       .filter((p) => +b[p[0]] > 0).map((p) => '<div><b>' + price(b[p[0]]) + '<small>USDC</small></b><span>' + p[1] + '</span></div>').join('');
     const mats = (b.materials || []).length;
     return '<article class="bc"' + (preview ? '' : ' data-brief="' + b.id + '"') + '>' +
-      '<div class="img"><img alt="" src="' + art(b.path) + '"><div class="tl">' + (mats ? '<span class="chip c">' + ic('image') + mats + ' materials</span>' : '') +
+      '<div class="img"><img alt="" src="' + pic(b.path) + '"><div class="tl">' + (mats ? '<span class="chip c">' + ic('image') + mats + ' materials</span>' : '') +
         '<span class="chip' + (b.days_left <= 2 ? ' r' : '') + '">' + ic('clock') + b.days_left + 'd left</span></div></div>' +
       '<div class="bd"><div class="nm"><b>' + esc(shortName(b.name)) + '</b><a class="lnk" href="' + esc(b.url) + '" target="_blank" rel="noopener">cymetica.com' + esc(b.path) + ' ↗</a></div>' +
         (b.say_line ? '<p class="say">' + esc(b.say_line) + '</p>' : '<p class="say dim">—</p>') +
@@ -239,7 +249,7 @@
         '<div class="ctas"><a class="btn g lg" href="#board">Earn: take a brief ' + ic('arrow') + '</a>' +
         '<a class="btn c lg" href="#new">' + ic('plus') + 'Promote my product</a>' +
         '<button class="btn gh lg" data-act="agent">' + ic('agent') + 'From your AI agent</button></div></div>' +
-        '<div class="vis">' + holo(170) +
+        '<div class="vis">' + holo(140) +
           '<div class="tag t1"><div class="k">USDC up for grabs</div><div class="v pos">' + usd(st.up_for_grabs_usdc) + '<small>USDC</small></div></div>' +
           '<div class="tag t2"><div class="k">Open briefs</div><div class="v">' + st.open_briefs + '</div></div>' +
           '<div class="tag t3"><div class="k">Top pay per new user</div><div class="v">' + usd(st.top_per_user_usdc) + '<small>USDC</small></div>' +
@@ -269,10 +279,10 @@
   }
 
   /* a brief, as a promoter opens it: what it pays, what the owner gave to post, Take it */
-  function matTile(m) {
+  function matTile(m, path) {
     if (m.kind === 'text') return '<div class="mg txt"><div class="mb">' + ic('text') + '<div><b>' + esc(m.title) + '</b><span>ready to post</span></div><span class="sp"></span>' +
       '<button class="btn sm" data-copytext="' + esc(m.body) + '">' + ic('copy') + 'Copy</button></div><div class="tx">' + linkify(m.body) + '</div></div>';
-    const th = m.kind === 'image' ? (m.src ? '<img alt="" src="' + esc(m.src) + '">' : ic('image')) : m.kind === 'video' ? '<span class="play">' + ic('play') + '</span>' : ic('link');
+    const th = m.kind === 'image' ? '<img alt="" src="' + esc(m.src || pic(path)) + '">' : m.kind === 'video' ? '<span class="play">' + ic('play') + '</span>' : ic('link');
     const sub = m.size || (m.url || '').replace('https://', '');
     return '<div class="mg"><div class="th">' + th + '</div><div class="mb"><div><b>' + esc(m.title) + '</b><span>' + esc(sub) + '</span></div><span class="sp"></span>' +
       (m.kind === 'link' ? '<button class="btn sm" data-copytext="' + esc(m.url) + '">' + ic('copy') + '</button>' : '<button class="btn sm" data-act="dl" data-what="' + esc(m.file || m.title) + '">' + ic('down') + '</button>') + '</div></div>';
@@ -282,18 +292,18 @@
     const tk = S.taken[id], spent = b.budget_usdc - b.up_for_grabs_usdc;
     const pays = [['per_post_usdc', 'per post', 'that stays up 7 days'], ['per_user_usdc', 'per new user', 'signed up, own deposit, 14-day check'], ['per_visitor_usdc', 'per new visitor', 'first visit, real browser, paid after 7 days']]
       .filter((p) => +b[p[0]] > 0);
-    $('drawer').innerHTML = '<div class="dh"><img alt="" src="' + art(b.path) + '"><button class="x" data-act="close">' + ic('close') + '</button></div><div class="db">' +
+    $('drawer').innerHTML = '<div class="dh"><img alt="" src="' + pic(b.path) + '"><button class="x" data-act="close">' + ic('close') + '</button></div><div class="db">' +
       '<div class="meta"><span class="chip">' + ic('clock') + b.days_left + 'd left</span><span class="chip g tipl" data-tip="The owner\'s own USDC covers this brief and their other open briefs, read on-chain ' + when(b.owner_funds.checked_at) + '">' + ic('shield') + 'Funds checked on-chain</span></div>' +
       '<div><h2>' + esc(shortName(b.name)) + '</h2><a class="lnk" href="' + esc(b.url) + '" target="_blank" rel="noopener">cymetica.com' + esc(b.path) + ' ↗</a></div>' +
       (b.say_line ? '<p class="say" style="margin:0;color:var(--text2)">“' + esc(b.say_line) + '”</p>' : '') +
-      '<div class="ufg"><span>Up for grabs</span><b>' + usd(b.up_for_grabs_usdc) + '<small>of ' + usd(b.budget_usdc) + ' USDC</small></b></div>' +
+      '<div class="ufg tipl" data-tip="Shared by every promoter on this brief, first come first paid: when it reaches 0, nothing more is counted"><span>Up for grabs <span class="i">i</span></span><b>' + usd(b.up_for_grabs_usdc) + '<small>of ' + usd(b.budget_usdc) + ' USDC</small></b></div>' +
       '<div class="tile" style="padding:12px 14px"><div class="k">Spent so far</div><div class="meter"><i style="width:' + (100 * spent / b.budget_usdc).toFixed(1) + '%"></i></div></div>' +
       '<div class="pays">' + pays.map((p) => '<div data-tip="' + p[2] + '"><b>' + price(b[p[0]]) + '<small>USDC</small></b><span>' + p[1] + '</span></div>').join('') + '</div>' +
       (tk ? '<div class="mylink"><div><span class="dim num" style="font-size:11px">YOUR LINK</span><br><b>cymetica.com/' + esc(tk.slug) + '</b></div><button class="btn g" data-copytext="https://cymetica.com/' + esc(tk.slug) + '">' + ic('copy') + 'Copy</button></div>' +
           '<div class="own"><input class="in" placeholder="Your post on X: https://x.com/…"><button class="btn c" data-act="registered">Register post</button></div>' :
         '<button class="btn g lg full" data-take="' + b.id + '">Take it · get my link ' + ic('arrow') + '</button>') +
       ((b.materials || []).length ? '<div class="ch" style="margin:6px 0 0"><h3>Materials to post</h3><span class="chip c">' + b.materials.length + '</span><span class="sp"></span><span class="dim num" style="font-size:11.5px">from the owner</span></div>' +
-        '<div class="mgrid">' + b.materials.filter((m) => m.kind !== 'text').concat(b.materials.filter((m) => m.kind === 'text')).map(matTile).join('') + '</div>' : '') +
+        '<div class="mgrid">' + b.materials.filter((m) => m.kind !== 'text').concat(b.materials.filter((m) => m.kind === 'text')).map((m) => matTile(m, b.path)).join('') + '</div>' : '') +
       '<details class="fold"><summary>' + ic('shield') + 'How results are counted' + ic('down', 'chev') + '</summary><div class="fb">' + rulesGrid().replace('class="rules"', 'class="rules" style="grid-template-columns:1fr 1fr"') + '</div></details>' +
     '</div>';
     show();
@@ -381,11 +391,11 @@
   }
   function productCard(p) {
     const b = p.brief, r = b && results(b.id), t = p.traffic_30d;
-    return '<article class="pc" data-product="' + esc(p.path) + '"><div class="img"><img alt="" src="' + art(p.path) + '">' +
+    return '<article class="pc" data-product="' + esc(p.path) + '"><div class="img"><img alt="" src="' + pic(p.path) + '">' +
         (b ? '<div class="tl"><span class="chip g"><i class="live"></i>Live · ' + b.days_left + 'd left</span></div>' : '') + '</div>' +
       '<div class="bd"><div class="nm"><b title="' + esc(p.name) + '">' + esc(shortName(p.name)) + '</b></div><a class="lnk" href="' + esc(p.url) + '" target="_blank" rel="noopener">cymetica.com' + esc(p.path) + ' ↗</a>' +
         '<div class="tr" data-tip="Every visit to the product in the last 30 days, brief or not"><span><b>' + fmt(t.visitors) + '</b> visitors</span><span><b>' + fmt(t.views) + '</b> views</span><span><b>' + fmt(t.uses) + '</b> uses</span></div>' +
-        (b ? '<div class="r3"><div><b class="pos">' + usd(b.up_for_grabs_usdc) + '</b><span>USDC left</span></div><div><b>' + fmt(r.visitors_14d) + '</b><span>visitors</span></div><div><b>' + r.new_users.counted + '</b><span>new users</span></div></div>' +
+        (b ? '<div class="r3"><div><b class="pos">' + usd(b.up_for_grabs_usdc) + '</b><span>USDC left</span></div><div><b>' + fmt(r.visitors_14d) + '</b><span>visitors</span></div><div><b>' + r.new_users.counted + '</b><span>users</span></div></div>' +
           '<a class="btn sm full" href="#mybrief/' + b.id + '">Open the brief ' + ic('arrow') + '</a>' :
           '<div class="nob">No brief yet</div><a class="btn g sm full" href="#new' + esc(p.path) + '">' + ic('plus') + 'Create brief</a>') +
       '</div></article>';
@@ -393,7 +403,7 @@
   function openProduct(path) {
     const p = api('/api/v1/promo/mine').products.products.find((x) => x.path === path); if (!p) return;
     const b = p.brief, t = p.traffic_30d;
-    $('drawer').innerHTML = '<div class="dh"><img alt="" src="' + art(p.path) + '"><button class="x" data-act="close">' + ic('close') + '</button></div><div class="db">' +
+    $('drawer').innerHTML = '<div class="dh"><img alt="" src="' + pic(p.path) + '"><button class="x" data-act="close">' + ic('close') + '</button></div><div class="db">' +
       '<div><h2>' + esc(shortName(p.name)) + '</h2><a class="lnk" href="' + esc(p.url) + '" target="_blank" rel="noopener">cymetica.com' + esc(p.path) + ' ↗</a>' +
         '<div class="meta" style="margin-top:8px"><span class="chip">Build it Better #' + p.issue_id + '</span>' + (b ? '<span class="chip g"><i class="live"></i>Brief live · ' + b.days_left + 'd left</span>' : '<span class="chip">No brief yet</span>') + '</div></div>' +
       '<div class="tiles" style="--n:3">' + tile('eye', 'Visitors', fmt(t.visitors), '30 days') + tile('reads', 'Views', fmt(t.views), '30 days') + tile('clicks', 'Uses', fmt(t.uses), '30 days') + '</div>' +
@@ -443,7 +453,7 @@
         tile('coin', 'Earned, payout pending', '<span class="pos">' + usd(tk.earned_usdc) + '</span><small>USDC</small>', '', '#00ff88') +
         tile('eye', 'Visitors you brought', fmt(sum(list, (t) => t.visitors || 0)), 'through your links') + '</div>' +
       (list.length ? '<div class="card"><table class="tbl"><thead><tr><th>Brief</th><th>Your link</th><th class="n">Visitors</th><th class="n">Posts</th><th class="n">New visitors</th><th class="n">New users</th><th class="n">Earned</th><th></th></tr></thead><tbody>' +
-          list.map((t) => '<tr><td><div class="tw" style="gap:12px"><img alt="" src="' + art(t.path) + '" style="width:64px;height:36px;border-radius:7px;object-fit:cover"><span class="ttl">' + esc(t.name) + '<small>taken ' + dShort(t.taken_at) + '</small></span></div></td>' +
+          list.map((t) => '<tr><td><div class="tw" style="gap:12px"><img alt="" src="' + pic(t.path) + '" style="width:64px;height:36px;border-radius:7px;object-fit:cover"><span class="ttl">' + esc(t.name) + '<small>taken ' + dShort(t.taken_at) + '</small></span></div></td>' +
             '<td><span class="lnk">' + esc(t.tracked_url.replace('https://', '')) + '</span></td><td class="n">' + fmt(t.visitors) + '</td><td class="n">' + t.posts + '</td><td class="n">' + fmt(t.new_visitors) + '</td><td class="n">' + t.new_users + '</td>' +
             '<td class="n pos">' + usd(t.earned_usdc) + '</td><td><span class="chip">payout pending</span></td></tr>').join('') + '</tbody></table></div>' :
         '<div class="card"><div class="empty">' + holo(46) + '<b>No brief taken yet</b><span>' + esc(PAGE.taken_empty) + '</span><a class="btn g" href="#market" style="margin-top:8px">Open the Promo Market ' + ic('arrow') + '</a></div></div>') +
@@ -612,7 +622,7 @@
   function defaultForm(path) {
     const prods = api('/api/v1/promo/mine').products.products, p = prods.find((x) => x.path === path) || prods[0];
     return { path: p.path, on: { post: true, user: true, visitor: true }, per_post: 2, per_user: 5, per_visitor: 0.05, budget: 50, days: 7, say: '',
-      mats: [{ kind: 'image', title: 'Share card', file: p.path.slice(1).replace('/', '-') + '-card.png', size: '1200 × 630', src: art(p.path) },
+      mats: [{ kind: 'image', title: 'Picture for posts', file: p.path.slice(1).replace('/', '-') + '.jpg', size: 'the product page, attached to posts', src: pic(p.path) },
         { kind: 'text', title: 'X post', body: '' }, { kind: 'link', title: 'Product page', url: p.url }] };
   }
   function formBrief(F) {
@@ -638,7 +648,7 @@
         '<span class="chip g tipr" data-tip="' + esc(PAGE.products_note) + '">' + ic('lock') + 'The budget stays in your own wallet</span></div>' +
       '<div class="nb">' +
         '<div class="card"><div class="colh"><span class="no">1</span><b>Product and pay</b></div>' +
-          '<div class="pick">' + P.map((p) => '<button data-pick="' + esc(p.path) + '" class="' + (p.path === F.path ? 'on' : '') + '"><img alt="" src="' + art(p.path) + '"><div><b>' + esc(shortName(p.name)) + '</b><span>cymetica.com' + esc(p.path) + '</span></div><em>' + fmt(p.traffic_30d.visitors) + ' / 30 d</em></button>').join('') + '</div>' +
+          '<div class="pick">' + P.map((p) => '<button data-pick="' + esc(p.path) + '" class="' + (p.path === F.path ? 'on' : '') + '"><img alt="" src="' + pic(p.path) + '"><div><b>' + esc(shortName(p.name)) + '</b><span>cymetica.com' + esc(p.path) + '</span></div><em>' + fmt(p.traffic_30d.visitors) + ' / 30 d</em></button>').join('') + '</div>' +
           pr('post', 'Per post', 'on X, still up after 7 days', F.per_post, 1, 'Up to 3 posts a brief a day are paid') +
           pr('user', 'Per new user', 'signed up, own deposit, 14-day check', F.per_user, 1, 'Counted only when the user\'s own fees in 14 days reach this price') +
           pr('visitor', 'Per new visitor', 'first visit, no sign-up', F.per_visitor, 0.01, '0.01 to 5 USDC. Counted after a real browser check, never a hosting network, paid 7 days later') +
@@ -652,7 +662,7 @@
         '<div class="card"><div class="colh"><span class="no">3</span><b>As promoters will see it</b></div><div class="preview">' + briefCard(b, true) +
           '<div><div class="dim num" style="font-size:11px;letter-spacing:1px;margin-bottom:6px">THIS BUDGET PAYS FOR UP TO</div><div class="buys">' +
             buy.map((x) => '<div><b>' + fmt(Math.floor(F.budget / x[1])) + '</b><span>' + x[2] + '</span></div>').join('') + '</div></div>' +
-          '<div class="sendbar"><div class="note">' + ic('shield') + '<span>Opens only when your own USDC, read on-chain, covers ' + usd(F.budget) + ' USDC and your other open briefs.</span></div>' +
+          '<div class="sendbar"><div class="note">' + ic('users') + '<span>One budget for every promoter who takes it: once ' + usd(F.budget) + ' USDC is spent, nothing more is counted or owed.</span></div><div class="note">' + ic('shield') + '<span>Opens only when your own USDC, read on-chain, covers ' + usd(F.budget) + ' USDC and your other open briefs.</span></div>' +
             '<button class="btn g lg full" data-act="publish"' + (ok ? '' : ' disabled') + '>Post the brief ' + ic('arrow') + '</button><a class="btn gh full" href="#me/products">Cancel</a></div></div></div>' +
       '</div></div>';
   }
@@ -681,7 +691,7 @@
     const unpaid = r.by_promoter.filter((p) => !p.paid && p.earned_usdc > 0);
     const notRows = r.users_not_by_reason.map((x) => [reasons[x[0]] || x[0], x[1], 'user']).concat(r.new_visitors.not_counted_by_reason.map((x) => [x.text, x.count, 'visitor']));
     const inner = '<div class="ph"><a class="back" href="#me/products">' + ic('arrow') + 'My products</a></div>' +
-      '<div class="card bdhead"><img alt="" src="' + art(b.path) + '"><div><h1>' + esc(shortName(b.name)) + '</h1><div class="meta">' +
+      '<div class="card bdhead"><img alt="" src="' + pic(b.path) + '"><div><h1>' + esc(shortName(b.name)) + '</h1><div class="meta">' +
           '<span class="chip g"><i class="live"></i>' + (b.status === 'open' ? 'Open' : esc(b.status)) + ' · ' + b.days_left + 'd left</span>' +
           '<span class="chip g tipd" data-tip="Your own USDC covers it and your other open briefs, read on-chain ' + when(b.owner_funds.checked_at) + '">' + ic('shield') + 'Funds covered</span>' +
           pays.map((p) => '<span class="chip">' + price(b[p[0]]) + ' USDC ' + p[1] + '</span>').join('') + '</div>' +
@@ -689,7 +699,7 @@
         '<div class="acts"><button class="btn sm" data-act="pause">' + ic('pause') + 'Pause</button><button class="btn sm" data-act="addbudget">' + ic('plus') + 'Add budget</button>' +
           '<button class="btn sm" data-act="prices">' + ic('edit') + 'Edit prices</button><button class="btn sm c" data-copytext="https://cymetica.com/creator-dashboard?view=market#brief-' + b.id + '">' + ic('link') + 'Share</button></div></div>' +
       '<div class="tiles" style="--n:6">' +
-        '<div class="tile" style="--c:#00cfff"><div class="k">' + ic('wallet') + 'Spent</div><div class="v">' + usd(spent) + '<small>of ' + usd(b.budget_usdc) + '</small></div><div class="meter"><i style="width:' + (100 * spent / b.budget_usdc).toFixed(1) + '%"></i></div></div>' +
+        '<div class="tile" style="--c:#00cfff" data-tip="Stops at your budget: a result after it is not counted (the budget was spent)"><div class="k">' + ic('wallet') + 'Spent <span class="i">i</span></div><div class="v">' + usd(spent) + '<small>of ' + usd(b.budget_usdc) + '</small></div><div class="meter"><i style="width:' + (100 * spent / b.budget_usdc).toFixed(1) + '%"></i></div></div>' +
         tile('coin', 'Up for grabs', '<span class="pos">' + usd(b.up_for_grabs_usdc) + '</span><small>USDC</small>', r.promoters + ' promoters', '#00ff88') +
         tile('eye', 'Visitors', fmt(r.visitors_14d), 'unique, 14 days') +
         tile('uniq', 'New visitors', fmt(r.new_visitors.counted), fmt(r.new_visitors.held) + ' on 7-day hold', '#00cfff', b.per_visitor_usdc ? 'First visit through a promoter\'s link, real browser, never seen on this brief' : 'Not paid on this brief') +

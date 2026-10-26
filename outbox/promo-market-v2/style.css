@@ -27,46 +27,66 @@ svg { display: block; }
 
 /* ---------------- the hologram cube: the Promo Market's mark (the Universe's building, in the page's colours) ---------------- */
 .mark { width: 30px; height: 30px; flex: none; filter: drop-shadow(0 0 8px rgba(0,207,255,.45)); }
-.holo { --s: 180px; position: relative; width: calc(var(--s) * 1.9); height: calc(var(--s) * 1.9); display: grid; place-items: center; perspective: 900px; }
-.holo .stage { position: relative; width: var(--s); height: var(--s); transform-style: preserve-3d; animation: holo-turn 14s linear infinite; }
-.holo.fast .stage { animation-duration: 9s; }
-@keyframes holo-turn { from { transform: rotateX(-24deg) rotateY(0deg); } to { transform: rotateX(-24deg) rotateY(360deg); } }
-.holo .f { position: absolute; inset: 0; border: 1.5px solid rgba(0,207,255,.85); border-radius: 6px; overflow: hidden;
-  background: linear-gradient(160deg, rgba(0,207,255,.16), rgba(0,255,136,.05) 60%, rgba(0,207,255,.10));
-  box-shadow: inset 0 0 28px rgba(0,207,255,.25), 0 0 18px rgba(0,207,255,.18); backface-visibility: visible; }
-.holo .f::before { content: ''; position: absolute; inset: 0; opacity: .5;
-  background-image: linear-gradient(rgba(0,207,255,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(0,207,255,.18) 1px, transparent 1px);
-  background-size: calc(var(--s) / 8) calc(var(--s) / 8); }
-.holo .f img { position: absolute; inset: 10%; width: 80%; height: 80%; object-fit: cover; border-radius: 4px; opacity: 0; mix-blend-mode: screen;
-  filter: saturate(1.2) brightness(1.15); transition: opacity .6s; }
-.holo .f img.on { opacity: .8; }
+/* The cube stands on one corner, tilted (the operator, 2026-10-26: "moc rovne hrany ... toci se moc rychle a jen dokola"):
+   glass faces with soft glowing edges instead of drawn lines, each face a screen showing a product's page, a smaller
+   cube turning inside it, and it sways and floats slowly instead of spinning. Every part moves by transform and opacity. */
+.holo { --s: 180px; position: relative; width: calc(var(--s) * 2.1); height: calc(var(--s) * 2.2); display: grid; place-items: center; perspective: 1100px; }
+.holo .cam { transform-style: preserve-3d; transform: rotateX(-12deg); }
+.holo .bob { transform-style: preserve-3d; animation: holo-bob 6.5s ease-in-out infinite; }
+@keyframes holo-bob { 50% { transform: translateY(calc(var(--s) * -0.06)); } }
+.holo .stage { position: relative; width: var(--s); height: var(--s); transform-style: preserve-3d; animation: holo-sway 18s ease-in-out infinite; }
+.holo.fast .stage { animation-duration: 11s; }
+@keyframes holo-sway {
+  0%, 100% { transform: rotateY(-34deg) rotateX(-35.264deg) rotateZ(45deg); }
+  50% { transform: rotateY(36deg) rotateX(-35.264deg) rotateZ(45deg); } }
+.holo .f { position: absolute; inset: 0; border-radius: calc(var(--s) * .09); overflow: hidden; backface-visibility: visible;
+  background: linear-gradient(140deg, rgba(0,207,255,.24), rgba(0,207,255,.05) 46%, rgba(0,255,136,.12));
+  box-shadow: inset 0 0 0 1px rgba(230,237,247,.22), inset 0 0 calc(var(--s) * .2) rgba(0,207,255,.32), 0 0 calc(var(--s) * .14) rgba(0,207,255,.20); }
+/* scan lines, the hologram's own texture */
+.holo .f::before { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(0,207,255,.08) 0 1px, transparent 1px 4px); }
+/* a sheen passing over the glass now and then */
+.holo .f::after { content: ''; position: absolute; inset: -50%; z-index: 2; pointer-events: none; transform: translateX(-70%);
+  background: linear-gradient(115deg, transparent 42%, rgba(230,237,247,.22) 50%, transparent 58%); animation: holo-sheen 8s ease-in-out infinite; }
+.holo .f2::after { animation-delay: 2s; } .holo .f3::after { animation-delay: 4s; } .holo .f4::after { animation-delay: 6s; }
+@keyframes holo-sheen { 0%, 62% { transform: translateX(-70%); } 100% { transform: translateX(70%); } }
+.holo .f img { position: absolute; inset: 13%; width: 74%; height: 74%; object-fit: cover; object-position: top; border-radius: calc(var(--s) * .04);
+  opacity: 0; transition: opacity 1s; filter: saturate(1.2) brightness(1.15); mix-blend-mode: screen; }
+.holo .f img.on { opacity: .88; }
 .holo .f1 { transform: translateZ(calc(var(--s) / 2)); }
 .holo .f2 { transform: rotateY(90deg) translateZ(calc(var(--s) / 2)); }
 .holo .f3 { transform: rotateY(180deg) translateZ(calc(var(--s) / 2)); }
 .holo .f4 { transform: rotateY(-90deg) translateZ(calc(var(--s) / 2)); }
-.holo .f5 { transform: rotateX(90deg) translateZ(calc(var(--s) / 2)); background: rgba(0,207,255,.10); }
-.holo .f6 { transform: rotateX(-90deg) translateZ(calc(var(--s) / 2)); background: rgba(0,255,136,.12); }
-/* the core: a bright point the faces circle */
-.holo .core { position: absolute; left: 50%; top: 50%; width: 26%; height: 26%; transform: translate(-50%, -50%); border-radius: 50%;
-  background: radial-gradient(circle, #e8fbff 0%, rgba(0,207,255,.85) 30%, rgba(0,207,255,0) 70%); filter: blur(1px); animation: holo-core 2.4s ease-in-out infinite; }
-@keyframes holo-core { 50% { transform: translate(-50%, -50%) scale(1.25); opacity: .75; } }
-/* the scan: a lit plane running down the cube, the way the Universe's building is scanned */
-.holo .scan { position: absolute; left: -8%; right: -8%; height: 2px; top: 0; background: linear-gradient(90deg, transparent, rgba(0,255,136,.95), transparent);
-  box-shadow: 0 0 16px rgba(0,255,136,.8); animation: holo-scan 3.2s ease-in-out infinite; }
-@keyframes holo-scan { 0% { top: 4%; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { top: 96%; opacity: 0; } }
-/* its pad: rings of light under it */
-.holo .pad { position: absolute; left: 50%; bottom: 6%; width: calc(var(--s) * 1.6); height: calc(var(--s) * .42); transform: translateX(-50%); border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(0,207,255,.32), rgba(0,207,255,.06) 55%, transparent 70%); }
-.holo .pad::before, .holo .pad::after { content: ''; position: absolute; inset: 14% 10%; border-radius: 50%; border: 1.5px solid rgba(0,207,255,.55);
-  animation: holo-ring 3s ease-out infinite; }
-.holo .pad::after { inset: 0; border-color: rgba(0,255,136,.35); animation-delay: 1.5s; }
-@keyframes holo-ring { from { transform: scale(.55); opacity: 1; } to { transform: scale(1.1); opacity: 0; } }
-.holo .beam { position: absolute; left: 50%; bottom: 18%; width: calc(var(--s) * .9); height: 58%; transform: translateX(-50%);
-  background: linear-gradient(0deg, rgba(0,207,255,.20), transparent); clip-path: polygon(20% 100%, 80% 100%, 100% 0, 0 0); pointer-events: none; }
-.holo .sp { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); opacity: 0; animation: holo-rise 4s linear infinite; }
+.holo .f5 { transform: rotateX(90deg) translateZ(calc(var(--s) / 2)); }
+.holo .f6 { transform: rotateX(-90deg) translateZ(calc(var(--s) / 2)); }
+/* the heart: a small green cube turning on its own inside the glass */
+.holo .inner { position: absolute; left: 50%; top: 50%; width: calc(var(--s) * .34); height: calc(var(--s) * .34); margin: calc(var(--s) * -.17);
+  transform-style: preserve-3d; animation: holo-inner 14s linear infinite; }
+@keyframes holo-inner { to { transform: rotateX(360deg) rotateY(720deg); } }
+.holo .g { position: absolute; inset: 0; border-radius: 22%; background: rgba(0,255,136,.16);
+  box-shadow: inset 0 0 0 1px rgba(0,255,136,.6), inset 0 0 calc(var(--s) * .06) rgba(0,255,136,.5), 0 0 calc(var(--s) * .08) rgba(0,255,136,.45); }
+.holo .g1 { transform: translateZ(calc(var(--s) * .17)); } .holo .g2 { transform: rotateY(90deg) translateZ(calc(var(--s) * .17)); }
+.holo .g3 { transform: rotateY(180deg) translateZ(calc(var(--s) * .17)); } .holo .g4 { transform: rotateY(-90deg) translateZ(calc(var(--s) * .17)); }
+.holo .g5 { transform: rotateX(90deg) translateZ(calc(var(--s) * .17)); } .holo .g6 { transform: rotateX(-90deg) translateZ(calc(var(--s) * .17)); }
+.holo .core { position: absolute; left: 50%; top: 50%; width: calc(var(--s) * .2); height: calc(var(--s) * .2); margin: calc(var(--s) * -.1); border-radius: 50%;
+  background: radial-gradient(circle, #e8fbff 0%, rgba(0,255,136,.8) 32%, rgba(0,207,255,0) 70%); animation: holo-core 2.6s ease-in-out infinite; }
+@keyframes holo-core { 50% { transform: scale(1.35); opacity: .7; } }
+/* the light around it: a glow that breathes out from the heart, a pool under it and a beam rising from the pool */
+.holo .aura { position: absolute; left: 50%; top: 45%; width: calc(var(--s) * 1.5); height: calc(var(--s) * 1.5); margin: calc(var(--s) * -.75); border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,207,255,.22), rgba(0,255,136,.06) 42%, transparent 68%); animation: holo-aura 4.2s ease-out infinite; pointer-events: none; }
+@keyframes holo-aura { 0% { transform: scale(.55); opacity: .95; } 100% { transform: scale(1.3); opacity: 0; } }
+.holo .pool { position: absolute; left: 50%; bottom: 3%; width: calc(var(--s) * 1.7); height: calc(var(--s) * .36); margin-left: calc(var(--s) * -.85); border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(0,207,255,.30), rgba(0,255,136,.08) 45%, transparent 70%); animation: holo-pool 6.5s ease-in-out infinite; }
+@keyframes holo-pool { 50% { transform: scale(.88); opacity: .75; } }
+.holo .beam { position: absolute; left: 50%; bottom: 8%; width: calc(var(--s) * .8); height: 58%; margin-left: calc(var(--s) * -.4); pointer-events: none; filter: blur(10px); opacity: .8;
+  background: linear-gradient(0deg, rgba(0,207,255,.18), transparent); clip-path: polygon(22% 100%, 78% 100%, 100% 0, 0 0); }
+.holo .sp { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); opacity: 0; animation: holo-rise 5s linear infinite; }
 .holo .sp:nth-child(2n) { background: var(--green); box-shadow: 0 0 8px var(--green); }
-@keyframes holo-rise { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: .9; } 100% { transform: translateY(-160px); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .holo .stage, .holo .scan, .holo .core, .holo .pad::before, .holo .pad::after, .holo .sp { animation: none; } .holo .stage { transform: rotateX(-24deg) rotateY(-32deg); } }
+@keyframes holo-rise { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: .9; } 100% { transform: translateY(calc(var(--s) * -1)); opacity: 0; } }
+.holo:hover .f { box-shadow: inset 0 0 0 1px rgba(230,237,247,.32), inset 0 0 calc(var(--s) * .26) rgba(0,207,255,.42), 0 0 calc(var(--s) * .2) rgba(0,207,255,.3); }
+@media (prefers-reduced-motion: reduce) {
+  .holo .bob, .holo .stage, .holo .inner, .holo .core, .holo .aura, .holo .pool, .holo .sp, .holo .f::after { animation: none; }
+  .holo .stage { transform: rotateY(-20deg) rotateX(-35.264deg) rotateZ(45deg); } }
 
 /* ---------------- the loader: the cube wakes up as the page's requests come back ---------------- */
 .boot { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; overflow: hidden;
@@ -201,13 +221,13 @@ details.fold .fb { padding: 0 18px 18px; }
 .hero h1 span { color: var(--green); text-shadow: 0 0 34px rgba(0,255,136,.25); }
 .hero p.lead { font-size: 17px; color: var(--text2); margin: 0 0 26px; max-width: 560px; }
 .hero .ctas { display: flex; gap: 12px; flex-wrap: wrap; }
-.hero .vis { position: relative; display: grid; place-items: center; min-height: 380px; }
-.hero .vis .holo { --s: 170px; }
+.hero .vis { position: relative; display: grid; place-items: center; min-height: 420px; }
+.hero .vis .holo { --s: 140px; }
 .hero .vis .tag { position: absolute; padding: 10px 14px; border-radius: 12px; background: rgba(6,9,15,.82); border: 1px solid var(--line2); backdrop-filter: blur(8px); box-shadow: 0 14px 40px rgba(0,0,0,.4); }
 .hero .vis .tag .k { font: 600 10px var(--mono); letter-spacing: 1px; text-transform: uppercase; color: var(--text3); }
 .hero .vis .tag .v { font: 24px/1.15 var(--display); margin-top: 2px; white-space: nowrap; }
 .hero .vis .tag .v small { font: 600 12px var(--mono); color: var(--text3); margin-left: 4px; }
-.hero .vis .t1 { left: 2%; top: 16%; } .hero .vis .t2 { right: 0; top: 36%; } .hero .vis .t3 { left: 8%; bottom: 10%; }
+.hero .vis .t1 { left: 0; top: 10%; } .hero .vis .t2 { right: 0; top: 40%; } .hero .vis .t3 { left: 4%; bottom: 6%; }
 .steps4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin: 26px 0 40px; position: relative; }
 .steps4 .st { display: flex; align-items: center; gap: 14px; padding: 16px 18px; border-radius: 14px; background: rgba(13,21,32,.7); border: 1px solid var(--line); position: relative; }
 .steps4 .st + .st::before { content: ''; position: absolute; left: -15px; top: 50%; width: 16px; height: 1px; background: linear-gradient(90deg, var(--line2), var(--cyan)); }
@@ -317,7 +337,7 @@ details.fold .fb { padding: 0 18px 18px; }
 .pc .r3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .pc .r3 div { padding: 7px 8px; border-radius: 9px; background: var(--bg2); border: 1px solid var(--line); }
 .pc .r3 b { font: 14px var(--display); display: block; }
-.pc .r3 span { font: 500 10px var(--mono); color: var(--text3); }
+.pc .r3 span { font: 500 9.5px var(--mono); color: var(--text3); white-space: nowrap; }
 .pc .nob { font: 500 11.5px var(--mono); color: var(--text3); padding: 6px 0 2px; }
 
 /* the priority post */

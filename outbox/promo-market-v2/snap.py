@@ -31,6 +31,8 @@ READS = {
     "rewards": "/api/v1/creator/rewards",
     "channel_posts": "/api/v1/creator/channel-posts",
     "posts": "/api/v1/creator/posts",
+    "bib_requests": "/api/v1/build-it-better/requests",
+    "bib_leaderboard": "/api/v1/build-it-better/apps/leaderboard?sort=views",
 }
 
 
