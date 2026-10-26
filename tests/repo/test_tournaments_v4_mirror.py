@@ -282,6 +282,20 @@ def test_the_coach_tab_comes_first_and_holds_only_the_coach(table):
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_grid_runs_the_whole_width_and_the_back_arrow_is_centred():
+    """ "proc ta mrizka na pozadi je jen jakovy uprostred stranky? airdrop farmer to ma roztazene prez cele": their .at
+    clips its own ::before honeycomb to the 1240 px column (overflow hidden), so v4 draws it on main, the full width,
+    and hides theirs. "ta sipka je moc na kraji": their bb-responsive.css makes every link in main inline-flex, which
+    leaves the table page's back arrow at the left edge of its square; v4 centres it."""
+    css = re.sub(r"/\*.*?\*/", "", (LIVE / "v4.css").read_text(encoding="utf-8"), flags=re.S)
+    rule = lambda sel: re.search(re.escape(sel) + r"\s*\{([^}]*)\}", css)
+    grid = rule("main.content-main:has(.at)::before")
+    assert grid and "left: 0" in grid.group(1) and "right: 0" in grid.group(1) and "repeat" in grid.group(1)
+    assert "display: none" in rule(".at::before").group(1)
+    assert "justify-content: center" in rule(".at .at-back").group(1)
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_the_v4_stylesheet_adds_no_colour_of_its_own():
     css = (LIVE / "v4.css").read_text(encoding="utf-8")
     assert not re.findall(r"#[0-9a-fA-F]{3,8}\b", css), "colours come from their variables"
