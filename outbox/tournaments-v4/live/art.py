@@ -31,6 +31,7 @@ SPRITE = """<svg class="v4-sprite" aria-hidden="true" focusable="false" style="p
 <linearGradient id="v4-pod-1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#66ffb8"></stop><stop offset="1" stop-color="#00995a"></stop></linearGradient>
 <linearGradient id="v4-pod-2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FE6FF"></stop><stop offset="1" stop-color="#007a99"></stop></linearGradient>
 <linearGradient id="v4-pod-3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#93c5fd"></stop><stop offset="1" stop-color="#1d4ed8"></stop></linearGradient>
+<linearGradient id="v4-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F3F7FC" stop-opacity=".42"></stop><stop offset="1" stop-color="#F3F7FC" stop-opacity="0"></stop></linearGradient>
 <filter id="v4-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"></feGaussianBlur></filter>
 <filter id="v4-glowf" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.4" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
 <symbol id="v4-et10" viewBox="0 0 32 32">
@@ -47,24 +48,50 @@ def coin(cls: str = "v4-coin") -> str:
     return f'<svg class="{cls}" viewBox="0 0 32 32" aria-hidden="true"><use href="#v4-et10"></use></svg>'
 
 
-# ------------------------------------------------------------------------------------------------ the small clock
+# ------------------------------------------------------------------------------------------------ the stopwatch
+# The operator, 2026-10-26, on the flat rings: "ty stopky vypadaji moc basic porad trapne". So a stopwatch as an object:
+# a brushed-metal bezel and crown, a dark glass face with a minute track, the time gone as a lit arc with a bright tip,
+# and a reflection across the glass.
+
+def stopwatch(frac: float, label: str = "", live: bool = False, detail: bool = True) -> str:
+    cx, cy, r = 32.0, 40.0, 26.0
+    ticks = ""
+    if detail:
+        for i in range(60):
+            a = 2 * math.pi * i / 60
+            major = i % 5 == 0
+            r1, r2 = r - 4.2, r - (8.6 if major else 6.4)
+            ticks += (f'<line class="{"mj" if major else "mn"}" x1="{cx + r1 * math.sin(a):.2f}" y1="{cy - r1 * math.cos(a):.2f}" '
+                      f'x2="{cx + r2 * math.sin(a):.2f}" y2="{cy - r2 * math.cos(a):.2f}"></line>')
+    ar = 14.0 if detail else 17.0
+    tip_a = 2 * math.pi * min(frac, 0.999)
+    tx, ty = cx + ar * math.sin(tip_a), cy - ar * math.cos(tip_a)
+    tip = f'<circle class="tip" cx="{tx:.2f}" cy="{ty:.2f}" r="{2.6 if detail else 3.4}"></circle>' if 0 < frac else ""
+    text = f'<text x="{cx}" y="{cy + 4.6}" text-anchor="middle">{label}</text>' if label else ""
+    return (f'<svg class="v4-watch{" live" if live else ""}" viewBox="0 0 64 70" aria-hidden="true">'
+            f'<ellipse cx="33" cy="67.5" rx="19" ry="2.6" fill="#06090f" opacity=".7" filter="url(#v4-blur)"></ellipse>'
+            f'<rect x="27" y="1.5" width="10" height="6" rx="2" fill="url(#v4-metal)"></rect>'
+            f'<rect x="29.6" y="6.5" width="4.8" height="8" fill="url(#v4-metal)"></rect>'
+            f'<rect x="48.5" y="10.5" width="8" height="5" rx="1.6" transform="rotate(45 52.5 13)" fill="url(#v4-metal)"></rect>'
+            f'<circle cx="{cx}" cy="{cy}" r="{r + 2.5}" fill="url(#v4-face)" stroke="url(#v4-metal)" stroke-width="5"></circle>'
+            f'<circle cx="{cx}" cy="{cy}" r="{r - 0.6}" fill="none" stroke="#06090f" stroke-opacity=".7" stroke-width="1.2"></circle>'
+            f'<g class="tk">{ticks}</g>'
+            f'<circle class="tr" cx="{cx}" cy="{cy}" r="{ar}"></circle>'
+            f'<circle class="pg" cx="{cx}" cy="{cy}" r="{ar}" pathLength="100" stroke-dasharray="{frac * 100:.1f} 100" '
+            f'transform="rotate(-90 {cx} {cy})" stroke="url(#v4-rim)" filter="url(#v4-glowf)"></circle>{tip}{text}'
+            f'<path d="M{cx - 19} {cy - 8} A20 20 0 0 1 {cx + 2} {cy - 21.5} L{cx + 1} {cy - 15} A14 14 0 0 0 {cx - 13} {cy - 6} Z" fill="url(#v4-glass)"></path>'
+            f'</svg>')
+
 
 def mini_clock(frac: float, live: bool) -> str:
-    """A 20 px clock face whose ring is the share of the table's time gone (live) or of a day (the hero's 1H 5H 1D)."""
-    return (f'<svg viewBox="0 0 20 22" aria-hidden="true"><rect class="cr" x="8.3" y="0.5" width="3.4" height="2.6" rx=".8"></rect>'
-            f'<circle class="fc" cx="10" cy="12.5" r="8.6"></circle><circle class="tr" cx="10" cy="12.5" r="6.3"></circle>'
-            f'<circle class="pg{" live" if live else ""}" cx="10" cy="12.5" r="6.3" pathLength="100" stroke-dasharray="{frac * 100:.1f} 100" '
-            f'transform="rotate(-90 10 12.5)"></circle><path class="hn" d="M10 12.5 V8.4"></path></svg>')
+    """The same stopwatch for a card's length pill: no minute track, a thicker arc, so it still reads at 22 px."""
+    return stopwatch(frac, live=live, detail=False)
 
 
 # ------------------------------------------------------------------------------------------------ the hero tiles
 
 def hero_tiles() -> str:
-    clocks = "".join(
-        f'<div class="v4-durbig"><svg viewBox="0 0 44 48" aria-hidden="true"><rect class="cr" x="18.5" y="1" width="7" height="5" rx="1.6"></rect>'
-        f'<circle class="fc" cx="22" cy="27" r="19.5"></circle><circle class="tr" cx="22" cy="27" r="14.5"></circle>'
-        f'<circle class="pg" cx="22" cy="27" r="14.5" pathLength="100" stroke-dasharray="{f * 100:.1f} 100" transform="rotate(-90 22 27)"></circle>'
-        f'</svg><b>{d}</b></div>' for d, f in (("1H", 1 / 24), ("5H", 5 / 24), ("1D", 1.0)))
+    clocks = "".join(f'<div class="v4-durbig">{stopwatch(f, d)}</div>' for d, f in (("1H", 1 / 24), ("5H", 5 / 24), ("1D", 1.0)))
     podium = ('<svg class="v4-podium" viewBox="0 0 150 74" aria-hidden="true">'
               '<rect x="6" y="30" width="40" height="44" rx="6" fill="url(#v4-pod-2)"></rect>'
               '<rect x="55" y="8" width="40" height="66" rx="6" fill="url(#v4-pod-1)"></rect>'

@@ -332,7 +332,7 @@ def live_section() -> list:
         f'<div class="v4-trow"><div><b>{n} #{i}</b><em>Flash · {r.lower()} · {"any wallet" if b == 1 else "proven wallets"}</em></div>'
         f'<span>{SEATS - t}/{SEATS} left</span><span class="v4-join">Join · pay ${b}</span></div>'
         for (i, n, b, r, t, _band) in LIVE_TABLES)
-    sec = (f'<div id="atLiveV4"><div class="at-sec"><h2>Open, starts when full <span class="n">{len(LIVE_TABLES)}</span></h2></div>'
+    sec = (f'<div id="atLiveV4"><div class="at-sec"><h2>Open, starts when full <span class="n">{len(LIVE_TABLES)}</span></h2>{MODE_SWITCH}</div>'
            f'<p class="dim at-secnote">Real USDC. 6 paid seats, no house bots, and a table starts when it is full. '
            f'Join with a wallet: sign a message, no account and no approval. Preview: nothing here moves money.</p>'
            f'<div class="at-tables">{cards}</div></div>')
@@ -383,9 +383,9 @@ def lobby(doc) -> None:
     owner.install_lobby(doc)        # their signed-in hero ("Your agent") and the YOU marks on our card
     for c in doc.xpath('//a[contains(@class,"at-tcard") or contains(@class,"at-feat")]'):
         restyle_card(c)
-    live_pill = doc.xpath('//header[contains(@class,"at-bar")]/span[contains(@class,"at-live")]')
-    if live_pill:                   # the Paper | Live switch, at the top of the lobby (synced with their header pill)
-        live_pill[0].addprevious(frag(MODE_SWITCH)[0])
+    filters = doc.xpath('//div[@id="tables"]/div[contains(@class,"at-seg")]')
+    if filters:                     # the Paper | Live switch beside their filters (one setting with their header pill)
+        filters[0].addprevious(frag(MODE_SWITCH)[0])
     for kinds in doc.xpath('//div[contains(@class,"at-kinds")]'):     # the hero's three tiles, with icons, no Week
         kinds.getparent().replace(kinds, frag(art.hero_tiles())[0])
     anchor = doc.xpath('//details[contains(@class,"at-done")]')

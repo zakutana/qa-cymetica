@@ -6,7 +6,7 @@
 #headerModeIndicator .mode-label { display: inline !important; }
 
 /* the Paper | Live switch at the top of the lobby */
-.v4-mode { display: inline-flex; gap: 4px; padding: 4px; margin-right: 18px; border-radius: 14px; background: var(--at-sunk); border: 1px solid var(--at-line); }
+.v4-mode { display: inline-flex; gap: 4px; padding: 4px; margin-left: auto; margin-right: 12px; border-radius: 14px; background: var(--at-sunk); border: 1px solid var(--at-line); }
 .v4-mode button { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 10px; padding: 9px 18px; background: transparent; color: var(--at-muted); font: 800 12.5px var(--at-num); letter-spacing: .1em; cursor: pointer; }
 .v4-mode button i { width: 8px; height: 8px; border-radius: 50%; background: var(--at-muted); }
 .v4-mode button.on[data-v4-mode="paper"] { color: var(--at-cyan); background: var(--at-cyan-soft); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .55); }
@@ -45,22 +45,25 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .v4-coin.lg { width: 34px; height: 34px; }
 .v4-sub { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .v4-dur { display: inline-flex; align-items: center; gap: 6px; padding: 3px 11px 3px 5px; border-radius: 99px; background: var(--at-sunk); box-shadow: inset 0 0 0 1px var(--at-line); }
-.v4-dur svg { width: 18px; height: 20px; flex: none; overflow: visible; }
-.v4-dur .cr { fill: var(--at-muted); }
-.v4-dur .fc { fill: var(--at-panel); stroke: var(--at-muted); stroke-width: 1.4; }
-.v4-dur .tr { fill: none; stroke: rgba(0, 207, 255, .18); stroke-width: 3; }
-.v4-dur .pg { fill: none; stroke: var(--at-cyan); stroke-width: 3; stroke-linecap: round; }
-.v4-dur .pg.live { stroke: var(--at-green); filter: drop-shadow(0 0 3px rgba(0, 255, 136, .8)); }
-.v4-dur .hn { stroke: var(--at-ink); stroke-width: 1.4; stroke-linecap: round; }
+.v4-dur > svg { width: 22px; height: 24px; flex: none; overflow: visible; }
 .v4-dur b { font-family: var(--font-display); font-size: 12.5px; letter-spacing: .04em; color: var(--at-hi); }
 .v4-dur.is-live { box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .55), 0 0 12px rgba(0, 255, 136, .18); }
-.v4-dur.is-live .cr { fill: var(--at-green); }
 .v4-dur.is-open { box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .5); }
-.v4-dur.is-open .cr { fill: var(--at-cyan); }
-.v4-dur.is-open .tr { stroke: var(--at-cyan); stroke-dasharray: 2 2.6; opacity: .85; }
-.v4-dur.is-open .pg { display: none; }
-.v4-dur.is-done .pg { stroke: var(--at-muted); }
-.v4-corner { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; margin-left: auto; }
+.v4-dur .v4-watch .tr, .v4-dur .v4-watch .pg { stroke-width: 7; }
+.v4-dur.is-open .v4-watch .pg, .v4-dur.is-open .v4-watch .tip { display: none; }
+.v4-dur.is-open .v4-watch .tr { stroke: var(--at-cyan); stroke-dasharray: 3.2 3.6; opacity: .9; }
+
+/* the stopwatch (art.stopwatch): metal bezel, glass face, minute track, a lit arc with a bright tip */
+.v4-watch .tk .mn { stroke: var(--at-muted); stroke-width: .9; opacity: .6; }
+.v4-watch .tk .mj { stroke: var(--at-ink); stroke-width: 1.9; stroke-linecap: round; }
+.v4-watch .tr { fill: none; stroke: rgba(0, 207, 255, .14); stroke-width: 4.4; }
+.v4-watch .pg { fill: none; stroke-width: 4.4; stroke-linecap: round; }
+.v4-watch .tip { fill: var(--at-hi); filter: drop-shadow(0 0 3px rgba(0, 255, 136, .95)); }
+.v4-watch text { font-family: var(--font-display); font-size: 13px; fill: var(--at-hi); }
+.v4-durbig { width: 60px; height: 66px; }
+.v4-durbig .v4-watch { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 8px 12px rgba(0, 207, 255, .22)); }
+
+.v4-corner { display: flex; flex-direction: column; align-items: flex-end; gap:6px; margin-left: auto; }
 .v4-note { font: 600 12px var(--at-num); color: var(--at-ink2); white-space: nowrap; }
 
 /* the hero's three tiles, with icons */
@@ -70,13 +73,6 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .v4-kind > * { position: relative; }
 .v4-kind p { margin: 0; font: 600 12px/1.4 var(--at-num); color: var(--at-ink2); }
 .v4-durs { display: flex; gap: 10px; }
-.v4-durbig { position: relative; width: 46px; height: 50px; }
-.v4-durbig svg { width: 100%; height: 100%; overflow: visible; }
-.v4-durbig .cr { fill: var(--at-cyan); }
-.v4-durbig .fc { fill: var(--at-sunk); stroke: var(--at-line); stroke-width: 1.5; }
-.v4-durbig .tr { fill: none; stroke: rgba(0, 207, 255, .16); stroke-width: 4.5; }
-.v4-durbig .pg { fill: none; stroke: var(--at-green); stroke-width: 4.5; stroke-linecap: round; filter: drop-shadow(0 0 4px rgba(0, 255, 136, .7)); }
-.v4-durbig b { position: absolute; left: 0; right: 0; top: 56%; transform: translateY(-50%); font-family: var(--font-display); font-size: 12.5px; color: var(--at-hi); }
 .v4-podium { width: 150px; height: 74px; overflow: visible; filter: drop-shadow(0 10px 16px rgba(0, 207, 255, .25)); }
 .v4-podium text { font-family: var(--font-display); font-size: 16px; fill: var(--at-sunk); }
 .v4-ontop { display: flex; align-items: center; gap: 12px; height: 74px; }
@@ -145,8 +141,7 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .v4-plan { font: 800 10.5px var(--at-num); letter-spacing: .12em; padding: 4px 9px; border-radius: 99px; color: var(--at-cyan); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); white-space: nowrap; }
 .v4-sw-lg { transform: scale(1.25); transform-origin: right center; }
 .v4-coach-ico-w { width: 220px; height: 220px; margin-top: 2px; }
-.v4-coach-ico { width: 100%; height: 100%; overflow: visible; animation: v4-float 5s ease-in-out infinite; }
-@keyframes v4-float { 50% { transform: translateY(-5px); } }
+.v4-coach-ico { width: 100%; height: 100%; overflow: visible; }
 .v4-coach-n { font: 700 12px var(--at-num); letter-spacing: .34em; color: var(--at-muted); margin-top: -6px; }
 .v4-coach-n b { color: var(--at-hi); }
 .v4-risk { width: 100%; margin-top: 8px; }
@@ -173,6 +168,12 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .v4-view { display: flex; gap: 4px; margin-top: 12px; align-self: flex-end; opacity: .55; }
 .v4-view button { border: 0; border-radius: 7px; padding: 4px 8px; font: 700 10px var(--at-num); color: var(--at-muted); background: transparent; box-shadow: inset 0 0 0 1px var(--at-line); cursor: pointer; }
 .v4-view button.on { color: var(--at-cyan); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); }
+
+/* the risk: its own panel under the coach, for every owner */
+.v4-riskcard { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; border-color: rgba(0, 207, 255, .35) !important; }
+.v4-risk-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.v4-riskcard .v4-ctx { margin-top: 0; padding: 5px 10px; }
+.v4-risk-say { margin: 2px 0 0; font: 500 12.5px/1.5 var(--at-num); color: var(--at-ink2); text-align: center; }
 
 /* the Tune log in the Changelog tab, and who changed what */
 [data-v4="tunelog"] .at-nx-log li { display: block; line-height: 1.5; }

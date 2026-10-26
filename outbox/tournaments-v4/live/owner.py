@@ -51,21 +51,27 @@ RISK_WORDS = {1: "Calm", 2: "Calm", 3: "Steady", 4: "Steady", 5: "Balanced", 6: 
 
 
 def coach_card(end: str) -> str:
-    """The coach, and nothing to read: on or off, and how much risk the bot may take. The owner moves the slider
-    (an hour before the end, not first: more risk) and NEXUS tunes the bot inside it."""
+    """Two panels, two functions (the operator, 2026-10-26: "coach je top staci aby byl staticky ... a ma byt mimo ten
+    risk panel, to je zvlast funkcionalita. risk panel si muze ovladat kazdy i bez coache"):
+    the coach -- the icon and on/off, on a paid plan -- and under it the risk, which every owner sets, coach or not
+    (an hour before the end, not first: more risk). With the coach on, NEXUS tunes the bot inside that risk."""
     seat = OWNER["my_seat"]
-    return f"""<section class="at-card v4-coach" data-v4="coach" data-v4-as="pro">
+    coach = f"""<section class="at-card v4-coach" data-v4="coach" data-v4-as="pro">
  <div class="v4-coach-h"><span class="v4-plan" data-v4-plan>PRO</span><label class="at-sw v4-sw-lg"><input type="checkbox" checked data-v4-sw aria-label="NEXUS coach on or off"><i></i></label></div>
  <div class="v4-coach-ico-w">{art.coach_icon()}</div>
  <div class="v4-coach-n">NEXUS <b>COACH</b></div>
- <div class="v4-risk" data-v4-on data-level="5"><div class="v4-gauge-w">{art.gauge(5)}
-   <div class="v4-risk-v"><b data-v4-risk-v>5</b><span data-v4-risk-w>{RISK_WORDS[5]}</span></div></div>
-  <input type="range" min="1" max="10" step="1" value="5" data-v4-risk aria-label="Risk">
-  <div class="v4-risk-f"><span>SAFE</span><span>RISK</span><span>ALL IN</span></div></div>
  <div data-v4-off hidden><span class="at-btn ghost wide">See plans ›</span></div>
- <div class="v4-ctx"><span><b>#{seat["rank"]}</b>/6</span><span><b data-end="{end}">10H</b> left</span></div>
  <div class="v4-view" aria-label="Preview as"><button type="button" class="on" data-v4-as="pro">Pro</button><button type="button" data-v4-as="free">Free</button></div>
 </section>"""
+    risk = f"""<section class="at-card v4-riskcard" data-v4="risk">
+ <div class="v4-risk-h"><span class="at-lbl">Risk</span><span class="v4-ctx"><span><b>#{seat["rank"]}</b>/6</span><span><b data-end="{end}">10H</b> left</span></span></div>
+ <div class="v4-risk" data-level="5"><div class="v4-gauge-w">{art.gauge(5)}
+   <div class="v4-risk-v"><b data-v4-risk-v>5</b><span data-v4-risk-w>{RISK_WORDS[5]}</span></div></div>
+  <input type="range" min="1" max="10" step="1" value="5" data-v4-risk aria-label="Risk">
+  <div class="v4-risk-f"><span>SAFE</span><span>ALL IN</span></div></div>
+ <p class="v4-risk-say">How hard your bot plays: trade size, stop loss and take profit. Change it any time.</p>
+</section>"""
+    return coach + risk
 
 
 def tunelog_card() -> str:

@@ -53,8 +53,9 @@
     each('.v4-dur[data-v4-end]', function (c) {
       var a = Date.parse(c.getAttribute('data-v4-start')), b = Date.parse(c.getAttribute('data-v4-end'));
       if (isNaN(a) || isNaN(b) || b <= a) return;
-      var p = Math.max(0, Math.min(1, (now - a) / (b - a))), pg = c.querySelector('.pg');
+      var p = Math.max(0, Math.min(1, (now - a) / (b - a))), pg = c.querySelector('.pg'), tip = c.querySelector('.tip');
       if (pg) pg.setAttribute('stroke-dasharray', (p * 100).toFixed(2) + ' 100');
+      if (tip) { var t = 2 * Math.PI * Math.min(p, 0.999); tip.setAttribute('cx', (32 + 17 * Math.sin(t)).toFixed(2)); tip.setAttribute('cy', (40 - 17 * Math.cos(t)).toFixed(2)); }
     });
   }
   clocks(); setInterval(clocks, 1000);
@@ -77,17 +78,20 @@
     each('[data-pane]', function (p) { p.hidden = p.getAttribute('data-pane') !== b.getAttribute('data-tab'); }, root);
   });
 
-  // 6. the coach: on or off, and the risk the bot may take; on the free plan it is locked
+  // 6. the coach: on or off, on a paid plan (locked on the free one)
+  function coach(card) {
+    var sw = card.querySelector('[data-v4-sw]'), free = card.getAttribute('data-v4-as') === 'free';
+    sw.disabled = free; if (free) sw.checked = false;
+    card.querySelector('[data-v4-off]').hidden = !free;
+    card.classList.toggle('v4-off', !sw.checked);
+    card.querySelector('[data-v4-plan]').textContent = free ? 'PRO · LOCKED' : 'PRO';
+  }
+  // 7. the risk: every owner sets it, coach or not
   var WORDS = ['', 'Calm', 'Calm', 'Steady', 'Steady', 'Balanced', 'Balanced', 'Bold', 'Bold', 'All in', 'All in'];
   var B = 'var(--at-blue)', C = 'var(--at-cyan)', G = 'var(--at-green)', R = 'var(--at-red)';
   var COLOURS = ['', B, B, C, C, C, G, G, R, R, R];      // the gauge's segments (art.RISK_COLOURS)
-  function coach(card) {
-    var sw = card.querySelector('[data-v4-sw]'), r = card.querySelector('[data-v4-risk]'), free = card.getAttribute('data-v4-as') === 'free';
-    sw.disabled = free; r.disabled = free || !sw.checked; if (free) sw.checked = false;
-    card.querySelector('[data-v4-on]').hidden = free; card.querySelector('[data-v4-off]').hidden = !free;
-    card.classList.toggle('v4-off', !sw.checked && !free);
-    card.querySelector('[data-v4-plan]').textContent = free ? 'PRO · LOCKED' : 'PRO';
-    var v = +r.value, num = card.querySelector('[data-v4-risk-v]');
+  function risk(card) {
+    var v = +card.querySelector('[data-v4-risk]').value, num = card.querySelector('[data-v4-risk-v]');
     num.textContent = v;
     num.style.color = COLOURS[v];
     card.querySelector('[data-v4-risk-w]').textContent = WORDS[v];
@@ -95,8 +99,12 @@
     var n = card.querySelector('.v4-needle'); if (n) n.style.transform = 'rotate(' + ((v - 0.5) * 18 - 90) + 'deg)';
     card.querySelector('.v4-risk').setAttribute('data-level', v);
   }
-  document.addEventListener('input', function (e) { var c = e.target.closest && e.target.closest('[data-v4="coach"]'); if (c) coach(c); });
-  document.addEventListener('change', function (e) { var c = e.target.closest && e.target.closest('[data-v4="coach"]'); if (c) coach(c); });
+  function onChange(e) {
+    var c = e.target.closest && e.target.closest('[data-v4="coach"]'); if (c) coach(c);
+    var r = e.target.closest && e.target.closest('[data-v4="risk"]'); if (r) risk(r);
+  }
+  document.addEventListener('input', onChange);
+  document.addEventListener('change', onChange);
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-v4-as]');
     if (!b || b.matches('[data-v4="coach"]')) return;

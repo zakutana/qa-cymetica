@@ -206,12 +206,22 @@ def test_the_hero_tiles_have_icons_and_no_week(lobby):
     assert "Week" not in text and "7 days" not in text
     assert all(d in text for d in ("1H", "5H", "1D"))
     assert len(kinds.xpath('.//svg')) >= 5
+    # "ty stopky vypadaji moc basic": a stopwatch with a metal bezel, a glass face and a minute track
+    watch = kinds.xpath('.//svg[contains(@class,"v4-watch")]')
+    assert len(watch) == 3
+    assert watch[0].xpath('.//*[@stroke="url(#v4-metal)" or @fill="url(#v4-metal)"]')
+    assert len(watch[0].xpath('.//line')) >= 60
 
 
+# "ten paper live switch mi dej tady k tem filtrum"
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_lobby_starts_with_a_paper_live_switch(lobby):
-    bar = lobby.xpath('//header[contains(@class,"at-bar")]')[0]
-    assert [b.get("data-v4-mode") for b in bar.xpath('.//button[@data-v4-mode]')] == ["paper", "live"]
+def test_the_paper_live_switch_sits_beside_the_filters(lobby):
+    assert not lobby.xpath('//header[contains(@class,"at-bar")]//button[@data-v4-mode]')
+    sec = lobby.xpath('//div[@id="tables"]')[0]
+    assert [b.get("data-v4-mode") for b in sec.xpath('.//button[@data-v4-mode]')] == ["paper", "live"]
+    assert sec.xpath('.//div[contains(@class,"v4-mode")]/following-sibling::div[contains(@class,"at-seg")]')
+    live = lobby.xpath('//div[@id="atLiveV4"]//div[contains(@class,"at-sec")]')[0]
+    assert [b.get("data-v4-mode") for b in live.xpath('.//button[@data-v4-mode]')] == ["paper", "live"]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -234,13 +244,22 @@ def test_the_coach_tab_comes_first_and_holds_only_the_coach(table):
     pane = table.xpath('//div[@data-pane="coach"]')[0]
     assert pane.get("hidden") is None
     coach = pane.xpath('.//*[@data-v4="coach"]')[0]
-    assert coach.xpath('.//svg') and coach.xpath('.//input[@data-v4-sw]') and coach.xpath('.//input[@type="range"][@data-v4-risk]')
-    # "ma to byt 5x lepsi top krasna ikonka tak do 3D a ten risk panel barevny": shaded, not line art; a coloured gauge
+    assert coach.xpath('.//svg') and coach.xpath('.//input[@data-v4-sw]')
+    # "ma to byt 5x lepsi top krasna ikonka tak do 3D": shaded, not line art
     ico = coach.xpath('.//svg[contains(@class,"v4-coach-ico")]')[0]
     assert len(ico.xpath('.//*[starts-with(@fill,"url(#v4-")]')) >= 6
-    assert len(coach.xpath('.//*[contains(@class,"v4-seg")]')) == 10
     words = " ".join(coach.text_content().split())
-    assert len(words) < 140, words              # a panel, not a paragraph
+    assert len(words) < 80, words               # a panel, not a paragraph
+    # "coach je top staci aby byl staticky ... a ma byt mimo ten risk panel, to je zvlast funkcionalita. risk panel si
+    # muze ovladat kazdy i bez coache, takze ho dej treba pod to a nejaky strucny popisek k nemu co dela"
+    assert not coach.xpath('.//input[@type="range"]') and not coach.xpath('.//*[contains(@class,"v4-seg")]')
+    risk = pane.xpath('.//*[@data-v4="risk"]')[0]
+    assert risk.getprevious() is not None and risk.getprevious().get("data-v4") == "coach"      # under the coach
+    assert risk.xpath('.//input[@type="range"][@data-v4-risk]') and len(risk.xpath('.//*[contains(@class,"v4-seg")]')) == 10
+    note = " ".join(risk.xpath('.//p[contains(@class,"v4-risk-say")]')[0].text_content().split())
+    assert 20 < len(note) < 120, note
+    css = (LIVE / "v4.css").read_text(encoding="utf-8")
+    assert "v4-float" not in css                # the coach stands still
     assert not table.xpath('//div[@data-pane="settings"]//*[@data-v4="tune" or @data-v4="coach"]')
     assert len(table.xpath('//div[@data-pane="log"]//*[@data-v4="tunelog"]//li')) == 4
 
