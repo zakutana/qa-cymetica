@@ -206,11 +206,11 @@ def test_the_hero_tiles_have_icons_and_no_week(lobby):
     assert "Week" not in text and "7 days" not in text
     assert all(d in text for d in ("1H", "5H", "1D"))
     assert len(kinds.xpath('.//svg')) >= 5
-    # "ty stopky vypadaji moc basic": a stopwatch with a metal bezel, a glass face and a minute track
+    # "ty stopky vypadaji moc basic", then "to je preplacane moc": a metal stopwatch, but no minute track
     watch = kinds.xpath('.//svg[contains(@class,"v4-watch")]')
     assert len(watch) == 3
     assert watch[0].xpath('.//*[@stroke="url(#v4-metal)" or @fill="url(#v4-metal)"]')
-    assert len(watch[0].xpath('.//line')) >= 60
+    assert len(watch[0].xpath('.//line')) <= 4
 
 
 # "ten paper live switch mi dej tady k tem filtrum"
@@ -222,6 +222,11 @@ def test_the_paper_live_switch_sits_beside_the_filters(lobby):
     assert sec.xpath('.//div[contains(@class,"v4-mode")]/following-sibling::div[contains(@class,"at-seg")]')
     live = lobby.xpath('//div[@id="atLiveV4"]//div[contains(@class,"at-sec")]')[0]
     assert [b.get("data-v4-mode") for b in live.xpath('.//button[@data-v4-mode]')] == ["paper", "live"]
+    # "pri live switchi zmizi ty ostatni filtry": Live has its filters too, wired to their own filter script
+    seg = live.xpath('.//div[contains(@class,"at-seg")][@data-filter="live"]')[0]
+    assert [b.text_content() for b in seg.xpath('./button')] == ["All", "$1", "$5", "1H", "5H", "1D", "Mine"]
+    cards = lobby.xpath('//div[@id="atLiveV4"]//a[contains(@class,"at-tcard")]')
+    assert all(c.get("data-group") == "live" and "all" in c.get("data-tags").split() for c in cards)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -250,6 +255,9 @@ def test_the_coach_tab_comes_first_and_holds_only_the_coach(table):
     assert len(ico.xpath('.//*[starts-with(@fill,"url(#v4-")]')) >= 6
     words = " ".join(coach.text_content().split())
     assert len(words) < 80, words               # a panel, not a paragraph
+    # "nexus coache nechci v zadne kostce ... ma byt jen plain vlozeny do stranky vedle switche on off"
+    assert "at-card" not in coach.get("class").split()
+    assert not coach.xpath('.//button[@data-v4-as]')            # the Pro / Free preview is a URL (?plan=free), not buttons
     # "coach je top staci aby byl staticky ... a ma byt mimo ten risk panel, to je zvlast funkcionalita. risk panel si
     # muze ovladat kazdy i bez coache, takze ho dej treba pod to a nejaky strucny popisek k nemu co dela"
     assert not coach.xpath('.//input[@type="range"]') and not coach.xpath('.//*[contains(@class,"v4-seg")]')

@@ -54,8 +54,7 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .v4-dur.is-open .v4-watch .tr { stroke: var(--at-cyan); stroke-dasharray: 3.2 3.6; opacity: .9; }
 
 /* the stopwatch (art.stopwatch): metal bezel, glass face, minute track, a lit arc with a bright tip */
-.v4-watch .tk .mn { stroke: var(--at-muted); stroke-width: .9; opacity: .6; }
-.v4-watch .tk .mj { stroke: var(--at-ink); stroke-width: 1.9; stroke-linecap: round; }
+.v4-watch .mk { stroke: var(--at-ink2); stroke-width: 2; stroke-linecap: round; opacity: .6; }
 .v4-watch .tr { fill: none; stroke: rgba(0, 207, 255, .14); stroke-width: 4.4; }
 .v4-watch .pg { fill: none; stroke-width: 4.4; stroke-linecap: round; }
 .v4-watch .tip { fill: var(--at-hi); filter: drop-shadow(0 0 3px rgba(0, 255, 136, .95)); }
@@ -129,21 +128,17 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .v4-api i { font-style: normal; color: var(--at-green); }
 @media (max-width: 800px) { .v4-cols, .v4-steps { grid-template-columns: 1fr; } }
 
-/* the NEXUS coach: their chip in a deerstalker, a switch, a coloured risk gauge */
-.v4-coach { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 22px 20px 16px; overflow: hidden; border-color: rgba(0, 207, 255, .5) !important;
-  background: radial-gradient(120% 60% at 50% 0%, rgba(0, 207, 255, .20), transparent 62%), radial-gradient(90% 55% at 50% 100%, rgba(0, 255, 136, .10), transparent 70%),
-    linear-gradient(170deg, var(--at-panel2), var(--at-sunk)) !important; }
-.v4-coach::before { content: ""; position: absolute; inset: 0; pointer-events: none;
-  background-image: linear-gradient(rgba(0, 207, 255, .06) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 207, 255, .06) 1px, transparent 1px); background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(ellipse 70% 45% at 50% 26%, black, transparent 80%); mask-image: radial-gradient(ellipse 70% 45% at 50% 26%, black, transparent 80%); }
-.v4-coach > * { position: relative; }
-.v4-coach-h { position: absolute !important; top: 14px; right: 16px; display: flex; align-items: center; gap: 10px; z-index: 2; }
-.v4-plan { font: 800 10.5px var(--at-num); letter-spacing: .12em; padding: 4px 9px; border-radius: 99px; color: var(--at-cyan); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); white-space: nowrap; }
-.v4-sw-lg { transform: scale(1.25); transform-origin: right center; }
-.v4-coach-ico-w { width: 220px; height: 220px; margin-top: 2px; }
+/* the NEXUS coach: their chip in a deerstalker, set straight into the page (no box), the switch beside it */
+.v4-coach { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: center; gap: 2px 16px; padding: 14px 4px 6px 14px; }
+.v4-coach-ico-w { grid-column: 1; grid-row: 1 / span 2; width: 150px; height: 150px; }
 .v4-coach-ico { width: 100%; height: 100%; overflow: visible; }
-.v4-coach-n { font: 700 12px var(--at-num); letter-spacing: .34em; color: var(--at-muted); margin-top: -6px; }
+.v4-coach-n { grid-column: 2; grid-row: 1; align-self: end; font: 700 12px var(--at-num); letter-spacing: .3em; color: var(--at-muted); }
 .v4-coach-n b { color: var(--at-hi); }
+.v4-coach-h { grid-column: 2; grid-row: 2; align-self: start; display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.v4-coach [data-v4-off] { grid-column: 1 / -1; }
+.v4-coach.v4-off .v4-coach-ico-w { opacity: .35; filter: grayscale(.6); }
+.v4-plan { font: 800 10.5px var(--at-num); letter-spacing: .12em; padding: 4px 9px; border-radius: 99px; color: var(--at-cyan); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); white-space: nowrap; }
+.v4-sw-lg { transform: scale(1.3); transform-origin: left center; margin-right: 10px; }
 .v4-risk { width: 100%; margin-top: 8px; }
 .v4-gauge-w { position: relative; width: 100%; max-width: 290px; margin: 0 auto; }
 .v4-gauge { display: block; width: 100%; height: auto; overflow: visible; }
@@ -161,13 +156,8 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .v4-risk input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--at-hi); border: 4px solid var(--at-bg); box-shadow: 0 0 0 2px var(--at-cyan); }
 .v4-risk-f { display: flex; justify-content: space-between; font: 700 10.5px var(--at-num); letter-spacing: .16em; color: var(--at-muted); }
 .v4-risk-f span:nth-child(2) { color: var(--at-ink2); }
-.v4-coach.v4-off .v4-coach-ico-w, .v4-coach.v4-off .v4-risk { opacity: .35; filter: grayscale(.6); }
 .v4-ctx { display: flex; gap: 14px; justify-content: center; margin-top: 10px; padding: 8px 14px; border-radius: 12px; background: var(--at-sunk); box-shadow: inset 0 0 0 1px var(--at-line2); font: 600 12.5px var(--at-num); color: var(--at-muted); }
 .v4-ctx b { color: var(--at-hi); }
-.v4-coach [data-v4-off] { width: 100%; margin-top: 14px; }
-.v4-view { display: flex; gap: 4px; margin-top: 12px; align-self: flex-end; opacity: .55; }
-.v4-view button { border: 0; border-radius: 7px; padding: 4px 8px; font: 700 10px var(--at-num); color: var(--at-muted); background: transparent; box-shadow: inset 0 0 0 1px var(--at-line); cursor: pointer; }
-.v4-view button.on { color: var(--at-cyan); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .6); }
 
 /* the risk: its own panel under the coach, for every owner */
 .v4-riskcard { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; border-color: rgba(0, 207, 255, .35) !important; }

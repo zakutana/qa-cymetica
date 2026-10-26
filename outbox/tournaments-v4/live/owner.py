@@ -56,12 +56,13 @@ def coach_card(end: str) -> str:
     the coach -- the icon and on/off, on a paid plan -- and under it the risk, which every owner sets, coach or not
     (an hour before the end, not first: more risk). With the coach on, NEXUS tunes the bot inside that risk."""
     seat = OWNER["my_seat"]
-    coach = f"""<section class="at-card v4-coach" data-v4="coach" data-v4-as="pro">
- <div class="v4-coach-h"><span class="v4-plan" data-v4-plan>PRO</span><label class="at-sw v4-sw-lg"><input type="checkbox" checked data-v4-sw aria-label="NEXUS coach on or off"><i></i></label></div>
+    # set straight into the page, the switch beside it ("nechci v zadne kostce ... jen plain vlozeny do stranky
+    # vedle switche on off"); the free-plan look is /agent-tournaments/table/15?plan=free
+    coach = f"""<section class="v4-coach" data-v4="coach" data-v4-as="pro">
  <div class="v4-coach-ico-w">{art.coach_icon()}</div>
  <div class="v4-coach-n">NEXUS <b>COACH</b></div>
+ <div class="v4-coach-h"><label class="at-sw v4-sw-lg"><input type="checkbox" checked data-v4-sw aria-label="NEXUS coach on or off"><i></i></label><span class="v4-plan" data-v4-plan>PRO</span></div>
  <div data-v4-off hidden><span class="at-btn ghost wide">See plans ›</span></div>
- <div class="v4-view" aria-label="Preview as"><button type="button" class="on" data-v4-as="pro">Pro</button><button type="button" data-v4-as="free">Free</button></div>
 </section>"""
     risk = f"""<section class="at-card v4-riskcard" data-v4="risk">
  <div class="v4-risk-h"><span class="at-lbl">Risk</span><span class="v4-ctx"><span><b>#{seat["rank"]}</b>/6</span><span><b data-end="{end}">10H</b> left</span></span></div>

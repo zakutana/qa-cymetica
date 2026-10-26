@@ -54,33 +54,24 @@ def coin(cls: str = "v4-coin") -> str:
 # and a reflection across the glass.
 
 def stopwatch(frac: float, label: str = "", live: bool = False, detail: bool = True) -> str:
+    """And the next look: "to je preplacane moc". So the object stays (a metal bezel and crown, a dark face, the lit arc)
+    and everything else goes: no minute track, no side button, no glass sheen, no shadow; four quiet quarter marks."""
     cx, cy, r = 32.0, 40.0, 26.0
-    ticks = ""
-    if detail:
-        for i in range(60):
-            a = 2 * math.pi * i / 60
-            major = i % 5 == 0
-            r1, r2 = r - 4.2, r - (8.6 if major else 6.4)
-            ticks += (f'<line class="{"mj" if major else "mn"}" x1="{cx + r1 * math.sin(a):.2f}" y1="{cy - r1 * math.cos(a):.2f}" '
-                      f'x2="{cx + r2 * math.sin(a):.2f}" y2="{cy - r2 * math.cos(a):.2f}"></line>')
-    ar = 14.0 if detail else 17.0
-    tip_a = 2 * math.pi * min(frac, 0.999)
-    tx, ty = cx + ar * math.sin(tip_a), cy - ar * math.cos(tip_a)
-    tip = f'<circle class="tip" cx="{tx:.2f}" cy="{ty:.2f}" r="{2.6 if detail else 3.4}"></circle>' if 0 < frac else ""
+    ar = 19.0 if detail else 17.0
+    marks = "".join(f'<line class="mk" x1="{cx}" y1="{cy - r + 1.5}" x2="{cx}" y2="{cy - r + 4.5}" transform="rotate({a} {cx} {cy})"></line>'
+                    for a in (0, 90, 180, 270)) if detail else ""
+    tip = ""
+    if 0 < frac < 1:
+        t = 2 * math.pi * frac
+        tip = f'<circle class="tip" cx="{cx + ar * math.sin(t):.2f}" cy="{cy - ar * math.cos(t):.2f}" r="{2.4 if detail else 3.4}"></circle>'
     text = f'<text x="{cx}" y="{cy + 4.6}" text-anchor="middle">{label}</text>' if label else ""
     return (f'<svg class="v4-watch{" live" if live else ""}" viewBox="0 0 64 70" aria-hidden="true">'
-            f'<ellipse cx="33" cy="67.5" rx="19" ry="2.6" fill="#06090f" opacity=".7" filter="url(#v4-blur)"></ellipse>'
-            f'<rect x="27" y="1.5" width="10" height="6" rx="2" fill="url(#v4-metal)"></rect>'
-            f'<rect x="29.6" y="6.5" width="4.8" height="8" fill="url(#v4-metal)"></rect>'
-            f'<rect x="48.5" y="10.5" width="8" height="5" rx="1.6" transform="rotate(45 52.5 13)" fill="url(#v4-metal)"></rect>'
-            f'<circle cx="{cx}" cy="{cy}" r="{r + 2.5}" fill="url(#v4-face)" stroke="url(#v4-metal)" stroke-width="5"></circle>'
-            f'<circle cx="{cx}" cy="{cy}" r="{r - 0.6}" fill="none" stroke="#06090f" stroke-opacity=".7" stroke-width="1.2"></circle>'
-            f'<g class="tk">{ticks}</g>'
-            f'<circle class="tr" cx="{cx}" cy="{cy}" r="{ar}"></circle>'
+            f'<rect x="27.5" y="2.5" width="9" height="5.5" rx="2" fill="url(#v4-metal)"></rect>'
+            f'<rect x="30" y="7.5" width="4" height="7" fill="url(#v4-metal)"></rect>'
+            f'<circle cx="{cx}" cy="{cy}" r="{r + 1.5}" fill="url(#v4-face)" stroke="url(#v4-metal)" stroke-width="3.4"></circle>'
+            f'{marks}<circle class="tr" cx="{cx}" cy="{cy}" r="{ar}"></circle>'
             f'<circle class="pg" cx="{cx}" cy="{cy}" r="{ar}" pathLength="100" stroke-dasharray="{frac * 100:.1f} 100" '
-            f'transform="rotate(-90 {cx} {cy})" stroke="url(#v4-rim)" filter="url(#v4-glowf)"></circle>{tip}{text}'
-            f'<path d="M{cx - 19} {cy - 8} A20 20 0 0 1 {cx + 2} {cy - 21.5} L{cx + 1} {cy - 15} A14 14 0 0 0 {cx - 13} {cy - 6} Z" fill="url(#v4-glass)"></path>'
-            f'</svg>')
+            f'transform="rotate(-90 {cx} {cy})" stroke="url(#v4-rim)"></circle>{tip}{text}</svg>')
 
 
 def mini_clock(frac: float, live: bool) -> str:

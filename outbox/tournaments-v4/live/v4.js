@@ -105,13 +105,10 @@
   }
   document.addEventListener('input', onChange);
   document.addEventListener('change', onChange);
-  document.addEventListener('click', function (e) {
-    var b = e.target.closest && e.target.closest('[data-v4-as]');
-    if (!b || b.matches('[data-v4="coach"]')) return;
-    var card = b.closest('[data-v4="coach"]');
-    card.setAttribute('data-v4-as', b.getAttribute('data-v4-as'));
-    if (b.getAttribute('data-v4-as') === 'pro') card.querySelector('[data-v4-sw]').checked = true;
-    each('button[data-v4-as]', function (x) { x.classList.toggle('on', x === b); }, card);
-    coach(card);
-  });
+  // the free-plan look, for the spec's picture: ?plan=free
+  function freePlan() {
+    if (!/[?&]plan=free\b/.test(location.search)) return;
+    each('[data-v4="coach"]', function (c) { c.setAttribute('data-v4-as', 'free'); coach(c); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', freePlan); else freePlan();
 })();

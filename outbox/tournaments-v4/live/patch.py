@@ -286,7 +286,9 @@ def live_card(tid, name, buy, runs, taken, band) -> str:
         f'<div role="listitem"{" class=w" if k == 0 else ""}><span class="k">{p}</span><b>{money(pot * share, True)}</b></div>'
         for k, (p, share) in enumerate((("1ST", .6), ("2ND", .3), ("3RD", .1))))
     left = SEATS - taken
-    return (f'<a class="at-tcard pro" href="#wallet" data-v4-live="{tid}" data-table-id="{tid}" data-v4-dur="{runs.split()[0]}{runs.split()[1][0]}">'
+    dur_tag = {"HOUR": "h", "HOURS": "h", "DAY": "d"}[runs.split()[1]] + runs.split()[0]
+    return (f'<a class="at-tcard pro" href="#wallet" data-v4-live="{tid}" data-table-id="{tid}" data-v4-dur="{runs.split()[0]}{runs.split()[1][0]}" '
+            f'data-group="live" data-tags="all b{buy} {dur_tag}">'
             f'<div class="at-thead"><div class="at-tl"><span class="at-tname">{name} #{tid}</span><div class="at-tsub">'
             f'<span class="at-buyin">${buy}</span><span class="at-kind flash" title="Real USDC">FLASH</span>'
             f'<span class="v4-band">{band}</span></div></div><div class="at-corner"><span class="at-st open">OPEN</span>'
@@ -332,7 +334,13 @@ def live_section() -> list:
         f'<div class="v4-trow"><div><b>{n} #{i}</b><em>Flash · {r.lower()} · {"any wallet" if b == 1 else "proven wallets"}</em></div>'
         f'<span>{SEATS - t}/{SEATS} left</span><span class="v4-join">Join · pay ${b}</span></div>'
         for (i, n, b, r, t, _band) in LIVE_TABLES)
-    sec = (f'<div id="atLiveV4"><div class="at-sec"><h2>Open, starts when full <span class="n">{len(LIVE_TABLES)}</span></h2>{MODE_SWITCH}</div>'
+    # their filter bar, for the Live tables (their page script wires any .at-seg[data-filter] to [data-group] items)
+    filters = ('<div class="at-seg" role="group" aria-label="Filter the Live tables" data-filter="live">'
+               '<button class="on" type="button" data-f="all">All</button><button type="button" data-f="b1">$1</button>'
+               '<button type="button" data-f="b5">$5</button><button type="button" data-f="h1">1H</button>'
+               '<button type="button" data-f="h5">5H</button><button type="button" data-f="d1">1D</button>'
+               '<button type="button" data-f="mine">Mine</button></div>')
+    sec = (f'<div id="atLiveV4"><div class="at-sec"><h2>Open, starts when full <span class="n">{len(LIVE_TABLES)}</span></h2>{MODE_SWITCH}{filters}</div>'
            f'<p class="dim at-secnote">Real USDC. 6 paid seats, no house bots, and a table starts when it is full. '
            f'Join with a wallet: sign a message, no account and no approval. Preview: nothing here moves money.</p>'
            f'<div class="at-tables">{cards}</div></div>')
