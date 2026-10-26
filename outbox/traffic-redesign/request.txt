@@ -1,3 +1,5 @@
+[NOT SUBMITTED. The operator, 2026-10-26, on v2: "je tam moc veci najednou, jejich originalni design ted je vice prehlednejsi". Cymetica's fixed /traffic answers what was confusing; this stays as a record, not a request.]
+
 Live Traffic, App Usage and Your Pages in one place (cymetica.com/traffic, /app-usage, /traffic/mine): the same data, laid out so every number says what it counts and over which days.
 
 Pictures (attached): site-1440.png (/traffic), apps-1440.png (/app-usage), mine-1440.png (/traffic/mine). Every figure in them is your own API, read 2026-10-26 14:27–14:37 UTC, after your fixes of today: traffic/public (14 and 30 days), traffic/activity, traffic/mine and app-usage. Your new names are kept: Arrivals, Unique visitors, AI-agent requests, Page views, From another page here, Rarely requested paths.
