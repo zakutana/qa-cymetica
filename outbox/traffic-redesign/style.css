@@ -90,6 +90,7 @@ a { color: var(--cyan); text-decoration: none; }
 .row { display: grid; grid-template-columns: minmax(0, 1fr) 120px 62px 46px; align-items: center; gap: 10px;
   padding: 5px 0; font-size: 12.5px; }
 .row.r24 { grid-template-columns: minmax(0, 1fr) 100px 62px 40px 54px; }
+.row.cmp { grid-template-columns: minmax(0, 1fr) 56px 52px 0; gap: 8px; }
 .row .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row .bar { height: 6px; border-radius: 3px; background: rgba(125, 143, 168, .14); overflow: hidden; }
 .row .bar i { display: block; height: 100%; border-radius: 3px; }
@@ -144,6 +145,9 @@ table.pages td .mini { display: inline-block; width: 64px; height: 5px; border-r
   overflow: hidden; vertical-align: middle; margin-left: 8px; }
 table.pages td .mini i { display: block; height: 100%; }
 table.pages tr.more td { color: var(--muted); text-align: left; }
+table.pages.apps th:nth-child(1), table.pages.apps td:nth-child(1) { width: 56px; text-align: left; padding-left: 0; color: var(--muted); }
+table.pages.apps th:nth-child(2), table.pages.apps td:nth-child(2) { width: 34%; text-align: left; }
+table.pages.apps td.pg { white-space: nowrap; }
 table.pages tr.sum td { border-top: 1px solid var(--line); border-bottom: 0; font-weight: 700; padding-top: 11px; }
 .beacon { color: var(--muted); }
 .beacon b { color: var(--text); font-weight: 600; }

@@ -16,7 +16,7 @@ here = Path(__file__).resolve().parent
 subprocess.run([sys.executable, str(here / "make_data.py")], check=True)
 
 bad = []
-for name in ("style.css", "app.js", "index.html", "mine.html"):
+for name in ("style.css", "app.js", "index.html", "apps.html", "mine.html"):
     src = (here / name).read_text(encoding="utf-8")
     toks = set(re.findall(r"#[0-9a-fA-F]{6}\b", src)) | {
         re.sub(r"\s", "", m) for m in re.findall(r"rgba?\(([\d\s]+,[\d\s]+,[\d\s]+),", src)}
@@ -40,6 +40,7 @@ SUMS = """() => {
   const num = s => +String(s).replace(/[^0-9]/g, '');
   const out = [];
   document.querySelectorAll('.rows').forEach((list, i) => {
+    if (!list.querySelector('.row.sum')) return;  // a top-five list claims no total
     const rows = [...list.querySelectorAll('.row:not(.head):not(.sum):not(.gap)')].map(r => num(r.querySelector('.val').textContent));
     const total = num(list.querySelector('.row.sum .val').textContent);
     out.push({i, title: list.closest('.card').querySelector('h3').textContent.trim().slice(0, 40), rows: rows.reduce((a, b) => a + b, 0), total});
@@ -50,7 +51,7 @@ SUMS = """() => {
 errors = []
 with sync_playwright() as p:
     browser = p.chromium.launch()
-    for page_name, html in (("site", "index.html"), ("mine", "mine.html")):
+    for page_name, html in (("site", "index.html"), ("apps", "apps.html"), ("mine", "mine.html")):
         page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
         page.on("pageerror", lambda e: errors.append(f"{page_name}: {e}"))
         page.goto((here / html).as_uri())
@@ -67,4 +68,4 @@ with sync_playwright() as p:
     browser.close()
 if errors:
     raise SystemExit("\n".join(errors))
-print("pictures: site-1440.png, mine-1440.png")
+print("pictures: site-1440.png, apps-1440.png, mine-1440.png")
