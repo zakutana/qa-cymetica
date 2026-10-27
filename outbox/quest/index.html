@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Cymetica Quest</title>
+<meta name="description" content="Build the best company in the Universe and earn up to 5% of Cymetica revenue. Four steps.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="quest.css">
+<!-- The Cymetica Quest guide (cymetica.com/quest), the page the revenue-share flyer sends people to. The operator,
+     2026-10-27: it opens like the flyer (dark deep space, Cymetica's sun far off), and scrolling flies the camera in:
+     to the sun's lane for step 1, into a company for step 2, out to the Agent Casino and the Promo Market, and back over
+     the whole Universe for the leaderboard. A glass rail always says which of the four steps you are on. As little
+     reading as possible: every figure comes from QUEST in quest.js. The film under the text is outbox/quest/render.py's
+     frames and stills; until they exist each chapter shows its poster or deep space, never a blank. -->
+</head>
+<body>
+<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
+  <!-- the flyer's V-cut (slogan-v4): a bright lip, the upper wall in shadow, the lower wall lit, over the glowing floor -->
+  <filter id="cut" x="-3%" y="-15%" width="106%" height="130%" color-interpolation-filters="sRGB">
+    <feMorphology in="SourceAlpha" operator="erode" radius="2.6" result="core"/>
+    <feGaussianBlur in="core" stdDeviation="2" result="coreS"/>
+    <feComposite in="coreS" in2="SourceAlpha" operator="in" result="coreIn"/>
+    <feFlood flood-color="#002a38" flood-opacity=".16"/>
+    <feComposite in2="coreIn" operator="in" result="floor"/>
+    <feMorphology in="SourceAlpha" operator="erode" radius=".75" result="er"/>
+    <feComposite in="SourceAlpha" in2="er" operator="out" result="rim"/>
+    <feFlood flood-color="#ffffff" flood-opacity=".5"/>
+    <feComposite in2="rim" operator="in" result="rimLit"/>
+    <feOffset in="SourceAlpha" dy="2.2" result="dn"/>
+    <feGaussianBlur in="dn" stdDeviation=".7" result="dnb"/>
+    <feComposite in="SourceAlpha" in2="dnb" operator="out" result="upper"/>
+    <feFlood flood-color="#003646" flood-opacity=".6"/>
+    <feComposite in2="upper" operator="in" result="upperShade"/>
+    <feOffset in="SourceAlpha" dy="-1.3" result="up"/>
+    <feComposite in="SourceAlpha" in2="up" operator="out" result="low"/>
+    <feFlood flood-color="#ffffff"/>
+    <feComposite in2="low" operator="in" result="lowLit"/>
+    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="floor"/><feMergeNode in="upperShade"/><feMergeNode in="rimLit"/><feMergeNode in="lowLit"/></feMerge>
+  </filter>
+</defs></svg>
+
+<div id="film" aria-hidden="true"></div>
+<div id="shade" aria-hidden="true"></div>
+
+<nav id="rail" class="glass" data-active="0" aria-label="The four steps"></nav>
+
+<main>
+  <section id="hero" data-step="0">
+    <div class="pin"><div class="panel hero">
+      <h1 class="eng" aria-label="Join the Cymetica Quest">
+        <span class="ln a"><span class="wide">JOIN THE</span><span class="bloom">JOIN THE</span><span class="cut">JOIN THE</span></span>
+        <span class="ln b"><span class="wide">CYMETICA QUEST</span><span class="bloom">CYMETICA QUEST</span><span class="cut">CYMETICA QUEST</span></span>
+      </h1>
+      <p class="copy lede">Build the best company in the Universe.<br>Earn up to <em><b data-figure="prize.top"></b>%</em> of Cymetica revenue.</p>
+      <div class="cue">Scroll <i></i></div>
+    </div></div>
+  </section>
+
+  <section id="s1" data-step="1">
+    <div class="pin"><div class="panel side">
+      <div class="kick">Step 01</div>
+      <div class="copy"><h2>Start an AI&#8209;native company.</h2><p>Most revenue wins. The top <b data-figure="prize.slots"></b> get paid.</p></div>
+      <div class="fine">Pro plan · one-time ET10 fee</div>
+      <div class="board" data-board></div>
+    </div></div>
+  </section>
+
+  <section id="s2a" data-step="2">
+    <div class="pin"><div class="panel">
+      <div class="kick">Step 02 · Way A</div>
+      <div class="copy"><h2>Ship apps people use.</h2><p>Name an app. Cymetica ships it finished.</p></div>
+      <div class="stat"><b data-figure="apps"></b><span>apps already shipped</span></div>
+      <a class="go" data-link="bib">Build it Better <i>&rarr;</i></a>
+    </div></div>
+  </section>
+
+  <section id="s2b" data-step="2">
+    <div class="pin"><div class="panel">
+      <div class="kick">Step 02 · Way B</div>
+      <div class="copy"><h2>Breed a Hero Agent.</h2><p>Your Quant Lab tests strategies until one makes money.</p></div>
+    </div></div>
+  </section>
+
+  <section id="s2c" data-step="2">
+    <div class="pin"><div class="panel">
+      <div class="kick">Step 02 · Way B</div>
+      <div class="copy"><h2>Send it to the Agent Casino.</h2><p><b data-figure="casino.seats"></b> agents. <b data-figure="casino.tables"></b> table. Best ROI wins.</p></div>
+      <a class="go" data-link="casino">Agent Casino <i>&rarr;</i></a>
+    </div></div>
+  </section>
+
+  <section id="s3" data-step="3">
+    <div class="pin"><div class="panel">
+      <div class="kick">Step 03</div>
+      <div class="copy"><h2>Get seen.</h2><p>Promoters put your product in front of degens.</p></div>
+      <a class="go" data-link="promo">Promo Market <i>&rarr;</i></a>
+    </div></div>
+  </section>
+
+  <section id="s4" data-step="4">
+    <div class="pin"><div class="panel final">
+      <div class="kick">Step 04</div>
+      <div class="copy"><h2>Bring the most revenue.</h2><p>Beat every company. The top <b data-figure="prize.slots"></b> get paid.</p></div>
+      <div class="board big" data-board></div>
+      <div class="calls"><a class="cta" data-link="company">Start your company <i>&rarr;</i></a><a class="go" data-link="board">Full leaderboard <i>&rarr;</i></a></div>
+    </div></div>
+  </section>
+</main>
+
+<script src="quest.js"></script>
+</body>
+</html>

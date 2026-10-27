@@ -1,0 +1,9 @@
+# made here by render.py, shots.py and Antigravity, never kept in git (docs/data-plan.md; the git ceiling is red)
+frames/
+stills/
+gen/
+shots/
+__pycache__/
+*.png
+*.jpg
+*.webp
