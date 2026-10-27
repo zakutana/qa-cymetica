@@ -1,0 +1,3 @@
+# render.py draws the pictures again in a minute; they go into a request as webp when it is filed
+pictures/
+live/__pycache__/
