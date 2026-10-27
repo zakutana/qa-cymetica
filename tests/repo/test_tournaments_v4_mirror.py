@@ -148,13 +148,11 @@ def test_the_lobby_headline_says_six(lobby):
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_an_open_cards_pot_and_prizes_are_six_buy_ins(lobby):
-    card = lobby.xpath('//a[contains(@class,"at-tcard") and contains(@class,"micro")]')[0]    # $5, ten seats live
+    card = lobby.xpath('//a[contains(@class,"at-tcard") and contains(@class,"fmicro")]')[0]    # $5 Flash, ten seats live
     assert card.xpath('.//*[@data-at-pot]')[0].text_content() == "$30"
     # the top 2 only since 2026-10-26: 4 and 2 of the six buy-ins (was 60 / 30 / 10: $18, $9, $3)
     assert [b.text_content().split("+")[0] for b in card.xpath('.//div[contains(@class,"at-c3")]//b')] == ["$20", "$10"]
     assert "6 seats left" in card.text_content()
-    et = lobby.xpath('//a[contains(@class,"at-tcard") and contains(@class,"et1k")]')[0]       # 1,000 ET10 a seat
-    assert et.xpath('.//*[@data-at-pot]')[0].text_content() == "6,000"
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -208,7 +206,7 @@ def test_the_live_cards_and_the_wallet_panel_are_there(lobby):
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_card_says_its_buy_in_once_and_its_length_on_a_small_clock_under_it(lobby):
     cards = lobby.xpath('//a[contains(@class,"at-tcard")]')
-    assert len(cards) >= 14
+    assert len(cards) >= 10
     for c in cards:
         head = c.xpath('.//div[contains(@class,"at-thead")]')[0]
         assert len(head.xpath('.//span[contains(@class,"v4-buy")]')) == 1
@@ -227,14 +225,32 @@ def test_every_page_has_a_green_button_to_the_casino_in_the_universe(lobby, tabl
     https://cymetica.com/company/app#universe kde uvidi agent casino", then "ne to tlacitko dej stejne jak pick a table
     barvy a dej ho mensi nahoru nekde do te listy na kraj" (2026-10-26): PICK A TABLE's filled green (their .go), small
     (their .sm), at the right end of the top bar on every page, and no longer in the hero."""
-    for page in (lobby, table, L.fromstring(patch.patch_html("leaderboard", fixture("leaderboard")))):
+    for page in (lobby, L.fromstring(patch.patch_html("leaderboard", fixture("leaderboard")))):
         bar = page.xpath('//header[contains(@class,"at-bar")]')[0]
-        uni = bar[-1]
+        uni = bar[-1]                                   # the very last item: flush right
         assert uni.get("href") == "https://cymetica.com/company/app#universe"
-        assert " ".join(uni.text_content().split()) == "SEE IN THE UNIVERSE"
+        assert " ".join(uni.text_content().split()) == "See in the Universe ↗"
         assert {"at-btn", "go", "sm", "v4-uni"} <= set(uni.get("class").split())
+        assert uni.xpath('.//svg//ellipse')            # their planet icon from the creator dashboard's button
         assert len(page.xpath('//a[contains(@class,"v4-uni")]')) == 1
     assert not lobby.xpath('//div[contains(@class,"at-cta")]//a[contains(@class,"v4-uni")]')
+    # "na detailu stolu at uz to tlacitko nezobrazuji" (2026-10-27)
+    assert not table.xpath('//a[contains(@class,"v4-uni")]')
+    css = re.sub(r"/\*.*?\*/", "", (LIVE / "v4.css").read_text(encoding="utf-8"), flags=re.S)
+    rule = re.search(r"\.at-bar \.at-btn\.v4-uni\s*\{([^}]*)\}", css).group(1)       # the creator dashboard's size and type
+    assert "min-height: 32px" in rule and "font-size: 12.5px" in rule and "border-radius: 8px" in rule and "padding: 0 12px" in rule
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_only_flash_tables_are_open_no_seven_day_ones(lobby):
+    """ "nechali 7D turnaje ty se mely smazat. maji byt jen ty co promuji" (2026-10-27): the live build kept #16, #21,
+    #22, #25 and #26 open at 7 days; the lobby lists only Flash tables (1 hour, 5 hours, 1 day) to join. Our own
+    running table 15 and the finished ones stay: they are history, not something to join."""
+    for c in lobby.xpath('//a[contains(@class,"at-tcard") or contains(@class,"at-feat")]'):
+        if c.xpath('.//*[contains(@class,"at-st") and contains(@class,"open")]') and c.get("data-v4-live") is None:
+            assert "flash" in (c.get("data-tags") or "") or "fmicro" in c.get("class") or "fpro" in c.get("class"), c.get("class")
+    assert not lobby.xpath('//a[contains(@class,"at-feat") and contains(@class,"micro") and not(contains(@class,"fmicro"))]')
+    assert "Flash tables only" in lobby.text_content()
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
@@ -300,7 +316,10 @@ def test_the_risk_level_sets_the_bots_own_settings(table):
     pane = table.xpath('//div[@data-pane="settings"]')[0]
     stop = pane.xpath('.//input[@aria-label="Stop loss %"]')[0]
     take = pane.xpath('.//input[@aria-label="Take profit %"]')[0]
-    assert m[5] == {"size": 5, "stop": float(stop.get("value")), "take": float(take.get("value"))}
+    size = pane.xpath('.//input[@aria-label="Trade size %"]')[0]       # Settings shows trade size too (2026-10-27)
+    assert m[5] == {"size": float(size.get("value")), "stop": float(stop.get("value")), "take": float(take.get("value"))}
+    assert float(size.get("max")) == 10                                # their fixed max position
+    assert "Trade size %" in (LIVE / "v4.js").read_text(encoding="utf-8")
     for k in range(1, 11):
         assert 1 <= m[k]["size"] <= 10
         assert float(stop.get("min")) <= m[k]["stop"] <= float(stop.get("max"))
@@ -325,6 +344,20 @@ def test_the_hero_tiles_have_icons_and_no_week(lobby):
     assert len(watch) == 3
     assert watch[0].xpath('.//*[@stroke="url(#v4-metal)" or @fill="url(#v4-metal)"]')
     assert len(watch[0].xpath('.//line')) <= 4
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_lobby_switch_is_a_view_filter_not_the_accounts_trading_mode():
+    """ "nechapu proc ten live paper mode switch nejde porad menit, tam pise nejaka halska ... kdyz Live stolu nefunguje
+    jeste tak ten filtr live paper v agent casinu muze fungovat klidne porad ne?" (2026-10-27): the header pill is the
+    whole platform's trading mode and is throttled ("Please wait 175s before switching trading modes again"); the lobby
+    switch only filters what this page lists, so it never fires tradingModeChanged, never touches the pill, has no
+    cooldown. And in LIVE the owner's paper agents are not listed."""
+    js = (LIVE / "v4.js").read_text(encoding="utf-8")
+    assert "tradingModeChanged" not in js.replace("/* ", "").split("// 2.")[1].split("// 3.")[0].replace("tradingModeChanged is never", "")
+    assert "headerModeIndicator" not in js.split("// 2.")[1].split("// 3.")[0]
+    css = re.sub(r"/\*.*?\*/", "", (LIVE / "v4.css").read_text(encoding="utf-8"), flags=re.S)
+    assert re.search(r"html\.v4-live \.at-me[^{]*\{\s*display:\s*none", css)
 
 
 # "ten paper live switch mi dej tady k tem filtrum"

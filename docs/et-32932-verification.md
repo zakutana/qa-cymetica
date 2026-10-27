@@ -31,6 +31,17 @@ The lobby is the picture at 1440 and 1920 (chips, headline, three icon tiles, 4x
 
 390 px: the lobby does not overflow (`wide: false`).
 
+## Added the same day (the operator seated tables 24 and 25 and filled them with house bots)
+
+- **Risk does not reach the Settings tab live.** At risk 6 the Coach shows "Set: size 6 %, stop loss 6 %, take profit 24 %" and the server holds it (`atCtlData`: `stop_loss_pct` 6, `take_profit_pct` 24; the changelog has 7 OWNER rows "changed trade size, stop loss, take profit", one per slider step). The Settings tab keeps 5 % / 20 % and "No change from what runs now" until a reload. Trade size has no control in Settings at all.
+- **Coach smaller than the picture.** Their `.at-coico` 64 px, `.at-gauge` max 230 px, card 420 x 468 at 1440; ours 112 px icon (the 3D chip) and a gauge up to 320 px. Their icon is another drawing.
+- **7-day tables left open**: #16, #21, #22, #25, #26 (the operator wants only the promoted Flash tables). Our spec was ambiguous: 2b said "no Week tables", line 3 said "Paper tables stay"; the new text says it outright.
+- **Universe button**: wants the creator dashboard's (`/expire76?tab=products`: `.btn.g.sm`, Inter 12.5 px 700, 32 px high, radius 8, planet icon, "See in the Universe ↗"), far right, none on table pages. Live: 179 x 44 px beside the pots line.
+- **Fill with house bots**: tables 24 (started 09:14:22) and 25 (09:13:44) are `running` in the API and listed under Live now on a fresh load (`live_tables` 2); the operator's lobby tab still showed them open. Their WebSocket (`/ws/agent-tournaments`) opens and says hello, and the lobby is built to reload on a start event, so I could not reproduce it: reported as seen once.
+
+- **LIVE lists Paper agents**: on LIVE the "Your agents" panel and its rows (#25, #24) still show (screenshot, 1920).
+- **The switch is the account's trading mode**: flipping it twice gives "Please wait 175s before switching trading modes again" (the header pill's throttle). The operator: with Live tables closed it can be a filter of the page alone. Our spec said "the same setting as the pill"; the new text says view filter, no account change, no wait.
+
 ## Proposed verdict
 
-FAIL with a note on the four items (table #16, the Universe button, 15 % smaller, suede), leaving the money part to the human slot. The note is `outbox/tournaments-v4/bb-verdict-note.txt`. Not sent: the verdict is the operator's.
+FAIL with a note on the nine items (Risk to Settings, 7-day tables and #16, the Universe button, the Coach size, 15 % smaller, suede, the lobby once, Paper agents on LIVE, the switch's wait), leaving the money part to the human slot. The note is `outbox/tournaments-v4/bb-verdict-note.txt`. Not sent: the verdict is the operator's.

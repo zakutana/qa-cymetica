@@ -20,29 +20,24 @@
   };
   function each(sel, fn, root) { Array.prototype.forEach.call((root || document).querySelectorAll(sel), fn); }
 
-  // 2. Paper | Live: the switch at the top of the lobby and their header pill are one setting
+  // 2. Paper | Live: a VIEW filter of this page only. The header pill is the whole platform's trading mode (and is
+  //    throttled); this switch does not touch it, never changes the account, and has no cooldown.
   var KEY = 'v4mode';
   function isPaper() { try { return localStorage.getItem(KEY) !== 'live'; } catch (e) { return true; } }
   function applyMode() {
     var paper = isPaper();
     document.documentElement.classList.toggle('v4-live', !paper);
-    var pill = document.getElementById('headerModeIndicator');
-    if (pill) {
-      pill.classList.toggle('paper', paper); pill.classList.toggle('live', !paper);
-      var l = pill.querySelector('.mode-label'); if (l) l.textContent = paper ? 'PAPER' : 'LIVE';
-    }
     each('[data-v4-mode]', function (b) { b.classList.toggle('on', (b.getAttribute('data-v4-mode') === 'paper') === paper); });
   }
   function setMode(live) {
     try { localStorage.setItem(KEY, live ? 'live' : 'paper'); } catch (x) { /* private window: the switch still works on this page */ }
     applyMode();
-    window.dispatchEvent(new CustomEvent('tradingModeChanged', { detail: { isPaper: !live } }));
   }
   document.addEventListener('click', function (e) {
-    var t = e.target.closest && e.target.closest('#headerModeIndicator, [data-v4-mode]');
+    var t = e.target.closest && e.target.closest('[data-v4-mode]');
     if (!t) return;
     e.preventDefault(); e.stopImmediatePropagation();
-    setMode(t.id === 'headerModeIndicator' ? isPaper() : t.getAttribute('data-v4-mode') === 'live');
+    setMode(t.getAttribute('data-v4-mode') === 'live');
   }, true);
   applyMode();
   document.addEventListener('DOMContentLoaded', applyMode);
@@ -101,7 +96,7 @@
     // the level SETS the bot (owner.RISK_SET): the three numbers here, and the Settings tab's own sliders
     var set = JSON.parse(card.getAttribute('data-v4-map'))[v];
     each('[data-v4-set]', function (b) { b.textContent = set[b.getAttribute('data-v4-set')] + '%'; }, card);
-    [['Stop loss %', set.stop], ['Take profit %', set.take]].forEach(function (p) {
+    [['Trade size %', set.size], ['Stop loss %', set.stop], ['Take profit %', set.take]].forEach(function (p) {
       var r = document.querySelector('input[aria-label="' + p[0] + '"]'); if (!r) return;
       r.value = p[1];
       var b = r.closest('.at-rng') && r.closest('.at-rng').querySelector('.rh b'); if (b) b.textContent = p[1] + '%';

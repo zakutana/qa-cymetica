@@ -359,9 +359,9 @@ MODE_SWITCH = ('<div class="v4-mode" role="group" aria-label="Paper or Live tabl
 # the top bar's last item on every page: the Agent Casino where it stands in their Universe, in PICK A TABLE's green
 # (their .go) and small (their .sm); a globe, no orbit rings
 UNIVERSE = ('<a class="at-btn go sm v4-uni" href="https://cymetica.com/company/app#universe">'
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" '
-            'aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9'
-            'M12 3c-2.6 2.6-3.8 5.6-3.8 9s1.2 6.4 3.8 9"/></svg>SEE IN THE UNIVERSE</a>')
+            '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" '
+            'stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="3.4"/>'
+            '<ellipse cx="10" cy="10" rx="8" ry="3.2" transform="rotate(-20 10 10)"/></svg>See in the Universe ↗</a>')
 
 
 # ------------------------------------------------------------------------------------------------ Live tables
@@ -491,6 +491,10 @@ def lobby(doc) -> None:
         card(c, six_buyins=True)
     owner.install_lobby(doc)        # their signed-in hero ("Your agent") and the YOU marks on our card
     for c in doc.xpath('//a[contains(@class,"at-tcard") or contains(@class,"at-feat")]'):
+        # only Flash tables are joined: the open 7-day ones (week and ET10) are deleted ("maji byt jen ty co promuji")
+        if c.xpath('.//*[contains(@class,"at-st") and contains(@class,"open")]') and not re.search(r"\bf(micro|pro)\b", c.get("class", "")):
+            c.getparent().remove(c)
+    for c in doc.xpath('//a[contains(@class,"at-tcard") or contains(@class,"at-feat")]'):
         restyle_card(c)
     filters = doc.xpath('//div[@id="tables"]/div[contains(@class,"at-seg")]')
     if filters:                     # the Paper | Live switch beside their filters (one setting with their header pill)
@@ -553,8 +557,9 @@ def patch_html(page: str, html: str) -> str:
     elif page == "how":
         how(doc)
     two_prizes(doc)
-    for bar in doc.xpath('//header[contains(@class,"at-bar")]')[:1]:   # every page: the Universe, at the bar's right end
-        bar.append(frag(UNIVERSE)[0])
+    for bar in doc.xpath('//header[contains(@class,"at-bar")]')[:1]:   # every page but a table's: the Universe, far right
+        if page != "table":
+            bar.append(frag(UNIVERSE)[0])
     retext(doc)
     rename(doc)
     inject(doc)

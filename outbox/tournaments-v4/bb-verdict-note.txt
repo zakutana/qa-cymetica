@@ -1,11 +1,16 @@
-Checked live, signed out at 390, 1440 and 1920 px, and the race signed in on table 15.
+Checked live: signed out at 390, 1440 and 1920 px, and signed in on tables 15, 24 and 25 (seat, Fill with house bots, Risk).
 
-Matches the spec: the rename and the 301 redirects with the query kept, Agent Casino in the logo, titles and copy, six-seat tables #21 to #25, the top 2 paid (4x and 2x: a $5 table pays $20 and $10, a 100 ET10 table 400 and 200), the PAPER | LIVE switch with the three Live cards shown as COMING, the icon tiles and 4x / 2x podium, the buy-in once with its clock, the metal rail, chips and deck, the full-width honeycomb, the centred back arrow, merged race markers (table 15: markers of 5, 4 and 5 trades, none touching at 1440 and 1920), and /llms.txt, the agent card and the MCP text for the Paper side.
+Matches the spec: the rename and the 301 redirects with the query kept, Agent Casino in the logo, titles and copy, six-seat tables #21 to #27, the top 2 paid (4x and 2x: $5 pays $20 and $10, 100 ET10 pays 400 and 200), the PAPER | LIVE switch with the three Live cards as COMING, the icon tiles and 4x / 2x podium, the buy-in once with its clock, the metal rail, chips and deck, the full-width honeycomb, the centred back arrow, merged race markers (table 15: 5, 4 and 5 trades, none touching at 1440 and 1920), /llms.txt, the agent card and the MCP text for Paper, and Risk saving the bot (stop loss 6 % and take profit 24 % at risk 6, 7 OWNER rows in the changelog).
 
 Not as specified:
-1. Table #16 (1,000 ET10) is open with 10 seats and 3 paid places (6,000 / 3,000 / 1,000); the lobby card says "10 seats left". It needs 6 seats and 4x / 2x like #21 to #25.
-2. The table page is not drawn 15 % smaller: the column is 1,240 px at 100 % scale, as before.
-3. The table panel and the table cards are flat #0d1520; the suede grain is only on the felt. The spec asks for the panel and the cards.
-4. SEE IN THE UNIVERSE is 179 x 44 px, not the small button in the picture (172 x 26): bb-responsive.css gives every link in main a minimum height of 44 px, and this button needs min-height 0.
+1. Risk and Settings: after moving Risk the Settings tab keeps showing the old stop loss 5 %, take profit 20 % and "No change from what runs now" until the page is reloaded (the server has 6 / 24). Trade size is not shown in Settings at all. Settings must follow Risk at once, trade size included.
+2. 7-day tables are still open: #16, #21, #22, #25 and #26. Only Flash tables (1H, 5H, 1D) should exist to join; the 7-day ones should be deleted. #16 also still has 10 seats and 3 paid places (6,000 / 3,000 / 1,000).
+3. SEE IN THE UNIVERSE is 179 x 44 px and sits next to the pots line. It should be the creator dashboard's button ("See in the Universe" with the arrow and planet icon, 32 px high), at the far right of the top bar, and it should not be on table pages. bb-responsive.css gives every link in main a 44 px minimum height.
+4. The Coach panel is much smaller than the picture: the icon is 64 px (112 px in the picture) and a different drawing from the 3D chip in a deerstalker; the gauge is at most 230 px (320 px in the picture).
+5. The table page is not drawn 15 % smaller: the column is 1,240 px at 100 % scale, as before.
+6. The table panel and the table cards are flat #0d1520; the suede grain is only on the felt.
+7. Seen once, not reproduced: after Fill with house bots on #24 and #25 the lobby still showed both as "Open, YOU waiting, 5 to go" and "Live now 0". Eight minutes later the lobby lists both under Live now, so the data was right; that tab did not update.
+8. On LIVE the lobby still lists my Paper agents: the "Your agents" panel and its two rows (#25, #24) stay.
+9. The PAPER | LIVE switch beside the filters is the account's trading mode: after one change it answers "Please wait 175s before switching trading modes again". While Live tables are closed it should only filter this page: no account change, no wait.
 
-Not checked: the Coach tab, Risk, Tune and its log, because no table has an owner column to open. Not built, as your note says: Live money and the wallet join (the lines in our BB-CHANGE).
+Not checked: Tune and its log (no trade has closed yet). Not built, as your note says: Live money and the wallet join (the lines in our BB-CHANGE).

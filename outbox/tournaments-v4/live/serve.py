@@ -24,6 +24,7 @@ import patch  # noqa: E402
 
 UPSTREAM = "https://cymetica.com"
 TTL = 30.0
+SNAPSHOT = True        # the four pages come from fixtures/ (their old page): the live ones already carry ET-32932's build
 OWN_FILES = {"v4.js": "application/javascript; charset=utf-8", "v4.css": "text/css; charset=utf-8"}
 # v4 renames it Agent Casino at /agent-casino (the operator, 2026-10-26); their page still lives at /agent-tournaments,
 # so a page here is fetched from there, and the old page addresses answer with a permanent redirect, as v4 asks of them
@@ -102,6 +103,8 @@ class Handler(BaseHTTPRequestHandler):
         bare = path.split("?")[0]
         for rx, page in PAGES:
             if rx.match(bare) and status == 200 and "text/html" in ctype:
+                if SNAPSHOT:      # their page as it was before v4 (their live one now carries the build of ET-32932)
+                    body = (HERE / "fixtures" / f"{'table15' if page == 'table' else page}.html").read_bytes()
                 body = patch.patch_html(page, body.decode("utf-8")).encode("utf-8")
                 break
         self._send(status, ctype, body, headers, head=head)
@@ -116,7 +119,11 @@ class Handler(BaseHTTPRequestHandler):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8790)
-    port = ap.parse_args().port
+    ap.add_argument("--live", action="store_true", help="patch their live pages instead of the saved pre-v4 snapshots")
+    args = ap.parse_args()
+    global SNAPSHOT
+    SNAPSHOT = not args.live
+    port = args.port
     srv = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     print(f"v4 mirror on http://127.0.0.1:{port}/agent-casino  (reads cymetica.com, never writes)", flush=True)
     srv.serve_forever()
