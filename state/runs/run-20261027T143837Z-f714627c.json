@@ -1,0 +1,126 @@
+{
+  "schema": 2,
+  "run_id": "run-20261027T143837Z-f714627c",
+  "started_at": "2026-10-27T14:38:54+00:00",
+  "finished_at": "2026-10-27T14:39:12+00:00",
+  "git_head": "f714627c64cdb52ed16fa7e98e529cccdaf46baf",
+  "git_short": "f714627c",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:cb0bb960f0d447e882c146b37f5b9ab139140bae2bbe1b8897b27846d00ea344",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "1e7f6fdae53f0ee95118e61e52835095eae7c37406f80884fe13af0afd2a45b3",
+    "/.well-known/agent-card.json": "5e0d977f916d6293f18b6e7e495ec5159068f6a2a1015c0782fcb9d6b2907923",
+    "/.well-known/agent-skills.json": "f076eda5827035dfbf46fd5ebc31705ddc08401a20da97284d59433c7e1f7a65",
+    "/.well-known/ai-plugin.json": "6ab78de3594c4cc3eeac74e02d88e28841bc38ca87933cc14172115bf7c1dded",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "1e1b7e2efeaff813451d647f88f52353e50627b882e63a65842dd1238b8e108c",
+    "/openapi-public.json": "e88f758e42c61fba06d6c60b4bdad7e2cae0256c79f4f6ffec4e485dc6ddf518",
+    "/llms.txt": "f3fb695308d64a1a0a751a3b74dc59b557c4adf6dd65513dc989773da2aa01ac",
+    "mcp:tools/list:none": "b4e37c12cf958cfd7d19fc86970f252e6919134bb6a7d781af48503532ff24bf"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_quant_search_rows_fit_the_list_grid.py -q",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_quant_search_rows_fit_the_list_grid.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_quant_search_rows_fit_the_list_grid.py::test_quant_search_rows_fit_the_list_grid"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_quant_search_rows_fit_the_list_grid.py::test_quant_search_rows_fit_the_list_grid",
+      "component": "rest.company",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "quant-search-rows-fit-the-list-grid",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 8983,
+      "evidence_ids": [
+        "d339398d8ddca6eb280096ad062a1b9430e3621f4e677bbbd1b780e52cb8dcda",
+        "f3c43fb5e855e587ac93d262d515348f5d11a70d85f8f5b73db0abdab603b744",
+        "3c53cd7ab79ef256383294f1fea01aeaa571bb271d3ae70bc5e4401358bb6c7b",
+        "476425c710b433f3fe31ec3f33bf95ba7b6e90e9852f427e8706f668e9d4079a",
+        "83e39d42e8ca13071a73f05b4c5bf2cbca57c631cf064e87e12333bf1aef4eb7",
+        "39188ba25324be26eddac69b077ee195b67230bc82657e81de0f3fc4921cc674"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "the stylesheet's `.qrow` grid starts with a 22px track (the rank cell, `.rk`), and /static/company/quantsearch.js draws 1 row template(s) whose first cell is ['qn'] not `.rk`, so the name cell falls in that 22px track",
+        "left": {
+          "rows_whose_first_cell_is_not_rk": 1
+        },
+        "right": {
+          "allowed": 0,
+          "first_track_px": 22.0
+        },
+        "sources": {
+          "page": "/company/app/experiments",
+          "scripts": "/static/company/quantlab.js, /static/company/quantsearch.js",
+          "style": "/static/company/xp.css"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "quant-search-rows-fit-the-list-grid",
+        "role": "verdict",
+        "population": {
+          "rows_by_script": {
+            "/static/company/quantlab.js": 1,
+            "/static/company/quantsearch.js": 1
+          },
+          "first_cells": {
+            "/static/company/quantlab.js": [
+              "rk"
+            ],
+            "/static/company/quantsearch.js": [
+              "qn"
+            ]
+          }
+        }
+      },
+      "check_fingerprint": "3c046b7c7bd94fdf8dc1c016bf1235fa23ffa0aa1f7de0b6629f2a023a02a5b9",
+      "helpers_fingerprint": "25a71ff8f0f39046d522da0fccd6a83ce43e801b49869582a6028c9d535339ed",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_quant_search_rows_fit_the_list_grid.py:84: in test_quant_search_rows_fit_the_list_grid\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: the stylesheet's `.qrow` grid starts with a 22px track (the rank cell, `.rk`), and /static/company/quantsearch.js draws 1 row template(s) whose first cell is ['qn'] not `.rk`, so the name cell falls in that 22px track\nE     left  = {'rows_whose_first_cell_is_not_rk': 1}\nE     right = {'allowed': 0, 'first_track_px': 22.0}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 6,
+    "limit": 2000,
+    "remaining": 1967,
+    "fraction_used": 0.0165,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": true,
+  "fingerprint_after": "sha256:cb0bb960f0d447e882c146b37f5b9ab139140bae2bbe1b8897b27846d00ea344",
+  "exit_status": 1
+}

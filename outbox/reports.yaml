@@ -6875,6 +6875,40 @@ reports:
       passes when every such card is settled, closed or gone from the list, within a day of its close, or open-ended; it
       is inconclusive if the list cannot be read whole, is empty, or holds a close it cannot parse. GET requests only.
 
+  - key: quant-search-rows-fit-the-list-grid
+    findings: [CYM-quant-search-rows-fit-the-list-grid]
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/company/app/experiments
+    title: "Quant Lab search results (ET-32976): the model name and the reason are set in a 22 px column, one to three letters a line"
+    expected: >
+      A search result on /company/app/experiments reads like the bot list above it: the name of the model and
+      market ("stockbull_blue · DOT") and the reason ("lost 3.09% on the held-back period (59 trades)") in the wide
+      column, the return and the counts to the right.
+    actual: >
+      Read on 2026-10-27 at 14:30 UTC, signed in, at 1315 px (and on the owner's 1960 px screen): after a search with
+      5 combinations checked on the held-back period, each of the 5 THROWN OUT rows draws its name cell 22 px wide, so
+      "stockbull_blue · DOT" breaks into "st / oc / kb / ul / l_ / bl / ue / . / DO / T" and the reason into pieces
+      of three characters, down the left of the card, while the return (-3.09%) sits 776 px to the right. Measured
+      per row: the four cells are 22 px (name), 776 px (return), 70 px and 80 px. The cause is in the public files:
+      xp.css lays every .qrow out as a grid of "22px minmax(0,1fr) 70px 80px 70px 70px 70px auto", made for the
+      rank cell the bot list draws first (quantlab.js: <span class="rk">), and quantsearch.js draws the search row
+      with no such cell (its first child is <div class="qn">), so the name lands in the 22 px track. The same
+      grid under 760 px gives the name an 18 px track.
+    steps:
+      - 'GET https://cymetica.com/static/company/xp.css?v=6ae0a522 -> .qrow { display: grid; grid-template-columns: 22px minmax(0, 1fr) 70px 80px 70px 70px 70px auto; ... }'
+      - 'GET https://cymetica.com/static/company/quantlab.js?v=6ae0a522 -> the bot row: ''<div class="qrow ...">'' + ''<span class="rk">'' + ... + ''<div class="qn">'''
+      - 'GET https://cymetica.com/static/company/quantsearch.js?v=6ae0a522 -> the search row: ''<div class="qrow ...">'' + ''<div class="qn">'' ... with no .rk cell'
+      - 'Signed in with a Pro plan, open https://cymetica.com/company/app/experiments after a search -> getComputedStyle of #sres .qrow: grid-template-columns 22px 776px 70px 70px ..., the .qn cell 22 px wide'
+    body: >
+      A user who runs the search cannot read which model and market were thrown out or kept, or why, which is the
+      result the search exists to show. Adding an empty <span class="rk"></span> as the first cell of the search row
+      (or giving the search list its own grid) would fix it. Low: the return and the counts still show. Our check
+      reads the page's public script and stylesheet and fails while a script draws a .qrow row whose first cell is
+      not the rank cell, with the stylesheet's first track a fixed 22 px; it passes when every such row starts with
+      the rank cell or the first track is no longer a narrow fixed one; it is inconclusive if the page, a script or
+      the .qrow rule cannot be read, or no script draws a .qrow row. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
