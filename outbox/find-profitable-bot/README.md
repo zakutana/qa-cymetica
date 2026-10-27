@@ -21,5 +21,12 @@ department, a visible tag on the 19 models that have a backtest setup, and capac
 the button's page is `/my-bots`, which is the same page as `/my-agents` (title "My Agents", checked), `/agents` the fallback. So the draft's app stays
 `/my-agents`. When the operator files it, its ET number goes here and the verdict is ours.
 
+**2026-10-27: filed as ET-32976** (`bb.py get`: app Build a Company, stage building, accepted 04:07 UTC, ours). REPLY-0230 (Nexus):
+first version live at `/company/app/experiments` (search panel, Download log) and an "Auto-optimize ready" tag on `/my-agents`; grid on
+stop loss and take profit only (the backtest cannot replay entry threshold, weights or AI confidence yet, those come back as IDEA approvals);
+Pro, and Max 5x / 20x include it; a search uses no plan units. Seen on the live page signed out: `quantsearch.js` exists, Pro-only, counts
+"skipped (already tried on the same data)" and "checked on the held-back period". Not seen: the Max-plan and plan-units claims, the tag
+(signed in only). The verdict is ours when the BB-SHIPPED message arrives.
+
 Checked with our key on 2026-10-25 (GET only): `GET /api/v1/cloned-bots/{id}/optimizations` answers for all 70 of our clones, levers and
 bounds as Nexus described, Auto-optimize off on all; 7 of the 70 are trading and none has a proposal yet.
