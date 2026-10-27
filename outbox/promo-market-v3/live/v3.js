@@ -1,32 +1,49 @@
   /* ================= v3, laid on top of their v2 in the local copy (outbox/promo-market-v3) =================
    * Spliced in at the end of their closure by patch.py: these function declarations replace theirs of the same name
-   * (defaultForm, formBrief, briefCard, newBrief), everything else is their own code.
+   * (chrome, defaultForm, formBrief, briefCard, newBrief), everything else is their own code.
    *   1. a brief can promote any website, not only an app on Cymetica;
    *   2. every price says its unit (USDC, and cents under a dollar);
-   *   3. a post is paid by its reach: a price per 1,000 real views, up to a cap, for promoters who pass the bar the
-   *      owner sets; a promoter applies with their X handle, Cymetica measures the account, the owner approves;
-   *   4. the owner's bell and inbox of promoters who want a brief, with what Cymetica measured;
-   *   5. the protection band above Open briefs.
-   * The promoters in the inbox are a sample, one model for every figure on the page: the example account in the form
-   * is the first of them (6,800 average views). */
+   *   3. a post is priced for each promoter: the promoter gives their X handle, Cymetica measures the account's real
+   *      reach, and the offer is the visitors it expects from one post x the owner's price per visitor, rounded
+   *      (the operator, 2026-10-27). The owner sets no price per post, only whether posts are paid;
+   *   4. the owner sees the offers on the brief's own page and approves them; the bell counts the ones waiting;
+   *   5. a slim user-protection line above Open briefs.
+   * The sample brief, its promoters and the stand-in engine (/__v3/x/<handle>) are sample.py: one model. */
   I.bell = '<path d="M5 14.5V9a5 5 0 0 1 10 0v5.5l1.5 1.5h-13z M8.3 17.5a1.9 1.9 0 0 0 3.4 0"/>';
   const V3_SITE = '__site';
-  const V3_DEF = { per_post: 3, cap: 40, min_views: 1000, min_followers: 500, min_age: 90, min_real: 70, per_user: 5, per_visitor: 0.05, budget: 50, days: 7 };
-  const V3_APPS = [
-    { h: 'gemhunter_demo', f: 12400, v: 6800, e: 2.9, r: 88, age: '3.1 y', s: 82 },
-    { h: 'alpha_threads_demo', f: 41000, v: 15200, e: 1.6, r: 79, age: '5.0 y', s: 91 },
-    { h: 'onchain_notes_demo', f: 4100, v: 2350, e: 4.4, r: 93, age: '1.4 y', s: 74 }];
-  const V3_OUT = [['moonfarm_demo', '52,000 followers, 310 avg views (0.6 %): a bought audience'], ['fresh_degen_demo', 'account 9 days old, you asked for 90'],
-    ['airdrop_twin_demo', 'same device and wallet as another promoter'], ['6 more', 'under 1,000 avg views over the last 20 posts']];
-  const V3_OUT_N = 9;
+  const V3_DEF = { per_user: 5, per_visitor: 0.05, budget: 50, days: 7 };
+  const V3_EX = 136;   // the form's example: visitors the engine expects from @gemhunter_demo (sample.py)
   const v3cents = (v) => { v = +v || 0; return v > 0 && v < 1 ? '= ' + Math.round(v * 100) + ' ¢' : '= $' + price(v); };
-  const v3pay = (F, views) => Math.min(+F.cap || 0, (+F.per_post || 0) * views / 1000);
+  // the offer, rounded so it reads well (sample.py nice): halves under 10, whole USDC to 100, fives above
+  const v3nice = (u) => { const s = u < 10 ? 0.5 : u < 100 ? 1 : 5; return Math.max(s, Math.round(u / s) * s); };
   const v3host = (u) => { try { const x = new URL(u); return x.host + (x.pathname === '/' ? '' : x.pathname); } catch (e) { return String(u || '').replace(/^https?:\/\//, ''); } };
-  const v3k = (v) => (v >= 1000 ? (v / 1000).toFixed(v >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'k' : String(v));
-  function v3exText(F) {
-    return 'e.g. an account with <b>' + fmt(V3_APPS[0].v) + '</b> avg views: <b class="pos">' + usd(v3pay(F, V3_APPS[0].v)) + ' USDC</b> a post';
+  const v3offerLine = (pv) => 'Offer = visitors Cymetica expects from their X × ' + price(pv) + ' USDC, rounded · e.g. ~' + V3_EX + ' visitors → <b class="pos">' + price(v3nice(V3_EX * pv)) + ' USDC</b>';
+  S.v3x = {}; S.v3dec = {};
+
+  /* the top bar: theirs, and the bell counts the offers waiting for the owner */
+  function chrome(r) {
+    const onMarket = r === 'market' || r === 'brief' || r === 'board';
+    $('tnav').innerHTML = '<a href="#market" class="' + (onMarket ? 'on' : '') + '">' + ic('market') + 'Market</a>' +
+      '<a href="#me/' + (OWNER ? 'products' : 'today') + '" class="' + (onMarket ? '' : 'on') + '">' + ic('dash') + 'My dashboard</a>';
+    $('topnew').innerHTML = ic('plus') + 'Post a brief';
+    $('topnew').setAttribute('href', SIGNED ? (OWNER ? '#new' : '/creator-dashboard?tab=products') : signInHref('/creator-dashboard'));
+    $('topuniv').innerHTML = ic('orbit') + 'See in the Universe ↗';
+    const as = briefsAnswer().stats.as_of;
+    $('livechip').innerHTML = '<i class="live"></i>' + (as ? 'live · read ' + when(as).slice(11) : 'live');
+    v3Bell();
+  }
+  function v3Waiting() {
+    return prodsOf().map((p) => p.brief).filter((r) => r && r.brief && r.brief.post_by_reach)
+      .map((r) => ({ id: r.brief.id, n: (r.offers || []).filter((o) => o.state === 'pending' && !S.v3dec[r.brief.id + ':' + o.handle]).length }));
+  }
+  function v3Bell() {
+    const b = $('v3belln'); if (!b) return;
+    const n = v3Waiting().reduce((s, x) => s + x.n, 0);
+    b.textContent = n; b.style.display = n ? '' : 'none';
+    $('v3bell').setAttribute('data-tip', n ? n + ' promoter' + (n === 1 ? '' : 's') + ' want your brief' : 'No offer waiting');
   }
 
+  /* Post a brief: any website, units on every price, the post priced for each promoter */
   function defaultForm(path) {
     const prods = prodsOf(), site = path === V3_SITE || !prods.length;
     const p = site ? null : (prods.find((x) => x.path === path) || prods[0]);
@@ -40,20 +57,20 @@
   function formBrief(F) {
     const site = F.path === V3_SITE;
     const p = site ? { name: F.site_name || 'Your website', path: null, url: F.site_url } : (prodsOf().find((x) => x.path === F.path) || {});
-    return { id: 0, name: p.name, path: p.path, url: p.url, site: site, per_post_usdc: F.on.post ? F.per_post : 0, post_cap_usdc: F.cap,
+    return { id: 0, name: p.name, path: p.path, url: p.url, site: site, per_post_usdc: 0, post_by_reach: !!F.on.post,
       per_user_usdc: F.on.user && !site ? F.per_user : 0, per_visitor_usdc: F.on.visitor ? F.per_visitor : 0, budget_usdc: F.budget, up_for_grabs_usdc: F.budget,
       days: F.days, days_left: F.days, status: 'open', say_line: F.say, preview_src: F.mats[0] && F.mats[0].kind === 'image' ? F.mats[0].src : null,
-      reach: { min_views: F.min_views, min_followers: F.min_followers, min_age: F.min_age, min_real: F.min_real },
       materials: F.mats.filter((m) => (m.kind !== 'text' || m.body) && !m.busy) };
   }
 
-  /* the brief card: every price with its unit; a post priced by reach; Apply with your X */
+  /* the brief card: every price with its unit; a post priced by the promoter's reach */
   function briefCard(b, preview) {
-    const tk = S.taken[b.id], byReach = b.post_cap_usdc != null;
+    const tk = S.taken[b.id];
     const tiles = [];
-    if (+b.per_post_usdc > 0) tiles.push(byReach ? [price(b.per_post_usdc), 'per 1k views', 'max ' + price(b.post_cap_usdc) + ' a post'] : [price(b.per_post_usdc), 'per post', 'up 7 days']);
-    if (+b.per_user_usdc > 0) tiles.push([price(b.per_user_usdc), 'per new user', 'after 14 days']);
-    if (+b.per_visitor_usdc > 0) tiles.push([price(b.per_visitor_usdc), 'per visitor', v3cents(b.per_visitor_usdc)]);
+    if (b.post_by_reach) tiles.push(['<b class="v3auto">by reach</b>', 'per post', 'for your X']);
+    else if (+b.per_post_usdc > 0) tiles.push(['<b>' + price(b.per_post_usdc) + '<small>USDC</small></b>', 'per post', 'up 7 days']);
+    if (+b.per_user_usdc > 0) tiles.push(['<b>' + price(b.per_user_usdc) + '<small>USDC</small></b>', 'per new user', 'after 14 days']);
+    if (+b.per_visitor_usdc > 0) tiles.push(['<b>' + price(b.per_visitor_usdc) + '<small>USDC</small></b>', 'per visitor', v3cents(b.per_visitor_usdc)]);
     const mats = (b.materials || []).length, src = b.preview_src || (b.site ? null : pic(b.path));
     return '<article class="bc v3bc"' + (preview ? '' : ' data-brief="' + b.id + '"') + '>' +
       '<div class="img">' + (src ? '<img alt="" src="' + esc(src) + '">' : '<div class="v3noimg">' + ic('globe') + '</div>') + '<div class="tl">' + (mats ? '<span class="chip c">' + ic('image') + mats + ' materials</span>' : '') +
@@ -61,30 +78,27 @@
       '<div class="bd"><div class="nm"><b>' + esc(shortName(b.name)) + '</b><a class="lnk" href="' + esc(b.url) + '" target="_blank" rel="noopener">' + esc(b.site ? v3host(b.url) : 'cymetica.com' + b.path) + ' ↗</a></div>' +
         (b.say_line ? '<p class="say">' + esc(b.say_line) + '</p>' : '<p class="say dim">—</p>') +
         '<div class="ufg tipl" data-tip="One budget for every promoter, first come first paid: once it is spent, nothing more is counted or owed"><span>Up for grabs <span class="i">i</span></span><b>' + usd(b.up_for_grabs_usdc) + '<small>USDC</small></b></div>' +
-        '<div class="pays v3pays">' + tiles.map((x) => '<div><b>' + x[0] + '<small>USDC</small></b><span>' + x[1] + '</span><em>' + x[2] + '</em></div>').join('') + '</div>' +
-        (byReach && b.reach ? '<div class="v3bar">' + ic('shield') + '<span>Open to X accounts with <b>' + fmt(b.reach.min_views) + '+</b> avg views · checked by Cymetica</span></div>' : '') +
+        '<div class="pays v3pays">' + tiles.map((x) => '<div>' + x[0] + '<span>' + x[1] + '</span><em>' + x[2] + '</em></div>').join('') + '</div>' +
         (tk ? '<button class="btn c full" data-brief="' + b.id + '">' + ic('check') + 'Taken · my link</button>' :
-          byReach ? '<button class="btn g full lg" ' + (preview ? 'disabled' : 'data-v3apply="' + b.id + '"') + '>' + ic('x') + 'Apply with your X ' + ic('arrow') + '</button>' :
-          '<button class="btn g full lg" ' + (preview ? 'disabled' : 'data-take="' + b.id + '"') + '>Take it ' + ic('arrow') + '</button>') +
+          // a post priced by reach opens the brief, where the promoter's X handle gives the offer
+          '<button class="btn g full lg" ' + (preview ? 'disabled' : (b.post_by_reach ? 'data-brief="' : 'data-take="') + b.id + '"') + '>' + (b.post_by_reach ? 'See my offer ' : 'Take it ') + ic('arrow') + '</button>') +
       '</div></article>';
   }
 
-  /* Post a brief: any website, units on every price, the post priced by reach */
   function newBrief(path) {
     if (!OWNER) return dash('products');
     if (!need([MINE])) return waitBox('your products');
     if (!S.form || (path && S.form.path !== path)) S.form = defaultForm(path);
     const F = S.form, prods = api(MINE).products, P = prods.products || [], site = F.path === V3_SITE;
-    const amt = (k, v, cents) => '<div class="v3amt"><input class="in" id="v3-' + k + '" data-f="' + k + '" inputmode="decimal" value="' + v + '" aria-label="' + k + ' in USDC"><i>USDC</i>' +
-      (cents ? '<em id="v3c-' + k + '">' + v3cents(v) + '</em>' : '') + '</div>';
-    const pr = (k, name, sub, v, tip, off) => '<div class="payrow v3row' + (F.on[k] && !off ? '' : ' off') + '"><button class="tog' + (F.on[k] && !off ? ' on' : '') + '"' + (off ? ' disabled' : ' data-tog="' + k + '"') + ' aria-label="' + name + '"></button>' +
-      '<div' + (tip ? ' data-tip="' + esc(tip) + '"' : '') + '><b>' + name + '</b><span>' + sub + '</span></div>' + amt('per_' + k, v, k !== 'post') + '</div>';
-    const req = (k, label, sub, unit) => '<label class="v3q"><span>' + label + '</span><div class="v3amt sm"><input class="in" id="v3-' + k + '" data-f="' + k + '" inputmode="numeric" value="' + F[k] + '"><i>' + unit + '</i></div><em>' + sub + '</em></label>';
-    const reach = F.on.post ? '<div class="v3reach">' +
-        '<div class="v3cap"><span>' + ic('coin') + 'Max for one post</span>' + amt('cap', F.cap) + '</div>' +
-        '<div class="v3lbl">' + ic('shield') + 'Who may apply · Cymetica checks it on X</div>' +
-        '<div class="v3reqs">' + req('min_views', 'Avg views', 'last 20 posts', 'min') + req('min_followers', 'Followers', 'real ones', 'min') + req('min_age', 'Account age', 'on X', 'days') + req('min_real', 'Real audience', 'not bought', '%') + '</div>' +
-        '<div class="v3ex" id="v3ex">' + v3exText(F) + '</div></div>' : '';
+    const amt = (k, v) => '<div class="v3amt"><input class="in" id="v3-' + k + '" data-f="' + k + '" inputmode="decimal" value="' + v + '" aria-label="' + k + ' in USDC"><i>USDC</i>' +
+      '<em id="v3c-' + k + '">' + v3cents(v) + '</em></div>';
+    const tog = (k, off) => '<button class="tog' + (F.on[k] && !off ? ' on' : '') + '"' + (off ? ' disabled' : ' data-tog="' + k + '"') + ' aria-label="' + k + '"></button>';
+    const pr = (k, name, sub, v, tip, off) => '<div class="payrow v3row' + (F.on[k] && !off ? '' : ' off') + '">' + tog(k, off) +
+      '<div' + (tip ? ' data-tip="' + esc(tip) + '"' : '') + '><b>' + name + '</b><span>' + sub + '</span></div>' + amt('per_' + k, v) + '</div>';
+    const post = '<div class="payrow v3row v3post' + (F.on.post ? '' : ' off') + '">' + tog('post') +
+        '<div data-tip="The promoter gives their X handle; Cymetica measures the account\'s real reach and prices the post for them. You approve each one."><b>Per post · priced for each promoter</b><span>paid for the post itself, before any visitor</span></div>' +
+        '<span class="v3autopill">' + ic('x') + 'auto</span></div>' +
+      (F.on.post ? '<div class="v3ex" id="v3ex">' + v3offerLine(F.per_visitor) + '</div>' : '');
     const matRow = (m, i) => m.kind === 'text' ?
       '<div class="mat txt"><div class="th">' + ic('text') + '</div><div><b>' + esc(m.title) + '</b><span>ready-made text, copied by promoters</span></div><button class="x" data-rmmat="' + i + '" aria-label="Remove">' + ic('close') + '</button>' +
         '<textarea class="in" data-mat="' + i + '" placeholder="Write the post promoters can copy (their link is added at the end)">' + esc(m.body) + '</textarea></div>' :
@@ -94,10 +108,10 @@
         '<div><b>Cover picture</b><span>' + esc(m.size) + '</span></div><button class="x" data-rmmat="' + i + '" aria-label="Remove">' + ic('close') + '</button></div>' :
       '<div class="mat"><div class="th">' + (m.kind === 'image' && m.src ? '<img alt="" src="' + esc(m.src) + '">' : ic(m.kind === 'video' ? 'video' : 'image')) + '</div>' +
         '<div><b>' + esc(m.title) + '</b><span>' + esc(m.busy ? 'uploading…' : m.err || m.size || '') + '</span></div><button class="x" data-rmmat="' + i + '" aria-label="Remove">' + ic('close') + '</button></div>';
-    const b = formBrief(F), ex = v3pay(F, V3_APPS[0].v);
+    const b = formBrief(F), ex = v3nice(V3_EX * F.per_visitor);
     const buy = [['post', ex, 'posts like the example'], ['user', site ? 0 : F.per_user, 'new users'], ['visitor', F.per_visitor, 'unique visitors']].filter((x) => F.on[x[0]] && x[1] > 0);
     const busy = F.mats.some((m) => m.busy);
-    const ok = F.budget >= prods.min_budget_usdc && buy.length && !busy && (!F.on.visitor || !(F.per_visitor > 0) || (F.per_visitor >= 0.01 && F.per_visitor <= 5)) && (!site || /^https?:\/\/[^/\s]+\.[^/\s]+/.test(F.site_url));
+    const ok = F.budget >= prods.min_budget_usdc && buy.length && !busy && F.per_visitor >= 0.01 && F.per_visitor <= 5 && (!site || /^https?:\/\/[^/\s]+\.[^/\s]+/.test(F.site_url));
     return '<div class="wrap"><div class="nbtop"><a class="back" href="#me/products">' + ic('arrow') + 'My products</a><h1>Post a brief</h1><span class="sp" style="flex:1"></span>' +
         '<span class="chip g tipr" data-tip="' + esc(PAGE().products_note) + '">' + ic('lock') + 'The budget stays in your own wallet</span></div>' +
       '<div class="nb v3nb">' +
@@ -106,10 +120,10 @@
             P.map((p) => '<button data-pick="' + esc(p.path) + '" class="' + (p.path === F.path ? 'on' : '') + '"><img alt="" src="' + esc(pic(p.path)) + '"><div><b>' + esc(shortName(p.name)) + '</b><span>cymetica.com' + esc(p.path) + '</span></div><em>' + fmt((p.traffic_30d || {}).visitors) + ' / 30 d</em></button>').join('') + '</div>' +
           (site ? '<div class="v3sitef"><input class="in" id="v3sn" data-v3f="site_name" placeholder="Name, e.g. My Shop" value="' + esc(F.site_name) + '"><input class="in" id="v3su" data-v3f="site_url" placeholder="https://your-site.com" value="' + esc(F.site_url) + '"></div>' : '') +
           '<div class="v3lbl top">' + ic('coin') + 'Pay · all prices in USDC (1 USDC = $1)</div>' +
-          pr('post', 'Per post · by reach', 'per 1,000 real views · post up 7 days', F.per_post, 'Views are read from X by Cymetica; up to 3 posts a brief a day are paid') + reach +
+          pr('visitor', 'Per unique visitor', 'one real person\'s first visit · paid after 7 days', F.per_visitor, '0.01 to 5 USDC. Counted after a real browser check, never a hosting network, paid 7 days later') +
+          post +
           pr('user', 'Per new user', site ? 'needs Cymetica\'s sign-up tag on your site' : 'spends ≥ this on Cymetica in 14 days · a deposit alone never counts', F.per_user,
             'Counted only when the user\'s own fees in 14 days reach this price, so a deposit and a withdrawal earn nothing', site) +
-          pr('visitor', 'Per unique visitor', 'one real person\'s first visit · paid after 7 days', F.per_visitor, '0.01 to 5 USDC. Counted after a real browser check, never a hosting network, paid 7 days later') +
           '<div class="row2"><label class="f">Budget (USDC) · min ' + prods.min_budget_usdc + '<input class="in" data-f="budget" inputmode="decimal" value="' + F.budget + '"><div class="quick">' + [50, 100, 250, 500].map((v) => '<button data-budget="' + v + '">' + v + '</button>').join('') + '</div></label>' +
             '<label class="f">Runs for<div class="seg" style="height:42px;align-items:center">' + (prods.days_choices || [7, 14, 30]).map((d) => '<button data-days="' + d + '" class="' + (F.days === d ? 'on' : '') + '">' + d + ' days</button>').join('') + '</div></label></div>' +
           '<label class="f" style="margin-top:14px">One line for promoters to say <span class="dim" id="saycnt">(' + F.say.length + ' / 280)</span><input class="in" data-f="say" maxlength="280" value="' + esc(F.say) + '" placeholder="optional"></label></div>' +
@@ -120,75 +134,91 @@
         '<div class="card"><div class="colh"><span class="no">3</span><b>As promoters will see it</b></div><div class="preview">' + briefCard(b, true) +
           '<div><div class="dim num" style="font-size:11px;letter-spacing:1px;margin-bottom:6px">THIS BUDGET PAYS FOR UP TO</div><div class="buys">' +
             buy.map((x) => '<div><b>' + fmt(Math.floor(F.budget / x[1])) + '</b><span>' + x[2] + '</span></div>').join('') + '</div></div>' +
-          '<div class="sendbar"><div class="note">' + ic('x') + '<span>Promoters apply with their X account. Cymetica measures its real reach and drops the ones under your bar; you approve the rest and their price.</span></div>' +
+          '<div class="sendbar">' +
             '<div class="note">' + ic('users') + '<span>One budget for every promoter, first come first paid: once ' + usd(F.budget) + ' USDC is spent, nothing more is counted or owed.</span></div><div class="note">' + ic('shield') + '<span>Opens only when your own USDC, read on-chain, covers ' + usd(F.budget) + ' USDC and your other open briefs.</span></div>' +
             (F.msg ? '<div class="statusrow neg" role="alert">' + esc(F.msg) + '</div>' : '') +
             '<button class="btn g lg full" data-act="publish"' + (ok ? '' : ' disabled') + '>Post the brief ' + ic('arrow') + '</button><a class="btn gh full" href="#me/products">Cancel</a></div></div></div>' +
       '</div></div>';
   }
 
-  /* the owner's inbox: promoters who want a brief, what Cymetica measured, the price by reach */
-  function v3Inbox() {
-    const F = S.form || V3_DEF;
-    const left = V3_APPS.filter((a) => !a.st);
-    const stat = (k, v, tip) => '<div' + (tip ? ' data-tip="' + esc(tip) + '"' : '') + '><span>' + k + '</span><b>' + v + '</b></div>';
-    const app = (a, i) => {
-      const p = v3pay(F, a.v), capped = p < (+F.per_post || 0) * a.v / 1000;
-      return '<div class="v3app' + (a.st ? ' ' + a.st : '') + '"><div class="v3ah"><span class="v3av">' + esc(a.h[0].toUpperCase()) + '</span><div><b>@' + esc(a.h) + '</b><span>applied ' + (i + 1) * 2 + 'h ago · on X ↗</span></div><span class="sp"></span>' +
-        '<span class="v3score" data-tip="Cymetica\'s reach score: real views, engagement and audience quality, 0 to 100"><i style="width:' + a.s + '%"></i><b>' + a.s + '</b></span></div>' +
-        '<div class="v3stats">' + stat('Followers', fmt(a.f)) + stat('Avg views', fmt(a.v), 'Median views of the last 20 posts') + stat('Engagement', a.e + ' %') + stat('Real audience', a.r + ' %', 'Followers that look like real, active people') + stat('Account', a.age) + '</div>' +
-        (a.st === 'ok' ? '<div class="v3done pos">' + ic('check') + 'Accepted at ' + usd(a.price) + ' USDC a post · their link is live</div>' :
-          a.st === 'no' ? '<div class="v3done dim">Declined</div>' :
-          '<div class="v3offer"><div><span>By reach</span><b>' + usd(p) + '<small>USDC</small></b><em>' + price(F.per_post) + ' × ' + v3k(a.v) + ' views' + (capped ? ' · your max' : '') + '</em></div>' +
-            '<div class="v3amt"><input class="in" id="v3p-' + i + '" value="' + p.toFixed(2) + '" inputmode="decimal" aria-label="Your price a post"><i>USDC</i></div>' +
-            '<button class="btn g" data-v3acc="' + i + '">' + ic('check') + 'Accept</button><button class="btn gh" data-v3dec="' + i + '">Decline</button></div>') + '</div>';
+  /* a promoter opens the brief: their X handle in, the offer for one post out (their drawer, this box above Take it) */
+  function v3OfferBox(b, tk) {
+    if (!b.post_by_reach || tk) return '';
+    const x = S.v3x[b.id] || {}, r = x.res, pv = b.per_visitor_usdc;
+    const head = '<div class="v3obh">' + ic('x') + '<b>Paid per post</b><span class="sp"></span><span class="chip c">priced for your X</span></div>';
+    if (!r) return '<div class="v3ob">' + head +
+      '<div class="v3obin"><span>@</span><input class="in" id="v3xh" placeholder="your X handle" value="' + esc(x.h || '') + '" autocomplete="off"><button class="btn c" data-v3check="' + b.id + '">Check my offer</button></div>' +
+      '<div class="v3obnote">Cymetica reads your public X: the real views of your last 20 posts and how much of your audience is real.</div></div>';
+    const who = '<div class="v3who"><span class="v3av">' + esc(r.handle[0].toUpperCase()) + '</span><b>@' + esc(r.handle) + '</b><span class="sp"></span><button class="lnk v3chg" data-v3change="' + b.id + '">change</button></div>';
+    const st = (k, v) => '<div><span>' + k + '</span><b>' + v + '</b></div>';
+    const stats = '<div class="v3s4">' + st('Followers', fmt(r.followers)) + st('Views a post', fmt(r.views)) + st('Real audience', r.real + ' %') + st('Account', esc(r.age)) + '</div>';
+    if (!r.ok) return '<div class="v3ob no">' + head + who + stats + '<div class="v3not">' + ic('close') + '<span><b>Not eligible.</b> ' + esc(r.why) + '</span></div></div>';
+    return '<div class="v3ob">' + head + who + stats +
+      '<div class="v3big"><div><span>Your offer for one post</span><b>' + price(r.offer) + '<small>USDC</small></b></div><em>~' + fmt(r.expected) + ' visitors expected<br>× ' + price(pv) + ' USDC, rounded</em></div>' +
+      (x.sent ? '<div class="v3done pos">' + ic('check') + 'Sent to the owner · your link arrives when they approve</div>' :
+        '<button class="btn g lg full" data-v3take="' + b.id + '">Take the offer ' + ic('arrow') + '</button>') +
+      '<div class="v3obnote">Paid for the post itself once it has stayed up 7 days, whatever it brings. Visitors above ~' + fmt(r.expected) + ' are paid ' + price(pv) + ' USDC each on top.</div></div>';
+  }
+
+  /* the owner's brief page: the offers, with what Cymetica measured (in place of v2's Quotes from promoters) */
+  function v3Offers(b, r) {
+    if (!b.post_by_reach) return '';
+    const O = (r.offers || []).slice(), F = r.filtered_out || [], nf = F.reduce((s, f) => s + f[1], 0);
+    const state = (o) => S.v3dec[b.id + ':' + o.handle] || o.state;
+    O.sort((a, z) => (state(a) === 'pending' ? 0 : 1) - (state(z) === 'pending' ? 0 : 1));
+    const wait = O.filter((o) => state(o) === 'pending').length;
+    const cell = (o) => {
+      const s = state(o), k = b.id + ':' + o.handle;
+      if (s === 'pending') return '<button class="btn g sm" data-v3ok="' + k + '">' + ic('check') + 'Approve</button><button class="btn gh sm v3x" data-v3no="' + k + '" aria-label="Decline" data-tip="Decline">' + ic('close') + '</button>';
+      return { approved: '<span class="chip g">' + ic('check') + 'approved</span>', posted: '<span class="chip c" data-tip="Paid once the post has stayed up 7 days">posted</span>', paid: '<span class="chip g">' + ic('check') + 'paid</span>', declined: '<span class="chip">declined</span>' }[s] || esc(s);
     };
-    $('drawer').innerHTML = '<div class="v3dh"><div><span class="chip c">SAMPLE · how it would look</span><h2>Promoters who want your brief</h2>' +
-        '<span class="dim num">Gem Screener · ' + price(F.per_post) + ' USDC per 1,000 views · max ' + price(F.cap) + ' a post</span></div><button class="x" data-act="close" aria-label="Close">' + ic('close') + '</button></div>' +
-      '<div class="v3db"><div class="tiles" style="--n:3">' +
-        tile('check', 'Passed the check', String(left.length), 'waiting for you', 'rgb(0,255,136)') +
-        tile('shield', 'Filtered out', String(V3_OUT_N), 'by Cymetica, never shown', 'rgb(255,68,68)') +
-        tile('coin', 'If you accept all', usd(left.reduce((s, a) => s + v3pay(F, a.v), 0)) + '<small>USDC</small>', 'one post each') + '</div>' +
-        V3_APPS.map(app).join('') +
-        '<details class="fold v3out"><summary>' + ic('shield') + 'Filtered out by Cymetica <span class="dim num">' + V3_OUT_N + '</span>' + ic('down', 'chev') + '</summary><div class="fb">' +
-          V3_OUT.map((o) => '<div class="v3orow"><b>' + (o[0][0] === '6' ? o[0] : '@' + esc(o[0])) + '</b><span class="chip r">' + esc(o[1]) + '</span></div>').join('') + '</div></details>' +
-        '<div class="dim" style="font-size:12px">Each check reads the account\'s public X: views of the last 20 posts, engagement, follower quality and age. An accepted promoter gets their own link; the post is paid once it has stayed up 7 days, at the price you accepted.</div></div>';
-    $('drawer').classList.add('on'); $('scrim').classList.add('on');
-  }
-  function v3Bell() {
-    const n = V3_APPS.filter((a) => !a.st).length, b = $('v3belln');
-    if (b) { b.textContent = n; b.style.display = n ? '' : 'none'; }
+    return '<div class="card v3offers" id="v3offers"><div class="tbar"><h3>Offers for a post</h3>' + (wait ? '<span class="chip g"><i class="live"></i>' + wait + ' waiting for you</span>' : '') +
+        '<span class="sp" style="flex:1"></span><span class="chip r tipl" data-tip="' + esc(F.map((f) => f[1] + ' × ' + f[0]).join(' · ')) + '">' + ic('shield') + nf + ' filtered out by Cymetica</span></div>' +
+      '<div class="tscroll"><table class="tbl v3tbl"><thead><tr><th>Promoter</th><th class="n">Followers</th><th class="n">Real views / post</th><th class="n">Real audience</th><th class="n">Visitors expected</th><th class="n">Offer</th><th></th></tr></thead><tbody>' +
+        O.map((o) => '<tr class="' + (state(o) === 'pending' ? 'v3wait' : '') + '"><td><span class="v3pm"><span class="v3av">' + esc(o.handle[0].toUpperCase()) + '</span><span><b>@' + esc(o.handle) + '</b><small>' + (o.promoter ? 'Promoter ' + o.promoter : 'applied ' + esc(o.applied || '')) + ' · on X ' + esc(o.age) + '</small></span></span></td>' +
+          '<td class="n">' + fmt(o.followers) + '</td><td class="n">' + fmt(o.views) + '</td><td class="n">' + o.real + ' %</td><td class="n">~' + fmt(o.expected) + '</td>' +
+          '<td class="n v3of">' + price(o.offer) + ' <small>USDC</small></td><td class="v3act">' + cell(o) + '</td></tr>').join('') + '</tbody></table></div>' +
+      '<div class="v3foot">' + ic('x') + '<span>Offer = visitors Cymetica expects from their X × ' + price(b.per_visitor_usdc) + ' USDC, rounded. Paid for the post itself once it has stayed up 7 days.</span></div></div>';
   }
 
-  /* the protection band, above Open briefs: their own counting rules, and the promoter checks v3 adds */
+  /* above Open briefs: one line, the details in the fold their page already has */
   function v3Protect() {
-    const R = howAnswer().rules || [];
-    const pro = [['x', 'X account', 'one per person'], ['eye', 'Real reach', 'avg views, last 20 posts'], ['users', 'No bought audience', 'views against followers'], ['check', 'Owner approves', 'sees the stats, sets the price']];
-    const node = (icn, t, s, tip) => '<div class="v3n"' + (tip ? ' data-tip="' + esc(tip) + '"' : '') + '><span class="v3i">' + ic(icn) + '</span><div><b>' + esc(t) + '</b>' + (s ? '<span>' + esc(s) + '</span>' : '') + '</div></div>';
-    return '<section class="v3prot"><div class="v3ph"><div><span class="chip g">' + ic('shield') + 'USER PROTECTION</span><h2>Only real people are paid for</h2></div><span class="sp"></span>' +
-        '<div class="v3nums">' + [[String(R.length), 'checks on every visitor and user'], ['4', 'checks on every promoter'], ['7 d', 'before a visitor is paid'], ['14 d', 'before a user is paid']]
-          .map((x) => '<div><b>' + x[0] + '</b><span>' + x[1] + '</span></div>').join('') + '</div></div>' +
-      '<div class="v3lane"><span class="v3lab">' + ic('x') + 'Promoters</span><div class="v3ns">' + pro.map((p) => node(p[0], p[1], p[2])).join('') + '</div></div>' +
-      '<div class="v3lane"><span class="v3lab">' + ic('users') + 'Visitors and users</span><div class="v3ns">' + R.map((r, k) => node(RULE_IC[k] || 'check', r.title, '', r.text)).join('') + '</div></div>' +
-      '<div class="v3foot">' + ic('lock') + '<span>Bots, farms, bought followers and repeat visits are never paid. A link that looks farmed is taken back whole.</span></div></section>';
+    const R = howAnswer().rules || [], rule = (re) => (R.find((r) => re.test(r.title)) || {}).text || '';
+    const pills = [['uniq', 'Real people only', rule(/visitor/i)], ['users', 'One person, one user', rule(/one person/i)],
+      ['x', 'Fake X accounts filtered', 'Cymetica reads each promoter\'s public X: real views, real followers, account age. Bought audiences and new accounts are refused.'],
+      ['clock', 'Paid after a 7–14 day check', rule(/14 days/i)]];
+    return '<section class="v3prot"><span class="v3sh">' + ic('shield') + '</span><div class="v3pt"><b>User protection</b><span>Only real people are paid for</span></div>' +
+      '<div class="v3pills">' + pills.map((p) => '<span class="v3pill" data-tip="' + esc(p[2]) + '">' + ic(p[0]) + p[1] + '</span>').join('') + '</div>' +
+      '<button class="v3how" data-v3how="1">How ' + ic('down') + '</button></section>';
   }
 
+  function v3check(id) {
+    const h = (($('v3xh') || {}).value || '').trim().replace(/^@/, '');
+    if (!h) { const i = $('v3xh'); if (i) i.focus(); return; }
+    const b = findBrief(id); if (!b) return;
+    fetch('/__v3/x/' + encodeURIComponent(h) + '?pv=' + b.per_visitor_usdc).then((r) => r.json()).then((res) => { S.v3x[id] = { h: h, res: res }; openBrief(id); });
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.id === 'v3xh') { const btn = document.querySelector('[data-v3check]'); if (btn) v3check(+btn.dataset.v3check); } });
   document.addEventListener('input', (e) => {
     const t = e.target, F = S.form; if (!F) return;
     if (t.dataset.v3f) { F[t.dataset.v3f] = t.value; return refreshPreview(); }
     if (t.dataset.f) {
-      const x = $('v3ex'); if (x) x.innerHTML = v3exText(F);
+      const x = $('v3ex'); if (x) x.innerHTML = v3offerLine(F.per_visitor);
       ['per_user', 'per_visitor'].forEach((k) => { const c = $('v3c-' + k); if (c) c.textContent = v3cents(F[k]); });
     }
   });
   document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-v3inbox],[data-v3acc],[data-v3dec],[data-v3apply]'); if (!t) return;
+    const t = e.target.closest('[data-v3inbox],[data-v3ok],[data-v3no],[data-v3check],[data-v3change],[data-v3take],[data-v3how]'); if (!t) return;
     const d = t.dataset;
-    if (d.v3inbox) return v3Inbox();
-    if (d.v3apply) return toast('Local copy: applying with X is drawn, not wired');
-    const a = V3_APPS[+(d.v3acc || d.v3dec)];
-    if (d.v3acc) { a.st = 'ok'; a.price = parseFloat(($('v3p-' + d.v3acc) || {}).value) || v3pay(S.form || V3_DEF, a.v); toast('Accepted @' + a.h + ' (local copy: nothing sent)'); }
-    else { a.st = 'no'; }
-    v3Bell(); v3Inbox();
+    if (d.v3inbox) {
+      const w = v3Waiting().find((x) => x.n) || v3Waiting()[0];
+      if (!w) return toast('No offer waiting');
+      location.hash = '#mybrief/' + w.id;
+      return setTimeout(() => { const o = $('v3offers'); if (o) o.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 400);
+    }
+    if (d.v3ok || d.v3no) { S.v3dec[d.v3ok || d.v3no] = d.v3ok ? 'approved' : 'declined'; toast((d.v3ok ? 'Approved' : 'Declined') + ' (local copy: nothing sent)'); return rerender(); }
+    if (d.v3check) return v3check(+d.v3check);
+    if (d.v3change) { S.v3x[+d.v3change] = { h: (S.v3x[+d.v3change] || {}).h }; return openBrief(+d.v3change); }
+    if (d.v3take) { S.v3x[+d.v3take].sent = true; toast('Offer sent to the owner (local copy: nothing sent)'); return openBrief(+d.v3take); }
+    if (d.v3how) { const f = document.querySelector('details.fold'); if (f) { f.open = true; f.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
   });
-  v3Bell();

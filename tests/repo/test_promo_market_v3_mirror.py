@@ -38,9 +38,9 @@ serve = _load("serve")
 
 PAGE = ('<html><head></head><body><span class="livechip" id="livechip"></span>'
         '<script id="pm2-boot" type="application/json">{"creator": "", "is_owner": false, "signed_in": false, "tab": "me/today"}</script>'
-        '<a href="/creator-dashboard?view=classic">x</a></body></html>')
-SCRIPT = ("(function () {\n  const a = '<section id=\"board\"><div>';\n  const b = ['signed up, own deposit, 14-day check'];\n"
-          "  const c = ['signed up, own deposit, 14-day check'];\n" + patch.TAIL)
+        '<a href="/creator-dashboard?view=classic">x</a><script src="/static/js/promo_market_v2.js?v=1"></script></body></html>')
+# every anchor patch.py needs, as many times as their file has it
+SCRIPT = "(function () {\n" + "".join(f"  x({old});\n" * times for old, _new, times in patch.JS_ANCHORS) + patch.TAIL
 
 
 @pytest.fixture()
@@ -83,6 +83,7 @@ def test_the_owner_is_the_owner_and_a_stranger_sees_the_market():
 def test_the_patch_lands_inside_their_closure():
     js = patch.patch_js(SCRIPT)
     assert "v3Protect() + '<section id=\"board\">" in js and "own deposit" not in js
+    assert "v3OfferBox(b, tk)" in js and "v3Offers(b, r)" in js
     assert js.index("function newBrief") < js.index(patch.TAIL)
 
 
@@ -92,3 +93,32 @@ def test_a_changed_script_is_said_not_shown_unchanged():
         patch.patch_js(SCRIPT.replace('<section id="board">', '<section id="briefs">'))
     with pytest.raises(patch.AnchorMissing):
         patch.patch_js(SCRIPT.replace("bootStart();", "start();"))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_v2_is_their_page_untouched_beside_v3():
+    """?v2 is the comparison: their script unpatched, no v3 stylesheet, no bell; only the switch between the two."""
+    v2 = patch.patch_html("owner", PAGE, "v2")
+    assert "promo_market_v2.js?raw=1&" in v2 and "/__v3/v3.css" not in v2 and "v3bell" not in v2 and 'id="v3switch"' in v2
+    assert 'id="v3switch"' in patch.patch_html("owner", PAGE)
+
+
+sample = _load("sample")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_sample_is_one_model():
+    """Every figure the pages show about the sample brief comes out of the same numbers (memory: mock figures come
+    from one model): an offer is the expected visitors x the price per visitor, rounded; the budget left is the budget
+    less what the promoters earned; the visitors by day are the promoters' visitors."""
+    r = sample.results()
+    for o in r["offers"]:
+        if o["ok"]:
+            assert o["offer"] == sample.nice(o["expected"] * sample.PER_VISITOR)
+            assert o["offer"] * 2 == int(o["offer"] * 2)          # never an odd number
+    assert r["brief"]["up_for_grabs_usdc"] == round(sample.BUDGET - sum(p["earned_usdc"] for p in r["by_promoter"]), 2)
+    assert sum(r["visitors_by_day"].values()) == r["visitors_14d"] == sum(p["visitors"] for p in r["by_promoter"])
+    assert sum(s[1] for s in r["sources"]) == r["visitors_14d"]
+    a = sample.answers()
+    assert a["/api/v1/promo/mine"]["products"]["products"][0]["brief"]["brief"] == a["/api/v1/promo/briefs"]["briefs"][0]
+    assert not sample.engine("@moonfarm_demo")["ok"]

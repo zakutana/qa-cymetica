@@ -3,8 +3,10 @@
     python outbox/promo-market-v3/live/serve.py       # http://127.0.0.1:8792/expire76#new  and  /promo-market
 
 The pages, styles, scripts and data are THEIR live ones, read anonymously (GET, no cookies, no key) and cached for 30
-seconds; patch.py changes only what v3 changes. The owner's own read (/api/v1/promo/mine, which needs a sign-in) is
-served from fixtures/mine.json, read from the operator's signed-in browser on 2026-10-27. The mirror READS ONLY:
+seconds; patch.py changes only what v3 changes, and ?v2 shows their page untouched. The owner's own read
+(/api/v1/promo/mine, which needs a sign-in) is fixtures/mine.json, read from the operator's signed-in browser on
+2026-10-27, with one sample brief added (sample.py); the brief's reads and the stand-in engine (/__v3/x/<handle>)
+come from the same model. The mirror READS ONLY:
 every method except GET and HEAD is refused here, before anything is sent anywhere, because a copy of a page with
 Post the brief and Pay buttons must never be able to post a brief or move money on the real one
 (tests/repo/test_promo_market_v3_mirror.py).
@@ -12,8 +14,10 @@ Post the brief and Pay buttons must never be able to post a brief or move money 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
+from urllib.parse import parse_qs, unquote
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -22,13 +26,13 @@ import httpx
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import patch  # noqa: E402
+import sample  # noqa: E402
 
 UPSTREAM = "https://cymetica.com"
 TTL = 30.0
 OWN_FILES = {"v3.css": "text/css; charset=utf-8"}
 # /promo-market is the product's own address (the operator, 2026-10-27); their page for a stranger is /creator-dashboard
 PAGES = {"/expire76": ("/expire76", "owner"), "/promo-market": ("/creator-dashboard", "market")}
-FIXTURES = {"/api/v1/promo/mine": HERE / "fixtures" / "mine.json"}
 SCRIPT = "/static/js/promo_market_v2.js"
 DROP = {"content-security-policy", "content-security-policy-report-only", "content-encoding", "content-length",
         "transfer-encoding", "connection", "set-cookie", "strict-transport-security", "cross-origin-opener-policy",
@@ -81,9 +85,16 @@ class Handler(BaseHTTPRequestHandler):
         if not head:
             self.wfile.write(body)
 
+    def _json(self, obj, head: bool):
+        return self._send(200, "application/json", json.dumps(obj).encode("utf-8"), head=head)
+
     def _get(self, head: bool):
         path = self.path
-        bare = path.split("?")[0].split("#")[0]
+        bare, _, query = path.split("#")[0].partition("?")
+        args = parse_qs(query, keep_blank_values=True)
+        if path.startswith("/__v3/x/"):
+            pv = float((args.get("pv") or [sample.PER_VISITOR])[0])
+            return self._json(sample.engine(unquote(bare[len("/__v3/x/"):]), pv), head)
         if path.startswith("/__v3/"):
             name = bare[len("/__v3/"):]
             if name in OWN_FILES:
@@ -91,19 +102,21 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(404, "text/plain", b"no", head=head)
         if bare == "/":
             return self._send(302, "text/plain", b"", {"Location": "/promo-market"}, head=head)
-        if bare in FIXTURES:
-            return self._send(200, "application/json", FIXTURES[bare].read_bytes(), head=head)
+        answers = sample.answers()
+        if bare in answers:
+            return self._json(answers[bare], head)
         if bare in PAGES:
             upstream, page = PAGES[bare]
-            status, ctype, body, headers = fetch_upstream(upstream + path[len(bare):])
+            version = "v2" if "v2" in args else "v3"
+            status, ctype, body, headers = fetch_upstream(upstream)
             if status == 200 and "text/html" in ctype:
                 try:
-                    body = patch.patch_html(page, body.decode("utf-8")).encode("utf-8")
+                    body = patch.patch_html(page, body.decode("utf-8"), version).encode("utf-8")
                 except patch.AnchorMissing as e:
                     return self._send(500, "text/plain; charset=utf-8", str(e).encode("utf-8"), head=head)
             return self._send(status, ctype, body, headers, head=head)
         status, ctype, body, headers = fetch_upstream(path)
-        if bare == SCRIPT and status == 200:
+        if bare == SCRIPT and status == 200 and "raw" not in args:
             try:
                 body = patch.patch_js(body.decode("utf-8")).encode("utf-8")
             except patch.AnchorMissing as e:

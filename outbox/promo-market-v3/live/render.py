@@ -33,19 +33,27 @@ def main():
     with sync_playwright() as p:
         b = p.chromium.launch()
         page = b.new_page(viewport={"width": 2000, "height": 1300})
-        page.goto(BASE + "/expire76#new"); ready(page)
-        page.screenshot(path=str(OUT / "1-post-a-brief.png"))
-        bad += [("post a brief", x) for x in page.evaluate(CHECK, BOXES)]
+
+        def at(url, name, full=False):
+            page.goto(BASE + url); ready(page)
+            page.screenshot(path=str(OUT / f"{name}.png"), full_page=full)
+            bad.extend((name, x) for x in page.evaluate(CHECK, BOXES))
+
+        at("/expire76#new", "1-post-a-brief")
         page.click("[data-pick='__site']"); page.wait_for_timeout(300)
         page.fill("#v3sn", "Ironstar Shop"); page.fill("#v3su", "https://example.com/shop"); page.wait_for_timeout(300)
         page.screenshot(path=str(OUT / "2-own-website.png"))
-        bad += [("own website", x) for x in page.evaluate(CHECK, BOXES)]
-        page.click("#v3bell"); page.wait_for_timeout(600)
-        page.screenshot(path=str(OUT / "3-inbox.png"))
-        bad += [("inbox", x) for x in page.evaluate(CHECK, BOXES)]
-        page.goto(BASE + "/promo-market"); ready(page)
-        page.screenshot(path=str(OUT / "4-market.png"), full_page=True)
-        bad += [("market", x) for x in page.evaluate(CHECK, BOXES)]
+        at("/expire76?v2#mybrief/9001", "3-brief-page-v2-now", full=True)
+        at("/expire76#mybrief/9001", "4-brief-page-v3", full=True)
+        at("/promo-market", "5-market-v3", full=True)
+        page.click("article[data-brief='9001'] .btn.g"); page.wait_for_timeout(500)
+        page.screenshot(path=str(OUT / "6-promoter-asks.png"))
+        page.fill("#v3xh", "gemhunter_demo"); page.click("[data-v3check]"); page.wait_for_timeout(700)
+        page.screenshot(path=str(OUT / "7-promoter-offer.png"))
+        page.click("[data-v3change]"); page.wait_for_timeout(300)
+        page.fill("#v3xh", "moonfarm_demo"); page.click("[data-v3check]"); page.wait_for_timeout(700)
+        page.screenshot(path=str(OUT / "8-promoter-refused.png"))
+        at("/promo-market?v2", "9-market-v2-now", full=True)
         b.close()
     for where, what in bad:
         print(f"{where}: {what}")
