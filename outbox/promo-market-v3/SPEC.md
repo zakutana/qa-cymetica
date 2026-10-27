@@ -10,6 +10,10 @@ There is no live brief yet, so the copy serves one sample brief (Gem Screener, 1
 
 Asked by the operator on 2026-10-27. Everything below is a patch on v2; what is not named stays as it is.
 
+**We give only the look. The look of the mockup is binding; how it works is yours**: how reach is measured, how fakes
+are caught, what a check says, and every word the page shows about protection is for you to write and secure. Where
+your backend cannot do what is drawn, change the design as little as it takes and name each change in your BB-SPEC.
+
 ## A. The product's own address, and its maker
 1. **`cymetica.com/promo-market`** opens the market (the Market tab) for anybody, signed in or not. It is the product's
    address. `/creator-dashboard` (the link in the daily Telegram post) keeps opening a member's dashboard as today.
@@ -57,6 +61,9 @@ Asked by the operator on 2026-10-27. Everything below is a patch on v2; what is 
 19. **The bell** in the top bar counts the offers waiting across the owner's briefs and opens the brief that has them.
 
 ## E. User protection on the market
-20. **One line above Open briefs**: a shield, *User protection · Only real people are paid for*, four pills (real
-    people only, one person one user, fake X accounts filtered, paid after a 7–14 day check) with your rules' text on
-    hover, and *How* opening the fold at the bottom that lists the rules.
+20. **One line above Open briefs**: a shield, *User protection*, a short line, four pills and *How*, which opens the
+    fold at the bottom that lists the rules. **Only the place and the look are ours.** The wording of the line and the
+    pills in the mockup is a placeholder: you decide what the protection is, write the pills and the fold from it, and
+    secure it as you see fit.
+21. **The loading screen is the one Airdrop Farmer and Company have**: the picture, the percent, one word, the bar.
+    v2 adds a row of chips (*page · the market · your products …*) under it; leave it out.
