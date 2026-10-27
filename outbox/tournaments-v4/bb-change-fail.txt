@@ -1,0 +1,10 @@
+Follow-up to our BB-VERDICT fail: these lines replace or add to the spec, after our own run of the shipped build.
+
+1. Coach icon: use exactly the one in the picture of the Coach tab with the Risk gauge at 9. It is the Agent Casino chip (a round dark disc with a thick white ring edged in green and the two vertical green bars of the logo), seen slightly from the side so its rim shows, wearing a blue plaid deerstalker hat, with a magnifying glass at the lower right. It stands still and is 112 px wide. The live icon (64 px, a robot head with a hat) is a different drawing. The Risk gauge is as large as in the picture (up to 320 px wide).
+2. Risk sets the bot at once and the Settings tab follows with no reload: level L sets trade size L %, stop loss L %, take profit 4 x L % (at least 5 %). Settings gets a Trade size slider (1 % up to the 10 % max position) beside Stop loss and Take profit, and "This change" shows the new values. One changelog row per settled move, not one per slider step (7 rows in a minute today).
+3. No 7-day tables. Paper tables are Flash only (1 day: $5, $50, 100 and 1,000 ET10), 6 seats. Delete the open 7-day tables #16, #21, #22, #25 and #26; finished ones stay as history.
+4. The PAPER | LIVE switch beside the table filters is a view filter of that page only: no account change and no wait (today it answers "Please wait 175s before switching trading modes again"). On LIVE the "Your agents" panels list no Paper agents.
+5. SEE IN THE UNIVERSE is the creator dashboard's button ("See in the Universe" with the up-right arrow, planet icon, green, 32 px high), at the far right of the top bar on the lobby, Leaderboard and How pages, and not on a table page. Today it is 44 px high.
+6. The table page is drawn 15 % smaller (as in the table picture), and the table panel and the table cards are poker-table suede in #0d1520 (fine fibre grain, darker nap, same blue), not flat.
+
+Everything in our fail note stays. Live money and the wallet join stay with the human-reviewed slot.
