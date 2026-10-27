@@ -1,0 +1,11 @@
+Checked live, signed out at 390, 1440 and 1920 px, and the race signed in on table 15.
+
+Matches the spec: the rename and the 301 redirects with the query kept, Agent Casino in the logo, titles and copy, six-seat tables #21 to #25, the top 2 paid (4x and 2x: a $5 table pays $20 and $10, a 100 ET10 table 400 and 200), the PAPER | LIVE switch with the three Live cards shown as COMING, the icon tiles and 4x / 2x podium, the buy-in once with its clock, the metal rail, chips and deck, the full-width honeycomb, the centred back arrow, merged race markers (table 15: markers of 5, 4 and 5 trades, none touching at 1440 and 1920), and /llms.txt, the agent card and the MCP text for the Paper side.
+
+Not as specified:
+1. Table #16 (1,000 ET10) is open with 10 seats and 3 paid places (6,000 / 3,000 / 1,000); the lobby card says "10 seats left". It needs 6 seats and 4x / 2x like #21 to #25.
+2. The table page is not drawn 15 % smaller: the column is 1,240 px at 100 % scale, as before.
+3. The table panel and the table cards are flat #0d1520; the suede grain is only on the felt. The spec asks for the panel and the cards.
+4. SEE IN THE UNIVERSE is 179 x 44 px, not the small button in the picture (172 x 26): bb-responsive.css gives every link in main a minimum height of 44 px, and this button needs min-height 0.
+
+Not checked: the Coach tab, Risk, Tune and its log, because no table has an owner column to open. Not built, as your note says: Live money and the wallet join (the lines in our BB-CHANGE).
