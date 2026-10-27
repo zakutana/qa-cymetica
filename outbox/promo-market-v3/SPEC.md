@@ -42,16 +42,21 @@ Asked by the operator on 2026-10-27. Everything below is a patch on v2; what is 
     against what the post was paid; above that each is paid at the visitor price, so the owner never pays twice.
 13. **The owner approves each offer** (D). The promoter's link arrives on approval.
 
-## D. The offers, on the brief's own page (`#mybrief/<id>`)
-14. **Offers for a post**, right under the numbers: per promoter followers, real views a post, real audience, account
-    age, visitors expected and the offer; *Approve* or ✕ for those waiting, the state (approved, posted, paid) for the
-    rest. *N filtered out by Cymetica* with the reasons on hover. It replaces v2's *Quotes from promoters*.
-15. **The bell** in the top bar counts the offers waiting across the owner's briefs and opens the brief that has them.
-
-16b. **v2's Promoters table cuts its last column** (the *paid* chip / *Pay* button) at the card's edge at 2000 px,
-    seen with the sample brief in your own v2 code (`?v2#mybrief/9001`); it needs room or a narrower table.
+## D. The brief's own page (`#mybrief/<id>`), trimmed
+14. **Four numbers**: Spent, Up for grabs, Visitors (unique, 14 days), New users. Gone: *New visitors* (a second count
+    of visitors, the paid ones; the owner needs one) and *Posts paid* (the Promoters table says it per promoter).
+15. **Offers for a post**, right under the numbers: only the promoters waiting for the owner, with followers, views a
+    post, real audience, visitors expected and the offer; *Approve* or ✕. *N filtered out by Cymetica*, the reasons on
+    hover. An approved one moves to Promoters. It replaces v2's *Quotes from promoters*.
+16. **Visitors by day shows the count on hover** (the day, the visitors, the new users); v2's chart shows none.
+17. **One Promoters table, full width**: promoter, the post (its price and one state: approved, posted, paid), visitors,
+    new users, earned, *Pay*. v2's table cut its last column (*paid* / *Pay*) at the card's edge at 2000 px, and its
+    paid state repeated the one in the offers list; there is one list now.
+18. **Gone as noise**: *Where they came from*, *Not counted*, *Materials* (the owner sees what they uploaded in Post a
+    brief; promoters still see the materials in the brief), and the *N materials* tag on the brief's card.
+19. **The bell** in the top bar counts the offers waiting across the owner's briefs and opens the brief that has them.
 
 ## E. User protection on the market
-16. **One line above Open briefs**: a shield, *User protection · Only real people are paid for*, four pills (real
+20. **One line above Open briefs**: a shield, *User protection · Only real people are paid for*, four pills (real
     people only, one person one user, fake X accounts filtered, paid after a 7–14 day check) with your rules' text on
     hover, and *How* opening the fold at the bottom that lists the rules.

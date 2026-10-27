@@ -33,12 +33,9 @@ JS_ANCHORS = (
     (".filter((p) => +b[p[0]] > 0);", ".filter((p) => +b[p[0]] > 0 && !(b.post_by_reach && p[0] === 'per_post_usdc'));", 2),
     # the promoter's drawer: their X handle in, the offer out, above Take it
     ("(tk ? '<div class=\"mylink\">", "v3OfferBox(b, tk) + (tk ? '<div class=\"mylink\">", 1),
-    # the owner's brief page: the offers, right under the numbers (the operator: "kdyz kliknu na brief ... tam to chci
-    # nejak videt ty nabidky"); they replace v2's Quotes from promoters, which asked a promoter to name a price
-    ("'<div class=\"g2\"><div class=\"card pad\"><div class=\"ch\"><h3>Visitors by day</h3>",
-     "v3Offers(b, r) + '<div class=\"g2\"><div class=\"card pad\"><div class=\"ch\"><h3>Visitors by day</h3>", 1),
-    ("'<div class=\"card pad\"><div class=\"ch\"><h3>Quotes from promoters</h3>",
-     "'<div class=\"card pad v3gone\"><div class=\"ch\"><h3>Quotes from promoters</h3>", 1),
+    # the owner's brief page is v3.js's own ownerBrief (the offers under the numbers, the chart with its hover, one
+    # Promoters table), not a patch; their drawer says "per visitor" as the form does
+    ("['per_visitor_usdc', 'per new visitor', 'first visit, real browser, paid after 7 days']", "['per_visitor_usdc', 'per visitor', 'first visit, real browser, paid after 7 days']", 1),
 )
 
 

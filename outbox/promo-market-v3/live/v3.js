@@ -71,9 +71,9 @@
     else if (+b.per_post_usdc > 0) tiles.push(['<b>' + price(b.per_post_usdc) + '<small>USDC</small></b>', 'per post', 'up 7 days']);
     if (+b.per_user_usdc > 0) tiles.push(['<b>' + price(b.per_user_usdc) + '<small>USDC</small></b>', 'per new user', 'after 14 days']);
     if (+b.per_visitor_usdc > 0) tiles.push(['<b>' + price(b.per_visitor_usdc) + '<small>USDC</small></b>', 'per visitor', v3cents(b.per_visitor_usdc)]);
-    const mats = (b.materials || []).length, src = b.preview_src || (b.site ? null : pic(b.path));
+    const src = b.preview_src || (b.site ? null : pic(b.path));
     return '<article class="bc v3bc"' + (preview ? '' : ' data-brief="' + b.id + '"') + '>' +
-      '<div class="img">' + (src ? '<img alt="" src="' + esc(src) + '">' : '<div class="v3noimg">' + ic('globe') + '</div>') + '<div class="tl">' + (mats ? '<span class="chip c">' + ic('image') + mats + ' materials</span>' : '') +
+      '<div class="img">' + (src ? '<img alt="" src="' + esc(src) + '">' : '<div class="v3noimg">' + ic('globe') + '</div>') + '<div class="tl">' +
         '<span class="chip' + (b.days_left <= 2 ? ' r' : '') + '">' + ic('clock') + b.days_left + 'd left</span></div></div>' +
       '<div class="bd"><div class="nm"><b>' + esc(shortName(b.name)) + '</b><a class="lnk" href="' + esc(b.url) + '" target="_blank" rel="noopener">' + esc(b.site ? v3host(b.url) : 'cymetica.com' + b.path) + ' ↗</a></div>' +
         (b.say_line ? '<p class="say">' + esc(b.say_line) + '</p>' : '<p class="say dim">—</p>') +
@@ -160,25 +160,90 @@
       '<div class="v3obnote">Paid for the post itself once it has stayed up 7 days, whatever it brings. Visitors above ~' + fmt(r.expected) + ' are paid ' + price(pv) + ' USDC each on top.</div></div>';
   }
 
-  /* the owner's brief page: the offers, with what Cymetica measured (in place of v2's Quotes from promoters) */
+  /* the owner's brief page, trimmed (the operator, 2026-10-27): four numbers, the offers waiting, visitors by day with
+   * the count on hover, one Promoters table. Gone from v2's page: New visitors, Posts paid, Where they came from, Not
+   * counted, Materials, Quotes from promoters. */
+  const v3decided = (b, o) => S.v3dec[b.id + ':' + o.handle];
   function v3Offers(b, r) {
     if (!b.post_by_reach) return '';
-    const O = (r.offers || []).slice(), F = r.filtered_out || [], nf = F.reduce((s, f) => s + f[1], 0);
-    const state = (o) => S.v3dec[b.id + ':' + o.handle] || o.state;
-    O.sort((a, z) => (state(a) === 'pending' ? 0 : 1) - (state(z) === 'pending' ? 0 : 1));
-    const wait = O.filter((o) => state(o) === 'pending').length;
-    const cell = (o) => {
-      const s = state(o), k = b.id + ':' + o.handle;
-      if (s === 'pending') return '<button class="btn g sm" data-v3ok="' + k + '">' + ic('check') + 'Approve</button><button class="btn gh sm v3x" data-v3no="' + k + '" aria-label="Decline" data-tip="Decline">' + ic('close') + '</button>';
-      return { approved: '<span class="chip g">' + ic('check') + 'approved</span>', posted: '<span class="chip c" data-tip="Paid once the post has stayed up 7 days">posted</span>', paid: '<span class="chip g">' + ic('check') + 'paid</span>', declined: '<span class="chip">declined</span>' }[s] || esc(s);
-    };
-    return '<div class="card v3offers" id="v3offers"><div class="tbar"><h3>Offers for a post</h3>' + (wait ? '<span class="chip g"><i class="live"></i>' + wait + ' waiting for you</span>' : '') +
-        '<span class="sp" style="flex:1"></span><span class="chip r tipl" data-tip="' + esc(F.map((f) => f[1] + ' × ' + f[0]).join(' · ')) + '">' + ic('shield') + nf + ' filtered out by Cymetica</span></div>' +
-      '<div class="tscroll"><table class="tbl v3tbl"><thead><tr><th>Promoter</th><th class="n">Followers</th><th class="n">Real views / post</th><th class="n">Real audience</th><th class="n">Visitors expected</th><th class="n">Offer</th><th></th></tr></thead><tbody>' +
-        O.map((o) => '<tr class="' + (state(o) === 'pending' ? 'v3wait' : '') + '"><td><span class="v3pm"><span class="v3av">' + esc(o.handle[0].toUpperCase()) + '</span><span><b>@' + esc(o.handle) + '</b><small>' + (o.promoter ? 'Promoter ' + o.promoter : 'applied ' + esc(o.applied || '')) + ' · on X ' + esc(o.age) + '</small></span></span></td>' +
+    const O = (r.offers || []).filter((o) => o.state === 'pending' && !v3decided(b, o)), F = r.filtered_out || [], nf = F.reduce((s, f) => s + f[1], 0);
+    return '<div class="card v3offers" id="v3offers"><div class="tbar"><h3>Offers for a post</h3>' + (O.length ? '<span class="chip g"><i class="live"></i>' + O.length + ' waiting for you</span>' : '') +
+        '<span class="sp" style="flex:1"></span><span class="chip r tipr" data-tip="' + esc(F.map((f) => f[1] + ' × ' + f[0]).join(' · ')) + '">' + ic('shield') + nf + ' filtered out by Cymetica</span></div>' +
+      (O.length ? '<div class="tscroll"><table class="tbl v3tbl"><thead><tr><th>Promoter</th><th class="n">Followers</th><th class="n">Views a post</th><th class="n">Real audience</th><th class="n">Visitors expected</th><th class="n">Offer</th><th></th></tr></thead><tbody>' +
+        O.map((o) => '<tr class="v3wait"><td><span class="v3pm"><span class="v3av">' + esc(o.handle[0].toUpperCase()) + '</span><span><b>@' + esc(o.handle) + '</b><small>applied ' + esc(o.applied || '') + ' · on X ' + esc(o.age) + '</small></span></span></td>' +
           '<td class="n">' + fmt(o.followers) + '</td><td class="n">' + fmt(o.views) + '</td><td class="n">' + o.real + ' %</td><td class="n">~' + fmt(o.expected) + '</td>' +
-          '<td class="n v3of">' + price(o.offer) + ' <small>USDC</small></td><td class="v3act">' + cell(o) + '</td></tr>').join('') + '</tbody></table></div>' +
+          '<td class="n v3of">' + price(o.offer) + ' <small>USDC</small></td><td class="v3act"><button class="btn g sm" data-v3ok="' + b.id + ':' + o.handle + '">' + ic('check') + 'Approve</button><button class="btn gh sm v3x" data-v3no="' + b.id + ':' + o.handle + '" aria-label="Decline" data-tip="Decline">' + ic('close') + '</button></td></tr>').join('') + '</tbody></table></div>' :
+        '<div class="empty" style="padding:22px"><span>No promoter is waiting for you.</span></div>') +
       '<div class="v3foot">' + ic('x') + '<span>Offer = visitors Cymetica expects from their X × ' + price(b.per_visitor_usdc) + ' USDC, rounded. Paid for the post itself once it has stayed up 7 days.</span></div></div>';
+  }
+
+  /* visitors by day: a column per day, the count on hover (v2's chart shows none) */
+  function v3Chart(days, visitors, users) {
+    const max = Math.max(1, ...visitors), H = 190;
+    return '<div class="v3chart" style="height:' + H + 'px">' + days.map((d, i) => {
+      const v = visitors[i] || 0, u = users[i] || 0, hv = v / max * (H - 8);
+      return '<div class="v3col" data-tip="' + esc(dShort(d) + ' · ' + v + ' visitor' + (v === 1 ? '' : 's') + (u ? ' · ' + u + ' new user' + (u === 1 ? '' : 's') : '')) + '"><span class="v3bar" style="height:' + hv.toFixed(1) + 'px"><i style="height:' + (v ? 100 * u / v : 0).toFixed(1) + '%"></i></span></div>';
+    }).join('') + '</div><div class="dl" style="display:flex;justify-content:space-between"><span>' + dShort(days[0]) + '</span><span>' + dShort(days[days.length - 1]) + '</span></div>';
+  }
+
+  /* Promoters, full width: the ones who took the brief, their post, what they brought and earned. The offers still
+   * waiting are the table above; an approved one moves here (the old Paid rows in Offers were the same list). */
+  function v3Promoters(b, r) {
+    const byp = r.by_promoter || [], O = r.offers || [];
+    const rows = byp.map((p) => ({ p: p, o: O.find((o) => o.promoter === p.n) }));
+    O.filter((o) => o.state === 'pending' && v3decided(b, o) === 'approved').forEach((o) => rows.push({ p: null, o: o }));
+    const unpaid = byp.filter((p) => !p.paid && p.earned_usdc > 0);
+    const chip = (x) => !x.o ? '' : (x.p ? ({ paid: '<span class="chip g">' + ic('check') + 'paid</span>', posted: '<span class="chip c" data-tip="Paid once the post has stayed up 7 days">posted</span>' }[x.o.state] || '') :
+      '<span class="chip" data-tip="Their link is live; paid once the post has stayed up 7 days">approved · no post yet</span>');
+    return '<div class="card v3prom"><div class="tbar"><h3 style="margin:0;font:17px var(--display)">Promoters</h3><span class="chip">' + rows.length + '</span><span class="sp" style="flex:1"></span>' +
+        (unpaid.length ? '<button class="btn g sm" data-payall="' + b.id + '">' + ic('coin') + 'Pay ' + unpaid.length + ' · ' + usd(sum(unpaid, (p) => p.earned_usdc)) + ' USDC</button>' : '') + '</div>' +
+      (rows.length ? '<table class="tbl v3tbl"><thead><tr><th>Promoter</th><th>Post</th><th class="n">Visitors</th><th class="n">New users</th><th class="n">Earned</th><th></th></tr></thead><tbody>' +
+        rows.map((x) => { const p = x.p, h = x.o && x.o.handle; return '<tr><td><span class="v3pm"><span class="v3av">' + esc((h || 'P')[0].toUpperCase()) + '</span><span><b>' + (h ? '@' + esc(h) : 'Promoter ' + p.n) + '</b>' +
+            '<small>' + (p ? 'cymetica.com/' + esc(p.slug) : 'link goes live when they post') + '</small></span></span></td>' +
+          '<td>' + (x.o ? '<b class="v3of" style="font-size:15px">' + price(x.o.offer) + '</b> <small class="dim">USDC</small> ' : '') + chip(x) + '</td>' +
+          '<td class="n">' + (p ? fmt(p.visitors) : '—') + '</td><td class="n">' + (p ? p.new_users : '—') + '</td><td class="n pos">' + (p ? usd(p.earned_usdc) : '—') + '</td>' +
+          '<td class="v3act">' + (p && !p.paid && (p.pending_ids || []).length ? '<button class="btn sm g" data-payids="' + (p.pending_ids || []).join(',') + '">Pay</button>' : '') + '</td></tr>'; }).join('') + '</tbody></table>' :
+        '<div class="empty"><b>No promoter has taken it yet</b><span>It is on the market now.</span><a class="btn c sm" href="#market" style="margin-top:6px">See it on the market</a></div>') + '</div>';
+  }
+
+  function ownerBrief(id) {
+    const RU = resultsUrl(id);
+    if (!need([RU, HOW])) return dash('products', waitIn('the brief'));
+    const r = api(RU); if (!r || !r.brief) return dash('products', '<div class="card"><div class="empty"><b>This brief is not yours, or it does not exist.</b><a class="btn c sm" href="#me/products">My products</a></div></div>');
+    const b = r.brief, spent = r.spent_usdc || 0, days = Object.keys(r.visitors_by_day || {}), vis = Object.values(r.visitors_by_day || {});
+    learn(b.path, b.preview_url, b.art);
+    const ubd = Array.isArray(r.users_by_day) ? r.users_by_day : days.map((d) => (r.users_by_day || {})[d] || 0);
+    const nu = r.new_users || { counted: 0, checking: 0, not_counted: 0 };
+    const pays = [['per_user_usdc', 'per new user'], ['per_visitor_usdc', 'per visitor']].filter((p) => +b[p[0]] > 0);
+    const fun = [['Clicks on the links', r.clicks || 0], ['Unique visitors', r.visitors_14d || 0], ['New users checking', (nu.checking || 0) + (nu.counted || 0)], ['New users counted', nu.counted || 0, 1]];
+    const fmax = Math.max(1, ...fun.map((f) => f[1]));
+    const live = b.status === 'open';
+    const fundTip = b.owner_funds && b.owner_funds.checked_at ? 'Your own USDC covers it and your other open briefs, read on-chain ' + when(b.owner_funds.checked_at) : 'Your own USDC is read on-chain while it runs';
+    const covered = !b.owner_funds || b.owner_funds.state !== 'short';
+    const inner = '<div class="ph"><a class="back" href="#me/products">' + ic('arrow') + 'My products</a></div>' +
+      '<div class="card bdhead"><img alt="" src="' + esc(pic(b.path)) + '"><div><h1>' + esc(shortName(b.name)) + '</h1><div class="meta">' +
+          '<span class="chip ' + (live ? 'g' : '') + '">' + (live ? '<i class="live"></i>Open' : esc(b.status)) + ' · ' + b.days_left + 'd left</span>' +
+          '<span class="chip ' + (covered ? 'g' : 'r') + ' tipd" data-tip="' + esc(fundTip) + '">' + ic('shield') + (covered ? 'Funds covered' : 'Funds short') + '</span>' +
+          (b.post_by_reach ? '<span class="chip">post: priced per promoter</span>' : '') + pays.map((p) => '<span class="chip">' + price(b[p[0]]) + ' USDC ' + p[1] + '</span>').join('') + '</div>' +
+          (b.say_line ? '<div class="dim" style="margin-top:8px;font-size:13px">“' + esc(b.say_line) + '”</div>' : '') +
+          '<div class="dim num" style="font-size:11.5px;margin-top:8px" id="act-msg">' + esc(S.actMsg || '') + '</div></div>' +
+        '<div class="acts">' + (b.status === 'paused' ? '<button class="btn sm" data-bact="resume" data-id="' + b.id + '">' + ic('play') + 'Resume</button>' : live ? '<button class="btn sm" data-bact="pause" data-id="' + b.id + '">' + ic('pause') + 'Pause</button>' : '') +
+          (live || b.status === 'paused' ? '<button class="btn sm" data-bact="add_budget" data-id="' + b.id + '">' + ic('plus') + 'Add budget</button><button class="btn sm" data-bact="edit_prices" data-id="' + b.id + '">' + ic('edit') + 'Edit prices</button>' : '') +
+          '<button class="btn sm c" data-copytext="' + esc(location.origin + '/promo-market#brief/' + b.id) + '">' + ic('link') + 'Share</button></div></div>' +
+      '<div class="tiles" style="--n:4">' +
+        '<div class="tile" style="--c:rgb(0,207,255)" data-tip="Stops at your budget: a result after it is not counted"><div class="k">' + ic('wallet') + 'Spent <span class="i">i</span></div><div class="v">' + usd(spent) + '<small>of ' + usd(b.budget_usdc) + '</small></div><div class="meter"><i style="width:' + (b.budget_usdc ? 100 * spent / b.budget_usdc : 0).toFixed(1) + '%"></i></div></div>' +
+        tile('coin', 'Up for grabs', '<span class="pos">' + usd(b.up_for_grabs_usdc) + '</span><small>USDC</small>', fmt(r.promoters) + ' promoters', 'rgb(0,255,136)') +
+        tile('eye', 'Visitors', fmt(r.visitors_14d), 'unique, 14 days') +
+        tile('users', 'New users', fmt(nu.counted), fmt(nu.checking) + ' in the 14-day check', 'rgb(59,130,246)') + '</div>' +
+      v3Offers(b, r) +
+      '<div class="g2"><div class="card pad"><div class="ch"><h3>Visitors by day</h3><span class="sp"></span><span class="lgd"><span><i style="background:' + SER[1] + '"></i>visitors</span><span><i style="background:' + SER[0] + '"></i>new users</span></span></div>' +
+          (vis.some((v) => v > 0) ? v3Chart(days, vis, ubd) : '<div class="dim num">No visitors yet</div>') + '</div>' +
+        '<div class="card pad"><div class="ch"><h3>From click to user</h3></div>' +
+          '<div class="funnel">' + fun.map((f) => '<div class="fr' + (f[2] ? ' g' : '') + '"><span>' + f[0] + '</span><div class="fb"><i style="width:' + Math.max(f[1] ? 1.5 : 0, 100 * f[1] / fmax).toFixed(1) + '%"></i></div><b>' + fmt(f[1]) + '</b></div>').join('') + '</div>' +
+          '<div class="dim num" style="font-size:11.5px;margin-top:12px">Cost per new user: <b style="color:var(--text)">' + (nu.counted ? usd(spent / nu.counted) + ' USDC' : '—') + '</b> · per visitor: <b style="color:var(--text)">' + (r.visitors_14d ? usd(spent / r.visitors_14d) + ' USDC' : '—') + '</b></div></div></div>' +
+      ((S.pay || S.payMsg) ? payBox(((api(MINE) || {}).products || {}).payouts && { ...api(MINE).products.payouts, items: (api(MINE).products.payouts.items || []).filter((x) => String(x.brief_id) === String(b.id)) }) : '') +
+      v3Promoters(b, r);
+    return dash('products', inner);
   }
 
   /* above Open briefs: one line, the details in the fold their page already has */

@@ -45,6 +45,8 @@ def main():
         page.screenshot(path=str(OUT / "2-own-website.png"))
         at("/expire76?v2#mybrief/9001", "3-brief-page-v2-now", full=True)
         at("/expire76#mybrief/9001", "4-brief-page-v3", full=True)
+        page.hover(".v3col:nth-child(3)"); page.wait_for_timeout(300)
+        page.screenshot(path=str(OUT / "4b-chart-hover.png"))
         at("/promo-market", "5-market-v3", full=True)
         page.click("article[data-brief='9001'] .btn.g"); page.wait_for_timeout(500)
         page.screenshot(path=str(OUT / "6-promoter-asks.png"))

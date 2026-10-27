@@ -83,8 +83,9 @@ def test_the_owner_is_the_owner_and_a_stranger_sees_the_market():
 def test_the_patch_lands_inside_their_closure():
     js = patch.patch_js(SCRIPT)
     assert "v3Protect() + '<section id=\"board\">" in js and "own deposit" not in js
-    assert "v3OfferBox(b, tk)" in js and "v3Offers(b, r)" in js
-    assert js.index("function newBrief") < js.index(patch.TAIL)
+    assert "v3OfferBox(b, tk)" in js and "'per visitor', 'first visit" in js
+    for fn in ("function newBrief", "function ownerBrief"):      # v3.js's own, inside the closure
+        assert js.index(fn) < js.index(patch.TAIL)
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
