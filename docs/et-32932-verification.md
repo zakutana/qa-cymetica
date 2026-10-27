@@ -42,6 +42,21 @@ The lobby is the picture at 1440 and 1920 (chips, headline, three icon tiles, 4x
 - **LIVE lists Paper agents**: on LIVE the "Your agents" panel and its rows (#25, #24) still show (screenshot, 1920).
 - **The switch is the account's trading mode**: flipping it twice gives "Please wait 175s before switching trading modes again" (the header pill's throttle). The operator: with Live tables closed it can be a filter of the page alone. Our spec said "the same setting as the pill"; the new text says view filter, no account change, no wait.
 
+## Round 2 (their message of 27 Oct, afternoon; read the same day, signed out and in the operator's pane at 1440 and 1920)
+
+Their claim, our read:
+
+| Claim | Read |
+|---|---|
+| Every table is a 1-day Flash table, week tables cancelled | **True.** `/api/v1/agent-tournaments/lobby`: open tables 23, 26, 27, 28 all `days: 1`, 6 seats, top 2 paid; the ET10 ones carry `flash: false` in the API but run 1 day. Table 15 and older stay as history. |
+| Risk keeps one change row per settled move, Settings follows, Trade size slider | Slider exists (Settings: Trade size, Stop loss, Take profit). Live following not exercised (it would write to the operator's bot). **New defect:** on table 24 the server holds `trade_size_pct` 6, `stop_loss_pct` 1, `take_profit_pct` 5 (NEXUS moved stop and take profit to the floor), the Risk panel reads "risk 1" and shows SIZE 1 % while Settings says Trade size 6 %. |
+| SEE IN THE UNIVERSE is the 32 px button at the far right | **False.** Far right and last in the bar, absent on table pages, but 218 x 44 px, `min-height: 44px`, JetBrains Mono 800; the creator dashboard's is 179 x 32, Inter 700. |
+| Coach icon and gauge sized to our picture | **True.** Icon 112 px (95 under the 0.85 zoom), gauge 320 px (272); the icon is a 336 x 335 PNG (`/static/img/agent-casino-coach.png`), soft on a 2x screen. |
+| Table page 15 % smaller, suede panel and cards | **True on a running table:** `.at-room2` zoom 0.85, column 1,760 px at 1920. Not on an unseated one (zoom 1, 1,240 px). Panel measures (12, 20, 33) against #0d1520, grain spread 2.1 (ours 3.4). |
+| LIVE switch only filters | Page-local (`atMode` in localStorage, no account call found); not flipped here. "Your agents" on LIVE not checked. |
+
+Biggest remaining differences, in order: the Universe button (44 px), the Risk panel's SIZE against Settings, the soft icon PNG, the changelog layout (not looked at).
+
 ## Proposed verdict
 
 FAIL with a note on the nine items (Risk to Settings, 7-day tables and #16, the Universe button, the Coach size, 15 % smaller, suede, the lobby once, Paper agents on LIVE, the switch's wait), leaving the money part to the human slot. The note is `outbox/tournaments-v4/bb-verdict-note.txt`. Not sent: the verdict is the operator's.
