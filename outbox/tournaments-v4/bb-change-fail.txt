@@ -7,4 +7,11 @@ Follow-up to our BB-VERDICT fail: these lines replace or add to the spec, after 
 5. SEE IN THE UNIVERSE is the creator dashboard's button ("See in the Universe" with the up-right arrow, planet icon, green, 32 px high), at the far right of the top bar on the lobby, Leaderboard and How pages, and not on a table page. Today it is 44 px high.
 6. The table page is drawn 15 % smaller (as in the table picture), and the table panel and the table cards are poker-table suede in #0d1520 (fine fibre grain, darker nap, same blue), not flat.
 
+Materials, public, to open and copy from:
+- The coach icon alone (600 px, transparent): https://github.com/zakutana/qa-cymetica/blob/main/outbox/tournaments-v4/pictures/coach-icon.png
+- The Coach tab with Risk at 9: https://github.com/zakutana/qa-cymetica/blob/main/outbox/tournaments-v4/pictures/coach-risk9-1440.png
+- The table page: https://github.com/zakutana/qa-cymetica/blob/main/outbox/tournaments-v4/pictures/table-1440.png
+- The lobby on LIVE: https://github.com/zakutana/qa-cymetica/blob/main/outbox/tournaments-v4/pictures/lobby-live-1440.png
+- The exact markup, CSS and the icon's SVG (art.py, coach_icon) of everything above: https://github.com/zakutana/qa-cymetica/tree/main/outbox/tournaments-v4/live
+
 Everything in our fail note stays. Live money and the wallet join stay with the human-reviewed slot.
