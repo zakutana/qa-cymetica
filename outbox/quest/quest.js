@@ -30,20 +30,22 @@
       company: 'https://cymetica.com/company',
       bib: 'https://cymetica.com/build-it-better',
       casino: 'https://cymetica.com/agent-casino',
-      promo: 'https://cymetica.com/promo-market',
+      promo: 'https://cymetica.com/creator-dashboard',   // the Promo Market's address today; our v3 request asks for /promo-market
       board: 'https://cymetica.com/company#universe'
     },
     // What plays under each chapter. seq: a flight rendered by render.py (frames/<set>/<seq>/NNNN.webp), from..to of its
     // frames across the chapter; still: one picture with a slow push in. poster: what stands there before any frame
     // has come (stills/<poster>.webp). out / in: how the chapter's picture leaves and arrives at a cut between two
-    // worlds -- a dive into the company (it grows and blurs away) or a pull back out of it (it shrinks away).
+    // worlds -- a dive into the company (it grows and blurs away) or a pull back out of it (it shrinks away). inner:
+    // the inside of the station the flight ends at (Antigravity's picture, stills/<set>/<inner>.webp), cut in over the
+    // last part of the chapter; without that picture the chapter simply stays outside.
     film: {
       hero: { seq: 'approach', from: 0, to: 36, poster: 'hero' },
       s1: { seq: 'approach', from: 36, to: 179, poster: 's1', out: 'dive' },
       s2a: { still: 'dev', poster: 'dev', in: 'land' },
       s2b: { still: 'lab', poster: 'lab', out: 'rise' },
-      s2c: { seq: 'casino', from: 0, to: 89, poster: 's2c', in: 'back' },
-      s3: { seq: 'promo', from: 0, to: 89, poster: 's3' },
+      s2c: { seq: 'casino', from: 0, to: 89, poster: 's2c', in: 'back', inner: 'casino' },
+      s3: { seq: 'promo', from: 0, to: 89, poster: 's3', inner: 'promo' },
       s4: { seq: 'pullback', from: 0, to: 119, poster: 's4' }
     }
   };
@@ -96,11 +98,20 @@
     var src = 'stills/' + set + '/' + (f.still || f.poster || sec.id) + '.webp', probe = new Image();
     probe.onload = function () { poster.style.backgroundImage = 'url("' + src + '")'; poster.classList.add('img'); };
     probe.src = src;
+    if (f.inner) {
+      var inner = el('div', 'poster inner'), isrc = 'stills/' + set + '/' + f.inner + '.webp', ip = new Image();
+      inner.style.opacity = '0';
+      ip.onload = function () { inner.style.backgroundImage = 'url("' + isrc + '")'; inner.classList.add('img'); shot.inner = inner; schedule(); };
+      ip.src = isrc;
+      layer.appendChild(inner);
+    }
     film.appendChild(layer);
     return shot;
   });
 
-  var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  // one canvas pixel per screen pixel at most, and never wider than 2000 px: the film is already soft-edged light, and a
+  // bigger canvas is only more to copy and scale on every frame of a scroll (measured: 64 frames over 50 ms at 4x CPU)
+  var dpr = Math.min(window.devicePixelRatio || 1, 1, 2000 / Math.max(innerWidth, 1));
   function size() {
     shots.forEach(function (s) {
       if (!s.canvas) return;
@@ -125,6 +136,9 @@
       while (live < 6 && next < order.length) {
         (function (i) {
           var img = new Image(); live++;
+          // decoded here, off the scroll's thread, so drawing it later is a copy and not a decode of a 2560 px picture
+          // kept as the compressed Image and nothing more: 480 frames decoded to 2560 x 1440 are gigabytes (a pre-scaled
+          // ImageBitmap per frame was tried, 2026-10-27, and the page crawled at 120 ms a frame)
           img.onload = function () { q.imgs[i] = img; live--; schedule(); pump(); };
           img.onerror = function () { live--; pump(); };
           img.src = 'frames/' + set + '/' + name + '/' + String(i).padStart(4, '0') + '.webp';
@@ -167,8 +181,9 @@
       // the cut between two worlds: on its way out a chapter's picture dives (grows, blurs) or rises (shrinks); on its
       // way in it settles from a little larger or smaller
       var scale = 1, blur = 0, leaving = r.top < 0, f = s.f;
-      if (leaving && f.out === 'dive') { scale = 1 + 1.1 * (1 - cov) * (1 - cov); blur = 10 * (1 - cov); }
-      else if (leaving && f.out === 'rise') { scale = 1 - .22 * (1 - cov); blur = 4 * (1 - cov); }
+      // (no CSS blur on the layer: a full-screen blur is repainted every frame of a scroll and was the dearest thing here)
+      if (leaving && f.out === 'dive') { scale = 1 + 1.1 * (1 - cov) * (1 - cov); }
+      else if (leaving && f.out === 'rise') { scale = 1 - .22 * (1 - cov); }
       else if (!leaving && f.in === 'land') { scale = 1 + .35 * (1 - cov); }
       else if (!leaving && f.in === 'back') { scale = 1 + .25 * (1 - cov); }
       if (f.still) scale *= 1.03 + .09 * p;          // a slow push in on a still
@@ -181,6 +196,12 @@
         idx = Math.round(f.from + (f.to - f.from) * ease(p));
         if (cov > 0 || Math.abs(r.top) < vh * 2) load(f.seq);
         if (cov > 0) draw(s, idx);
+      }
+      if (s.inner) {
+        // through the station's door: a bright cut over the flight's last third, then a slow push in on the inside
+        var k = smooth(.58, .72, p);
+        s.inner.style.opacity = k.toFixed(3);
+        s.inner.style.transform = 'scale(' + (1.18 - .14 * k + .06 * smooth(.72, 1, p)).toFixed(4) + ')';
       }
       if (cov > bestCov) { bestCov = cov; best = { id: s.sec.id, idx: idx }; }
       // the text: in as the chapter arrives, out before it leaves (the hero is there from the start, the last stays)

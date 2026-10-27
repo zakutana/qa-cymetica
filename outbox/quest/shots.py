@@ -65,18 +65,24 @@ def scroll(browser, url):
     page.wait_for_function("() => window.QUEST_STATE && QUEST_STATE.ready")
     time.sleep(3)
     cdp.send('Emulation.setCPUThrottlingRate', {'rate': 4})
-    result = page.evaluate("""() => new Promise(done => {
+    run = """() => new Promise(done => {
       const H = document.documentElement.scrollHeight - innerHeight, T = 12000, t0 = performance.now(), gaps = [];
       let last = t0;
       function step(now) {
-        gaps.push(now - last); last = now;
-        const k = Math.min(1, (now - t0) / T); window.scrollTo(0, H * k);
+        const k = Math.min(1, (now - t0) / T); gaps.push(now - last); last = now; (window.__slow = window.__slow || []).push([k, gaps[gaps.length - 1], window.QUEST_STATE.shot]);
+        window.scrollTo(0, H * k);
         if (k < 1) requestAnimationFrame(step); else done({ frames: gaps.length, worst: Math.max(...gaps.slice(2)),
-          over50: gaps.filter(g => g > 50).length, mean: gaps.reduce((a, b) => a + b, 0) / gaps.length });
+          over50: gaps.filter(g => g > 50).length, mean: gaps.reduce((a, b) => a + b, 0) / gaps.length,
+          ...Object.fromEntries(window.__slow.filter(s => s[1] > 50).map(s => [s[2] + '@' + s[0].toFixed(2), Math.round(s[1])]).slice(0, 40)) });
       }
       requestAnimationFrame(step);
-    })""")
-    print('throttled 4x scroll:', json.dumps({k: round(v, 1) for k, v in result.items()}))
+    })"""
+    # two passes: the first is the first visit (frames still arriving), the second is the page as it feels once loaded
+    for label in ('first pass ', 'second pass'):
+        result = page.evaluate(run)
+        print(f'throttled 4x scroll, {label}:', json.dumps({k: round(v, 1) for k, v in result.items()}))
+        page.evaluate("() => window.scrollTo(0, 0)")
+        time.sleep(2)
     page.close()
 
 

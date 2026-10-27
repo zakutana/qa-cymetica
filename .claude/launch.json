@@ -30,6 +30,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8796", "--bind", "127.0.0.1", "--directory", "outbox/airdrop-farms"],
       "port": 8796
+    },
+    {
+      "name": "quest",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8797", "--bind", "127.0.0.1", "--directory", "outbox/quest"],
+      "port": 8797
     }
   ]
 }
