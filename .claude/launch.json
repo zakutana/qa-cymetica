@@ -36,6 +36,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8797", "--bind", "127.0.0.1", "--directory", "outbox/quest"],
       "port": 8797
+    },
+    {
+      "name": "quant-lab-graphic",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8798", "--bind", "127.0.0.1", "--directory", "outbox/quant-lab-graphic"],
+      "port": 8798
     }
   ]
 }
