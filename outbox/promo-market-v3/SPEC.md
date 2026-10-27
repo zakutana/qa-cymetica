@@ -48,6 +48,9 @@ Asked by the operator on 2026-10-27. Everything below is a patch on v2; what is 
     rest. *N filtered out by Cymetica* with the reasons on hover. It replaces v2's *Quotes from promoters*.
 15. **The bell** in the top bar counts the offers waiting across the owner's briefs and opens the brief that has them.
 
+16b. **v2's Promoters table cuts its last column** (the *paid* chip / *Pay* button) at the card's edge at 2000 px,
+    seen with the sample brief in your own v2 code (`?v2#mybrief/9001`); it needs room or a narrower table.
+
 ## E. User protection on the market
 16. **One line above Open briefs**: a shield, *User protection · Only real people are paid for*, four pills (real
     people only, one person one user, fake X accounts filtered, paid after a 7–14 day check) with your rules' text on
