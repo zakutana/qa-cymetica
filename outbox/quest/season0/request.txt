@@ -1,0 +1,15 @@
+Cymetica Quest, Season 0: the Revenue Share board pays a fixed ET10 pool until revenue is real, and the guide at cymetica.com/quest explains it. This follows our Telegram exchange of 2026-10-27 (your answer on Season 0); the terms below are your shape with your changes applied.
+
+Terms (yours to adjust where your backend needs it; say what you changed in the BB-SPEC):
+1. Season 0 runs in months. Each month the top 3 companies share a fixed pool in ET10 in the 5 : 3 : 1 ratio. Range you called sensible: 50,000 / 30,000 / 10,000 ET10 for 1st / 2nd / 3rd.
+2. Ranked by users a company brought who are still active: an account counts when it was active on at least 7 of the last 30 days. Floor to qualify: 10 such accounts in the first season, raised each season.
+3. Half of a place's pool is paid at the end of the month, half 60 days later and only for users who are still active then. Owner accounts never count. Each account counts for one company only (the first referral wins), with the same anti-fake checks the Promo Market uses.
+4. Every referred user keeps paying 1,000 ET10 to whoever referred them (/traffic referrals), not only the top 3.
+5. Founding status: whoever held a top-3 slot in 2 of the last 3 Season 0 months gets a double share for the first 3 months of the real revenue share.
+6. The real revenue share (5% / 3% / 1% of Cymetica revenue) replaces the pool when the 5% slot is worth more per month than the Season 0 first prize.
+
+What the board shows (the Universe's Revenue Share board and the leaderboard): while Season 0 runs, the head reads SEASON 0 and each place shows its ET10 prize instead of a percentage; open slots read "bring 10 active users"; the foot shows the pool and the day the month ends. When the real revenue share starts, the board shows the percentages again, as today.
+
+What we ask for beyond the board: the page cymetica.com/quest from our mock (pictures and a short spec to follow), which links to /company, /build-it-better, /agent-casino, the Promo Market and the leaderboard.
+
+Nothing here is a requirement on how you measure it; how active users are counted, how the 60 days are tracked and what counts as fake are for you to decide and secure.
