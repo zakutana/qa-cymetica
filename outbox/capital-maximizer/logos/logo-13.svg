@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="l13m" x1="8" y1="6" x2="56" y2="58" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+    <linearGradient id="l13a" x1="18" y1="0" x2="46" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+    <radialGradient id="l13h" cx="32" cy="20.5" r="17" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00ff88" stop-opacity="0.32"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></radialGradient>
+    <linearGradient id="l13ao" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#06090f" stop-opacity="0"/><stop offset="1" stop-color="#06090f" stop-opacity="0.45"/></linearGradient>
+    <radialGradient id="l13sh" cx="0.3" cy="0.25" r="0.75"><stop offset="0" stop-color="#e6edf7" stop-opacity="0.5"/><stop offset="1" stop-color="#e6edf7" stop-opacity="0"/></radialGradient>
+    <filter id="l13g" x="-60%" y="-60%" width="220%" height="220%" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <path d="M32 1.5 L58.41 16.75 L58.41 47.25 L32 62.5 L5.59 47.25 L5.59 16.75Z M32 7.6 L53.13 19.8 L53.13 44.2 L32 56.4 L10.87 44.2 L10.87 19.8Z" fill="url(#l13m)" fill-rule="evenodd"/>
+  <polygon points="32,1.5 58.41,16.75 55.9,18.2 32,4.4" fill="#e6edf7" fill-opacity="0.2"/>
+  <polygon points="32,4.4 55.9,18.2 53.13,19.8 32,7.6" fill="#06090f" fill-opacity="0.3"/>
+  <polygon points="58.41,16.75 58.41,47.25 55.9,45.8 55.9,18.2" fill="#06090f" fill-opacity="0.2"/>
+  <polygon points="55.9,18.2 55.9,45.8 53.13,44.2 53.13,19.8" fill="#e6edf7" fill-opacity="0.1"/>
+  <polygon points="58.41,47.25 32,62.5 32,59.6 55.9,45.8" fill="#06090f" fill-opacity="0.5"/>
+  <polygon points="55.9,45.8 32,59.6 32,56.4 53.13,44.2" fill="#e6edf7" fill-opacity="0.28"/>
+  <polygon points="32,62.5 5.59,47.25 8.1,45.8 32,59.6" fill="#06090f" fill-opacity="0.32"/>
+  <polygon points="32,59.6 8.1,45.8 10.87,44.2 32,56.4" fill="#e6edf7" fill-opacity="0.16"/>
+  <polygon points="5.59,47.25 5.59,16.75 8.1,18.2 8.1,45.8" fill="#e6edf7" fill-opacity="0.1"/>
+  <polygon points="8.1,45.8 8.1,18.2 10.87,19.8 10.87,44.2" fill="#06090f" fill-opacity="0.38"/>
+  <polygon points="5.59,16.75 32,1.5 32,4.4 8.1,18.2" fill="#e6edf7" fill-opacity="0.42"/>
+  <polygon points="8.1,18.2 32,4.4 32,7.6 10.87,19.8" fill="#06090f" fill-opacity="0.5"/>
+  <path d="M5.59 47.25 L5.59 16.75 L32 1.5 L58.41 16.75" fill="none" stroke="#e6edf7" stroke-opacity="0.6" stroke-width="0.8" stroke-linejoin="round"/>
+  <path d="M53.13 19.8 L53.13 44.2 L32 56.4 L10.87 44.2" fill="none" stroke="#e6edf7" stroke-opacity="0.35" stroke-width="0.7" stroke-linejoin="round"/>
+  <polygon points="32,7.6 53.13,19.8 53.13,44.2 32,56.4 10.87,44.2 10.87,19.8" fill="#06090f"/>
+  <polygon points="32,7.6 53.13,19.8 53.13,44.2 32,56.4 10.87,44.2 10.87,19.8" fill="none" stroke="#06090f" stroke-opacity="0.6" stroke-width="1"/>
+  <circle cx="32" cy="20.5" r="17" fill="url(#l13h)"/>
+  <polygon points="32,10.6 50.53,21.3 50.53,42.7 32,53.4 13.47,42.7 13.47,21.3" fill="none" stroke="#00cfff" stroke-opacity="0.4" stroke-width="1" stroke-dasharray="1.6 2.6"/>
+  <polygon points="18.5,43.8 25.25,48.4 38.75,48.4 45.5,43.8 45.5,47.4 38.75,52 25.25,52 18.5,47.4" fill="#3b82f6"/>
+  <polygon points="25.25,48.4 38.75,48.4 38.75,52 25.25,52" fill="#06090f" fill-opacity="0.3"/>
+  <polygon points="38.75,48.4 45.5,43.8 45.5,47.4 38.75,52" fill="#06090f" fill-opacity="0.55"/>
+  <polygon points="18.5,43.8 25.25,48.4 38.75,48.4 45.5,43.8 45.5,47.4 38.75,52 25.25,52 18.5,47.4" fill="url(#l13ao)"/>
+  <polygon points="18.5,43.8 25.25,39.2 38.75,39.2 45.5,43.8 38.75,48.4 25.25,48.4" fill="#3b82f6"/>
+  <polygon points="18.5,43.8 25.25,39.2 38.75,39.2 45.5,43.8 38.75,48.4 25.25,48.4" fill="#e6edf7" fill-opacity="0.3"/>
+  <path d="M18.5 43.8 L25.25 48.4 L38.75 48.4 L45.5 43.8" fill="none" stroke="#e6edf7" stroke-opacity="0.5" stroke-width="0.7" stroke-linejoin="round"/>
+  <polygon points="18.5,38.7 25.25,43.3 38.75,43.3 45.5,38.7 45.5,42.3 38.75,46.9 25.25,46.9 18.5,42.3" fill="#00cfff"/>
+  <polygon points="25.25,43.3 38.75,43.3 38.75,46.9 25.25,46.9" fill="#06090f" fill-opacity="0.3"/>
+  <polygon points="38.75,43.3 45.5,38.7 45.5,42.3 38.75,46.9" fill="#06090f" fill-opacity="0.55"/>
+  <polygon points="18.5,38.7 25.25,43.3 38.75,43.3 45.5,38.7 45.5,42.3 38.75,46.9 25.25,46.9 18.5,42.3" fill="url(#l13ao)"/>
+  <polygon points="18.5,38.7 25.25,34.1 38.75,34.1 45.5,38.7 38.75,43.3 25.25,43.3" fill="#00cfff"/>
+  <polygon points="18.5,38.7 25.25,34.1 38.75,34.1 45.5,38.7 38.75,43.3 25.25,43.3" fill="#e6edf7" fill-opacity="0.3"/>
+  <path d="M18.5 38.7 L25.25 43.3 L38.75 43.3 L45.5 38.7" fill="none" stroke="#e6edf7" stroke-opacity="0.5" stroke-width="0.7" stroke-linejoin="round"/>
+  <polygon points="18.5,33.6 25.25,38.2 38.75,38.2 45.5,33.6 45.5,37.2 38.75,41.8 25.25,41.8 18.5,37.2" fill="url(#l13a)"/>
+  <polygon points="25.25,38.2 38.75,38.2 38.75,41.8 25.25,41.8" fill="#06090f" fill-opacity="0.3"/>
+  <polygon points="38.75,38.2 45.5,33.6 45.5,37.2 38.75,41.8" fill="#06090f" fill-opacity="0.55"/>
+  <polygon points="18.5,33.6 25.25,38.2 38.75,38.2 45.5,33.6 45.5,37.2 38.75,41.8 25.25,41.8 18.5,37.2" fill="url(#l13ao)"/>
+  <polygon points="18.5,33.6 25.25,29 38.75,29 45.5,33.6 38.75,38.2 25.25,38.2" fill="url(#l13a)"/>
+  <polygon points="18.5,33.6 25.25,29 38.75,29 45.5,33.6 38.75,38.2 25.25,38.2" fill="url(#l13sh)"/>
+  <path d="M18.5 33.6 L25.25 29 L38.75 29 L45.5 33.6" fill="none" stroke="#e6edf7" stroke-opacity="0.3" stroke-width="0.6" stroke-linejoin="round"/>
+  <path d="M18.5 33.6 L25.25 38.2 L38.75 38.2 L45.5 33.6" fill="none" stroke="#e6edf7" stroke-opacity="0.65" stroke-width="0.7" stroke-linejoin="round"/>
+  <path d="M36.86 14.86C35.78 13.03 34.05 12.49 32 12.49C29.08 12.49 27.03 13.89 27.03 15.94C27.03 18.32 29.41 18.86 32 19.4C34.59 19.94 36.97 20.48 36.97 22.86C36.97 24.91 34.92 26.31 32 26.31C29.95 26.31 28.22 25.77 27.14 23.94M32 10.11V28.69" fill="none" stroke="#00ff88" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round" filter="url(#l13g)"/>
+</svg>

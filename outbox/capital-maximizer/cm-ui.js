@@ -112,7 +112,6 @@
     $('preview').className = 'preview';
     $('preview').innerHTML = ok ? `<div class="lbl">MAX PROFIT THIS MONTH<span class="tip" title="${MAXDEF}">i</span></div><b>${usd(C.profit(c.route, S.amount))}</b>` : '';
     $('find').disabled = !ok;
-    $('find').classList.toggle('red', S.tier === 'og');
     document.querySelectorAll('#quick button').forEach(b => b.classList.toggle('on', +b.dataset.amt === S.amount));
   }
 
@@ -412,8 +411,8 @@
     $('scan').style.display = 'none';
     $('h3').innerHTML = 'Your <em>top 3</em>';
     $('p3').textContent = `${D.platforms.length} platforms · ${new Set(D.platforms.flatMap(p => p.chains)).size} chains · ${num(D.scanned.pools)} pools read`;
-    const og = S.tier === 'og';
-    $('strats').innerHTML = S.picks.map((r, k) => `<div class="frame strat ${k === 0 ? 'best' : ''} ${og ? 'og' : ''}" style="--d:${grow ? k * 0.16 : 0}s">
+    // red is kept for losses, liquidation and EXIT; a tier's strategies and buttons are green whatever the tier
+    $('strats').innerHTML = S.picks.map((r, k) => `<div class="frame strat ${k === 0 ? 'best' : ''}" style="--d:${grow ? k * 0.16 : 0}s">
       <div class="hd">${rankSvg(k)}<div><h3>${r.label}</h3><div class="ven">${r.venue}</div></div>${k === 0 ? '<span class="chip g">TOP PICK</span>' : ''}</div>
       <div data-tree="${k}">${tree(r, {orient: 'v', id: 's' + k, col: k, grow, delay: k * 0.16, interactive: true})}</div>
       <div data-steps="${k}">${stepsHtml(r)}</div>
@@ -462,7 +461,7 @@
     $('bar').innerHTML = lev + `<div class="frame"><div class="lbl"><span>LIQUIDATION</span></div><div class="val" id="liqv"></div><div class="sub" id="liqs"></div></div>
       <div class="frame"><div class="lbl"><span>MAX PROFIT / MONTH<span class="tip" title="${MAXDEF}">i</span></span></div>
         <div class="val g" id="pv"></div><div class="sub g" id="ps"></div></div>
-      <div class="go4 ${S.started ? 'started' : ''}" id="go4"><button class="cta ${og ? 'red' : ''} startbtn" id="start">START ${ARROW}</button>
+      <div class="go4 ${S.started ? 'started' : ''}" id="go4"><button class="cta startbtn" id="start">START ${ARROW}</button>
         <button class="cta running" disabled><i class="dot"></i>RUNNING · DEMO</button>
         <div class="chips"><span class="chip c">AI RE-CHECKS EVERY 6 H</span><span class="chip m">${r.chain.toUpperCase()}</span></div></div>`;
     updateBar(r);
