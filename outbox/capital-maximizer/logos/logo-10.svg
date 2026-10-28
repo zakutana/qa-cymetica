@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="l10a" x1="5" y1="22" x2="51" y2="38" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+    <linearGradient id="l10b" x1="38" y1="24" x2="58" y2="4" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+  </defs>
+  <path d="M5 46 L17 55 L39 55 L51 46" fill="none" stroke="#3b82f6" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M5 35 L17 44 L39 44 L51 35" fill="none" stroke="#00cfff" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <polygon points="5,24 17,15 39,15 51,24 39,33 17,33" fill="url(#l10a)" stroke="url(#l10a)" stroke-width="5" stroke-linejoin="round"/>
+  <polygon points="12.5,24 20.5,18.5 35.5,18.5 43.5,24 35.5,29.5 20.5,29.5" fill="none" stroke="#06090f" stroke-opacity=".3" stroke-width="1"/>
+  <circle cx="48" cy="14" r="13" fill="#06090f"/>
+  <circle cx="48" cy="14" r="10.5" fill="url(#l10b)"/>
+  <path d="M48 7.2V20.8M51.4 10.4C50.5 9.1 45.6 8.9 44.9 11C44.1 13.1 46.7 13.6 48 13.9C49.5 14.2 52.2 14.9 51.4 17C50.6 19.1 45.7 18.9 44.6 17.2" fill="none" stroke="#06090f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

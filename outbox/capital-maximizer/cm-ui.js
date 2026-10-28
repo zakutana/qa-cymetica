@@ -109,7 +109,7 @@
   }
   function updatePreview() {
     const ok = S.amount > 0, c = C.card(S.tier);
-    $('preview').className = 'preview' + (S.tier === 'og' ? ' red' : '');
+    $('preview').className = 'preview';
     $('preview').innerHTML = ok ? `<div class="lbl">MAX PROFIT THIS MONTH<span class="tip" title="${MAXDEF}">i</span></div><b>${usd(C.profit(c.route, S.amount))}</b>` : '';
     $('find').disabled = !ok;
     $('find').classList.toggle('red', S.tier === 'og');
@@ -234,7 +234,7 @@
     }
     const by = Object.fromEntries(N.map(n => [n.id, n]));
     const g0 = o.grow ? (o.delay || 0) + 0.15 : 0, dly = n => o.grow ? g0 + (n.kind === 'lever' ? dmax * 0.24 + 0.25 : n.d * 0.24) : 0;
-    const accent = og ? '#ff4444' : '#00ff88';
+    const accent = '#00ff88';                                    // money flowing in, and the profit, are never red
     // links
     let links = '', sparks = '';
     E.forEach(([a, b, loopy], k) => {
@@ -242,13 +242,15 @@
       const x1 = A.x + ux * RAD[A.kind], y1 = A.y + uy * RAD[A.kind], x2 = B.x - ux * RAD[B.kind], y2 = B.y - uy * RAD[B.kind];
       const d = `M${x1.toFixed(1)} ${y1.toFixed(1)}L${x2.toFixed(1)} ${y2.toFixed(1)}`, len = Math.hypot(x2 - x1, y2 - y1);
       const t = dly(A) + 0.12, col = loopy ? '#00cfff' : `url(#${p}lg)`;
-      links += `<path class="lk base" d="${d}"/><path class="lk glow" d="${d}" stroke="${loopy ? '#00cfff' : accent}" style="--d:${t}s;filter:blur(2.2px)"/>
-        <path class="lk lit" pathLength="1" d="${d}" stroke="${col}" style="--d:${t}s"/>`;
-      const n = loopy ? Math.max(2, Math.round(r.L)) : 2, dur = Math.max(1.3, len / 52);
+      // on the way out (o.exit) the same links carry the light back towards the root, and drain one by one
+      const tag = `data-e="${b}"`;
+      links += `<path class="lk base" d="${d}"/><path class="lk glow" ${tag} d="${d}" stroke="${loopy ? '#00cfff' : accent}" style="--d:${t}s;filter:blur(2.2px)"/>
+        <path class="lk lit" ${tag} pathLength="1" d="${d}" stroke="${col}" style="--d:${t}s"/>`;
+      const n = loopy ? Math.max(2, Math.round(r.L)) : o.exit ? 3 : 2, dur = Math.max(1.3, len / (o.exit ? 90 : 52));
       for (let j = 0; j < n; j++) {
-        const b0 = (shot ? 0 : t + 0.55) + j * dur / n, c = loopy ? '#00cfff' : accent;
-        sparks += `<circle r="2" fill="${c}" opacity="0" style="filter:drop-shadow(0 0 4px ${c})">
-          <animateMotion dur="${dur.toFixed(2)}s" begin="${b0.toFixed(2)}s" repeatCount="indefinite" path="${d}"/>
+        const b0 = (shot || o.exit ? 0 : t + 0.55) + j * dur / n, c = o.exit ? '#00ff88' : loopy ? '#00cfff' : accent;
+        sparks += `<circle class="sp" ${tag} r="${o.exit ? 2.6 : 2}" fill="${c}" opacity="0" style="filter:drop-shadow(0 0 4px ${c})">
+          <animateMotion dur="${dur.toFixed(2)}s" begin="${b0.toFixed(2)}s" repeatCount="indefinite" path="${d}" ${o.exit ? 'keyPoints="1;0" keyTimes="0;1" calcMode="linear"' : ''}/>
           <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;.12;.82;1" dur="${dur.toFixed(2)}s" begin="${b0.toFixed(2)}s" repeatCount="indefinite"/></circle>`;
       }
     });
@@ -310,12 +312,12 @@
       const no = nums[n.id], bx = n.x + R * 0.82, bY = n.y - R * 0.82;
       const badge = no ? `<circle cx="${bx}" cy="${bY}" r="9.5" fill="#06090f" stroke="#00cfff" stroke-width="1.2"/>
         <text x="${bx}" y="${bY + 0.5}" class="num">${no}</text>` : '';
-      return `<g class="nd" style="--d:${t}s">${body}${badge}${lab}</g>`;
+      return `<g class="nd" data-n="${n.id}" style="--d:${t}s">${body}${badge}${lab}</g>`;
     }).join('');
     // the backdrop: a fine hexagon lattice fading out from the middle
     const hw = 16 * Math.sqrt(3);
     const lattice = [[0, 0], [hw, 0], [hw / 2, 24], [0, 48], [hw, 48]].map(([x, y]) => `<path class="grid" d="${hex(x, y, 16)}"/>`).join('');
-    return `<svg class="tree ${o.grow ? '' : 'static'}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${r.label}, ${r.venue}">
+    return `<svg class="tree ${o.grow ? '' : 'static'} ${o.exit ? 'exit' : ''}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${r.label}, ${r.venue}">
       <defs>
         <linearGradient id="${p}lg" gradientUnits="userSpaceOnUse" ${V ? `x1="0" y1="${H}" x2="0" y2="0"` : `x1="0" y1="0" x2="${W}" y2="0"`}>
           <stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="${accent}"/></linearGradient>
@@ -323,7 +325,7 @@
         <radialGradient id="${p}rh"><stop offset="0" stop-color="#3b82f6" stop-opacity=".35"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/></radialGradient>
         <radialGradient id="${p}lh"><stop offset="0" stop-color="#00cfff" stop-opacity=".22"/><stop offset="1" stop-color="#00cfff" stop-opacity="0"/></radialGradient>
         <radialGradient id="${p}ah"><stop offset="0" stop-color="${accent}" stop-opacity=".32"/><stop offset="1" stop-color="${accent}" stop-opacity="0"/></radialGradient>
-        <linearGradient id="${p}af" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${og ? '#ff4444' : '#00cfff'}"/><stop offset="1" stop-color="${accent}"/></linearGradient>
+        <linearGradient id="${p}af" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="${accent}"/></linearGradient>
         <pattern id="${p}hg" width="${hw.toFixed(2)}" height="48" patternUnits="userSpaceOnUse">${lattice}</pattern>
         <radialGradient id="${p}fade"><stop offset="0" stop-color="#e6edf7" stop-opacity=".9"/><stop offset="1" stop-color="#06090f" stop-opacity="0"/></radialGradient>
         <mask id="${p}m"><rect width="${W}" height="${H}" fill="url(#${p}fade)"/></mask>
@@ -459,7 +461,7 @@
       : `<div class="frame"><div class="lbl"><span>LEVERAGE</span></div><div class="val">None</div><div class="sub">${r.type === 'vaults' ? 'a third in each vault' : 'nothing borrowed'}</div></div>`;
     $('bar').innerHTML = lev + `<div class="frame"><div class="lbl"><span>LIQUIDATION</span></div><div class="val" id="liqv"></div><div class="sub" id="liqs"></div></div>
       <div class="frame"><div class="lbl"><span>MAX PROFIT / MONTH<span class="tip" title="${MAXDEF}">i</span></span></div>
-        <div class="val g" id="pv" ${og ? 'style="color:#ff4444;text-shadow:0 0 36px rgba(255,68,68,.35)"' : ''}></div><div class="sub g" id="ps" ${og ? 'style="color:#ff4444"' : ''}></div></div>
+        <div class="val g" id="pv"></div><div class="sub g" id="ps"></div></div>
       <div class="go4 ${S.started ? 'started' : ''}" id="go4"><button class="cta ${og ? 'red' : ''} startbtn" id="start">START ${ARROW}</button>
         <button class="cta running" disabled><i class="dot"></i>RUNNING · DEMO</button>
         <div class="chips"><span class="chip c">AI RE-CHECKS EVERY 6 H</span><span class="chip m">${r.chain.toUpperCase()}</span></div></div>`;
@@ -575,14 +577,15 @@
     const col = left === null || left > 0.3 ? '#00ff88' : left > 0.15 ? '#00cfff' : '#ff4444';
     const arc = (a0, a1) => { const p = a => [110 + 84 * Math.cos(Math.PI * (1 - a)), 110 - 84 * Math.sin(Math.PI * (1 - a))];
       const [x0, y0] = p(a0), [x1, y1] = p(a1); return `M${x0.toFixed(1)} ${y0.toFixed(1)}A84 84 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; };
-    const what = left === null ? 'NO LIQUIDATION' : `${pos.r.asset === 'USD' ? 'sUSDe' : pos.r.asset} TO LIQUIDATION`;
+    // a distance, not a loss: how far the asset can still fall before the loop is closed
+    const what = left === null ? 'NO LIQUIDATION' : `${pos.r.asset === 'USD' ? 'sUSDe' : pos.r.asset} CAN FALL BEFORE LIQUIDATION`;
     return `<svg class="gauge" viewBox="0 0 220 172" id="pg${pos.id}">
       <defs><linearGradient id="gg${pos.id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff4444"/><stop offset=".45" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient></defs>
       <path d="${arc(0, 1)}" fill="none" stroke="url(#gg${pos.id})" stroke-width="10" stroke-linecap="round" opacity=".22"/>
       <path d="${arc(0, Math.max(0.001, f))}" fill="none" stroke="url(#gg${pos.id})" stroke-width="10" stroke-linecap="round"/>
       ${[0, 0.25, 0.5, 0.75, 1].map(a => { const x = 110 + 98 * Math.cos(Math.PI * (1 - a)), y = 110 - 98 * Math.sin(Math.PI * (1 - a)); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.5" fill="#7f93ad"/>`; }).join('')}
       <g class="needle" style="transform:rotate(${(f * 180 - 90).toFixed(1)}deg)"><path d="M110 110L110 44" stroke="#e6edf7" stroke-width="2" stroke-linecap="round"/><circle cx="110" cy="110" r="6" fill="#06090f" stroke="#e6edf7" stroke-width="2"/></g>
-      <text class="t" x="110" y="150" style="fill:${col}">${left === null ? 'SAFE' : '−' + Math.max(0, Math.round(left * 100)) + '%'}</text>
+      <text class="t" x="110" y="150" style="fill:${col}">${left === null ? 'SAFE' : Math.max(0, Math.round(left * 100)) + '%'}</text>
       <text class="s" x="110" y="168">${what}</text></svg>`;
   }
   function sparkPath(pos) {
@@ -650,67 +653,92 @@
     if (on && !shot) posTimer = setInterval(tickPositions, 1000);
   }
 
-  /* EXIT: the route unwinds node by node, the money flows home, the wallet shows what came back */
+  /* EXIT: the route's own skill tree plays backwards. Each step empties its nodes and drains the links into them, the
+     light runs back towards the root, and the root is the wallet the money lands in. */
   function exitSteps(pos) {
     const r = pos.r, st = r.steps, v = valueOf(pos), away = awayOf(r), out = [];
-    const node = (project, t1, t2) => out.push({project, t1, t2});
-    if (r.type === 'vaults') st.filter(s => s.kind === 'vault').forEach(s => node(s.project, 'Withdraw', `${num(v * s.share)} USDC`));
-    else if (r.type === 'lp') { node(st[2].project, 'Remove liquidity', `${num(v)} USD`); node(st[1].project, 'Swap ETH → USDC', `${num(v / 2)} USD`); }
+    const step = (nodes, t1, t2) => out.push({nodes, t1, t2});
+    if (r.type === 'vaults') st.filter(s => s.kind === 'vault').forEach((s, k) => step(['v' + k], `Withdraw from ${pname(s.project)}`, `${num(v * s.share)} USDC`));
+    else if (r.type === 'lp') { step(['lp'], 'Remove liquidity', `${num(v)} USD`); step(['swap'], 'Swap ETH → USDC', `${num(v / 2)} USD`); }
     else {
-      const swap = st.find(s => s.kind === 'swap'), coll = st.find(s => s.kind === 'collateral'), bor = st.find(s => s.kind === 'borrow');
+      const coll = st.find(s => s.kind === 'collateral'), bor = st.find(s => s.kind === 'borrow');
       const tok = r.label.replace(' loop', '').replace('Staked ', '');
       if (bor) {
-        node(bor.project, `Repay ${bor.loan}`, `${num(pos.amount * (r.L - 1))} ${bor.loan}`);
-        node(coll.project, `Withdraw ${tok}`, `${num(v + pos.amount * (r.L - 1))} USD`);
+        step(['bor', 'lev'], `Repay the ${bor.loan} loan`, `${num(pos.amount * (r.L - 1))} ${bor.loan}`);
+        step(['coll'], `Withdraw the ${tok}`, `${num(v + pos.amount * (r.L - 1))} USD`);
       }
-      node(swap.project, `Swap ${tok} → USDC`, `${num(v)} USDC`);
+      step(['stake', 'swap'], `Swap ${tok} → USDC`, `${num(v)} USDC`);
     }
-    if (away.length) out.push({project: 'circle', t1: 'Circle CCTP', t2: `${away.map(chainName).join(' · ')} → Ethereum`});
-    out.push({wallet: true, t1: 'Your wallet', t2: `${num(v)} USDC`});
+    if (away.length) step(['cctp'], `Move home with Circle CCTP`, `${away.map(chainName).join(' · ')} → Ethereum`);
+    step(['root'], 'Into your wallet', `${num(v)} USDC`);
     return out;
+  }
+  /* EXIT asks first: what comes back and the result, then a clear yes */
+  function confirmExit(id) {
+    const pos = POS.find(p => p.id === id);
+    if (!pos || pos.closed) return;
+    const v = valueOf(pos), d = v - pos.amount, ov = $('exitov');
+    ov.innerHTML = `<div class="frame confirm">
+      <svg class="warn" viewBox="0 0 64 64"><path d="${hex(32, 32, 28)}" fill="rgba(255,68,68,.1)" stroke="#ff4444" stroke-width="2"/>
+        <path d="M32 19v17" stroke="#ff4444" stroke-width="4.5" stroke-linecap="round"/><circle cx="32" cy="45" r="3" fill="#ff4444"/></svg>
+      <h2>Close this position?</h2>
+      <p class="cwho">${pos.r.label} · ${pos.r.venue}${pos.r.L > 1 ? ' · ' + pos.r.L.toFixed(1) + '×' : ''}</p>
+      <div class="cgrid"><div><div class="lbl">YOU GET BACK</div><b>${num(v)} <small>USDC</small></b></div>
+        <div><div class="lbl">RESULT</div><b class="${d >= 0 ? 'up' : 'dn'}">${usd(d)}</b><span class="${d >= 0 ? 'up' : 'dn'}">${fp(v / pos.amount)}</span></div></div>
+      <div class="cnote">Everything leaves the pools and lands in your wallet on Ethereum. The route stops earning.</div>
+      <div class="cbtn"><button class="ghost2" data-cancel="1">CANCEL</button><button class="cta red" data-yes="${id}">YES, EXIT</button></div></div>`;
+    ov.classList.add('on');
   }
   function exitPos(id) {
     const pos = POS.find(p => p.id === id);
     if (!pos || pos.closed) return;
     pos.exiting = true;
-    const steps = exitSteps(pos), v = valueOf(pos), n = steps.length, W = 1100, gap = W / n, y = 92;
-    const xs = steps.map((_, k) => gap / 2 + k * gap);
-    const nodes = steps.map((s, k) => {
-      const x = xs[k], logo = s.wallet ? '' : `<clipPath id="xc${k}"><circle cx="${x}" cy="${y}" r="17"/></clipPath>
-        <text x="${x}" y="${y + 5}" text-anchor="middle" style="font:700 14px Inter;fill:#a9b8cc">${(s.project === 'circle' ? 'C' : pname(s.project)[0])}</text>
-        <image href="${s.project === 'circle' ? 'https://icons.llamao.fi/icons/protocols/circle?w=96' : icon(s.project)}" x="${x - 17}" y="${y - 17}" width="34" height="34" clip-path="url(#xc${k})"/>`;
-      const body = s.wallet ? `<circle cx="${x}" cy="${y}" r="32" fill="#06090f" stroke="#3b82f6" stroke-width="1.6"/>
-        <rect x="${x - 15}" y="${y - 11}" width="30" height="22" rx="4" fill="none" stroke="#00cfff" stroke-width="2"/><path d="M${x + 6} ${y}h9" stroke="#00cfff" stroke-width="2" stroke-linecap="round"/>`
-        : `<path class="hx" d="${hex(x, y, 32)}"/>${logo}`;
-      return `<g class="xn" data-x="${k}">${body}
-        <g class="ok"><circle cx="${x + 24}" cy="${y - 24}" r="9" fill="#00ff88"/><path d="M${x + 20} ${y - 24}l3 3 5-6" fill="none" stroke="#06090f" stroke-width="2" stroke-linecap="round"/></g>
-        <text class="xt" x="${x}" y="${y + 58}">${s.t1}</text><text class="xs" x="${x}" y="${y + 76}">${s.t2}</text></g>`;
-    }).join('');
-    const links = xs.slice(1).map((x, k) => `<line class="lk" data-l="${k}" x1="${xs[k] + 34}" y1="${y}" x2="${x - 34}" y2="${y}"/>`).join('');
+    const steps = exitSteps(pos), v = valueOf(pos), n = steps.length;
+    const keep = [S.amount, S.tier];
+    [S.amount, S.tier] = [pos.amount, pos.tier];
+    const svg = tree(pos.r, {orient: 'h', id: 'ex', col: 0, grow: false, interactive: false, exit: true});
+    [S.amount, S.tier] = keep;
     const ov = $('exitov');
     ov.innerHTML = `<div class="exbox"><div class="eyebrow" style="color:#ff4444">EXITING</div><h2>${pos.r.label} <em>→</em> your wallet</h2>
-      <svg class="exrail" viewBox="0 0 ${W} 190">${links}${nodes}
-        <g class="orb" id="orb" style="transform:translate(${xs[0] - 90}px,${y}px)"><circle r="26" fill="#00ff88" opacity=".14"/><circle r="12" fill="#00ff88" opacity=".35"/><circle r="6" fill="#e6edf7"/></g></svg>
+      <div class="extree">${svg}</div>
       <div class="excount"><div class="pool"><div class="lbl">IN THE POOL</div><b id="exPool" data-v="${v}">$${num(v)}</b></div><div class="arr">→</div>
         <div class="wal"><div class="lbl">IN YOUR WALLET</div><b id="exWal" data-v="0">$0</b></div></div>
-      <ol class="exsteps">${steps.map((s, k) => `<li data-s="${k}">${k + 1} · ${s.t1}</li>`).join('')}</ol></div>`;
+      <div class="exprog"><div class="top"><span>STEP <b id="exK">0</b> / ${n}</span><b id="exPct">0%</b></div>
+        <div class="track"><i class="fill" id="exFill"></i>${steps.map((s, k) => `<i class="tick" data-s="${k}" style="left:${((k + 1) / n * 100).toFixed(2)}%"></i>`).join('')}</div>
+        <div class="now"><span id="exNow">Preparing the exit</span><b id="exAmt"></b></div></div></div>`;
     ov.classList.add('on');
-    const step = 900;
-    steps.forEach((s, k) => later(500 + k * step, () => {
-      $('orb').style.transform = `translate(${xs[k]}px,${y}px)`;
+    const tsvg = ov.querySelector('.extree svg');
+    // empty a node: dim it, drain the link that fed it, a ring where it was; the root lights up instead
+    const empty = id => {
+      const g = tsvg.querySelector(`.nd[data-n="${id}"]`);
+      if (!g) return;
+      const shape = g.querySelector('path,circle'), bb = shape.getBBox();
+      tsvg.insertAdjacentHTML('beforeend', `<circle class="xb" cx="${bb.x + bb.width / 2}" cy="${bb.y + bb.height / 2}" r="${bb.width / 2}"/>`);
+      g.classList.add(id === 'root' ? 'home' : 'out');
+      tsvg.querySelectorAll(`[data-e="${id}"]`).forEach(e => e.classList.add('gone'));
+    };
+    later(250, () => empty('apex'));
+    const step = 1000;
+    steps.forEach((s, k) => later(600 + k * step, () => {
+      if ($('exNow')) {
+        $('exK').textContent = k + 1;
+        $('exNow').textContent = s.t1 + ' …';
+        $('exAmt').textContent = s.t2;
+      }
       later(650, () => {
-        const g = ov.querySelector(`[data-x="${k}"]`);
-        if (!g) return;
-        g.classList.add('on');
-        g.insertAdjacentHTML('beforeend', `<circle class="burst" cx="${xs[k]}" cy="${y}" r="32"/>`);
-        if (k) ov.querySelector(`[data-l="${k - 1}"]`).classList.add('on');
+        if (!ov.querySelector(`[data-s="${k}"]`)) return;
+        s.nodes.forEach(empty);
         ov.querySelector(`[data-s="${k}"]`).classList.add('on');
+        const pct = Math.round((k + 1) / n * 100);
+        $('exFill').style.width = pct + '%';
+        $('exPct').textContent = pct + '%';
+        $('exNow').textContent = k === n - 1 ? 'Everything is out of the pools' : s.t1 + ' ✓';
         const left = v * (1 - (k + 1) / n);
         tween($('exPool'), left, x => '$' + num(x), 500);
         tween($('exWal'), v - left, x => '$' + num(x), 500);
       });
     }));
-    later(500 + n * step + 700, () => {
+    later(600 + n * step + 800, () => {
       pos.closed = {value: v};
       pos.exiting = false;
       const d = v - pos.amount;
@@ -774,7 +802,9 @@
       openPosition(S.picks[S.pick], S.tier, S.amount);
       return later(1100, () => setTab('positions'));
     }
-    if (el('[data-exit]')) return exitPos(+el('[data-exit]').dataset.exit);
+    if (el('[data-exit]')) return confirmExit(+el('[data-exit]').dataset.exit);
+    if (el('[data-yes]')) return exitPos(+el('[data-yes]').dataset.yes);
+    if (el('[data-cancel]')) { $('exitov').classList.remove('on'); return; }
     if (el('[data-done]')) { $('exitov').classList.remove('on'); return renderPositions(); }
     if (el('[data-filter]')) { S.filter = el('[data-filter]').dataset.filter; return renderPlatforms(); }
     if (el('[data-chain]')) { S.chain = el('[data-chain]').dataset.chain; return renderPlatforms(); }

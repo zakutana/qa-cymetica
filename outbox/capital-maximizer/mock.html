@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Capital Maximizer</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 3l25 14.5v29L32 61 7 46.5v-29z' fill='%2306090f' stroke='%2300ff88' stroke-width='3'/%3E%3Cpath d='M32 46L21 33l11-14 11 14z' fill='none' stroke='%2300cfff' stroke-width='3'/%3E%3Ccircle cx='32' cy='19' r='5' fill='%2300ff88'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M8 24L20 15H44L56 24L44 33H20Z' fill='%2306090f' stroke='%2300ff88' stroke-width='5' stroke-linejoin='round'/%3E%3Cpath d='M8 37L20 46H44L56 37' fill='none' stroke='%2300cfff' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M8 49L20 58H44L56 49' fill='none' stroke='%233b82f6' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M32 10V38M38.5 17C36.5 14 27.5 13.8 26 18C24.6 22 29.5 23 32 23.5C35 24 40 25 38.5 29C37 33 27.8 32.6 25.6 29.2' fill='none' stroke='%2300ff88' stroke-width='4.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -129,9 +129,10 @@ h1 em{font-style:normal;color:var(--green)}
 .t3 .emblem .ic{stroke:var(--red)}
 .t3 .emblem .hx{stroke:var(--red)}
 .t3 .meter i.on{background:var(--red);box-shadow:0 0 8px rgba(255,68,68,.7)}
-.t3 .big b{background:none;color:var(--red);filter:none;text-shadow:0 0 18px rgba(255,68,68,.85),0 0 46px rgba(255,68,68,.45);animation:blaze 2.4s ease-in-out infinite}
-.t3 .big span,.t3 .go1{color:var(--red)}
-@keyframes blaze{50%{text-shadow:0 0 8px rgba(255,68,68,.55),0 0 20px rgba(255,68,68,.2)}}
+/* a profit is never red: OG Gambler's number glows green, the red stays on the frame, the name and the risk */
+.t3 .big b{background:none;color:var(--green);filter:none;text-shadow:0 0 18px rgba(0,255,136,.85),0 0 46px rgba(0,255,136,.45);animation:blaze 2.4s ease-in-out infinite}
+.t3 .go1{color:var(--red)}
+@keyframes blaze{50%{text-shadow:0 0 8px rgba(0,255,136,.55),0 0 20px rgba(0,255,136,.2)}}
 .note{margin-top:20px;color:var(--dim);font:500 11.5px "JetBrains Mono",monospace;display:flex;gap:18px;align-items:center}
 .note b{color:var(--muted);font-weight:600}
 
@@ -199,7 +200,6 @@ h1 em{font-style:normal;color:var(--green)}
   display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
 .sel:hover{background:rgba(0,255,136,.08);box-shadow:0 0 30px rgba(0,255,136,.15)}
 .best .sel{background:linear-gradient(180deg,var(--green),rgba(0,255,136,.82));color:var(--deep);border-color:transparent;box-shadow:0 12px 34px rgba(0,255,136,.22)}
-.og .result .v,.og .result .x{color:var(--red);text-shadow:0 0 30px rgba(255,68,68,.35)}
 .og .sel{border-color:rgba(255,68,68,.5);color:var(--red)}
 .og .sel:hover{background:rgba(255,68,68,.08);box-shadow:0 0 30px rgba(255,68,68,.15)}
 .og.best{background:linear-gradient(180deg,rgba(13,21,32,.86),rgba(6,9,15,.92)) padding-box,linear-gradient(160deg,rgba(255,68,68,.85),rgba(30,48,80,.6) 40%,rgba(255,68,68,.45)) border-box;
@@ -362,9 +362,54 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;bac
 .excount b{display:block;font:46px "Archivo Black",sans-serif;margin-top:4px}
 .excount .pool b{color:var(--red)}.excount .wal b{color:var(--green)}
 .excount .arr{font:30px Inter;color:var(--dim)}
-.exsteps{list-style:none;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px}
-.exsteps li{font:600 12px "JetBrains Mono",monospace;color:var(--dim);padding:6px 12px;border:1px solid var(--hair);border-radius:20px;transition:all .3s}
-.exsteps li.on{color:var(--green);border-color:rgba(0,255,136,.5);background:rgba(0,255,136,.06)}
+/* the exit asks first */
+.confirm{width:min(560px,92vw);padding:34px 36px 30px;text-align:center;animation:rise .3s ease-out;
+  background:linear-gradient(180deg,rgba(13,21,32,.97),rgba(6,9,15,.98)) padding-box,linear-gradient(160deg,rgba(255,68,68,.75),rgba(30,48,80,.7) 45%,rgba(255,68,68,.4)) border-box;
+  box-shadow:0 40px 100px rgba(6,9,15,.8),0 0 70px rgba(255,68,68,.15)}
+.confirm .warn{width:64px;height:64px;filter:drop-shadow(0 0 16px rgba(255,68,68,.5))}
+.confirm h2{font:30px "Archivo Black",sans-serif;margin-top:14px}
+.confirm .cwho{font:500 12px "JetBrains Mono",monospace;color:var(--dim);margin-top:6px}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0 18px}
+.cgrid>div{padding:16px;border-radius:14px;border:1px solid var(--hair);background:rgba(6,9,15,.7)}
+.cgrid b{display:block;font:30px/1.15 "Archivo Black",sans-serif;margin-top:6px}
+.cgrid b small{font:14px "Archivo Black",sans-serif;color:var(--muted)}
+.cgrid span{font:700 12px "JetBrains Mono",monospace}
+.cgrid .up{color:var(--green)}.cgrid .dn{color:var(--red)}
+.cnote{font:500 13px Inter,sans-serif;color:var(--muted)}
+.cbtn{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;margin-top:24px}
+.cbtn .cta{height:60px}
+.ghost2{height:60px;border-radius:16px;border:1px solid var(--line);color:var(--muted);font:800 15px Inter,sans-serif;letter-spacing:.08em;transition:all .2s}
+.ghost2:hover{border-color:var(--muted);color:var(--text)}
+
+/* the exit: the route's tree playing backwards */
+.extree{max-width:1120px;margin:14px auto 0}
+.tree.exit .nd{animation:none;opacity:1;transition:opacity .6s}
+.tree.exit .nd.out{opacity:.32}
+.tree.exit .nd.out .hx{stroke:var(--line)}
+.tree.exit .nd.home{filter:drop-shadow(0 0 18px rgba(0,255,136,.95))}
+.tree.exit .lk.lit.gone{animation:undraw .7s ease-in forwards}
+@keyframes undraw{from{stroke-dashoffset:0}to{stroke-dashoffset:1}}
+.tree.exit .lk.glow.gone{animation:none;opacity:0;transition:opacity .6s}
+.tree.exit .sp.gone{display:none}
+.tree.exit .xb{transform-box:fill-box;transform-origin:center;animation:burst .8s ease-out forwards;fill:none;stroke:var(--green);stroke-width:2.5}
+
+/* the exit's progress: one glowing bar, a diamond per step, what is happening now and with how much */
+.exprog{max-width:820px;margin:30px auto 0;text-align:left;padding:20px 26px 22px;border-radius:18px;
+  background:linear-gradient(180deg,rgba(13,21,32,.9),rgba(6,9,15,.95)) padding-box,var(--edge) border-box;border:1px solid transparent}
+.exprog .top{display:flex;justify-content:space-between;align-items:baseline;font:600 11px "JetBrains Mono",monospace;letter-spacing:.22em;color:var(--dim)}
+.exprog .top b{font:700 13px "JetBrains Mono",monospace;color:var(--green);letter-spacing:.05em}
+.exprog .top>b{font:22px "Archivo Black",sans-serif;letter-spacing:0}
+.exprog .track{position:relative;height:8px;border-radius:6px;background:rgba(30,48,80,.55);margin:14px 8px 0;box-shadow:inset 0 1px 2px rgba(6,9,15,.8)}
+.exprog .fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:6px;overflow:hidden;
+  background:linear-gradient(90deg,var(--cyan),var(--green));box-shadow:0 0 18px rgba(0,255,136,.55);transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.exprog .fill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(230,237,247,.55),transparent);transform:translateX(-100%);animation:sweepbar 1.1s linear infinite}
+@keyframes sweepbar{to{transform:translateX(100%)}}
+.exprog .tick{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;transform:rotate(45deg);border-radius:3px;
+  background:var(--deep);border:1.5px solid var(--line);transition:all .3s}
+.exprog .tick.on{background:var(--green);border-color:var(--green);box-shadow:0 0 12px rgba(0,255,136,.9)}
+.exprog .now{display:flex;justify-content:space-between;align-items:baseline;margin-top:18px;gap:20px}
+.exprog .now span{font:600 16px Inter,sans-serif;color:var(--text)}
+.exprog .now b{font:700 15px "JetBrains Mono",monospace;color:var(--green);white-space:nowrap}
 .final{position:relative;padding:20px 0}
 .final .ringfx{position:absolute;left:50%;top:118px;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;border:2px solid var(--green);animation:ringfx 1.6s ease-out infinite;opacity:0;pointer-events:none}
 .shot .final .ringfx{display:none}
@@ -423,19 +468,26 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;bac
 <div class="wrap">
   <header class="top">
     <div class="brand" id="home">
+      <!-- the mark: the operator's pick, 9 Dollar Rising with the dollar inside the stack (logos/logo-final.svg) -->
       <svg viewBox="0 0 64 64" aria-hidden="true" id="mark">
         <defs>
-          <linearGradient id="mk" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
-          <radialGradient id="mkc"><stop offset="0" stop-color="#00ff88" stop-opacity=".55"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></radialGradient>
+          <linearGradient id="fa" x1="8" y1="15" x2="56" y2="33" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+          <linearGradient id="fb" x1="0" y1="47" x2="0" y2="17" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+          <radialGradient id="fd" cx="32" cy="27" r="20" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00ff88" stop-opacity=".5"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></radialGradient>
         </defs>
-        <path d="M32 2.5l26 15v30L32 62.5l-26-15v-30z" fill="#06090f" stroke="url(#mk)" stroke-width="2"/>
-        <path d="M32 9l20.2 11.7v23.3L32 55.7 11.8 44V20.7z" fill="none" stroke="#00cfff" stroke-opacity=".28" stroke-width=".8"/>
-        <path d="M32 47L20 34M32 47L44 34M20 34L32 18M44 34L32 18M32 47V18" fill="none" stroke="url(#mk)" stroke-width="1.8" stroke-linecap="round"/>
-        <circle cx="32" cy="18" r="11" fill="url(#mkc)"/>
-        <circle cx="32" cy="47" r="3.2" fill="#00cfff"/>
-        <circle cx="20" cy="34" r="3" fill="#06090f" stroke="#00cfff" stroke-width="1.6"/>
-        <circle cx="44" cy="34" r="3" fill="#06090f" stroke="#00ff88" stroke-width="1.6"/>
-        <circle cx="32" cy="18" r="4.8" fill="#00ff88"/>
+        <path d="M8 24 V46 M56 24 V46 M20 33 V55 M44 33 V55" stroke="#00cfff" stroke-opacity=".3" stroke-width="1"/>
+        <polygon points="8,24 20,15 44,15 56,24 44,33 20,33" fill="#06090f"/>
+        <polygon points="8,24 20,15 44,15 56,24 44,33 20,33" fill="url(#fd)"/>
+        <path d="M8 24 L20 15 L44 15 L56 24" fill="none" stroke="url(#fa)" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M32 17V43M39.3 25C37.2 21.9 26.8 21.5 25.2 26C23.7 30.4 29.1 31.5 32 32C35.3 32.7 40.8 33.8 39.3 38.2C37.7 42.8 27.1 42.4 24.7 38.6" stroke="#06090f" stroke-width="8"/>
+          <path d="M32 17V43M39.3 25C37.2 21.9 26.8 21.5 25.2 26C23.7 30.4 29.1 31.5 32 32C35.3 32.7 40.8 33.8 39.3 38.2C37.7 42.8 27.1 42.4 24.7 38.6" stroke="url(#fb)" stroke-width="4.4"/>
+        </g>
+        <path d="M8 24 L20 33 L44 33 L56 24" fill="none" stroke="url(#fa)" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M8 35 L20 44 L44 44 L56 35" fill="none" stroke="#06090f" stroke-width="8.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M8 35 L20 44 L44 44 L56 35" fill="none" stroke="#00cfff" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M8 46 L20 55 L44 55 L56 46" fill="none" stroke="#3b82f6" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M10 8.5L12.2 6.3L14.4 8.5L12.2 10.7Z M50 6L52.4 3.6L54.8 6L52.4 8.4Z" fill="#00ff88"/>
       </svg>
       <div class="w"><b>CAPITAL <em>MAXIMIZER</em></b><span>BY CYMETICA</span></div>
     </div>
@@ -444,7 +496,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;bac
       <button data-tab="positions">Positions <i id="poscount">0</i></button>
       <button data-tab="platforms">Platforms <i id="pcount"></i></button>
     </nav>
-    <div class="trust"><span class="chip g">NO KYC</span><span class="chip c">AUDITED DEFI ONLY</span></div>
+    <div class="trust"><span class="chip c">AUDITED DEFI ONLY</span></div>
   </header>
 
   <div id="maxtab">
