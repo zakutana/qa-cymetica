@@ -360,8 +360,46 @@
     if (CO.BOARD_LAUNCH) v *= 0.12;
     return Math.round(v / 10) * 10;
   };
+  // SEASON 0 (the operator, 2026-10-28; Cymetica's build spec ET-33050, REPLY-0233): the same board, but a company's score is
+  // POINTS for real use of its products in a calendar month, not revenue. Shown with ?season0 in the address; without it the
+  // revenue-share board above is unchanged. The rules, as Cymetica wrote them:
+  //   - an active user (a signed-in account that used a product on 2 different days in the month) = 10 points, +1 for every
+  //     further active day, at most 20 per user per month;
+  //   - a signed-out returning visitor (same IP hash on 2 days), only on products that work signed out: 1 point each, in total at
+  //     most 25 % of the company's signed-in points;
+  //   - the company's own trading agents: 1 point per 100 USDC of fee-paying traded volume, at most 30 % of the company's points;
+  //   - the owner's own accounts and test accounts earn nothing; 100 points in the month to be placed; the top 3 are paid.
+  // The caps are read as shares of the company's TOTAL (the agents' cap: pa <= 0.3 / 0.7 of users + visitors). Their answer
+  // does not say whether the base is the total or the signed-in points: it is an open question in outbox/company-spec-5/SPEC.md.
+  // The PRIZE is not in their answer; 50,000 / 30,000 / 10,000 ET10 is what they called a sensible range (REPLY-0229): a SAMPLE.
+  // Every figure below is a sample drawn from one seeded model, so the board, the leaderboard and the pulses agree.
+  CO.SEASON0 = /[?&]season0\b/.test(location.search);
+  CO.SEASON = { name: 'Season 1', month: 'November 2026', day: 12, days: 30, threshold: 100, prizes: [50000, 30000, 10000], cap: { visitors: 0.25, agents: 0.30 } };
+  CO.uvPoints = function (c) {
+    var R = CO.uvRng((+c.id || 0) * 17 + 3), K = CO.SEASON;
+    var users = Math.round(Math.pow(R(), 3.2) * 46 * (CO.BOARD_LAUNCH ? 0.12 : 1));
+    if (c.status === 'paused') users = Math.round(users * 0.4);
+    var per = Math.min(20, 10 + Math.round(R() * 6));              // 10 + the further active days, at most 20
+    var pu = users * per;
+    var visitors = Math.round(users * (0.5 + R() * 3));
+    var pv = Math.min(visitors, Math.floor(pu * K.cap.visitors));
+    var volume = Math.round(R() * R() * 60000 / 100) * 100;        // fee-paying USDC volume of the company's own agents
+    var paRaw = Math.floor(volume / 100);
+    var pa = Math.min(paRaw, Math.floor((pu + pv) * K.cap.agents / (1 - K.cap.agents)));
+    return { users: users, visitors: visitors, volume: volume, pu: pu, pv: pv, pa: pa, total: pu + pv + pa, capped: pa < paRaw || pv < visitors };
+  };
   // the ranking, highest first; top: the first three at or above the floor (fewer when fewer reach it)
   CO.uvBoard = function (mine) {
+    if (CO.SEASON0) {
+      var K = CO.SEASON;
+      var rs = CO.UNIVERSE.map(function (c) { return { c: c, p: CO.uvPoints(c), mine: false }; });
+      if (mine) rs.push({ c: mine, p: CO.uvPoints(mine), mine: true });
+      rs.sort(function (a, b) { return b.p.total - a.p.total || (a.c.id || 0) - (b.c.id || 0); });
+      rs.forEach(function (r, i) { r.rank = i + 1; r.total = r.p.total; r.qualifies = r.total >= K.threshold; });
+      var tp = rs.filter(function (r) { return r.qualifies; }).slice(0, K.prizes.length);
+      tp.forEach(function (r, i) { r.prize = K.prizes[i]; });
+      return { season: true, rows: rs, top: tp, prizes: K.prizes, floor: K.threshold, left: K.days - K.day };
+    }
     var rows = CO.UNIVERSE.map(function (c) { return { c: c, rev: CO.uvRevenue(c), mine: false }; });
     if (mine) rows.push({ c: mine, rev: CO.uvRevenue(mine), mine: true });
     rows.sort(function (a, b) { return b.rev - a.rev || (a.c.id || 0) - (b.c.id || 0); });

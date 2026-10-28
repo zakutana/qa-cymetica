@@ -1262,7 +1262,7 @@
     var self = this, mine = this.h.mine ? this.h.mine() : null;
     CO.uvBoard(mine).top.forEach(function (r, i) {
       var it = self.items.filter(function (x) { return r.mine ? x.mine : !x.kind && !x.mine && String(x.c.id) === String(r.c.id); })[0];
-      if (it) setTimeout(function () { self.pop(it, '+' + r.share + '% of revenue', '#00cfff'); }, i * 450);
+      if (it) setTimeout(function () { self.pop(it, r.share != null ? '+' + r.share + '% of revenue' : '+' + r.total + ' pts', '#00cfff'); }, i * 450);
     });
   };
   Universe.prototype.pop = function (it, label, colour) {

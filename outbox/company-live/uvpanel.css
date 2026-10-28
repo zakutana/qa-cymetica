@@ -214,6 +214,14 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 .lb-r.top { border-color: rgba(0, 207, 255, .38); background: rgba(0, 207, 255, .06); }
 .lb-r.me { border-color: rgba(0, 255, 136, .55); background: rgba(0, 255, 136, .07); }
 .lb-v { text-align: right; font-weight: 700; }
+.uvb-n u { text-decoration: none; }
+/* Season 0's leaderboard: users / visitors / agents each with its points under it, then the total (uvboard.js tableSeason) */
+.lb-head.s0, .lb-r.s0, .lbg .lb-r.s0, .lbg .lb-head.s0 { grid-template-columns: 38px 30px minmax(0, 1fr) 96px 96px 96px 150px; }
+.lb-head.s0 span:nth-child(n+4) { text-align: right; }
+.lb-r.s0 .lb-v small { display: block; margin-top: 1px; font-size: 10px; font-weight: 500; color: var(--dim2); }
+.lb-r.s0 .lb-s .sh.dim { color: var(--dim); } .lb-r.s0 .lb-s .sh.ok { color: var(--green); }
+.lb-r.s0 .lb-s { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+.lb-r.s0 .lb-s .sh { margin-right: 0; }
 .lb-s { text-align: right; font-size: 10.5px; color: var(--dim2); }
 .lb-s .sh { font: 400 15px 'Archivo Black', sans-serif; color: var(--rs1); margin-right: 6px; } .lb-r.pl2 .lb-s .sh { color: var(--rs2); } .lb-r.pl3 .lb-s .sh { color: var(--rs3); }
 .lb-s .ok { color: var(--green); }

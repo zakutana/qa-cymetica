@@ -2339,7 +2339,7 @@ class Universe3D {
     CO.uvBoard(mine).top.forEach((r, i) => {
       const it = this.items.find((x) => (r.mine ? x.mine : !x.kind && !x.mine && String(x.c.id) === String(r.c.id)));
       if (!it) return;
-      setTimeout(() => { this.arc(it, true, '#00cfff'); setTimeout(() => this.pop(it, '+' + r.share + '% of revenue', 'share'), 1500); }, i * 450);
+      setTimeout(() => { this.arc(it, true, '#00cfff'); setTimeout(() => this.pop(it, r.share != null ? '+' + r.share + '% of revenue' : '+' + r.total + ' pts', 'share'), 1500); }, i * 450);
     });
   }
   // work goes in to Cymetica in the company's colour; ET10 comes back out in green (or in the colour given: gold for the share)
