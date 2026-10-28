@@ -245,17 +245,19 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
   background: color-mix(in srgb, var(--sc) 18%, transparent); border: 1px solid color-mix(in srgb, var(--sc) 45%, transparent); }
 /* the block: a lit top face (a trapezoid, so the step reads as a solid seen from a little above) and the glass front */
 .pod-block { width: 100%; filter: drop-shadow(0 18px 24px rgba(0, 0, 0, .55)); }
-.pod-top { display: block; height: 16px; margin: 0 2px;
-  clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%);
-  background: linear-gradient(180deg, rgba(255, 255, 255, .75), color-mix(in srgb, var(--sc) 75%, #ffffff) 45%, color-mix(in srgb, var(--sc) 55%, transparent)); }
-.pod-s { position: relative; overflow: hidden; width: 100%; display: grid; place-items: center;
+/* round, not square ("dobry ale moc hranaty", 2026-10-28): each step a short glass cylinder, a lit elliptical lid on a front that
+   is shaded from its edges to its middle, with a curved foot */
+.pod-top { position: relative; z-index: 2; display: block; height: 26px; margin: 0 0 -13px; border-radius: 50%;
+  background: radial-gradient(60% 70% at 50% 40%, rgba(255, 255, 255, .85), color-mix(in srgb, var(--sc) 70%, #ffffff) 40%, color-mix(in srgb, var(--sc) 80%, #06101c) 100%);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sc) 70%, #ffffff), 0 0 24px color-mix(in srgb, var(--sc) 70%, transparent), inset 0 -3px 6px rgba(0, 0, 0, .35); }
+.pod-s { position: relative; overflow: hidden; width: 100%; display: grid; place-items: center; padding-top: 10px;
+  border-radius: 0 0 50% 50% / 0 0 16px 16px;
   border: 1px solid color-mix(in srgb, var(--sc) 55%, transparent); border-top: 0;
   background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 22px),
-    radial-gradient(90% 70% at 50% 0%, color-mix(in srgb, var(--sc) 40%, transparent), transparent 70%),
-    linear-gradient(180deg, color-mix(in srgb, var(--sc) 26%, rgba(8, 14, 24, .9)), rgba(6, 10, 18, .94) 80%);
-  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .55), inset 0 -24px 30px -20px color-mix(in srgb, var(--sc) 35%, transparent),
-    0 0 40px color-mix(in srgb, var(--sc) 22%, transparent); }
+    linear-gradient(90deg, rgba(0, 0, 0, .45) 0%, rgba(255, 255, 255, .06) 30%, rgba(255, 255, 255, .14) 48%, rgba(255, 255, 255, .04) 66%, rgba(0, 0, 0, .5) 100%),
+    radial-gradient(90% 70% at 50% 0%, color-mix(in srgb, var(--sc) 45%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--sc) 30%, rgba(8, 14, 24, .9)), rgba(6, 10, 18, .94) 85%);
+  box-shadow: inset 0 -26px 30px -20px color-mix(in srgb, var(--sc) 40%, transparent), 0 0 40px color-mix(in srgb, var(--sc) 22%, transparent); }
 .pod.pl1 .pod-s { height: 128px; } .pod.pl2 .pod-s { height: 92px; } .pod.pl3 .pod-s { height: 66px; }
 /* a slow sheen across the glass */
 .pod-s::after { content: ''; position: absolute; top: -20%; bottom: -20%; left: -70%; width: 45%; transform: skewX(-18deg); pointer-events: none;
