@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capital Maximizer</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 3l25 14.5v29L32 61 7 46.5v-29z' fill='%2306090f' stroke='%2300ff88' stroke-width='3'/%3E%3Cpath d='M32 46L21 33l11-14 11 14z' fill='none' stroke='%2300cfff' stroke-width='3'/%3E%3Ccircle cx='32' cy='19' r='5' fill='%2300ff88'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Capital Maximizer. One idea carries the whole page: a skill tree of fine lines. The progress rail, the strategies
+   and the plan are all nodes and links; every number on them comes from cm-core.js. */
+:root{
+  --bg:#0a0e17; --deep:#06090f; --panel:#0d1520; --line:#1e3050;
+  --text:#e6edf7; --muted:#a9b8cc; --dim:#7f93ad;
+  --cyan:#00cfff; --green:#00ff88; --red:#ff4444; --blue:#3b82f6;
+  --hair:rgba(30,48,80,.85);
+  --edge:linear-gradient(135deg,rgba(0,207,255,.5),rgba(30,48,80,.7) 38%,rgba(30,48,80,.7) 62%,rgba(0,255,136,.42));
+  --gut:max(20px,env(safe-area-inset-left,0px));
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{color:var(--text);font:14px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;
+  background:radial-gradient(1100px 620px at 8% -8%,rgba(0,207,255,.075),transparent 62%),
+             radial-gradient(1000px 700px at 96% -4%,rgba(0,255,136,.06),transparent 60%),var(--bg)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(rgba(127,147,173,.13) 1px,transparent 1.3px);background-size:28px 28px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 30%,rgba(6,9,15,1),rgba(6,9,15,0));mask-image:radial-gradient(ellipse 80% 70% at 50% 30%,rgba(6,9,15,1),rgba(6,9,15,0))}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+a{color:inherit;text-decoration:none}
+.wrap{position:relative;z-index:1;max-width:1480px;margin:0 auto;padding:0 var(--gut) 90px}
+.mono{font-family:"JetBrains Mono",monospace}
+.eyebrow{font:600 11px "JetBrains Mono",monospace;letter-spacing:.3em;color:var(--cyan)}
+h1{font:46px/1.04 "Archivo Black",sans-serif;letter-spacing:-.012em;margin-top:10px}
+h1 em{font-style:normal;color:var(--green)}
+.tip{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;border:1px solid var(--line);color:var(--dim);
+  font:700 9.5px "JetBrains Mono",monospace;cursor:help;vertical-align:1px;margin-left:6px}
+.tip:hover{color:var(--cyan);border-color:var(--cyan)}
+
+/* the fine-line frame every surface shares: a 1px gradient edge on glass */
+.frame{border:1px solid transparent;border-radius:22px;
+  background:linear-gradient(180deg,rgba(13,21,32,.86),rgba(6,9,15,.92)) padding-box,var(--edge) border-box;
+  box-shadow:0 30px 80px rgba(6,9,15,.55),inset 0 1px 0 rgba(230,237,247,.03)}
+
+/* header */
+.top{display:flex;align-items:center;gap:34px;height:84px;position:relative}
+.top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,207,255,.35),rgba(0,255,136,.35),transparent)}
+.brand{display:flex;align-items:center;gap:13px;cursor:pointer}
+.brand svg{width:44px;height:44px;flex:none;filter:drop-shadow(0 0 14px rgba(0,255,136,.3))}
+.brand .w{line-height:1}
+.brand .w b{display:block;font:19px "Archivo Black",sans-serif;letter-spacing:.015em}
+.brand .w b em{font-style:normal;color:var(--green)}
+.brand .w span{display:block;margin-top:6px;font:600 9px "JetBrains Mono",monospace;letter-spacing:.34em;color:var(--dim)}
+.tabs{display:flex;gap:2px;padding:4px;border-radius:13px;border:1px solid var(--hair);background:rgba(6,9,15,.6)}
+.tabs button{padding:9px 18px;border-radius:9px;font:600 13px Inter,sans-serif;color:var(--dim);display:flex;align-items:center;gap:9px;transition:color .2s,background .2s}
+.tabs button:hover{color:var(--text)}
+.tabs button.on{color:var(--text);background:linear-gradient(180deg,rgba(0,207,255,.14),rgba(0,255,136,.08));box-shadow:inset 0 0 0 1px rgba(0,255,136,.35)}
+.tabs button i{font-style:normal;font:700 10px "JetBrains Mono",monospace;color:var(--green);background:rgba(0,255,136,.1);border-radius:6px;padding:1px 6px}
+.trust{margin-left:auto;display:flex;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px;border-radius:7px;font:700 10px "JetBrains Mono",monospace;letter-spacing:.12em;white-space:nowrap}
+.chip.g{color:var(--green);border:1px solid rgba(0,255,136,.35);background:rgba(0,255,136,.06)}
+.chip.c{color:var(--cyan);border:1px solid rgba(0,207,255,.32);background:rgba(0,207,255,.05)}
+.chip.r{color:var(--red);border:1px solid rgba(255,68,68,.42);background:rgba(255,68,68,.06)}
+.chip.m{color:var(--muted);border:1px solid var(--hair)}
+.chip svg{width:12px;height:12px}
+
+/* the progress rail: four nodes on a fine line */
+.rail{display:flex;align-items:center;margin:30px 0 6px;max-width:620px}
+.rail button{display:flex;align-items:center;gap:10px;font:600 12px Inter,sans-serif;color:var(--dim);white-space:nowrap}
+.rail button[disabled]{cursor:default}
+.rail svg{width:22px;height:22px;flex:none;overflow:visible}
+.rail svg path{fill:var(--deep);stroke:var(--line);stroke-width:1.4}
+.rail .done{color:var(--muted)}
+.rail .done svg path{stroke:var(--green);fill:rgba(0,255,136,.15)}
+.rail .on{color:var(--text)}
+.rail .on svg path{stroke:var(--green);fill:var(--green);filter:drop-shadow(0 0 6px rgba(0,255,136,.8))}
+.rail i{flex:1;height:1px;margin:0 14px;background:var(--line);min-width:28px}
+.rail i.lit{background:linear-gradient(90deg,var(--green),var(--cyan))}
+
+.view{display:none}
+.view.on{display:block;animation:rise .45s cubic-bezier(.2,.7,.2,1)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:26px 0 26px}
+.head p{color:var(--dim);font-size:13px;max-width:360px;text-align:right}
+
+/* step 1: the four tiers */
+.tiers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.tier{position:relative;text-align:left;padding:26px 26px 22px;display:flex;flex-direction:column;min-height:392px;overflow:hidden;
+  transition:transform .25s cubic-bezier(.2,.7,.2,1),box-shadow .25s}
+.tier::before{content:"";position:absolute;inset:-1px;border-radius:22px;pointer-events:none;opacity:0;transition:opacity .25s;
+  background:radial-gradient(420px 220px at 50% 0%,rgba(0,255,136,.12),transparent 70%)}
+.tier:hover{transform:translateY(-5px);box-shadow:0 40px 90px rgba(6,9,15,.7),0 0 0 1px rgba(0,255,136,.45),0 0 60px rgba(0,255,136,.12)}
+.tier:hover::before{opacity:1}
+.tier .row1{display:flex;justify-content:space-between;align-items:flex-start}
+.emblem{width:58px;height:58px}
+.emblem .hx{fill:var(--deep);stroke:url(#gEdge);stroke-width:1.3}
+.emblem .hi{fill:none;stroke:rgba(0,207,255,.25);stroke-width:.8}
+.emblem .ic{fill:none;stroke:var(--cyan);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.meter{display:flex;gap:4px;align-items:flex-end;margin-top:6px}
+.meter i{width:5px;border-radius:2px;background:var(--line)}
+.meter i:nth-child(1){height:9px}.meter i:nth-child(2){height:14px}.meter i:nth-child(3){height:19px}.meter i:nth-child(4){height:24px}
+.meter i.on{background:var(--green);box-shadow:0 0 8px rgba(0,255,136,.6)}
+.tier h3{font:25px "Archivo Black",sans-serif;margin-top:22px}
+.tier .say{color:var(--dim);font-size:13px;margin-top:4px}
+.maxp{margin-top:auto;padding-top:26px}
+.lbl{font:600 9.5px "JetBrains Mono",monospace;letter-spacing:.24em;color:var(--dim)}
+.big{display:flex;align-items:baseline;gap:12px;margin-top:8px}
+.big b{font:62px/1 "Archivo Black",sans-serif;letter-spacing:-.02em;background:linear-gradient(180deg,var(--text),var(--green) 140%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 22px rgba(0,255,136,.22))}
+.big span{font:700 16px "JetBrains Mono",monospace;color:var(--green)}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px;padding-top:16px;border-top:1px solid var(--hair)}
+.facts div b{display:block;font:600 13.5px Inter,sans-serif;margin-top:3px}
+.tier .go1{margin-top:18px;display:flex;justify-content:space-between;align-items:center;font:600 12.5px Inter,sans-serif;color:var(--cyan)}
+.tier .go1 svg{width:18px;height:18px;transition:transform .25s}
+.tier:hover .go1 svg{transform:translateX(4px)}
+.t0 .emblem .ic{stroke:var(--cyan)}
+.t0 .meter i.on{background:var(--cyan);box-shadow:0 0 8px rgba(0,207,255,.6)}
+.t0 .big b{background:linear-gradient(180deg,var(--text),var(--cyan) 140%);-webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 0 22px rgba(0,207,255,.2))}
+.t0 .big span{color:var(--cyan)}
+.t1 .emblem .ic,.t2 .emblem .ic{stroke:var(--green)}
+/* OG Gambler burns red */
+.t3{background:linear-gradient(180deg,rgba(13,21,32,.86),rgba(6,9,15,.92)) padding-box,linear-gradient(150deg,rgba(255,68,68,.8),rgba(30,48,80,.6) 45%,rgba(255,68,68,.5)) border-box;
+  box-shadow:0 30px 80px rgba(6,9,15,.55),0 0 60px rgba(255,68,68,.12)}
+.t3::before{background:radial-gradient(420px 240px at 50% 0%,rgba(255,68,68,.16),transparent 70%);opacity:.7}
+.t3:hover{box-shadow:0 40px 90px rgba(6,9,15,.7),0 0 0 1px rgba(255,68,68,.6),0 0 70px rgba(255,68,68,.25)}
+.t3 h3{color:var(--red)}
+.t3 .emblem .ic{stroke:var(--red)}
+.t3 .emblem .hx{stroke:var(--red)}
+.t3 .meter i.on{background:var(--red);box-shadow:0 0 8px rgba(255,68,68,.7)}
+.t3 .big b{background:none;color:var(--red);filter:none;text-shadow:0 0 18px rgba(255,68,68,.85),0 0 46px rgba(255,68,68,.45);animation:blaze 2.4s ease-in-out infinite}
+.t3 .big span,.t3 .go1{color:var(--red)}
+@keyframes blaze{50%{text-shadow:0 0 8px rgba(255,68,68,.55),0 0 20px rgba(255,68,68,.2)}}
+.note{margin-top:20px;color:var(--dim);font:500 11.5px "JetBrains Mono",monospace;display:flex;gap:18px;align-items:center}
+.note b{color:var(--muted);font-weight:600}
+
+/* step 2: one amount */
+.amount{max-width:820px;margin:40px auto 0;padding:38px 46px 40px;text-align:center}
+.picked{display:inline-flex;align-items:center;gap:12px;padding:7px 16px 7px 8px;border-radius:40px;border:1px solid var(--hair);background:rgba(6,9,15,.6)}
+.picked svg{width:30px;height:30px}
+.picked b{font:600 14px Inter,sans-serif}
+.picked button{font:600 12px Inter,sans-serif;color:var(--cyan);margin-left:6px}
+.inbox{display:flex;align-items:center;justify-content:center;gap:16px;margin:30px auto 0;padding-bottom:14px;max-width:560px;position:relative}
+.inbox::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),var(--green),transparent)}
+.inbox input{font:84px/1.05 "Archivo Black",sans-serif;background:transparent;border:0;outline:0;text-align:center;field-sizing:content;min-width:1ch;max-width:440px;caret-color:var(--green);letter-spacing:-.02em}
+.token{display:inline-flex;align-items:center;gap:9px;flex:none;font:700 18px Inter,sans-serif}
+.token i{font-style:normal;width:34px;height:34px;border-radius:50%;background:var(--blue);display:grid;place-items:center;font:800 18px Inter,sans-serif;box-shadow:0 0 20px rgba(59,130,246,.5)}
+.quick{display:flex;justify-content:center;gap:10px;margin-top:22px}
+.quick button{padding:8px 16px;border-radius:10px;border:1px solid var(--hair);font:600 12.5px "JetBrains Mono",monospace;color:var(--muted);transition:all .2s}
+.quick button:hover,.quick button.on{color:var(--green);border-color:rgba(0,255,136,.5);background:rgba(0,255,136,.06)}
+.preview{margin:38px 0 34px}
+.preview b{display:block;font:68px/1.05 "Archivo Black",sans-serif;color:var(--green);margin-top:10px;text-shadow:0 0 40px rgba(0,255,136,.3);letter-spacing:-.02em}
+.preview.red b{color:var(--red);text-shadow:0 0 40px rgba(255,68,68,.4)}
+.cta{width:100%;height:68px;border-radius:16px;background:linear-gradient(180deg,var(--green),rgba(0,255,136,.82));color:var(--deep);
+  font:800 17px Inter,sans-serif;letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:12px;
+  box-shadow:0 0 0 1px rgba(0,255,136,.6),0 16px 40px rgba(0,255,136,.25),inset 0 1px 0 rgba(230,237,247,.5);transition:transform .15s,box-shadow .2s}
+.cta:hover{box-shadow:0 0 0 1px var(--green),0 18px 60px rgba(0,255,136,.42),inset 0 1px 0 rgba(230,237,247,.5);transform:translateY(-1px)}
+.cta[disabled]{background:var(--line);color:var(--dim);box-shadow:none;cursor:default;transform:none}
+.cta.red{background:linear-gradient(180deg,var(--red),rgba(255,68,68,.82));color:var(--text);box-shadow:0 0 0 1px rgba(255,68,68,.7),0 16px 40px rgba(255,68,68,.3)}
+.cta svg{width:20px;height:20px}
+
+/* step 3: the scan, then three trees side by side */
+.scan{display:flex;flex-direction:column;align-items:center;padding:26px 0 10px}
+.scan svg{width:420px;max-width:100%;height:auto}
+.sweep{transform-origin:220px 220px;animation:spin 1.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scan .p circle.ring{fill:var(--deep);stroke:var(--line);stroke-width:1}
+.scan .p.hit circle.ring{stroke:var(--green);filter:drop-shadow(0 0 7px rgba(0,255,136,.9))}
+.counts{display:flex;gap:56px;margin-top:22px}
+.counts div{text-align:center}
+.counts b{display:block;font:34px/1.1 "Archivo Black",sans-serif;margin-top:4px}
+.counts .k3 b{color:var(--green)}
+.ticker{margin-top:16px;height:18px;font:500 11.5px "JetBrains Mono",monospace;color:var(--dim)}
+.ticker b{color:var(--green);font-weight:600}
+.strats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.strat{position:relative;padding:22px 22px 24px;display:flex;flex-direction:column;opacity:0;animation:appear .6s cubic-bezier(.2,.7,.2,1) forwards;animation-delay:var(--d)}
+@keyframes appear{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.strat.best{background:linear-gradient(180deg,rgba(13,21,32,.86),rgba(6,9,15,.92)) padding-box,linear-gradient(160deg,rgba(0,255,136,.85),rgba(30,48,80,.6) 40%,rgba(0,207,255,.5)) border-box;
+  box-shadow:0 30px 80px rgba(6,9,15,.55),0 0 70px rgba(0,255,136,.12)}
+.strat .hd{display:flex;align-items:center;gap:14px}
+.rank{width:44px;height:44px;flex:none}
+.rank path{fill:var(--deep);stroke:var(--line);stroke-width:1.2}
+.rank text{font:16px "Archivo Black",sans-serif;fill:var(--muted);text-anchor:middle;dominant-baseline:central}
+.best .rank path{stroke:var(--green);fill:rgba(0,255,136,.12)}
+.best .rank text{fill:var(--green)}
+.strat h3{font:21px/1.15 "Archivo Black",sans-serif}
+.strat .ven{font:500 11.5px "JetBrains Mono",monospace;color:var(--dim);margin-top:4px}
+.strat .hd .chip{margin-left:auto}
+.tree{display:block;width:100%;height:auto;margin:6px 0 0}
+.result{margin-top:4px;padding-top:18px;border-top:1px solid var(--hair);display:grid;grid-template-columns:1fr auto;gap:8px 16px;align-items:end}
+.result .v{font:40px/1.05 "Archivo Black",sans-serif;color:var(--green);letter-spacing:-.015em;text-shadow:0 0 30px rgba(0,255,136,.25);margin-top:6px}
+.result .x{font:700 13px "JetBrains Mono",monospace;color:var(--green);text-align:right}
+.result .x small{display:block;font:600 9.5px "JetBrains Mono",monospace;letter-spacing:.2em;color:var(--dim);margin-bottom:4px}
+.mini{display:flex;gap:22px;margin-top:16px}
+.mini div b{display:block;font:600 13px Inter,sans-serif;margin-top:3px}
+.mini .warn b{color:var(--red)}
+.sel{margin-top:20px;height:50px;border-radius:13px;border:1px solid rgba(0,255,136,.45);color:var(--green);font:800 13px Inter,sans-serif;letter-spacing:.1em;
+  display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s}
+.sel:hover{background:rgba(0,255,136,.08);box-shadow:0 0 30px rgba(0,255,136,.15)}
+.best .sel{background:linear-gradient(180deg,var(--green),rgba(0,255,136,.82));color:var(--deep);border-color:transparent;box-shadow:0 12px 34px rgba(0,255,136,.22)}
+.og .result .v,.og .result .x{color:var(--red);text-shadow:0 0 30px rgba(255,68,68,.35)}
+.og .sel{border-color:rgba(255,68,68,.5);color:var(--red)}
+.og .sel:hover{background:rgba(255,68,68,.08);box-shadow:0 0 30px rgba(255,68,68,.15)}
+.og.best{background:linear-gradient(180deg,rgba(13,21,32,.86),rgba(6,9,15,.92)) padding-box,linear-gradient(160deg,rgba(255,68,68,.85),rgba(30,48,80,.6) 40%,rgba(255,68,68,.45)) border-box;
+  box-shadow:0 30px 80px rgba(6,9,15,.55),0 0 70px rgba(255,68,68,.14)}
+.og.best .sel{background:linear-gradient(180deg,var(--red),rgba(255,68,68,.82));color:var(--text);box-shadow:0 12px 34px rgba(255,68,68,.25)}
+.og.best .rank path{stroke:var(--red);fill:rgba(255,68,68,.12)}
+.og.best .rank text{fill:var(--red)}
+.og.best .chip.g{color:var(--red);border-color:rgba(255,68,68,.42);background:rgba(255,68,68,.06)}
+
+/* the trees: hexagon nodes, 1.4px links, light running through them */
+.tree .grid{fill:none;stroke:rgba(30,48,80,.45);stroke-width:.6}
+.tree .lk{fill:none;stroke-linecap:round}
+.tree .lk.base{stroke:rgba(30,48,80,.9);stroke-width:1}
+.tree .lk.lit{stroke-width:1.5;stroke-dasharray:1 1;stroke-dashoffset:1;animation:draw .55s ease-out forwards;animation-delay:var(--d)}
+.tree .lk.glow{stroke-width:5;opacity:0;animation:fadein .5s forwards;animation-delay:calc(var(--d) + .3s)}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes fadein{to{opacity:.32}}
+.tree .nd{opacity:0;transform-box:fill-box;transform-origin:center;animation:pop .5s cubic-bezier(.2,.8,.2,1.2) forwards;animation-delay:var(--d)}
+@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.tree .hx{fill:var(--panel);stroke-width:1.3}
+.tree .hi{fill:none;stroke:rgba(0,207,255,.22);stroke-width:.7}
+.tree .halo{opacity:.9}
+.tree .pl{fill:rgba(10,14,23,.94);stroke:rgba(30,48,80,.9);stroke-width:.8}
+.tree .la{font:600 12.5px Inter,sans-serif;fill:var(--text);text-anchor:middle}
+.tree .lb{font:500 10px "JetBrains Mono",monospace;fill:var(--dim);text-anchor:middle}
+.tree .lb .e{fill:var(--green)}.tree .lb .p{fill:var(--red)}
+.tree.static .lk.lit,.tree.static .nd,.tree.static .lk.glow{animation-duration:0s;animation-delay:0s}
+.tree .ini{font:700 15px Inter,sans-serif;fill:var(--muted);text-anchor:middle;dominant-baseline:central}
+.tree .cap{font:600 9.5px "JetBrains Mono",monospace;letter-spacing:.24em;fill:var(--dim);text-anchor:middle}
+.tree .apx{font:19px "Archivo Black",sans-serif;fill:var(--deep);text-anchor:middle;dominant-baseline:central}
+.tree .lev{font:15px "Archivo Black",sans-serif;fill:var(--cyan);text-anchor:middle;dominant-baseline:central}
+.tree .usd{font:800 22px Inter,sans-serif;fill:var(--text);text-anchor:middle;dominant-baseline:central}
+.tree .btn{cursor:pointer}
+.tree .btn circle{fill:var(--deep);stroke:rgba(0,207,255,.5);stroke-width:1;transition:all .15s}
+.tree .btn path{stroke:var(--cyan);stroke-width:1.6;stroke-linecap:round}
+.tree .btn:hover circle{fill:rgba(0,207,255,.16);stroke:var(--cyan)}
+.tree .btn.off{opacity:.25;pointer-events:none}
+.tree .bump{transform-box:fill-box;transform-origin:center;animation:bump .45s ease-out}
+@keyframes bump{40%{transform:scale(1.12)}}
+
+/* step 4: the plan */
+.plan{padding:26px 28px 22px}
+.plan .tree{margin-top:10px}
+.bar{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,.8fr) minmax(0,1.2fr) 300px;gap:18px;margin-top:20px}
+.bar>div{padding:20px 22px}
+.bar .lbl{display:flex;justify-content:space-between}
+.bar .val{font:30px/1.1 "Archivo Black",sans-serif;margin-top:8px}
+.bar .val.g{color:var(--green);font-size:44px;text-shadow:0 0 36px rgba(0,255,136,.3)}
+.bar .val.r{color:var(--red)}
+.bar .sub{font:600 12px "JetBrains Mono",monospace;color:var(--dim);margin-top:4px}
+.bar .sub.g{color:var(--green)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin-top:14px;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:2px;border-radius:2px;background:linear-gradient(90deg,var(--cyan) var(--f),var(--line) var(--f))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;margin-top:-9px;transform:rotate(45deg);border-radius:4px;background:var(--deep);border:1.5px solid var(--cyan);box-shadow:0 0 14px rgba(0,207,255,.6)}
+input[type=range]::-moz-range-track{height:2px;background:var(--line)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;background:var(--deep);border:1.5px solid var(--cyan)}
+.ends{display:flex;justify-content:space-between;font:600 10.5px "JetBrains Mono",monospace;color:var(--dim)}
+.go4{border:0!important;background:none!important;box-shadow:none!important;padding:0!important;display:flex;flex-direction:column;gap:10px}
+.go4 .cta{flex:1;height:auto;min-height:84px;font-size:22px}
+.go4 .chips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.running{display:none}
+.started .running{display:flex}
+.started .startbtn{display:none}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--deep);animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+.back{display:flex;gap:22px;margin-top:18px}
+.link{font:600 12.5px Inter,sans-serif;color:var(--cyan)}
+.link:hover{text-decoration:underline}
+
+/* the Platforms tab */
+.pstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:22px}
+.pstats>div{padding:18px 22px}
+.pstats b{display:block;font:34px/1.1 "Archivo Black",sans-serif;margin-top:6px}
+.pstats .g b{color:var(--green)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.filters button{padding:8px 15px;border-radius:20px;border:1px solid var(--hair);font:600 12px Inter,sans-serif;color:var(--dim);transition:all .2s}
+.filters button:hover{color:var(--text)}
+.filters button.on{color:var(--green);border-color:rgba(0,255,136,.5);background:rgba(0,255,136,.07)}
+.filters button i{font-style:normal;font:600 10.5px "JetBrains Mono",monospace;color:var(--dim);margin-left:6px}
+.plats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.plat{padding:22px;display:flex;flex-direction:column;gap:16px;transition:transform .25s,box-shadow .25s}
+.plat:hover{transform:translateY(-3px);box-shadow:0 34px 80px rgba(6,9,15,.7),0 0 0 1px rgba(0,207,255,.35)}
+.plat .hd{display:flex;align-items:center;gap:14px}
+.plat .hd svg{width:52px;height:52px;flex:none}
+.plat h3{font:19px/1.15 "Archivo Black",sans-serif}
+.plat .cat{font:600 10.5px "JetBrains Mono",monospace;letter-spacing:.14em;color:var(--cyan);margin-top:4px;text-transform:uppercase}
+.plat .tvl{display:flex;justify-content:space-between;align-items:flex-end}
+.plat .tvl b{font:30px/1 "Archivo Black",sans-serif}
+.plat .three{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-top:14px;border-top:1px solid var(--hair)}
+.plat .three b{display:block;font:600 13px Inter,sans-serif;margin-top:3px}
+.plat .three .ok b{color:var(--green)}
+.plat .uses{display:flex;gap:6px;flex-wrap:wrap}
+.plat .site{font:500 11px "JetBrains Mono",monospace;color:var(--dim)}
+.plat .site:hover{color:var(--cyan)}
+.pfoot{margin-top:18px;color:var(--dim);font:500 11.5px "JetBrains Mono",monospace}
+
+/* the mark, large (?logo=1) */
+.sheet{display:grid;grid-template-columns:auto 1fr;gap:56px;align-items:center;padding:46px 54px;margin-top:30px}
+.sheet .bigmark{width:280px;height:280px;filter:drop-shadow(0 0 50px rgba(0,255,136,.3))}
+.sheet .wm{font:76px/1 "Archivo Black",sans-serif;letter-spacing:-.01em}
+.sheet .wm em{font-style:normal;color:var(--green)}
+.sheet .sizes{display:flex;gap:30px;align-items:flex-end;margin-top:34px}
+.sheet .sizes div{text-align:center;font:500 11px "JetBrains Mono",monospace;color:var(--dim)}
+
+/* frozen pictures: every animation at its end */
+.shot *,.shot *::before,.shot *::after{animation-duration:0s!important;animation-delay:0s!important;transition:none!important}
+.shot .tree .lk.glow{opacity:.32}
+.shot .t3 .big b{animation:none!important}
+.shot .sweep{display:none}
+
+@media (max-width:1200px){
+  .tiers,.plats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .strats{grid-template-columns:minmax(0,1fr);max-width:560px;margin:0 auto}
+  .bar{grid-template-columns:1fr 1fr}
+  .trust{display:none}
+}
+@media (max-width:680px){
+  .tiers,.plats,.pstats,.bar{grid-template-columns:minmax(0,1fr)}
+  .rail button span{display:none}
+  h1{font-size:32px}
+  .head{flex-direction:column;align-items:flex-start}
+  .head p{text-align:left}
+  .inbox input{font-size:52px}
+  .preview b{font-size:46px}
+  .amount{padding:28px 20px}
+  .top{gap:14px}
+  .brand .w span{display:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="gEdge" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+  </defs>
+</svg>
+<div class="wrap">
+  <header class="top">
+    <div class="brand" id="home">
+      <svg viewBox="0 0 64 64" aria-hidden="true" id="mark">
+        <defs>
+          <linearGradient id="mk" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+          <radialGradient id="mkc"><stop offset="0" stop-color="#00ff88" stop-opacity=".55"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></radialGradient>
+        </defs>
+        <path d="M32 2.5l26 15v30L32 62.5l-26-15v-30z" fill="#06090f" stroke="url(#mk)" stroke-width="2"/>
+        <path d="M32 9l20.2 11.7v23.3L32 55.7 11.8 44V20.7z" fill="none" stroke="#00cfff" stroke-opacity=".28" stroke-width=".8"/>
+        <path d="M32 47L20 34M32 47L44 34M20 34L32 18M44 34L32 18M32 47V18" fill="none" stroke="url(#mk)" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="32" cy="18" r="11" fill="url(#mkc)"/>
+        <circle cx="32" cy="47" r="3.2" fill="#00cfff"/>
+        <circle cx="20" cy="34" r="3" fill="#06090f" stroke="#00cfff" stroke-width="1.6"/>
+        <circle cx="44" cy="34" r="3" fill="#06090f" stroke="#00ff88" stroke-width="1.6"/>
+        <circle cx="32" cy="18" r="4.8" fill="#00ff88"/>
+      </svg>
+      <div class="w"><b>CAPITAL <em>MAXIMIZER</em></b><span>BY CYMETICA</span></div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <button data-tab="max">Maximize</button>
+      <button data-tab="platforms">Platforms <i id="pcount"></i></button>
+    </nav>
+    <div class="trust"><span class="chip g">NO KYC</span><span class="chip c">AUDITED DEFI ONLY</span></div>
+  </header>
+
+  <div id="maxtab">
+    <nav class="rail" id="rail"></nav>
+
+    <section class="view" id="v1">
+      <div class="head"><div><div class="eyebrow">STEP 1</div><h1>Pick your <em>risk</em></h1></div></div>
+      <div class="tiers" id="tiers"></div>
+      <div class="note" id="note1"></div>
+    </section>
+
+    <section class="view" id="v2">
+      <div class="frame amount">
+        <div id="picked"></div>
+        <label class="inbox"><input id="amt" inputmode="decimal" autocomplete="off" value="5,000"><span class="token"><i>$</i>USDC</span></label>
+        <div class="quick" id="quick"></div>
+        <div class="preview" id="preview"></div>
+        <button class="cta" id="find"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z"/><circle cx="12" cy="12" r="2.6"/></svg>FIND TOP 3 STRATEGIES</button>
+      </div>
+    </section>
+
+    <section class="view" id="v3">
+      <div class="head"><div><div class="eyebrow">STEP 3</div><h1 id="h3">Finding your <em>top 3</em></h1></div><p id="p3"></p></div>
+      <div class="scan" id="scan"></div>
+      <div class="strats" id="strats"></div>
+    </section>
+
+    <section class="view" id="v4">
+      <div class="head"><div><div class="eyebrow">STEP 4 · YOUR PLAN</div><h1 id="h4"></h1></div><p id="p4"></p></div>
+      <div class="frame plan" id="plan"></div>
+      <div class="bar" id="bar"></div>
+      <div class="back"><button class="link" data-step="3">← Compare the three</button><button class="link" data-step="2">← Change amount</button><button class="link" data-step="1">← Change risk</button></div>
+    </section>
+  </div>
+
+  <section class="view" id="vp">
+    <div class="head"><div><div class="eyebrow">VERIFIED · AUDITED · NO KYC</div><h1>Supported <em>platforms</em></h1></div><p id="pp"></p></div>
+    <div class="pstats" id="pstats"></div>
+    <div class="filters" id="filters"></div>
+    <div class="plats" id="plats"></div>
+    <div class="pfoot" id="pfoot"></div>
+  </section>
+
+  <section class="view" id="vlogo"><div class="frame sheet" id="sheet"></div></section>
+</div>
+<script src="data.js"></script>
+<script src="cm-core.js"></script>
+<script src="cm-ui.js"></script>
+</body>
+</html>

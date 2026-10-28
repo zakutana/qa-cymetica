@@ -1,25 +1,28 @@
-"""Read today's DeFi rates for the Yield Booster demo from DefiLlama and write data.js beside the page.
+"""Read today's DeFi rates for the Capital Maximizer demo from DefiLlama and write data.js beside the page.
 
-Only the pools a route can use, each by its DefiLlama pool id, with the time they were read, and how many pools of the
-allowlisted protocols the finder looked through. GET only, no key. Refresh: python outbox/yield-booster/rates.py
+Only the pools a route can use, each by its DefiLlama pool id, with the time they were read; how many pools of each
+allowlisted protocol the finder looked through; and each protocol's own DefiLlama record (category, TVL, audits,
+chains) for the Platforms tab. GET only, no key. Refresh: python outbox/capital-maximizer/rates.py
 
-The allowlist is ours for the demo (blue-chip, permissionless, no KYC to use); Cymetica makes its own selection.
+The allowlist is ours for the demo (blue-chip, permissionless, no KYC to use, audited per DefiLlama); Cymetica makes
+its own selection. Spark Savings was dropped on 2026-10-28: DefiLlama lists no audit for it.
 """
 from __future__ import annotations
 
 import datetime as dt
 import json
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
 SRC = "https://yields.llama.fi"
+LLAMA = "https://api.llama.fi"
 CHAINS = ("Ethereum", "Arbitrum", "Base")
 # DefiLlama project -> name shown, icon slug on icons.llamao.fi
 PROTOCOLS = {
     "aave-v3": ("Aave", "aave-v3"),
     "compound-v3": ("Compound", "compound-v3"),
     "morpho-blue": ("Morpho", "morpho-blue"),
-    "spark-savings": ("Spark", "spark"),
     "sky-lending": ("Sky", "sky"),
     "lido": ("Lido", "lido"),
     "ether.fi-stake": ("ether.fi", "ether.fi"),
@@ -35,7 +38,6 @@ VAULTS = [
     ("aave-v3", "Base", "USDC", "Aave USDC"),
     ("aave-v3", "Arbitrum", "USDC", "Aave USDC"),
     ("compound-v3", "Ethereum", "USDC", "Compound USDC"),
-    ("spark-savings", "Ethereum", "USDC", "Spark Savings"),
     ("sky-lending", "Ethereum", "SUSDS", "Sky sUSDS"),
     ("morpho-blue", "Ethereum", "STEAKUSDC", "Steakhouse USDC"),
     ("morpho-blue", "Base", "GTUSDCP", "Gauntlet USDC Prime"),
@@ -69,8 +71,8 @@ LOANS = {"USDC", "PYUSD"}          # a Morpho market lends one coin; USDC, or PY
 MIN_MARKET = 20_000_000            # supplied, USD: a cheap rate on a market of $300k is not a route
 
 
-def get(path: str):
-    req = urllib.request.Request(SRC + path, headers={"User-Agent": "qa-cymetica yield-booster demo"})
+def get(path: str, base: str = SRC):
+    req = urllib.request.Request(base + path, headers={"User-Agent": "qa-cymetica capital-maximizer demo"})
     with urllib.request.urlopen(req, timeout=120) as r:
         return json.load(r)
 
@@ -135,16 +137,26 @@ def main() -> None:
     looked = [p for p in mine if (p["tvlUsd"] or 0) >= 1_000_000]
     ticker = [[p["project"], p["symbol"], p["chain"], round(p.get("apy") or 0, 2)]
               for p in sorted(looked, key=lambda p: -(p["tvlUsd"] or 0))[:48]]
+    # each protocol's own DefiLlama record: what it is, how much it holds, whether it is audited, where it runs
+    facts = {p["slug"]: p for p in get(LLAMA + "/protocols", base="")}
+    protocols = {}
+    for k, (n, i) in PROTOCOLS.items():
+        f = facts[k]
+        protocols[k] = {"name": n, "icon": i, "llama_name": f["name"], "category": f.get("category"),
+                        "tvl": round(f.get("tvl") or 0), "audited": str(f.get("audits") or "0") != "0",
+                        "audit_links": len(f.get("audit_links") or []), "chains": len(f.get("chains") or []),
+                        "site": urllib.parse.urlsplit(f.get("url") or "").netloc,
+                        "pools_read": sum(1 for p in looked if p["project"] == k)}
     data = {
         "fetched_at": now,
-        "source": f"{SRC}/pools + {SRC}/lendBorrow",
-        "protocols": {k: {"name": n, "icon": i} for k, (n, i) in PROTOCOLS.items()},
+        "source": f"{SRC}/pools + {SRC}/lendBorrow + {LLAMA}/protocols",
+        "protocols": protocols,
         "scanned": {"pools": len(looked), "protocols": len({p["project"] for p in looked}), "chains": len(CHAINS)},
         "pools": out,
         "ticker": ticker,
     }
     here = Path(__file__).resolve().parent
-    (here / "data.js").write_text("// written by rates.py -- DefiLlama, read " + now + "\nwindow.YB_DATA = "
+    (here / "data.js").write_text("// written by rates.py -- DefiLlama, read " + now + "\nwindow.CM_DATA = "
                                   + json.dumps(data, indent=1) + ";\n", encoding="utf-8")
     print(f"{len(out)} pools, {len(looked)} looked through, {now}")
 

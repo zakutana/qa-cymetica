@@ -1,60 +1,144 @@
-// written by rates.py -- DefiLlama, read 2026-10-28T08:44Z
-window.YB_DATA = {
- "fetched_at": "2026-10-28T08:44Z",
- "source": "https://yields.llama.fi/pools + https://yields.llama.fi/lendBorrow",
+// written by rates.py -- DefiLlama, read 2026-10-28T15:45Z
+window.CM_DATA = {
+ "fetched_at": "2026-10-28T15:45Z",
+ "source": "https://yields.llama.fi/pools + https://yields.llama.fi/lendBorrow + https://api.llama.fi/protocols",
  "protocols": {
   "aave-v3": {
    "name": "Aave",
-   "icon": "aave-v3"
+   "icon": "aave-v3",
+   "llama_name": "Aave V3",
+   "category": "Lending",
+   "tvl": 16360031001,
+   "audited": true,
+   "audit_links": 1,
+   "chains": 21,
+   "site": "aave.com",
+   "pools_read": 61
   },
   "compound-v3": {
    "name": "Compound",
-   "icon": "compound-v3"
+   "icon": "compound-v3",
+   "llama_name": "Compound V3",
+   "category": "Lending",
+   "tvl": 1346479075,
+   "audited": true,
+   "audit_links": 1,
+   "chains": 10,
+   "site": "www.compound.xyz",
+   "pools_read": 38
   },
   "morpho-blue": {
    "name": "Morpho",
-   "icon": "morpho-blue"
-  },
-  "spark-savings": {
-   "name": "Spark",
-   "icon": "spark"
+   "icon": "morpho-blue",
+   "llama_name": "Morpho Blue",
+   "category": "Lending",
+   "tvl": 11303896307,
+   "audited": true,
+   "audit_links": 1,
+   "chains": 45,
+   "site": "app.morpho.org",
+   "pools_read": 293
   },
   "sky-lending": {
    "name": "Sky",
-   "icon": "sky"
+   "icon": "sky",
+   "llama_name": "Sky Lending",
+   "category": "CDP",
+   "tvl": 5203655385,
+   "audited": true,
+   "audit_links": 1,
+   "chains": 1,
+   "site": "app.sky.money",
+   "pools_read": 13
   },
   "lido": {
    "name": "Lido",
-   "icon": "lido"
+   "icon": "lido",
+   "llama_name": "Lido",
+   "category": "Liquid Staking",
+   "tvl": 22677921402,
+   "audited": true,
+   "audit_links": 1,
+   "chains": 5,
+   "site": "lido.fi",
+   "pools_read": 1
   },
   "ether.fi-stake": {
    "name": "ether.fi",
-   "icon": "ether.fi"
+   "icon": "ether.fi",
+   "llama_name": "ether.fi Stake",
+   "category": "Liquid Staking",
+   "tvl": 4473279166,
+   "audited": true,
+   "audit_links": 1,
+   "chains": 6,
+   "site": "www.ether.fi",
+   "pools_read": 3
   },
   "rocket-pool": {
    "name": "Rocket Pool",
-   "icon": "rocket-pool"
+   "icon": "rocket-pool",
+   "llama_name": "Rocket Pool",
+   "category": "Liquid Staking",
+   "tvl": 1138104387,
+   "audited": true,
+   "audit_links": 4,
+   "chains": 1,
+   "site": "rocketpool.net",
+   "pools_read": 1
   },
   "ethena-usde": {
    "name": "Ethena",
-   "icon": "ethena"
+   "icon": "ethena",
+   "llama_name": "Ethena USDe",
+   "category": "Basis Trading",
+   "tvl": 4539626563,
+   "audited": true,
+   "audit_links": 1,
+   "chains": 1,
+   "site": "www.app.ethena.fi",
+   "pools_read": 1
   },
   "uniswap-v3": {
    "name": "Uniswap",
-   "icon": "uniswap"
+   "icon": "uniswap",
+   "llama_name": "Uniswap V3",
+   "category": "Dexs",
+   "tvl": 1597989890,
+   "audited": true,
+   "audit_links": 2,
+   "chains": 44,
+   "site": "app.uniswap.org",
+   "pools_read": 160
   },
   "curve-dex": {
    "name": "Curve",
-   "icon": "curve-dex"
+   "icon": "curve-dex",
+   "llama_name": "Curve DEX",
+   "category": "Dexs",
+   "tvl": 1163553540,
+   "audited": true,
+   "audit_links": 1,
+   "chains": 32,
+   "site": "curve.finance",
+   "pools_read": 104
   },
   "gmx-evm": {
    "name": "GMX",
-   "icon": "gmx"
+   "icon": "gmx",
+   "llama_name": "GMX EVM",
+   "category": "Derivatives",
+   "tvl": 209036662,
+   "audited": true,
+   "audit_links": 1,
+   "chains": 4,
+   "site": "gmx.io",
+   "pools_read": 11
   }
  },
  "scanned": {
-  "pools": 691,
-  "protocols": 12,
+  "pools": 686,
+  "protocols": 11,
   "chains": 3
  },
  "pools": [
@@ -64,11 +148,11 @@ window.YB_DATA = {
    "chain": "Ethereum",
    "symbol": "USDC",
    "role": "vault",
-   "apy": 4.3681,
-   "apy_now": 4.4365,
+   "apy": 4.331,
+   "apy_now": 4.331,
    "apy_7d": null,
-   "apy_30d": 4.36814,
-   "tvl": 131627639,
+   "apy_30d": 4.37441,
+   "tvl": 133069907,
    "name": "Aave USDC"
   },
   {
@@ -77,11 +161,11 @@ window.YB_DATA = {
    "chain": "Base",
    "symbol": "USDC",
    "role": "vault",
-   "apy": 4.9715,
-   "apy_now": 4.9715,
+   "apy": 4.479,
+   "apy_now": 4.479,
    "apy_7d": null,
-   "apy_30d": 4.98974,
-   "tvl": 16985644,
+   "apy_30d": 5.00058,
+   "tvl": 17660821,
    "name": "Aave USDC"
   },
   {
@@ -90,11 +174,11 @@ window.YB_DATA = {
    "chain": "Arbitrum",
    "symbol": "USDC",
    "role": "vault",
-   "apy": 2.3992,
-   "apy_now": 2.3992,
+   "apy": 2.4763,
+   "apy_now": 2.4763,
    "apy_7d": null,
-   "apy_30d": 2.78967,
-   "tvl": 51755037,
+   "apy_30d": 2.78441,
+   "tvl": 48896160,
    "name": "Aave USDC"
   },
   {
@@ -103,25 +187,12 @@ window.YB_DATA = {
    "chain": "Ethereum",
    "symbol": "USDC",
    "role": "vault",
-   "apy": 4.5229,
-   "apy_now": 4.5229,
+   "apy": 4.605,
+   "apy_now": 4.605,
    "apy_7d": null,
-   "apy_30d": 4.74094,
-   "tvl": 36073282,
+   "apy_30d": 4.74811,
+   "tvl": 36006696,
    "name": "Compound USDC"
-  },
-  {
-   "id": "c5c74dd1-995c-4445-9d84-3e710bad7d52",
-   "project": "spark-savings",
-   "chain": "Ethereum",
-   "symbol": "USDC",
-   "role": "vault",
-   "apy": 3.7379,
-   "apy_now": 3.8,
-   "apy_7d": null,
-   "apy_30d": 3.73788,
-   "tvl": 300858042,
-   "name": "Spark Savings"
   },
   {
    "id": "d8c4eff5-c8a9-46fc-a888-057c4c668e72",
@@ -129,11 +200,11 @@ window.YB_DATA = {
    "chain": "Ethereum",
    "symbol": "SUSDS",
    "role": "vault",
-   "apy": 3.7378,
+   "apy": 3.7397,
    "apy_now": 3.8,
    "apy_7d": null,
-   "apy_30d": 3.73778,
-   "tvl": 4669209197,
+   "apy_30d": 3.73972,
+   "tvl": 4674055955,
    "name": "Sky sUSDS"
   },
   {
@@ -142,11 +213,11 @@ window.YB_DATA = {
    "chain": "Ethereum",
    "symbol": "STEAKUSDC",
    "role": "vault",
-   "apy": 4.5215,
-   "apy_now": 4.8844,
+   "apy": 4.5234,
+   "apy_now": 4.6859,
    "apy_7d": null,
-   "apy_30d": 4.52148,
-   "tvl": 108786144,
+   "apy_30d": 4.52339,
+   "tvl": 106637838,
    "name": "Steakhouse USDC"
   },
   {
@@ -155,11 +226,11 @@ window.YB_DATA = {
    "chain": "Base",
    "symbol": "GTUSDCP",
    "role": "vault",
-   "apy": 4.6048,
-   "apy_now": 5.0731,
+   "apy": 4.6118,
+   "apy_now": 5.1681,
    "apy_7d": null,
-   "apy_30d": 4.60484,
-   "tvl": 405220899,
+   "apy_30d": 4.61182,
+   "tvl": 405121187,
    "name": "Gauntlet USDC Prime"
   },
   {
@@ -168,11 +239,11 @@ window.YB_DATA = {
    "chain": "Base",
    "symbol": "SPARKUSDC",
    "role": "vault",
-   "apy": 4.1337,
-   "apy_now": 4.5401,
+   "apy": 4.1399,
+   "apy_now": 4.6328,
    "apy_7d": null,
-   "apy_30d": 4.13372,
-   "tvl": 526921167,
+   "apy_30d": 4.13994,
+   "tvl": 554790871,
    "name": "Spark USDC"
   },
   {
@@ -181,11 +252,11 @@ window.YB_DATA = {
    "chain": "Ethereum",
    "symbol": "STETH",
    "role": "stake",
-   "apy": 2.258,
-   "apy_now": 2.2715,
+   "apy": 2.2521,
+   "apy_now": 2.2521,
    "apy_7d": null,
-   "apy_30d": 2.25796,
-   "tvl": 22780525922,
+   "apy_30d": 2.25809,
+   "tvl": 22596696193,
    "token": "wstETH",
    "asset": "ETH"
   },
@@ -195,11 +266,11 @@ window.YB_DATA = {
    "chain": "Ethereum",
    "symbol": "WEETH",
    "role": "stake",
-   "apy": 2.2806,
-   "apy_now": 2.3168,
-   "apy_7d": 2.31683,
-   "apy_30d": 2.28059,
-   "tvl": 5212516193,
+   "apy": 2.2809,
+   "apy_now": 2.3756,
+   "apy_7d": 2.37559,
+   "apy_30d": 2.28095,
+   "tvl": 5162709705,
    "token": "weETH",
    "asset": "ETH"
   },
@@ -212,8 +283,8 @@ window.YB_DATA = {
    "apy": 1.8283,
    "apy_now": 1.8283,
    "apy_7d": null,
-   "apy_30d": 2.05457,
-   "tvl": 1149161264,
+   "apy_30d": 2.05142,
+   "tvl": 1136731718,
    "token": "rETH",
    "asset": "ETH"
   },
@@ -223,11 +294,11 @@ window.YB_DATA = {
    "chain": "Ethereum",
    "symbol": "SUSDE",
    "role": "stake",
-   "apy": 4.9888,
-   "apy_now": 5.0835,
+   "apy": 4.9895,
+   "apy_now": 5.0805,
    "apy_7d": null,
-   "apy_30d": 4.98876,
-   "tvl": 1188880750,
+   "apy_30d": 4.98954,
+   "tvl": 1189576018,
    "token": "sUSDe",
    "asset": "USD"
   },
@@ -237,11 +308,11 @@ window.YB_DATA = {
    "chain": "Ethereum",
    "symbol": "USDC-WETH",
    "role": "lp",
-   "apy": 7.7618,
-   "apy_now": 9.1484,
-   "apy_7d": 14.37127,
-   "apy_30d": 7.76178,
-   "tvl": 81822058,
+   "apy": 7.7729,
+   "apy_now": 9.301,
+   "apy_7d": 17.88189,
+   "apy_30d": 7.77292,
+   "tvl": 81510444,
    "kind": "uniswap",
    "name": "ETH/USDC 0.05%"
   },
@@ -251,11 +322,11 @@ window.YB_DATA = {
    "chain": "Ethereum",
    "symbol": "USDC-WETH",
    "role": "lp",
-   "apy": 16.9826,
-   "apy_now": 16.9826,
-   "apy_7d": 18.08131,
-   "apy_30d": 18.92377,
-   "tvl": 54743942,
+   "apy": 17.0264,
+   "apy_now": 18.3102,
+   "apy_7d": 17.02642,
+   "apy_30d": 18.95384,
+   "tvl": 54451852,
    "kind": "uniswap",
    "name": "ETH/USDC 0.3%"
   },
@@ -265,11 +336,11 @@ window.YB_DATA = {
    "chain": "Arbitrum",
    "symbol": "WETH-USDC",
    "role": "lp",
-   "apy": 17.7046,
-   "apy_now": 17.7046,
-   "apy_7d": 23.93066,
-   "apy_30d": 21.7801,
-   "tvl": 38295854,
+   "apy": 17.9679,
+   "apy_now": 17.9679,
+   "apy_7d": 23.70586,
+   "apy_30d": 21.74064,
+   "tvl": 37940511,
    "kind": "uniswap",
    "name": "ETH/USDC 0.05%"
   },
@@ -279,11 +350,11 @@ window.YB_DATA = {
    "chain": "Base",
    "symbol": "WETH-USDC",
    "role": "lp",
-   "apy": 13.6637,
-   "apy_now": 37.2879,
-   "apy_7d": 13.66373,
-   "apy_30d": 54.33846,
-   "tvl": 158184365,
+   "apy": 13.6797,
+   "apy_now": 39.6759,
+   "apy_7d": 13.67971,
+   "apy_30d": 54.3274,
+   "tvl": 157144756,
    "kind": "uniswap",
    "name": "ETH/USDC 0.3%"
   },
@@ -293,11 +364,11 @@ window.YB_DATA = {
    "chain": "Arbitrum",
    "symbol": "ETH-USDC",
    "role": "lp",
-   "apy": 2.9097,
-   "apy_now": 7.5938,
+   "apy": 2.9732,
+   "apy_now": 8.6283,
    "apy_7d": null,
-   "apy_30d": 2.90972,
-   "tvl": 48877781,
+   "apy_30d": 2.9732,
+   "tvl": 48996787,
    "kind": "gmx",
    "name": "GM ETH-USDC"
   },
@@ -311,13 +382,13 @@ window.YB_DATA = {
    "apy_now": 0.0,
    "apy_7d": null,
    "apy_30d": 2e-05,
-   "tvl": 3555289037,
+   "tvl": 3528847305,
    "token": "weETH",
    "asset": "ETH",
    "stake": "WEETH",
-   "ltv": 0.775,
+   "ltv": 0.78,
    "loan": "USDC",
-   "borrow": 5.22,
+   "borrow": 5.0999,
    "loan_pool": "aa70268e-4b52-42bf-a116-608b370f9501"
   },
   {
@@ -330,13 +401,13 @@ window.YB_DATA = {
    "apy_now": 0.0033,
    "apy_7d": null,
    "apy_30d": 0.00328,
-   "tvl": 2695564347,
+   "tvl": 2681901061,
    "token": "WBTC",
    "asset": "BTC",
    "stake": null,
-   "ltv": 0.73,
+   "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 5.22,
+   "borrow": 5.0999,
    "loan_pool": "aa70268e-4b52-42bf-a116-608b370f9501"
   },
   {
@@ -349,13 +420,13 @@ window.YB_DATA = {
    "apy_now": 0.0002,
    "apy_7d": null,
    "apy_30d": 0.00042,
-   "tvl": 2222296118,
+   "tvl": 2203258761,
    "token": "wstETH",
    "asset": "ETH",
    "stake": "STETH",
-   "ltv": 0.785,
+   "ltv": 0.79,
    "loan": "USDC",
-   "borrow": 5.22,
+   "borrow": 5.0999,
    "loan_pool": "aa70268e-4b52-42bf-a116-608b370f9501"
   },
   {
@@ -368,13 +439,13 @@ window.YB_DATA = {
    "apy_now": 0.0015,
    "apy_7d": null,
    "apy_30d": 0.00112,
-   "tvl": 1402157646,
+   "tvl": 1379124433,
    "token": "cbBTC",
    "asset": "BTC",
    "stake": null,
-   "ltv": 0.73,
+   "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 5.22,
+   "borrow": 5.0999,
    "loan_pool": "aa70268e-4b52-42bf-a116-608b370f9501"
   },
   {
@@ -383,17 +454,17 @@ window.YB_DATA = {
    "chain": "Ethereum",
    "symbol": "WETH",
    "role": "market",
-   "apy": 1.293,
-   "apy_now": 1.293,
+   "apy": 1.3095,
+   "apy_now": 1.3095,
    "apy_7d": null,
-   "apy_30d": 1.35063,
-   "tvl": 970135987,
+   "apy_30d": 1.34908,
+   "tvl": 925512155,
    "token": "ETH",
    "asset": "ETH",
    "stake": null,
-   "ltv": 0.805,
+   "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 5.22,
+   "borrow": 5.0999,
    "loan_pool": "aa70268e-4b52-42bf-a116-608b370f9501"
   },
   {
@@ -405,14 +476,14 @@ window.YB_DATA = {
    "apy": 0.0176,
    "apy_now": 0.0176,
    "apy_7d": null,
-   "apy_30d": 0.01796,
-   "tvl": 234737568,
+   "apy_30d": 0.01793,
+   "tvl": 233393407,
    "token": "WBTC",
    "asset": "BTC",
    "stake": null,
-   "ltv": 0.73,
+   "ltv": 0.78,
    "loan": "USDC",
-   "borrow": 3.4848,
+   "borrow": 3.5404,
    "loan_pool": "d9fa8e14-0447-4207-9ae8-7810199dfa1f"
   },
   {
@@ -425,13 +496,13 @@ window.YB_DATA = {
    "apy_now": 0.0,
    "apy_7d": null,
    "apy_30d": 3e-05,
-   "tvl": 94749842,
+   "tvl": 93849466,
    "token": "weETH",
    "asset": "ETH",
    "stake": "WEETH",
    "ltv": 0.75,
    "loan": "USDC",
-   "borrow": 3.4848,
+   "borrow": 3.5404,
    "loan_pool": "d9fa8e14-0447-4207-9ae8-7810199dfa1f"
   },
   {
@@ -444,13 +515,13 @@ window.YB_DATA = {
    "apy_now": 0.0,
    "apy_7d": null,
    "apy_30d": 1e-05,
-   "tvl": 54370790,
+   "tvl": 56190975,
    "token": "wstETH",
    "asset": "ETH",
    "stake": "STETH",
    "ltv": 0.75,
    "loan": "USDC",
-   "borrow": 3.4848,
+   "borrow": 3.5404,
    "loan_pool": "d9fa8e14-0447-4207-9ae8-7810199dfa1f"
   },
   {
@@ -459,17 +530,17 @@ window.YB_DATA = {
    "chain": "Arbitrum",
    "symbol": "WETH",
    "role": "market",
-   "apy": 0.9179,
-   "apy_now": 0.9179,
+   "apy": 0.919,
+   "apy_now": 0.919,
    "apy_7d": null,
-   "apy_30d": 0.99633,
-   "tvl": 31602732,
+   "apy_30d": 0.99516,
+   "tvl": 31143752,
    "token": "ETH",
    "asset": "ETH",
    "stake": null,
-   "ltv": 0.8,
+   "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 3.4848,
+   "borrow": 3.5404,
    "loan_pool": "d9fa8e14-0447-4207-9ae8-7810199dfa1f"
   },
   {
@@ -481,14 +552,14 @@ window.YB_DATA = {
    "apy": 0.0096,
    "apy_now": 0.0096,
    "apy_7d": null,
-   "apy_30d": 0.00997,
-   "tvl": 239390192,
+   "apy_30d": 0.00996,
+   "tvl": 237994805,
    "token": "cbBTC",
    "asset": "BTC",
    "stake": null,
-   "ltv": 0.73,
+   "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 5.9749,
+   "borrow": 5.4066,
    "loan_pool": "7e0661bf-8cf3-45e6-9424-31916d4c7b84"
   },
   {
@@ -497,17 +568,17 @@ window.YB_DATA = {
    "chain": "Base",
    "symbol": "WETH",
    "role": "market",
-   "apy": 1.4308,
-   "apy_now": 1.4308,
+   "apy": 1.4473,
+   "apy_now": 1.4473,
    "apy_7d": null,
-   "apy_30d": 3.25003,
-   "tvl": 44199669,
+   "apy_30d": 3.25055,
+   "tvl": 42576599,
    "token": "ETH",
    "asset": "ETH",
    "stake": null,
-   "ltv": 0.8,
+   "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 5.9749,
+   "borrow": 5.4066,
    "loan_pool": "7e0661bf-8cf3-45e6-9424-31916d4c7b84"
   },
   {
@@ -520,13 +591,13 @@ window.YB_DATA = {
    "apy_now": 0.0001,
    "apy_7d": null,
    "apy_30d": 9e-05,
-   "tvl": 37496239,
+   "tvl": 29373395,
    "token": "weETH",
    "asset": "ETH",
    "stake": "WEETH",
    "ltv": 0.75,
    "loan": "USDC",
-   "borrow": 5.9749,
+   "borrow": 5.4066,
    "loan_pool": "7e0661bf-8cf3-45e6-9424-31916d4c7b84"
   },
   {
@@ -538,14 +609,14 @@ window.YB_DATA = {
    "apy": 0.0009,
    "apy_now": 0.0009,
    "apy_7d": null,
-   "apy_30d": 0.0009,
-   "tvl": 24327499,
+   "apy_30d": 0.00091,
+   "tvl": 24131259,
    "token": "wstETH",
    "asset": "ETH",
    "stake": "STETH",
    "ltv": 0.75,
    "loan": "USDC",
-   "borrow": 5.9749,
+   "borrow": 5.4066,
    "loan_pool": "7e0661bf-8cf3-45e6-9424-31916d4c7b84"
   },
   {
@@ -558,14 +629,14 @@ window.YB_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 3248495840,
+   "tvl": 3226613824,
    "token": "cbBTC",
    "asset": "BTC",
    "stake": null,
    "ltv": 0.86,
    "loan": "USDC",
-   "borrow": 5.7125,
-   "size": 3248495840
+   "borrow": 5.7165,
+   "size": 3226613824
   },
   {
    "id": "d70d42b1-4ba3-4572-bf76-0ac12781bde4",
@@ -577,14 +648,14 @@ window.YB_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 681820598,
+   "tvl": 677344101,
    "token": "cbBTC",
    "asset": "BTC",
    "stake": null,
    "ltv": 0.86,
    "loan": "USDC",
-   "borrow": 5.0085,
-   "size": 681820598
+   "borrow": 5.0078,
+   "size": 677344101
   },
   {
    "id": "2d1aa052-64c0-4c2c-82a0-db39062f04ab",
@@ -596,14 +667,14 @@ window.YB_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 237560841,
+   "tvl": 236154379,
    "token": "WBTC",
    "asset": "BTC",
    "stake": null,
    "ltv": 0.86,
    "loan": "USDC",
-   "borrow": 5.057,
-   "size": 237560841
+   "borrow": 5.0193,
+   "size": 236154379
   },
   {
    "id": "660e240a-ab18-43af-9d24-0245828f903f",
@@ -615,14 +686,14 @@ window.YB_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 195095239,
+   "tvl": 192719741,
    "token": "ETH",
    "asset": "ETH",
    "stake": null,
    "ltv": 0.86,
    "loan": "USDC",
-   "borrow": 5.7197,
-   "size": 195095239
+   "borrow": 5.7223,
+   "size": 192719741
   },
   {
    "id": "9b0c3b21-d47b-4b0c-855d-d1b78cd35350",
@@ -634,33 +705,14 @@ window.YB_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 114172185,
+   "tvl": 114167876,
    "token": "sUSDe",
    "asset": "USD",
    "stake": "SUSDE",
    "ltv": 0.915,
    "loan": "PYUSD",
-   "borrow": 4.197,
-   "size": 114172185
-  },
-  {
-   "id": "be65ac8e-2b80-4582-a9d9-f8ff8ff73cb7",
-   "project": "morpho-blue",
-   "chain": "Ethereum",
-   "symbol": "WEETH",
-   "role": "market",
-   "apy": 0,
-   "apy_now": 0,
-   "apy_7d": null,
-   "apy_30d": 0,
-   "tvl": 72252789,
-   "token": "weETH",
-   "asset": "ETH",
-   "stake": "WEETH",
-   "ltv": 0.86,
-   "loan": "USDC",
-   "borrow": 5.1831,
-   "size": 72252789
+   "borrow": 4.198,
+   "size": 114167876
   },
   {
    "id": "7d114ce1-2af1-42c3-a719-406fbbc3ed92",
@@ -672,14 +724,33 @@ window.YB_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 71633596,
+   "tvl": 81084815,
    "token": "wstETH",
    "asset": "ETH",
    "stake": "STETH",
    "ltv": 0.86,
    "loan": "USDC",
-   "borrow": 5.0081,
-   "size": 71633596
+   "borrow": 5.0071,
+   "size": 81084815
+  },
+  {
+   "id": "be65ac8e-2b80-4582-a9d9-f8ff8ff73cb7",
+   "project": "morpho-blue",
+   "chain": "Ethereum",
+   "symbol": "WEETH",
+   "role": "market",
+   "apy": 0,
+   "apy_now": 0,
+   "apy_7d": null,
+   "apy_30d": 0,
+   "tvl": 71566196,
+   "token": "weETH",
+   "asset": "ETH",
+   "stake": "WEETH",
+   "ltv": 0.86,
+   "loan": "USDC",
+   "borrow": 6.445,
+   "size": 71566196
   }
  ],
  "ticker": [
@@ -687,13 +758,13 @@ window.YB_DATA = {
    "lido",
    "STETH",
    "Ethereum",
-   2.27
+   2.25
   ],
   [
    "ether.fi-stake",
    "WEETH",
    "Ethereum",
-   2.32
+   2.38
   ],
   [
    "sky-lending",
@@ -747,7 +818,7 @@ window.YB_DATA = {
    "aave-v3",
    "WETH",
    "Ethereum",
-   1.29
+   1.31
   ],
   [
    "sky-lending",
@@ -771,19 +842,13 @@ window.YB_DATA = {
    "sky-lending",
    "SKY",
    "Ethereum",
-   4.66
-  ],
-  [
-   "spark-savings",
-   "USDT",
-   "Ethereum",
-   3.75
+   4.63
   ],
   [
    "morpho-blue",
    "SPARKUSDC",
    "Base",
-   4.54
+   4.63
   ],
   [
    "morpho-blue",
@@ -795,25 +860,25 @@ window.YB_DATA = {
    "morpho-blue",
    "SIRLOINUSDC",
    "Base",
-   6.51
+   6.81
   ],
   [
    "morpho-blue",
    "GROVE-STEAKUSDC",
    "Base",
-   5.06
+   5.17
   ],
   [
    "morpho-blue",
    "SENRLUSDV2",
    "Ethereum",
-   7.88
+   7.27
   ],
   [
    "morpho-blue",
    "GTUSDCP",
    "Base",
-   5.07
+   5.17
   ],
   [
    "compound-v3",
@@ -825,19 +890,7 @@ window.YB_DATA = {
    "morpho-blue",
    "SENPYUSDMAIN",
    "Ethereum",
-   5.35
-  ],
-  [
-   "morpho-blue",
-   "WSTETH",
-   "Ethereum",
-   0
-  ],
-  [
-   "spark-savings",
-   "USDS",
-   "Arbitrum",
-   3.8
+   5.34
   ],
   [
    "sky-lending",
@@ -853,6 +906,12 @@ window.YB_DATA = {
   ],
   [
    "morpho-blue",
+   "WSTETH",
+   "Ethereum",
+   0
+  ],
+  [
+   "morpho-blue",
    "KBTC",
    "Ethereum",
    0
@@ -862,12 +921,6 @@ window.YB_DATA = {
    "OSETH",
    "Ethereum",
    0
-  ],
-  [
-   "spark-savings",
-   "USDC",
-   "Ethereum",
-   3.8
   ],
   [
    "morpho-blue",
@@ -915,7 +968,7 @@ window.YB_DATA = {
    "morpho-blue",
    "SENPYUSDPRIMEV2",
    "Ethereum",
-   5.77
+   5.74
   ],
   [
    "sky-lending",
@@ -930,16 +983,22 @@ window.YB_DATA = {
    0
   ],
   [
-   "aave-v3",
-   "USDT",
-   "Ethereum",
-   4.8
-  ],
-  [
    "sky-lending",
    "STUSDS",
    "Ethereum",
    6.51
+  ],
+  [
+   "aave-v3",
+   "USDT",
+   "Ethereum",
+   5.45
+  ],
+  [
+   "sky-lending",
+   "USDS",
+   "Ethereum",
+   13.7
   ],
   [
    "curve-dex",
@@ -957,13 +1016,25 @@ window.YB_DATA = {
    "uniswap-v3",
    "WETH-USDC",
    "Base",
-   37.29
+   39.68
+  ],
+  [
+   "morpho-blue",
+   "PT-REUSD-10DEC2026",
+   "Ethereum",
+   0
   ],
   [
    "morpho-blue",
    "KBTC",
    "Ethereum",
    0
+  ],
+  [
+   "morpho-blue",
+   "STEAKEURCV",
+   "Ethereum",
+   3
   ],
   [
    "morpho-blue",

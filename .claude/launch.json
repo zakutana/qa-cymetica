@@ -44,9 +44,9 @@
       "port": 8798
     },
     {
-      "name": "yield-booster",
+      "name": "capital-maximizer",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8799", "--bind", "127.0.0.1", "--directory", "outbox/yield-booster"],
+      "runtimeArgs": ["-m", "http.server", "8799", "--bind", "127.0.0.1", "--directory", "outbox/capital-maximizer"],
       "port": 8799
     }
   ]
