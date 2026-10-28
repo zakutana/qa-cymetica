@@ -309,6 +309,75 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;bac
 .filters button{padding:7px 13px}
 .pfoot{margin-top:14px;color:var(--dim);font:500 11.5px "JetBrains Mono",monospace}
 
+/* the Positions tab: one card a route, the money in it first */
+.pos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) 250px 250px;gap:26px;align-items:center;padding:24px 28px;margin-bottom:16px;position:relative;overflow:hidden}
+.pos .who{display:flex;gap:14px;align-items:flex-start}
+.pos .who svg.emblem{width:50px;height:50px;flex:none}
+.pos h3{font:22px/1.15 "Archivo Black",sans-serif}
+.pos .ven{font:500 11.5px "JetBrains Mono",monospace;color:var(--dim);margin-top:5px}
+.pos .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.pos .val b{display:block;font:64px/1 "Archivo Black",sans-serif;letter-spacing:-.02em;margin-top:6px;transition:color .3s}
+.pos .pnl{font:700 15px "JetBrains Mono",monospace;margin-top:8px}
+.pos .pnl.up{color:var(--green)}.pos .pnl.dn{color:var(--red)}
+.pos .spark{display:block;width:100%;height:46px;margin-top:10px}
+.pos .since{font:500 10.5px "JetBrains Mono",monospace;color:var(--dim);margin-top:4px}
+.gauge{width:100%;display:block}
+.gauge .t{font:30px "Archivo Black",sans-serif;text-anchor:middle}
+.gauge .s{font:600 9.5px "JetBrains Mono",monospace;letter-spacing:.2em;fill:var(--dim);text-anchor:middle}
+.needle{transition:transform .8s cubic-bezier(.2,.8,.2,1);transform-origin:110px 110px}
+.exitbtn{width:100%;height:96px;border-radius:18px;background:linear-gradient(180deg,var(--red),rgba(255,68,68,.78));color:var(--text);
+  font:800 30px Inter,sans-serif;letter-spacing:.14em;box-shadow:0 0 0 1px rgba(255,68,68,.7),0 18px 50px rgba(255,68,68,.35),inset 0 1px 0 rgba(230,237,247,.35);
+  transition:transform .15s,box-shadow .2s;position:relative;overflow:hidden}
+.exitbtn::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(230,237,247,.25) 50%,transparent 70%);transform:translateX(-120%);animation:shine 3.2s ease-in-out infinite}
+@keyframes shine{60%,100%{transform:translateX(120%)}}
+.exitbtn:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--red),0 22px 70px rgba(255,68,68,.55),inset 0 1px 0 rgba(230,237,247,.35)}
+.px small{display:block;text-align:center;margin-top:10px;font:500 11px "JetBrains Mono",monospace;color:var(--dim)}
+.pos.closed{opacity:.75;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) 520px}
+.pos.closed .val b{color:var(--muted)}
+.closedtag{font:800 13px "JetBrains Mono",monospace;letter-spacing:.14em;color:var(--green)}
+.empty{text-align:center;padding:70px 20px}
+.empty svg{width:80px;height:80px;opacity:.7}
+.empty h3{font:26px "Archivo Black",sans-serif;margin:16px 0 18px}
+.empty .cta{max-width:340px;margin:0 auto}
+
+/* EXIT: everything leaves the pools and flows home */
+.exitov{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;background:rgba(6,9,15,.88);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.exitov.on{display:flex;animation:rise .3s ease-out}
+.exbox{width:min(1180px,94vw);text-align:center}
+.exbox h2{font:40px "Archivo Black",sans-serif;margin-top:10px}
+.exbox h2 em{font-style:normal;color:var(--red)}
+.exrail{width:100%;height:auto;display:block;margin:26px 0 8px}
+.exrail .lk{stroke:rgba(30,48,80,.9);stroke-width:1.5}
+.exrail .lk.on{stroke:var(--green);filter:drop-shadow(0 0 6px rgba(0,255,136,.8));transition:stroke .3s}
+.exrail .xn .hx{fill:var(--panel);stroke:var(--line);stroke-width:1.4;transition:stroke .3s}
+.exrail .xn.on .hx{stroke:var(--green);filter:drop-shadow(0 0 10px rgba(0,255,136,.8))}
+.exrail .xn .ok{opacity:0;transition:opacity .3s}
+.exrail .xn.on .ok{opacity:1}
+.exrail .xt{font:600 13px Inter,sans-serif;fill:var(--text);text-anchor:middle}
+.exrail .xs{font:500 10.5px "JetBrains Mono",monospace;fill:var(--dim);text-anchor:middle}
+.exrail .orb{transition:transform .75s cubic-bezier(.5,0,.2,1)}
+.exrail .burst{transform-box:fill-box;transform-origin:center;animation:burst .8s ease-out forwards;fill:none;stroke:var(--green);stroke-width:2}
+@keyframes burst{from{transform:scale(.4);opacity:1}to{transform:scale(2.6);opacity:0}}
+.excount{display:flex;justify-content:center;align-items:center;gap:40px;margin-top:18px}
+.excount b{display:block;font:46px "Archivo Black",sans-serif;margin-top:4px}
+.excount .pool b{color:var(--red)}.excount .wal b{color:var(--green)}
+.excount .arr{font:30px Inter;color:var(--dim)}
+.exsteps{list-style:none;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:22px}
+.exsteps li{font:600 12px "JetBrains Mono",monospace;color:var(--dim);padding:6px 12px;border:1px solid var(--hair);border-radius:20px;transition:all .3s}
+.exsteps li.on{color:var(--green);border-color:rgba(0,255,136,.5);background:rgba(0,255,136,.06)}
+.final{position:relative;padding:20px 0}
+.final .ringfx{position:absolute;left:50%;top:118px;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;border:2px solid var(--green);animation:ringfx 1.6s ease-out infinite;opacity:0;pointer-events:none}
+.shot .final .ringfx{display:none}
+.final .ringfx.b{animation-delay:.5s}
+@keyframes ringfx{from{transform:scale(.6);opacity:.9}to{transform:scale(1.7);opacity:0}}
+.final svg.wallet{width:120px;height:120px;filter:drop-shadow(0 0 30px rgba(0,255,136,.5))}
+.final .big2{font:96px/1 "Archivo Black",sans-serif;color:var(--green);text-shadow:0 0 50px rgba(0,255,136,.4);margin-top:18px;letter-spacing:-.02em}
+.final .big2 small{font:32px "Archivo Black",sans-serif;color:var(--muted);margin-left:10px}
+.final .res{font:700 18px "JetBrains Mono",monospace;margin-top:14px}
+.final .res.up{color:var(--green)}.final .res.dn{color:var(--red)}
+.final .where{font:500 13px Inter,sans-serif;color:var(--muted);margin-top:8px}
+.final .cta{max-width:300px;margin:30px auto 0}
+
 /* the mark, large (?logo=1) */
 .sheet{display:grid;grid-template-columns:auto 1fr;gap:56px;align-items:center;padding:46px 54px;margin-top:30px}
 .sheet .bigmark{width:280px;height:280px;filter:drop-shadow(0 0 50px rgba(0,255,136,.3))}
@@ -328,6 +397,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;bac
   .strats{grid-template-columns:minmax(0,1fr);max-width:560px;margin:0 auto}
   .bar{grid-template-columns:1fr 1fr}
   .planin{grid-template-columns:minmax(0,1fr)}
+  .pos,.pos.closed{grid-template-columns:1fr 1fr}
   .trust{display:none}
 }
 @media (max-width:680px){
@@ -371,6 +441,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;bac
     </div>
     <nav class="tabs" id="tabs">
       <button data-tab="max">Maximize</button>
+      <button data-tab="positions">Positions <i id="poscount">0</i></button>
       <button data-tab="platforms">Platforms <i id="pcount"></i></button>
     </nav>
     <div class="trust"><span class="chip g">NO KYC</span><span class="chip c">AUDITED DEFI ONLY</span></div>
@@ -408,6 +479,13 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;bac
       <div class="back"><button class="link" data-step="3">← Compare the three</button><button class="link" data-step="2">← Change amount</button><button class="link" data-step="1">← Change risk</button></div>
     </section>
   </div>
+
+  <section class="view" id="vpos">
+    <div class="head"><div><div class="eyebrow">LIVE · YOUR OPEN ROUTES</div><h1>Your <em>positions</em></h1></div><p>demo clock: 1 s = 1 hour</p></div>
+    <div class="frame pstats" id="posstats"></div>
+    <div id="poslist"></div>
+  </section>
+  <div class="exitov" id="exitov"></div>
 
   <section class="view" id="vp">
     <div class="head"><div><div class="eyebrow">VERIFIED · AUDITED · NO KYC</div><h1>Supported <em>platforms</em></h1></div><p id="pp"></p></div>

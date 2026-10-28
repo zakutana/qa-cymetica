@@ -37,7 +37,7 @@
 
   function tween(el, to, fmt, ms = 420) {
     if (!el) return;
-    const from = +el.dataset.v || to;
+    const from = el.dataset.v !== undefined && el.dataset.v !== '' ? +el.dataset.v : to;
     el.dataset.v = to;
     if (shot || from === to) { el.textContent = fmt(to); return; }
     const t0 = performance.now();
@@ -153,13 +153,23 @@
         E.push([prev, 'apex']);
       }
     }
+    // off the home chain the USDC first crosses with Circle's CCTP: one node more between the wallet and the rest
+    if (awayOf(r).length) {
+      N.forEach(n => { if (n.id !== 'root') n.d += 1; });
+      E.forEach(e => { if (e[0] === 'root') e[0] = 'cctp'; });
+      N.push({id: 'cctp', kind: 'bridge', d: 1, w: 0, lv: 'right', lh: 'below'});
+      E.unshift(['root', 'cctp']);
+    }
     return {N, E};
   }
-  const RAD = {apex: 38, root: 26, lever: 25, node: 28};
+  const HOME = 'Ethereum';
+  const awayOf = r => [...new Set((r.type === 'vaults' ? r.steps.filter(s => s.chain).map(s => s.chain) : [r.chain]).filter(c => c !== HOME))];
+  const RAD = {apex: 38, root: 26, lever: 25, node: 28, bridge: 28};
 
   function label(n, r) {
     const s = n.step, rt = (v, sign = '+') => `<tspan class="${sign === '+' ? 'e' : 'p'}">${sign}${v.toFixed(2)}%</tspan>`;
     if (n.kind === 'root') return [num(S.amount), 'USDC', 'USDC'];
+    if (n.kind === 'bridge') { const to = '→ ' + awayOf(r).map(chainName).join(' · '); return ['Circle CCTP', to, to]; }
     if (n.kind === 'lever') {
       const l = r.pLiq === null ? null : `${r.asset === 'USD' ? 'depeg' : r.asset} −${Math.round((1 - r.pLiq) * 100)}%`;
       return ['Leverage', l ? `liq <tspan class="p">${l}</tspan>` : 'no liquidation', l ? 'liq ' + l : 'no liquidation'];
@@ -180,6 +190,11 @@
     const A = S.amount, st = r.steps, rows = [];
     const add = (node, text, meta, cls = '') => rows.push({node, text, meta, cls, no: rows.length + 1});
     const yr = (v, sign = '+') => `${sign}${v.toFixed(2)}%/yr`;
+    const away = awayOf(r);
+    if (away.length) {
+      const moved = r.type === 'vaults' ? A * st.filter(s => s.kind === 'vault' && s.chain !== HOME).length / 3 : A;
+      add('cctp', `Move ${num(moved)} USDC to ${away.map(chainName).join(' & ')}`, 'Circle CCTP', 'c');
+    }
     if (r.type === 'vaults') {
       st.filter(s => s.kind === 'vault').forEach((s, k) =>
         add('v' + k, `Put ${num(A * s.share)} USDC in ${s.title}`, `${pname(s.project)} ${yr(s.rate)}`, 'e'));
@@ -258,6 +273,13 @@
           <text class="lev" x="${n.x}" y="${n.y + 1}">${r.L.toFixed(1)}×</text>` +
           (g ? `<g class="btn ${r.L <= g.min ? 'off' : ''}" data-act="dec" data-col="${o.col}"><circle cx="${n.x - 19}" cy="${by2}" r="12"/><path d="M${n.x - 24} ${by2}h10"/></g>
             <g class="btn ${r.L >= g.max - 1e-9 ? 'off' : ''}" data-act="inc" data-col="${o.col}"><circle cx="${n.x + 19}" cy="${by2}" r="12"/><path d="M${n.x + 14} ${by2}h10M${n.x + 19} ${by2 - 5}v10"/></g>` : '');
+      } else if (n.kind === 'bridge') {
+        body = `<circle cx="${n.x}" cy="${n.y}" r="${R + 14}" fill="url(#${p}lh)"/>
+          <path d="${hex(n.x, n.y, R)}" class="hx" stroke="#00cfff" style="stroke-dasharray:4 3"/>
+          <path d="${hex(n.x, n.y, R - 5)}" class="hi"/>
+          <clipPath id="${p}c${n.id}"><circle cx="${n.x}" cy="${n.y}" r="16.5"/></clipPath>
+          <text class="ini" x="${n.x}" y="${n.y}">C</text>
+          <image href="https://icons.llamao.fi/icons/protocols/circle?w=96" x="${n.x - 16.5}" y="${n.y - 16.5}" width="33" height="33" clip-path="url(#${p}c${n.id})"/>`;
       } else {
         const s = n.step, loopy = s.kind === 'borrow';
         body = `<path d="${hex(n.x, n.y, R)}" class="hx" stroke="${loopy ? '#00cfff' : `url(#${p}lg)`}"/>
@@ -311,19 +333,21 @@
   }
 
   /* ---------- step 3: scan, then three trees ---------- */
+  /* the scan reads every supported platform: two rings of logos, the inner fourteen and the outer twenty-two */
   function radarSvg() {
-    const ids = Object.keys(D.protocols), n = ids.length;
-    const logos = ids.map((pr, k) => {
-      const a = (k / n) * Math.PI * 2 - Math.PI / 2, x = 220 + 172 * Math.cos(a), y = 220 + 172 * Math.sin(a);
-      return `<g class="p"><clipPath id="rc${k}"><circle cx="${x}" cy="${y}" r="16"/></clipPath>
-        <circle class="ring" cx="${x}" cy="${y}" r="20"/><text x="${x}" y="${y + 5}" text-anchor="middle" style="font:700 14px Inter;fill:#a9b8cc">${pname(pr)[0]}</text>
-        <image href="${icon(pr)}" x="${x - 16}" y="${y - 16}" width="32" height="32" clip-path="url(#rc${k})"/><title>${pname(pr)}</title></g>`;
+    const P = D.platforms, inner = 14;
+    const logos = P.map((p, k) => {
+      const ring = k < inner, n = ring ? inner : P.length - inner, j = ring ? k : k - inner, R = ring ? 112 : 182;
+      const a = (j / n) * Math.PI * 2 - Math.PI / 2 + (ring ? 0 : 0.12), x = 220 + R * Math.cos(a), y = 220 + R * Math.sin(a);
+      return `<g class="p"><clipPath id="rc${k}"><circle cx="${x}" cy="${y}" r="14"/></clipPath>
+        <circle class="ring" cx="${x}" cy="${y}" r="17.5"/><text x="${x}" y="${y + 5}" text-anchor="middle" style="font:700 13px Inter;fill:#a9b8cc">${p.name[0]}</text>
+        <image href="https://icons.llamao.fi/icons/protocols/${p.icon}?w=96" x="${x - 14}" y="${y - 14}" width="28" height="28" clip-path="url(#rc${k})"/><title>${p.name}</title></g>`;
     }).join('');
     return `<svg viewBox="0 0 440 440">
       <defs><linearGradient id="sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00ff88" stop-opacity="0"/><stop offset="1" stop-color="#00ff88" stop-opacity=".3"/></linearGradient></defs>
-      ${[70, 125, 172, 210].map(r => `<path d="${hex(220, 220, r)}" fill="none" stroke="#1e3050" stroke-width=".8"/>`).join('')}
-      <path d="M220 10V430M10 220H430" stroke="#1e3050" stroke-width=".6"/>
-      <path class="sweep" d="M220 220L220 10A210 210 0 0 1 380.9 85Z" fill="url(#sw)"/>
+      ${[70, 112, 148, 182, 214].map(r => `<path d="${hex(220, 220, r)}" fill="none" stroke="#1e3050" stroke-width=".8"/>`).join('')}
+      <path d="M220 6V434M6 220H434" stroke="#1e3050" stroke-width=".6"/>
+      <path class="sweep" d="M220 220L220 6A214 214 0 0 1 383.9 82.4Z" fill="url(#sw)"/>
       ${logos}
       <text x="220" y="214" text-anchor="middle" style="font:46px 'Archivo Black',sans-serif;fill:#e6edf7" id="rcount">0</text>
       <text x="220" y="244" text-anchor="middle" style="font:600 10px 'JetBrains Mono',monospace;letter-spacing:.24em;fill:#7f93ad">POOLS READ</text></svg>`;
@@ -344,10 +368,14 @@
     $('h3').innerHTML = 'Finding your <em>top 3</em>';
     $('p3').textContent = '';
     $('scan').style.display = '';
-    $('scan').innerHTML = radarSvg() + `<div class="counts"><div><div class="lbl">POOLS READ</div><b id="c1">0</b></div>
+    const nChains = new Set(D.platforms.flatMap(p => p.chains)).size;
+    $('scan').innerHTML = radarSvg() + `<div class="counts"><div><div class="lbl">PLATFORMS</div><b id="c0">0</b></div>
+      <div><div class="lbl">CHAINS</div><b id="c4">0</b></div><div><div class="lbl">POOLS READ</div><b id="c1">0</b></div>
       <div><div class="lbl">ROUTES BUILT</div><b id="c2">0</b></div><div class="k3"><div class="lbl">TOP STRATEGIES</div><b id="c3">0</b></div></div>
       <div class="ticker" id="tick"></div>`;
     count($('rcount'), D.scanned.pools, scanT - 300);
+    count($('c0'), D.platforms.length, scanT - 600);
+    count($('c4'), nChains, scanT - 600);
     count($('c1'), D.scanned.pools, scanT - 300);
     count($('c2'), f.built, scanT);
     later(scanT - 200, () => count($('c3'), 3, 300));
@@ -381,7 +409,7 @@
   function showStrats(grow) {
     $('scan').style.display = 'none';
     $('h3').innerHTML = 'Your <em>top 3</em>';
-    $('p3').textContent = `${num(D.scanned.pools)} pools read · ${C.find(S.tier).built} routes built`;
+    $('p3').textContent = `${D.platforms.length} platforms · ${new Set(D.platforms.flatMap(p => p.chains)).size} chains · ${num(D.scanned.pools)} pools read`;
     const og = S.tier === 'og';
     $('strats').innerHTML = S.picks.map((r, k) => `<div class="frame strat ${k === 0 ? 'best' : ''} ${og ? 'og' : ''}" style="--d:${grow ? k * 0.16 : 0}s">
       <div class="hd">${rankSvg(k)}<div><h3>${r.label}</h3><div class="ven">${r.venue}</div></div>${k === 0 ? '<span class="chip g">TOP PICK</span>' : ''}</div>
@@ -508,6 +536,196 @@
     $('pfoot').innerHTML = '<span class="live"></span> in the finder today · ✓ audited per DefiLlama, live a year or more, under $1M lost in 2 years · hover a tile for more · Cymetica makes its own selection';
   }
 
+  /* ---------- the Positions tab: the routes started, what is in them now, how far from liquidation, EXIT ----------
+     A demo clock (1 s = 1 hour) moves the asset's price on a seeded random walk; the value is the same CM.loop / CM.lp
+     arithmetic at that price, plus the route's carry for the hours elapsed. */
+  const POS = [];
+  let posTimer = null;
+  const rng = seed => { let s = seed; return () => (s = (s * 16807) % 2147483647) / 2147483647; };
+  const gauss = rnd => Math.sqrt(-2 * Math.log(rnd() || 1e-9)) * Math.cos(2 * Math.PI * rnd());
+  const pricedR = r => r.asset === 'ETH' || r.asset === 'BTC';
+  function carry(r) {
+    const sum = role => r.legs.filter(l => l.role === role).reduce((t, l) => t + l.rate * (l.share || 1), 0);
+    return {y: sum('stake') + sum('collateral') + sum('supply') + sum('lp'), b: sum('borrow')};
+  }
+  function valueOf(pos) {
+    const r = pos.r, {y, b} = carry(r), t = pos.hours / 8760, P = pricedR(r) ? pos.P : 1;
+    let v;
+    if (r.type === 'lp') v = C.lp({kind: 'uniswap', fee: 0, P}) + y / 100 * t;
+    else if (r.L > 1) v = C.loop({L: r.L, y: 0, b: 0, lt: r.ltv, bonus: 0.05, P}).value + (r.L * y - (r.L - 1) * b) / 100 * t;
+    else v = P * (1 + y / 100 * t);
+    return pos.amount * v;
+  }
+  function stepPos(pos) {
+    pos.hours += 1;
+    if (pricedR(pos.r)) pos.P *= Math.exp(0.0055 * gauss(pos.rnd) + 0.00025);
+    pos.path.push(valueOf(pos));
+    if (pos.path.length > 120) pos.path.shift();
+  }
+  function openPosition(r, tier, amount) {
+    const pos = {id: POS.length + 1, r, tier, amount, hours: 0, P: 1, path: [amount], rnd: rng(4242 + POS.length * 7919), closed: null};
+    for (let k = 0; k < 72; k++) stepPos(pos);                  // three days of history so the line has a shape
+    POS.unshift(pos);
+    $('poscount').textContent = POS.filter(p => !p.closed).length;
+    return pos;
+  }
+  const liqLeft = pos => pos.r.pLiq === null ? null : 1 - pos.r.pLiq / (pricedR(pos.r) ? pos.P : 1);
+  function gaugeSvg(pos) {
+    const left = liqLeft(pos), f = left === null ? 1 : Math.max(0, Math.min(1, left / 0.5));
+    const col = left === null || left > 0.3 ? '#00ff88' : left > 0.15 ? '#00cfff' : '#ff4444';
+    const arc = (a0, a1) => { const p = a => [110 + 84 * Math.cos(Math.PI * (1 - a)), 110 - 84 * Math.sin(Math.PI * (1 - a))];
+      const [x0, y0] = p(a0), [x1, y1] = p(a1); return `M${x0.toFixed(1)} ${y0.toFixed(1)}A84 84 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; };
+    const what = left === null ? 'NO LIQUIDATION' : `${pos.r.asset === 'USD' ? 'sUSDe' : pos.r.asset} TO LIQUIDATION`;
+    return `<svg class="gauge" viewBox="0 0 220 172" id="pg${pos.id}">
+      <defs><linearGradient id="gg${pos.id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff4444"/><stop offset=".45" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient></defs>
+      <path d="${arc(0, 1)}" fill="none" stroke="url(#gg${pos.id})" stroke-width="10" stroke-linecap="round" opacity=".22"/>
+      <path d="${arc(0, Math.max(0.001, f))}" fill="none" stroke="url(#gg${pos.id})" stroke-width="10" stroke-linecap="round"/>
+      ${[0, 0.25, 0.5, 0.75, 1].map(a => { const x = 110 + 98 * Math.cos(Math.PI * (1 - a)), y = 110 - 98 * Math.sin(Math.PI * (1 - a)); return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.5" fill="#7f93ad"/>`; }).join('')}
+      <g class="needle" style="transform:rotate(${(f * 180 - 90).toFixed(1)}deg)"><path d="M110 110L110 44" stroke="#e6edf7" stroke-width="2" stroke-linecap="round"/><circle cx="110" cy="110" r="6" fill="#06090f" stroke="#e6edf7" stroke-width="2"/></g>
+      <text class="t" x="110" y="150" style="fill:${col}">${left === null ? 'SAFE' : '−' + Math.max(0, Math.round(left * 100)) + '%'}</text>
+      <text class="s" x="110" y="168">${what}</text></svg>`;
+  }
+  function sparkPath(pos) {
+    const v = pos.path, lo = Math.min(...v, pos.amount), hi = Math.max(...v, pos.amount), sp = hi - lo || 1;
+    const pts = v.map((x, k) => `${(k / (v.length - 1) * 400).toFixed(1)} ${(54 - (x - lo) / sp * 48).toFixed(1)}`);
+    const base = (54 - (pos.amount - lo) / sp * 48).toFixed(1);
+    return {line: 'M' + pts.join('L'), base};
+  }
+  function posCard(pos) {
+    const r = pos.r, i = idx(pos.tier), t = tierOf(pos.tier), away = awayOf(r);
+    const flow = away.length ? `Ethereum → ${away.map(chainName).join(' · ')}` : 'Ethereum';
+    const who = `<div class="who">${emblem(i)}<div><h3>${r.label}</h3><div class="ven">${r.venue} · ${flow}</div>
+      <div class="chips"><span class="chip ${i === 3 ? 'r' : 'c'}">${t.name.toUpperCase()}</span>${r.L > 1 ? `<span class="chip m">${r.L.toFixed(1)}× LEVERAGE</span>` : ''}
+      ${pos.closed ? '' : '<span class="chip g">AI RE-CHECKS EVERY 6 H</span>'}</div></div></div>`;
+    if (pos.closed) {
+      const d = pos.closed.value - pos.amount;
+      return `<div class="frame pos closed">${who}<div class="val"><div class="lbl">RETURNED TO YOUR WALLET</div><b>$${num(pos.closed.value)}</b>
+        <div class="pnl ${d >= 0 ? 'up' : 'dn'}">${d >= 0 ? '▲' : '▼'} ${usd(d)} · ${fp(pos.closed.value / pos.amount)}</div></div>
+        <div class="closedtag">✓ CLOSED · ${num(pos.amount)} USDC IN, ${num(pos.closed.value)} USDC OUT</div></div>`;
+    }
+    return `<div class="frame pos" id="pos${pos.id}">${who}
+      <div class="val"><div class="lbl">IN THE POOL</div><b id="pv${pos.id}"></b><div class="pnl" id="pp${pos.id}"></div>
+        <svg class="spark" viewBox="0 0 400 60" preserveAspectRatio="none"><line id="pb${pos.id}" x1="0" x2="400" stroke="#7f93ad" stroke-dasharray="3 4" stroke-width="1"/>
+          <path id="pl${pos.id}" fill="none" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>
+        <div class="since" id="pt${pos.id}"></div></div>
+      <div id="pgw${pos.id}">${gaugeSvg(pos)}</div>
+      <div class="px"><button class="exitbtn" data-exit="${pos.id}">EXIT</button><small>everything back to your wallet</small></div></div>`;
+  }
+  function paintPos(pos) {
+    const v = valueOf(pos), d = v - pos.amount, up = d >= 0, sp = sparkPath(pos);
+    const vb = $('pv' + pos.id);
+    if (!vb) return;
+    vb.textContent = '$' + num(v);
+    vb.style.color = up ? '#e6edf7' : '#ff4444';
+    $('pp' + pos.id).className = 'pnl ' + (up ? 'up' : 'dn');
+    $('pp' + pos.id).textContent = `${up ? '▲' : '▼'} ${usd(d)} · ${fp(v / pos.amount)}`;
+    $('pl' + pos.id).setAttribute('d', sp.line);
+    $('pl' + pos.id).setAttribute('stroke', up ? '#00ff88' : '#ff4444');
+    $('pb' + pos.id).setAttribute('y1', sp.base);
+    $('pb' + pos.id).setAttribute('y2', sp.base);
+    const h = pos.hours;
+    $('pt' + pos.id).textContent = `open ${Math.floor(h / 24)}d ${h % 24}h · ${num(pos.amount)} USDC put in`;
+    $('pgw' + pos.id).innerHTML = gaugeSvg(pos);
+  }
+  function renderPositions() {
+    const open = POS.filter(p => !p.closed), closed = POS.filter(p => p.closed);
+    const inPools = open.reduce((t, p) => t + valueOf(p), 0), put = open.reduce((t, p) => t + p.amount, 0);
+    const back = closed.reduce((t, p) => t + p.closed.value, 0);
+    $('posstats').innerHTML = [['IN THE POOLS', '$' + num(inPools), inPools >= put ? 'g' : ''], ['OPEN ROUTES', open.length, ''],
+      ['RETURNED TO WALLET', '$' + num(back), '']].map(([k, v, c]) => `<div class="${c}"><b>${v}</b><span class="lbl">${k}</span></div>`).join('');
+    $('poscount').textContent = open.length;
+    $('poslist').innerHTML = POS.length ? POS.map(posCard).join('') : `<div class="frame empty">
+      <svg viewBox="0 0 64 64"><path d="${hex(32, 32, 28)}" fill="none" stroke="#1e3050" stroke-width="1.5"/><path d="M24 32h16M32 24v16" stroke="#7f93ad" stroke-width="2" stroke-linecap="round"/></svg>
+      <h3>No open routes yet</h3><button class="cta" data-step="1">FIND A STRATEGY</button></div>`;
+    open.forEach(paintPos);
+  }
+  function tickPositions() {
+    POS.filter(p => !p.closed && !p.exiting).forEach(p => { stepPos(p); paintPos(p); });
+    const open = POS.filter(p => !p.closed), inPools = open.reduce((t, p) => t + valueOf(p), 0);
+    const b = $('posstats').querySelector('b');
+    if (b) b.textContent = '$' + num(inPools);
+  }
+  function posTicking(on) {
+    if (posTimer) { clearInterval(posTimer); posTimer = null; }
+    if (on && !shot) posTimer = setInterval(tickPositions, 1000);
+  }
+
+  /* EXIT: the route unwinds node by node, the money flows home, the wallet shows what came back */
+  function exitSteps(pos) {
+    const r = pos.r, st = r.steps, v = valueOf(pos), away = awayOf(r), out = [];
+    const node = (project, t1, t2) => out.push({project, t1, t2});
+    if (r.type === 'vaults') st.filter(s => s.kind === 'vault').forEach(s => node(s.project, 'Withdraw', `${num(v * s.share)} USDC`));
+    else if (r.type === 'lp') { node(st[2].project, 'Remove liquidity', `${num(v)} USD`); node(st[1].project, 'Swap ETH → USDC', `${num(v / 2)} USD`); }
+    else {
+      const swap = st.find(s => s.kind === 'swap'), coll = st.find(s => s.kind === 'collateral'), bor = st.find(s => s.kind === 'borrow');
+      const tok = r.label.replace(' loop', '').replace('Staked ', '');
+      if (bor) {
+        node(bor.project, `Repay ${bor.loan}`, `${num(pos.amount * (r.L - 1))} ${bor.loan}`);
+        node(coll.project, `Withdraw ${tok}`, `${num(v + pos.amount * (r.L - 1))} USD`);
+      }
+      node(swap.project, `Swap ${tok} → USDC`, `${num(v)} USDC`);
+    }
+    if (away.length) out.push({project: 'circle', t1: 'Circle CCTP', t2: `${away.map(chainName).join(' · ')} → Ethereum`});
+    out.push({wallet: true, t1: 'Your wallet', t2: `${num(v)} USDC`});
+    return out;
+  }
+  function exitPos(id) {
+    const pos = POS.find(p => p.id === id);
+    if (!pos || pos.closed) return;
+    pos.exiting = true;
+    const steps = exitSteps(pos), v = valueOf(pos), n = steps.length, W = 1100, gap = W / n, y = 92;
+    const xs = steps.map((_, k) => gap / 2 + k * gap);
+    const nodes = steps.map((s, k) => {
+      const x = xs[k], logo = s.wallet ? '' : `<clipPath id="xc${k}"><circle cx="${x}" cy="${y}" r="17"/></clipPath>
+        <text x="${x}" y="${y + 5}" text-anchor="middle" style="font:700 14px Inter;fill:#a9b8cc">${(s.project === 'circle' ? 'C' : pname(s.project)[0])}</text>
+        <image href="${s.project === 'circle' ? 'https://icons.llamao.fi/icons/protocols/circle?w=96' : icon(s.project)}" x="${x - 17}" y="${y - 17}" width="34" height="34" clip-path="url(#xc${k})"/>`;
+      const body = s.wallet ? `<circle cx="${x}" cy="${y}" r="32" fill="#06090f" stroke="#3b82f6" stroke-width="1.6"/>
+        <rect x="${x - 15}" y="${y - 11}" width="30" height="22" rx="4" fill="none" stroke="#00cfff" stroke-width="2"/><path d="M${x + 6} ${y}h9" stroke="#00cfff" stroke-width="2" stroke-linecap="round"/>`
+        : `<path class="hx" d="${hex(x, y, 32)}"/>${logo}`;
+      return `<g class="xn" data-x="${k}">${body}
+        <g class="ok"><circle cx="${x + 24}" cy="${y - 24}" r="9" fill="#00ff88"/><path d="M${x + 20} ${y - 24}l3 3 5-6" fill="none" stroke="#06090f" stroke-width="2" stroke-linecap="round"/></g>
+        <text class="xt" x="${x}" y="${y + 58}">${s.t1}</text><text class="xs" x="${x}" y="${y + 76}">${s.t2}</text></g>`;
+    }).join('');
+    const links = xs.slice(1).map((x, k) => `<line class="lk" data-l="${k}" x1="${xs[k] + 34}" y1="${y}" x2="${x - 34}" y2="${y}"/>`).join('');
+    const ov = $('exitov');
+    ov.innerHTML = `<div class="exbox"><div class="eyebrow" style="color:#ff4444">EXITING</div><h2>${pos.r.label} <em>→</em> your wallet</h2>
+      <svg class="exrail" viewBox="0 0 ${W} 190">${links}${nodes}
+        <g class="orb" id="orb" style="transform:translate(${xs[0] - 90}px,${y}px)"><circle r="26" fill="#00ff88" opacity=".14"/><circle r="12" fill="#00ff88" opacity=".35"/><circle r="6" fill="#e6edf7"/></g></svg>
+      <div class="excount"><div class="pool"><div class="lbl">IN THE POOL</div><b id="exPool" data-v="${v}">$${num(v)}</b></div><div class="arr">→</div>
+        <div class="wal"><div class="lbl">IN YOUR WALLET</div><b id="exWal" data-v="0">$0</b></div></div>
+      <ol class="exsteps">${steps.map((s, k) => `<li data-s="${k}">${k + 1} · ${s.t1}</li>`).join('')}</ol></div>`;
+    ov.classList.add('on');
+    const step = 900;
+    steps.forEach((s, k) => later(500 + k * step, () => {
+      $('orb').style.transform = `translate(${xs[k]}px,${y}px)`;
+      later(650, () => {
+        const g = ov.querySelector(`[data-x="${k}"]`);
+        if (!g) return;
+        g.classList.add('on');
+        g.insertAdjacentHTML('beforeend', `<circle class="burst" cx="${xs[k]}" cy="${y}" r="32"/>`);
+        if (k) ov.querySelector(`[data-l="${k - 1}"]`).classList.add('on');
+        ov.querySelector(`[data-s="${k}"]`).classList.add('on');
+        const left = v * (1 - (k + 1) / n);
+        tween($('exPool'), left, x => '$' + num(x), 500);
+        tween($('exWal'), v - left, x => '$' + num(x), 500);
+      });
+    }));
+    later(500 + n * step + 700, () => {
+      pos.closed = {value: v};
+      pos.exiting = false;
+      const d = v - pos.amount;
+      ov.innerHTML = `<div class="exbox final"><span class="ringfx"></span><span class="ringfx b"></span>
+        <div class="eyebrow" style="color:#00ff88">EXIT COMPLETE</div>
+        <svg class="wallet" viewBox="0 0 64 64" style="margin-top:22px"><path d="${hex(32, 32, 29)}" fill="#06090f" stroke="#00ff88" stroke-width="2"/>
+          <rect x="17" y="22" width="30" height="21" rx="4" fill="none" stroke="#00ff88" stroke-width="2.2"/><path d="M38 32.5h9" stroke="#00ff88" stroke-width="2.2" stroke-linecap="round"/></svg>
+        <div class="big2"><span id="finV" data-v="0">0</span><small>USDC</small></div>
+        <div class="res ${d >= 0 ? 'up' : 'dn'}">${d >= 0 ? '▲' : '▼'} ${usd(d)} · ${fp(v / pos.amount)} on ${num(pos.amount)} USDC</div>
+        <div class="where">in your wallet on Ethereum · nothing left in any pool</div>
+        <button class="cta" data-done="1">DONE</button></div>`;
+      tween($('finV'), v, num, 1100);
+    });
+  }
+
   /* ---------- the mark, large ---------- */
   function renderLogo() {
     const mark = $('mark').outerHTML.replace(' id="mark"', '');
@@ -522,7 +740,10 @@
     document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
     $('maxtab').style.display = tab === 'max' ? '' : 'none';
     $('vp').classList.toggle('on', tab === 'platforms');
+    $('vpos').classList.toggle('on', tab === 'positions');
     if (tab === 'platforms') renderPlatforms();
+    if (tab === 'positions') renderPositions();
+    posTicking(tab === 'positions');
   }
   function go(n) {
     if (!can(n)) return;
@@ -547,7 +768,14 @@
     if (el('#find')) return go(3);
     if (el('[data-act]')) { const b = el('[data-act]'), k = +b.dataset.col; return tuneCol(k, S.picks[k].L + (b.dataset.act === 'inc' ? 0.5 : -0.5)); }
     if (el('[data-pick]')) { S.pick = +el('[data-pick]').dataset.pick; S.started = false; return go(4); }
-    if (el('#start')) { S.started = true; $('go4').classList.add('started'); return; }
+    if (el('#start')) {
+      S.started = true;
+      $('go4').classList.add('started');
+      openPosition(S.picks[S.pick], S.tier, S.amount);
+      return later(1100, () => setTab('positions'));
+    }
+    if (el('[data-exit]')) return exitPos(+el('[data-exit]').dataset.exit);
+    if (el('[data-done]')) { $('exitov').classList.remove('on'); return renderPositions(); }
     if (el('[data-filter]')) { S.filter = el('[data-filter]').dataset.filter; return renderPlatforms(); }
     if (el('[data-chain]')) { S.chain = el('[data-chain]').dataset.chain; return renderPlatforms(); }
     if (el('[data-morechains]')) { S.allChains = true; return renderPlatforms(); }
@@ -574,6 +802,13 @@
       S.pick = Math.min(2, +q.get('pick') || 0);
       if (q.has('lev') && C.range(S.picks[S.pick], S.tier)) S.picks[S.pick] = C.tune(S.picks[S.pick], +q.get('lev'));
     }
-    if (q.get('tab') === 'platforms') { go(1); setTab('platforms'); } else go(step);
+    if (q.get('tab') === 'platforms') { go(1); setTab('platforms'); }
+    else if (q.get('tab') === 'positions') {                     // opened straight: one demo route to look at
+      const t = S.tier || 'high', r = C.top3(t)[0];
+      openPosition(q.has('lev') && C.range(r, t) ? C.tune(r, +q.get('lev')) : r, t, S.amount);
+      go(1);
+      setTab('positions');
+      if (q.has('exit')) exitPos(1);
+    } else go(step);
   }
 })();

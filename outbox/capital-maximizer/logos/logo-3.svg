@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="l3a" x1="8" y1="13" x2="56" y2="31" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+  </defs>
+  <path d="M8 22 V44 M56 22 V44 M20 31 V53 M44 31 V53" stroke="#00cfff" stroke-opacity=".3" stroke-width="1"/>
+  <path d="M8 44 L20 53 L44 53 L56 44" fill="none" stroke="#3b82f6" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8 33 L20 42 L44 42 L56 33" fill="none" stroke="#00cfff" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <polygon points="8,22 20,13 44,13 56,22 44,31 20,31" fill="url(#l3a)" stroke="url(#l3a)" stroke-width="5" stroke-linejoin="round"/>
+  <polygon points="16,22 23.5,16.5 40.5,16.5 48,22 40.5,27.5 23.5,27.5" fill="none" stroke="#06090f" stroke-opacity=".35" stroke-width="1"/>
+</svg>

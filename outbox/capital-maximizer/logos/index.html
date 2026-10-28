@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capital Maximizer Logos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0e17; --deep:#06090f; --panel:#0d1520; --line:#1e3050;
+  --text:#e6edf7; --muted:#a9b8cc; --dim:#7f93ad;
+  --cyan:#00cfff; --green:#00ff88; --blue:#3b82f6;
+  --edge:linear-gradient(135deg,rgba(0,207,255,.5),rgba(30,48,80,.7) 38%,rgba(30,48,80,.7) 62%,rgba(0,255,136,.42));
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{color:var(--text);font:13px/1.5 "JetBrains Mono",monospace;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden;
+  background:radial-gradient(1100px 620px at 8% -8%,rgba(0,207,255,.075),transparent 62%),
+             radial-gradient(1000px 700px at 96% -4%,rgba(0,255,136,.06),transparent 60%),var(--bg)}
+.wrap{max-width:1840px;margin:0 auto;padding:0 max(16px,env(safe-area-inset-left,0px)) 80px}
+
+/* page head */
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:36px 0 26px;position:relative}
+.head::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,207,255,.35),rgba(0,255,136,.35),transparent)}
+.eyebrow{font:600 11px "JetBrains Mono",monospace;letter-spacing:.3em;color:var(--cyan)}
+h1{font:40px/1.05 "Archivo Black",sans-serif;letter-spacing:-.01em;margin-top:10px}
+h1 em{font-style:normal;color:var(--green)}
+
+/* every candidate at 24 px, side by side */
+.strip{display:flex;gap:10px;flex-wrap:wrap}
+.strip figure{display:flex;flex-direction:column;align-items:center;gap:6px}
+.strip .t{width:44px;height:44px;border-radius:9px;background:var(--deep);border:1px solid var(--line);display:grid;place-items:center}
+.strip figcaption{font:600 10px "JetBrains Mono",monospace;color:var(--dim)}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin-top:28px}
+.card{border:1px solid transparent;border-radius:22px;padding:22px;
+  background:linear-gradient(180deg,rgba(13,21,32,.86),rgba(6,9,15,.92)) padding-box,var(--edge) border-box;
+  box-shadow:0 30px 80px rgba(6,9,15,.55)}
+.card.cur{background:linear-gradient(180deg,rgba(13,21,32,.86),rgba(6,9,15,.92)) padding-box,linear-gradient(135deg,rgba(127,147,173,.45),rgba(30,48,80,.7)) border-box}
+.ch{display:flex;align-items:baseline;gap:12px}
+.ch .n{font:700 22px "JetBrains Mono",monospace;color:var(--green)}
+.cur .ch .n{color:var(--dim)}
+.ch h2{font:20px "Archivo Black",sans-serif;letter-spacing:.01em}
+.idea{margin-top:4px;color:var(--muted);font-size:12px;min-height:18px}
+
+.stage{margin-top:16px;height:300px;border-radius:16px;display:grid;place-items:center;border:1px solid var(--line);
+  background:radial-gradient(260px 200px at 50% 50%,rgba(0,207,255,.06),transparent 70%),
+             linear-gradient(rgba(30,48,80,.32) 1px,transparent 1px) 0 0/24px 24px,
+             linear-gradient(90deg,rgba(30,48,80,.32) 1px,transparent 1px) 0 0/24px 24px,var(--deep)}
+.stage svg{filter:drop-shadow(0 0 26px rgba(0,255,136,.16))}
+
+/* mirrors .brand in mock.html: 44 px mark, 19 px Archivo Black, 9 px mono line */
+.lock{margin-top:14px;height:84px;padding:0 22px;border-radius:14px;background:var(--bg);border:1px solid var(--line);display:flex;align-items:center;position:relative;overflow:hidden}
+.lock::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,207,255,.35),rgba(0,255,136,.35),transparent)}
+.brand{display:flex;align-items:center;gap:13px}
+.brand svg{flex:none;filter:drop-shadow(0 0 14px rgba(0,255,136,.3))}
+.brand .w{line-height:1}
+.brand .w b{display:block;font:19px "Archivo Black",sans-serif;letter-spacing:.015em;white-space:nowrap}
+.brand .w b em{font-style:normal;color:var(--green)}
+.brand .w span{display:block;margin-top:6px;font:600 9px "JetBrains Mono",monospace;letter-spacing:.34em;color:var(--dim)}
+
+.sizes{margin-top:14px;display:flex;align-items:flex-end;gap:14px}
+.sizes figure{display:flex;flex-direction:column;align-items:center;gap:6px}
+.sizes .t{border-radius:10px;background:var(--deep);border:1px solid var(--line);display:grid;place-items:center}
+.sizes .t64{width:92px;height:92px}
+.sizes .t32{width:56px;height:56px}
+.sizes .t24{width:44px;height:44px}
+.sizes figcaption{font:600 10px "JetBrains Mono",monospace;color:var(--dim)}
+
+@media (max-width:1400px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}.stage{height:260px}.stage svg{width:200px;height:200px}h1{font-size:30px}}
+@media (max-width:420px){.brand .w b{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="head">
+  <div>
+    <div class="eyebrow">6 MARKS · 240 / 44 / 64 / 32 / 24 PX</div>
+    <h1>Capital <em>Maximizer</em> logos</h1>
+  </div>
+  <div class="strip" aria-label="All marks at 24 px">
+    <figure><div class="t"><span class="m" data-m="0" data-s="24"></span></div><figcaption>0</figcaption></figure>
+    <figure><div class="t"><span class="m" data-m="1" data-s="24"></span></div><figcaption>1</figcaption></figure>
+    <figure><div class="t"><span class="m" data-m="2" data-s="24"></span></div><figcaption>2</figcaption></figure>
+    <figure><div class="t"><span class="m" data-m="3" data-s="24"></span></div><figcaption>3</figcaption></figure>
+    <figure><div class="t"><span class="m" data-m="4" data-s="24"></span></div><figcaption>4</figcaption></figure>
+    <figure><div class="t"><span class="m" data-m="5" data-s="24"></span></div><figcaption>5</figcaption></figure>
+  </div>
+</header>
+
+<main class="grid" id="grid"></main>
+
+</div>
+
+<!-- 0: the current mark, verbatim from mock.html <svg id="mark"> -->
+<template id="t0"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+        <defs>
+          <linearGradient id="mk" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+          <radialGradient id="mkc"><stop offset="0" stop-color="#00ff88" stop-opacity=".55"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></radialGradient>
+        </defs>
+        <path d="M32 2.5l26 15v30L32 62.5l-26-15v-30z" fill="#06090f" stroke="url(#mk)" stroke-width="2"/>
+        <path d="M32 9l20.2 11.7v23.3L32 55.7 11.8 44V20.7z" fill="none" stroke="#00cfff" stroke-opacity=".28" stroke-width=".8"/>
+        <path d="M32 47L20 34M32 47L44 34M20 34L32 18M44 34L32 18M32 47V18" fill="none" stroke="url(#mk)" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="32" cy="18" r="11" fill="url(#mkc)"/>
+        <circle cx="32" cy="47" r="3.2" fill="#00cfff"/>
+        <circle cx="20" cy="34" r="3" fill="#06090f" stroke="#00cfff" stroke-width="1.6"/>
+        <circle cx="44" cy="34" r="3" fill="#06090f" stroke="#00ff88" stroke-width="1.6"/>
+        <circle cx="32" cy="18" r="4.8" fill="#00ff88"/>
+</svg></template>
+
+<!-- 1..5: identical to logo-1.svg .. logo-5.svg -->
+<template id="t1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="l1a" x1="20" y1="40" x2="50" y2="4" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3b82f6"/><stop offset=".5" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+  </defs>
+  <g transform="translate(-2.5 0)">
+    <g fill="none" stroke="url(#l1a)" stroke-linecap="round">
+      <path d="M23.7 37.5 L28 42.7" stroke-width="2.6"/>
+      <path d="M28 42.7 L37 40.2" stroke-width="3"/>
+      <path d="M37 40.2 L39.3 28.4" stroke-width="3.4"/>
+      <path d="M39.3 28.4 L28 19.2" stroke-width="3.8"/>
+      <path d="M28 19.2 L12 25.8" stroke-width="4.2"/>
+      <path d="M12 25.8 L9.6 45.6" stroke-width="4.6"/>
+      <path d="M9.6 45.6 L28 58.9" stroke-width="5"/>
+      <path d="M28 58.9 L51 48.3" stroke-width="5.4"/>
+      <path d="M51 48.3 L51 17" stroke-width="5.8"/>
+    </g>
+    <polygon points="23.7,34.4 26.4,36 26.4,39.1 23.7,40.6 21,39.1 21,36" fill="#00cfff"/>
+    <polygon points="42.5,16.5 51,3.5 59.5,16.5" fill="#00ff88" stroke="#00ff88" stroke-width="1.5" stroke-linejoin="round"/>
+  </g>
+</svg></template>
+
+<template id="t2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="l2a" x1="12" y1="52" x2="54" y2="10" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+    <linearGradient id="l2b" x1="15" y1="15" x2="49" y2="49" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#00cfff"/></linearGradient>
+  </defs>
+  <path d="M8 40 L24 56 M24 8 L40 24" stroke="#00cfff" stroke-opacity=".3" stroke-width="1" stroke-linecap="round"/>
+  <path d="M15 15 L24 24 M40 40 L49 49" fill="none" stroke="url(#l2b)" stroke-width="7" stroke-linecap="round"/>
+  <line x1="13" y1="51" x2="45" y2="19" stroke="url(#l2a)" stroke-width="7" stroke-linecap="round"/>
+  <polygon points="55,9 51.5,26 38,12.5" fill="#00ff88" stroke="#00ff88" stroke-width="1.5" stroke-linejoin="round"/>
+</svg></template>
+
+<template id="t3"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="l3a" x1="8" y1="13" x2="56" y2="31" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+  </defs>
+  <path d="M8 22 V44 M56 22 V44 M20 31 V53 M44 31 V53" stroke="#00cfff" stroke-opacity=".3" stroke-width="1"/>
+  <path d="M8 44 L20 53 L44 53 L56 44" fill="none" stroke="#3b82f6" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M8 33 L20 42 L44 42 L56 33" fill="none" stroke="#00cfff" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+  <polygon points="8,22 20,13 44,13 56,22 44,31 20,31" fill="url(#l3a)" stroke="url(#l3a)" stroke-width="5" stroke-linejoin="round"/>
+  <polygon points="16,22 23.5,16.5 40.5,16.5 48,22 40.5,27.5 23.5,27.5" fill="none" stroke="#06090f" stroke-opacity=".35" stroke-width="1"/>
+</svg></template>
+
+<template id="t4"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="l4a" x1="6" y1="54" x2="40" y2="10" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#00cfff"/></linearGradient>
+    <linearGradient id="l4b" x1="23" y1="46" x2="52" y2="16" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+  </defs>
+  <path d="M37 9.5 L19 9.5 L6 32 L19 54.5 L44 54.5" fill="none" stroke="url(#l4a)" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M23 45 L23 22 L33.5 34.5 L51 16" fill="none" stroke="url(#l4b)" stroke-width="5.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="51" cy="16" r="9.5" fill="none" stroke="#00ff88" stroke-opacity=".3" stroke-width="1"/>
+  <circle cx="51" cy="16" r="5.6" fill="#00ff88"/>
+</svg></template>
+
+<template id="t5"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="l5a" x1="13" y1="52" x2="51" y2="15" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#00cfff"/></linearGradient>
+    <linearGradient id="l5b" x1="17" y1="0" x2="47" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+  </defs>
+  <path d="M32 15 V10" stroke="#00ff88" stroke-width="3" stroke-linecap="round"/>
+  <polygon points="32,2.5 36.3,5 36.3,10 32,12.5 27.7,10 27.7,5" fill="#00ff88"/>
+  <rect x="6.5" y="27" width="5" height="13" rx="1.5" fill="#3b82f6"/>
+  <rect x="52.5" y="27" width="5" height="13" rx="1.5" fill="#3b82f6"/>
+  <path d="M20 15.5 H44 L51 22.5 V40 L43 52.5 H21 L13 40 V22.5 Z" fill="#06090f" stroke="url(#l5a)" stroke-width="4.5" stroke-linejoin="round"/>
+  <polygon points="16.5,31 22,24.5 42,24.5 47.5,31 42,37.5 22,37.5" fill="url(#l5b)"/>
+  <path d="M23 33.5 L41.5 28" fill="none" stroke="#06090f" stroke-width="2" stroke-linecap="round"/>
+</svg></template>
+
+<script>
+const CANDIDATES = [
+  {n: "0", name: "Current", idea: "Hexagon frame around a four-node diamond tree, glowing apex.", cur: true},
+  {n: "1", name: "Flywheel", idea: "Yield loops back, the spiral widens, the exit points straight up."},
+  {n: "2", name: "Multiplier", idea: "A times sign whose rising arm turns into the arrow."},
+  {n: "3", name: "Leverage Stack", idea: "Lend, borrow, re-stake: each loop adds a layer to the vault."},
+  {n: "4", name: "CM Monogram", idea: "Hex C holds an M that breaks out as a rising chart."},
+  {n: "5", name: "Finder Bot", idea: "The AI finder as a scout bot; its visor reads the chart."},
+];
+
+const grid = document.getElementById("grid");
+grid.innerHTML = CANDIDATES.map(c => `
+  <article class="card${c.cur ? " cur" : ""}">
+    <div class="ch"><span class="n">${c.n}</span><h2>${c.name}</h2></div>
+    <p class="idea">${c.idea}</p>
+    <div class="stage"><span class="m" data-m="${c.n}" data-s="240"></span></div>
+    <div class="lock"><div class="brand"><span class="m" data-m="${c.n}" data-s="44"></span>
+      <div class="w"><b>CAPITAL <em>MAXIMIZER</em></b><span>BY CYMETICA</span></div></div></div>
+    <div class="sizes">
+      <figure><div class="t t64"><span class="m" data-m="${c.n}" data-s="64"></span></div><figcaption>64</figcaption></figure>
+      <figure><div class="t t32"><span class="m" data-m="${c.n}" data-s="32"></span></div><figcaption>32</figcaption></figure>
+      <figure><div class="t t24"><span class="m" data-m="${c.n}" data-s="24"></span></div><figcaption>24</figcaption></figure>
+    </div>
+  </article>`).join("");
+
+// Each slot gets its own copy of the mark with its ids suffixed, so the 30 inline
+// copies on this page never resolve a gradient or mask from another copy.
+let k = 0;
+for (const slot of document.querySelectorAll(".m")) {
+  const src = document.getElementById("t" + slot.dataset.m).innerHTML;
+  const sfx = "_" + (k++);
+  slot.outerHTML = src
+    .replace(/id="([^"]+)"/g, `id="$1${sfx}"`)
+    .replace(/url\(#([^)]+)\)/g, `url(#$1${sfx})`)
+    .replace("<svg ", `<svg width="${slot.dataset.s}" height="${slot.dataset.s}" aria-hidden="true" `);
+}
+</script>
+</body>
+</html>
