@@ -80,22 +80,24 @@
         '<div class="lb-v" title="fee-paying volume of the company\'s own agents, 1 point per 100 USDC, at most 30% of the company\'s points">$' + k(r.p.volume) + '<small>' + pts(r.p.pa) + ' pts</small></div>' +
         '<div class="lb-s">' + right + '</div></div>';
     }).join('');
-    var seats = b.prizes.map(function (prize, i) {
-      return '<div class="lb-seat pl' + (i + 1) + '"><i>' + (i + 1) + '</i><b>' + pts(prize) + '</b><span>ET10</span></div>';
+    // the prizes as a podium (the operator, 2026-10-28: "nejake stupne viteznu"): 2nd, 1st, 3rd, the first the tallest step; under it the
+    // three conditions; on the right only the table of what earns what
+    var steps = [1, 0, 2].map(function (i) {
+      return '<div class="pod pl' + (i + 1) + '"><div class="pod-p"><b>' + pts(b.prizes[i]) + '</b><span>ET10</span></div><div class="pod-s"><i>' + (i + 1) + '</i></div></div>';
     }).join('');
     return '<div class="mh lbh"><span class="uvb-live"></span><h3>' + K.name.toUpperCase() + ' · ' + K.month.split(' ')[0].toUpperCase() + '</h3><span class="lbt">LEADERBOARD</span><button class="btn" data-a="close">×</button></div>' +
-      '<div class="lb-rule"><div class="lb-seats">' + seats + '</div>' +
+      '<div class="lb-rule s0"><div class="lb-left"><div class="lb-pod">' + steps + '</div>' +
         '<div class="lb-who"><h4>Who gets a slot</h4>' +
           '<div class="lb-c"><i>1</i><b>Top 3</b><span>by points this month; ' + b.left + ' days left</span></div>' +
           '<div class="lb-c"><i>2</i><b>' + b.floor + '+</b><span>points in the month, or the slot stays open</span></div>' +
-          '<div class="lb-c"><i>3</i><b>Month end</b><span>the ranking decides; then every company starts again from zero</span></div>' +
-          // what earns what, as a table (the operator, 2026-10-28: "misto toho hnusneho textu peknou tabulku struncou")
-          '<div class="lb-pt"><div class="lb-pt-h"><span>What counts</span><span>Points</span><span>Cap</span></div>' +
-            '<div class="lb-pt-r"><span>Active user<small>used a product on 2+ days</small></span><b>10</b><span>+1 per further day, max 20</span></div>' +
-            '<div class="lb-pt-r"><span>Visitor<small>no account, came back</small></span><b>1</b><span>25% of user points</span></div>' +
-            '<div class="lb-pt-r"><span>Trading agents<small>per 100 USDC of fee-paying volume</small></span><b>1</b><span>30% of all points</span></div>' +
-            '<div class="lb-pt-r z"><span>Your own accounts</span><b>0</b><span>earn nothing</span></div>' +
-            '<em>The ET10 prizes are a sample.</em></div></div></div>' +
+          '<div class="lb-c"><i>3</i><b>Month end</b><span>the ranking decides; then every company starts again from zero</span></div></div></div>' +
+        // what earns what, as a table (the operator, 2026-10-28: "misto toho hnusneho textu peknou tabulku struncou")
+        '<div class="lb-pt"><div class="lb-pt-h"><span>What counts</span><span>Points</span><span>Cap</span></div>' +
+          '<div class="lb-pt-r"><span>Active user<small>used a product on 2+ days</small></span><b>10</b><span>+1 per further day, max 20</span></div>' +
+          '<div class="lb-pt-r"><span>Visitor<small>no account, came back</small></span><b>1</b><span>25% of user points</span></div>' +
+          '<div class="lb-pt-r"><span>Trading agents<small>per 100 USDC of fee-paying volume</small></span><b>1</b><span>30% of all points</span></div>' +
+          '<div class="lb-pt-r z"><span>Your own accounts</span><b>0</b><span>earn nothing</span></div>' +
+          '<em>The ET10 prizes are a sample.</em></div></div>' +
       '<div class="lb-head s0"><span>#</span><span></span><span>Company</span><span>Users</span><span>Visitors</span><span>Agents</span><span>Points</span></div>' +
       '<div class="lb">' + rows + (cut ? '' : line(false)) + '</div>';
   }

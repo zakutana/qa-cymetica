@@ -215,6 +215,23 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 .lb-r.me { border-color: rgba(0, 255, 136, .55); background: rgba(0, 255, 136, .07); }
 .lb-v { text-align: right; font-weight: 700; }
 .uvb-n u { text-decoration: none; }
+/* Season 0's leaderboard head: the prizes as a podium and the three conditions under it on the left, only the table on the right */
+.lb-rule.s0, .lbg .lb-rule.s0 { grid-template-columns: minmax(0, 1fr) minmax(0, .95fr); gap: 34px; align-items: start; }
+.lb-left { display: flex; flex-direction: column; gap: 18px; }
+.lb-pod { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: end; padding: 0 6px; }
+.pod { --sc: var(--rs1); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; }
+.pod.pl2 { --sc: var(--rs2); } .pod.pl3 { --sc: var(--rs3); }
+.pod-p { text-align: center; line-height: 1; }
+.pod-p b { display: block; font: 400 clamp(22px, 2.3vw, 32px)/1 'Archivo Black', sans-serif; color: var(--sc); text-shadow: 0 0 16px color-mix(in srgb, var(--sc) 55%, transparent); }
+.pod-p span { display: block; margin-top: 4px; font-size: 11px; font-weight: 700; color: var(--text); }
+.pod-s { width: 100%; display: grid; place-items: center; border-radius: 12px 12px 0 0; border: 1px solid color-mix(in srgb, var(--sc) 50%, transparent); border-bottom: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sc) 30%, transparent), rgba(255, 255, 255, .02) 85%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 -10px 34px color-mix(in srgb, var(--sc) 20%, transparent); }
+.pod.pl1 .pod-s { height: 112px; } .pod.pl2 .pod-s { height: 80px; } .pod.pl3 .pod-s { height: 56px; }
+.pod-s i { font: 400 34px/1 'Archivo Black', sans-serif; font-style: normal; color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-image: linear-gradient(180deg, #ffffff, var(--sc)); filter: drop-shadow(0 0 10px color-mix(in srgb, var(--sc) 60%, transparent)); }
+.lb-rule.s0 > .lb-pt { margin-top: 0; }
+.lb-rule.s0 .lb-who { padding: 0; }
 /* Season 0's "what earns what" table, in the leaderboard's rule box (uvboard.js tableSeason) */
 .lb-pt { margin-top: 12px; display: grid; gap: 0; }
 .lb-pt-h, .lb-pt-r { display: grid; grid-template-columns: minmax(0, 1.5fr) 44px minmax(0, 1.2fr); align-items: center; gap: 12px; padding: 7px 0; }
