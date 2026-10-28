@@ -42,6 +42,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8798", "--bind", "127.0.0.1", "--directory", "outbox/quant-lab-graphic"],
       "port": 8798
+    },
+    {
+      "name": "yield-booster",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8799", "--bind", "127.0.0.1", "--directory", "outbox/yield-booster"],
+      "port": 8799
     }
   ]
 }
