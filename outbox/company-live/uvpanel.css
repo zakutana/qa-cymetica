@@ -282,6 +282,7 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 @media (prefers-reduced-motion: reduce) { .pod > .pod-beam, .pod-s::after, .spark { animation: none; } .spark { display: none; } }
 .lb-rule.s0 > .lb-pt { margin-top: 0; }
 .lb-rule.s0 .lb-who { padding: 0; }
+.lb-rule.s0 .lb-c span { white-space: nowrap; }
 /* Season 0's "what earns what" table, in the leaderboard's rule box (uvboard.js tableSeason) */
 .lb-pt { margin-top: 12px; display: grid; gap: 0; }
 .lb-pt-h, .lb-pt-r { display: grid; grid-template-columns: minmax(0, 1.5fr) 44px minmax(0, 1.2fr); align-items: center; gap: 12px; padding: 7px 0; }
