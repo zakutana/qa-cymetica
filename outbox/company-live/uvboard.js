@@ -49,17 +49,19 @@
       var r = b.top[i];
       if (!r) {
         return '<div class="uvb-r pl' + (i + 1) + ' open"><i class="uvb-rk">' + (i + 1) + '</i><span class="uvb-seat" aria-hidden="true">+</span>' +
-          '<div class="uvb-n"><b>Open slot</b><span>bring ' + b.floor + ' points this month</span></div><div class="uvb-s"><b>' + k(prize) + '</b><span>ET10 prize</span></div></div>';
+          '<div class="uvb-n"><b>Open slot</b><span>bring ' + b.floor + ' pts</span></div><div class="uvb-s"><b>' + k(prize) + '</b><span>ET10</span></div></div>';
       }
+      // the board says three things: who, how many points, what they win -- and the prize is the big number (the operator, 2026-10-28);
+      // users / visitors / agents are in the leaderboard
       return '<div class="uvb-r pl' + (i + 1) + (r.mine ? ' me' : '') + '"><i class="uvb-rk">' + (i + 1) + '</i>' + CO.stationIcon(r.c.skin, r.c.accent) +
-        '<div class="uvb-n">' + name(r.c, r.mine) + '<span>' + mix(r.p) + '</span></div>' +
-        '<div class="uvb-s"><b>' + pts(r.total) + '</b><span>' + k(prize) + ' ET10</span></div></div>';
+        '<div class="uvb-n">' + name(r.c, r.mine) + '<span>' + pts(r.total) + ' pts</span></div>' +
+        '<div class="uvb-s"><b>' + k(prize) + '</b><span>ET10</span></div></div>';
     }).join('');
     var none = !b.top.length;
     return '<button type="button" class="uvb-pill" data-a="board-fold" title="The top 3 of the month win ET10">TOP 3 <i>' + K.name.toUpperCase() + '</i></button>' +
       '<div class="uvb-in"><i class="uvb-sh"></i><div class="uvb-h"><span class="uvb-live"></span><b>' + K.name.toUpperCase() + '</b><span>TOP 3</span></div>' +
       '<div class="uvb-sub" title="Points for real use of a company\'s products this month: 10 per active user (+1 per further active day, at most 20), signed-out visitors count less, trading agents add 1 point per 100 USDC of fee-paying volume. The owner\'s own accounts earn nothing. The prize amounts are a sample: Cymetica sets the prize.">' +
-        K.month + ' · points for real use of your products</div>' +
+        K.month + ' · most points wins</div>' +
       (none ? '<div class="uvb-hero"><b>All 3 slots are open.</b><span>Be the first company to reach ' + b.floor + ' points.</span></div>' : '') + rows +
       '<div class="uvb-f"><span><b>' + b.left + ' d</b> left · <b>' + b.floor + ' pts</b> to qualify</span>' +
         '<button type="button" data-a="board-all">Full leaderboard →</button></div></div>';
