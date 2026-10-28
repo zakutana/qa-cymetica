@@ -137,7 +137,7 @@ def test_the_loop_arithmetic_on_numbers_worked_by_hand():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
-def test_the_platforms_tab_is_the_allowlist_from_defillama():
+def test_the_finders_venues_are_the_ones_its_routes_use():
     text = (HERE / "data.js").read_text(encoding="utf-8")
     assert len(text.encode()) < 80_000
     d = js("CM_DATA")
@@ -145,9 +145,30 @@ def test_the_platforms_tab_is_the_allowlist_from_defillama():
     assert all(re.fullmatch(r"[0-9a-f-]{36}", p["id"]) for p in d["pools"])
     used = {p["project"] for p in d["pools"]} | {"uniswap-v3", "curve-dex"}          # the swaps
     assert used == set(d["protocols"]), used ^ set(d["protocols"])
-    for k, p in d["protocols"].items():
-        assert p["audited"] and p["tvl"] > 0 and p["category"] and p["site"] and "/" not in p["site"], k
     assert sum(p["pools_read"] for p in d["protocols"].values()) == d["scanned"]["pools"]
+
+
+# The operator, 2026-10-28: "ono to ma byt cross chain ... ktere vsechny platformy by tam meli pridat, aby to byl fakt
+# top rozsahly produkt". The rule each one passes, decided here and checked on every refresh by rates.py:
+CEX_ISSUED = ("binance", "coinbase", "bybit", "kraken", "okx", "bitget")
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_every_platform_passes_the_rule_and_runs_where_usdc_is_native():
+    """Audited per DefiLlama, live a year or more, no more than $1M lost and not returned in the last two years, on at
+    least one chain where Circle's CCTP moves native USDC (so a cross-chain move never holds a wrapped dollar), and not
+    a token an exchange issues. The finder's own venues are all among them and marked as such."""
+    d = js("CM_DATA")
+    plats, cctp = d["platforms"], set(d["cctp_chains"])
+    assert len(plats) >= 30 and len({p["slug"] for p in plats}) == len(plats)
+    assert {"Ethereum", "Solana", "Arbitrum", "Base"} <= cctp and "BSC" not in cctp and "Tron" not in cctp
+    for p in plats:
+        assert p["audited"] and (p["age_years"] is None or p["age_years"] >= 1) and p["lost_24m"] <= 1_000_000, p["slug"]
+        assert p["chains"] and set(p["chains"]) <= cctp and p["tvl"] >= 30_000_000, p["slug"]
+        assert p["category"] and p["site"] and "/" not in p["site"] and not p["slug"].startswith(CEX_ISSUED), p["slug"]
+    finder = {p["slug"] for p in plats if p["in_finder"]}
+    assert finder == set(d["protocols"]), finder ^ set(d["protocols"])
+    assert len({c for p in plats for c in p["chains"]}) >= 8             # cross-chain, not three chains with a label
 
 
 ALLOWED = {"#00cfff", "#00ff88", "#ff4444", "#3b82f6", "#e6edf7", "#a9b8cc", "#7f93ad", "#1e3050", "#06090f",

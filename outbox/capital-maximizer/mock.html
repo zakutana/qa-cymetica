@@ -299,10 +299,14 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:4px;bac
 .plat:hover{border-color:rgba(0,207,255,.5);background:rgba(13,21,32,.95);transform:translateY(-1px)}
 .plat svg.lg{width:40px;height:40px;flex:none}
 .plat .n{flex:1;min-width:0}
-.plat .n b{display:block;font:600 14px Inter,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plat .n b{display:flex;align-items:baseline;font:600 14px Inter,sans-serif;white-space:nowrap;overflow:hidden}
+.plat .n .cc{margin-left:auto;padding-left:8px;font:500 10.5px "JetBrains Mono",monospace;font-style:normal;color:var(--dim)}
 .plat .n small{display:block;font:500 11px "JetBrains Mono",monospace;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .plat .n small i{font-style:normal;color:var(--text);font-weight:600}
 .plat .ok{width:20px;height:20px;flex:none}
+.live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px rgba(0,207,255,.8);margin-right:7px;vertical-align:2px}
+.fsep{width:1px;align-self:stretch;background:var(--hair);margin:0 6px}
+.filters button{padding:7px 13px}
 .pfoot{margin-top:14px;color:var(--dim);font:500 11.5px "JetBrains Mono",monospace}
 
 /* the mark, large (?logo=1) */

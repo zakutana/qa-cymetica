@@ -455,7 +455,10 @@
   }
 
   /* ---------- the Platforms tab ---------- */
-  const CAT = {'Dexs': 'DEX', 'Liquid Staking': 'Liquid staking', 'Basis Trading': 'Synthetic dollar', 'CDP': 'Savings', 'Lending': 'Lending', 'Derivatives': 'Perps & pools'};
+  const CAT = {'Dexs': 'DEX', 'Liquid Staking': 'Liquid staking', 'Liquid Restaking': 'Restaking', 'Basis Trading': 'Synthetic dollar',
+    'CDP': 'Stablecoin', 'Lending': 'Lending', 'Yield': 'Yield', 'Derivatives': 'Perps & pools'};
+  const CHAIN = {'Hyperliquid L1': 'Hyperliquid', 'Optimism': 'OP'};
+  const chainName = c => CHAIN[c] || c;
   const USE = {vault: 'SUPPLY', stake: 'STAKE', collateral: 'COLLATERAL', borrow: 'BORROW', swap: 'SWAP', lp: 'LP'};
   function usage() {
     const out = {};
@@ -466,27 +469,43 @@
     }
     return out;
   }
+  /* every supported platform (data.js platforms: one rule, re-checked on each refresh by rates.py), filtered by what
+     it is and by chain; the ones the finder builds routes from today carry a cyan dot */
   function renderPlatforms() {
-    const P = Object.entries(D.protocols).sort((a, b) => b[1].tvl - a[1].tvl), U = usage();
-    const cats = ['All', ...new Set(P.map(([, p]) => CAT[p.category] || p.category))];
-    const tvl = P.reduce((t, [, p]) => t + p.tvl, 0);
+    const P = D.platforms, U = usage(), cat = p => CAT[p.category] || p.category;
+    const cats = ['All', ...new Set(P.map(cat))];
+    const chainCount = {};
+    P.forEach(p => p.chains.forEach(c => { chainCount[c] = (chainCount[c] || 0) + 1; }));
+    const S2 = S.chain || 'All chains';
+    const ranked = Object.keys(chainCount).sort((a, b) => chainCount[b] - chainCount[a]);
+    const shown = S.allChains ? ranked : ranked.filter((c, k) => chainCount[c] >= 3 || c === S2);
+    const chains = ['All chains', ...shown];
+    const tvl = P.reduce((t, p) => t + p.tvl, 0);
     $('pp').textContent = `DefiLlama · ${when(D.fetched_at)}`;
     $('pstats').className = 'frame pstats';
-    $('pstats').innerHTML = [['PLATFORMS', P.length, 'g'], ['TVL', '$' + bn(tvl), ''], ['POOLS READ', num(D.scanned.pools), ''], ['CHAINS', D.scanned.chains, '']]
-      .map(([k, v, c]) => `<div class="${c}"><b>${v}</b><span class="lbl">${k}</span></div>`).join('');
-    $('filters').innerHTML = cats.map(c => `<button data-filter="${c}" class="${S.filter === c ? 'on' : ''}">${c}<i>${c === 'All' ? P.length : P.filter(([, p]) => (CAT[p.category] || p.category) === c).length}</i></button>`).join('');
+    $('pstats').innerHTML = [['PLATFORMS', P.length, 'g'], ['TVL', '$' + bn(tvl), ''], ['CHAINS', Object.keys(chainCount).length, ''],
+      ['IN THE FINDER TODAY', P.filter(p => p.in_finder).length, '']]
+      .map(([k, v, c]) => `<div class="${c}"><b>${v}</b><span class="lbl">${k}</span></div>`).join('') +
+      `<span class="chip c" style="margin-left:auto" title="Circle's CCTP burns USDC on one chain and mints it on another: no bridge pool, no wrapped dollar. Every platform here runs on at least one chain it serves.">CROSS-CHAIN · NATIVE USDC VIA CIRCLE CCTP</span>`;
+    $('filters').innerHTML = cats.map(c => `<button data-filter="${c}" class="${S.filter === c ? 'on' : ''}">${c}<i>${c === 'All' ? P.length : P.filter(p => cat(p) === c).length}</i></button>`).join('') +
+      '<span class="fsep"></span>' +
+      chains.map(c => `<button data-chain="${c}" class="${S2 === c ? 'on' : ''}">${c === 'All chains' ? c : chainName(c)}<i>${c === 'All chains' ? Object.keys(chainCount).length : chainCount[c]}</i></button>`).join('') +
+      (ranked.length > shown.length ? `<button data-morechains="1">+${ranked.length - shown.length}</button>` : '');
     // one tile a platform: logo, name, what it is and how much it holds; the rest on hover
-    $('plats').innerHTML = P.filter(([, p]) => S.filter === 'All' || (CAT[p.category] || p.category) === S.filter).map(([k, p], i) => {
-      const u = U[k] || {uses: new Set(), routes: new Set()};
-      const more = `${p.chains} chains · ${p.pools_read} pools read · ${u.routes.size} routes · ${[...u.uses].join(', ').toLowerCase()} · ${p.site.replace(/^www\./, '')}`;
-      return `<a class="plat" href="https://${p.site}" target="_blank" rel="noopener noreferrer" title="${more}" style="animation:rise .4s ${i * 0.02}s both">
+    $('plats').innerHTML = P.filter(p => (S.filter === 'All' || cat(p) === S.filter) && (S2 === 'All chains' || p.chains.includes(S2))).map((p, i) => {
+      const u = U[p.slug];
+      const more = [p.chains.map(chainName).join(', '), p.age_years === null ? 'listed before 2022' : `live ${Math.floor(p.age_years)}+ yr`,
+        p.lost_24m ? `$${(p.lost_24m / 1e6).toFixed(2)}M lost in 2 yr` : 'nothing lost in 2 yr',
+        u ? `in the finder: ${u.routes.size} routes, ${[...u.uses].join(', ').toLowerCase()}` : 'not in the finder yet', p.site.replace(/^www\./, '')].join(' · ');
+      return `<a class="plat" href="https://${p.site}" target="_blank" rel="noopener noreferrer" title="${more}" style="animation:rise .4s ${Math.min(i, 30) * 0.015}s both">
         <svg class="lg" viewBox="0 0 52 52"><path d="${hex(26, 26, 24)}" fill="#06090f" stroke="url(#gEdge)" stroke-width="1.4"/>
           <clipPath id="pc${i}"><circle cx="26" cy="26" r="15"/></clipPath><text x="26" y="31" text-anchor="middle" style="font:700 14px Inter;fill:#a9b8cc">${p.name[0]}</text>
-          <image href="${icon(k)}" x="11" y="11" width="30" height="30" clip-path="url(#pc${i})"/></svg>
-        <div class="n"><b>${p.name}</b><small>${CAT[p.category] || p.category} · <i>$${bn(p.tvl)}</i></small></div>
+          <image href="https://icons.llamao.fi/icons/protocols/${p.icon}?w=96" x="11" y="11" width="30" height="30" clip-path="url(#pc${i})"/></svg>
+        <div class="n"><b>${p.in_finder ? '<span class="live" title="the finder builds routes from it today"></span>' : ''}${p.name}<em class="cc">${p.chains.length > 1 ? p.chains.length + ' chains' : chainName(p.chains[0])}</em></b>
+          <small>${cat(p)} · <i>$${bn(p.tvl)}</i></small></div>
         ${p.audited ? `<svg class="ok" viewBox="0 0 20 20"><title>Audited (DefiLlama)</title><path d="${hex(10, 10, 9)}" fill="rgba(0,255,136,.12)" stroke="#00ff88" stroke-width="1.2"/><path d="M6.4 10.2l2.4 2.4 4.8-5" fill="none" stroke="#00ff88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}</a>`;
     }).join('');
-    $('pfoot').textContent = '✓ audited per DefiLlama · hover a tile for chains, pools and what the routes use it for · demo selection, Cymetica makes its own';
+    $('pfoot').innerHTML = '<span class="live"></span> in the finder today · ✓ audited per DefiLlama, live a year or more, under $1M lost in 2 years · hover a tile for more · Cymetica makes its own selection';
   }
 
   /* ---------- the mark, large ---------- */
@@ -530,6 +549,8 @@
     if (el('[data-pick]')) { S.pick = +el('[data-pick]').dataset.pick; S.started = false; return go(4); }
     if (el('#start')) { S.started = true; $('go4').classList.add('started'); return; }
     if (el('[data-filter]')) { S.filter = el('[data-filter]').dataset.filter; return renderPlatforms(); }
+    if (el('[data-chain]')) { S.chain = el('[data-chain]').dataset.chain; return renderPlatforms(); }
+    if (el('[data-morechains]')) { S.allChains = true; return renderPlatforms(); }
     if (el('#home')) return go(1);
   });
   document.addEventListener('input', e => {
@@ -539,7 +560,7 @@
   $('amt').addEventListener('blur', e => { if (S.amount > 0) e.target.value = num(S.amount); });
   $('amt').addEventListener('keydown', e => { if (e.key === 'Enter' && S.amount > 0) go(3); });
 
-  $('pcount').textContent = Object.keys(D.protocols).length;
+  $('pcount').textContent = D.platforms.length;
   if (q.has('logo')) {
     $('maxtab').style.display = 'none';
     $('vlogo').classList.add('on');

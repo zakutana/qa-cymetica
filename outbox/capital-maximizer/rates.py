@@ -30,8 +30,34 @@ PROTOCOLS = {
     "ethena-usde": ("Ethena", "ethena"),
     "uniswap-v3": ("Uniswap", "uniswap"),
     "curve-dex": ("Curve", "curve-dex"),
-    "gmx-evm": ("GMX", "gmx"),
 }
+# GMX was dropped on 2026-10-28 by the platform rule below: DefiLlama's hacks list $42M taken from GMX V1 in 07/2025,
+# $40M returned, so $2M lost.
+
+# The Platforms tab: every platform the product supports, picked 2026-10-28 from DefiLlama's protocol list by one rule,
+# re-checked on every refresh (a platform that stops passing stops the refresh, it is never shown quietly):
+#   audited per DefiLlama; listed a year or more; at most $1M lost and not returned in the last two years (DefiLlama
+#   hacks, any version of the protocol, social-engineering scams of users not counted); at least $30M on chains where
+#   Circle's CCTP moves native USDC (developers.circle.com/cctp/cctp-supported-blockchains, read 2026-10-28: BNB Chain
+#   has USYC only and Tron none, so the product never holds a wrapped dollar); permissionless, so no token an exchange
+#   issues (Binance, Coinbase, Bybit staked ETH/SOL) and no KYC-gated pool (Liquid Collective).
+# Left out by it, the large ones: Drift ($295M lost 04/2026), Kelp ($293M, 04/2026), Cetus ($223M, 05/2025), Balancer
+# ($128M, 11/2025), Moonwell, Yearn, Across, NAVI, Venus (lost); Jupiter, Orca, Raydium, Hyperliquid HLP, Sanctum
+# (no audit on DefiLlama); Maple (lender access not verified as open to all).
+CCTP_CHAINS = ["Ethereum", "Arbitrum", "Base", "Optimism", "Polygon", "Avalanche", "Solana", "Sui", "Aptos", "Sonic",
+               "Hyperliquid L1", "Linea", "Unichain", "Monad", "Plasma", "Sei", "Ink", "World Chain", "Starknet",
+               "Injective", "Plume", "XDC", "Cronos", "Codex", "Stellar", "Morph", "X Layer", "Pharos", "EDGE", "Arc"]
+PLATFORMS = {      # DefiLlama slug -> name shown (the finder's own venues come from PROTOCOLS)
+    "sparklend": "Spark", "kamino-lend": "Kamino", "fluid-lending": "Fluid", "euler-v2": "Euler",
+    "dolomite": "Dolomite", "hyperlend-pooled": "HyperLend", "suilend": "Suilend", "benqi-lending": "BENQI",
+    "cap": "Cap", "liquity-v1": "Liquity", "reservoir-protocol": "Reservoir",
+    "jito-liquid-staking": "Jito", "marinade-liquid-staking": "Marinade", "stakewise-v3": "StakeWise",
+    "stader": "Stader", "sthype": "stHYPE", "springsui": "SpringSui", "benqi-staked-avax": "BENQI sAVAX",
+    "renzo": "Renzo", "pendle-v2": "Pendle", "convex-finance": "Convex", "stake-dao-yield": "Stake DAO",
+    "falcon-finance": "Falcon", "solstice": "Solstice", "aerodrome-slipstream": "Aerodrome", "quickswap-dex": "QuickSwap",
+}
+CEX_ISSUED = ("binance", "coinbase", "bybit", "kraken", "okx", "bitget")
+MIN_PLATFORM = 30_000_000
 # stablecoin homes for USDC: (project, chain, DefiLlama symbol, name shown)
 VAULTS = [
     ("aave-v3", "Ethereum", "USDC", "Aave USDC"),
@@ -56,7 +82,6 @@ LPS = [
     ("uniswap-v3", "Ethereum", "USDC-WETH", "0.3%", "uniswap"),
     ("uniswap-v3", "Arbitrum", "WETH-USDC", "0.05%", "uniswap"),
     ("uniswap-v3", "Base", "WETH-USDC", "0.3%", "uniswap"),
-    ("gmx-evm", "Arbitrum", "ETH-USDC", None, "gmx"),
 ]
 # collateral a loop can borrow against: DefiLlama symbol -> (token, asset, the stake whose yield it carries)
 COLLATERAL = {
@@ -95,6 +120,38 @@ def row(p: dict, role: str, **extra) -> dict:
            "apy_30d": p.get("apyMean30d"), "tvl": round(p["tvlUsd"] or 0)}
     out.update(extra)
     return out
+
+
+def platforms(facts: dict, hacks: list) -> list:
+    """Every platform of the tab with the facts its rule reads; a platform that fails the rule stops the refresh."""
+    now = dt.datetime.now(dt.timezone.utc).timestamp()
+    family = lambda f: f.get("parentProtocol") or f["slug"]
+    by_id, by_name = {str(f.get("id")): f for f in facts.values()}, {f["name"].lower(): f for f in facts.values()}
+    lost = {}
+    for h in hacks:
+        if h["date"] < now - 2 * 365 * 86400 or h.get("classification") == "Social Engineering":
+            continue
+        f = by_id.get(str(h.get("defillamaId"))) or by_name.get(h["name"].lower())
+        if f:
+            lost[family(f)] = lost.get(family(f), 0) + max(0, (h["amount"] or 0) - (h.get("returnedFunds") or 0))
+    out, bad = [], []
+    for slug, name in [(k, n) for k, (n, _) in PROTOCOLS.items()] + list(PLATFORMS.items()):
+        f = facts[slug]
+        ct = {c: v for c, v in (f.get("chainTvls") or {}).items() if c in CCTP_CHAINS and v >= 1_000_000}
+        p = {"slug": slug, "name": name, "icon": PROTOCOLS[slug][1] if slug in PROTOCOLS else slug,
+             "category": f.get("category"), "tvl": round(sum(ct.values())),
+             "audited": str(f.get("audits") or "0") != "0",
+             # DefiLlama records a listing date only for later listings: none means listed before it kept them
+             "age_years": round((now - f["listedAt"]) / 86400 / 365, 1) if f.get("listedAt") else None,
+             "lost_24m": round(lost.get(family(f), 0)), "chains": sorted(ct, key=lambda c: -ct[c]),
+             "site": urllib.parse.urlsplit(f.get("url") or "").netloc, "in_finder": slug in PROTOCOLS}
+        if not (p["audited"] and (p["age_years"] is None or p["age_years"] >= 1) and p["lost_24m"] <= 1_000_000
+                and p["tvl"] >= MIN_PLATFORM and not slug.startswith(CEX_ISSUED)):
+            bad.append(f"{slug}: {p}")
+        out.append(p)
+    if bad:
+        raise SystemExit("platforms that no longer pass the rule:\n" + "\n".join(bad))
+    return sorted(out, key=lambda p: -p["tvl"])
 
 
 def main() -> None:
@@ -149,8 +206,10 @@ def main() -> None:
                         "pools_read": sum(1 for p in looked if p["project"] == k)}
     data = {
         "fetched_at": now,
-        "source": f"{SRC}/pools + {SRC}/lendBorrow + {LLAMA}/protocols",
+        "source": f"{SRC}/pools + {SRC}/lendBorrow + {LLAMA}/protocols + {LLAMA}/hacks",
         "protocols": protocols,
+        "cctp_chains": CCTP_CHAINS,
+        "platforms": platforms(facts, get(LLAMA + "/hacks", base="")),
         "scanned": {"pools": len(looked), "protocols": len({p["project"] for p in looked}), "chains": len(CHAINS)},
         "pools": out,
         "ticker": ticker,

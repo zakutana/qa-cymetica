@@ -1,14 +1,14 @@
-// written by rates.py -- DefiLlama, read 2026-10-28T15:45Z
+// written by rates.py -- DefiLlama, read 2026-10-28T17:09Z
 window.CM_DATA = {
- "fetched_at": "2026-10-28T15:45Z",
- "source": "https://yields.llama.fi/pools + https://yields.llama.fi/lendBorrow + https://api.llama.fi/protocols",
+ "fetched_at": "2026-10-28T17:09Z",
+ "source": "https://yields.llama.fi/pools + https://yields.llama.fi/lendBorrow + https://api.llama.fi/protocols + https://api.llama.fi/hacks",
  "protocols": {
   "aave-v3": {
    "name": "Aave",
    "icon": "aave-v3",
    "llama_name": "Aave V3",
    "category": "Lending",
-   "tvl": 16360031001,
+   "tvl": 16331724915,
    "audited": true,
    "audit_links": 1,
    "chains": 21,
@@ -44,7 +44,7 @@ window.CM_DATA = {
    "icon": "sky",
    "llama_name": "Sky Lending",
    "category": "CDP",
-   "tvl": 5203655385,
+   "tvl": 5191542972,
    "audited": true,
    "audit_links": 1,
    "chains": 1,
@@ -56,7 +56,7 @@ window.CM_DATA = {
    "icon": "lido",
    "llama_name": "Lido",
    "category": "Liquid Staking",
-   "tvl": 22677921402,
+   "tvl": 22637746208,
    "audited": true,
    "audit_links": 1,
    "chains": 5,
@@ -68,7 +68,7 @@ window.CM_DATA = {
    "icon": "ether.fi",
    "llama_name": "ether.fi Stake",
    "category": "Liquid Staking",
-   "tvl": 4473279166,
+   "tvl": 4456262574,
    "audited": true,
    "audit_links": 1,
    "chains": 6,
@@ -80,7 +80,7 @@ window.CM_DATA = {
    "icon": "rocket-pool",
    "llama_name": "Rocket Pool",
    "category": "Liquid Staking",
-   "tvl": 1138104387,
+   "tvl": 1133958150,
    "audited": true,
    "audit_links": 4,
    "chains": 1,
@@ -92,7 +92,7 @@ window.CM_DATA = {
    "icon": "ethena",
    "llama_name": "Ethena USDe",
    "category": "Basis Trading",
-   "tvl": 4539626563,
+   "tvl": 4539816882,
    "audited": true,
    "audit_links": 1,
    "chains": 1,
@@ -116,29 +116,665 @@ window.CM_DATA = {
    "icon": "curve-dex",
    "llama_name": "Curve DEX",
    "category": "Dexs",
-   "tvl": 1163553540,
+   "tvl": 1162483849,
    "audited": true,
    "audit_links": 1,
    "chains": 32,
    "site": "curve.finance",
-   "pools_read": 104
-  },
-  "gmx-evm": {
-   "name": "GMX",
-   "icon": "gmx",
-   "llama_name": "GMX EVM",
-   "category": "Derivatives",
-   "tvl": 209036662,
-   "audited": true,
-   "audit_links": 1,
-   "chains": 4,
-   "site": "gmx.io",
-   "pools_read": 11
+   "pools_read": 103
   }
  },
+ "cctp_chains": [
+  "Ethereum",
+  "Arbitrum",
+  "Base",
+  "Optimism",
+  "Polygon",
+  "Avalanche",
+  "Solana",
+  "Sui",
+  "Aptos",
+  "Sonic",
+  "Hyperliquid L1",
+  "Linea",
+  "Unichain",
+  "Monad",
+  "Plasma",
+  "Sei",
+  "Ink",
+  "World Chain",
+  "Starknet",
+  "Injective",
+  "Plume",
+  "XDC",
+  "Cronos",
+  "Codex",
+  "Stellar",
+  "Morph",
+  "X Layer",
+  "Pharos",
+  "EDGE",
+  "Arc"
+ ],
+ "platforms": [
+  {
+   "slug": "lido",
+   "name": "Lido",
+   "icon": "lido",
+   "category": "Liquid Staking",
+   "tvl": 22637746208,
+   "audited": true,
+   "age_years": null,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum",
+    "Solana"
+   ],
+   "site": "lido.fi",
+   "in_finder": true
+  },
+  {
+   "slug": "aave-v3",
+   "name": "Aave",
+   "icon": "aave-v3",
+   "category": "Lending",
+   "tvl": 15987044822,
+   "audited": true,
+   "age_years": 4.6,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum",
+    "Base",
+    "Arbitrum",
+    "Plasma",
+    "Monad",
+    "Avalanche",
+    "Polygon",
+    "X Layer",
+    "Optimism",
+    "Linea",
+    "Sonic"
+   ],
+   "site": "aave.com",
+   "in_finder": true
+  },
+  {
+   "slug": "morpho-blue",
+   "name": "Morpho",
+   "icon": "morpho-blue",
+   "category": "Lending",
+   "tvl": 10524577073,
+   "audited": true,
+   "age_years": 2.8,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum",
+    "Base",
+    "Arc",
+    "Arbitrum",
+    "Monad",
+    "Hyperliquid L1",
+    "Pharos",
+    "World Chain",
+    "Optimism",
+    "Polygon",
+    "Morph",
+    "Sei",
+    "Unichain"
+   ],
+   "site": "app.morpho.org",
+   "in_finder": true
+  },
+  {
+   "slug": "sky-lending",
+   "name": "Sky",
+   "icon": "sky",
+   "category": "CDP",
+   "tvl": 5191542972,
+   "audited": true,
+   "age_years": null,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum"
+   ],
+   "site": "app.sky.money",
+   "in_finder": true
+  },
+  {
+   "slug": "sparklend",
+   "name": "Spark",
+   "icon": "sparklend",
+   "category": "Lending",
+   "tvl": 4996088779,
+   "audited": true,
+   "age_years": 3.5,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum"
+   ],
+   "site": "spark.finance",
+   "in_finder": false
+  },
+  {
+   "slug": "ethena-usde",
+   "name": "Ethena",
+   "icon": "ethena",
+   "category": "Basis Trading",
+   "tvl": 4539816882,
+   "audited": true,
+   "age_years": 2.7,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum"
+   ],
+   "site": "www.app.ethena.fi",
+   "in_finder": true
+  },
+  {
+   "slug": "ether.fi-stake",
+   "name": "ether.fi",
+   "icon": "ether.fi",
+   "category": "Liquid Staking",
+   "tvl": 4456006565,
+   "audited": true,
+   "age_years": 3.7,
+   "lost_24m": 43260,
+   "chains": [
+    "Ethereum",
+    "Base",
+    "Arbitrum"
+   ],
+   "site": "www.ether.fi",
+   "in_finder": true
+  },
+  {
+   "slug": "falcon-finance",
+   "name": "Falcon",
+   "icon": "falcon-finance",
+   "category": "Basis Trading",
+   "tvl": 1719802190,
+   "audited": true,
+   "age_years": 1.1,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum"
+   ],
+   "site": "app.falcon.finance",
+   "in_finder": false
+  },
+  {
+   "slug": "uniswap-v3",
+   "name": "Uniswap",
+   "icon": "uniswap",
+   "category": "Dexs",
+   "tvl": 1445901739,
+   "audited": true,
+   "age_years": 4.0,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum",
+    "Base",
+    "Arbitrum",
+    "X Layer",
+    "Polygon",
+    "Optimism",
+    "Arc",
+    "Unichain",
+    "Plasma",
+    "Ink",
+    "Avalanche",
+    "Monad",
+    "World Chain"
+   ],
+   "site": "app.uniswap.org",
+   "in_finder": true
+  },
+  {
+   "slug": "compound-v3",
+   "name": "Compound",
+   "icon": "compound-v3",
+   "category": "Lending",
+   "tvl": 1344095963,
+   "audited": true,
+   "age_years": 4.1,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum",
+    "Arbitrum",
+    "Base",
+    "Optimism",
+    "Polygon"
+   ],
+   "site": "www.compound.xyz",
+   "in_finder": true
+  },
+  {
+   "slug": "kamino-lend",
+   "name": "Kamino",
+   "icon": "kamino-lend",
+   "category": "Lending",
+   "tvl": 1266142259,
+   "audited": true,
+   "age_years": 3.0,
+   "lost_24m": 0,
+   "chains": [
+    "Solana"
+   ],
+   "site": "kamino.com",
+   "in_finder": false
+  },
+  {
+   "slug": "curve-dex",
+   "name": "Curve",
+   "icon": "curve-dex",
+   "category": "Dexs",
+   "tvl": 1137467263,
+   "audited": true,
+   "age_years": null,
+   "lost_24m": 240000,
+   "chains": [
+    "Ethereum",
+    "Monad",
+    "Arbitrum",
+    "Base",
+    "Polygon",
+    "Plasma",
+    "Avalanche",
+    "Optimism"
+   ],
+   "site": "curve.finance",
+   "in_finder": true
+  },
+  {
+   "slug": "rocket-pool",
+   "name": "Rocket Pool",
+   "icon": "rocket-pool",
+   "category": "Liquid Staking",
+   "tvl": 1133958150,
+   "audited": true,
+   "age_years": 4.9,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum"
+   ],
+   "site": "rocketpool.net",
+   "in_finder": true
+  },
+  {
+   "slug": "jito-liquid-staking",
+   "name": "Jito",
+   "icon": "jito-liquid-staking",
+   "category": "Liquid Staking",
+   "tvl": 1049472383,
+   "audited": true,
+   "age_years": 3.9,
+   "lost_24m": 0,
+   "chains": [
+    "Solana"
+   ],
+   "site": "jito.network",
+   "in_finder": false
+  },
+  {
+   "slug": "pendle-v2",
+   "name": "Pendle",
+   "icon": "pendle-v2",
+   "category": "Yield",
+   "tvl": 1047110101,
+   "audited": true,
+   "age_years": null,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum",
+    "Monad",
+    "Arbitrum",
+    "X Layer",
+    "Hyperliquid L1",
+    "Plasma",
+    "Base"
+   ],
+   "site": "pendle.finance",
+   "in_finder": false
+  },
+  {
+   "slug": "stakewise-v3",
+   "name": "StakeWise",
+   "icon": "stakewise-v3",
+   "category": "Liquid Staking",
+   "tvl": 895580283,
+   "audited": true,
+   "age_years": null,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum"
+   ],
+   "site": "stakewise.io",
+   "in_finder": false
+  },
+  {
+   "slug": "fluid-lending",
+   "name": "Fluid",
+   "icon": "fluid-lending",
+   "category": "Lending",
+   "tvl": 668105178,
+   "audited": true,
+   "age_years": 2.7,
+   "lost_24m": 215000,
+   "chains": [
+    "Ethereum",
+    "Arbitrum",
+    "Plasma",
+    "Base",
+    "Polygon"
+   ],
+   "site": "www.fluid.io",
+   "in_finder": false
+  },
+  {
+   "slug": "convex-finance",
+   "name": "Convex",
+   "icon": "convex-finance",
+   "category": "Yield",
+   "tvl": 553080578,
+   "audited": true,
+   "age_years": null,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum",
+    "Arbitrum"
+   ],
+   "site": "www.convexfinance.com",
+   "in_finder": false
+  },
+  {
+   "slug": "hyperlend-pooled",
+   "name": "HyperLend",
+   "icon": "hyperlend-pooled",
+   "category": "Lending",
+   "tvl": 314182504,
+   "audited": true,
+   "age_years": 1.6,
+   "lost_24m": 0,
+   "chains": [
+    "Hyperliquid L1"
+   ],
+   "site": "app.hyperlend.finance",
+   "in_finder": false
+  },
+  {
+   "slug": "euler-v2",
+   "name": "Euler",
+   "icon": "euler-v2",
+   "category": "Lending",
+   "tvl": 275517259,
+   "audited": true,
+   "age_years": 2.2,
+   "lost_24m": 0,
+   "chains": [
+    "Monad",
+    "Ethereum",
+    "Base",
+    "Avalanche",
+    "Unichain",
+    "Plasma",
+    "Hyperliquid L1"
+   ],
+   "site": "www.euler.finance",
+   "in_finder": false
+  },
+  {
+   "slug": "marinade-liquid-staking",
+   "name": "Marinade",
+   "icon": "marinade-liquid-staking",
+   "category": "Liquid Staking",
+   "tvl": 227718593,
+   "audited": true,
+   "age_years": null,
+   "lost_24m": 0,
+   "chains": [
+    "Solana"
+   ],
+   "site": "marinade.finance",
+   "in_finder": false
+  },
+  {
+   "slug": "benqi-staked-avax",
+   "name": "BENQI sAVAX",
+   "icon": "benqi-staked-avax",
+   "category": "Liquid Staking",
+   "tvl": 211910804,
+   "audited": true,
+   "age_years": 4.7,
+   "lost_24m": 0,
+   "chains": [
+    "Avalanche"
+   ],
+   "site": "app.benqi.fi",
+   "in_finder": false
+  },
+  {
+   "slug": "cap",
+   "name": "Cap",
+   "icon": "cap",
+   "category": "Lending",
+   "tvl": 204041866,
+   "audited": true,
+   "age_years": 1.2,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum"
+   ],
+   "site": "cap.app",
+   "in_finder": false
+  },
+  {
+   "slug": "solstice",
+   "name": "Solstice",
+   "icon": "solstice",
+   "category": "Basis Trading",
+   "tvl": 201620617,
+   "audited": true,
+   "age_years": 1.1,
+   "lost_24m": 0,
+   "chains": [
+    "Solana"
+   ],
+   "site": "solstice.finance",
+   "in_finder": false
+  },
+  {
+   "slug": "dolomite",
+   "name": "Dolomite",
+   "icon": "dolomite",
+   "category": "Lending",
+   "tvl": 194843474,
+   "audited": true,
+   "age_years": 4.0,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum",
+    "Arbitrum"
+   ],
+   "site": "dolomite.io",
+   "in_finder": false
+  },
+  {
+   "slug": "sthype",
+   "name": "stHYPE",
+   "icon": "sthype",
+   "category": "Liquid Staking",
+   "tvl": 181643259,
+   "audited": true,
+   "age_years": 1.3,
+   "lost_24m": 0,
+   "chains": [
+    "Hyperliquid L1"
+   ],
+   "site": "app.valantis.xyz",
+   "in_finder": false
+  },
+  {
+   "slug": "stader",
+   "name": "Stader",
+   "icon": "stader",
+   "category": "Liquid Staking",
+   "tvl": 177163307,
+   "audited": true,
+   "age_years": 4.9,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum"
+   ],
+   "site": "staderlabs.com",
+   "in_finder": false
+  },
+  {
+   "slug": "liquity-v1",
+   "name": "Liquity",
+   "icon": "liquity-v1",
+   "category": "CDP",
+   "tvl": 165832578,
+   "audited": true,
+   "age_years": null,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum"
+   ],
+   "site": "www.liquity.org",
+   "in_finder": false
+  },
+  {
+   "slug": "suilend",
+   "name": "Suilend",
+   "icon": "suilend",
+   "category": "Lending",
+   "tvl": 148184826,
+   "audited": true,
+   "age_years": 2.6,
+   "lost_24m": 0,
+   "chains": [
+    "Sui"
+   ],
+   "site": "www.suilend.fi",
+   "in_finder": false
+  },
+  {
+   "slug": "stake-dao-yield",
+   "name": "Stake DAO",
+   "icon": "stake-dao-yield",
+   "category": "Yield",
+   "tvl": 142331780,
+   "audited": true,
+   "age_years": null,
+   "lost_24m": 267000,
+   "chains": [
+    "Ethereum",
+    "Base",
+    "Arbitrum"
+   ],
+   "site": "stakedao.org",
+   "in_finder": false
+  },
+  {
+   "slug": "benqi-lending",
+   "name": "BENQI",
+   "icon": "benqi-lending",
+   "category": "Lending",
+   "tvl": 106312319,
+   "audited": true,
+   "age_years": null,
+   "lost_24m": 0,
+   "chains": [
+    "Avalanche"
+   ],
+   "site": "benqi.fi",
+   "in_finder": false
+  },
+  {
+   "slug": "aerodrome-slipstream",
+   "name": "Aerodrome",
+   "icon": "aerodrome-slipstream",
+   "category": "Dexs",
+   "tvl": 102651805,
+   "audited": true,
+   "age_years": 2.5,
+   "lost_24m": 700000,
+   "chains": [
+    "Base"
+   ],
+   "site": "aerodrome.finance",
+   "in_finder": false
+  },
+  {
+   "slug": "renzo",
+   "name": "Renzo",
+   "icon": "renzo",
+   "category": "Liquid Restaking",
+   "tvl": 100724038,
+   "audited": true,
+   "age_years": 2.9,
+   "lost_24m": 0,
+   "chains": [
+    "Ethereum",
+    "Linea",
+    "Solana",
+    "Arbitrum"
+   ],
+   "site": "app.renzoprotocol.com",
+   "in_finder": false
+  },
+  {
+   "slug": "reservoir-protocol",
+   "name": "Reservoir",
+   "icon": "reservoir-protocol",
+   "category": "CDP",
+   "tvl": 69657982,
+   "audited": true,
+   "age_years": 2.0,
+   "lost_24m": 0,
+   "chains": [
+    "Monad",
+    "Pharos",
+    "Ethereum",
+    "Plasma"
+   ],
+   "site": "app.reservoir.xyz",
+   "in_finder": false
+  },
+  {
+   "slug": "springsui",
+   "name": "SpringSui",
+   "icon": "springsui",
+   "category": "Liquid Staking",
+   "tvl": 58906083,
+   "audited": true,
+   "age_years": 2.0,
+   "lost_24m": 0,
+   "chains": [
+    "Sui"
+   ],
+   "site": "springsui.com",
+   "in_finder": false
+  },
+  {
+   "slug": "quickswap-dex",
+   "name": "QuickSwap",
+   "icon": "quickswap-dex",
+   "category": "Dexs",
+   "tvl": 45386326,
+   "audited": true,
+   "age_years": null,
+   "lost_24m": 0,
+   "chains": [
+    "Polygon"
+   ],
+   "site": "quickswap.exchange",
+   "in_finder": false
+  }
+ ],
  "scanned": {
-  "pools": 686,
-  "protocols": 11,
+  "pools": 674,
+  "protocols": 10,
   "chains": 3
  },
  "pools": [
@@ -148,11 +784,11 @@ window.CM_DATA = {
    "chain": "Ethereum",
    "symbol": "USDC",
    "role": "vault",
-   "apy": 4.331,
-   "apy_now": 4.331,
+   "apy": 4.3244,
+   "apy_now": 4.3244,
    "apy_7d": null,
-   "apy_30d": 4.37441,
-   "tvl": 133069907,
+   "apy_30d": 4.37561,
+   "tvl": 133079910,
    "name": "Aave USDC"
   },
   {
@@ -161,11 +797,11 @@ window.CM_DATA = {
    "chain": "Base",
    "symbol": "USDC",
    "role": "vault",
-   "apy": 4.479,
-   "apy_now": 4.479,
+   "apy": 5.0033,
+   "apy_now": 5.8593,
    "apy_7d": null,
-   "apy_30d": 5.00058,
-   "tvl": 17660821,
+   "apy_30d": 5.00327,
+   "tvl": 17857565,
    "name": "Aave USDC"
   },
   {
@@ -174,11 +810,11 @@ window.CM_DATA = {
    "chain": "Arbitrum",
    "symbol": "USDC",
    "role": "vault",
-   "apy": 2.4763,
-   "apy_now": 2.4763,
+   "apy": 2.4777,
+   "apy_now": 2.4777,
    "apy_7d": null,
-   "apy_30d": 2.78441,
-   "tvl": 48896160,
+   "apy_30d": 2.78364,
+   "tvl": 48847859,
    "name": "Aave USDC"
   },
   {
@@ -187,11 +823,11 @@ window.CM_DATA = {
    "chain": "Ethereum",
    "symbol": "USDC",
    "role": "vault",
-   "apy": 4.605,
-   "apy_now": 4.605,
+   "apy": 3.8587,
+   "apy_now": 3.8587,
    "apy_7d": null,
-   "apy_30d": 4.74811,
-   "tvl": 36006696,
+   "apy_30d": 4.74729,
+   "tvl": 36982269,
    "name": "Compound USDC"
   },
   {
@@ -200,11 +836,11 @@ window.CM_DATA = {
    "chain": "Ethereum",
    "symbol": "SUSDS",
    "role": "vault",
-   "apy": 3.7397,
+   "apy": 3.74,
    "apy_now": 3.8,
    "apy_7d": null,
-   "apy_30d": 3.73972,
-   "tvl": 4674055955,
+   "apy_30d": 3.74,
+   "tvl": 4679813168,
    "name": "Sky sUSDS"
   },
   {
@@ -213,11 +849,11 @@ window.CM_DATA = {
    "chain": "Ethereum",
    "symbol": "STEAKUSDC",
    "role": "vault",
-   "apy": 4.5234,
-   "apy_now": 4.6859,
+   "apy": 4.5236,
+   "apy_now": 4.684,
    "apy_7d": null,
-   "apy_30d": 4.52339,
-   "tvl": 106637838,
+   "apy_30d": 4.52359,
+   "tvl": 107067081,
    "name": "Steakhouse USDC"
   },
   {
@@ -226,11 +862,11 @@ window.CM_DATA = {
    "chain": "Base",
    "symbol": "GTUSDCP",
    "role": "vault",
-   "apy": 4.6118,
-   "apy_now": 5.1681,
+   "apy": 4.6128,
+   "apy_now": 5.1577,
    "apy_7d": null,
-   "apy_30d": 4.61182,
-   "tvl": 405121187,
+   "apy_30d": 4.61283,
+   "tvl": 405063366,
    "name": "Gauntlet USDC Prime"
   },
   {
@@ -239,11 +875,11 @@ window.CM_DATA = {
    "chain": "Base",
    "symbol": "SPARKUSDC",
    "role": "vault",
-   "apy": 4.1399,
-   "apy_now": 4.6328,
+   "apy": 4.1409,
+   "apy_now": 4.6392,
    "apy_7d": null,
-   "apy_30d": 4.13994,
-   "tvl": 554790871,
+   "apy_30d": 4.14086,
+   "tvl": 554893160,
    "name": "Spark USDC"
   },
   {
@@ -255,8 +891,8 @@ window.CM_DATA = {
    "apy": 2.2521,
    "apy_now": 2.2521,
    "apy_7d": null,
-   "apy_30d": 2.25809,
-   "tvl": 22596696193,
+   "apy_30d": 2.25797,
+   "tvl": 22569145068,
    "token": "wstETH",
    "asset": "ETH"
   },
@@ -266,11 +902,11 @@ window.CM_DATA = {
    "chain": "Ethereum",
    "symbol": "WEETH",
    "role": "stake",
-   "apy": 2.2809,
+   "apy": 2.2811,
    "apy_now": 2.3756,
    "apy_7d": 2.37559,
-   "apy_30d": 2.28095,
-   "tvl": 5162709705,
+   "apy_30d": 2.28109,
+   "tvl": 5156794698,
    "token": "weETH",
    "asset": "ETH"
   },
@@ -283,8 +919,8 @@ window.CM_DATA = {
    "apy": 1.8283,
    "apy_now": 1.8283,
    "apy_7d": null,
-   "apy_30d": 2.05142,
-   "tvl": 1136731718,
+   "apy_30d": 2.05098,
+   "tvl": 1135953662,
    "token": "rETH",
    "asset": "ETH"
   },
@@ -295,10 +931,10 @@ window.CM_DATA = {
    "symbol": "SUSDE",
    "role": "stake",
    "apy": 4.9895,
-   "apy_now": 5.0805,
+   "apy_now": 5.0797,
    "apy_7d": null,
-   "apy_30d": 4.98954,
-   "tvl": 1189576018,
+   "apy_30d": 4.98951,
+   "tvl": 1189742832,
    "token": "sUSDe",
    "asset": "USD"
   },
@@ -308,11 +944,11 @@ window.CM_DATA = {
    "chain": "Ethereum",
    "symbol": "USDC-WETH",
    "role": "lp",
-   "apy": 7.7729,
-   "apy_now": 9.301,
-   "apy_7d": 17.88189,
-   "apy_30d": 7.77292,
-   "tvl": 81510444,
+   "apy": 7.7714,
+   "apy_now": 8.97,
+   "apy_7d": 17.58542,
+   "apy_30d": 7.77136,
+   "tvl": 81523924,
    "kind": "uniswap",
    "name": "ETH/USDC 0.05%"
   },
@@ -322,11 +958,11 @@ window.CM_DATA = {
    "chain": "Ethereum",
    "symbol": "USDC-WETH",
    "role": "lp",
-   "apy": 17.0264,
-   "apy_now": 18.3102,
-   "apy_7d": 17.02642,
-   "apy_30d": 18.95384,
-   "tvl": 54451852,
+   "apy": 16.5972,
+   "apy_now": 18.1555,
+   "apy_7d": 16.59725,
+   "apy_30d": 18.95207,
+   "tvl": 54462092,
    "kind": "uniswap",
    "name": "ETH/USDC 0.3%"
   },
@@ -336,11 +972,11 @@ window.CM_DATA = {
    "chain": "Arbitrum",
    "symbol": "WETH-USDC",
    "role": "lp",
-   "apy": 17.9679,
-   "apy_now": 17.9679,
-   "apy_7d": 23.70586,
-   "apy_30d": 21.74064,
-   "tvl": 37940511,
+   "apy": 16.7708,
+   "apy_now": 16.7708,
+   "apy_7d": 23.52984,
+   "apy_30d": 21.72531,
+   "tvl": 37646496,
    "kind": "uniswap",
    "name": "ETH/USDC 0.05%"
   },
@@ -350,27 +986,13 @@ window.CM_DATA = {
    "chain": "Base",
    "symbol": "WETH-USDC",
    "role": "lp",
-   "apy": 13.6797,
-   "apy_now": 39.6759,
-   "apy_7d": 13.67971,
-   "apy_30d": 54.3274,
-   "tvl": 157144756,
+   "apy": 13.5053,
+   "apy_now": 34.7573,
+   "apy_7d": 13.50533,
+   "apy_30d": 54.28837,
+   "tvl": 157094278,
    "kind": "uniswap",
    "name": "ETH/USDC 0.3%"
-  },
-  {
-   "id": "61b4c35c-97f6-4c05-a5ff-aeb4426adf5b",
-   "project": "gmx-evm",
-   "chain": "Arbitrum",
-   "symbol": "ETH-USDC",
-   "role": "lp",
-   "apy": 2.9732,
-   "apy_now": 8.6283,
-   "apy_7d": null,
-   "apy_30d": 2.9732,
-   "tvl": 48996787,
-   "kind": "gmx",
-   "name": "GM ETH-USDC"
   },
   {
    "id": "db678df9-3281-4bc2-a8bb-01160ffd6d48",
@@ -382,13 +1004,13 @@ window.CM_DATA = {
    "apy_now": 0.0,
    "apy_7d": null,
    "apy_30d": 2e-05,
-   "tvl": 3528847305,
+   "tvl": 3524803896,
    "token": "weETH",
    "asset": "ETH",
    "stake": "WEETH",
    "ltv": 0.78,
    "loan": "USDC",
-   "borrow": 5.0999,
+   "borrow": 5.0923,
    "loan_pool": "aa70268e-4b52-42bf-a116-608b370f9501"
   },
   {
@@ -401,13 +1023,13 @@ window.CM_DATA = {
    "apy_now": 0.0033,
    "apy_7d": null,
    "apy_30d": 0.00328,
-   "tvl": 2681901061,
+   "tvl": 2681392083,
    "token": "WBTC",
    "asset": "BTC",
    "stake": null,
    "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 5.0999,
+   "borrow": 5.0923,
    "loan_pool": "aa70268e-4b52-42bf-a116-608b370f9501"
   },
   {
@@ -420,13 +1042,13 @@ window.CM_DATA = {
    "apy_now": 0.0002,
    "apy_7d": null,
    "apy_30d": 0.00042,
-   "tvl": 2203258761,
+   "tvl": 2200142298,
    "token": "wstETH",
    "asset": "ETH",
    "stake": "STETH",
    "ltv": 0.79,
    "loan": "USDC",
-   "borrow": 5.0999,
+   "borrow": 5.0923,
    "loan_pool": "aa70268e-4b52-42bf-a116-608b370f9501"
   },
   {
@@ -439,13 +1061,13 @@ window.CM_DATA = {
    "apy_now": 0.0015,
    "apy_7d": null,
    "apy_30d": 0.00112,
-   "tvl": 1379124433,
+   "tvl": 1378079753,
    "token": "cbBTC",
    "asset": "BTC",
    "stake": null,
    "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 5.0999,
+   "borrow": 5.0923,
    "loan_pool": "aa70268e-4b52-42bf-a116-608b370f9501"
   },
   {
@@ -454,17 +1076,17 @@ window.CM_DATA = {
    "chain": "Ethereum",
    "symbol": "WETH",
    "role": "market",
-   "apy": 1.3095,
-   "apy_now": 1.3095,
+   "apy": 1.3073,
+   "apy_now": 1.3073,
    "apy_7d": null,
-   "apy_30d": 1.34908,
-   "tvl": 925512155,
+   "apy_30d": 1.34887,
+   "tvl": 929774821,
    "token": "ETH",
    "asset": "ETH",
    "stake": null,
    "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 5.0999,
+   "borrow": 5.0923,
    "loan_pool": "aa70268e-4b52-42bf-a116-608b370f9501"
   },
   {
@@ -477,13 +1099,13 @@ window.CM_DATA = {
    "apy_now": 0.0176,
    "apy_7d": null,
    "apy_30d": 0.01793,
-   "tvl": 233393407,
+   "tvl": 233509676,
    "token": "WBTC",
    "asset": "BTC",
    "stake": null,
    "ltv": 0.78,
    "loan": "USDC",
-   "borrow": 3.5404,
+   "borrow": 3.5414,
    "loan_pool": "d9fa8e14-0447-4207-9ae8-7810199dfa1f"
   },
   {
@@ -496,13 +1118,13 @@ window.CM_DATA = {
    "apy_now": 0.0,
    "apy_7d": null,
    "apy_30d": 3e-05,
-   "tvl": 93849466,
+   "tvl": 93741932,
    "token": "weETH",
    "asset": "ETH",
    "stake": "WEETH",
    "ltv": 0.75,
    "loan": "USDC",
-   "borrow": 3.5404,
+   "borrow": 3.5414,
    "loan_pool": "d9fa8e14-0447-4207-9ae8-7810199dfa1f"
   },
   {
@@ -515,13 +1137,13 @@ window.CM_DATA = {
    "apy_now": 0.0,
    "apy_7d": null,
    "apy_30d": 1e-05,
-   "tvl": 56190975,
+   "tvl": 56130415,
    "token": "wstETH",
    "asset": "ETH",
    "stake": "STETH",
    "ltv": 0.75,
    "loan": "USDC",
-   "borrow": 3.5404,
+   "borrow": 3.5414,
    "loan_pool": "d9fa8e14-0447-4207-9ae8-7810199dfa1f"
   },
   {
@@ -530,17 +1152,17 @@ window.CM_DATA = {
    "chain": "Arbitrum",
    "symbol": "WETH",
    "role": "market",
-   "apy": 0.919,
-   "apy_now": 0.919,
+   "apy": 0.9188,
+   "apy_now": 0.9188,
    "apy_7d": null,
-   "apy_30d": 0.99516,
-   "tvl": 31143752,
+   "apy_30d": 0.99499,
+   "tvl": 31195223,
    "token": "ETH",
    "asset": "ETH",
    "stake": null,
    "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 3.5404,
+   "borrow": 3.5414,
    "loan_pool": "d9fa8e14-0447-4207-9ae8-7810199dfa1f"
   },
   {
@@ -553,13 +1175,13 @@ window.CM_DATA = {
    "apy_now": 0.0096,
    "apy_7d": null,
    "apy_30d": 0.00996,
-   "tvl": 237994805,
+   "tvl": 237844122,
    "token": "cbBTC",
    "asset": "BTC",
    "stake": null,
    "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 5.4066,
+   "borrow": 5.314,
    "loan_pool": "7e0661bf-8cf3-45e6-9424-31916d4c7b84"
   },
   {
@@ -568,17 +1190,17 @@ window.CM_DATA = {
    "chain": "Base",
    "symbol": "WETH",
    "role": "market",
-   "apy": 1.4473,
-   "apy_now": 1.4473,
+   "apy": 2.9968,
+   "apy_now": 2.9968,
    "apy_7d": null,
-   "apy_30d": 3.25055,
-   "tvl": 42576599,
+   "apy_30d": 3.25277,
+   "tvl": 42099232,
    "token": "ETH",
    "asset": "ETH",
    "stake": null,
    "ltv": 0.81,
    "loan": "USDC",
-   "borrow": 5.4066,
+   "borrow": 5.314,
    "loan_pool": "7e0661bf-8cf3-45e6-9424-31916d4c7b84"
   },
   {
@@ -591,13 +1213,13 @@ window.CM_DATA = {
    "apy_now": 0.0001,
    "apy_7d": null,
    "apy_30d": 9e-05,
-   "tvl": 29373395,
+   "tvl": 29339739,
    "token": "weETH",
    "asset": "ETH",
    "stake": "WEETH",
    "ltv": 0.75,
    "loan": "USDC",
-   "borrow": 5.4066,
+   "borrow": 5.314,
    "loan_pool": "7e0661bf-8cf3-45e6-9424-31916d4c7b84"
   },
   {
@@ -610,13 +1232,13 @@ window.CM_DATA = {
    "apy_now": 0.0009,
    "apy_7d": null,
    "apy_30d": 0.00091,
-   "tvl": 24131259,
+   "tvl": 24383964,
    "token": "wstETH",
    "asset": "ETH",
    "stake": "STETH",
    "ltv": 0.75,
    "loan": "USDC",
-   "borrow": 5.4066,
+   "borrow": 5.314,
    "loan_pool": "7e0661bf-8cf3-45e6-9424-31916d4c7b84"
   },
   {
@@ -629,14 +1251,14 @@ window.CM_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 3226613824,
+   "tvl": 3227732088,
    "token": "cbBTC",
    "asset": "BTC",
    "stake": null,
    "ltv": 0.86,
    "loan": "USDC",
-   "borrow": 5.7165,
-   "size": 3226613824
+   "borrow": 6.0933,
+   "size": 3227732088
   },
   {
    "id": "d70d42b1-4ba3-4572-bf76-0ac12781bde4",
@@ -648,14 +1270,14 @@ window.CM_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 677344101,
+   "tvl": 677567337,
    "token": "cbBTC",
    "asset": "BTC",
    "stake": null,
    "ltv": 0.86,
    "loan": "USDC",
-   "borrow": 5.0078,
-   "size": 677344101
+   "borrow": 5.0086,
+   "size": 677567337
   },
   {
    "id": "2d1aa052-64c0-4c2c-82a0-db39062f04ab",
@@ -667,14 +1289,14 @@ window.CM_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 236154379,
+   "tvl": 236292698,
    "token": "WBTC",
    "asset": "BTC",
    "stake": null,
    "ltv": 0.86,
    "loan": "USDC",
-   "borrow": 5.0193,
-   "size": 236154379
+   "borrow": 5.1134,
+   "size": 236292698
   },
   {
    "id": "660e240a-ab18-43af-9d24-0245828f903f",
@@ -686,14 +1308,14 @@ window.CM_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 192719741,
+   "tvl": 193082264,
    "token": "ETH",
    "asset": "ETH",
    "stake": null,
    "ltv": 0.86,
    "loan": "USDC",
-   "borrow": 5.7223,
-   "size": 192719741
+   "borrow": 6.1036,
+   "size": 193082264
   },
   {
    "id": "9b0c3b21-d47b-4b0c-855d-d1b78cd35350",
@@ -705,14 +1327,14 @@ window.CM_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 114167876,
+   "tvl": 114175340,
    "token": "sUSDe",
    "asset": "USD",
    "stake": "SUSDE",
    "ltv": 0.915,
    "loan": "PYUSD",
-   "borrow": 4.198,
-   "size": 114167876
+   "borrow": 4.1982,
+   "size": 114175340
   },
   {
    "id": "7d114ce1-2af1-42c3-a719-406fbbc3ed92",
@@ -724,14 +1346,14 @@ window.CM_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 81084815,
+   "tvl": 81038511,
    "token": "wstETH",
    "asset": "ETH",
    "stake": "STETH",
    "ltv": 0.86,
    "loan": "USDC",
-   "borrow": 5.0071,
-   "size": 81084815
+   "borrow": 5.0881,
+   "size": 81038511
   },
   {
    "id": "be65ac8e-2b80-4582-a9d9-f8ff8ff73cb7",
@@ -743,14 +1365,14 @@ window.CM_DATA = {
    "apy_now": 0,
    "apy_7d": null,
    "apy_30d": 0,
-   "tvl": 71566196,
+   "tvl": 71484194,
    "token": "weETH",
    "asset": "ETH",
    "stake": "WEETH",
    "ltv": 0.86,
    "loan": "USDC",
-   "borrow": 6.445,
-   "size": 71566196
+   "borrow": 7.2605,
+   "size": 71484194
   }
  ],
  "ticker": [
@@ -848,7 +1470,7 @@ window.CM_DATA = {
    "morpho-blue",
    "SPARKUSDC",
    "Base",
-   4.63
+   4.64
   ],
   [
    "morpho-blue",
@@ -860,7 +1482,7 @@ window.CM_DATA = {
    "morpho-blue",
    "SIRLOINUSDC",
    "Base",
-   6.81
+   6.84
   ],
   [
    "morpho-blue",
@@ -872,13 +1494,13 @@ window.CM_DATA = {
    "morpho-blue",
    "SENRLUSDV2",
    "Ethereum",
-   7.27
+   7.23
   ],
   [
    "morpho-blue",
    "GTUSDCP",
    "Base",
-   5.17
+   5.16
   ],
   [
    "compound-v3",
@@ -890,7 +1512,7 @@ window.CM_DATA = {
    "morpho-blue",
    "SENPYUSDMAIN",
    "Ethereum",
-   5.34
+   5.33
   ],
   [
    "sky-lending",
@@ -992,13 +1614,7 @@ window.CM_DATA = {
    "aave-v3",
    "USDT",
    "Ethereum",
-   5.45
-  ],
-  [
-   "sky-lending",
-   "USDS",
-   "Ethereum",
-   13.7
+   5.47
   ],
   [
    "curve-dex",
@@ -1013,10 +1629,16 @@ window.CM_DATA = {
    0
   ],
   [
+   "sky-lending",
+   "USDS",
+   "Ethereum",
+   10.1
+  ],
+  [
    "uniswap-v3",
    "WETH-USDC",
    "Base",
-   39.68
+   34.76
   ],
   [
    "morpho-blue",

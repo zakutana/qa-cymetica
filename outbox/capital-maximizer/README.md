@@ -24,7 +24,11 @@ One model (`cm-core.js`) makes every figure: the cards, the amount screen, the t
 - The three are the best of different kinds (one per protocol and asset), so three leverages of one loop never fill the list. Leverage tunes in tenths from 1.5× to the tier's cap, while the market would still lend and liquidation stays at least a 5 % move away.
 - A loop is liquidated where its debt reaches the market's LTV; Morpho's liquidation bonus from its LLTV, Aave 5 %.
 
-The protocol list (Aave, Compound, Morpho, Sky, Lido, ether.fi, Rocket Pool, Ethena, Uniswap, Curve, GMX on Ethereum, Arbitrum and Base) is ours for the demo, each audited per DefiLlama; Spark Savings was dropped because DefiLlama lists no audit for it. Cymetica makes its own selection.
+## The platforms
+
+36 platforms on 21 chains, picked 2026-10-28 from DefiLlama by one rule that `rates.py` re-checks on every refresh (a platform that stops passing stops the refresh): audited per DefiLlama; listed a year or more; at most $1M lost and not returned in the last two years (DefiLlama hacks, any version); at least $30M on chains where Circle's CCTP moves native USDC, so a cross-chain move never holds a wrapped dollar (BNB Chain and Tron have no native USDC); permissionless (no exchange-issued token, no KYC pool).
+
+The finder builds routes from 10 of them today (Aave, Compound, Morpho, Sky, Lido, ether.fi, Rocket Pool, Ethena, Uniswap, Curve; a cyan dot on the tab). GMX left the finder by the same rule ($2M of a $42M GMX V1 hack not returned, 07/2025), as did Spark Savings (no audit on DefiLlama; SparkLend passes). Left out, the large ones: Drift, Kelp, Cetus, Balancer, Moonwell, Yearn, Across, NAVI, Venus (lost funds); Jupiter, Orca, Raydium, Hyperliquid HLP, Sanctum (no audit on DefiLlama); Binance, Coinbase and Bybit staked tokens (exchange-issued); Liquid Collective (KYC); Maple (open access not verified). Cymetica makes its own selection.
 
 ## Files
 
