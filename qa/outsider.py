@@ -443,8 +443,13 @@ def coin_returns(pick_rows, price_rows, now) -> dict:
 
 # -- the tournament seat ----------------------------------------------------------------
 
-def seat_refusal(table_id: str, table, rules) -> str | None:
+def seat_refusal(table_id: str, table, rules, instance_id: str | None = None) -> str | None:
     """Why a seat may NOT be asked for at this table, or None.
+
+    A seat of ours already at the table refuses only the SAME bot again (their rules: one owner
+    may seat several DIFFERENT bots at a paper table, one copy of each; the operator, 2026-10-28:
+    five different bots at one table). Called without a bot, the old floor holds: any seat of ours
+    refuses.
 
     Read off THEIR table (`GET /api/v1/agent-tournaments/tables/{id}`) and rules
     (`/rules`), never off the lobby -- `/lobby?mode=paper` is filtered by the very
@@ -472,7 +477,7 @@ def seat_refusal(table_id: str, table, rules) -> str | None:
     free = table.get("seats_free")
     if not isinstance(free, int) or isinstance(free, bool) or free < 1:
         return f"table {table_id} has {free!r} seats free"
-    if table.get("my_seat") is not None:
+    if table.get("my_seat") is not None and instance_id is None:
         return f"we already hold a seat at table {table_id}: {table.get('my_seat')!r}"
     buyin = table.get("buyin_usdc")
     tiers = [t for t in rules.get("tiers") or [] if isinstance(t, dict)

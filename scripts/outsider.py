@@ -582,9 +582,11 @@ def _capture(response) -> str | None:
         return None
 
 
-def asked_before(table_id: str, rows: list[dict], table: dict | None = None) -> str | None:
+def asked_before(table_id: str, rows: list[dict], table: dict | None = None,
+                 instance_id: str | None = None) -> str | None:
     """A seat intent of ours at this table that went through or may have: one with no
-    outcome, or with `accepted` / `unknown`. One seat per owner per table.
+    outcome, or with `accepted` / `unknown`. One seat per BOT per table (the operator,
+    2026-10-28: five different bots at one table; without `instance_id`, per owner as before).
 
     Unless their table says the seat is gone: an accepted ask whose seat_id their standings
     no longer list was left (the owner can leave by hand before a table starts). Only a
@@ -599,7 +601,8 @@ def asked_before(table_id: str, rows: list[dict], table: dict | None = None) -> 
     seated = {str(s.get("seat_id")) for s in listed} if listed else None
     for intent in rows:
         if intent.get("type") != "intent" or intent.get("kind") != "seat" \
-                or str(intent.get("table_id")) != str(table_id):
+                or str(intent.get("table_id")) != str(table_id) \
+                or (instance_id is not None and str(intent.get("instance_id")) != str(instance_id)):
             continue
         said = outcomes.get(intent.get("id"))
         if said is None or said.get("outcome") in ("accepted", "unknown"):
@@ -655,15 +658,15 @@ def seat(table_id: str, instance_id: str, confirm: bool, client=None) -> int:
         table = _get(client, f"{TOURNAMENTS}/tables/{table_id}")
         rules_body = _json(rules) if rules is not None and rules.status_code == 200 else None
         table_body = _json(table) if table is not None and table.status_code == 200 else None
-        why = outsider.seat_refusal(table_id, table_body, rules_body)
+        why = outsider.seat_refusal(table_id, table_body, rules_body, instance_id=instance_id)
         if why:
             print(f"refused: {why}")
             return 1
-        earlier = asked_before(table_id, load(), table_body)
+        earlier = asked_before(table_id, load(), table_body, instance_id=instance_id)
         if earlier:
-            print(f"refused: {earlier} already asked for a seat at table {table_id} (it went "
-                  f"through or may have, and their table still lists it); one seat per "
-                  f"owner per table")
+            print(f"refused: {earlier} already asked for a seat for {instance_id} at table "
+                  f"{table_id} (it went through or may have, and their table still lists it); "
+                  f"one seat per bot per table")
             return 1
         try:
             theirs = clone._instance(client, instance_id)

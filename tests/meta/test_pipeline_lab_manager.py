@@ -504,6 +504,11 @@ def _a_seat_is_asked_only_at_a_paper_table_and_never_on_a_dry_run(tmp_path):
                        (dict(table, buyin_usdc=500.0), "buy-in")):
         said = outsider.seat_refusal("2", wrong, rules)
         assert said and why in said, (wrong, said)
+    # 2026-10-28, the operator: five DIFFERENT bots at one paper table. Their rules allow it ("one owner may seat
+    # several DIFFERENT bots"; one copy of each), so a seat of ours at the table refuses only the same bot again.
+    assert outsider.seat_refusal("2", dict(table, my_seat={"seat_id": 4}), rules, instance_id="inst-2") is None
+    assert outsider.seat_refusal("2", dict(table, my_seat={"seat_id": 4}), rules)       # no bot named: the old floor
+    assert outsider.seat_refusal("2", dict(table, seats_free=0), rules, instance_id="inst-2")
     assert outsider.seat_refusal("2", table, dict(rules, modes={"paper": "closed"}))
     assert outsider.seat_refusal("2", table, dict(rules, paper_note="Live buy-ins."))
 
@@ -526,8 +531,8 @@ def _a_seat_is_asked_only_at_a_paper_table_and_never_on_a_dry_run(tmp_path):
                 return httpx.Response(200, json=table_body)
             if path.endswith("/cloned-bots/my-clones"):
                 return httpx.Response(200, json=[{
-                    "id": "inst-1", "is_paper": True,
-                    "execution_economics": {"execution_class": "PAPER_SIMULATION"}}])
+                    "id": i, "is_paper": True,
+                    "execution_economics": {"execution_class": "PAPER_SIMULATION"}} for i in ("inst-1", "inst-2")])
             return httpx.Response(404, json={})
         return handler
 
@@ -570,6 +575,23 @@ def _a_seat_is_asked_only_at_a_paper_table_and_never_on_a_dry_run(tmp_path):
         {"instance_id": "inst-1"}
     assert seat_rows[1]["outcome"] == "accepted" and \
         seat_rows[1]["approve_url"].endswith("/approve/abc")
+
+    # A DIFFERENT paper clone of ours may take another seat at the same table (their table now shows our first
+    # seat as `my_seat` and in its standings); the same bot may not, and a clone not in our record still may not.
+    with clones.open("a", encoding="utf-8") as f:
+        f.write(json.dumps({"type": "outcome", "outcome": "accepted", "clone_instance_id": "inst-2",
+                            "is_paper": True}) + "\n")
+    seated = dict(table, my_seat={"seat_id": 9}, standings=[{"seat_id": 9, "bot": "x"}], seats_free=7)
+    client = build_mock_client(handler_for(seated, posted), registry=registry)
+    try:
+        assert script.seat("2", "inst-2", confirm=True, client=client) == 0
+        assert script.seat("2", "inst-2", confirm=True, client=client) != 0, "the same bot twice is refused"
+        assert script.seat("2", "inst-1", confirm=True, client=client) != 0, "inst-1 already asked here"
+    finally:
+        client.close()
+    assert posted == ["/api/v1/agent-tournaments/tables/2/seat"] * 2, posted
+    assert [r["body"] for r in script.load() if r.get("kind") == "seat" and r["type"] == "intent"] == \
+        [{"instance_id": "inst-1"}, {"instance_id": "inst-2"}]
 
     # Our seat gone from their table -- the owner left it by hand (2026-10-11, table 5) --
     # ends the earlier ask: a new one may go. Still standing, or a table that lists no
