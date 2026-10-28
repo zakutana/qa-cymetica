@@ -1,2 +1,2 @@
-# render.py's pictures are for looking; git is over its size ceiling
-pictures/
+# render.py's working pictures are for looking; the spec's target pictures live in pictures/ and are committed
+renders/

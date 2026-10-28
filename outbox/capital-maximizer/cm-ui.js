@@ -162,6 +162,8 @@
     return {N, E};
   }
   const HOME = 'Ethereum';
+  // a strategy is cross-chain: show the money's whole path, from the wallet's chain to every chain a leg runs on
+  const chainFlow = r => { const a = awayOf(r); return a.length ? `${HOME} → ${a.map(chainName).join(' + ')}` : HOME; };
   const awayOf = r => [...new Set((r.type === 'vaults' ? r.steps.filter(s => s.chain).map(s => s.chain) : [r.chain]).filter(c => c !== HOME))];
   const RAD = {apex: 38, root: 26, lever: 25, node: 28, bridge: 28};
 
@@ -402,7 +404,7 @@
       <div class="x"><small>RETURN</small><span data-ret="${k}">${fx(r.up)} · ${fp(r.up)}</span></div>
       <div class="mini" style="grid-column:1/-1"><div><div class="lbl">LEVERAGE</div><b data-lev="${k}">${r.L > 1 ? r.L.toFixed(1) + '×' : 'None'}</b></div>
         <div class="${l ? 'warn' : ''}"><div class="lbl">LIQUIDATION</div><b data-liq="${k}">${l || 'None'}</b></div>
-        <div><div class="lbl">CHAIN</div><b>${r.chain.split(' · ').length > 1 ? r.chain.split(' · ').length + ' chains' : r.chain}</b></div></div>`;
+        <div><div class="lbl">CHAINS</div><b>${chainFlow(r)}</b></div></div>`;
   }
   function rankSvg(k) {
     return `<svg class="rank" viewBox="0 0 44 44"><path d="${hex(22, 22, 20)}"/><text x="22" y="23">${k + 1}</text></svg>`;
@@ -463,7 +465,7 @@
         <div class="val g" id="pv"></div><div class="sub g" id="ps"></div></div>
       <div class="go4 ${S.started ? 'started' : ''}" id="go4"><button class="cta startbtn" id="start">START ${ARROW}</button>
         <button class="cta running" disabled><i class="dot"></i>RUNNING · DEMO</button>
-        <div class="chips"><span class="chip c">AI RE-CHECKS EVERY 6 H</span><span class="chip m">${r.chain.toUpperCase()}</span></div></div>`;
+        <div class="chips"><span class="chip c">AI RE-CHECKS EVERY 6 H</span><span class="chip m">${chainFlow(r).toUpperCase()}</span></div></div>`;
     updateBar(r);
   }
   function updateBar(r) {

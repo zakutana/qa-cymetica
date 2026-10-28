@@ -1,5 +1,7 @@
 # Capital Maximizer
 
+**For Cymetica: read [SPEC.md](SPEC.md).** The target pictures are in `pictures/` and our platform research is in `research/`. The design is a proposal for the look; every number and every text in it is an example.
+
 Demo of a Cymetica product idea (the operator, 2026-10-28; first drawn as Yield Booster the same morning): the yield loops people ran by hand — lock USDC, buy BTC or ETH, post it as collateral, borrow, buy more — automated, with a finder that brings the three best strategies right now. Audited DeFi only, no KYC.
 
 **Maximize:** Risk (Conservative, Medium, High Risk, OG Gambler, each with its max profit a month) → Amount (USDC) → Strategies (the finder reads the pools and lays the top 3 side by side as skill trees; leverage is tuned with − / + inside each tree) → Plan (the picked tree full width, a leverage slider, the max profit, Start).
