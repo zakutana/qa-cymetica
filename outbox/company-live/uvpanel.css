@@ -215,6 +215,18 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 .lb-r.me { border-color: rgba(0, 255, 136, .55); background: rgba(0, 255, 136, .07); }
 .lb-v { text-align: right; font-weight: 700; }
 .uvb-n u { text-decoration: none; }
+/* Season 0's "what earns what" table, in the leaderboard's rule box (uvboard.js tableSeason) */
+.lb-pt { margin-top: 12px; display: grid; gap: 0; }
+.lb-pt-h, .lb-pt-r { display: grid; grid-template-columns: minmax(0, 1.5fr) 44px minmax(0, 1.2fr); align-items: center; gap: 12px; padding: 7px 0; }
+.lb-pt-h { font-size: 9.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--dim2); padding-top: 0; }
+.lb-pt-h span:nth-child(2) { text-align: center; }
+.lb-pt-r { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .12) 25%, rgba(0, 207, 255, .22) 75%, rgba(255, 255, 255, 0)) 1; }
+.lb-pt-r > span:first-child { font-size: 12.5px; font-weight: 700; color: var(--text); }
+.lb-pt-r small { display: block; margin-top: 2px; font-size: 10px; font-weight: 500; color: var(--dim2); }
+.lb-pt-r b { font: 400 24px/1 'Archivo Black', sans-serif; text-align: center; color: var(--rs1); text-shadow: 0 0 14px rgba(0, 255, 136, .45); }
+.lb-pt-r > span:last-child { font-size: 11px; color: #a9bccb; }
+.lb-pt-r.z b { color: var(--dim); text-shadow: none; }
+.lb-pt em { margin-top: 6px; font-style: normal; font-size: 10px; color: var(--dim2); }
 /* Season 0's leaderboard: users / visitors / agents each with its points under it, then the total (uvboard.js tableSeason) */
 .lb-head.s0, .lb-r.s0, .lbg .lb-r.s0, .lbg .lb-head.s0 { grid-template-columns: 38px 30px minmax(0, 1fr) 96px 96px 96px 150px; }
 .lb-head.s0 span:nth-child(n+4) { text-align: right; }

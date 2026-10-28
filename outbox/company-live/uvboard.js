@@ -89,7 +89,13 @@
           '<div class="lb-c"><i>1</i><b>Top 3</b><span>by points this month; ' + b.left + ' days left</span></div>' +
           '<div class="lb-c"><i>2</i><b>' + b.floor + '+</b><span>points in the month, or the slot stays open</span></div>' +
           '<div class="lb-c"><i>3</i><b>Month end</b><span>the ranking decides; then every company starts again from zero</span></div>' +
-          '<p>A user counts once they used a product on 2 different days: 10 points, +1 per further active day, at most 20. Visitors without an account: 1 point each, at most 25% of the signed-in points. Trading agents: 1 point per 100 USDC of fee-paying volume, at most 30%. The owner\'s own accounts earn nothing. The ET10 amounts are a sample.</p></div></div>' +
+          // what earns what, as a table (the operator, 2026-10-28: "misto toho hnusneho textu peknou tabulku struncou")
+          '<div class="lb-pt"><div class="lb-pt-h"><span>What counts</span><span>Points</span><span>Cap</span></div>' +
+            '<div class="lb-pt-r"><span>Active user<small>used a product on 2+ days</small></span><b>10</b><span>+1 per further day, max 20</span></div>' +
+            '<div class="lb-pt-r"><span>Visitor<small>no account, came back</small></span><b>1</b><span>25% of user points</span></div>' +
+            '<div class="lb-pt-r"><span>Trading agents<small>per 100 USDC of fee-paying volume</small></span><b>1</b><span>30% of all points</span></div>' +
+            '<div class="lb-pt-r z"><span>Your own accounts</span><b>0</b><span>earn nothing</span></div>' +
+            '<em>The ET10 prizes are a sample.</em></div></div></div>' +
       '<div class="lb-head s0"><span>#</span><span></span><span>Company</span><span>Users</span><span>Visitors</span><span>Agents</span><span>Points</span></div>' +
       '<div class="lb">' + rows + (cut ? '' : line(false)) + '</div>';
   }
