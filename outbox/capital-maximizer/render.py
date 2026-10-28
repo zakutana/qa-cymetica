@@ -42,6 +42,12 @@ with sync_playwright() as p:
             if over > 0:
                 errors.append(f"{name} at {w}px overflows by {over}px")
             t.screenshot(path=str(out / f"{name}-{w}.png"), full_page=True)
+        # the operator expects some fifty platforms: copy the tiles to fifty in the picture only, to see they fit
+        t.goto(f"{url}?shot=1&tab=platforms", wait_until="networkidle")
+        t.evaluate("""() => { const g = document.getElementById('plats'), tiles = [...g.children];
+            for (let k = tiles.length; k < 50; k++) g.appendChild(tiles[k % tiles.length].cloneNode(true)); }""")
+        t.wait_for_timeout(300)
+        t.screenshot(path=str(out / f"platforms-50-copies-{w}.png"), full_page=True)
         for tier in ("conservative", "medium", "high", "og"):
             t.goto(f"{url}?shot=1&amount=5000&step=1", wait_until="networkidle")
             card = t.inner_text(f"[data-tier={tier}] .big b")

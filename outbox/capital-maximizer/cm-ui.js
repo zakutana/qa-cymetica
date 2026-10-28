@@ -118,21 +118,21 @@
 
   /* ---------- the skill tree ---------- */
   /* d is how far a node is grown from the root, w how far to the side; lv and lh say where its label sits when the
-     tree grows up (the three side by side) or to the right (the plan) */
+     tree flows down (the three side by side) or to the right (the plan) */
   function shape(r) {
     const N = [], E = [], st = r.steps;
     const add = (id, kind, d, w, lv, lh, step) => N.push({id, kind, d, w, lv, lh, step});
-    add('root', 'root', 0, 0, 'below', 'below');
+    add('root', 'root', 0, 0, 'right', 'below');
     if (r.type === 'vaults') {
       st.filter(s => s.kind === 'vault').forEach((s, k) => {
         add('v' + k, 'node', k === 1 ? 1.95 : 1.45, k - 1, k === 1 ? 'right' : 'below', 'below', s);
         E.push(['root', 'v' + k], ['v' + k, 'apex']);
       });
-      add('apex', 'apex', 3.1, 0, 'above', 'below');
+      add('apex', 'apex', 3.1, 0, 'below', 'below');
     } else if (r.type === 'lp') {
       add('swap', 'node', 1, -0.85, 'left', 'below', st[1]);
       add('lp', 'node', 2, 0, 'right', 'below', st[2]);
-      add('apex', 'apex', 3.1, 0, 'above', 'below');
+      add('apex', 'apex', 3.1, 0, 'below', 'below');
       E.push(['root', 'swap'], ['swap', 'lp'], ['root', 'lp'], ['lp', 'apex']);
     } else {
       const swap = st.find(s => s.kind === 'swap'), stake = st.find(s => s.kind === 'stake');
@@ -147,9 +147,9 @@
         add('bor', 'node', d, 1, 'right', 'below', bor);
         add('lev', 'lever', 1, 1, 'right', 'below');
         E.push([prev, 'coll'], ['coll', 'bor'], ['bor', 'lev', 1], ['lev', 'swap', 1], ['coll', 'apex']);
-        add('apex', 'apex', d + 1.35, 0.5, 'above', 'below');
+        add('apex', 'apex', d + 1.35, 0.5, 'below', 'below');
       } else {
-        add('apex', 'apex', d + 1.2, 0, 'above', 'below');
+        add('apex', 'apex', d + 1.2, 0, 'below', 'below');
         E.push([prev, 'apex']);
       }
     }
@@ -175,14 +175,44 @@
     return ['', '', ''];
   }
 
+  /* what the strategy does, in order, with the user's own dollars: the numbers on the tree's nodes point here */
+  function stepRows(r) {
+    const A = S.amount, st = r.steps, rows = [];
+    const add = (node, text, meta, cls = '') => rows.push({node, text, meta, cls, no: rows.length + 1});
+    const yr = (v, sign = '+') => `${sign}${v.toFixed(2)}%/yr`;
+    if (r.type === 'vaults') {
+      st.filter(s => s.kind === 'vault').forEach((s, k) =>
+        add('v' + k, `Put ${num(A * s.share)} USDC in ${s.title}`, `${pname(s.project)} ${yr(s.rate)}`, 'e'));
+    } else if (r.type === 'lp') {
+      add('swap', `Swap ${num(A / 2)} USDC → ETH`, pname(st[1].project));
+      add('lp', `Pool the ETH + ${num(A / 2)} USDC`, `fees ${yr(st[2].rate)}`, 'e');
+    } else {
+      const swap = st.find(s => s.kind === 'swap'), stake = st.find(s => s.kind === 'stake');
+      const coll = st.find(s => s.kind === 'collateral'), bor = st.find(s => s.kind === 'borrow');
+      const tok = r.label.replace(' loop', '').replace('Staked ', '');
+      add('swap', `Swap ${num(A)} ${swap.title}`, pname(swap.project));
+      if (stake) add('stake', `${tok} earns staking yield`, `${pname(stake.project)} ${yr(stake.rate)}`, 'e');
+      if (coll) {
+        add('coll', `Deposit the ${tok} as collateral`, pname(coll.project));
+        add('bor', `Borrow ${num(A * (r.L - 1))} ${bor.loan} against it`, `${pname(bor.project)} ${yr(bor.rate, '−')}`, 'p');
+        add('lev', `Buy more ${tok}, repeat to ${r.L.toFixed(1)}×`, `${num(A * r.L)} USD in ${tok}`, 'c');
+      }
+    }
+    return rows;
+  }
+  function stepsHtml(r) {
+    return `<ol class="stepl">${stepRows(r).map(x => `<li><span class="no">${x.no}</span><span class="tx">${x.text}</span><span class="mt ${x.cls}">${x.meta}</span></li>`).join('')}</ol>`;
+  }
+
   function tree(r, o) {
     const {N, E} = shape(r), V = o.orient === 'v', p = o.id, og = S.tier === 'og';
-    const W = V ? 460 : 1120, H = V ? 650 : 400;
+    const nums = Object.fromEntries(stepRows(r).map(x => [x.node, x.no]));
+    const W = V ? 460 : 1120, H = V ? 600 : 400;
     const ds = N.map(n => n.d), ws = N.map(n => n.w), dmax = Math.max(...ds), wmin = Math.min(...ws), wmax = Math.max(...ws);
     const unit = V ? 135 : 150;
-    if (V) {
-      const cx = W / 2 - unit * (wmin + wmax) / 2, bot = H - 92, top = 112, dep = (bot - top) / dmax;
-      N.forEach(n => { n.x = cx + n.w * unit; n.y = bot - n.d * dep; });
+    if (V) {                                                     // the money enters at the top and flows down
+      const cx = W / 2 - unit * (wmin + wmax) / 2, top = 58, bot = H - 96, dep = (bot - top) / dmax;
+      N.forEach(n => { n.x = cx + n.w * unit; n.y = top + n.d * dep; });
     } else {
       const cy = H / 2 - unit * (wmin + wmax) / 2 - (wmax > 0.6 ? 22 : 0), left = 80, right = W - 110, dep = (right - left) / dmax;
       N.forEach(n => { n.x = left + n.d * dep; n.y = cy + n.w * unit; });
@@ -221,7 +251,7 @@
           <path d="${hex(n.x, n.y, R)}" fill="url(#${p}af)" stroke="${accent}" stroke-width="1.4"/>
           <text class="apx" x="${n.x}" y="${n.y + 1}" style="font-size:${Math.min(19, 62 / (fp(r.up).length * 0.66)).toFixed(1)}px">${fp(r.up)}</text>`;
       } else if (n.kind === 'lever') {
-        const g = o.interactive ? C.range(r, S.tier) : null, by2 = n.y + 46;
+        const g = o.interactive ? C.range(r, S.tier) : null, by2 = V ? n.y - 46 : n.y + 46;
         const dia = (k) => `M${n.x} ${n.y - k}L${n.x + k} ${n.y}L${n.x} ${n.y + k}L${n.x - k} ${n.y}Z`;
         body = `<circle cx="${n.x}" cy="${n.y}" r="${R + 16}" fill="url(#${p}lh)"/>
           <path d="${dia(R + 1)}" fill="#06090f" stroke="#00cfff" stroke-width="1.4"/><path d="${dia(R - 5)}" fill="none" stroke="#00cfff" stroke-opacity=".3" stroke-width=".7"/>
@@ -255,7 +285,10 @@
           <text class="la" x="${tx.toFixed(1)}" y="${(py + 16).toFixed(1)}" style="text-anchor:${anchor}">${t1}</text>
           <text class="lb" x="${tx.toFixed(1)}" y="${(py + 30).toFixed(1)}" style="text-anchor:${anchor}">${t2}</text>`;
       }
-      return `<g class="nd" style="--d:${t}s">${body}${lab}</g>`;
+      const no = nums[n.id], bx = n.x + R * 0.82, bY = n.y - R * 0.82;
+      const badge = no ? `<circle cx="${bx}" cy="${bY}" r="9.5" fill="#06090f" stroke="#00cfff" stroke-width="1.2"/>
+        <text x="${bx}" y="${bY + 0.5}" class="num">${no}</text>` : '';
+      return `<g class="nd" style="--d:${t}s">${body}${badge}${lab}</g>`;
     }).join('');
     // the backdrop: a fine hexagon lattice fading out from the middle
     const hw = 16 * Math.sqrt(3);
@@ -353,6 +386,7 @@
     $('strats').innerHTML = S.picks.map((r, k) => `<div class="frame strat ${k === 0 ? 'best' : ''} ${og ? 'og' : ''}" style="--d:${grow ? k * 0.16 : 0}s">
       <div class="hd">${rankSvg(k)}<div><h3>${r.label}</h3><div class="ven">${r.venue}</div></div>${k === 0 ? '<span class="chip g">TOP PICK</span>' : ''}</div>
       <div data-tree="${k}">${tree(r, {orient: 'v', id: 's' + k, col: k, grow, delay: k * 0.16, interactive: true})}</div>
+      <div data-steps="${k}">${stepsHtml(r)}</div>
       <div class="result">${resultHtml(r, k)}</div>
       <button class="sel" data-pick="${k}">SELECT STRATEGY ${ARROW.replace('<svg', '<svg width="16" height="16"')}</button></div>`).join('');
   }
@@ -370,6 +404,7 @@
       const box = document.querySelector(`[data-tree="${k}"]`);
       box.innerHTML = tree(r, {orient: 'v', id: 's' + k, col: k, grow: false, interactive: true});
       box.querySelector('.lev')?.classList.add('bump');
+      document.querySelector(`[data-steps="${k}"]`).innerHTML = stepsHtml(r);
       tween(document.querySelector(`[data-usd="${k}"]`), C.profit(r, S.amount), usd);
       document.querySelector(`[data-ret="${k}"]`).textContent = `${fx(r.up)} · ${fp(r.up)}`;
       document.querySelector(`[data-lev="${k}"]`).textContent = r.L.toFixed(1) + '×';
@@ -377,17 +412,18 @@
       lq.textContent = liqTxt(r) || 'None';
     }
     if (S.step === 4 && k === S.pick) {
-      $('plan').innerHTML = tree(r, {orient: 'h', id: 'pl', col: k, grow: false, interactive: true});
+      $('plan').innerHTML = planInner(r, false);
       updateBar(r);
     }
   }
 
   /* ---------- step 4: the plan ---------- */
+  const planInner = (r, grow) => `<div class="planin"><div>${tree(r, {orient: 'h', id: 'pl', col: S.pick, grow, interactive: true})}</div>${stepsHtml(r)}</div>`;
   function renderPlan() {
     const r = S.picks[S.pick];
     $('h4').innerHTML = `${r.label} <em>·</em> ${r.venue}`;
     $('p4').textContent = `#${S.pick + 1} of your top 3 · ${num(S.amount)} USDC`;
-    $('plan').innerHTML = tree(r, {orient: 'h', id: 'pl', col: S.pick, grow: !shot, interactive: true});
+    $('plan').innerHTML = planInner(r, !shot);
     const g = C.range(r, S.tier), og = S.tier === 'og';
     const lev = g ? `<div class="frame"><div class="lbl"><span>LEVERAGE</span><span id="levv" style="color:#00cfff">${r.L.toFixed(1)}×</span></div>
         <input type="range" id="lev" min="${g.min}" max="${g.max}" step="${g.step}" value="${r.L}">
@@ -435,23 +471,22 @@
     const cats = ['All', ...new Set(P.map(([, p]) => CAT[p.category] || p.category))];
     const tvl = P.reduce((t, [, p]) => t + p.tvl, 0);
     $('pp').textContent = `DefiLlama · ${when(D.fetched_at)}`;
-    $('pstats').innerHTML = [['PLATFORMS', P.length, 'g'], ['TOTAL VALUE LOCKED', '$' + bn(tvl), ''], ['POOLS READ', num(D.scanned.pools), ''], ['CHAINS', D.scanned.chains, '']]
-      .map(([k, v, c]) => `<div class="frame ${c}"><div class="lbl">${k}</div><b>${v}</b></div>`).join('');
+    $('pstats').className = 'frame pstats';
+    $('pstats').innerHTML = [['PLATFORMS', P.length, 'g'], ['TVL', '$' + bn(tvl), ''], ['POOLS READ', num(D.scanned.pools), ''], ['CHAINS', D.scanned.chains, '']]
+      .map(([k, v, c]) => `<div class="${c}"><b>${v}</b><span class="lbl">${k}</span></div>`).join('');
     $('filters').innerHTML = cats.map(c => `<button data-filter="${c}" class="${S.filter === c ? 'on' : ''}">${c}<i>${c === 'All' ? P.length : P.filter(([, p]) => (CAT[p.category] || p.category) === c).length}</i></button>`).join('');
+    // one tile a platform: logo, name, what it is and how much it holds; the rest on hover
     $('plats').innerHTML = P.filter(([, p]) => S.filter === 'All' || (CAT[p.category] || p.category) === S.filter).map(([k, p], i) => {
       const u = U[k] || {uses: new Set(), routes: new Set()};
-      return `<div class="frame plat" style="animation:rise .45s ${i * 0.03}s both">
-        <div class="hd"><svg viewBox="0 0 52 52"><path d="${hex(26, 26, 24)}" fill="#06090f" stroke="url(#gEdge)" stroke-width="1.2"/>
+      const more = `${p.chains} chains · ${p.pools_read} pools read · ${u.routes.size} routes · ${[...u.uses].join(', ').toLowerCase()} · ${p.site.replace(/^www\./, '')}`;
+      return `<a class="plat" href="https://${p.site}" target="_blank" rel="noopener noreferrer" title="${more}" style="animation:rise .4s ${i * 0.02}s both">
+        <svg class="lg" viewBox="0 0 52 52"><path d="${hex(26, 26, 24)}" fill="#06090f" stroke="url(#gEdge)" stroke-width="1.4"/>
           <clipPath id="pc${i}"><circle cx="26" cy="26" r="15"/></clipPath><text x="26" y="31" text-anchor="middle" style="font:700 14px Inter;fill:#a9b8cc">${p.name[0]}</text>
           <image href="${icon(k)}" x="11" y="11" width="30" height="30" clip-path="url(#pc${i})"/></svg>
-          <div><h3>${p.name}</h3><div class="cat">${CAT[p.category] || p.category}</div></div></div>
-        <div class="tvl"><div><div class="lbl">TVL</div><b>$${bn(p.tvl)}</b></div>${p.audited ? '<span class="chip g">✓ AUDITED</span>' : ''}</div>
-        <div class="three"><div><div class="lbl">POOLS READ</div><b>${p.pools_read}</b></div><div><div class="lbl">CHAINS</div><b>${p.chains}</b></div>
-          <div><div class="lbl">ROUTES</div><b>${u.routes.size}</b></div></div>
-        <div class="uses">${[...u.uses].map(x => `<span class="chip m">${x}</span>`).join('')}</div>
-        <a class="site" href="https://${p.site}" target="_blank" rel="noopener noreferrer">${p.site.replace(/^www\./, '')} ↗</a></div>`;
+        <div class="n"><b>${p.name}</b><small>${CAT[p.category] || p.category} · <i>$${bn(p.tvl)}</i></small></div>
+        ${p.audited ? `<svg class="ok" viewBox="0 0 20 20"><title>Audited (DefiLlama)</title><path d="${hex(10, 10, 9)}" fill="rgba(0,255,136,.12)" stroke="#00ff88" stroke-width="1.2"/><path d="M6.4 10.2l2.4 2.4 4.8-5" fill="none" stroke="#00ff88" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>` : ''}</a>`;
     }).join('');
-    $('pfoot').textContent = 'Category, TVL, audits and chains: DefiLlama. Demo selection: Cymetica makes its own.';
+    $('pfoot').textContent = '✓ audited per DefiLlama · hover a tile for chains, pools and what the routes use it for · demo selection, Cymetica makes its own';
   }
 
   /* ---------- the mark, large ---------- */
