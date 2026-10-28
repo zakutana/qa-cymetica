@@ -218,18 +218,66 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 /* Season 0's leaderboard head: the prizes as a podium and the three conditions under it on the left, only the table on the right */
 .lb-rule.s0, .lbg .lb-rule.s0 { grid-template-columns: minmax(0, 1fr) minmax(0, .95fr); gap: 34px; align-items: start; }
 .lb-left { display: flex; flex-direction: column; gap: 18px; }
-.lb-pod { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; align-items: end; padding: 0 6px; }
-.pod { --sc: var(--rs1); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; }
+/* the podium (uvboard.js tableSeason): three blocks, each a lit top face over a glass front with its place cut into it; a beam of
+   light falls on each from above, the first's the strongest, sparks rise off the first, the floor glows, and the podium is reflected */
+.lb-pod { position: relative; display: grid; grid-template-columns: 1fr 1.12fr 1fr; gap: 10px; align-items: end; padding: 26px 8px 0; margin-bottom: 34px;
+  -webkit-box-reflect: below 2px linear-gradient(transparent 70%, rgba(255, 255, 255, .08)); }
+.pod { --sc: var(--rs1); position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 10px; }
 .pod.pl2 { --sc: var(--rs2); } .pod.pl3 { --sc: var(--rs3); }
+.pod > * { position: relative; z-index: 1; }
+/* the beam: a cone of light from above the step, breathing slowly */
+.pod > .pod-beam { position: absolute; z-index: 0; left: -18%; right: -18%; bottom: 0; top: -46px; pointer-events: none; filter: blur(10px); opacity: .55;
+  background: conic-gradient(at 50% 0%, transparent 152deg, color-mix(in srgb, var(--sc) 70%, transparent) 168deg, color-mix(in srgb, #ffffff 55%, var(--sc)) 180deg,
+    color-mix(in srgb, var(--sc) 70%, transparent) 192deg, transparent 208deg);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, .25) 0%, #000 35%, rgba(0, 0, 0, .7) 75%, transparent 100%); mask-image: linear-gradient(180deg, rgba(0, 0, 0, .25) 0%, #000 35%, rgba(0, 0, 0, .7) 75%, transparent 100%);
+  mix-blend-mode: screen; animation: podbeam 4.5s ease-in-out infinite; }
+.pod.pl1 > .pod-beam { opacity: .9; top: -70px; }
+.pod.pl3 > .pod-beam { opacity: .4; animation-delay: -1.6s; } .pod.pl2 > .pod-beam { animation-delay: -3s; }
+@keyframes podbeam { 0%, 100% { opacity: var(--bo, .55); transform: scaleX(1); } 50% { opacity: calc(var(--bo, .55) * .7); transform: scaleX(.92); } }
+.pod.pl1 { --bo: .9; } .pod.pl3 { --bo: .4; }
+/* the prize over each step: the flyer's cut gradient, white at the lip, the place's colour below */
 .pod-p { text-align: center; line-height: 1; }
-.pod-p b { display: block; font: 400 clamp(22px, 2.3vw, 32px)/1 'Archivo Black', sans-serif; color: var(--sc); text-shadow: 0 0 16px color-mix(in srgb, var(--sc) 55%, transparent); }
-.pod-p span { display: block; margin-top: 4px; font-size: 11px; font-weight: 700; color: var(--text); }
-.pod-s { width: 100%; display: grid; place-items: center; border-radius: 12px 12px 0 0; border: 1px solid color-mix(in srgb, var(--sc) 50%, transparent); border-bottom: 0;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--sc) 30%, transparent), rgba(255, 255, 255, .02) 85%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 -10px 34px color-mix(in srgb, var(--sc) 20%, transparent); }
-.pod.pl1 .pod-s { height: 112px; } .pod.pl2 .pod-s { height: 80px; } .pod.pl3 .pod-s { height: 56px; }
-.pod-s i { font: 400 34px/1 'Archivo Black', sans-serif; font-style: normal; color: transparent; -webkit-background-clip: text; background-clip: text;
-  background-image: linear-gradient(180deg, #ffffff, var(--sc)); filter: drop-shadow(0 0 10px color-mix(in srgb, var(--sc) 60%, transparent)); }
+.pod-p b { display: block; font: 400 clamp(22px, 2.2vw, 30px)/1 'Archivo Black', sans-serif; letter-spacing: -.01em; color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-image: linear-gradient(180deg, #ffffff 0%, color-mix(in srgb, #ffffff 30%, var(--sc)) 35%, var(--sc) 70%, color-mix(in srgb, #000 25%, var(--sc)) 100%);
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--sc) 70%, transparent)) drop-shadow(0 2px 0 rgba(0, 0, 0, .5)); }
+.pod.pl1 .pod-p b { font-size: clamp(28px, 2.9vw, 40px); }
+.pod-p span { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 99px; font-size: 10.5px; font-weight: 800; letter-spacing: .14em; color: #eaf6ff;
+  background: color-mix(in srgb, var(--sc) 18%, transparent); border: 1px solid color-mix(in srgb, var(--sc) 45%, transparent); }
+/* the block: a lit top face (a trapezoid, so the step reads as a solid seen from a little above) and the glass front */
+.pod-block { width: 100%; filter: drop-shadow(0 18px 24px rgba(0, 0, 0, .55)); }
+.pod-top { display: block; height: 16px; margin: 0 2px;
+  clip-path: polygon(7% 0, 93% 0, 100% 100%, 0 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .75), color-mix(in srgb, var(--sc) 75%, #ffffff) 45%, color-mix(in srgb, var(--sc) 55%, transparent)); }
+.pod-s { position: relative; overflow: hidden; width: 100%; display: grid; place-items: center;
+  border: 1px solid color-mix(in srgb, var(--sc) 55%, transparent); border-top: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 22px),
+    radial-gradient(90% 70% at 50% 0%, color-mix(in srgb, var(--sc) 40%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--sc) 26%, rgba(8, 14, 24, .9)), rgba(6, 10, 18, .94) 80%);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .55), inset 0 -24px 30px -20px color-mix(in srgb, var(--sc) 35%, transparent),
+    0 0 40px color-mix(in srgb, var(--sc) 22%, transparent); }
+.pod.pl1 .pod-s { height: 128px; } .pod.pl2 .pod-s { height: 92px; } .pod.pl3 .pod-s { height: 66px; }
+/* a slow sheen across the glass */
+.pod-s::after { content: ''; position: absolute; top: -20%; bottom: -20%; left: -70%; width: 45%; transform: skewX(-18deg); pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .14) 45%, rgba(220, 255, 248, .26) 50%, transparent 62%); animation: podsheen 6s ease-in-out infinite; }
+.pod.pl2 .pod-s::after { animation-delay: -2s; } .pod.pl3 .pod-s::after { animation-delay: -4s; }
+@keyframes podsheen { 0%, 55% { left: -70%; } 100% { left: 140%; } }
+/* the place, cut into the glass and lit from within */
+.pod-s i { font: 400 44px/1 'Archivo Black', sans-serif; font-style: normal; color: transparent; -webkit-background-clip: text; background-clip: text;
+  background-image: linear-gradient(180deg, #ffffff 10%, color-mix(in srgb, #ffffff 35%, var(--sc)) 45%, var(--sc) 100%);
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--sc) 75%, transparent)) drop-shadow(0 0 30px color-mix(in srgb, var(--sc) 35%, transparent)); }
+.pod.pl1 .pod-s i { font-size: 62px; }
+/* sparks rising off the first */
+.pod > .pod-sparks { position: absolute; z-index: 2; left: 0; right: 0; bottom: 40px; top: -40px; pointer-events: none; }
+.spark { position: absolute; bottom: 0; width: 3px; height: 3px; border-radius: 50%; background: #d8fff0; box-shadow: 0 0 8px var(--rs1), 0 0 2px #ffffff;
+  opacity: 0; animation: spark 3.4s linear infinite; }
+.spark:nth-child(3n) { width: 2px; height: 2px; animation-duration: 4.1s; } .spark:nth-child(4n) { background: #c9f6ff; box-shadow: 0 0 8px var(--rs2); }
+@keyframes spark { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: 1; } 70% { opacity: .8; } 100% { transform: translate(6px, -150px); opacity: 0; } }
+/* the floor the podium stands on: a lit ellipse in the three colours */
+.lb-pod > .pod-floor { position: absolute; z-index: 0; left: -4%; right: -4%; bottom: -18px; height: 36px; pointer-events: none; border-radius: 50%; filter: blur(8px);
+  background: radial-gradient(40% 60% at 50% 50%, rgba(0, 255, 136, .5), transparent 70%), radial-gradient(30% 50% at 20% 50%, rgba(0, 207, 255, .4), transparent 70%),
+    radial-gradient(30% 50% at 80% 50%, rgba(59, 130, 246, .4), transparent 70%); }
+@media (prefers-reduced-motion: reduce) { .pod > .pod-beam, .pod-s::after, .spark { animation: none; } .spark { display: none; } }
 .lb-rule.s0 > .lb-pt { margin-top: 0; }
 .lb-rule.s0 .lb-who { padding: 0; }
 /* Season 0's "what earns what" table, in the leaderboard's rule box (uvboard.js tableSeason) */

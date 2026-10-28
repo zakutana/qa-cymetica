@@ -82,9 +82,15 @@
     }).join('');
     // the prizes as a podium (the operator, 2026-10-28: "nejake stupne viteznu"): 2nd, 1st, 3rd, the first the tallest step; under it the
     // three conditions; on the right only the table of what earns what
+    // ("udelej to nejak huste to podium ne takove basic"): each step a block with a lit top face and a glass front, a beam of light
+    // from above, sparks rising off the first, a glowing floor and the podium's reflection under it
+    var sparks = '';
+    for (var s = 0; s < 9; s++) sparks += '<i class="spark" style="left:' + (12 + s * 9.5) + '%;animation-delay:' + (s * 0.37).toFixed(2) + 's"></i>';
     var steps = [1, 0, 2].map(function (i) {
-      return '<div class="pod pl' + (i + 1) + '"><div class="pod-p"><b>' + pts(b.prizes[i]) + '</b><span>ET10</span></div><div class="pod-s"><i>' + (i + 1) + '</i></div></div>';
-    }).join('');
+      return '<div class="pod pl' + (i + 1) + '"><span class="pod-beam"></span>' + (i === 0 ? '<span class="pod-sparks">' + sparks + '</span>' : '') +
+        '<div class="pod-p"><b>' + pts(b.prizes[i]) + '</b><span>ET10</span></div>' +
+        '<div class="pod-block"><span class="pod-top"></span><div class="pod-s"><i>' + (i + 1) + '</i></div></div></div>';
+    }).join('') + '<span class="pod-floor"></span>';
     return '<div class="mh lbh"><span class="uvb-live"></span><h3>' + K.name.toUpperCase() + ' · ' + K.month.split(' ')[0].toUpperCase() + '</h3><span class="lbt">LEADERBOARD</span><button class="btn" data-a="close">×</button></div>' +
       '<div class="lb-rule s0"><div class="lb-left"><div class="lb-pod">' + steps + '</div>' +
         '<div class="lb-who"><h4>Who gets a slot</h4>' +
