@@ -1,0 +1,37 @@
+Build a Company, round 5: work without waiting, Season 1 points, free company creation
+
+A. THE COMPANY WORKS WHILE WORK IS QUEUED
+The runner ticks every 120 s (pass_every_s 120) and waits between ticks even when a department has queued work and the plan has units left. You told us working while queued is not built and that a feature request is the way to move it up. This is that request.
+- While a department has a queued task and the owner's plan has units left, the next turn starts at once, not at the next tick.
+- Done when: a task queued while units remain starts within seconds (queued_at to the first turn, visible in /tasks).
+- An empty queue costs nothing (no turns spent looking for work).
+- The countdown chip to the next pass can go or change meaning. You decide.
+
+B. SEASON 1: POINTS (your build spec ET-33050)
+We take your rules as written: a season is a calendar month, 100 points to be placed, an active user (signed in, used a product on 2 different days) is 10 points, signed-out returning visitors are capped at 25 % of the signed-in points, trading agents give 1 point per 100 USDC of fee-paying volume, the owner's own and test accounts earn nothing, the board shows users / visitors / agents. We ask for these changes:
+1. Further active days count from the 3rd: 2 days = 10 points, 3 days = 11, up to 20.
+2. No cap on the trading agents' points. A company that only trades must be able to take part; as written it earns 0.
+3. Every product counts separately for a user: 10 points for each product the user uses. Companies own different products, so a user of several products gives points to every product's company. Please drop the limit of 5 companies per account: it has no purpose then.
+4. A signed-out visitor who keeps coming back keeps earning, as a user does: 1 point, then +0.25 for every further day from the 3rd. The 25 % cap stays.
+5. An agent cloned under the owner's account is that company's agent; its fee-paying volume counts for the company.
+6. PRIZES: 500,000 / 250,000 / 100,000 ET10 for 1st / 2nd / 3rd (about 572 / 286 / 114 USD at 0.001144 USDC; your sample was 50,000 / 30,000 / 10,000). We would really like the prizes to stay at this level. If the points rules look too generous, please tighten the conditions (thresholds, caps, anti-farming) rather than cut the prizes. The size is your operator's to set, by 31 October.
+7. LAND: 5 slots per account, not 3.
+8. PRODUCTS TAB: show per product what it brings (active users, visitors, agent volume and the points they give) in place of "revenue brought: not measured yet". Farming now depends on these figures, so the owner must see which product earns what.
+9. PRODUCT LIST: the Products tab and the product list in the Promo Market brief ("What and pay") are wrong for company 14 (Ironstar Capital). They should list the company's own products, everything built through Build it Better, not Cymetica's own pages. We expect everything except Build Usage and Build it Better; Agent Casino is listed twice. See pictures 4 and 5.
+10. Season 1 starts in November and points are computed back for products that already exist: the ones we built before the season opened count from the start.
+11. ANTI-FARMING. We tested your protection today on Promo Market, our brief 1 (cymetica.com/promo-market#mybrief/1). A proxy farming bot we built produced 62 clicks and 17 unique visitors in a short time (picture 3, "From click to user"). It barely holds. Please analyse how that got through and strengthen it, in Promo Market and in the companies' points alike. If the abuse cannot be stopped, adjust how Season points are earned to fit what can be measured honestly, rather than leave a board that farming wins.
+Still open from your answer: when the counting runs and what the board shows in between; where a company reads its own breakdown (and an API for it); when the real revenue share replaces the points.
+
+C. CREATING A COMPANY IS FREE
+Today a company costs a one-time 5,000 ET10 (not refundable) and needs the Pro plan. Please make creating a company need only a registration: no fee, no Pro plan.
+- It lures people into making a company just like that and gives them the feeling of belonging to the Universe, which is what Season 1 needs (more companies, more users, more volume).
+- A company without a paid plan can only trade with bots; it earns points from its agents' volume (B2).
+- To build (Build it Better, new products, departments) the owner still needs the Pro plan. That is where the plan is paid.
+- Done when: an account with no plan creates a company and sees it in the Universe; its bots trade and earn points; Build it Better asks for Pro at the moment it is used, not at creation.
+
+PICTURES
+1. Season 1 board in the Universe (top 3 with 500k / 250k / 100k)
+2. The full leaderboard: podium, what counts, companies
+3. Promo Market brief 1: "From click to user", 62 clicks, 17 unique visitors
+4. Products tab with the wrong list
+5. Promo Market brief, the wrong product list
