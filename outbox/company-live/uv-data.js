@@ -378,8 +378,9 @@
   // The operator's decisions of 2026-10-29, which change Cymetica's wording (to be put to them, not yet sent): (1) the further days count from
   // the 3rd active day on (2 days = 10 points, 3 = 11, ..., 12 = 20); (2) NO cap on the trading agents' points, so a company that only trades
   // farms points too (the rule as written gave it 0); (3) every PRODUCT counts separately for a user: 10 points for each product the user uses
-  // (the 20 cap is read per user per product: the operator did not say); (4) a visitor's 1 point per day or per month is left to Cymetica
-  // (the sample counts it once a month). Visitors keep their 25 % cap of the signed-in points.
+  // (the 20 cap is read per user per product: the operator did not say); (4) a returning visitor keeps earning: 1 point, then +0.25 for every
+  // further day from the 3rd (the operator, 2026-10-29: "u aktivniho je +1 tak u bez uctu aspon 0.25"). Visitors keep their 25 % cap of the
+  // signed-in points.
   CO.SEASON = { name: 'Season 1', month: 'November 2026', day: 12, days: 30, threshold: 100, prizes: [500000, 250000, 100000], cap: { visitors: 0.25 } };
   CO.uvPoints = function (c) {
     var R = CO.uvRng((+c.id || 0) * 17 + 3), K = CO.SEASON;
@@ -390,9 +391,10 @@
     var per = Math.min(20, 10 + Math.max(0, Math.round(R() * 8) - 2));  // 10, +1 from the 3rd active day, at most 20
     var pu = uses * per;
     var visitors = trader ? 0 : Math.round(users * (0.5 + R() * 3));
-    var pv = Math.min(visitors, Math.floor(pu * K.cap.visitors));
     var volume = Math.round(R() * R() * (trader ? 200000 : 60000) * (CO.BOARD_LAUNCH ? 0.12 : 1) / 100) * 100;   // fee-paying USDC volume of the company's own agents
     var pa = Math.floor(volume / 100);                             // 1 point per 100 USDC, no cap
+    var vper = 1 + 0.25 * Math.max(0, Math.round(R() * 8) - 2);   // a returning visitor: 1, +0.25 from the 3rd day they come back
+    var pv = Math.min(Math.floor(visitors * vper), Math.floor(pu * K.cap.visitors));
     return { users: users, uses: uses, visitors: visitors, volume: volume, pu: pu, pv: pv, pa: pa, total: pu + pv + pa, trader: trader, capped: pv < visitors };
   };
   // the ranking, highest first; top: the first three at or above the floor (fewer when fewer reach it)
