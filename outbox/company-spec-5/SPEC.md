@@ -49,6 +49,18 @@ and for the guide at `cymetica.com/quest` (outbox/quest), not a new request. The
 7. **Which agent is a company's agent** (the operator, 2026-10-29): a company is tied to a Cymetica account, so every agent cloned under that
    account is that company's agent, and its fee-paying volume counts for the company. Not stated by them; an account that owns several
    companies would count the same agent for each.
+8. **No limit of 5 companies per user** (the operator, 2026-10-29, on their rule "one account is an active user of at most 5 companies a month"):
+   every company has its own products and two companies cannot own the same product, so a user of several products earns points for **every**
+   product's company. We read it as: that rule has no purpose and goes. Not yet put to them.
+9. **Land: 5 slots per account, not 3** (the operator): the number of slots a company can buy in the Universe (`Buy land`, today 3) goes to 5,
+   so a company can hold more products on the map.
+10. **The Products tab shows what each product brings** (the operator): the figures farming now depends on (active users, visitors, agent volume
+    and the points they give) per product, in place of "revenue brought · not measured yet", so the owner sees which product earns what.
+11. **A company's products are only what it built with Build it Better** (the operator; seen on Ironstar Capital, company 14): the Products tab
+    and the product list in Promo Market's brief ("What and pay") today also list Cymetica's own pages that no one built through Build it
+    Better. He expects everything except Build Usage and Build it Better, and Agent Casino once (it is listed twice).
+12. **Season 1 starts at once, in November, with the points computed back for products that already exist** (the operator): the products we
+    built before the season opened count from the start, not from the day the board goes live.
 The Universe mock (`?season0`) draws these; the sample figures come from one model (uv-data.js, `CO.uvPoints`).
 
 **What their answer does not say (to settle before we check the build):**
