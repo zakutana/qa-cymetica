@@ -46,6 +46,9 @@ and for the guide at `cymetica.com/quest` (outbox/quest), not a new request. The
    of 2026-10-29 (0.001144 USDC) that is about 572 / 286 / 114 USD, 972 USD in all. The size is Cymetica's operator's to set, by 31 October.
 6. **We would really like the prizes to stay at 500k / 250k / 100k**: if the points rules look too generous to them, tighten the conditions
    (the thresholds, the caps, the anti-farming rules) rather than take from the prizes.
+7. **Which agent is a company's agent** (the operator, 2026-10-29): a company is tied to a Cymetica account, so every agent cloned under that
+   account is that company's agent, and its fee-paying volume counts for the company. Not stated by them; an account that owns several
+   companies would count the same agent for each.
 The Universe mock (`?season0`) draws these; the sample figures come from one model (uv-data.js, `CO.uvPoints`).
 
 **What their answer does not say (to settle before we check the build):**
