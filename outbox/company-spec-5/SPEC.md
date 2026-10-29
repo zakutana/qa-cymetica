@@ -41,6 +41,8 @@ and for the guide at `cymetica.com/quest` (outbox/quest), not a new request. The
 2. **No cap on the trading agents' points**: a company that only trades collects points too (their rule as written gave it 0).
 3. **Every product counts separately** for a user: 10 points for each product the user uses. (The 20 cap is read per user per product; he did not say.)
 4. A visitor's 1 point per day or per month: **left to Cymetica** to decide.
+5. **The prize we propose: 500,000 / 250,000 / 100,000 ET10 for 1st / 2nd / 3rd** (their sample was 50,000 / 30,000 / 10,000). At the ET10 price
+   of 2026-10-29 (0.001144 USDC) that is about 572 / 286 / 114 USD, 972 USD in all. The size is Cymetica's operator's to set, by 31 October.
 The Universe mock (`?season0`) draws these; the sample figures come from one model (uv-data.js, `CO.uvPoints`).
 
 **What their answer does not say (to settle before we check the build):**

@@ -371,7 +371,8 @@
   //   - the owner's own accounts and test accounts earn nothing; 100 points in the month to be placed; the top 3 are paid.
   // The caps are read as shares of the company's TOTAL (the agents' cap: pa <= 0.3 / 0.7 of users + visitors). Their answer
   // does not say whether the base is the total or the signed-in points: it is an open question in outbox/company-spec-5/SPEC.md.
-  // The PRIZE is not in their answer; 50,000 / 30,000 / 10,000 ET10 is what they called a sensible range (REPLY-0229): a SAMPLE.
+  // The PRIZE (the operator, 2026-10-29): 500,000 / 250,000 / 100,000 ET10 for 1st / 2nd / 3rd. Cymetica's own sample was 50,000 / 30,000 /
+  // 10,000 (REPLY-0229, REPLY-0237); their operator sets the real prize, so this is OUR proposal until they do.
   // Every figure below is a sample drawn from one seeded model, so the board, the leaderboard and the pulses agree.
   CO.SEASON0 = /[?&]season0\b/.test(location.search);
   // The operator's decisions of 2026-10-29, which change Cymetica's wording (to be put to them, not yet sent): (1) the further days count from
@@ -379,7 +380,7 @@
   // farms points too (the rule as written gave it 0); (3) every PRODUCT counts separately for a user: 10 points for each product the user uses
   // (the 20 cap is read per user per product: the operator did not say); (4) a visitor's 1 point per day or per month is left to Cymetica
   // (the sample counts it once a month). Visitors keep their 25 % cap of the signed-in points.
-  CO.SEASON = { name: 'Season 1', month: 'November 2026', day: 12, days: 30, threshold: 100, prizes: [50000, 30000, 10000], cap: { visitors: 0.25 } };
+  CO.SEASON = { name: 'Season 1', month: 'November 2026', day: 12, days: 30, threshold: 100, prizes: [500000, 250000, 100000], cap: { visitors: 0.25 } };
   CO.uvPoints = function (c) {
     var R = CO.uvRng((+c.id || 0) * 17 + 3), K = CO.SEASON;
     var trader = R() < 0.22;                                       // a company that only trades: agents, no products, no users
