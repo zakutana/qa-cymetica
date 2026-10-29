@@ -1,6 +1,6 @@
 # Build a Company, round 5 (draft, not filed)
 
-Started 2026-10-28 at the operator's word. Two items so far; more are added here as they are agreed. The operator files the
+Started 2026-10-28 at the operator's word. Three items so far (A, B, C); more are added here as they are agreed. The operator files the
 request text himself on Build it Better, and its ET number goes in README.md. Not written yet: the request text, the pictures.
 
 ## A. The company works while work is queued (not built, said by them)
@@ -61,6 +61,11 @@ and for the guide at `cymetica.com/quest` (outbox/quest), not a new request. The
     Better. He expects everything except Build Usage and Build it Better, and Agent Casino once (it is listed twice).
 12. **Season 1 starts at once, in November, with the points computed back for products that already exist** (the operator): the products we
     built before the season opened count from the start, not from the day the board goes live.
+13. **Tighten the anti-farming protection, we tested it today and it barely holds** (the operator, 2026-10-29): we built a proxy farming bot
+    and aimed it at our own brief 1 in Promo Market (`cymetica.com/promo-market#mybrief/1`). In a short time it produced **62 clicks on the
+    links and 17 unique visitors** (the "From click to user" panel on the brief). Please analyse how that got through and strengthen it, in
+    Promo Market and in the companies' points alike. If the abuse cannot be stopped, adjust how Season points are earned to fit what can be
+    measured honestly, rather than leave a board that farming wins.
 The Universe mock (`?season0`) draws these; the sample figures come from one model (uv-data.js, `CO.uvPoints`).
 
 **What their answer does not say (to settle before we check the build):**
@@ -78,6 +83,18 @@ The Universe mock (`?season0`) draws these; the sample figures come from one mod
 **Our checks when it ships (ET-33050):** the board shows points, the breakdown and the threshold; a company with 10 active users on 2 days
 reaches 100; a page view alone gives nothing; the owner's own account gives nothing; a signed-out visitor counts at most 25 % in total; agents'
 volume counts at most 30 %; one account counts for at most 5 companies.
+
+## C. Creating a company is free (the operator, 2026-10-29)
+
+**Today:** a company costs a one-time 5,000 ET10 (not refundable) and needs the Pro plan or higher.
+
+**What we ask:** creating a company needs only a registration. Drop the 5,000 ET10 fee and the Pro-plan requirement for creating one.
+- Why: it lures people into making a company just like that and gives them the feeling of belonging to the Universe, which is what
+  Season 0 needs (more companies, more users, more volume).
+- A company without a paid plan can **only trade with bots**; it earns Season points from its agents' volume (B, item 2).
+- To **build** (Build it Better, new products, departments), the owner still needs the Pro plan. That is where the plan is paid.
+- Done when: an account with no plan creates a company and sees it in the Universe; its bots trade and earn points; Build it Better asks
+  for Pro at the moment it is used, not at creation.
 
 **For the guide (outbox/quest):** the prize line and step 4 change from "up to 5 % of revenue" to Season points once the prize is settled
 (item 1). The draft Build it Better request `outbox/quest/season0/request.txt` is superseded by ET-33050 and is not filed.
