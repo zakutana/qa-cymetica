@@ -60,7 +60,7 @@
     var none = !b.top.length;
     return '<button type="button" class="uvb-pill" data-a="board-fold" title="The top 3 of the month win ET10">TOP 3 <i>' + K.name.toUpperCase() + '</i></button>' +
       '<div class="uvb-in"><i class="uvb-sh"></i><div class="uvb-h"><span class="uvb-live"></span><b>' + K.name.toUpperCase() + '</b><span>TOP 3</span></div>' +
-      '<div class="uvb-sub" title="Points for real use of a company\'s products this month: 10 per active user (+1 per further active day, at most 20), signed-out visitors count less, trading agents add 1 point per 100 USDC of fee-paying volume. The owner\'s own accounts earn nothing. The prize amounts are a sample: Cymetica sets the prize.">' +
+      '<div class="uvb-sub" title="Points for real use of a company\'s products this month: 10 per active user (+1 per further active day, at most 20), signed-out visitors count less, trading agents add 1 point per 100 USDC of fee-paying volume, with no cap. The owner\'s own accounts earn nothing. The prize amounts are a sample: Cymetica sets the prize.">' +
         K.month + ' · most points wins</div>' +
       (none ? '<div class="uvb-hero"><b>All 3 slots are open.</b><span>Be the first company to reach ' + b.floor + ' points.</span></div>' : '') + rows +
       '<div class="uvb-f"><span><b>' + b.left + ' d</b> left · <b>' + b.floor + ' pts</b> to qualify</span>' +
@@ -75,9 +75,9 @@
       var pre = !cut && !r.qualifies ? (cut = true, line(i === 0)) : '';
       return pre + '<div class="lb-r s0' + (r.prize ? ' top pl' + r.rank : '') + (r.mine ? ' me' : '') + (r.qualifies ? '' : ' below') + '"><i class="lb-rk">' + r.rank + '</i>' + CO.stationIcon(r.c.skin, r.c.accent) +
         '<div class="lb-n">' + name(r.c, r.mine) + '</div>' +
-        '<div class="lb-v" title="' + r.p.users + ' active users: ' + r.p.pu + ' points">' + r.p.users + '<small>' + pts(r.p.pu) + ' pts</small></div>' +
+        '<div class="lb-v" title="' + r.p.users + ' active users on ' + r.p.uses + ' product uses (every product counts separately): ' + r.p.pu + ' points">' + r.p.users + '<small>' + pts(r.p.pu) + ' pts</small></div>' +
         '<div class="lb-v" title="signed-out returning visitors, at most 25% of the signed-in points">' + r.p.visitors + '<small>' + pts(r.p.pv) + ' pts</small></div>' +
-        '<div class="lb-v" title="fee-paying volume of the company\'s own agents, 1 point per 100 USDC, at most 30% of the company\'s points">$' + k(r.p.volume) + '<small>' + pts(r.p.pa) + ' pts</small></div>' +
+        '<div class="lb-v" title="fee-paying volume of the company\'s own agents, 1 point per 100 USDC, no cap">$' + k(r.p.volume) + '<small>' + pts(r.p.pa) + ' pts</small></div>' +
         '<div class="lb-s">' + right + '</div></div>';
     }).join('');
     // the prizes as a podium (the operator, 2026-10-28: "nejake stupne viteznu"): 2nd, 1st, 3rd, the first the tallest step; under it the
@@ -99,9 +99,9 @@
           '<div class="lb-c one"><i>3</i><b>Month end</b><span>the ranking decides, then back to zero</span></div></div></div>' +
         // what earns what, as a table (the operator, 2026-10-28: "misto toho hnusneho textu peknou tabulku struncou")
         '<div class="lb-pt"><div class="lb-pt-h"><span>What counts</span><span>Points</span><span>Cap</span></div>' +
-          '<div class="lb-pt-r"><span>Active user<small>used a product on 2+ days</small></span><b>10</b><span>+1 per further day, max 20</span></div>' +
+          '<div class="lb-pt-r"><span>Active user<small>per product, on 2+ days</small></span><b>10</b><span>+1 from day 3, max 20</span></div>' +
           '<div class="lb-pt-r"><span>Visitor<small>no account, came back</small></span><b>1</b><span>25% of user points</span></div>' +
-          '<div class="lb-pt-r"><span>Trading agents<small>per 100 USDC of fee-paying volume</small></span><b>1</b><span>30% of all points</span></div></div></div>' +
+          '<div class="lb-pt-r"><span>Trading agents<small>per 100 USDC of fee-paying volume</small></span><b>1</b><span>no cap</span></div></div></div>' +
       '<div class="lb-head s0"><span>#</span><span></span><span>Company</span><span>Users</span><span>Visitors</span><span>Agents</span><span>Points</span></div>' +
       '<div class="lb">' + rows + (cut ? '' : line(false)) + '</div>';
   }

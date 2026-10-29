@@ -36,6 +36,13 @@ and for the guide at `cymetica.com/quest` (outbox/quest), not a new request. The
 | Trading agents | 1 point per 100 USDC of fee-paying traded volume on the company's agents in the month, at most 30 % of the company's points; nothing for profit or ROI |
 | Against farming | the owner's own accounts and test accounts earn nothing; one account is an active user of at most 5 companies a month; accounts created in the month need a verified deposit or 7 days of age; the board shows the breakdown users / visitors / agents |
 
+**The operator's decisions, 2026-10-29 (his words; they change Cymetica's wording, so they are for him to put to Cymetica, not yet sent):**
+1. The further days count **from the 3rd active day**: 2 days = 10 points, 3 days = 11, 12 days = 20.
+2. **No cap on the trading agents' points**: a company that only trades collects points too (their rule as written gave it 0).
+3. **Every product counts separately** for a user: 10 points for each product the user uses. (The 20 cap is read per user per product; he did not say.)
+4. A visitor's 1 point per day or per month: **left to Cymetica** to decide.
+The Universe mock (`?season0`) draws these; the sample figures come from one model (uv-data.js, `CO.uvPoints`).
+
 **What their answer does not say (to settle before we check the build):**
 1. **The prize.** The answer names a winner above a threshold but no prize. Earlier (REPLY-0229): ET10 only, the 5 : 3 : 1 split, a
    pool in the 50,000 / 30,000 / 10,000 range, a USDC prize is a treasury decision they cannot promise. Is that still the Season 1 prize,

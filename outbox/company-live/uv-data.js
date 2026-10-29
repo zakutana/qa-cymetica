@@ -374,19 +374,25 @@
   // The PRIZE is not in their answer; 50,000 / 30,000 / 10,000 ET10 is what they called a sensible range (REPLY-0229): a SAMPLE.
   // Every figure below is a sample drawn from one seeded model, so the board, the leaderboard and the pulses agree.
   CO.SEASON0 = /[?&]season0\b/.test(location.search);
-  CO.SEASON = { name: 'Season 1', month: 'November 2026', day: 12, days: 30, threshold: 100, prizes: [50000, 30000, 10000], cap: { visitors: 0.25, agents: 0.30 } };
+  // The operator's decisions of 2026-10-29, which change Cymetica's wording (to be put to them, not yet sent): (1) the further days count from
+  // the 3rd active day on (2 days = 10 points, 3 = 11, ..., 12 = 20); (2) NO cap on the trading agents' points, so a company that only trades
+  // farms points too (the rule as written gave it 0); (3) every PRODUCT counts separately for a user: 10 points for each product the user uses
+  // (the 20 cap is read per user per product: the operator did not say); (4) a visitor's 1 point per day or per month is left to Cymetica
+  // (the sample counts it once a month). Visitors keep their 25 % cap of the signed-in points.
+  CO.SEASON = { name: 'Season 1', month: 'November 2026', day: 12, days: 30, threshold: 100, prizes: [50000, 30000, 10000], cap: { visitors: 0.25 } };
   CO.uvPoints = function (c) {
     var R = CO.uvRng((+c.id || 0) * 17 + 3), K = CO.SEASON;
-    var users = Math.round(Math.pow(R(), 3.2) * 46 * (CO.BOARD_LAUNCH ? 0.12 : 1));
+    var trader = R() < 0.22;                                       // a company that only trades: agents, no products, no users
+    var users = trader ? 0 : Math.round(Math.pow(R(), 3.2) * 46 * (CO.BOARD_LAUNCH ? 0.12 : 1));
     if (c.status === 'paused') users = Math.round(users * 0.4);
-    var per = Math.min(20, 10 + Math.round(R() * 6));              // 10 + the further active days, at most 20
-    var pu = users * per;
-    var visitors = Math.round(users * (0.5 + R() * 3));
+    var uses = Math.round(users * (1 + R() * 1.4));                // user-product pairs: each user counts once for EACH product they use
+    var per = Math.min(20, 10 + Math.max(0, Math.round(R() * 8) - 2));  // 10, +1 from the 3rd active day, at most 20
+    var pu = uses * per;
+    var visitors = trader ? 0 : Math.round(users * (0.5 + R() * 3));
     var pv = Math.min(visitors, Math.floor(pu * K.cap.visitors));
-    var volume = Math.round(R() * R() * 60000 / 100) * 100;        // fee-paying USDC volume of the company's own agents
-    var paRaw = Math.floor(volume / 100);
-    var pa = Math.min(paRaw, Math.floor((pu + pv) * K.cap.agents / (1 - K.cap.agents)));
-    return { users: users, visitors: visitors, volume: volume, pu: pu, pv: pv, pa: pa, total: pu + pv + pa, capped: pa < paRaw || pv < visitors };
+    var volume = Math.round(R() * R() * (trader ? 200000 : 60000) * (CO.BOARD_LAUNCH ? 0.12 : 1) / 100) * 100;   // fee-paying USDC volume of the company's own agents
+    var pa = Math.floor(volume / 100);                             // 1 point per 100 USDC, no cap
+    return { users: users, uses: uses, visitors: visitors, volume: volume, pu: pu, pv: pv, pa: pa, total: pu + pv + pa, trader: trader, capped: pv < visitors };
   };
   // the ranking, highest first; top: the first three at or above the floor (fewer when fewer reach it)
   CO.uvBoard = function (mine) {
