@@ -29,11 +29,11 @@ The `quest-steps` entry in `.claude/launch.json` (http://127.0.0.1:8800/). Wide 
 - **Live, cymetica.com, 2026-10-29:** the office (`/company/app/builder`, step 2, its own 3D with the page hidden) and the
   Promo Market page (`/promo-market`, its backgrounds cleared so it floats).
 - **Our Universe mock** (`outbox/company-live`, rendered 2026-10-27 by `outbox/quest/render.py`): the flight, the Promo
-  Market tower close, the whole Universe at the end; and the leaderboard (`?season0`), since the monthly ET10 board is
-  not live. It still says "Season 1 · November" inside the picture.
+  Market tower close, the whole Universe at the end; and the leaderboard (`?season0`, its title cut off), since the
+  monthly ET10 board is not live. Its companies (Giga Fund, Bull Club, ...) and "18 days left" are the mock's samples.
 - **Made for the page:** the robot arms (our scene) and the Hero Agent (Antigravity, `outbox/quest/gen`).
 - The flight's frames come from `outbox/quest/frames`, which is not in git either: a fresh clone shows the first frame
-  (`pics/fly-0.webp`) and the tests pass on it.
+  (`pics/fly-0.webp`) and the tests pass on it (run so, frames moved away, 2026-10-29: 19 green).
 
 ## Notes
 
