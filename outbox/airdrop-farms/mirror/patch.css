@@ -1,0 +1,33 @@
+/* Our patch over their airdrop-farmer.css (mockup, 2026-10-29). Their palette only. */
+
+/* header: the money in white, a touch larger */
+.afm .status { font-size: 14px; }
+.afm .status b { color: var(--text); font-weight: 800; }
+
+/* the plan panel: one balance number */
+.afm .bal { font-size: 13px; }
+.afm .bal b { color: var(--text); font-size: 15px; font-weight: 800; }
+
+/* Live farms: the money in the farms, first and large */
+.afm .money { margin-top: 26px; padding: 24px 26px 20px; }
+.afm .money .mbig { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.afm .money .mbig b.num { display: block; margin-top: 8px; font: 46px/1.05 "Archivo Black", sans-serif; color: var(--text); white-space: nowrap; }
+.afm .money .mbig b.pos { color: #00ff88; text-shadow: 0 0 30px rgba(0, 255, 136, .4); }
+.afm .money .mbig b.neg { color: #ff4444; }
+.afm .money .mbig small { font-size: 18px; margin-left: 4px; }
+.afm .money .msteps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 18px; padding-top: 14px;
+  border-top: 1px solid rgba(30, 48, 80, .9); font-size: 13px; color: var(--text-2); }
+.afm .money .msteps b { color: var(--text); }
+.afm .money .msteps i { font-style: normal; color: #00cfff; }
+.afm .money .msteps .fee, .afm .money .msteps .wait { margin-left: 10px; }
+.afm .money .msteps .wait b { color: #00cfff; }
+
+/* Coming soon: the badge in a narrow column, the reason in the width it frees, three lines, the rest on hover */
+.afm .list .row.soon { grid-template-columns: 88px minmax(200px, 1fr) 150px minmax(0, 2.4fr) 220px 0; }
+.afm .noheat .row.soon { grid-template-columns: minmax(200px, 1fr) 150px minmax(0, 2.4fr) 220px 0; }
+.afm .row.soon .why small { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  font-size: 12.5px; line-height: 1.5; color: var(--text-2); padding-right: 18px; }
+@media (max-width: 1100px) {
+  .afm .list .row.soon { grid-template-columns: 76px minmax(180px, 1fr) 130px minmax(0, 2fr) 200px 0; }
+  .afm .money .mbig b.num { font-size: 34px; }
+}
