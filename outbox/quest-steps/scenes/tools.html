@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ship products: the robot arms (scene for the Quest page)</title>
+<!-- Step 02, way A of the Quest page: "nejaky huste naradi vesmirne space roboticke" (the operator, 2026-10-29). Two robot
+     arms in a station's workshop assemble an app out of glass panels of light, deep space behind; the mood of the Hero
+     Agent picture beside it (dark navy, cyan and green light, a warm sun far off). Rendered once by capture.py
+     (?w=2560&h=1440), never loaded by the page. Subject in the right 55 %, the left dark for the words. No text. -->
+<style>html, body { margin: 0; background: #05070c; overflow: hidden; } canvas { display: block; }</style>
+<script type="importmap">{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
+} }</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+
+const Q = new URLSearchParams(location.search);
+const W = +(Q.get('w') || innerWidth), H = +(Q.get('h') || innerHeight);
+const PORTRAIT = H > W;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1);
+renderer.setSize(W, H);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.92;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.environmentIntensity = 0.32;
+
+const camera = new THREE.PerspectiveCamera(PORTRAIT ? 40 : 30, W / H, 0.1, 400);
+
+// ---- deep space: a dark dome, stars, a warm sun far off through the dark
+const sky = new THREE.Mesh(new THREE.SphereGeometry(180, 48, 24), new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false,
+  uniforms: {},
+  vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `varying vec3 vP;
+    void main(){
+      vec3 base = mix(vec3(0.006, 0.009, 0.016), vec3(0.010, 0.020, 0.036), smoothstep(-0.2, 0.6, vP.y));
+      float neb = smoothstep(0.6, 1.0, dot(vP, normalize(vec3(0.55, 0.3, -0.75))));
+      base += vec3(0.0, 0.07, 0.11) * neb * 0.45;
+      float neb2 = smoothstep(0.8, 1.0, dot(vP, normalize(vec3(0.9, -0.05, -0.4))));
+      base += vec3(0.0, 0.08, 0.05) * neb2 * 0.25;
+      gl_FragColor = vec4(base, 1.0);
+    }`
+}));
+scene.add(sky);
+{
+  const n = 2600, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
+  let s = 7;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) {
+    const u = rnd() * 2 - 1, t = rnd() * Math.PI * 2, r = Math.sqrt(1 - u * u);
+    pos.set([Math.cos(t) * r * 150, u * 150, Math.sin(t) * r * 150], i * 3);
+    const b = 0.35 + rnd() * 0.65, c = rnd();
+    col.set(c < 0.12 ? [b * 0.7, b * 0.9, b] : [b, b, b], i * 3);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ size: 0.42, vertexColors: true, sizeAttenuation: true, transparent: true, opacity: 0.9, depthWrite: false })));
+}
+function glowTex(inner, outer) {
+  const c = document.createElement('canvas'); c.width = c.height = 256;
+  const x = c.getContext('2d'), gr = x.createRadialGradient(128, 128, 0, 128, 128, 128);
+  gr.addColorStop(0, inner); gr.addColorStop(0.25, outer); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('rgba(255,248,232,1)', 'rgba(255,214,160,0.35)'), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+sun.position.set(46, 30, -130); sun.scale.set(10, 10, 1); scene.add(sun);
+
+// ---- materials
+const M = {
+  shell: new THREE.MeshPhysicalMaterial({ color: 0xc9d2da, roughness: 0.34, metalness: 0.0, clearcoat: 0.8, clearcoatRoughness: 0.2 }),
+  joint: new THREE.MeshStandardMaterial({ color: 0x1b222b, roughness: 0.38, metalness: 0.85 }),
+  dark: new THREE.MeshStandardMaterial({ color: 0x0c1118, roughness: 0.5, metalness: 0.7 }),
+  steel: new THREE.MeshStandardMaterial({ color: 0x8a96a3, roughness: 0.28, metalness: 1.0 }),
+  cyan: new THREE.MeshStandardMaterial({ color: 0x00cfff, emissive: 0x00cfff, emissiveIntensity: 3.2, roughness: 0.4 }),
+  green: new THREE.MeshStandardMaterial({ color: 0x00ff88, emissive: 0x00ff88, emissiveIntensity: 3.0, roughness: 0.4 }),
+  floor: new THREE.MeshStandardMaterial({ color: 0x0a0f16, roughness: 0.3, metalness: 0.65 }),
+  cable: new THREE.MeshStandardMaterial({ color: 0x10151c, roughness: 0.6, metalness: 0.3 })
+};
+
+// ---- the workshop floor: a dark disc, a lit rim, a faint grid of light
+const deck = new THREE.Group(); scene.add(deck);
+{
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.35, 0.22, 96), M.floor);
+  disc.position.y = -0.11; disc.receiveShadow = true; deck.add(disc);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(4.22, 0.018, 8, 160), M.cyan);
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.004; deck.add(rim);
+  const rim2 = new THREE.Mesh(new THREE.TorusGeometry(2.1, 0.008, 8, 120), new THREE.MeshStandardMaterial({ color: 0x00cfff, emissive: 0x00cfff, emissiveIntensity: 1.2 }));
+  rim2.rotation.x = Math.PI / 2; rim2.position.y = 0.004; deck.add(rim2);
+  const gmat = new THREE.LineBasicMaterial({ color: 0x0a4a66, transparent: true, opacity: 0.55 });
+  const pts = [];
+  for (let i = -8; i <= 8; i++) { const v = i * 0.5, L = Math.sqrt(Math.max(0, 4.1 * 4.1 - v * v)); pts.push(-L, 0.003, v, L, 0.003, v, v, 0.003, -L, v, 0.003, L); }
+  const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  deck.add(new THREE.LineSegments(gg, gmat));
+}
+
+// ---- a robot arm: base, turret, shoulder, upper arm, elbow, forearm, wrist, tool
+function joint(r, len, ringMat) {
+  const g = new THREE.Group();
+  const c = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 48), M.joint); c.rotation.x = Math.PI / 2; c.castShadow = true; g.add(c);
+  for (const s of [1, -1]) {
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.72, r * 0.72, 0.012, 48), M.steel); cap.rotation.x = Math.PI / 2; cap.position.z = s * (len / 2 + 0.006); g.add(cap);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 0.84, r * 0.06, 10, 64), ringMat); ring.position.z = s * (len / 2 + 0.002); g.add(ring);
+  }
+  return g;
+}
+function link(w, len, d) {
+  const m = new THREE.Mesh(new RoundedBoxGeometry(w, len, d, 6, Math.min(w, d) * 0.42), M.shell);
+  m.position.y = len / 2; m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+// The links stand along +y in their own group and every joint turns about its group's z, so the arm works in the
+// turret's x-y plane: a positive angle leans a link towards the turret's -x, its "forward".
+const HS = 0.64, L1 = 1.15, L2 = 0.95;   // the shoulder's height over the floor, the upper arm, the forearm
+function arm(ledMat) {
+  const root = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.5, 0.14, 64), M.joint); base.position.y = 0.07; base.castShadow = true; root.add(base);
+  const bring = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.012, 8, 96), M.cyan); bring.rotation.x = Math.PI / 2; bring.position.y = 0.145; root.add(bring);
+  const turret = new THREE.Group(); turret.position.y = 0.14; root.add(turret);
+  const tbody = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, 0.36, 64), M.shell); tbody.position.y = 0.18; tbody.castShadow = true; turret.add(tbody);
+  const led = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.16), ledMat); led.position.set(-0.335, 0.24, 0); turret.add(led);
+  const sh = new THREE.Group(); sh.position.y = HS - 0.14; turret.add(sh);
+  sh.add(joint(0.22, 0.46, M.cyan));
+  const shoulder = new THREE.Group(); sh.add(shoulder);
+  shoulder.add(link(0.26, L1, 0.3));
+  const el = new THREE.Group(); el.position.y = L1; shoulder.add(el);
+  el.add(joint(0.17, 0.38, M.cyan));
+  const elbow = new THREE.Group(); el.add(elbow);
+  elbow.add(link(0.2, L2, 0.23));
+  const wr = new THREE.Group(); wr.position.y = L2; elbow.add(wr);
+  wr.add(joint(0.12, 0.26, M.cyan));
+  const wrist = new THREE.Group(); wr.add(wrist);
+  const flange = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.2, 40), M.joint); flange.position.y = 0.12; flange.castShadow = true; wrist.add(flange);
+  const tool = new THREE.Group(); tool.position.y = 0.22; wrist.add(tool);
+  // a cable along the upper arm
+  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0.17, 0.05, 0.0), new THREE.Vector3(0.2, 0.6, 0.05), new THREE.Vector3(0.16, 1.12, 0.0)]);
+  shoulder.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 0.025, 10, false), M.cable));
+  return { root, turret, shoulder, elbow, wrist, tool };
+}
+// Point the tool's tip, `reach` past the wrist joint, at `target`, coming in at `psi` (radians from straight up, towards
+// the target): the turret faces it, the upper arm and the forearm solve the two-link reach (elbow up), the wrist aims.
+function aim(a, target, reach, psi) {
+  const b = a.root.position, dx = target.x - b.x, dz = target.z - b.z;
+  a.turret.rotation.y = Math.atan2(dz, -dx);
+  const tr = Math.hypot(dx, dz), ty = target.y - HS;
+  const wr = tr - reach * Math.sin(psi), wy = ty - reach * Math.cos(psi);
+  const D = Math.min(Math.hypot(wr, wy), L1 + L2 - 1e-3);
+  const t2 = Math.acos(THREE.MathUtils.clamp((D * D - L1 * L1 - L2 * L2) / (2 * L1 * L2), -1, 1));
+  const g = Math.atan2(wr, wy), al = Math.atan2(L2 * Math.sin(t2), L1 + L2 * Math.cos(t2));
+  a.shoulder.rotation.z = g - al;
+  a.elbow.rotation.z = t2;
+  a.wrist.rotation.z = psi - (g - al) - t2;
+}
+function gripper(tool) {
+  const palm = new THREE.Mesh(new RoundedBoxGeometry(0.3, 0.1, 0.16, 4, 0.03), M.joint); palm.position.y = 0.05; palm.castShadow = true; tool.add(palm);
+  for (const s of [1, -1]) {
+    const f = new THREE.Mesh(new RoundedBoxGeometry(0.05, 0.24, 0.12, 4, 0.02), M.steel); f.position.set(s * 0.11, 0.2, 0); f.castShadow = true; tool.add(f);
+    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.03, 0.124), M.green); tip.position.set(s * 0.11, 0.31, 0); tool.add(tip);
+  }
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.02, 16, 12), M.green); eye.position.set(0, 0.06, 0.085); tool.add(eye);
+}
+function laser(tool) {
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.1, 0.26, 40), M.joint); body.position.y = 0.13; body.castShadow = true; tool.add(body);
+  const nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.18, 40), M.steel); nozzle.position.y = 0.35; tool.add(nozzle);
+  const r = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.01, 8, 48), M.cyan); r.rotation.x = Math.PI / 2; r.position.y = 0.2; tool.add(r);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 12), new THREE.MeshBasicMaterial({ color: 0xbff6ff })); tip.position.y = 0.45; tool.add(tip);
+  return tip;
+}
+
+// ---- the app being built: glass panels of light, stacked in the air over a pad of light
+const app = new THREE.Group(); app.position.set(0.15, 1.35, 0.2); scene.add(app);
+const glass = (op) => new THREE.MeshPhysicalMaterial({ color: 0x0b2a3a, roughness: 0.08, metalness: 0.1, transparent: true, opacity: op, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false });
+function uiPanel(w, h, accent, kind) {
+  const g = new THREE.Group();
+  const plate = new THREE.Mesh(new RoundedBoxGeometry(w, h, 0.02, 4, 0.05), glass(0.2)); g.add(plate);
+  const edge = new THREE.LineSegments(new THREE.EdgesGeometry(new RoundedBoxGeometry(w, h, 0.02, 4, 0.05), 30), new THREE.LineBasicMaterial({ color: new THREE.Color(accent).multiplyScalar(2.6), transparent: true, opacity: 0.95 }));
+  g.add(edge);
+  const lit = (c, i) => new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(i), transparent: true, opacity: 0.95, depthWrite: false });
+  if (kind === 'chart') {
+    const pts = []; let y = -h * 0.28;
+    for (let i = 0; i <= 18; i++) { const x = -w * 0.4 + (w * 0.8) * i / 18; y += (Math.sin(i * 1.7) * 0.03 + 0.022); pts.push(new THREE.Vector3(x, Math.min(y, h * 0.32), 0.016)); }
+    const line = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 80, 0.008, 6, false), lit(0x00ff88, 2.6)); g.add(line);
+    for (let i = 0; i < 7; i++) { const bh = 0.04 + ((i * 37) % 9) * 0.012; const b = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.06, bh), lit(0x00cfff, 1.2)); b.position.set(-w * 0.36 + i * w * 0.11, -h * 0.38 + bh / 2, 0.015); g.add(b); }
+  } else if (kind === 'cards') {
+    for (let i = 0; i < 3; i++) {
+      const c = new THREE.Mesh(new RoundedBoxGeometry(w * 0.27, h * 0.62, 0.006, 2, 0.02), lit(i === 1 ? 0x00ff88 : 0x00cfff, i === 1 ? 0.3 : 0.14)); c.position.set(-w * 0.31 + i * w * 0.31, 0, 0.015); g.add(c);
+      const ce = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(w * 0.27, h * 0.62)), new THREE.LineBasicMaterial({ color: new THREE.Color(i === 1 ? 0x00ff88 : 0x00cfff).multiplyScalar(1.8) })); ce.position.copy(c.position); ce.position.z += 0.004; g.add(ce);
+    }
+  } else if (kind === 'button') {
+    const bt = new THREE.Mesh(new RoundedBoxGeometry(w * 0.46, h * 0.24, 0.01, 3, 0.04), lit(0x00ff88, 1.8)); bt.position.set(0, -h * 0.18, 0.016); g.add(bt);
+    for (let i = 0; i < 3; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(w * (0.7 - i * 0.18), 0.022), lit(0x9fe8ff, 0.9)); l.position.set(0, h * 0.26 - i * 0.07, 0.015); g.add(l); }
+  } else {
+    for (let i = 0; i < 5; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(w * (0.75 - (i % 3) * 0.17), 0.02), lit(0x7fdcff, 0.8)); l.position.set(-w * 0.04, h * 0.3 - i * h * 0.14, 0.015); g.add(l); }
+  }
+  return g;
+}
+const panels = [
+  [uiPanel(1.5, 0.95, 0x00cfff, 'chart'), [0, 0.0, 0], [-0.08, -0.22, 0.02]],
+  [uiPanel(1.3, 0.8, 0x00cfff, 'cards'), [-0.35, 0.62, -0.45], [-0.05, -0.3, 0.04]],
+  [uiPanel(1.1, 0.7, 0x00ff88, 'button'), [0.55, 0.95, 0.35], [-0.1, -0.12, -0.05]],
+  [uiPanel(0.9, 0.6, 0x00cfff, 'lines'), [-0.75, -0.42, 0.55], [-0.06, -0.4, 0.03]]
+];
+for (const [p, pos, rot] of panels) { p.position.set(...pos); p.rotation.set(...rot); app.add(p); }
+{
+  const pad = new THREE.Mesh(new THREE.CircleGeometry(1.25, 96), new THREE.MeshBasicMaterial({ map: glowTex('rgba(0,255,170,0.45)', 'rgba(0,207,255,0.12)'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  pad.rotation.x = -Math.PI / 2; pad.position.set(0.15, 0.012, 0.2); scene.add(pad);
+  const ringA = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.01, 8, 128), M.green); ringA.rotation.x = Math.PI / 2; ringA.position.set(0.15, 0.02, 0.2); scene.add(ringA);
+  // the beam of light up into the panels
+  const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.05, 2.2, 64, 1, true), new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+    vertexShader: 'varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+    fragmentShader: 'varying vec2 vU; void main(){ float a = pow(1.0 - vU.y, 2.6) * 0.07; gl_FragColor = vec4(0.0, 0.85, 0.75, a); }'
+  }));
+  cone.position.set(0.15, 1.1, 0.2); scene.add(cone);
+  const appLight = new THREE.PointLight(0x00ffb0, 4, 6, 1.6); appLight.position.set(0.15, 1.2, 0.4); scene.add(appLight);
+}
+
+// ---- two arms at work: one sets the green panel in, one welds the edge of the chart with a beam of light
+scene.updateMatrixWorld(true);
+const onPanel = (i, x, y) => panels[i][0].localToWorld(new THREE.Vector3(x, y, 0));
+const A = arm(M.green); A.root.position.set(2.15, 0, 0.75); scene.add(A.root); gripper(A.tool);
+const holdAt = onPanel(2, 0.56, -0.05);
+aim(A, holdAt, 0.5, THREE.MathUtils.degToRad(98));
+const B = arm(M.cyan); B.root.position.set(-1.35, 0, -1.55); scene.add(B.root); const tip = laser(B.tool);
+const weldAt = onPanel(0, -0.74, -0.3);
+aim(B, weldAt, 0.67 + 0.32, THREE.MathUtils.degToRad(104));
+// the weld: the beam, a hot point of light where it meets the glass, sparks off it
+scene.updateMatrixWorld(true);
+const tipW = new THREE.Vector3(); tip.getWorldPosition(tipW);
+{
+  const dir = new THREE.Vector3().subVectors(weldAt, tipW), len = dir.length();
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, len, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x9ff4ff).multiplyScalar(5) }));
+  beam.position.copy(tipW).addScaledVector(dir, 0.5); beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()); scene.add(beam);
+  tipW.copy(weldAt);
+}
+{
+  const flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('rgba(220,255,255,1)', 'rgba(0,207,255,0.5)'), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+  flare.position.copy(tipW); flare.scale.set(0.7, 0.7, 1); scene.add(flare);
+  const wl = new THREE.PointLight(0x7fe6ff, 6, 4, 1.8); wl.position.copy(tipW); scene.add(wl);
+  const n = 420, pos = new Float32Array(n * 3); let s = 11;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) {
+    const t = Math.pow(rnd(), 1.6), th = rnd() * Math.PI * 2, ph = rnd() * 1.2;
+    const d = new THREE.Vector3(Math.cos(th) * Math.sin(ph), -Math.cos(ph) * 0.6 + 0.2, Math.sin(th) * Math.sin(ph)).multiplyScalar(t * 0.75);
+    d.y -= t * t * 0.5;
+    pos.set([tipW.x + d.x, tipW.y + d.y, tipW.z + d.z], i * 3);
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xbdf5ff, size: 0.018, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false })));
+}
+// dust in the light
+{
+  const n = 900, pos = new Float32Array(n * 3); let s = 3;
+  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < n; i++) pos.set([(rnd() - 0.5) * 7, rnd() * 3.4, (rnd() - 0.5) * 6], i * 3);
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0x8fe9ff, size: 0.012, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false })));
+}
+// two small drones with their lights, hovering by the work
+for (const [x, y, z, ry, s] of [[-1.1, 2.55, 1.3, 0.6, 1], [1.55, 3.05, -1.2, -0.4, 0.8]]) {
+  const d = new THREE.Group(); d.position.set(x, y, z); d.rotation.set(0.12, ry, -0.08); d.scale.setScalar(s); scene.add(d);
+  const body = new THREE.Mesh(new RoundedBoxGeometry(0.34, 0.09, 0.34, 4, 0.04), M.shell); body.castShadow = true; d.add(body);
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 16, 12), M.green); eye.position.set(0, -0.02, 0.17); d.add(eye);
+  for (const [x, z] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
+    const armM = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.02, 0.2), M.joint); armM.position.set(x * 0.2, 0, z * 0.2); armM.rotation.y = Math.atan2(x, z); d.add(armM);
+    const rotor = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.008, 6, 40), M.cyan); rotor.rotation.x = Math.PI / 2; rotor.position.set(x * 0.27, 0.03, z * 0.27); d.add(rotor);
+    const blur = new THREE.Mesh(new THREE.CircleGeometry(0.085, 32), new THREE.MeshBasicMaterial({ color: 0x9fdfff, transparent: true, opacity: 0.12, depthWrite: false })); blur.rotation.x = -Math.PI / 2; blur.position.set(x * 0.27, 0.035, z * 0.27); d.add(blur);
+  }
+}
+
+// ---- light: a cool key from above and behind the camera, cyan rims from behind, the sun's warmth faintly
+const key = new THREE.DirectionalLight(0xe6f2ff, 1.35); key.position.set(4, 7, 6); key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: 1, far: 30 }); key.shadow.bias = -0.0004; scene.add(key);
+const rim1 = new THREE.DirectionalLight(0x00cfff, 2.2); rim1.position.set(-6, 3, -7); scene.add(rim1);
+const rim2 = new THREE.DirectionalLight(0x00ff88, 0.9); rim2.position.set(7, 1.5, -5); scene.add(rim2);
+scene.add(new THREE.HemisphereLight(0x1a3550, 0x05070c, 0.2));
+
+// ---- the camera: slight low angle, the work in the right 55 %, the left dark
+const FOCUS = new THREE.Vector3(0.3, 1.5, 0.2);
+if (PORTRAIT) { camera.position.set(0.7, 1.7, 8.2); camera.lookAt(0.35, 1.55, 0.0); camera.setViewOffset(W, H, 0, H * -0.1, W, H); }
+else { camera.position.set(-1.3, 1.45, 8.3); camera.lookAt(0.45, 1.45, 0.0); camera.setViewOffset(W, H, -W * 0.15, 0, W, H); }
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new BokehPass(scene, camera, { focus: camera.position.distanceTo(FOCUS), aperture: 0.00035, maxblur: 0.0022 }));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.6, 0.42, 1.0));
+composer.addPass(new OutputPass());
+composer.addPass(new ShaderPass({
+  uniforms: { tDiffuse: { value: null }, uRes: { value: new THREE.Vector2(W, H) } },
+  vertexShader: 'varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `uniform sampler2D tDiffuse; uniform vec2 uRes; varying vec2 vU;
+    float h(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+    void main(){
+      vec4 c = texture2D(tDiffuse, vU);
+      vec2 q = vU - 0.5; q.x *= uRes.x / uRes.y;
+      float v = smoothstep(1.25, 0.35, length(q));
+      c.rgb *= mix(0.55, 1.0, v);
+      c.rgb += (h(vU * uRes) - 0.5) * 0.028;
+      gl_FragColor = c;
+    }`
+}));
+let frames = 0;
+function loop() { composer.render(); if (++frames === 8) window.READY = true; requestAnimationFrame(loop); }
+loop();
+</script>
+</body>
+</html>

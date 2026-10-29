@@ -1,4 +1,6 @@
-# made by capture.py: the raw captures. The page's own pictures (pics/*.webp) are kept: they are what it loads.
+# made by capture.py. The page's own pictures (pics/*.webp) are kept: they are what it loads. The opening's flight
+# frames are not (5 MB, and their source, outbox/quest/frames, is not in git either): a fresh clone shows fly-0.webp.
 img/
+pics/fly/
 __pycache__/
 *.png

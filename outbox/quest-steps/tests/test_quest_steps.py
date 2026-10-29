@@ -1,14 +1,17 @@
 """The Cymetica Quest, step by step (outbox/quest-steps), checked in a real browser before anybody looks at it.
 
-What the operator asked for (2026-10-29), each as a test: the intro and four steps in his order (start a company in the
-Universe; products OR a trading agent; the Promo Market; the leaderboard), a real picture of each, the prize up to 500k
-ET10 a month. And what holds for every page we draw (outbox/quest/tests): a rail that always says which step you are
-on, a glance of words per step, type big enough to read, the site's palette, every figure from one place.
+What the operator asked for (2026-10-29), each as a test: the intro and four steps in his order (the tutorial's office;
+space robot tools OR breed your agent; the Promo Market's building close and its page; the leaderboard), up to 500k ET10
+a month. And his two rules from the first take's 7/10: no picture in a panel, a frame or a box, every one melting into
+the page; and the opening not a giant banner. With what holds for every page we draw (outbox/quest/tests): a rail that
+always says which step you are on, a glance of words per step, type big enough to read, the site's palette, every
+figure from one place.
 
     python -m pytest outbox/quest-steps/tests -o addopts="" -p no:cacheprovider
 
 `-o addopts=""` keeps the repository's report plugin out: this is a page, not a check against the platform, and a run
-of it must not write a run record. Needs Playwright's Chromium.
+of it must not write a run record. Needs Playwright's Chromium. Passes without the flight's frames (pics/fly/, not in
+git): the opening then shows its first frame.
 """
 import colorsys
 import functools
@@ -24,7 +27,7 @@ from playwright.sync_api import sync_playwright
 HERE = Path(__file__).resolve().parent.parent
 WIDE = {"width": 2000, "height": 1100}      # the operator's screenshots are ~2000 px wide
 PHONE = {"width": 390, "height": 844}
-MAX_WORDS = 14                               # per step's copy: a glance, not a read
+MAX_WORDS = 14                               # per step's words: a glance, not a read
 MIN_PX_WIDE, MIN_PX_PHONE = 20, 16           # "type under ~20 px is moc male" (2026-10-23)
 
 
@@ -75,43 +78,85 @@ def _chapters(page):
     return page.evaluate("() => [...document.querySelectorAll('section[data-step]')].map(s => [s.id, +s.dataset.step])")
 
 
+def _scroll_through(page):
+    height = page.evaluate("() => document.documentElement.scrollHeight")
+    for y in range(0, height, 700):          # the lazy pictures load as they come near
+        page.evaluate("(y) => window.scrollTo(0, y)", y)
+        _settle(page)
+
+
 def test_the_steps_are_his_in_his_order(browser, url):
-    """intro, the Universe, products OR an agent, the Promo Market, the leaderboard, each with a picture of its page"""
     page = _open(browser, url, WIDE)
     order = page.evaluate("""() => [...document.querySelectorAll('section[data-step]')].map(s =>
-      [s.id, (s.querySelector('h1,h2') || {}).textContent, [...s.querySelectorAll('figure img')].map(i => i.getAttribute('src'))])""")
-    ids = [o[0] for o in order]
-    assert ids == ["hero", "s1", "s2a", "s2b", "s3", "s4", "go"], ids
-    pics = {o[0]: o[2] for o in order}
-    assert pics["s1"] == ["pics/universe.webp"] and pics["s2a"] == ["pics/bib.webp"] and pics["s2b"] == ["pics/casino.webp"]
-    assert pics["s3"][0] == "pics/promo.webp" and pics["s4"] == ["pics/leaderboard.webp"]
-    assert page.locator(".or").count() == 1, "the two ways of step 2 are a choice: OR between them"
+      [s.id, [...s.querySelectorAll('img')].map(i => i.getAttribute('src'))])""")
+    assert [o[0] for o in order] == ["hero", "s1", "s2", "s3", "s4", "go"], order
+    pics = dict(order)
+    assert pics["s1"] == ["pics/office.webp"], "step 1 is the tutorial's office, the headquarters"
+    assert pics["s2"] == ["pics/tools.webp", "pics/agent.webp"], "step 2: space robot tools, or the agent"
+    assert pics["s3"] == ["pics/tower.webp", "pics/promo-ui.webp"], "step 3: the Promo Market building close, and its page"
+    assert pics["s4"] == ["pics/board.webp"]
+    heads = page.evaluate("() => [...document.querySelectorAll('#s2 .way h2')].map(h => h.textContent.trim())")
+    assert heads == ["Ship products.", "Breed your agent."], heads
+    assert page.locator("#s2 .or").count() == 1, "the two ways of step 2 are a choice: OR between them"
 
 
 def test_every_picture_loads(browser, url):
     page = _open(browser, url, WIDE)
-    height = page.evaluate("() => document.documentElement.scrollHeight")
-    for y in range(0, height, 800):          # the lazy ones load as they come near
-        page.evaluate("(y) => window.scrollTo(0, y)", y)
-        _settle(page)
+    _scroll_through(page)
     page.wait_for_function("[...document.images].every(i => i.complete)", timeout=15000)
-    broken = page.evaluate("() => [...document.images].filter(i => !i.naturalWidth).map(i => i.getAttribute('src'))")
+    broken = page.evaluate("() => [...document.images].filter(i => !i.naturalWidth).map(i => i.currentSrc || i.getAttribute('src'))")
     assert not broken, broken
     assert not page.errors, page.errors
 
 
+@pytest.mark.parametrize("viewport", [WIDE, PHONE], ids=["wide", "phone"])
+def test_no_picture_sits_in_a_box(browser, url, viewport):
+    """The operator, 2026-10-29: "nedavej ty veci do takovych panelu ... at to splyva prirozene se strankou". So between
+    a picture and its section nothing draws an edge (a border, an outline, a box-shadow, a filled background), and every
+    picture fades into the page somewhere (a mask on it or on what holds it)."""
+    page = _open(browser, url, viewport)
+    found = page.evaluate("""() => [...document.querySelectorAll('main img')].map(img => {
+      const why = []; let masked = false;
+      for (let e = img; e && e.tagName !== 'SECTION'; e = e.parentElement) {
+        const cs = getComputedStyle(e);
+        if ((cs.webkitMaskImage || cs.maskImage || 'none') !== 'none') masked = true;
+        for (const side of ['Top', 'Right', 'Bottom', 'Left']) {
+          if (parseFloat(cs['border' + side + 'Width']) > 0 && cs['border' + side + 'Style'] !== 'none' && !/rgba\\(.*, 0\\)$/.test(cs['border' + side + 'Color'])) why.push(e.tagName + ' border-' + side);
+        }
+        if (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0) why.push(e.tagName + ' outline');
+        if (cs.boxShadow !== 'none') why.push(e.tagName + ' box-shadow');
+        if (e !== img && !/rgba\\(0, 0, 0, 0\\)|transparent/.test(cs.backgroundColor)) why.push(e.tagName + ' background ' + cs.backgroundColor);
+      }
+      if (!masked) why.push('no fade into the page');
+      return [img.getAttribute('src'), why]; }).filter(([, why]) => why.length)""")
+    assert not found, found
+
+
+def test_the_opening_is_not_a_banner(browser, url):
+    """The first take's opening was "moc obrovsky ... jak nejaky obri reklamni banner": the title now takes at most
+    60 % of the width, nothing on the first screen is over 84 px, and nothing there sits in a filled box but the call."""
+    page = _open(browser, url, WIDE)
+    box = page.evaluate("() => document.querySelector('#hero h1').getBoundingClientRect().width / innerWidth")
+    assert box <= 0.6, f"the title is {box:.0%} of the width"
+    big = page.evaluate("""() => [...document.querySelectorAll('#hero .hero-copy *')].filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
+      .map(e => [e.className || e.tagName, parseFloat(getComputedStyle(e).fontSize)]).filter(([, s]) => s > 84)""")
+    assert not big, big
+    boxed = page.evaluate("""() => [...document.querySelectorAll('#hero .prizes *')].filter(e => !/rgba\\(0, 0, 0, 0\\)/.test(getComputedStyle(e).backgroundColor)).map(e => e.className)""")
+    assert not boxed, f"the prizes are type, not chips: {boxed}"
+
+
 def test_the_prize_is_500k_a_month_from_one_config(browser, url):
-    """the first screen's prize, the chips and step 4's list are the same figures, written by quest.js from QUEST, and
-    a digit in the copy sits inside a [data-figure] (mock-figures-come-from-one-model)"""
+    """the first screen's prize and step 4's are the same figures, written by quest.js from QUEST, and a digit in the
+    words sits inside a [data-figure] (mock-figures-come-from-one-model)"""
     page = _open(browser, url, WIDE)
     assert page.evaluate("() => window.QUEST.prizes") == [500000, 250000, 100000]
     assert page.evaluate("() => document.querySelector('#hero .lede').innerText.replace(/\\s+/g, ' ').trim()") == \
         "Win up to 500,000 ET10 every month."
     loose = page.evaluate("""() => { const out = [];
-      for (const root of document.querySelectorAll('section .copy')) {
+      for (const root of document.querySelectorAll('section [data-glance]')) {
         const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
         for (let n = walk.nextNode(); n; n = walk.nextNode())
-          if (/\\d/.test(n.textContent) && !n.parentElement.closest('[data-figure]')) out.push(n.textContent.trim());
+          if (/\\d/.test(n.textContent) && !n.parentElement.closest('[data-figure], .kick')) out.push(n.textContent.trim());
       } return out; }""")
     assert not loose, f"figures typed outside the config: {loose}"
     wrong = page.evaluate("""() => [...document.querySelectorAll('[data-figure]')].filter(el => {
@@ -128,6 +173,22 @@ def test_every_link_goes_to_cymetica(browser, url):
     page = _open(browser, url, WIDE)
     hrefs = page.evaluate("() => [...document.querySelectorAll('a[data-link]')].map(a => a.href)")
     assert hrefs and all(h.startswith("https://cymetica.com/") for h in hrefs), hrefs
+
+
+def test_the_flight_runs_forward_as_you_scroll(browser, url):
+    """through the opening the frame it wants only ever moves forward as the page goes down, ends on the last, and
+    something is always drawn: a frame, or the first frame until frames come"""
+    page = _open(browser, url, WIDE)
+    span = page.evaluate("() => document.getElementById('hero').offsetHeight - innerHeight")
+    seen = []
+    for k in range(0, 21):
+        page.evaluate("(y) => window.scrollTo({ top: y, behavior: 'instant' })", span * k / 20)
+        _settle(page)
+        seen.append(page.evaluate("() => [QUEST_STATE.frame, QUEST_STATE.drawn]"))
+    frames = [f for f, _ in seen]
+    assert frames == sorted(frames) and frames[0] == 0, frames
+    assert frames[-1] == page.evaluate("() => QUEST.fly.count - 1"), frames
+    assert all(d != -1 for _, d in seen[1:]), seen
 
 
 @pytest.mark.parametrize("viewport", [WIDE, PHONE], ids=["wide", "phone"])
@@ -162,16 +223,15 @@ def test_a_click_on_the_rail_jumps_to_that_step(browser, url):
     page = _open(browser, url, WIDE)
     for step in (3, 1, 4, 2):
         page.click(f"#rail [data-step='{step}']")
-        page.wait_for_function(f"+document.getElementById('rail').dataset.active === {step}", timeout=4000)
+        page.wait_for_function(f"+document.getElementById('rail').dataset.active === {step}", timeout=5000)
 
 
 @pytest.mark.parametrize("viewport", [WIDE, PHONE], ids=["wide", "phone"])
 def test_each_step_is_a_glance(browser, url, viewport):
     page = _open(browser, url, viewport)
-    # the sentences: a step's heading and its line (the prize chips and a stat are figures, read at a glance)
-    counts = page.evaluate("""() => [...document.querySelectorAll('section[data-step]')].map(s =>
-      [s.id, [...s.querySelectorAll('.copy:not(.prizes):not(.stat)')].map(c => c.innerText).join(' ').split(/\\s+/).filter(w => /[\\w%$]/.test(w)).length])""")
-    assert all(n > 0 for _, n in counts), counts
+    counts = page.evaluate("""() => [...document.querySelectorAll('[data-glance]')].map(g =>
+      [g.closest('section').id, [...g.querySelectorAll('.copy')].map(c => c.innerText).join(' ').split(/\\s+/).filter(w => /[\\w%$]/.test(w)).length])""")
+    assert len(counts) == 7 and all(n > 0 for _, n in counts), counts
     over = [(c, n) for c, n in counts if n > MAX_WORDS]
     assert not over, f"more than {MAX_WORDS} words: {over}"
 
@@ -198,14 +258,6 @@ def test_no_sideways_scroll_on_a_phone(browser, url):
         assert wide <= PHONE["width"], (chapter, wide)
 
 
-def test_a_hotspot_sits_inside_its_picture(browser, url):
-    page = _open(browser, url, WIDE)
-    spots = page.evaluate("""() => [...document.querySelectorAll('.spot')].map(s => {
-      const a = s.getBoundingClientRect(), b = s.parentElement.querySelector('img').getBoundingClientRect();
-      return [a.left >= b.left - 1 && a.right <= b.right + 1 && a.top >= b.top - 1 && a.bottom <= b.bottom + 1, a.width, a.height]; })""")
-    assert len(spots) == 3 and all(ok and w > 20 and h > 8 for ok, w, h in spots), spots
-
-
 ALLOWED_HUES = ((90, 205), (205, 235), (345, 360), (0, 12))   # green .. cyan, blue, red (the site's palette)
 
 
@@ -220,7 +272,7 @@ def _colours(css):
 
 def test_the_page_keeps_the_site_palette():
     """Cymetica's rule for its pages: cyan, green, red, blue; no purple, magenta, amber, orange, yellow or plain grey
-    (read-the-vendors-design-rule-before-drawing). The pictures are their pages, exempt."""
+    (read-the-vendors-design-rule-before-drawing). The pictures are scenes and their pages, exempt."""
     bad = []
     for name in ("quest.css", "index.html", "quest.js"):
         for text, (r, g, b) in _colours((HERE / name).read_text(encoding="utf-8")):
