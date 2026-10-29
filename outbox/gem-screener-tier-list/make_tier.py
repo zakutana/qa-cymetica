@@ -26,14 +26,21 @@ gates = len(g["degen_gates"]["gates"])
 bench = g["bench"]["mult"]
 when = datetime.fromisoformat(g["generated_at_iso"].replace("Z", "+00:00"))
 
-apps = [a for a in g["apps"] if (a.get("rev30d") or 0) >= 1e5 and (a.get("reliable") or a.get("degen_ok"))]
-apps.sort(key=lambda a: -(a.get("potential") or 0))
+# The set the live Gem Tier List draws (gem-screener/app?view=apps, tierModel): $100K+ revenue in 30 days and
+# vetted (reliable) or young, plus every Degen pick; an app without an upside number is not ranked. A tier follows the
+# upside rounded to one decimal, the number the icon shows (9.96 reads 10x). 2026-10-29: this was "reliable or
+# degen_ok" before, which left out young apps (MASK was in their list and not in ours).
+apps = [a for a in g["apps"] if a.get("degen_ok") or ((a.get("rev30d") or 0) >= 1e5 and (a.get("reliable") or a.get("young")))]
+unranked = [a for a in apps if a.get("potential") is None]
+apps = [a for a in apps if a.get("potential") is not None]
+apps.sort(key=lambda a: -(a.get("potential_raw") or a.get("potential") or 0))
+up = lambda a: round(a["potential"] * 10) / 10
 TIERS = [
     ("S", f"ALL {gates} GATES", "#00ff88", "#04140c", lambda a: a.get("degen_ok")),
-    ("A", "10x+ UPSIDE", "#2fe0a3", "#04140c", lambda a: a["potential"] >= 10),
-    ("B", "5 TO 10x", "#00cfff", "#03121a", lambda a: a["potential"] >= 5),
-    ("C", "2 TO 5x", "#3b82f6", "#ffffff", lambda a: a["potential"] >= 2),
-    ("D", "1 TO 2x", "#64748b", "#ffffff", lambda a: a["potential"] >= 1),
+    ("A", "10x+ UPSIDE", "#2fe0a3", "#04140c", lambda a: up(a) >= 10),
+    ("B", "5 TO 10x", "#00cfff", "#03121a", lambda a: up(a) >= 5),
+    ("C", "2 TO 5x", "#3b82f6", "#ffffff", lambda a: up(a) >= 2),
+    ("D", "1 TO 2x", "#64748b", "#ffffff", lambda a: up(a) >= 1),
     ("F", "UNDER 1x", "#475569", "#ffffff", lambda a: True),
 ]
 rows, left = [], list(apps)
@@ -63,10 +70,10 @@ page = f"""<!doctype html><html><head><meta charset="utf-8">
 <style>
 *{{box-sizing:border-box;margin:0}}
 body{{width:2000px;background:#0a0e17;color:#fff;font-family:'JetBrains Mono',monospace;padding:28px 44px 40px}}
-header{{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}}
+header{{display:flex;align-items:center;gap:56px;margin-bottom:22px}}
 .brand{{background:#0f1726;border-radius:10px;padding:14px 20px}}
 .brand svg{{height:76px;width:auto;display:block}}
-h1{{font-family:'Archivo Black',sans-serif;font-size:44px;letter-spacing:-.5px;margin-right:260px}}
+h1{{font-family:'Archivo Black',sans-serif;font-size:44px;letter-spacing:-.5px}}
 h1 em{{font-style:normal;color:#00ff88}}
 .row{{display:flex;background:#0f1726;border:1px solid #182234;border-radius:10px;margin-bottom:14px;overflow:hidden;min-height:176px}}
 .lab{{width:212px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}}
