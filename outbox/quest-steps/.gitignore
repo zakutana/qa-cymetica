@@ -1,0 +1,4 @@
+# made by capture.py: the raw captures. The page's own pictures (pics/*.webp) are kept: they are what it loads.
+img/
+__pycache__/
+*.png

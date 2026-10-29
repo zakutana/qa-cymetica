@@ -38,6 +38,12 @@
       "port": 8797
     },
     {
+      "name": "quest-steps",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8800", "--bind", "127.0.0.1", "--directory", "outbox/quest-steps"],
+      "port": 8800
+    },
+    {
       "name": "quant-lab-graphic",
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8798", "--bind", "127.0.0.1", "--directory", "outbox/quant-lab-graphic"],
