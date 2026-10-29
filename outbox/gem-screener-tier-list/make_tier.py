@@ -36,7 +36,7 @@ apps = [a for a in apps if a.get("potential") is not None]
 apps.sort(key=lambda a: -(a.get("potential_raw") or a.get("potential") or 0))
 up = lambda a: round(a["potential"] * 10) / 10
 TIERS = [
-    ("S", f"ALL {gates} GATES", "#00ff88", "#04140c", lambda a: a.get("degen_ok")),
+    ("S", "♥ PICKS", "#00ff88", "#04140c", lambda a: a.get("degen_ok")),   # as the live page labels it (the Degen picks)
     ("A", "10x+ UPSIDE", "#2fe0a3", "#04140c", lambda a: up(a) >= 10),
     ("B", "5 TO 10x", "#00cfff", "#03121a", lambda a: up(a) >= 5),
     ("C", "2 TO 5x", "#3b82f6", "#ffffff", lambda a: up(a) >= 2),
@@ -61,7 +61,7 @@ body = "".join(
     f'<div class="coins">{"".join(coin(a) for a in mine)}</div></section>'
     for k, l, bg, fg, mine in rows)
 n = len(apps)
-foot = (f"{n} apps with $100K+ revenue in 30 days, vetted or a Degen pick. S = passes all {gates} Degen gates. "
+foot = (f"{n} apps with $100K+ revenue in 30 days, vetted or a Degen pick. S = the Degen picks, passing all {gates} Degen gates. "
         f"A to F = Upside: Hyperliquid's price-to-revenue multiple ({bench:.1f}x) divided by the app's own. "
         f"Data {when.day} {when.strftime('%b %Y')}. A research screen, not financial advice.")
 
