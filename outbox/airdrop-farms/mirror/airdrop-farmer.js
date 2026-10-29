@@ -220,7 +220,7 @@
   function header() {
     var n = liveCount();
     // FARMING only when the farm wallet really runs; a saved plan alone moves nothing
-    var status = running() ? '<span class="dot"></span><b>' + (LEGACY.status === 'unwinding' ? 'BRINGING FUNDS HOME' : LEGACY.status === 'pending_funding' && LEGACY.funding_mode === 'direct' ? 'WAITING FOR YOUR DEPOSIT' : 'FARMING') + '</b>' + /* MOCK PATCH: no "farm wallet"; what is in and what it is worth, in white */ (+LEGACY.deployed_usdc > 0 ? ' · <b>' + usd(+LEGACY.deployed_usdc) + '</b> in' + (LEGACY.farm_value_usd ? ' · <b>' + usd(+LEGACY.farm_value_usd) + '</b> now' : '') : '')
+    var status = running() ? '<span class="dot"></span><b>' + (LEGACY.status === 'unwinding' ? 'BRINGING FUNDS HOME' : LEGACY.status === 'pending_funding' && LEGACY.funding_mode === 'direct' ? 'WAITING FOR YOUR DEPOSIT' : 'FARMING') + '</b>' + /* MOCK PATCH: no "farm wallet"; what is in and what it is worth, in green */ (+LEGACY.deployed_usdc > 0 ? ' · <b>' + usd(+LEGACY.deployed_usdc) + '</b> in' + (LEGACY.farm_value_usd ? ' · <b>' + usd(+LEGACY.farm_value_usd) + '</b> now' : '') : '')
       : n ? '<span class="dot idle"></span><b>PLAN SAVED</b> · ' + n + ' farm' + (n > 1 ? 's' : '') + ' on the plan' : '<span class="dot idle"></span><b>NOT FARMING</b>';
     return '<header class="app"><a class="brand" href="/airdrop-farmer">' + LOGO + '<div class="w"><span>AIRDROP</span><b>FARMER</b></div></a>' +
       '<nav class="tabs" aria-label="Airdrop Farmer"><a data-tab="farms" class="' + (TAB === 'farms' ? 'on' : '') + '">Farms</a><a data-tab="live" class="' + (TAB === 'live' ? 'on' : '') + '">Live farms' + (n ? ' <i>' + n + '</i>' : '') + '</a></nav>' +
@@ -592,22 +592,6 @@
       '<details class="hold"><summary>Coins by network ▾</summary>' + nets + '</details>' +
       (d.gas_note ? '<p class="gasnote">' + esc(d.gas_note) + '</p>' : '') + '</div>';
   }
-  // MOCK PATCH (qa-cymetica, 2026-10-29): the money in the farms, first and large, and where every dollar is
-  function moneyHTML() {
-    var a = LEGACY; if (!a) return '';
-    var c2 = function (n) { return '$' + n.toFixed(2); };
-    var inn = +a.deployed_usdc || 0, now = +(a.farm_value_usd || 0), d = now - inn, pct = inn ? d / inn * 100 : 0;
-    var fees = a.fees_usd != null ? +a.fees_usd : null, planted = PLAN ? +PLAN.amount_usdc || 0 : 0;
-    var inFarms = PLAN ? PLAN.farms.reduce(function (s, p) { return s + (+p.deposited_usdc || 0); }, 0) : 0;
-    var toMove = Math.max(0, planted - inn), sg = d < 0 ? '−' : '+';
-    return '<div class="glass glow money">' +
-      '<div class="mbig"><div><span class="cap">YOU PUT IN</span><b class="num">' + c2(inn) + '</b></div>' +
-      '<div><span class="cap">WORTH NOW</span><b class="num">' + c2(now) + '</b></div>' +
-      '<div><span class="cap">DIFFERENCE</span><b class="num ' + (d < 0 ? 'neg' : 'pos') + '">' + sg + c2(Math.abs(d)) + ' <small>' + sg + Math.abs(pct).toFixed(1) + ' %</small></b></div></div>' +
-      '<div class="msteps"><span>Planted <b>' + c2(planted) + '</b></span><i>→</i><span>In your farm wallet <b>' + c2(inn) + '</b></span><i>→</i><span>In farms <b>' + c2(inFarms) + '</b></span>' +
-      (fees != null ? '<span class="fee">Network fees <b>' + c2(fees) + '</b></span>' : '') +
-      (toMove > 0.005 ? '<span class="wait">Still to move <b>' + c2(toMove) + '</b></span>' : '') + '</div></div>';
-  }
   function legacyHTML() {
     var a = LEGACY; if (!a) return '';
     var live = ['pending_funding', 'funding', 'active', 'paused'].indexOf(a.status) >= 0;
@@ -621,7 +605,7 @@
       (live ? '<div class="acts"><button class="stop" type="button" data-legacy-stop="' + esc(a.id) + '">Stop and bring my funds home</button></div>' : '') + '</div>';
   }
   function liveView() {
-    if (!PLAN && running()) return '<div class="wrap">' + header() + moneyHTML() + legacyHTML() + '</div>';
+    if (!PLAN && running()) return '<div class="wrap">' + header() + legacyHTML() + '</div>';
     if (!PLAN) {
       return '<div class="wrap">' + header() + '<div class="glass emptylive"><b>Nothing planted yet</b>Type an amount on the Farms tab and press Start farming.<br>' +
         (SIGNED ? '' : '<a href="/login?next=/airdrop-farmer?tab=live" style="color:var(--cyan)">Sign in</a> to see your farms.<br>') +
@@ -638,7 +622,7 @@
     if (META.generated_at) events.push({ t: META.generated_at, c: 'green', txt: 'Farm list checked: <b>' + fmt(META.count) + ' farms</b> pass the gate' });
     if (LEGACY && LEGACY.last_action_at) events.push({ t: LEGACY.last_action_at, c: 'blue', txt: 'Farm wallet step recorded' });
     events.sort(function (a, b) { return Date.parse(b.t) - Date.parse(a.t); });
-    return '<div class="wrap">' + header() + (running() ? moneyHTML() : '') + /* MOCK PATCH: the money first; the wallet's address and Stop go to the foot */
+    return '<div class="wrap">' + header() + (running() ? legacyHTML() : '') +
       '<section class="lhero"><div class="glass glow earnp"><span class="cap">EARNED SO FAR</span><div class="big num">$0</div>' +
       '<div class="today"><em class="num">+$0 today</em><span>day ' + Math.floor(day) + ' of your 6 months · ' + PLAN.farms.length + ' farm' + (PLAN.farms.length === 1 ? '' : 's') + ' · ' + usd(PLAN.amount_usdc) + ' planted</span></div>' +
       '<button class="go" type="button" disabled>' + BOLT + 'NOTHING TO HARVEST YET</button>' +
@@ -648,7 +632,7 @@
       '<div class="glass chartp"><span class="cap">YOUR 6 MONTHS</span>' + liveChart({ day: day, lo: lo, hi: hi, any: any, start: dfmt(start), end: dfmt(end) }) +
       '<div class="ticker"><span class="cap">CYMETICA 24/7</span>' + events.slice(0, 3).map(function (e) { return '<span class="ev"><i style="background:var(--' + e.c + ')"></i><time>' + ago(e.t) + '</time><span>' + e.txt + '</span></span>'; }).join('') + '</div></div>' +
       '<div class="sechead" style="margin-top:30px"><div><h2>Your farms</h2></div></div>' +
-      '<div class="glass list">' + PLAN.farms.map(liveRowHTML).join('') + '</div>' + testnetHTML() + legacyHTML() + '</div>';
+      '<div class="glass list">' + PLAN.farms.map(liveRowHTML).join('') + '</div>' + testnetHTML() + (running() ? '' : legacyHTML()) + '</div>';
   }
 
   /* ---------- wiring ---------- */
