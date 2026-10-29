@@ -1,27 +1,26 @@
 """The pictures for the Quest steps page, into pics/ (the page loads these).
 
-What each one is, and where it comes from (the operator, 2026-10-29: the office from the tutorial for step 1, "space
-robotic tools" and "breed your agent" for step 2, the Promo Market building close and its page for step 3, and nothing
-in a panel: every picture melts into the page):
+Third take (the operator, 2026-10-29): the first take's layout, and in every step a picture and beside it a piece of
+Cymetica's own web, shown as a hologram in the dark, never in a rectangle ("v kazdem kroku nejaky zaber z webu nejak
+huste holograficky zobrazeny ... a k tomu zaroven vzdy ten obrazek"). Nowhere the orbit with its companies.
 
-  fly/NNN.webp   the hero's flight in from deep space to Cymetica's sun: outbox/quest/frames/desk/approach, our Universe
-                 mock's own render (2026-10-27), every 2nd frame. Not in git: neither are its source frames, so a fresh
-                 clone shows fly-0.webp, the first frame, which is kept.
-  office.webp    LIVE: cymetica.com/company/app/builder, step 2 (the tutorial's office, the headquarters), its own 3D with
-                 every page element hidden (`visibility`, so the canvas keeps its place)
-  tools.webp     our scene, scenes/tools.html: two robot arms building an app out of glass panels of light
-  agent.webp     the Hero Agent, Antigravity's picture for the Quant Lab (outbox/quest/gen/lab-16x9.png, -9x16 for phones)
-  tower.webp     the Promo Market station close: outbox/quest/frames/desk/promo/0089 (the mock's render of their model)
-  promo-ui.webp  LIVE: cymetica.com/promo-market's top, every background cleared, so it floats (alpha)
-  board.webp     the monthly leaderboard (podium and rows) from our Universe mock (?season0), backgrounds cleared (alpha):
-                 the ET10 board is not live yet
-  finale.webp    the whole Universe from above: outbox/quest/frames/desk/pullback/0119
+  pictures                                              pieces of their web (backgrounds cleared: alpha)
+  office.webp   LIVE builder, step 2: the HQ             web-builder.webp  LIVE builder, step 2: its Start card
+  dev.webp      LIVE builder's tour: Development         web-bib.webp      LIVE /build-it-better, its top
+  agent.webp    the Hero Agent (Antigravity,             web-casino.webp   LIVE /agent-casino, its table
+                outbox/quest/gen; -tall for phones)
+  cube.webp     LIVE /promo-market: its cube of light    web-briefs.webp   their Promo Market with a sample brief, from
+                                                                           our mirror's picture of 2026-10-27
+                                                                           (outbox/promo-market-v3/pictures): their
+                                                                           market has no open brief today
+  podium.webp   our Universe mock (?season0)             web-board.webp    the same leaderboard, its rows: the monthly
+                                                                           ET10 board is not live yet
 
     python outbox/quest-steps/capture.py              # every one
-    python outbox/quest-steps/capture.py office board # some
+    python outbox/quest-steps/capture.py dev cube     # some
 
-Chrome with a real GPU (the Universe and the office are WebGPU), as outbox/quest/render.py does. Live pages are read
-anonymously (GET, no cookies, no key); the builder is typed into (a name) and never submitted.
+Chrome with a real GPU (the office is WebGPU), as outbox/quest/render.py does. Live pages are read anonymously (GET,
+no cookies, no key); the builder is typed into (a name) and never submitted.
 """
 import functools
 import http.server
@@ -32,7 +31,7 @@ import threading
 import time
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageChops
 from playwright.sync_api import sync_playwright
 
 HERE = Path(__file__).resolve().parent
@@ -43,6 +42,23 @@ GPU = ['--enable-unsafe-webgpu', '--use-angle=d3d11', '--ignore-gpu-blocklist']
 
 # only the 3D: every element hidden but the canvases (visibility, so nothing moves)
 ONLY_3D = "html, body { background: #05070c !important; } body * { visibility: hidden !important; } canvas { visibility: visible !important; }"
+# every box that covers much of the screen loses its background, so the page's own words, buttons and pictures float
+CLEAR_BIG = """() => {
+  const A = innerWidth * innerHeight;
+  document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent';
+  for (const e of document.querySelectorAll('body *')) {
+    const r = e.getBoundingClientRect();
+    if (r.width * r.height > A * 0.2) { e.style.background = 'transparent'; e.style.backgroundImage = 'none'; e.style.boxShadow = 'none'; }
+  }
+  const s = document.createElement('style');
+  s.textContent = 'html::before, html::after, body::before, body::after, main::before, main::after, .wrap::before, .wrap::after, section::before, section::after { display: none !important; }';
+  document.head.appendChild(s);
+}"""
+# one element of the page, its own box cleared too, as a picture with alpha
+CLEAR_ONE = """(sel) => { const e = document.querySelector(sel);
+  e.style.background = 'transparent'; e.style.backgroundImage = 'none'; e.style.boxShadow = 'none'; e.style.borderColor = 'transparent';
+  e.style.backdropFilter = 'none'; e.style.webkitBackdropFilter = 'none';
+  const r = e.getBoundingClientRect(); return { x: r.left, y: r.top, width: r.width, height: r.height }; }"""
 
 
 def serve(directory):
@@ -58,11 +74,21 @@ def serve(directory):
     return f'http://127.0.0.1:{port}/'
 
 
-def save(img, name, size=None, quality=84):
+def hologram(img):
+    """a piece of their web as light: what is near black (their page's dark, its panels' fills) goes clear, and only
+    what glows -- type, lines, buttons, pictures -- stays, so it never reads as a rectangle on the dark"""
+    img = img.convert('RGBA')
+    key = img.convert('RGB').convert('L').point(lambda v: 0 if v < 14 else 255 if v > 70 else (v - 14) * 255 // 56)
+    img.putalpha(ImageChops.multiply(img.getchannel('A'), key))
+    return img
+
+
+def save(img, name, size=None, quality=86):
     if size:
         img = img.resize(size, Image.LANCZOS)
+    if name.startswith('web-'):
+        img = hologram(img)
     path = OUT / name
-    path.parent.mkdir(parents=True, exist_ok=True)
     img.save(path, quality=quality, method=6)
     alpha = ''
     if img.mode == 'RGBA':
@@ -71,85 +97,82 @@ def save(img, name, size=None, quality=84):
     print(f'{name} {img.width}x{img.height} {path.stat().st_size // 1024} KB{alpha}')
 
 
-def fly(_b):
-    src = sorted((QUEST / 'frames' / 'desk' / 'approach').glob('*.webp'))[:141:2]
-    if not src:
-        print('fly: outbox/quest/frames/desk/approach is missing (render.py film); the page shows fly-0.webp')
-        return
-    (OUT / 'fly').mkdir(parents=True, exist_ok=True)
-    for i, f in enumerate(src):
-        img = Image.open(f).convert('RGB').resize((1920, 1080), Image.LANCZOS)
-        img.save(OUT / 'fly' / f'{i:03d}.webp', quality=62, method=4)
-        if i == 0:
-            img.save(OUT / 'fly-0.webp', quality=78, method=6)
-    total = sum(p.stat().st_size for p in (OUT / 'fly').glob('*.webp'))
-    print(f'fly: {len(src)} frames, {total // 1024} KB; fly-0.webp kept')
+def shot(page, clip, pad=0):
+    x, y, w, h = clip['x'] - pad, clip['y'] - pad, clip['width'] + 2 * pad, clip['height'] + 2 * pad
+    return Image.open(io.BytesIO(page.screenshot(clip={'x': x, 'y': y, 'width': w, 'height': h}, omit_background=True))).convert('RGBA')
 
 
-def office(b):
+def builder(b):
+    """the builder's step 2: the Start card (web), the office (picture), then the tour to Development (picture)"""
     page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=2)
     page.goto('https://cymetica.com/company/app/builder', wait_until='domcontentloaded', timeout=60000)
     time.sleep(12)
     page.fill('#f-name', 'Moonshot Labs')          # typed, never submitted: step 2 shows the office and its tour
     page.click('#b-next')
     time.sleep(12)
+    # the office, its own 3D alone
+    tag = page.add_style_tag(content=ONLY_3D)
+    time.sleep(2)
+    img = Image.open(io.BytesIO(page.screenshot())).convert('RGB')
+    w, h = img.size                                   # the page's own rounded frame sits in the outer 1 %: cut it
+    save(img.crop((int(w * 0.012), int(h * 0.016), int(w * 0.988), int(h * 0.984))), 'office.webp', (2560, 1440))
+    tag.evaluate('t => t.remove()')
+    # the Start card, floating: no 3D behind it, no box round it
+    tag = page.add_style_tag(content="""html, body, main, section.stage { background: transparent !important; }
+      section.stage::before, section.stage::after { display: none !important; } canvas, .bz-call { visibility: hidden !important; }""")
+    time.sleep(1)
+    save(shot(page, page.evaluate(CLEAR_ONE, 'section.bz-card'), 4), 'web-builder.webp')
+    tag.evaluate('t => t.remove()')
+    page.evaluate("() => { const c = document.querySelector('section.bz-card'); c.style.background = ''; c.style.boxShadow = ''; c.style.borderColor = ''; }")
+    # the tour: Command, the Vault, then Development
+    page.click('.bz-call')
+    time.sleep(4.5)
+    for _ in range(2):
+        page.click('.bz-go')
+        time.sleep(5)
     page.add_style_tag(content=ONLY_3D)
     time.sleep(2)
     img = Image.open(io.BytesIO(page.screenshot())).convert('RGB')
+    w, h = img.size
+    img = img.crop((int(w * 0.012), int(h * 0.016), int(w * 0.988), int(h * 0.984))).resize((2560, 1440), Image.LANCZOS)
+    save(img.crop((1120, 330, 2240, 1080)), 'dev.webp')       # the tour's own camera, cut to the Development room
     page.close()
-    w, h = img.size                                   # the page's own rounded frame sits in the outer 1 %: cut it
-    img = img.crop((int(w * 0.012), int(h * 0.016), int(w * 0.988), int(h * 0.984)))
-    save(img, 'office.webp', (2560, 1440))
 
 
-def tools(b):
-    base = serve(HERE / 'scenes')
-    for name, (w, h) in (('tools.webp', (2560, 1440)),):
-        page = b.new_page(viewport={'width': w, 'height': h})
-        page.goto(base + f'tools.html?w={w}&h={h}', wait_until='load')
-        page.wait_for_function('window.READY === true', timeout=120000)
-        time.sleep(0.5)
-        save(Image.open(io.BytesIO(page.screenshot())).convert('RGB'), name)
-        page.close()
-
-
-def agent(_b):
-    save(Image.open(QUEST / 'gen' / 'lab-16x9.png').convert('RGB'), 'agent.webp', quality=82)
-    save(Image.open(QUEST / 'gen' / 'lab-9x16.png').convert('RGB'), 'agent-tall.webp', (1080, 1920), quality=80)
-
-
-def tower(_b):
-    img = Image.open(QUEST / 'frames' / 'desk' / 'promo' / '0089.webp').convert('RGB')
-    save(img.crop((0, 40, img.width, img.height)), 'tower.webp')          # the label's stub off the top
-
-
-def finale(_b):
-    save(Image.open(QUEST / 'frames' / 'desk' / 'pullback' / '0119.webp').convert('RGB'), 'finale.webp', quality=80)
-
-
-# every box that covers much of the screen loses its background, so the page's own words, buttons and cube float
-CLEAR_BIG = """() => {
-  const A = innerWidth * innerHeight;
-  document.documentElement.style.background = 'transparent'; document.body.style.background = 'transparent';
-  for (const e of document.querySelectorAll('body *')) {
-    const r = e.getBoundingClientRect();
-    if (r.width * r.height > A * 0.2) { e.style.background = 'transparent'; e.style.backgroundImage = 'none'; e.style.boxShadow = 'none'; }
-  }
-  const s = document.createElement('style');
-  s.textContent = 'html::before, html::after, body::before, body::after, main::before, main::after, .wrap::before, .wrap::after, section::before, section::after { display: none !important; }';
-  document.head.appendChild(s);
-}"""
-
-
-def promo_ui(b):
+def bib(b):
     page = b.new_page(viewport={'width': 1600, 'height': 1000}, device_scale_factor=2)
+    page.goto('https://cymetica.com/build-it-better', wait_until='domcontentloaded', timeout=60000)
+    time.sleep(7)
+    page.evaluate(CLEAR_BIG)
+    time.sleep(0.6)
+    save(shot(page, page.evaluate(CLEAR_ONE, '.bb-hero'), 6), 'web-bib.webp')
+    page.close()
+
+
+def casino(b):
+    page = b.new_page(viewport={'width': 1600, 'height': 1400}, device_scale_factor=2)
+    page.goto('https://cymetica.com/agent-casino', wait_until='domcontentloaded', timeout=60000)
+    time.sleep(8)
+    page.evaluate(CLEAR_BIG)
+    time.sleep(0.6)
+    save(shot(page, page.evaluate(CLEAR_ONE, 'a.at-big.at-feat'), 4), 'web-casino.webp')
+    page.close()
+
+
+def cube(b):
+    page = b.new_page(viewport={'width': 1600, 'height': 1000}, device_scale_factor=3)
     page.goto('https://cymetica.com/promo-market', wait_until='domcontentloaded', timeout=60000)
     time.sleep(8)
     page.evaluate(CLEAR_BIG)
-    time.sleep(1)
-    png = page.screenshot(clip={'x': 120, 'y': 86, 'width': 1360, 'height': 392}, omit_background=True)
+    time.sleep(0.6)
+    save(shot(page, page.evaluate(CLEAR_ONE, 'section.hero .holo'), 30), 'cube.webp')
     page.close()
-    save(Image.open(io.BytesIO(png)).convert('RGBA'), 'promo-ui.webp', quality=88)
+
+
+def briefs(_b):
+    # their market as our mirror drew it on 2026-10-27, with its one sample brief: the heading and the card
+    img = Image.open(OUTBOX / 'promo-market-v3' / 'pictures' / '5-market-v3.png').convert('RGB')
+    save(img.crop((318, 858, 782, 1392)), 'web-briefs.webp')
 
 
 def board(b):
@@ -163,22 +186,33 @@ def board(b):
       html, body { background: transparent !important; }
       body * { visibility: hidden !important; }
       .modal-card.lbg, .modal-card.lbg * { visibility: visible !important; }
-      .modal-card.lbg .mh { visibility: hidden !important; }
+      .modal-card.lbg .mh, .modal-card.lbg .mh * { visibility: hidden !important; }
       .modal, .modal-card.lbg { background: transparent !important; box-shadow: none !important; border-color: transparent !important;
         -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
       .modal-card.lbg::before, .modal-card.lbg::after, .modal-card.lbg .uvb-sh { display: none !important; }
     """)
     time.sleep(1.2)
-    box = page.evaluate("""() => { const c = document.querySelector('.modal-card.lbg'), h = c.querySelector('.mh');
-      const r = c.getBoundingClientRect(), t = h ? h.getBoundingClientRect().bottom : r.top;
-      const rows = [...c.querySelectorAll('.lb-r')].slice(0, 3), last = rows.length ? rows[rows.length - 1].getBoundingClientRect().bottom : r.bottom;
-      return { x: r.left, y: t, w: r.width, h: last - t + 8 }; }""")
-    png = page.screenshot(clip={'x': box['x'], 'y': box['y'], 'width': box['w'], 'height': box['h']}, omit_background=True)
+    box = page.evaluate("""() => { const c = document.querySelector('.modal-card.lbg'), r = c.getBoundingClientRect();
+      const s = c.querySelector('.lb-pod').getBoundingClientRect();
+      const rows = [...c.querySelectorAll('.lb-r')].slice(0, 3), head = c.querySelector('.lb-head').getBoundingClientRect();
+      return { podium: { x: s.left - 30, y: s.top - 60, width: s.width + 60, height: s.height + 90 },
+               rows: { x: r.left, y: head.top - 10, width: r.width, height: rows[rows.length - 1].getBoundingClientRect().bottom - head.top + 18 } }; }""")
+    save(shot(page, box['podium']), 'podium.webp')
+    save(shot(page, box['rows']), 'web-board.webp')
     page.close()
-    save(Image.open(io.BytesIO(png)).convert('RGBA'), 'board.webp', quality=88)
 
 
-SHOTS = {'fly': fly, 'office': office, 'tools': tools, 'agent': agent, 'tower': tower, 'promo-ui': promo_ui, 'board': board, 'finale': finale}
+def sky(_b):
+    # the revenue-share flyer's deep space, Cymetica's sun far off at the top: behind the opening, never flown into
+    save(Image.open(OUTBOX / 'revenue-share-flyer' / 'space-bg.jpg').convert('RGB'), 'space.webp', quality=82)
+
+
+def agent(_b):
+    save(Image.open(QUEST / 'gen' / 'lab-16x9.png').convert('RGB'), 'agent.webp', quality=82)
+    save(Image.open(QUEST / 'gen' / 'lab-9x16.png').convert('RGB'), 'agent-tall.webp', (1080, 1920), quality=80)
+
+
+SHOTS = {'builder': builder, 'bib': bib, 'casino': casino, 'cube': cube, 'briefs': briefs, 'board': board, 'agent': agent, 'sky': sky}
 
 
 def main(names):

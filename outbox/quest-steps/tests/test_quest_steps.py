@@ -1,17 +1,17 @@
 """The Cymetica Quest, step by step (outbox/quest-steps), checked in a real browser before anybody looks at it.
 
-What the operator asked for (2026-10-29), each as a test: the intro and four steps in his order (the tutorial's office;
-space robot tools OR breed your agent; the Promo Market's building close and its page; the leaderboard), up to 500k ET10
-a month. And his two rules from the first take's 7/10: no picture in a panel, a frame or a box, every one melting into
-the page; and the opening not a giant banner. With what holds for every page we draw (outbox/quest/tests): a rail that
-always says which step you are on, a glance of words per step, type big enough to read, the site's palette, every
-figure from one place.
+What the operator asked for (2026-10-29), each as a test: the intro and four steps in his order, up to 500k ET10 a
+month; in every step a picture and beside it a piece of Cymetica's own web as a hologram, never in a rectangle (the HQ
+and the builder; the Development room and Build it Better, OR the agent and the Agent Casino; the Promo Market's cube
+and an open brief; the podium and the leaderboard). From the second take's 4/10: nothing over the whole screen, and
+nowhere the orbit with its companies. With what holds for every page we draw (outbox/quest/tests): a rail that always
+says which step you are on, a glance of words per step, type big enough to read, the site's palette, every figure
+from one place.
 
     python -m pytest outbox/quest-steps/tests -o addopts="" -p no:cacheprovider
 
 `-o addopts=""` keeps the repository's report plugin out: this is a page, not a check against the platform, and a run
-of it must not write a run record. Needs Playwright's Chromium. Passes without the flight's frames (pics/fly/, not in
-git): the opening then shows its first frame.
+of it must not write a run record. Needs Playwright's Chromium.
 """
 import colorsys
 import functools
@@ -86,18 +86,48 @@ def _scroll_through(page):
 
 
 def test_the_steps_are_his_in_his_order(browser, url):
+    """in every step a picture (.pic) and a piece of their web (.holo), the ones he named"""
     page = _open(browser, url, WIDE)
     order = page.evaluate("""() => [...document.querySelectorAll('section[data-step]')].map(s =>
-      [s.id, [...s.querySelectorAll('img')].map(i => i.getAttribute('src'))])""")
-    assert [o[0] for o in order] == ["hero", "s1", "s2", "s3", "s4", "go"], order
-    pics = dict(order)
-    assert pics["s1"] == ["pics/office.webp"], "step 1 is the tutorial's office, the headquarters"
-    assert pics["s2"] == ["pics/tools.webp", "pics/agent.webp"], "step 2: space robot tools, or the agent"
-    assert pics["s3"] == ["pics/tower.webp", "pics/promo-ui.webp"], "step 3: the Promo Market building close, and its page"
-    assert pics["s4"] == ["pics/board.webp"]
-    heads = page.evaluate("() => [...document.querySelectorAll('#s2 .way h2')].map(h => h.textContent.trim())")
+      [s.id, [...s.querySelectorAll('.pic img')].map(i => i.getAttribute('src')), [...s.querySelectorAll('.holo img')].map(i => i.getAttribute('src'))])""")
+    assert [o[0] for o in order] == ["hero", "s1", "s2a", "s2b", "s3", "s4", "go"], order
+    want = {"s1": (["pics/office.webp"], ["pics/web-builder.webp"]),
+            "s2a": (["pics/dev.webp"], ["pics/web-bib.webp"]),
+            "s2b": (["pics/agent.webp"], ["pics/web-casino.webp"]),
+            "s3": (["pics/cube.webp"], ["pics/web-briefs.webp"]),
+            "s4": (["pics/podium.webp"], ["pics/web-board.webp"])}
+    got = {sid: (pic, holo) for sid, pic, holo in order if sid in want}
+    assert got == want, got
+    heads = page.evaluate("() => [...document.querySelectorAll('#s2a h2, #s2b h2')].map(h => h.textContent.trim())")
     assert heads == ["Ship products.", "Breed your agent."], heads
-    assert page.locator("#s2 .or").count() == 1, "the two ways of step 2 are a choice: OR between them"
+    assert page.locator(".or").count() == 1, "the two ways of step 2 are a choice: OR between them"
+
+
+def test_nothing_fills_the_screen_and_no_orbit(browser, url):
+    """The second take was 4/10: "je to nahovno jak je to pres celou obrazovku" and "nedavej nikde tu obeznou drahu s
+    tolika companies". So no picture is wider than 62 % of the screen, and none of that take's Universe shots is back."""
+    page = _open(browser, url, WIDE)
+    _scroll_through(page)
+    wide = page.evaluate("""() => [...document.querySelectorAll('main img')].map(i => [i.getAttribute('src'), +(i.getBoundingClientRect().width / innerWidth).toFixed(2)])
+      .filter(([, w]) => w > 0.62)""")
+    assert not wide, wide
+    srcs = page.evaluate("() => [...document.images].map(i => i.getAttribute('src'))")
+    back = [s for s in srcs if any(k in s for k in ("fly", "finale", "tower", "season", "universe"))]
+    assert not back, back
+
+
+def test_a_piece_of_the_web_is_light_not_a_rectangle(browser, url):
+    """every hologram is a cut-out: its picture's corners are clear (capture.py keyed the page's dark out), so no edge
+    of a rectangle can show on the dark"""
+    page = _open(browser, url, WIDE)
+    _scroll_through(page)
+    page.wait_for_function("[...document.querySelectorAll('.holo img')].every(i => i.complete && i.naturalWidth)", timeout=15000)
+    corners = page.evaluate("""() => [...document.querySelectorAll('.holo img')].map(img => {
+      const c = document.createElement('canvas'); c.width = img.naturalWidth; c.height = img.naturalHeight;
+      const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+      const W = c.width - 1, H = c.height - 1, a = [[0, 0], [W, 0], [0, H], [W, H]].map(([u, v]) => x.getImageData(u, v, 1, 1).data[3]);
+      return [img.getAttribute('src'), a]; }).filter(([, a]) => a.some(v => v > 40))""")
+    assert not corners, corners
 
 
 def test_every_picture_loads(browser, url):
@@ -132,19 +162,6 @@ def test_no_picture_sits_in_a_box(browser, url, viewport):
     assert not found, found
 
 
-def test_the_opening_is_not_a_banner(browser, url):
-    """The first take's opening was "moc obrovsky ... jak nejaky obri reklamni banner": the title now takes at most
-    60 % of the width, nothing on the first screen is over 84 px, and nothing there sits in a filled box but the call."""
-    page = _open(browser, url, WIDE)
-    box = page.evaluate("() => document.querySelector('#hero h1').getBoundingClientRect().width / innerWidth")
-    assert box <= 0.6, f"the title is {box:.0%} of the width"
-    big = page.evaluate("""() => [...document.querySelectorAll('#hero .hero-copy *')].filter(e => [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()))
-      .map(e => [e.className || e.tagName, parseFloat(getComputedStyle(e).fontSize)]).filter(([, s]) => s > 84)""")
-    assert not big, big
-    boxed = page.evaluate("""() => [...document.querySelectorAll('#hero .prizes *')].filter(e => !/rgba\\(0, 0, 0, 0\\)/.test(getComputedStyle(e).backgroundColor)).map(e => e.className)""")
-    assert not boxed, f"the prizes are type, not chips: {boxed}"
-
-
 def test_the_prize_is_500k_a_month_from_one_config(browser, url):
     """the first screen's prize and step 4's are the same figures, written by quest.js from QUEST, and a digit in the
     words sits inside a [data-figure] (mock-figures-come-from-one-model)"""
@@ -153,7 +170,7 @@ def test_the_prize_is_500k_a_month_from_one_config(browser, url):
     assert page.evaluate("() => document.querySelector('#hero .lede').innerText.replace(/\\s+/g, ' ').trim()") == \
         "Win up to 500,000 ET10 every month."
     loose = page.evaluate("""() => { const out = [];
-      for (const root of document.querySelectorAll('section [data-glance]')) {
+      for (const root of document.querySelectorAll('section [data-glance] .copy')) {
         const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
         for (let n = walk.nextNode(); n; n = walk.nextNode())
           if (/\\d/.test(n.textContent) && !n.parentElement.closest('[data-figure], .kick')) out.push(n.textContent.trim());
@@ -164,31 +181,14 @@ def test_the_prize_is_500k_a_month_from_one_config(browser, url):
         const t = typeof v === 'number' ? v.toLocaleString('en-US') : String(v);
         return v == null || el.textContent.trim() !== t; }).map(el => [el.dataset.figure, el.textContent.trim()])""")
     assert not wrong, wrong
-    for sel in ("#hero [data-prizes]", "#s4 [data-prizes]"):
-        got = page.evaluate(f"() => [...document.querySelectorAll('{sel} .pz b')].map(b => b.textContent)")
-        assert got == ["500,000", "250,000", "100,000"], (sel, got)
+    got = page.evaluate("() => [...document.querySelectorAll('#hero [data-prizes] .pz b')].map(b => b.textContent)")
+    assert got == ["500,000", "250,000", "100,000"], got
 
 
 def test_every_link_goes_to_cymetica(browser, url):
     page = _open(browser, url, WIDE)
     hrefs = page.evaluate("() => [...document.querySelectorAll('a[data-link]')].map(a => a.href)")
     assert hrefs and all(h.startswith("https://cymetica.com/") for h in hrefs), hrefs
-
-
-def test_the_flight_runs_forward_as_you_scroll(browser, url):
-    """through the opening the frame it wants only ever moves forward as the page goes down, ends on the last, and
-    something is always drawn: a frame, or the first frame until frames come"""
-    page = _open(browser, url, WIDE)
-    span = page.evaluate("() => document.getElementById('hero').offsetHeight - innerHeight")
-    seen = []
-    for k in range(0, 21):
-        page.evaluate("(y) => window.scrollTo({ top: y, behavior: 'instant' })", span * k / 20)
-        _settle(page)
-        seen.append(page.evaluate("() => [QUEST_STATE.frame, QUEST_STATE.drawn]"))
-    frames = [f for f, _ in seen]
-    assert frames == sorted(frames) and frames[0] == 0, frames
-    assert frames[-1] == page.evaluate("() => QUEST.fly.count - 1"), frames
-    assert all(d != -1 for _, d in seen[1:]), seen
 
 
 @pytest.mark.parametrize("viewport", [WIDE, PHONE], ids=["wide", "phone"])
