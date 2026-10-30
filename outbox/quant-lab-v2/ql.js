@@ -366,22 +366,27 @@
     cells = { mode: M.mode, v: v, hot: hot }; return cells;
   }
   function drawBlast(p, t) {
-    var cl = cellsFor(), n = M.setups.length, m = M.markets.length, x0 = 200, y0 = 70, mw = W - x0 - 330, ch = Math.min(16.5, (H - y0 - 16) / n), cw = mw / m;
+    // the grid fills the screen's height and runs to the counter (the operator, 2026-10-30: "nevyuziva celou plochu")
+    var cl = cellsFor(), n = M.setups.length, m = M.markets.length, x0 = 200, y0 = 70, mw = W - x0 - 330, ch = (H - y0 - 20) / n, cw = mw / m, fs = ch >= 24 ? 13 : 11;
     M.markets.forEach(function (s, j) { coin(s, x0 + j * cw + cw / 2, 26, 13, true); });
     // live: the cells follow the feed's done_jobs, evenly, as a running search does; a replay eases through it
     var live = LAB === 'live', fd = live ? feed(p) : null, prog = live ? fd.done_jobs / fd.total_jobs : ease(seg(p, 0, 0.82)), hotAt = live ? 0.92 : 0.84;
-    var total = n * m, lit = Math.floor(prog * total), k = M.settings, sq = Math.min(4, (cw - 10) / Math.ceil(k / 3) - 1);
+    var total = n * m, lit = Math.floor(prog * total), k = M.settings, sw = (cw - 8) / Math.ceil(k / 3), sh = (ch - 4) / 3;   // a setting is one rectangle of a three-row block filling the cell
     for (var i = 0; i < n; i++) {
       var s = M.setups[i];
-      ctx.font = '700 11px ' + MONO; var lab = setupText(s); if (lab.length > 22) lab = lab.slice(0, 21) + '…';
-      txt(lab, x0 - 10, y0 + i * ch + ch / 2, '700 11px ' + MONO, i * m < lit ? C.dim : C.dim3, 'right');
+      var lab = setupText(s); if (lab.length > 22) lab = lab.slice(0, 21) + '…';
+      txt(lab, x0 - 10, y0 + i * ch + ch / 2, '700 ' + fs + 'px ' + MONO, i * m < lit ? C.dim : C.dim3, 'right');
       for (var j = 0; j < m; j++) {
         var idx = i * m + j, x = x0 + j * cw, y = y0 + i * ch;
         ctx.fillStyle = C.navy; ctx.fillRect(x + 1, y + 1, cw - 2, ch - 2);
         if (idx < lit) {
           var v = cl.v[i][j], a = Math.min(0.85, 0.15 + Math.abs(v) / 30);
           ctx.fillStyle = v >= 0 ? 'rgba(0, 255, 136, ' + a + ')' : 'rgba(255, 68, 68, ' + (a * 0.7) + ')';
-          for (var q = 0; q < k; q++) ctx.fillRect(x + 4 + Math.floor(q / 3) * (sq + 1), y + 2 + (q % 3) * ((ch - 4) / 3), sq, (ch - 4) / 3 - 1);
+          for (var q = 0; q < k; q++) {
+            ctx.globalAlpha = 0.72 + 0.28 * (((i * 31 + j * 17 + q * 7) % 10) / 10);   // the settings differ a little, as their results do
+            ctx.fillRect(x + 4 + Math.floor(q / 3) * sw, y + 2 + (q % 3) * sh, sw - 1, sh - 1);
+          }
+          ctx.globalAlpha = 1;
         }
         if (idx === lit) { ctx.fillStyle = '#ffffff'; ctx.shadowColor = C.cyan; ctx.shadowBlur = 24; ctx.fillRect(x, y, cw, ch); ctx.shadowBlur = 0; if (Math.random() < 0.5) burst(x + cw / 2, y + ch / 2, C.cyan, 2, 4); }
       }
