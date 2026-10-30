@@ -243,7 +243,9 @@ def test_the_pipeline_is_a_skill_tree(browser, url):
 @pytest.mark.parametrize("sid", list(ANIMS))
 def test_every_step_moves(browser, url, sid):
     """"kazdy krok musi mit top animaci": on screen, each step's clips play (their time runs on) and each live animation
-    draws frames (QUEST_STATE.frames counts them); a missing clip fails here, so run record.py"""
+    draws frames (QUEST_STATE.frames counts them); a missing clip fails here, so run record.py. This proves it moves, not
+    that it is smooth: headless Chromium has no GPU and draws ~10 a second. Smoothness was measured in Chrome with the
+    CPU throttled 10x (2026-10-30: every animation 62+ a second, the clips 30, the farmer's dropping ~1 in 9)."""
     page = _open(browser, url, WIDE)
     _scroll_to_middle_of(page, sid)
     page.wait_for_timeout(600)
