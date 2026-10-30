@@ -4,7 +4,7 @@ Asked for by the operator on 2026-10-29: a new page for the Cymetica Quest, expl
 quest, win up to 500,000 ET10 every month), then how. It stands beside `outbox/quest` (the scroll film, still on the 5 %
 revenue share), which is unchanged.
 
-## Seven takes
+## Eight takes
 
 1. **a1cb3cf5, 7/10**: real screenshots, each in a glass browser frame. "Nedavej to do panelu ... at to splyva."
 2. **60da77f5, 4/10**: everything full screen, a flight in to the sun, the orbit with its companies. "Predchozi verze
@@ -13,24 +13,23 @@ revenue share), which is unchanged.
 4. **e66d68dc**: the first screen as our flyer on its side, five steps in his words, no link in a step.
 5. **46cd5e1e**: Capital Maximizer's bar, a sharp sky, and an animation in every step.
 6. **000eb3e8, 7.5/10**: glass, icons on tiles, the station dive into step 1, steps 2 and 3 on one screen with a slider.
-7. **This one** (2026-10-30), after the sixth:
-   - **Crystal glass** for the bar, the prize board, the departments, the leaderboard and the two calls at the end:
-     clear, glossy, a rim of light ("ne ta tvoje zakalena plocha").
-   - **The words under every heading are much smaller.** No point stands on a tile of an icon ("vsude takove stejne
-     kostky").
-   - **The companies by the sun** stand still, are bigger and are grey.
-   - **The board** says who wins each slot (most points), with no "could be yours". The first screen's five steps
-     are a list, not links.
-   - **Step 1:** the HQ only, without the zoom or the station. Under it, the four departments with their agents' roles
-     and pictures; no "7 rooms".
-   - **The slider is gone.** Breed your hero agent is its own step again, so there are five.
-   - **Step 2**, "Build your own products": the Cymetica pipeline as a machine. An idea is typed in, six chambers
-     (Spec, Design, Build, Security, Deploy, Hosting) light one after another, and your app comes out live, a real
-     product of Build it Better each time. Beside it, a ring of the built products' marks as holograms, turned by
-     dragging.
-   - **Step 3:** the Quant Lab's reactor from `outbox/quant-lab-v2` (another session's page, its Coming soon mode).
-   - **Step 5**, "Farm your points": the leaderboard with each company's station as its mark, and a Universe of 18
-     companies with Cymetica's sun.
+7. **e4cbe7a5**: crystal glass, the HQ with its departments, the pipeline as a machine, the ring of marks, the
+   Quant Lab's reactor, 18 companies in the Universe.
+8. **This one** (2026-10-30), after the seventh:
+   - **The glass polished clear** ("musi byt uplne pruhledne jako bys ho vylestil"): no fill and no blur anywhere,
+     only rims and a glint. The top bar alone keeps a dark tint, so what scrolls under it does not run into its tabs.
+   - **The first screen is only its slogan** beside the prize board: join the quest, earn points, climb the
+     leaderboard, earn up to 500,000 ET10 monthly. The 1 to 5 list is gone.
+   - **Step 1:** the HQ larger on the right; under the heading only the nine agents, led by NEXUS, named by role.
+     The department cards are gone.
+   - **Step 2:** the arms and the Cymetica pipeline are one machine: the pipeline runs under the arms' pad, a column
+     of light rises from it while the idea is inside, and the app comes out at its end. The ring above shows the built
+     products' live pages as holograms, not marks.
+   - **Step 3:** the reactor stands beside its words, not a hologram, nothing over it.
+   - **Step 4:** the Promo Market tilted far back as a hologram on the left, the Universe with the Airdrop Farmer and
+     the Gem Screener beside it, the words on the right.
+   - **The two calls at the end** are the start tutorial's two cards (its live room and its live Universe on top, the
+     button below), in crystal glass, each scene moving.
 
 ## Open it
 
@@ -44,13 +43,11 @@ clip shows its poster. The lab clip needs `outbox/quant-lab-v2` served on 8801.
 |---|---|
 | `index.html`, `quest.css`, `quest.js` | the page; `QUEST` in quest.js holds every figure, both addresses, the departments and the ideas |
 | `anim.js` | everything that moves: the clips' loops, the pipeline, the ring of products, the users, the leaderboard |
-| `logos.js` | the products' marks for the ring and the pipeline's output |
-| `record.py` | the five clips into `clips/` and their posters into `pics/` (its docstring says how and from where) |
+| `record.py` | the seven clips into `clips/` and their posters into `pics/` (its docstring says how and from where) |
 | `scenes/tools.html` | the robot-arm workshop (three.js), a 10 s loop drawn frame by frame by record.py |
-| `capture.py` | the still pictures into `pics/`: the sky, the sun, the five companies, the builder's card, the Promo Market |
+| `capture.py` | the still pictures into `pics/`: the sky, the sun, the five companies, the builder's card, the Promo Market, the built products' live pages (`pics/apps/`) |
 
-`pics/crew/` and `pics/board/` are copies of our Universe mock's renders (`outbox/company-live/shots`): its rooms, its
-agents by role, its stations.
+`pics/board/` holds copies of our Universe mock's station renders (`outbox/company-live/shots`).
 
 No test suite: a design page is judged by the operator's eye (2026-10-30), and looked at, wide and on a phone, before it
 goes to him.
@@ -60,19 +57,22 @@ goes to him.
 | Step | What | From |
 |---|---|---|
 | top | the sun and five companies | our Universe mock, each cut out |
-| 01 | the HQ, astronauts at work | LIVE cymetica.com/company/app/builder, recorded; the departments and roles are the live builder's pre-build (builder.js PRE), pictured by our mock |
+| 01 | the HQ, astronauts at work | LIVE cymetica.com/company/app/builder, recorded; the nine agents and their roles are the live builder's pre-build (builder.js PRE) |
 | 02 | the workshop and the pipeline | our three.js scene and anim.js; the ideas map to real Build it Better products |
-| 02 | the products' marks | Gem Screener's is its own icon; every other product has no logo yet, so its mark is ours (logos.js) |
+| 02 | the ring of products | LIVE: each product's own page, captured (capture.py apps) |
 | 03 | the Quant Lab's reactor | outbox/quant-lab-v2's Coming soon mode, filmed: a simulation, and it says so on screen |
 | 04 | the Promo Market and the Airdrop Farmer | their page through our read-only mirror with three sample briefs; our Universe mock, composed |
 | 05 | the Universe and the leaderboard | our Universe mock with 18 of its sample companies (the live one has six); the leaderboard's names and points are samples (QUEST.board) |
+| end | the two cards | LIVE cymetica.com/company/app/start, its room and its Universe, recorded; our sun over the Universe, as their poster shows none |
 
 ## Decided here, the veto open
 
-- **Five steps again:** the hero list and the rail have five. His "3 bring in users, 4 compete in the Universe and earn
+- **Five steps again:** the rail has five. His "3 bring in users, 4 compete in the Universe and earn
   points" are its 4th and 5th, now that the agent has its own step.
-- **The departments' cards** show the four of the pre-build. NEXUS (Command) and the supervisor (Operations) are left
-  out, so as not to crowd them.
+- **The nine agents** are named by role (Developer, Lab scientist, Trader, QA tester, Auditor, Supervisor, three
+  Researchers), as the pre-build has them; NEXUS leads them and is said in the line above.
+- **The top bar** keeps a dark tint under its rim while every other glass is clear, because a clear bar ran the page's
+  words into its tabs.
 - **The companies by the sun** are about a quarter of its disc. That is over his earlier eighth, because he said they
   were still too small.
 - **The clips** stay out of git. Their posters are kept.

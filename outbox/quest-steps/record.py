@@ -126,16 +126,18 @@ def lab(b):
     CoinGecko's coin logos into its canvas, which taints it, and a tainted canvas's own stream stops: so the window is
     filmed instead (Playwright's video), and cut to the reactor by ffmpeg"""
     import shutil
-    vw, vh, total = 1600, 1100, 23.6            # its five stages, 3.2 + 4.4 + 3.4 + 5.6 + 7.0 s (ql.js STAGES)
+    # a window of 1100 so the reactor is less wide than tall-ish (it stands beside its words now: "dej to jen vedle
+    # toho napravo"), and its stage rail with it (BUILD, BLAST, BLIND, THE BAR, FOUND)
+    vw, vh, total = 1100, 1000, 23.6            # its five stages, 3.2 + 4.4 + 3.4 + 5.6 + 7.0 s (ql.js STAGES)
     tmpdir = Path(tempfile.mkdtemp())
     ctx = b.new_context(viewport={'width': vw, 'height': vh}, device_scale_factor=1, record_video_dir=str(tmpdir), record_video_size={'width': vw, 'height': vh})
     t0 = time.time()
     page = ctx.new_page()
     page.goto('http://127.0.0.1:8801/?mode=sim', wait_until='load', timeout=60000)
     page.wait_for_function("() => document.fonts.status === 'loaded' && document.querySelector('#rx').width > 0", timeout=60000)
-    page.evaluate("() => document.querySelector('#rx').scrollIntoView({ block: 'center' })")
+    page.evaluate("() => document.querySelector('.q2-reactor').scrollIntoView({ block: 'center' })")
     time.sleep(3)
-    r = page.evaluate("() => { const r = document.querySelector('#rx').getBoundingClientRect(); return [r.left, r.top, r.width, r.height].map(Math.round); }")
+    r = page.evaluate("() => { const r = document.querySelector('.q2-reactor').getBoundingClientRect(); return [r.left, r.top, r.width, r.height].map(Math.round); }")
     page.click('#rail [data-st="0"]')           # from the top: BUILD
     start = time.time() - t0
     time.sleep(total + 1)
@@ -148,6 +150,20 @@ def lab(b):
     shutil.rmtree(tmpdir, ignore_errors=True)
     print('lab: reactor', w, 'x', h, 'from', round(start, 2), 's,', total, 's,', (CLIPS / 'lab.webm').stat().st_size // 1024, 'KB')
     frame_poster('lab', 21.0)
+
+
+def doors(b, seconds=12):
+    """the end's two calls as the LIVE start tutorial has them (cymetica.com/company/app/start, "udelej je tak jak to
+    mame v start tutorialu, ale vylepsi je"): its two pictures, each drawn live by its engine, a room of the office
+    turning and the Universe from above, recorded at twice their size"""
+    page = b.new_page(viewport={'width': 1600, 'height': 1000}, device_scale_factor=2)
+    page.goto('https://cymetica.com/company/app/start', wait_until='domcontentloaded', timeout=60000)
+    page.wait_for_function("() => ['#lp-room', '#lp-uvpic'].every(s => document.querySelector(s + ' canvas'))", timeout=90000)
+    time.sleep(10)
+    for sel, name in (('#lp-room canvas', 'door-room'), ('#lp-uvpic canvas', 'door-universe')):
+        poster(page, sel, name)
+        record(page, sel, seconds, name)
+    page.close()
 
 
 def farmer(b, seconds=12):
@@ -211,7 +227,7 @@ def workshop(b, fps=30, at=None):
     page.close()
 
 
-SHOTS = {'office': office, 'workshop': workshop, 'lab': lab, 'farmer': farmer, 'universe': universe}
+SHOTS = {'office': office, 'workshop': workshop, 'lab': lab, 'farmer': farmer, 'universe': universe, 'doors': doors}
 
 
 def main(names):

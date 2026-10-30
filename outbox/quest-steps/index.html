@@ -4,19 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Cymetica Quest</title>
-<meta name="description" content="Join the Cymetica Quest: start an AI-native company in the Universe, build your own products, breed your hero agent, get seen, farm your points. Up to 500,000 ET10 every month.">
+<meta name="description" content="Join the Cymetica Quest: earn points, climb the leaderboard and earn up to 500,000 ET10 every month.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="quest.css">
-<!-- The Cymetica Quest, step by step (the operator, 2026-10-29). Seventh take (2026-10-30): the bar, the prize board
-     and the two calls at the end in clear, glossy crystal glass ("ne ta tvoje zakalena plocha"); the words under
-     every heading much smaller, no tiles of icons; the companies by the sun still, bigger, quiet in colour; step 1 the
-     HQ only, its departments shown with their agents; step 2 the Cymetica pipeline taking an idea in and putting a
-     product out, beside a ring of the products already built; step 3 the Quant Lab's reactor; step 5 farming points,
-     the leaderboard with each company's mark. The clips are record.py's, the pictures capture.py's; every figure is
-     QUEST's in quest.js, every animation anim.js's, the products' marks logos.js's. -->
+<!-- The Cymetica Quest, step by step (the operator, 2026-10-29). Eighth take (2026-10-30): the glass polished clear
+     ("musi byt uplne pruhledne jako bys ho vylestil"); the first screen only its slogan; step 1 a bigger HQ and its nine
+     agents named; step 2 the arms and the Cymetica pipeline one machine, beside a ring of the built products' live
+     pages as holograms; step 3 the Quant Lab's reactor beside its words; step 4 the Promo Market tilted far back as a
+     hologram, the Universe beside it; the two calls as the start tutorial's, better. The clips are record.py's, the
+     pictures capture.py's; every figure is QUEST's in quest.js, every animation anim.js's. -->
 </head>
 <body>
 <div id="sky" aria-hidden="true"></div>
@@ -44,14 +43,7 @@
         </div>
       </div>
       <div class="words">
-        <h1>Join the<br>Cymetica Quest.<br><span class="g">Win up to <b data-figure="prizes.0"></b><br><span data-figure="unit"></span> every month.</span></h1>
-        <ol class="path">
-          <li><span class="no">01</span><span class="t"><b>Start an AI-native company</b><span>your HQ in the Universe</span></span></li>
-          <li><span class="no">02</span><span class="t"><b>Build your own products</b><span>say an idea, Cymetica builds it</span></span></li>
-          <li><span class="no">03</span><span class="t"><b>Breed your hero agent</b><span>your Quant Lab finds the strategy</span></span></li>
-          <li><span class="no">04</span><span class="t"><b>Bring in users</b><span>Promo Market &middot; your land</span></span></li>
-          <li><span class="no">05</span><span class="t"><b>Compete in the Universe and earn points</b><span>the top <b data-figure="slots"></b> get paid every month</span></span></li>
-        </ol>
+        <h1>Join the Cymetica Quest.<br>Earn points.<br>Climb the leaderboard.<br><span class="g">Earn up to <b data-figure="prizes.0"></b> <span data-figure="unit"></span> monthly.</span></h1>
       </div>
     </div>
   </section>
@@ -61,7 +53,9 @@
     <div class="txt rv">
       <div class="kick">Step 01</div>
       <div class="copy"><h2>Start an<br><span class="g">AI-native company.</span></h2></div>
-      <p class="sub"><b>Your HQ in the Universe,</b> staffed with AI agents. You approve what goes out.</p>
+      <p class="sub"><b>Your HQ in the Universe.</b> You approve what goes out.</p>
+      <div class="crewline"><b data-figure="hq.agents"></b><span>AI agents, led by NEXUS</span></div>
+      <ul class="roles"><li>Developer</li><li>Lab scientist</li><li>Trader</li><li>QA tester</li><li>Auditor</li><li>Supervisor</li><li><b data-figure="hq.researchers"></b> &times; Researcher</li></ul>
     </div>
     <div class="stage rv">
       <figure class="pic office">
@@ -69,24 +63,23 @@
         <figure class="ui"><img src="pics/builder-card.webp" alt="Start: New, or the Cymetica pre-build of 7 rooms, 4 departments and 9 agents" width="904" height="1068"></figure>
       </figure>
     </div>
-    <div class="crew rv" data-crew aria-label="The pre-build's departments and their AI agents"></div>
   </section>
 
-  <section id="s2" data-step="2" class="step flip">
+  <section id="s2" data-step="2" class="step build">
     <div class="num" aria-hidden="true">02</div>
     <div class="txt rv">
       <div class="kick">Step 02</div>
       <div class="copy"><h2>Build your own<br><span class="g">products.</span></h2></div>
       <p class="sub"><b>Just say an idea.</b> Cymetica's pipeline builds it for you.</p>
-      <div class="ring" data-anim="apps" aria-label="Products already built with Cymetica">
-        <div class="items"></div><span class="base"></span>
-        <div class="plate"><b></b><span><span data-figure="apps"></span> apps already built &middot; drag</span></div>
-      </div>
+    </div>
+    <div class="ring rv" data-anim="apps" aria-label="Products already built with Cymetica, their live pages">
+      <div class="items"></div><span class="base"></span>
+      <div class="plate"><b></b><span><span data-figure="apps"></span> apps already built &middot; drag</span></div>
     </div>
     <div class="stage work rv">
       <figure class="pic"><div class="clip" data-anim="workshop"><video muted playsinline loop preload="metadata" poster="pics/workshop.webp" width="1440" height="810"><source src="clips/workshop.webm" type="video/webm"></video></div></figure>
+      <div class="machine" data-anim="pipeline" aria-label="The Cymetica pipeline: your idea in, your app out"></div>
     </div>
-    <div class="machine rv" data-anim="pipeline" aria-label="The Cymetica pipeline: your idea in, your app out"></div>
   </section>
 
   <section id="s3" data-step="3" class="step">
@@ -101,7 +94,7 @@
       </ul>
     </div>
     <div class="stage lab rv">
-      <figure class="pic"><div class="clip xf" data-anim="lab"><video muted playsinline preload="metadata" poster="pics/lab.webp" width="1542" height="470"><source src="clips/lab.webm" type="video/webm"></video></div></figure>
+      <figure class="reactor"><div class="clip xf" data-anim="lab"><video muted playsinline preload="metadata" poster="pics/lab.webp" width="1044" height="430"><source src="clips/lab.webm" type="video/webm"></video></div></figure>
     </div>
   </section>
 
@@ -116,7 +109,7 @@
       </ul>
     </div>
     <div class="stage duo rv">
-      <figure class="pic"><img src="pics/promo.webp" alt="The Promo Market with its cube of light and three briefs up for grabs" width="2768" height="2098" loading="lazy"></figure>
+      <figure class="promo3d"><img src="pics/promo.webp" alt="The Promo Market with its cube of light and three briefs up for grabs" width="2768" height="2098" loading="lazy"></figure>
       <figure class="pic near">
         <div class="clip xf" data-anim="farmer"><video muted playsinline preload="metadata" poster="pics/farmer.webp" width="1558" height="865"><source src="clips/farmer.webm" type="video/webm"></video></div>
         <span class="nm" style="left: 30.3%; top: 17.4%"><i></i>Airdrop Farmer</span><span class="nm" style="left: 79.5%; top: 23.3%"><i></i>Gem Screener</span>
@@ -141,14 +134,19 @@
   </section>
 
   <section id="go" data-step="5" class="final">
-    <div class="calls">
-      <a class="gem" data-link="builder"><span class="face"></span><span class="t">Start your company</span><i class="ar">&rarr;</i><span class="glint"></span></a>
-      <a class="gem alt" data-link="universe"><span class="face"></span><span class="t">Explore the Universe</span><i class="ar">&rarr;</i><span class="glint"></span></a>
+    <div class="doors">
+      <a class="door go crystal" data-link="builder">
+        <span class="art"><span class="clip xf" data-anim="door-room"><video muted playsinline preload="metadata" poster="pics/door-room.webp" width="604" height="466"><source src="clips/door-room.webm" type="video/webm"></video></span></span>
+        <span class="cta">Start a company <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
+      <a class="door uv crystal" data-link="universe">
+        <span class="art"><span class="clip xf" data-anim="door-universe"><video muted playsinline preload="metadata" poster="pics/door-universe.webp" width="604" height="462"><source src="clips/door-universe.webm" type="video/webm"></video></span><span class="sun" aria-hidden="true"><img src="pics/sun.webp" alt=""></span></span>
+        <span class="cta">Explore the Universe <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </a>
     </div>
   </section>
 </main>
 
-<script src="logos.js"></script>
 <script src="quest.js"></script>
 <script src="anim.js"></script>
 </body>

@@ -1,5 +1,5 @@
-/* The Cymetica Quest, step by step: the figures, the board's three open slots, the company's departments, the top
-   bar's rail, and what moves as you scroll (each step rises in). The animations in the steps are anim.js's. No library.
+/* The Cymetica Quest, step by step: the figures, the board's three open slots, the top bar's rail, and what moves as
+   you scroll (each step rises in). The animations in the steps are anim.js's. No library.
 
    QUEST holds every figure and every address on the page. */
 (function () {
@@ -12,17 +12,11 @@
     unit: 'ET10',
     slots: 3,
     // the live builder's pre-build (builder.js PRE, data.js TEMPLATES, read 2026-10-30): four departments, two AI agents
-    // each, and a supervisor in Operations: nine agents; NEXUS in Command runs them. Pictures: our Universe mock's
-    // renders of the same rooms and agents (outbox/company-live/shots)
-    crew: [
-      { key: 'development', name: 'Development', does: 'builds your products', roles: [['developer', 'Developer'], ['researcher', 'Researcher']] },
-      { key: 'testing_lab', name: 'Quant Lab', does: 'hunts profitable strategies', roles: [['lab_scientist', 'Lab scientist'], ['researcher', 'Researcher']] },
-      { key: 'trading_desk', name: 'Trading desk', does: 'trades what wins', roles: [['trader', 'Trader'], ['researcher', 'Researcher']] },
-      { key: 'testing', name: 'Cymetica QA', does: 'earns ET10 for bugs', roles: [['qa_tester', 'QA tester'], ['auditor', 'Auditor']] }
-    ],
+    // each, and a supervisor in Operations: nine agents, three of them researchers; NEXUS in Command runs them
+    hq: { agents: 9, researchers: 3 },
     // Build it Better's own count, GET /api/v1/build-it-better/apps/leaderboard, 2026-10-30
     apps: 134,
-    // the products in step 2's ring, the most visited first; their marks are logos.js's
+    // the products in step 2's ring, the most visited first, each its live page (capture.py apps: pics/apps/)
     built: [['Gem Screener', 'gem-screener'], ['Chart Analyzer', 'chart-analyzer'], ['Agent Casino', 'agent-casino'], ['Supply Analyzer', 'supply-analyzer'],
             ['Crypto Dashboards', 'crypto'], ['AI Marketplace', 'ai-marketplace'], ['TradingView', 'tradingview'], ['Weekly Signal', 'weekly-signal'],
             ['Team Dump Radar', 'team-dump-radar'], ['Airdrop Farmer', 'airdrop-farmer'], ['Events', 'events'], ['Infiltrator', 'infiltrator'],
@@ -77,15 +71,6 @@
       return '<div class="seat p' + (i + 1) + '"><span class="rk">' + (i + 1) + '</span>' +
         '<span class="who"><b>Open slot</b><span>' + BY[i] + '</span></span>' +
         '<span class="pay"><b data-figure="prizes.' + i + '"></b><span data-figure="unit"></span></span></div>';
-    }).join('');
-  });
-  // ---- step 1's departments: the room, its two AI agents with their pictures and roles
-  document.querySelectorAll('[data-crew]').forEach(function (host) {
-    host.innerHTML = Q.crew.map(function (d) {
-      return '<article class="dept"><div class="room"><img src="pics/crew/room-' + d.key + '.webp" alt="" width="320" height="200" loading="lazy"></div>' +
-        '<div class="dt"><b>' + d.name + '</b><span>' + d.does + '</span></div><div class="agents">' +
-        d.roles.map(function (r) { return '<span class="ag"><span class="face"><img src="pics/crew/astro-' + r[0] + '.webp" alt="" width="256" height="192" loading="lazy"></span><i>' + r[1] + '</i></span>'; }).join('') +
-        '</div></article>';
     }).join('');
   });
   document.querySelectorAll('[data-figure]').forEach(function (el) { el.textContent = fmt(get(el.dataset.figure)); });

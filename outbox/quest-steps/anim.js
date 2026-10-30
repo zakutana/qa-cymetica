@@ -11,7 +11,8 @@
    Each live one draws only while it is on screen and counts its frames in QUEST_STATE.frames. Figures from QUEST. */
 (function () {
   'use strict';
-  var Q = window.QUEST, S = window.QUEST_STATE, LOGO = window.QUEST_LOGO || {};
+  var Q = window.QUEST, S = window.QUEST_STATE;
+  function shot(key) { return '<img src="pics/apps/' + key + '.webp" alt="" width="560" height="315" loading="lazy" draggable="false">'; }
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var HEX = 'M12 1.6 21 6.8v10.4L12 22.4 3 17.2V6.8z';
   var clamp = function (x, a, b) { return x < a ? a : x > b ? b : x; };
@@ -113,7 +114,7 @@
     var idea = -1, lastT = 99;
     function setIdea(i) {
       idea = i; var d = Q.ideas[i];
-      lg.innerHTML = LOGO[d[2]] || ''; an.textContent = d[1];
+      lg.innerHTML = shot(d[2]); an.textContent = d[1];
     }
     setIdea(0);
     run('pipeline', m, function (t) {
@@ -140,15 +141,15 @@
     });
   })();
 
-  /* ---------------- step 2: the ring of products already built, as holograms ---------------- */
-  // ("ale tak huste do 3D to musis dat a holograficky a od kazde apky spis jeji logo"): turning slowly, turned faster
-  // by a drag; the one in front says its name
+  /* ---------------- step 2: the ring of products already built, their live pages as holograms ---------------- */
+  // ("nechci at to jsou ikonky ale screeny z live aplikaci holograficky"): turning slowly, turned faster by a drag; the
+  // one in front says its name
   (function () {
     var ring = document.querySelector('[data-anim=apps]'); if (!ring) return;
     var wrap = ring.querySelector('.items'), plate = ring.querySelector('.plate b');
     var items = Q.built.map(function (a) {
       var e = document.createElement('div'); e.className = 'it';
-      e.innerHTML = '<span class="mk">' + (LOGO[a[1]] || '') + '</span>';
+      e.innerHTML = '<span class="mk">' + shot(a[1]) + '</span>';
       wrap.appendChild(e); return { el: e, name: a[0] };
     });
     var n = items.length, drag = 0, vel = 0, down = false, x0 = 0, front = -1;
@@ -160,10 +161,11 @@
     run('apps', ring, function (t) {
       if (!down) { drag += vel; vel *= 0.94; }
       // a ring seen a little from above: the front ones lower and bigger, the back ones higher, small and faint
-      var W = wrap.clientWidth, R = W * 0.47, base = t * 11 + drag, best = -2, bi = 0;
+      var W = wrap.clientWidth, R = W * 0.4, base = t * 9 + drag, best = -2, bi = 0;
       items.forEach(function (it, i) {
         var a = (base + i * 360 / n) * Math.PI / 180, z = Math.cos(a), x = Math.sin(a) * R, k = (z + 1) / 2;
-        it.el.style.transform = 'translate(' + x.toFixed(1) + 'px,' + (34 * z).toFixed(1) + 'px) translate(-50%,-50%) scale(' + (0.34 + 0.86 * k * k).toFixed(3) + ')';
+        // each page turned to face the way round the ring, as a card on a carousel
+        it.el.style.transform = 'translate(' + x.toFixed(1) + 'px,' + (40 * z).toFixed(1) + 'px) translate(-50%,-50%) scale(' + (0.34 + 0.86 * k * k).toFixed(3) + ') rotateY(' + (Math.sin(a) * 38).toFixed(1) + 'deg)';
         it.el.style.opacity = (0.18 + 0.82 * Math.pow(k, 1.6)).toFixed(3);
         it.el.style.zIndex = Math.round(k * 100);
         if (z > best) { best = z; bi = i; }
@@ -178,7 +180,7 @@
   /* ---------------- step 4: users walk from the briefs to the product ---------------- */
   (function () {
     var svg = document.querySelector('[data-anim=flow]'); if (!svg) return;
-    var stage = svg.parentElement, promo = stage.querySelector('.pic img'), near = stage.querySelector('.near');
+    var stage = svg.parentElement, promo = stage.querySelector('.promo3d img'), near = stage.querySelector('.near');
     var count = stage.querySelector('.users b'), pop = stage.querySelector('.plus');
     var NS = svg.namespaceURI, paths = [], dots = [], users = 0;
     // the briefs' "See my offer" buttons in promo.webp (x, y in %), and where the farmer stands in its clip

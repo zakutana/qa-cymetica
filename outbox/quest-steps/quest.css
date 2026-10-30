@@ -20,15 +20,14 @@ img, video, canvas { display: block; max-width: 100%; height: auto; }
 figure { margin: 0; }
 ul, ol { list-style: none; }
 
-/* ---- crystal glass: clear, glossy, a rim of light ("to musi byt takove kristalove sklo, ne ta tvoje zakalena plocha") */
-.crystal { position: relative; isolation: isolate;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .10) 0%, rgba(255, 255, 255, .025) 38%, rgba(255, 255, 255, 0) 60%, rgba(160, 240, 255, .05) 100%), rgba(6, 14, 24, .12);
-  backdrop-filter: blur(2px) saturate(1.9) brightness(1.16); -webkit-backdrop-filter: blur(2px) saturate(1.9) brightness(1.16);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(160, 240, 255, .28), inset 1px 0 0 rgba(255, 255, 255, .22), inset -1px 0 0 rgba(255, 255, 255, .1),
-    inset 0 0 34px rgba(170, 240, 255, .05), 0 30px 70px rgba(0, 0, 0, .5), 0 0 60px rgba(0, 207, 255, .08); }
+/* ---- crystal glass, polished clear ("musi byt uplne pruhledne jako bys ho vylestil"): nothing frosted, nothing tinted,
+   the dark seen through it as it is; only the light it catches: a bright edge, a thin rim of colour, two glints */
+.crystal { position: relative; isolation: isolate; background: transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(160, 240, 255, .35), inset 1px 0 0 rgba(255, 255, 255, .3), inset -1px 0 0 rgba(255, 255, 255, .14),
+    0 0 50px rgba(0, 207, 255, .1); }
 .crystal::before { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none;
-  background: radial-gradient(130% 75% at 15% -25%, rgba(255, 255, 255, .26), rgba(255, 255, 255, 0) 52%),
-    linear-gradient(108deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, .13) 44%, rgba(255, 255, 255, 0) 50%, rgba(255, 255, 255, 0) 64%, rgba(255, 255, 255, .07) 68%, rgba(255, 255, 255, 0) 72%); }
+  background: linear-gradient(108deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, .09) 44%, rgba(255, 255, 255, 0) 47%, rgba(255, 255, 255, 0) 66%, rgba(255, 255, 255, .05) 69%, rgba(255, 255, 255, 0) 71%),
+    linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, 0) 14%); }
 .crystal::after { content: ''; position: absolute; inset: 0; z-index: 0; border-radius: inherit; padding: 1.2px; pointer-events: none;
   background: linear-gradient(135deg, rgba(255, 255, 255, .95), rgba(0, 207, 255, .6) 24%, rgba(255, 255, 255, .1) 50%, rgba(0, 255, 136, .55) 76%, rgba(255, 255, 255, .75));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
@@ -41,10 +40,11 @@ main { position: relative; z-index: 2; }
 
 /* ---- the top bar: a sheet of crystal across the top; Capital Maximizer's brand, its tabs in a capsule of crystal
    with the step you are on lit, the prize in a pill */
+/* (a clear pane over the page: no frost; a dark that fades from its top edge keeps the rail readable over a heading
+   scrolling under it) */
 #bar { position: fixed; z-index: 10; left: 0; right: 0; top: 0; height: 80px; display: flex; align-items: center; gap: 32px; padding: 0 max(24px, 3vw);
-  background: linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .02) 55%, rgba(255, 255, 255, 0)), rgba(5, 9, 16, .42);
-  backdrop-filter: blur(3px) saturate(1.9) brightness(1.12); -webkit-backdrop-filter: blur(3px) saturate(1.9) brightness(1.12);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 14px 40px rgba(0, 0, 0, .45); }
+  background: linear-gradient(180deg, rgba(5, 7, 12, .95), rgba(5, 7, 12, .84));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 14px 40px rgba(0, 0, 0, .35); }
 #bar::before { content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(100deg, rgba(255, 255, 255, 0) 22%, rgba(255, 255, 255, .07) 28%, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, .05) 74%, rgba(255, 255, 255, 0) 78%); }
 #bar::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none;
@@ -60,7 +60,7 @@ main { position: relative; z-index: 2; }
 .brand .w b em { font-style: normal; color: var(--green); }
 .brand .w span { display: block; margin-top: 6px; font: 600 11px 'JetBrains Mono'; letter-spacing: .34em; color: var(--mute); }
 #rail { position: relative; margin: 0 auto; display: flex; align-items: center; gap: 4px; padding: 5px; border-radius: 15px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .01)), rgba(4, 8, 14, .35);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, 0) 40%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 -1px 0 rgba(0, 207, 255, .2), inset 0 0 0 1px rgba(255, 255, 255, .1), 0 6px 20px rgba(0, 0, 0, .35); }
 #rail a { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; padding: 9px 18px; border-radius: 11px; color: var(--mute); white-space: nowrap; cursor: pointer; transition: color .3s; }
 #rail a svg { width: 20px; height: 20px; flex: none; overflow: visible; }
@@ -97,15 +97,9 @@ h1 b { font-weight: 400; }
 /* ---- the first screen: the flyer's board on the left, the words and the five steps on the right, the sun above */
 #hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 150px 0 70px; overflow-x: clip; }
 .hero-in { position: relative; z-index: 2; width: min(1480px, calc(100% - 12vw)); margin: 0 auto; display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 5vw; align-items: center; }
-.hero-in h1 { font-size: clamp(38px, 3.2vw, 62px); line-height: 1.04; }
-/* the five steps, small, a list to read and not to click */
-.path { margin-top: 28px; display: grid; gap: 12px; counter-reset: none; }
-.path li { display: flex; align-items: baseline; gap: 14px; }
-.path .no { font: 800 14px 'JetBrains Mono'; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
-.path .t > b { font: 700 18px Inter, sans-serif; color: #ffffff; margin-right: 10px; }
-.path .t > span { font: 500 14px 'JetBrains Mono'; color: var(--mute); }
-.path .t span b { font: 800 14px 'JetBrains Mono'; color: var(--green); margin: 0; }
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); column-gap: 5vw; align-items: center; }
+/* the slogan alone ("jen bude proste hlavni slogan"), the start page's type */
+.hero-in h1 { font-size: clamp(38px, 3.1vw, 60px); line-height: 1.06; }
 /* the sun and five companies standing round it, bigger than before ("porad moc male") and quiet in colour ("nechapu
    proc jsou tak moc barevne"); .core is its visible disc */
 #sun { position: absolute; z-index: 1; left: calc(50% + 230px); top: 18px; width: 760px; height: 440px; pointer-events: none; isolation: isolate; }
@@ -165,9 +159,18 @@ h1 b { font-weight: 400; }
 .clip.xf video { transition: opacity .9s linear; }
 .clip.xf video.b { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; }
 
-/* step 1: the live builder's HQ, still ("nech jen ty headquarters"), its card where the page puts it, a hologram
-   that holds still; its canvas runs wider than the stage (record.py prints where: 0.05 % in, 125.95 % wide) */
-#s1 .pic { width: 116%; margin-left: -4%; }
+/* step 1: the live builder's HQ, still and bigger ("spis zvetsi napravo ty headquarters"), its card where the page
+   puts it, a hologram that holds still; its canvas runs wider than the stage (record.py: 0.05 % in, 125.95 % wide) */
+#s1 { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); column-gap: 3vw; }
+#s1 .pic { width: 112%; margin-left: -2%; }
+/* its nine agents, named ("jen dej kolik je tam agentu, vyjmenuj je a to staci") */
+.crewline { display: flex; align-items: baseline; gap: 12px; margin-top: 26px; }
+.crewline b { font: 400 46px/1 'Archivo Black', sans-serif; color: var(--green); text-shadow: 0 0 22px rgba(0, 255, 136, .55); }
+.crewline span { font: 700 16px 'JetBrains Mono'; letter-spacing: .06em; color: var(--text); }
+.roles { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; max-width: 30em; }
+.roles li { padding: 6px 11px; border-radius: 9px; font: 600 14px Inter, sans-serif; color: var(--dim);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 0 0 1px rgba(0, 207, 255, .3); }
+.roles li b { font-weight: 800; color: var(--green); }
 .crop { position: relative; aspect-ratio: 1888 / 1052; overflow: hidden; }
 .crop .clip { position: absolute; left: .05%; top: .1%; width: 125.95%; height: 99.81%; }
 .crop video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: fill; }
@@ -175,38 +178,24 @@ h1 b { font-weight: 400; }
 .ui img { width: 100%; opacity: .92;
   filter: drop-shadow(0 0 14px rgba(0, 207, 255, .45)) drop-shadow(0 0 2px rgba(150, 240, 255, .6)) brightness(1.06);
   -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 3px, rgba(0, 0, 0, .74) 3px 5px); mask-image: repeating-linear-gradient(180deg, #000 0 3px, rgba(0, 0, 0, .74) 3px 5px); }
-/* its departments with their agents ("spis tam zobraz ty oddeleni nejak huste, vyjmenuj i ty role agentu s obrazky") */
-.crew { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; margin-top: 54px; position: relative; z-index: 3; }
-.dept { position: relative; isolation: isolate; padding: 14px 16px 16px; border-radius: 22px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .015) 45%, rgba(160, 240, 255, .04)), rgba(6, 14, 24, .12);
-  backdrop-filter: blur(2px) saturate(1.8); -webkit-backdrop-filter: blur(2px) saturate(1.8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(255, 255, 255, .12), inset 0 -1px 0 rgba(0, 207, 255, .3), 0 24px 50px rgba(0, 0, 0, .45);
-  transition: transform .35s var(--ease), box-shadow .35s; }
-.dept::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
-  background: linear-gradient(112deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, .1) 46%, rgba(255, 255, 255, 0) 52%); }
-.dept:hover { transform: translateY(-4px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 0 0 1px rgba(0, 255, 136, .4), 0 28px 60px rgba(0, 0, 0, .5), 0 0 40px rgba(0, 255, 136, .14); }
-.dept .room img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; object-position: 50% 58%;
-  -webkit-mask-image: radial-gradient(75% 80% at 50% 50%, #000 55%, transparent 100%); mask-image: radial-gradient(75% 80% at 50% 50%, #000 55%, transparent 100%); }
-.dept .dt { margin-top: 4px; }
-.dept .dt b { display: block; font: 400 20px 'Archivo Black', sans-serif; color: #ffffff; }
-.dept .dt span { display: block; margin-top: 3px; font: 600 14px 'JetBrains Mono'; color: var(--green); }
-.dept .agents { display: flex; gap: 14px; margin-top: 12px; }
-.ag { display: flex; align-items: center; gap: 9px; }
-.ag .face { width: 46px; height: 46px; flex: none; border-radius: 50%; overflow: hidden; background: #0a1220;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .35), 0 0 0 2px rgba(0, 207, 255, .25), 0 0 16px rgba(0, 207, 255, .25); }
-.ag .face img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 14%; transform: scale(1.9); transform-origin: 50% 16%; }
-.ag i { font: 700 14px Inter, sans-serif; font-style: normal; color: var(--text); white-space: nowrap; }
-
-/* step 2: the ring of products already built, holograms over a projector of light */
-.ring { position: relative; margin-top: 24px; height: 320px; max-width: 640px; cursor: grab; touch-action: pan-y; user-select: none; }
+/* step 2: the words and beside them the ring; under both, the arms and the pipeline as one machine */
+.step.build { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+.step.build .txt { grid-column: 1; grid-row: 1; }
+.step.build .ring { grid-column: 2; grid-row: 1; }
+.step.build .stage { grid-column: 1 / -1; grid-row: 2; margin-top: 10px; }
+/* the ring of products already built: their live pages as holograms over a projector of light */
+.ring { position: relative; height: 390px; cursor: grab; touch-action: pan-y; user-select: none; }
 .ring.grab { cursor: grabbing; }
-.ring .items { position: absolute; left: 0; right: 0; top: 0; height: 200px; }
-.ring .it { position: absolute; left: 50%; top: 50%; width: 88px; height: 88px; will-change: transform, opacity; }
-.ring .mk { display: block; width: 100%; height: 100%; filter: drop-shadow(0 0 10px rgba(0, 207, 255, .55)) drop-shadow(0 0 2px rgba(200, 250, 255, .6));
-  -webkit-box-reflect: below 6px linear-gradient(transparent 62%, rgba(255, 255, 255, .22)); }
-.ring .mk svg, .ring .mk img { width: 100%; height: 100%; display: block; }
-.ring .it.front .mk { filter: drop-shadow(0 0 16px rgba(0, 255, 136, .6)) drop-shadow(0 0 3px rgba(220, 255, 245, .8)) brightness(1.12); }
-.ring .base { position: absolute; left: 2%; right: 2%; top: 172px; height: 84px; border-radius: 50%; pointer-events: none;
+.ring .items { position: absolute; left: 0; right: 0; top: 0; height: 270px; perspective: 900px; }
+.ring .it { position: absolute; left: 50%; top: 50%; width: 280px; height: 158px; will-change: transform, opacity; }
+.ring .mk { display: block; width: 100%; height: 100%; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 207, 255, .65), 0 0 26px rgba(0, 207, 255, .4);
+  -webkit-box-reflect: below 6px linear-gradient(transparent 64%, rgba(255, 255, 255, .2)); }
+.ring .mk img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: 50% 0; pointer-events: none; mix-blend-mode: screen;
+  filter: saturate(1.15) brightness(1.08) contrast(1.05);
+  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .72) 2px 4px); mask-image: repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .72) 2px 4px); }
+.ring .it.front .mk { box-shadow: 0 0 0 1px rgba(0, 255, 136, .85), 0 0 40px rgba(0, 255, 136, .45); }
+.ring .base { position: absolute; left: 4%; right: 4%; top: 236px; height: 84px; border-radius: 50%; pointer-events: none;
   background: radial-gradient(closest-side, rgba(0, 207, 255, .3), rgba(0, 255, 136, .08) 60%, rgba(0, 207, 255, 0));
   box-shadow: 0 0 0 1px rgba(0, 207, 255, .25) inset; }
 .ring .base::after { content: ''; position: absolute; left: 38%; right: 38%; bottom: 40%; height: 150px; transform: translateY(0);
@@ -216,9 +205,16 @@ h1 b { font-weight: 400; }
 .ring .plate span { display: block; margin-top: 4px; font: 700 14px 'JetBrains Mono'; letter-spacing: .12em; text-transform: uppercase; color: var(--cyan); }
 .ring .plate span span { display: inline; margin: 0; color: var(--green); letter-spacing: 0; }
 
-/* step 2: the workshop clip, and under it the Cymetica pipeline: the idea in, six chambers, your app out */
-.stage.work .pic { width: 100%; }
-.machine { grid-column: 1 / -1; order: 3; position: relative; z-index: 3; display: grid; grid-template-columns: 250px minmax(0, 1fr) 270px; align-items: center; gap: 22px; margin-top: 46px; }
+/* step 2: one machine ("idealne to nejak propojit tu animaci robotickych rukou s tou pipelinou"): the arms stand on the
+   pipeline, which runs under their pad; while the idea is inside it, a column of light rises from the pipeline into
+   the pad the arms build on, and what they finish comes out of its end */
+.stage.work .pic { width: 66%; margin: 0 auto; }
+.machine { position: relative; z-index: 3; display: grid; grid-template-columns: 250px minmax(0, 1fr) 280px; align-items: center; gap: 22px; margin-top: -8.5%; }
+.tube::after { content: ''; position: absolute; left: 50%; bottom: calc(100% - 2px); width: 220px; height: 210px; transform: translateX(-50%); pointer-events: none; opacity: 0;
+  background: linear-gradient(0deg, rgba(0, 255, 136, .32), rgba(0, 207, 255, .1) 55%, rgba(0, 207, 255, 0)); clip-path: polygon(38% 100%, 62% 100%, 100% 0, 0 0);
+  transition: opacity .5s; }
+.machine.sent .tube::after { opacity: 1; animation: rise 1.2s linear infinite; }
+@keyframes rise { 50% { filter: brightness(1.5); } }
 .machine .cap { display: block; margin-bottom: 8px; font: 800 13px 'JetBrains Mono'; letter-spacing: .22em; text-transform: uppercase; color: var(--cyan); }
 .inlet .say { min-height: 92px; padding: 14px 16px; border-radius: 16px; font: 600 16px/1.4 'JetBrains Mono'; color: #ffffff;
   background: linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .02)), rgba(6, 14, 24, .3);
@@ -289,8 +285,9 @@ h1 b { font-weight: 400; }
   background: linear-gradient(180deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .02)), rgba(6, 14, 24, .3);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), inset 0 0 0 1px rgba(0, 255, 136, .4); transition: opacity .45s var(--ease), transform .55s var(--ease), filter .45s, box-shadow .45s; }
 .machine.out .outlet .app { opacity: 1; transform: none; filter: none; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 0 0 1px rgba(0, 255, 136, .75), 0 0 46px rgba(0, 255, 136, .4); }
-.outlet .lg { width: 58px; height: 58px; flex: none; filter: drop-shadow(0 0 10px rgba(0, 255, 136, .5)); }
-.outlet .lg svg, .outlet .lg img { width: 100%; height: 100%; display: block; }
+.outlet .app { flex-direction: column; align-items: stretch; gap: 10px; }
+.outlet .lg { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 9px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0, 255, 136, .5), 0 0 18px rgba(0, 255, 136, .25); }
+.outlet .lg img { width: 100%; height: 100%; display: block; object-fit: cover; object-position: 50% 0; }
 .outlet .an b { display: block; font: 400 17px/1.15 'Archivo Black', sans-serif; color: #ffffff; }
 .outlet .an i { display: inline-block; margin-top: 6px; font: 800 12px 'JetBrains Mono'; font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: var(--green); }
 .outlet .an i::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); vertical-align: 1px; }
@@ -298,18 +295,23 @@ h1 b { font-weight: 400; }
 .machine.pop .outlet .burst { animation: burst .8s var(--ease) forwards; }
 @keyframes burst { 0% { transform: scale(.4); opacity: 1; } 100% { transform: scale(4.2); opacity: 0; } }
 
-/* step 3: the Quant Lab's reactor (outbox/quant-lab-v2), wide: the words over it, the reactor across the whole row */
-#s3 { grid-template-columns: minmax(0, 1fr); }
-#s3 .txt { max-width: 760px; }
-.stage.lab { margin-top: 30px; }
-.stage.lab .pic > .clip { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 90%, transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 8%, #000 90%, transparent 100%); }
+/* step 3: the Quant Lab's reactor (outbox/quant-lab-v2) beside its words, as it is, no hologram ("to nedelej
+   holograficky a dej to jen vedle toho napravo"); only its outermost edge softened into the page */
+.stage.lab .reactor .clip { border-radius: 14px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 2%, #000 98%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 2%, #000 98%, transparent 100%); }
 
-/* step 4: the Promo Market, the farmer's clip under it, users walking between them */
-.stage.duo .pic { width: 84%; }
-.stage.duo .pic:first-child > img { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 6%, #000 80%, transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 6%, #000 80%, transparent 100%); }
-.stage.duo .near { width: 62%; margin: -5% 0 0 auto; z-index: 2; }
+/* step 4: the Promo Market tilted far back as a hologram ("zesikma, jak je nas leaderboard, ale mnohem vic,
+   holograficky"), and beside it the Universe close with the Airdrop Farmer and the Gem Screener */
+#s4 { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); }
+.stage.duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); align-items: center; perspective: 1300px; }
+.promo3d { position: relative; z-index: 1; transform: rotateY(36deg) rotateX(7deg) rotateZ(-1.5deg) scale(1.08); transform-origin: 100% 50%; }
+.promo3d img { width: 100%; mix-blend-mode: screen; opacity: .9; filter: saturate(1.1) brightness(1.06) drop-shadow(0 0 22px rgba(0, 207, 255, .35));
+  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .7) 2px 4px), linear-gradient(90deg, transparent, #000 6%, #000 96%, transparent), linear-gradient(180deg, transparent, #000 5%, #000 88%, transparent);
+  mask-image: repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .7) 2px 4px), linear-gradient(90deg, transparent, #000 6%, #000 96%, transparent), linear-gradient(180deg, transparent, #000 5%, #000 88%, transparent);
+  -webkit-mask-composite: source-in, source-in; mask-composite: intersect; }
+.promo3d::after { content: ''; position: absolute; left: 4%; right: 4%; bottom: -8%; height: 18%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(0, 207, 255, .28), rgba(0, 207, 255, 0)); filter: blur(8px); }
+.stage.duo .near { position: relative; z-index: 2; margin-left: -6%; }
 .nm { position: absolute; z-index: 3; display: inline-flex; align-items: center; gap: 8px; transform: translate(-50%, -100%); padding: 5px 12px; border-radius: 7px;
   font: 800 16px 'JetBrains Mono'; letter-spacing: .1em; text-transform: uppercase; color: #ffffff; white-space: nowrap;
   background: rgba(5, 7, 12, .78); border: 1px solid rgba(0, 255, 136, .5); box-shadow: 0 0 18px rgba(0, 255, 136, .18); }
@@ -329,7 +331,7 @@ h1 b { font-weight: 400; }
 .stage.uni .pic { width: 104%; margin-left: -2%; }
 .stage.uni .sun { position: absolute; z-index: 2; left: 58.5%; top: 39.5%; width: 34%; transform: translate(-50%, -50%); pointer-events: none; }
 .stage.uni .sun img { width: 100%; }
-.climb { position: relative; z-index: 3; width: 96%; margin: -10% auto 0; padding: 14px; border-radius: 24px; height: calc(6 * 66px + 28px); }
+.climb { position: relative; z-index: 3; width: 96%; margin: -5% auto 0; padding: 14px; border-radius: 24px; height: calc(6 * 66px + 28px); }
 .row { position: absolute; left: 14px; right: 14px; top: 14px; height: 66px; display: grid; grid-template-columns: 42px 50px minmax(0, 1fr) 184px 158px; align-items: center; gap: 12px;
   padding: 0 18px; border-radius: 14px; transition: transform .7s var(--ease), background .4s, box-shadow .4s; }
 .row + .row::before { content: ''; position: absolute; left: 18px; right: 18px; top: 0; height: 1px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .14), rgba(255, 255, 255, 0)); }
@@ -355,46 +357,39 @@ h1 b { font-weight: 400; }
 .row.me .badge { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5), 0 0 0 2px var(--green), 0 0 18px rgba(0, 255, 136, .6); }
 .climb.won .row.me { box-shadow: inset 0 0 0 1px var(--green), 0 0 50px rgba(0, 255, 136, .45); }
 
-/* ---- the end: the only two links, two bars of cut crystal ("ne ze tam jebnes obdelnik a do toho napis") */
+/* ---- the end: the only two links, as the live start tutorial's two doors (cymetica.com/company/app/start, "udelej
+   je tak jak to mame v start tutorialu, ale vylepsi je"): each its picture drawn live by its engine (record.py doors),
+   on a sheet of clear crystal; better: bigger, the picture alive and lit from below, the call a lit bar with a sweep of
+   light across it, the whole door lifting towards you */
 .final { position: relative; padding: 120px 6vw 200px; }
-.final .calls { display: flex; flex-wrap: wrap; justify-content: center; gap: 44px; }
-.final::before { content: ''; position: absolute; left: 50%; top: 45%; width: 1200px; height: 460px; transform: translate(-50%, -50%); z-index: -1;
-  background: radial-gradient(closest-side, rgba(0, 255, 136, .14), rgba(0, 207, 255, .06) 55%, rgba(0, 207, 255, 0)); pointer-events: none; }
-.gem { --c1: #00ff88; --c2: #00cfff; position: relative; display: inline-flex; align-items: center; gap: 22px; height: 104px; padding: 0 76px;
-  clip-path: polygon(40px 0, calc(100% - 40px) 0, 100% 50%, calc(100% - 40px) 100%, 40px 100%, 0 50%);
-  background: linear-gradient(115deg, #ffffff 0%, var(--c1) 22%, rgba(0, 60, 40, .9) 48%, var(--c2) 74%, #ffffff 100%);
-  filter: drop-shadow(0 0 22px rgba(0, 255, 136, .38)) drop-shadow(0 24px 34px rgba(0, 0, 0, .55)); transition: transform .35s var(--ease), filter .35s; }
-.gem.alt { --c1: #00cfff; --c2: #3b82f6; filter: drop-shadow(0 0 22px rgba(0, 207, 255, .38)) drop-shadow(0 24px 34px rgba(0, 0, 0, .55)); }
-/* the crystal's faces, inside its rim: the top face lit, a crease across the middle, the bottom face dark and clear,
-   the two pointed ends a shade apart, all of it letting the dark through */
-.gem .face { position: absolute; inset: 2px; z-index: 0;
-  clip-path: polygon(39px 0, calc(100% - 39px) 0, 100% 50%, calc(100% - 39px) 100%, 39px 100%, 0 50%);
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, .16) 0, rgba(255, 255, 255, .04) 40px, rgba(255, 255, 255, 0) 41px, rgba(255, 255, 255, 0) calc(100% - 41px), rgba(0, 0, 0, .2) calc(100% - 40px), rgba(0, 0, 0, .1) 100%),
-    linear-gradient(180deg, rgba(230, 255, 248, .34) 0%, rgba(160, 255, 220, .12) 47%, rgba(0, 30, 24, .5) 50%, rgba(0, 255, 136, .05) 72%, rgba(0, 255, 136, .16) 100%),
-    rgba(3, 14, 12, .72);
-  backdrop-filter: blur(2px) saturate(1.8); -webkit-backdrop-filter: blur(2px) saturate(1.8); }
-.gem.alt .face { background:
-    linear-gradient(90deg, rgba(255, 255, 255, .16) 0, rgba(255, 255, 255, .04) 40px, rgba(255, 255, 255, 0) 41px, rgba(255, 255, 255, 0) calc(100% - 41px), rgba(0, 0, 0, .2) calc(100% - 40px), rgba(0, 0, 0, .1) 100%),
-    linear-gradient(180deg, rgba(230, 248, 255, .34) 0%, rgba(160, 225, 255, .12) 47%, rgba(0, 18, 34, .5) 50%, rgba(0, 207, 255, .05) 72%, rgba(0, 207, 255, .16) 100%),
-    rgba(3, 10, 20, .72); }
-.gem .t { position: relative; z-index: 1; font: 400 27px 'Archivo Black', sans-serif; letter-spacing: .07em; text-transform: uppercase; color: #f4fffb;
-  text-shadow: 0 0 18px rgba(0, 255, 136, .65), 0 2px 10px rgba(0, 0, 0, .7); }
-.gem.alt .t { color: #f2fbff; text-shadow: 0 0 18px rgba(0, 207, 255, .7), 0 2px 10px rgba(0, 0, 0, .7); }
-.gem .ar { position: relative; z-index: 1; font: 800 30px 'JetBrains Mono'; font-style: normal; color: var(--c1); text-shadow: 0 0 14px var(--c1); transition: transform .3s var(--ease); }
-/* a glint where the light catches its upper edge, and a sweep of light across it now and then */
-.gem .glint { position: absolute; z-index: 2; inset: 0; pointer-events: none;
-  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, .35) 47%, rgba(255, 255, 255, 0) 54%) -120% 0 / 60% 100% no-repeat;
-  animation: sweep 5.5s var(--ease) infinite; }
-.gem .glint::before { content: ''; position: absolute; left: 62px; top: 10px; width: 16px; height: 16px;
-  background: radial-gradient(closest-side, #ffffff, rgba(255, 255, 255, 0)); clip-path: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%);
-  animation: twinkle 2.6s ease-in-out infinite; }
-.gem.alt .glint { animation-delay: 2.2s; } .gem.alt .glint::before { animation-delay: 1.3s; }
-@keyframes sweep { 0%, 62% { background-position: -120% 0; } 100% { background-position: 260% 0; } }
-@keyframes twinkle { 0%, 100% { opacity: .2; transform: scale(.6) rotate(0); } 50% { opacity: 1; transform: scale(1.15) rotate(25deg); } }
-.gem:hover { transform: translateY(-4px); filter: drop-shadow(0 0 34px rgba(0, 255, 136, .6)) drop-shadow(0 28px 40px rgba(0, 0, 0, .6)); }
-.gem.alt:hover { filter: drop-shadow(0 0 34px rgba(0, 207, 255, .6)) drop-shadow(0 28px 40px rgba(0, 0, 0, .6)); }
-.gem:hover .ar { transform: translateX(7px); }
+.final::before { content: ''; position: absolute; left: 50%; top: 45%; width: 1200px; height: 520px; transform: translate(-50%, -50%); z-index: -1;
+  background: radial-gradient(closest-side, rgba(0, 255, 136, .12), rgba(0, 207, 255, .06) 55%, rgba(0, 207, 255, 0)); pointer-events: none; }
+.doors { display: grid; grid-template-columns: repeat(2, minmax(0, 560px)); justify-content: center; gap: 40px; perspective: 1600px; }
+.door { --cr: 0, 255, 136; display: flex; flex-direction: column; border-radius: 26px; transition: transform .45s var(--ease), box-shadow .45s; }
+.door.uv { --cr: 0, 207, 255; }
+.door.crystal { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1px rgba(var(--cr), .4), inset 0 -1px 0 rgba(var(--cr), .6), 0 0 60px rgba(var(--cr), .14); }
+.door.crystal:hover { transform: translateY(-8px) rotateX(3deg); box-shadow: inset 0 1px 0 #ffffff, inset 0 0 0 1px rgba(var(--cr), .8), 0 0 90px rgba(var(--cr), .3), 0 30px 60px rgba(0, 0, 0, .5); }
+.door .art { position: relative; display: block; margin: 12px 12px 0; border-radius: 18px; overflow: hidden; aspect-ratio: 604 / 466;
+  background: radial-gradient(70% 60% at 50% 70%, rgba(var(--cr), .16), rgba(var(--cr), 0) 70%); }
+.door .art .clip { position: absolute; inset: 0; }
+.door .art video { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
+.door:hover .art video { transform: scale(1.05); }
+.door .art::after { content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .14), inset 0 -40px 60px -30px rgba(var(--cr), .35); }
+.door .art .sun { position: absolute; left: 50%; top: 47%; width: 58%; transform: translate(-50%, -50%); pointer-events: none; }
+.door .art .sun img { width: 100%; }
+.door .cta { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 12px; margin: 14px; padding: 20px 16px; border-radius: 16px;
+  font: 400 22px 'Archivo Black', sans-serif; letter-spacing: .06em; text-transform: uppercase; transition: box-shadow .35s; }
+.door .cta svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s var(--ease); }
+.door:hover .cta svg { transform: translateX(6px); }
+.door.go .cta { color: #03140c; background: linear-gradient(180deg, #8dffc8, #00ff88 50%, #00e07a);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 0 0 1px rgba(0, 255, 136, .8), 0 12px 36px -6px rgba(0, 255, 136, .6); }
+.door.uv .cta { color: var(--cyan); background: linear-gradient(180deg, rgba(0, 207, 255, .14), rgba(0, 207, 255, .04));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(0, 207, 255, .6), 0 0 30px rgba(0, 207, 255, .18); text-shadow: 0 0 14px rgba(0, 207, 255, .6); }
+.door .cta::after { content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; pointer-events: none;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .55), rgba(255, 255, 255, 0)); transform: skewX(-18deg); animation: sweep 5s var(--ease) infinite; }
+.door.uv .cta::after { animation-delay: 2.5s; background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(160, 240, 255, .35), rgba(255, 255, 255, 0)); }
+@keyframes sweep { 0%, 64% { left: -40%; } 100% { left: 130%; } }
 
 /* ---- rising in */
 .rv { opacity: 0; transform: translateY(40px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
@@ -407,7 +402,6 @@ h1 b { font-weight: 400; }
   #rail a .lab { display: none; }
   #rail a .sh { display: inline; font: 600 16px Inter, sans-serif; }
   .pill { letter-spacing: .12em; }
-  .crew { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 /* ---- a phone: the bar is the mark and the rail, the words above every picture */
 @media (max-width: 900px) {
@@ -425,8 +419,7 @@ h1 b { font-weight: 400; }
   #sun .core { width: 128px; height: 128px; }
   #sun .co { width: 34px; height: 34px; } #sun .co.back { width: 26px; height: 26px; }
   .hero-in { width: calc(100% - 32px); display: flex; flex-direction: column-reverse; gap: 34px; }
-  .hero-in h1 { font-size: 34px; }
-  .path .t > b { font-size: 16px; display: block; } .path .t > span { font-size: 13px; }
+  .hero-in h1 { font-size: 32px; }
   .board-wrap { perspective: none; width: 100%; }
   .board { transform: none; padding: 20px 16px 14px; border-radius: 20px; }
   .gh { gap: 10px; } .gh b { font-size: 19px; letter-spacing: .04em; white-space: nowrap; } .gh .tg { font-size: 14px; letter-spacing: .12em; }
@@ -442,20 +435,20 @@ h1 b { font-weight: 400; }
   .kick { font-size: 14px; letter-spacing: .2em; }
   h2 { font-size: 32px; margin-top: 10px; }
   .sub { font-size: 15px; } .pts li { font-size: 14px; }
-  #s1 .pic, .stage.work .pic, .stage.uni .pic, .stage.duo .pic { width: 100%; margin-left: 0; }
+  #s1 .pic, .stage.work .pic, .stage.uni .pic { width: 100%; margin-left: 0; }
   .ui { width: 30%; }
-  .crew { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-top: 30px; }
-  .dept { padding: 10px; border-radius: 16px; }
-  .dept .dt b { font-size: 15px; } .dept .dt span { font-size: 12px; }
-  .dept .agents { flex-direction: column; gap: 6px; }
-  .ag .face { width: 32px; height: 32px; } .ag i { font-size: 12px; }
-  .ring { height: 240px; } .ring .items { height: 170px; } .ring .it { width: 70px; height: 70px; } .ring .base { top: 130px; height: 50px; }
+  .crewline b { font-size: 34px; } .crewline span { font-size: 14px; }
+  .roles li { font-size: 13px; padding: 5px 9px; }
+  .ring { height: 250px; margin-top: 20px; } .ring .items { height: 170px; } .ring .it { width: 150px; height: 85px; } .ring .base { top: 136px; height: 56px; }
   .machine { grid-template-columns: 1fr; gap: 14px; margin-top: 0; }
+  .tube::after { display: none; }
   .inlet::after, .outlet::before { display: none; }
   .chs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tube .track { display: none; }
   .ch b { font-size: 12px; }
-  .stage.duo .near { width: 90%; margin-top: 6%; }
+  .stage.duo { grid-template-columns: 1fr; }
+  .promo3d { transform: rotateY(24deg) rotateX(6deg) scale(.96); }
+  .stage.duo .near { width: 96%; margin: 4% 0 0 auto; }
   .nm { font-size: 12px; padding: 3px 8px; }
   .users { font-size: 14px; } .users b { font-size: 22px; }
   .plus { font-size: 14px; }
@@ -465,14 +458,11 @@ h1 b { font-weight: 400; }
   .row .rk { font-size: 18px; } .row .badge { width: 32px; height: 32px; } .row .nm { font-size: 14px; } .row .pp, .row .pp b { font-size: 13px; }
   .row .nm em { display: none; }
   .final { padding: 60px 16px 120px; }
-  .final .calls { flex-direction: column; align-items: stretch; gap: 22px; }
-  .gem { height: 78px; padding: 0 40px; justify-content: center; clip-path: polygon(26px 0, calc(100% - 26px) 0, 100% 50%, calc(100% - 26px) 100%, 26px 100%, 0 50%); }
-  .gem .face { clip-path: polygon(25px 0, calc(100% - 25px) 0, 100% 50%, calc(100% - 25px) 100%, 25px 100%, 0 50%); }
-  .gem .t { font-size: 18px; }
-  .gem .glint::before { left: 36px; }
+  .doors { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+  .door .cta { font-size: 17px; padding: 16px 12px; }
   .final::before { width: 100vw; }
 }
 @media (prefers-reduced-motion: reduce) {
   .rv { opacity: 1; transform: none; transition: none; }
-  .gem .glint, .gem .glint::before { animation: none; }
+  .door .cta::after { animation: none; }
 }

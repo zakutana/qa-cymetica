@@ -295,7 +295,29 @@ def farmer(b):
     page.close()
 
 
-SHOTS = {'sky': sky, 'sun': sun, 'stations': stations, 'builder': builder, 'promo': promo}
+# step 2's ring of products already built, each as a hologram of its live page ("nechci at to jsou ikonky ale screeny
+# z live aplikaci holograficky"): Build it Better's own list and previews (GET /api/v1/build-it-better/apps/leaderboard),
+# the most visited first, leaving out the platform's own pages
+BUILT_SKIP = {'/company', '/my-files', '/my-agents', '/nexus-panel', '/usage'}
+
+
+def apps(_b, n=13):
+    import json
+    import urllib.request
+    with urllib.request.urlopen('https://cymetica.com/api/v1/build-it-better/apps/leaderboard', timeout=30) as r:
+        data = json.load(r)
+    (OUT / 'apps').mkdir(exist_ok=True)
+    picked = [a for a in data['apps'] if a.get('preview_url') and a['path'] not in BUILT_SKIP][:n]
+    for a in picked:
+        slug = a['path'].strip('/').replace('/', '-')
+        with urllib.request.urlopen('https://cymetica.com' + a['preview_url'], timeout=30) as r:
+            img = Image.open(io.BytesIO(r.read())).convert('RGB')
+        img = img.resize((560, round(560 * img.height / img.width)), Image.LANCZOS)
+        img.save(OUT / 'apps' / f'{slug}.webp', quality=82, method=6)
+    print('apps: of', data['count'], 'built, in the ring:', json.dumps([[a['name'], a['path'].strip('/')] for a in picked]))
+
+
+SHOTS = {'sky': sky, 'sun': sun, 'stations': stations, 'builder': builder, 'promo': promo, 'apps': apps}
 
 
 def main(names):
