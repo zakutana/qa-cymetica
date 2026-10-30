@@ -23356,6 +23356,7 @@
 {"archive": "evidence-2026-10", "bytes": 4242, "call": "GET https://cymetica.com/api/v1/rst/deposit-intents?", "id": "673a7caa2f5831c9f79815e1a30b6ec9e66522b65ce30a8db17df8de66697774", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 565187, "call": "GET https://cymetica.com/gem-screener/app?view", "id": "673a829090f287d192ce3ba95743a56cb43d7cf2ae6593c3416b06f51013dca5", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 12818, "call": "GET https://data-api.binance.vision/api/v3/klines?interval,limit,startTime,symbol", "id": "673b9265d9d96c150561325ad8e78293945a36338d1ea308a6178599f11af8b1", "why": "row"}
+{"archive": "", "bytes": 533073, "call": "GET https://cymetica.com/api/v1/bounty/my-reports?wallet_address", "id": "673cfd83eff275d88a5caaac249835523c53fa0dfd6c7280e52cfafe0c0f8bbc", "why": "their-words"}
 {"archive": "evidence-2026-10", "bytes": 4908, "call": "POST https://cymetica.com/api/v1/event-cards/6d0b5308-c151-45a2-b4eb-d2f6c61fc4eb/buy?", "id": "673db8498aed760de62a539527c1a8994054a90b198d7e1c5d7b3e5062dba4ae", "why": "trade"}
 {"archive": "evidence-2026-10", "bytes": 9782, "call": "GET https://cymetica.com/api/v1/event-cards/3379eb72-7ce9-4a0d-ac33-f16985bcb571?", "id": "673fc72c1cfcdf7eb89b10c06611e5dc57c34773c48624346d40275ec08da1e0", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 4984, "call": "GET https://cymetica.com/api/v1/research-backtest/models?", "id": "674065ef884f19f517e01a79f8ef9f5e650f59ccdc1d1568055f6f3fce67453d", "why": "row"}

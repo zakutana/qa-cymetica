@@ -233,9 +233,11 @@
 
   // 1 BUILD: a setup is assembled (sim: model or combination + skills); then every setup lands in the grid
   function drawBuild(p) {
-    var n = M.setups.length, gx = W * 0.47, gy = 60, cols = M.mode === 'sim' ? 3 : 4, cw = (W - gx - 30) / cols, chh = Math.min(42, (H - 90) / Math.ceil(n / cols));
+    // narrow screens: the assembly on top, the grid under it, instead of side by side
+    var narrow = W < 1300, n = M.setups.length, gx = narrow ? 30 : W * 0.47, gy = narrow ? 150 : 60, cols = narrow ? 4 : M.mode === 'sim' ? 3 : 4,
+      cw = (W - gx - 30) / cols, chh = Math.min(42, (H - gy - 30) / Math.ceil(n / cols));
     if (M.mode === 'sim') {
-      var f = M.candidates[0].setup, b = baseOf(f), pa = ease(seg(p, 0, 0.42)), cx = W * 0.07, cy = H * 0.46;
+      var f = M.candidates[0].setup, b = baseOf(f), pa = ease(seg(p, 0, 0.42)), cx = W * (narrow ? 0.04 : 0.07), cy = narrow ? 80 : H * 0.46;
       var parts3 = [b[0] + ' ' + b[1]].concat(f.skills.map(function (k) { return SKILLS[k][0] + ' ' + SKILLS[k][1]; }));
       var from = [[-320, cy], [W * 0.5, -40], [W * 0.5, H + 40]], xs = cx;
       parts3.forEach(function (s, i) {
@@ -248,9 +250,11 @@
         once('snap', function () { burst(cx + 260, cy, C.green, 60, 8); shake = 10; });
         var gl = 1 - seg(p, 0.42, 0.62);
         rr(cx - 12, cy - 28, xs - cx + 6, 56, 14); ctx.strokeStyle = 'rgba(0, 255, 136, ' + (0.5 + 0.5 * gl) + ')'; ctx.lineWidth = 2; ctx.shadowColor = C.green; ctx.shadowBlur = 20 + 30 * gl; ctx.stroke(); ctx.shadowBlur = 0;
-        txt('= ONE SETUP', cx, cy + 58, '700 15px ' + MONO, C.green, 'left', 10);
+        txt('= ONE SETUP', narrow ? xs + 10 : cx, narrow ? cy : cy + 58, '700 15px ' + MONO, C.green, 'left', 10);
       }
-      txt('MODEL / COMBO + SKILLS', cx, 50, '700 14px ' + MONO, C.dim, 'left');
+      if (!narrow) txt('MODEL / COMBO + SKILLS', cx, 50, '700 14px ' + MONO, C.dim, 'left');
+    } else if (narrow) {
+      txt(n + ' RULES · NO SKILLS · NO COMBOS', 30, 80, '400 24px ' + BLACK, C.cyan, 'left', 14);
     } else {
       txt('TODAY', W * 0.07, 50, '700 14px ' + MONO, C.dim, 'left');
       bigCounter(n, 'RULES · 1 RULE = 1 SETUP', 'NO SKILLS · NO COMBOS', W * 0.07, H * 0.42, C.cyan);
@@ -264,7 +268,7 @@
       txt(setupText(s), x + 10, y + (chh - 8) / 2 + 1, '700 ' + (chh < 34 ? 12 : 13) + 'px ' + MONO, C.text, 'left');
       if (fresh) once('s' + i, function () { burst(x + cw / 2, y + chh / 2, C.cyan, 6, 3); });
     }
-    if (M.mode === 'sim') txt(n + ' SETUPS', W - 30, 32, '400 22px ' + BLACK, C.green, 'right', 12);
+    if (M.mode === 'sim') txt(n + ' SETUPS', W - 30, narrow ? 130 : 32, '400 22px ' + BLACK, C.green, 'right', 12);
   }
 
   // 2 BLAST: every setup x every market x every setting, replayed; the counter runs to what was tried
