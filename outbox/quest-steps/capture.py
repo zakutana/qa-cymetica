@@ -1,23 +1,19 @@
-"""The pictures for the Quest steps page, into pics/ (the page loads these).
+"""The still pictures for the Quest steps page, into pics/ (the page loads these; the clips and their posters are
+record.py's).
 
-Fourth take (the operator, 2026-10-30): five steps in his words, each with the pictures he named. Nowhere the second
-take's orbit with its companies: the one Universe picture is a near camera on two products.
+Fifth take (the operator, 2026-10-30).
 
-  step  file                what, and from where
-  01    office.webp         LIVE builder, its Start (step 2) at 1920 x 1080, the office in 3D (refused if it drew flat)
-        builder-card.webp   the same page's card as it stands, laid back over the office where the page puts it
-  02    tools.webp          our robot-arm workshop (scenes/tools.html at 60da77f5, the second take's), kept from git
-  03    agent.webp          the Hero Agent (Antigravity, outbox/quest/gen; agent-tall.webp for phones)
-        casino.webp         the Agent Casino's building as our Universe mock draws it (u3d.js adCasino), cut out
-  04    promo.webp          their Promo Market through our read-only mirror (outbox/promo-market-v3/live, ?v2), with
-                            three sample briefs: their market has none open today
-        farmer.webp         our Universe mock, near: the Airdrop Farmer, and the Gem Screener brought behind it
-  05    podium.webp         our Universe mock's leaderboard (?season0): the monthly ET10 board is not live yet
-        web-board.webp      the same leaderboard, its rows, as light
-        space.webp          the revenue-share flyer's deep space and sun, behind the first screen
+  where   file                what, and from where
+  top     space.webp          the flyer's nebula and stars (revenue-share-flyer/nebula.py) made sharp at 3840 x 2160
+          sun.webp            Cymetica's sun alone, from our Universe mock, its light as alpha
+          co-1..5.webp        five companies from our Universe mock, each alone and cut out, to float round the sun
+  01      builder-card.webp   the LIVE builder's Start card as it stands, laid over the office clip where the page puts it
+  03      agent.webp          the Hero Agent (Antigravity, outbox/quest/gen), drawn by step 3's Quant Lab (anim.js)
+  04      promo.webp          their Promo Market through our read-only mirror (outbox/promo-market-v3/live, ?v2), with
+                              three sample briefs: their market has none open today
 
     python outbox/quest-steps/capture.py                 # every one
-    python outbox/quest-steps/capture.py farmer casino   # some
+    python outbox/quest-steps/capture.py sun stations    # some
 
 Chrome with a real GPU (the office and the Universe are WebGPU), as outbox/quest/render.py does. Live pages are read
 anonymously (GET, no cookies, no key); the builder is typed into (a name) and never submitted; the mirror refuses
@@ -27,12 +23,12 @@ import functools
 import http.server
 import io
 import socket
-import subprocess
 import sys
 import threading
 import time
 from pathlib import Path
 
+import numpy as np
 from PIL import Image, ImageChops
 from playwright.sync_api import sync_playwright
 
@@ -90,40 +86,20 @@ def shot(page, clip, pad=0):
 
 
 def builder(b):
-    """the builder's Start (its step 2) as it stands at 1920 x 1080: the office in 3D, and its card, which the page
-    lays over the office at the place the live page puts it (quest.css .ui, from the numbers this prints)"""
+    """the builder's Start card as the live page draws it at 1920 x 1080, its own glass and rim kept, only the 3D behind
+    it gone; the page lays it over the office clip (record.py) at the place the live page puts it (quest.css .ui)"""
     page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=2)
     page.goto('https://cymetica.com/company/app/builder', wait_until='domcontentloaded', timeout=60000)
     time.sleep(12)
     page.fill('#f-name', 'Moonshot Labs')          # typed, never submitted: step 2 shows the office and its tour
     page.click('#b-next')
     time.sleep(12)
-    assert page.evaluate("() => document.getElementById('stage').classList.contains('is3d')"), 'the builder drew its flat office, not 3D'
-    # the office, its own 3D alone (the tour's "click here" bubble left out: a picture cannot be clicked)
-    tag = page.add_style_tag(content=ONLY_3D)
-    time.sleep(2)
-    img = Image.open(io.BytesIO(page.screenshot())).convert('RGB')
-    w, h = img.size                                   # the page's own rounded frame sits in the outer 1 %: cut it
-    x0, y0, x1, y1 = int(w * 0.012), int(h * 0.016), int(w * 0.988), int(h * 0.984)
-    save(img.crop((x0, y0, x1, y1)), 'office.webp', (2560, 1440))
-    tag.evaluate('t => t.remove()')
-    # the card as the page draws it, its own glass and rim kept; only the 3D behind it gone
     page.add_style_tag(content="""html, body, main, section.stage { background: transparent !important; }
       section.stage::before, section.stage::after { display: none !important; } canvas, .bz-call { visibility: hidden !important; }""")
     time.sleep(1)
     r = page.evaluate("() => { const r = document.querySelector('section.bz-card').getBoundingClientRect(); return { x: r.left, y: r.top, width: r.width, height: r.height }; }")
     save(shot(page, r, 2), 'builder-card.webp')
-    dpr = w / 1920
-    print('card in the office picture: left {:.2%} top {:.2%} width {:.2%}'.format(
-        (r['x'] - 2 - x0 / dpr) / ((x1 - x0) / dpr), (r['y'] - 2 - y0 / dpr) / ((y1 - y0) / dpr), (r['width'] + 4) / ((x1 - x0) / dpr)))
     page.close()
-
-
-def tools(_b):
-    """step 2's workshop: the robot arms building an app in light, our three.js scene of the second take
-    (scenes/tools.html at 60da77f5, rendered then), kept from git"""
-    data = subprocess.run(['git', '-C', str(HERE), 'show', '60da77f5:outbox/quest-steps/pics/tools.webp'], capture_output=True, check=True).stdout
-    save(Image.open(io.BytesIO(data)).convert('RGB'), 'tools.webp', quality=84)
 
 
 def promo(b):
@@ -174,47 +150,92 @@ def promo(b):
     srv.shutdown()
 
 
-def board(b):
-    base = serve(OUTBOX / 'company-live')
-    page = b.new_page(viewport={'width': 1600, 'height': 1000}, device_scale_factor=2)
-    page.goto(base + 'index.html?season0#universe', wait_until='domcontentloaded', timeout=60000)
-    time.sleep(16)
-    page.click('#uv-board [data-a="board-all"]')
-    time.sleep(2.5)
-    page.add_style_tag(content="""
-      html, body { background: transparent !important; }
-      body * { visibility: hidden !important; }
-      .modal-card.lbg, .modal-card.lbg * { visibility: visible !important; }
-      .modal-card.lbg .mh, .modal-card.lbg .mh * { visibility: hidden !important; }
-      .modal, .modal-card.lbg { background: transparent !important; box-shadow: none !important; border-color: transparent !important;
-        -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
-      .modal-card.lbg::before, .modal-card.lbg::after, .modal-card.lbg .uvb-sh { display: none !important; }
-    """)
-    time.sleep(1.2)
-    box = page.evaluate("""() => { const c = document.querySelector('.modal-card.lbg'), r = c.getBoundingClientRect();
-      const s = c.querySelector('.lb-pod').getBoundingClientRect();
-      const rows = [...c.querySelectorAll('.lb-r')].slice(0, 3), head = c.querySelector('.lb-head').getBoundingClientRect();
-      return { podium: { x: s.left - 30, y: s.top - 60, width: s.width + 60, height: s.height + 90 },
-               rows: { x: r.left, y: head.top - 10, width: r.width, height: rows[rows.length - 1].getBoundingClientRect().bottom - head.top + 18 } }; }""")
-    save(shot(page, box['podium']), 'podium.webp')
-    save(shot(page, box['rows']), 'web-board.webp')
+def sky(_b):
+    """the first screen's deep space, sharp ("ten vesmir ... ma spatne rozliseni ze je jeste rozmazany"): the flyer's
+    nebula and stars (revenue-share-flyer/nebula.py) made at 3840 x 2160, landscape, so a wide screen never stretches
+    it; the sun is not in it (sun.webp, its own layer, with the companies round it)"""
+    sys.path.insert(0, str(OUTBOX / 'revenue-share-flyer'))
+    import nebula
+    nebula.W, nebula.H = 3840, 2160
+    img = Image.fromarray(np.clip(nebula.make(7, 0.5), 0, 255).astype(np.uint8), 'RGB')
+    save(img, 'space.webp', quality=88)
+
+
+def sun(b):
+    """Cymetica's sun alone, from our Universe mock (its ball, glow and rays; no orbit, ring or station), on black: the
+    page screens it over the sky. Prints how wide its bright ball is, so the page can size the companies by it."""
+    sys.path.insert(0, str(OUTBOX / 'revenue-share-flyer'))
+    import render as flyer
+    page = universe(b, viewport={'width': 700, 'height': 700}, dsf=2)
+    page.add_style_tag(content=ONLY_3D)
+    for _ in range(3):
+        page.evaluate(flyer.CAMERA, [1.25, 170.0, 0.5, 0.5])
+        page.evaluate(flyer.ONLY_SUN)
+        time.sleep(3)
+    img = Image.open(io.BytesIO(page.screenshot())).convert('RGB')
+    page.close()
+    a = np.asarray(img, np.float32)
+    ground = np.median(np.concatenate([a[:40, :40].reshape(-1, 3), a[-40:, -40:].reshape(-1, 3)]), axis=0)
+    a = np.clip((a - ground) / (255 - ground) * 255, 0, 255)
+    lum = a.mean(axis=2)
+    ys, xs = np.nonzero(lum > 225)
+    print('sun: its bright ball is', round(float(np.percentile(xs, 98) - np.percentile(xs, 2)) / a.shape[1] * 100, 1), '% of the picture wide')
+    # light as alpha: its brightest channel is how much it covers, its colour that light undarkened, so it lays over the
+    # sky as light without a blend mode (main is its own stacking context: a screen blend there would see no sky)
+    alpha = a.max(axis=2, keepdims=True)
+    rgb = np.where(alpha > 0, a * 255 / np.maximum(alpha, 1), 0)
+    save(Image.fromarray(np.concatenate([rgb, alpha], axis=2).clip(0, 255).astype(np.uint8), 'RGBA'), 'sun.webp', quality=90)
+
+
+def stations(b):
+    """five companies from our Universe mock, each alone on black and cut out (u3d.js makeStation, five looks), for the
+    first screen: they float round the sun, none bigger than an eighth of it (quest.css #sun)"""
+    page = universe(b, viewport={'width': 600, 'height': 600}, dsf=1)
+    page.add_style_tag(content=ONLY_3D)
+    page.evaluate(HIDE_SKY)
+    ids = page.evaluate("""() => { const seen = new Set(), out = [];
+      for (const it of CO.uv.items) { if (it.kind || !it.plot || !it.c.skin || seen.has(it.c.skin)) continue; seen.add(it.c.skin); out.push(it.c.id); }
+      return out.slice(0, 5); }""")
+    for n, cid in enumerate(ids, 1):
+        page.evaluate("""([id, fixed]) => { const uv = CO.uv, it = uv.items.find(x => x.c.id === id), keep = new Set();
+          uv.items.forEach(x => { if (x.plot) x.plot.root.visible = x === it; });
+          for (let o = it.plot.root; o; o = o.parent) keep.add(o);
+          const hide = (g) => g.children.forEach(c => { if (c.isLight) return; if (keep.has(c)) { if (c !== it.plot.root) hide(c); } else c.visible = false; });
+          hide(uv.scene);
+          ['ring', 'pool', 'halo'].forEach(k => { if (it.plot[k]) it.plot[k].visible = false; });
+          it.orbit = null; uv.follow = null; uv.controls.autoRotate = false;
+          const p = it.plot.root.position, k = it.plot.k || 1, tgt = p.clone(); tgt.y += (it.plot.top + it.plot.bot) * 0.5 * k;
+          // the camera beside the station along its orbit, a little sunward and above: the sun out of the picture, to one
+          // side (straight behind the station it shows; between them its glow floods the lens)
+          const V = uv.camera.position.constructor, out = new V(p.x, 0, p.z).normalize(), along = new V(0, 1, 0).cross(out);
+          const dir = fixed ? new V(1, 0.5, 0.7).normalize() : along.multiplyScalar(0.85).addScaledVector(out, -0.35); dir.y = fixed ? dir.y : 0.55; dir.normalize();
+          uv.tween(tgt.clone().add(dir.multiplyScalar(Math.max(it.plot.top - it.plot.bot, it.plot.b.foot * 2) * k * 9.0)), tgt, 0); }""", [cid, n == 2])
+        time.sleep(2.5)
+        # only the station's own square of the screen: its body's box, projected
+        box = page.evaluate("""(id) => { const uv = CO.uv, it = uv.items.find(x => x.c.id === id), r = uv.el.getBoundingClientRect();
+          const V = uv.camera.position.constructor, bb = new (uv.camera.position.constructor)(), pts = [];
+          const body = it.plot.body || it.plot.root; body.updateWorldMatrix(true, true);
+          const lo = new V(Infinity, Infinity, Infinity), hi = new V(-Infinity, -Infinity, -Infinity);
+          body.traverse(o => { if (!o.isMesh || !o.visible || !o.geometry) return; o.geometry.computeBoundingBox(); const g = o.geometry.boundingBox;
+            for (const x of [g.min.x, g.max.x]) for (const y of [g.min.y, g.max.y]) for (const z of [g.min.z, g.max.z]) { const p = new V(x, y, z).applyMatrix4(o.matrixWorld); lo.min(p); hi.max(p); } });
+          for (const x of [lo.x, hi.x]) for (const y of [lo.y, hi.y]) for (const z of [lo.z, hi.z]) { bb.set(x, y, z).project(uv.camera); pts.push([r.left + (bb.x + 1) / 2 * r.width, r.top + (1 - bb.y) / 2 * r.height]); }
+          const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+          return { x: Math.max(r.left, Math.min(...xs)), y: Math.max(r.top, Math.min(...ys)), width: Math.min(r.right, Math.max(...xs)) - Math.max(r.left, Math.min(...xs)),
+                   height: Math.min(r.bottom, Math.max(...ys)) - Math.max(r.top, Math.min(...ys)) }; }""", cid)
+        img = shot(page, box, 6).convert('RGB')
+        save(cutout(img, lo=10, hi=50, edge=0.08), f'co-{n}.webp')
     page.close()
 
 
-def sky(_b):
-    # the revenue-share flyer's deep space, Cymetica's sun far off at the top: behind the opening, never flown into
-    save(Image.open(OUTBOX / 'revenue-share-flyer' / 'space-bg.jpg').convert('RGB'), 'space.webp', quality=82)
-
-
 def agent(_b):
+    # the Hero Agent (Antigravity, outbox/quest/gen): step 3's Quant Lab draws it out of a hologram scan (anim.js)
     save(Image.open(QUEST / 'gen' / 'lab-16x9.png').convert('RGB'), 'agent.webp', quality=82)
-    save(Image.open(QUEST / 'gen' / 'lab-9x16.png').convert('RGB'), 'agent-tall.webp', (1080, 1920), quality=80)
 
 
-def universe(b, query='?season0'):
+def universe(b, query='?season0', viewport=None, dsf=2):
     """our Universe mock (outbox/company-live) with its ads on, settled, its camera and items ours to move"""
     base = serve(OUTBOX / 'company-live')
-    page = b.new_page(viewport={'width': 1600, 'height': 1000}, device_scale_factor=2)
+    page = b.new_page(viewport=viewport or {'width': 1600, 'height': 1000}, device_scale_factor=dsf)
     page.goto(base + 'index.html' + query + '#universe', wait_until='domcontentloaded', timeout=60000)
     time.sleep(16)
     page.wait_for_function("() => window.CO && CO.uv && CO.uv.camera && CO.uv.items.some(it => it.c.id === 'ad-farmer')", timeout=30000)
@@ -227,41 +248,37 @@ HIDE_SKY = """() => { const uv = CO.uv;
     .forEach(k => { const v = uv[k]; [].concat(v || []).forEach(o => { if (o && o.isObject3D) o.visible = false; else if (o && o.mesh && o.mesh.isObject3D) o.mesh.visible = false; }); }); }"""
 
 
-def cutout(img, lo=6, hi=46):
-    """a thing drawn on black, the black made clear (softer than hologram: a 3D object keeps its dark sides)"""
+def cutout(img, lo=6, hi=46, edge=0.0):
+    """a thing drawn on black, the black made clear (softer than hologram: a 3D object keeps its dark sides); `edge`
+    fades the outer share of each side to clear too, for a haze of the map that reaches into the frame"""
     img = img.convert('RGBA')
     key = img.convert('RGB').convert('L').point(lambda v: 0 if v < lo else 255 if v > hi else (v - lo) * 255 // (hi - lo))
     img.putalpha(ImageChops.multiply(img.getchannel('A'), key))
+    if edge:
+        w, h = img.size
+        ex, ey = np.clip(np.minimum(np.arange(w), np.arange(w)[::-1]) / (w * edge), 0, 1), np.clip(np.minimum(np.arange(h), np.arange(h)[::-1]) / (h * edge), 0, 1)
+        img.putalpha(Image.fromarray((np.asarray(img.getchannel('A'), np.float32) * np.outer(ey, ex)).astype(np.uint8), 'L'))
     return img.crop(img.getchannel('A').point(lambda v: 255 if v > 8 else 0).getbbox())
 
 
-def casino_building(b):
-    """step 3, under the hero agent: the Agent Casino's building as the Universe draws it (u3d.js adCasino, the big
-    orbital chip), alone on black, then cut out. Nothing else of the map is drawn: no sky, no orbits, no station."""
-    page = universe(b)
-    page.add_style_tag(content=ONLY_3D)
-    page.evaluate(HIDE_SKY)
-    page.evaluate("""() => { const uv = CO.uv, it = uv.items.find(x => x.c.id === 'ad-casino'), keep = new Set();
-      for (let o = it.plot.root; o; o = o.parent) keep.add(o);
-      const hide = (g) => g.children.forEach(c => { if (c.isLight) return; if (keep.has(c)) { if (c !== it.plot.root) hide(c); } else c.visible = false; });
-      hide(uv.scene);
-      it.plot.ring.visible = false; it.plot.pool.visible = false; it.plot.halo.visible = false;
-      it.orbit = null; uv.follow = null; uv.controls.autoRotate = false;
-      const p = it.plot.root.position, k = it.plot.k, tgt = p.clone(); tgt.y += (it.plot.top + it.plot.bot) * 0.5 * k;
-      const dir = new uv.camera.position.constructor(1, 0.36, 0.55).normalize();
-      uv.tween(tgt.clone().add(dir.multiplyScalar((it.plot.top - it.plot.bot) * k * 3.1)), tgt, 0); }""")
-    time.sleep(3)
-    # only the building's own square of the screen (the map's sun, far off, can still reach into the frame)
-    box = page.evaluate("""() => { const uv = CO.uv, it = uv.items.find(x => x.c.id === 'ad-casino'), r = uv.el.getBoundingClientRect();
-      const B = new (uv.camera.position.constructor)(), pts = [], hit = it.plot.hit; hit.updateWorldMatrix(true, false);
-      for (const sx of [-0.5, 0.5]) for (const sy of [-0.5, 0.5]) for (const sz of [-0.5, 0.5]) {
-        B.set(sx, sy, sz).applyMatrix4(hit.matrixWorld).project(uv.camera);
-        pts.push([r.left + (B.x + 1) / 2 * r.width, r.top + (1 - B.y) / 2 * r.height]); }
-      const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
-      return { x: Math.min(...xs), y: Math.min(...ys), width: Math.max(...xs) - Math.min(...xs), height: Math.max(...ys) - Math.min(...ys) }; }""")
-    img = shot(page, box, 20).convert('RGB')
-    save(cutout(img), 'casino.webp')
-    page.close()
+# the farmer's composition: the other stations left out, the two frozen on their orbits, the gem brought behind the
+# farmer, a still camera (record.py films the same)
+FARMER_SHOT = """() => { const uv = CO.uv, V = uv.camera.position.constructor, up = new V(0, 1, 0);
+  const F = uv.items.find(x => x.c.id === 'ad-farmer'), G = uv.items.find(x => x.c.id === 'ad-gem');
+  uv.items.forEach(x => { if (x !== F && x !== G && x.plot) x.plot.root.visible = false; });
+  F.orbit = null; G.orbit = null; uv.follow = null; uv.controls.autoRotate = false;
+  const f = F.plot.root.position.clone(), k = F.plot.k, h = (F.plot.top - F.plot.bot) * k;
+  // looking along the farmer's orbit (its lanes sweep across the picture, the sun out of it), a little inwards;
+  // the farmer left of the middle, the gem far behind it on the right and a little higher
+  const out = new V(f.x, 0, f.z).normalize(), along = up.clone().cross(out).normalize();
+  const look = along.clone().addScaledVector(out, -0.22).normalize(), right = look.clone().cross(up).normalize();
+  const mid = f.clone(); mid.y += h * 0.5;
+  const aim = mid.clone().addScaledVector(right, h * 0.6);
+  const cam = aim.clone().addScaledVector(look, -h * 3.6); cam.y += h * 0.6;
+  const g = f.clone().addScaledVector(look, h * 8).addScaledVector(right, h * 3.5); g.y -= h * 1.8;
+  G.plot.root.position.copy(g);
+  [F, G].forEach(x => { x.anchor.set(x.plot.root.position.x, x.plot.root.position.y + (x.plot.top + 0.5) * (x.plot.k || 1), x.plot.root.position.z); if (x.el) x.el.classList.add('keep'); });
+  uv.tween(cam, aim, 0); }"""
 
 
 def farmer(b):
@@ -271,22 +288,7 @@ def farmer(b):
     other stations are left out; the camera is near, never the map's whole galaxy (the second take's orbit)."""
     page = universe(b)
     page.add_style_tag(content=ONLY_3D + " .b3.keep, .b3.keep * { visibility: visible !important; }")
-    page.evaluate("""() => { const uv = CO.uv, V = uv.camera.position.constructor, up = new V(0, 1, 0);
-      const F = uv.items.find(x => x.c.id === 'ad-farmer'), G = uv.items.find(x => x.c.id === 'ad-gem');
-      uv.items.forEach(x => { if (x !== F && x !== G && x.plot) x.plot.root.visible = false; });
-      F.orbit = null; G.orbit = null; uv.follow = null; uv.controls.autoRotate = false;
-      const f = F.plot.root.position.clone(), k = F.plot.k, h = (F.plot.top - F.plot.bot) * k;
-      // looking along the farmer's orbit (its lanes sweep across the picture, the sun out of it), a little inwards;
-      // the farmer left of the middle, the gem far behind it on the right and a little higher
-      const out = new V(f.x, 0, f.z).normalize(), along = up.clone().cross(out).normalize();
-      const look = along.clone().addScaledVector(out, -0.22).normalize(), right = look.clone().cross(up).normalize();
-      const mid = f.clone(); mid.y += h * 0.5;
-      const aim = mid.clone().addScaledVector(right, h * 0.6);
-      const cam = aim.clone().addScaledVector(look, -h * 3.6); cam.y += h * 0.6;
-      const g = f.clone().addScaledVector(look, h * 8).addScaledVector(right, h * 3.5); g.y -= h * 1.8;
-      G.plot.root.position.copy(g);
-      [F, G].forEach(x => { x.anchor.set(x.plot.root.position.x, x.plot.root.position.y + (x.plot.top + 0.5) * (x.plot.k || 1), x.plot.root.position.z); if (x.el) x.el.classList.add('keep'); });
-      uv.tween(cam, aim, 0); }""")
+    page.evaluate(FARMER_SHOT)
     time.sleep(3)
     print('farmer, gem on screen (-1..1):', page.evaluate("""() => ['ad-farmer', 'ad-gem'].map(id => { const it = CO.uv.items.find(x => x.c.id === id);
       const p = it.plot.root.position.clone(); p.y += (it.plot.top + it.plot.bot) * 0.5 * it.plot.k; p.project(CO.uv.camera);
@@ -297,8 +299,7 @@ def farmer(b):
     page.close()
 
 
-SHOTS = {'builder': builder, 'tools': tools, 'agent': agent, 'casino': casino_building, 'promo': promo, 'farmer': farmer,
-         'board': board, 'sky': sky}
+SHOTS = {'sky': sky, 'sun': sun, 'stations': stations, 'builder': builder, 'agent': agent, 'promo': promo}
 
 
 def main(names):
