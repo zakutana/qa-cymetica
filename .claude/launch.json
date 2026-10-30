@@ -54,6 +54,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8799", "--bind", "127.0.0.1", "--directory", "outbox/capital-maximizer"],
       "port": 8799
+    },
+    {
+      "name": "quant-lab-v2",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8801", "--bind", "127.0.0.1", "--directory", "outbox/quant-lab-v2"],
+      "port": 8801
     }
   ]
 }
