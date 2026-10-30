@@ -105,5 +105,5 @@ reports:
   228: "Event karty: táhneš kartu doleva a ukáže se razítko SELL, ale karta se jen přeskočí, nic se neprodá"
   229: "Event karty: 6 karet po uzávěrce z srpna a září pořád hlásí „live“ a jedna se dá dál koupit"
   230: "Quant Lab: výsledky hledání mají jméno modelu v úzkém sloupci, text se láme po písmenech a nejde přečíst"
-  231: "Quant Lab: denní hledání strategií spadlo 3 dny po sobě (28.–30. 10.) dřív, než spustilo jediný backtest; naposled doběhlo 27. 10."
+  231: "Quant Lab: denní hledání strategií spadlo 3 dny po sobě (28.–30. 10.) hned na startu; naposled doběhlo 27. 10."
   232: "Quant Lab: spadlé hledání ukáže majiteli surovou chybu databáze i se zněním dotazu a jmény tabulky a sloupců"
