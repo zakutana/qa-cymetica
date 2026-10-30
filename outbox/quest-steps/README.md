@@ -4,7 +4,7 @@ Asked for by the operator on 2026-10-29: a new page for the Cymetica Quest, expl
 quest, win up to 500,000 ET10 every month), then how. It stands beside `outbox/quest` (the scroll film, still on the 5 %
 revenue share), which is unchanged.
 
-## Eight takes
+## Nine takes
 
 1. **a1cb3cf5, 7/10**: real screenshots, each in a glass browser frame. "Nedavej to do panelu ... at to splyva."
 2. **60da77f5, 4/10**: everything full screen, a flight in to the sun, the orbit with its companies. "Predchozi verze
@@ -15,27 +15,36 @@ revenue share), which is unchanged.
 6. **000eb3e8, 7.5/10**: glass, icons on tiles, the station dive into step 1, steps 2 and 3 on one screen with a slider.
 7. **e4cbe7a5**: crystal glass, the HQ with its departments, the pipeline as a machine, the ring of marks, the
    Quant Lab's reactor, 18 companies in the Universe.
-8. **This one** (2026-10-30), after the seventh:
-   - **The glass polished clear** ("musi byt uplne pruhledne jako bys ho vylestil"): no fill and no blur anywhere,
-     only rims and a glint. The top bar keeps a light dark tint, as in the seventh take.
-   - **The first screen is only its slogan** beside the prize board: join the quest, earn points, climb the
-     leaderboard, earn up to 500,000 ET10 monthly. The 1 to 5 list is gone.
-   - **Step 1:** the HQ larger on the right; under the heading only the nine agents, led by NEXUS, named by role.
-     The department cards are gone.
-   - **Step 2:** the arms and the Cymetica pipeline are one machine: the pipeline runs under the arms' pad, a column
-     of light rises from it while the idea is inside, and the app comes out at its end. The ring above shows the built
-     products' live pages as holograms, not marks.
-   - **Step 3:** the reactor stands beside its words, not a hologram, nothing over it.
-   - **Step 4:** the Promo Market tilted far back as a hologram on the left, the Universe with the Airdrop Farmer and
-     the Gem Screener beside it, the words on the right.
-   - **The two calls at the end** are the start tutorial's two cards (its live room and its live Universe on top, the
-     button below), in crystal glass, each scene moving.
+8. **5f837999**: the glass polished clear, the first screen only its slogan, the HQ larger with its nine agents named,
+   the arms and the pipeline one machine, the ring of live pages, the reactor beside its words, the Promo Market
+   tilted far back, the start tutorial's two cards at the end.
+9. **This one** (2026-10-30), after the eighth ("na takovych detailech zalezi"):
+   - **The sky's stars glow** (capture.py sky): thousands with a soft glow, dozens bright with a halo, a dozen with
+     spikes, over the flyer's nebula; no more "trapne tecky".
+   - **The sun and the companies round it are the live start tutorial's own scene** (capture.py hero: six stations on
+     two orbits in its perspective), screened onto the sky where the sun stands; the slogan stands under the orbits.
+   - **The top bar floats**: a sheet of crystal off the top edge, the quest's path across it as Capital Maximizer's
+     rail, hexagons joined by lines that light as far as you have come; the faintest tint, no band.
+   - **The step numbers** are faint again (the first take's stroke) and stand above the words, so a heading crosses
+     only their foot.
+   - **Step 1:** the HQ alone, close, as his own screenshot framed it (record.py office, the camera at 0.72); the Start
+     card gone; the nine agents named in one quiet line, no chips.
+   - **Step 2:** the ring lower, beside the words; the step on one screen; the workshop clip preloaded whole, asked to
+     play again a second after it comes on screen, its poster behind it (the one thing not reproduced: in his browser
+     the clip did not start).
+   - **Step 3:** the Quant Lab's page whole, heading, tiles and reactor; its first four stages in 5 s on a bent clock
+     (record.py LAB_WARP), then the agent found at the reactor's own pace.
+   - **Step 5:** the LIVE Universe, big, its sky, sun, six companies and four products; the leaderboard smaller, over
+     its foot.
+   - **The two doors** are smaller (420 px).
+   - **serve.py** serves the page on 8800 with Range requests; the stock server answered every seek with the whole file.
 
 ## Open it
 
-The `quest-steps` entry in `.claude/launch.json` (http://127.0.0.1:8800/). Wide first (2000 px), works on a phone.
-The clips are not in git: `python outbox/quest-steps/record.py` makes them into `clips/` (~55 MB). Without them each
-clip shows its poster. The lab clip needs `outbox/quant-lab-v2` served on 8801.
+The `quest-steps` entry in `.claude/launch.json` (`python outbox/quest-steps/serve.py 8800`, http://127.0.0.1:8800/).
+Wide first (2000 px); the phone is not looked at this round ("na phone zatim kasli"). The clips are not in git:
+`python outbox/quest-steps/record.py` makes them into `clips/` (~65 MB). Without them each clip shows its poster. The
+lab clip serves `outbox/quant-lab-v2` itself; the office, the Universe and the doors read live pages.
 
 ## What is here
 
@@ -45,7 +54,8 @@ clip shows its poster. The lab clip needs `outbox/quant-lab-v2` served on 8801.
 | `anim.js` | everything that moves: the clips' loops, the pipeline, the ring of products, the users, the leaderboard |
 | `record.py` | the seven clips into `clips/` and their posters into `pics/` (its docstring says how and from where) |
 | `scenes/tools.html` | the robot-arm workshop (three.js), a 10 s loop drawn frame by frame by record.py |
-| `capture.py` | the still pictures into `pics/`: the sky, the sun, the five companies, the builder's card, the Promo Market, the built products' live pages (`pics/apps/`) |
+| `capture.py` | the still pictures into `pics/`: the sky, the sun with its companies (`hero.webp`), the Promo Market, the built products' live pages (`pics/apps/`) |
+| `serve.py` | the page on 8800 with Range requests, for the clips' seeks |
 
 `pics/board/` holds copies of our Universe mock's station renders (`outbox/company-live/shots`).
 
@@ -56,13 +66,15 @@ goes to him.
 
 | Step | What | From |
 |---|---|---|
-| top | the sun and five companies | our Universe mock, each cut out |
+| top | the sky | ours (capture.py sky) |
+| top | the sun and the companies round it | LIVE cymetica.com/company/app/start, its own scene, cut round the sun |
 | 01 | the HQ, astronauts at work | LIVE cymetica.com/company/app/builder, recorded; the nine agents and their roles are the live builder's pre-build (builder.js PRE) |
 | 02 | the workshop and the pipeline | our three.js scene and anim.js; the ideas map to real Build it Better products |
 | 02 | the ring of products | LIVE: each product's own page, captured (capture.py apps) |
-| 03 | the Quant Lab's reactor | outbox/quant-lab-v2's Coming soon mode, filmed: a simulation, and it says so on screen |
+| 03 | the Quant Lab's page | outbox/quant-lab-v2's Coming soon mode, filmed on a bent clock: a simulation, and it says so on screen |
 | 04 | the Promo Market and the Airdrop Farmer | their page through our read-only mirror with three sample briefs; our Universe mock, composed |
-| 05 | the Universe and the leaderboard | our Universe mock with 18 of its sample companies (the live one has six); the leaderboard's names and points are samples (QUEST.board) |
+| 05 | the Universe | LIVE cymetica.com/company/app#universe, recorded: its six companies and four products today |
+| 05 | the leaderboard | samples (QUEST.board), with our mock's stations as marks |
 | end | the two cards | LIVE cymetica.com/company/app/start, its room and its Universe, recorded; our sun over the Universe, as their poster shows none |
 
 ## Decided here, the veto open
@@ -71,8 +83,12 @@ goes to him.
   points" are its 4th and 5th, now that the agent has its own step.
 - **The nine agents** are named by role (Developer, Lab scientist, Trader, QA tester, Auditor, Supervisor, three
   Researchers), as the pre-build has them; NEXUS leads them and is said in the line above.
-- **The companies by the sun** are about a quarter of its disc. That is over his earlier eighth, because he said they
-  were still too small.
+- **The companies by the sun** are their own start page's, at its sizes, since "realistic" is what that page is.
+- **Step 5 is the live Universe**, six companies today; the seventh take's eighteen were our mock's samples
+  (record.py universe-mock still makes that clip). His words this round were about the sky, and the live sky is the
+  one he called better.
+- **The Quant Lab's clock** runs 3.3 times faster through its first four stages so the agent is found at the fifth
+  second, then at its own pace; nothing in the lab's page was changed.
 - **The clips** stay out of git. Their posters are kept.
 
 ## The contest

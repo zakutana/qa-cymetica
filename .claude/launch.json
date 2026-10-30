@@ -40,7 +40,7 @@
     {
       "name": "quest-steps",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8800", "--bind", "127.0.0.1", "--directory", "outbox/quest-steps"],
+      "runtimeArgs": ["outbox/quest-steps/serve.py", "8800"],
       "port": 8800
     },
     {

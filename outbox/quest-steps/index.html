@@ -10,12 +10,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="quest.css">
-<!-- The Cymetica Quest, step by step (the operator, 2026-10-29). Eighth take (2026-10-30): the glass polished clear
-     ("musi byt uplne pruhledne jako bys ho vylestil"); the first screen only its slogan; step 1 a bigger HQ and its nine
-     agents named; step 2 the arms and the Cymetica pipeline one machine, beside a ring of the built products' live
-     pages as holograms; step 3 the Quant Lab's reactor beside its words; step 4 the Promo Market tilted far back as a
-     hologram, the Universe beside it; the two calls as the start tutorial's, better. The clips are record.py's, the
-     pictures capture.py's; every figure is QUEST's in quest.js, every animation anim.js's. -->
+<!-- The Cymetica Quest, step by step (the operator, 2026-10-29). Ninth take (2026-10-30): a sky whose stars glow; the
+     sun and the companies round it as the live start tutorial draws them ("ma to vypadat realisticky"); the bar a
+     floating sheet of crystal with the quest's path across it; the step numbers faint, above the words; step 1 the HQ
+     alone, close, its nine agents named in a line; step 2 the ring lower and its clip made to start; step 3 the whole
+     Quant Lab, the agent found by the fifth second; step 5 the live Universe, big; the two doors smaller. The clips
+     are record.py's, the pictures capture.py's; every figure is QUEST's in quest.js, every animation anim.js's. -->
 </head>
 <body>
 <div id="sky" aria-hidden="true"></div>
@@ -30,10 +30,7 @@
 
 <main>
   <section id="hero" data-step="0">
-    <div id="sun" aria-hidden="true">
-      <div class="ball"><img src="pics/sun.webp" alt="" width="1400" height="1400"><span class="core"></span></div>
-      <span class="co"><img src="pics/co-1.webp" alt=""></span><span class="co"><img src="pics/co-2.webp" alt=""></span><span class="co"><img src="pics/co-3.webp" alt=""></span><span class="co"><img src="pics/co-4.webp" alt=""></span><span class="co"><img src="pics/co-5.webp" alt=""></span>
-    </div>
+    <div id="sun" aria-hidden="true"><img src="pics/hero.webp" alt="" width="2160" height="1840"></div>
     <div class="hero-in">
       <div class="board-wrap">
         <div class="board crystal" aria-label="This month's prizes">
@@ -54,13 +51,12 @@
       <div class="kick">Step 01</div>
       <div class="copy"><h2>Start an<br><span class="g">AI-native company.</span></h2></div>
       <p class="sub"><b>Your HQ in the Universe.</b> You approve what goes out.</p>
-      <div class="crewline"><b data-figure="hq.agents"></b><span>AI agents, led by NEXUS</span></div>
-      <ul class="roles"><li>Developer</li><li>Lab scientist</li><li>Trader</li><li>QA tester</li><li>Auditor</li><li>Supervisor</li><li><b data-figure="hq.researchers"></b> &times; Researcher</li></ul>
+      <p class="crew"><b data-figure="hq.agents"></b><span>AI agents, led by NEXUS</span></p>
+      <p class="names">Developer<i>&middot;</i>Lab scientist<i>&middot;</i>Trader<i>&middot;</i>QA tester<i>&middot;</i>Auditor<i>&middot;</i>Supervisor<i>&middot;</i><b data-figure="hq.researchers"></b>&thinsp;&times;&thinsp;Researcher</p>
     </div>
     <div class="stage rv">
       <figure class="pic office">
         <div class="crop"><div class="clip xf" data-anim="office" data-loop-from="4.5"><video muted playsinline preload="auto" poster="pics/office.webp" width="1783" height="787"><source src="clips/office.webm" type="video/webm"></video></div></div>
-        <figure class="ui"><img src="pics/builder-card.webp" alt="Start: New, or the Cymetica pre-build of 7 rooms, 4 departments and 9 agents" width="904" height="1068"></figure>
       </figure>
     </div>
   </section>
@@ -77,7 +73,7 @@
       <div class="plate"><b></b><span><span data-figure="apps"></span> apps already built &middot; drag</span></div>
     </div>
     <div class="stage work rv">
-      <figure class="pic"><div class="clip" data-anim="workshop"><video muted playsinline loop preload="metadata" poster="pics/workshop.webp" width="1440" height="810"><source src="clips/workshop.webm" type="video/webm"></video></div></figure>
+      <figure class="pic"><div class="clip" data-anim="workshop"><video muted playsinline loop preload="auto" poster="pics/workshop.webp" width="1440" height="810"><source src="clips/workshop.webm" type="video/webm"></video></div></figure>
       <div class="machine" data-anim="pipeline" aria-label="The Cymetica pipeline: your idea in, your app out"></div>
     </div>
   </section>
@@ -94,7 +90,7 @@
       </ul>
     </div>
     <div class="stage lab rv">
-      <figure class="reactor"><div class="clip xf" data-anim="lab"><video muted playsinline preload="metadata" poster="pics/lab.webp" width="1044" height="430"><source src="clips/lab.webm" type="video/webm"></video></div></figure>
+      <figure class="reactor"><div class="clip xf" data-anim="lab"><video muted playsinline preload="metadata" poster="pics/lab.webp" width="1356" height="774"><source src="clips/lab.webm" type="video/webm"></video></div></figure>
     </div>
   </section>
 
@@ -127,8 +123,7 @@
       <p class="sub"><b>Compete with other companies in the Universe</b> to secure your top <span data-figure="slots"></span> slot on the leaderboard.</p>
     </div>
     <div class="stage uni rv">
-      <figure class="pic"><div class="clip xf" data-anim="universe"><video muted playsinline preload="metadata" poster="pics/universe.webp" width="1408" height="708"><source src="clips/universe.webm" type="video/webm"></video></div>
-        <span class="sun" aria-hidden="true"><img src="pics/sun.webp" alt=""></span></figure>
+      <figure class="pic"><div class="clip xf" data-anim="universe"><video muted playsinline preload="metadata" poster="pics/universe.webp" width="1878" height="1011"><source src="clips/universe.webm" type="video/webm"></video></div></figure>
       <div class="climb crystal" data-anim="climb" aria-label="The leaderboard: your company climbs to the top"></div>
     </div>
   </section>

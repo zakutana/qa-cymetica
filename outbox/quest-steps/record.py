@@ -84,7 +84,9 @@ def poster(page, sel, name):
 
 
 def office(b, seconds=16):
-    """the live builder's Start in 3D at 1920 x 1080 (its card's place), drawn at 1440 x 810, its astronauts walking"""
+    """the live builder's Start in 3D at 1920 x 1080, drawn at 0.75 of it, its astronauts walking; ninth take: the camera
+    closer, so the HQ fills the picture as his own screenshot of it does ("zobrazil jen ty headquarters ... v takovem
+    zaberu jak posilam"), and the HQ's box in the frame printed, for the page's crop (quest.css #s1 .crop)"""
     page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=0.75)
     page.goto('https://cymetica.com/company/app/builder', wait_until='domcontentloaded', timeout=60000)
     time.sleep(12)
@@ -100,15 +102,24 @@ def office(b, seconds=16):
       const f = (v, d) => +(v / d * 100).toFixed(2);
       return { left: f(c.left - s.left, s.width), top: f(c.top - s.top, s.height), width: f(c.width, s.width), height: f(c.height, s.height),
                card: [f(k.left - s.left, s.width), f(k.top - s.top, s.height), f(k.width, s.width)] }; }"""))
-    # the camera in, as far as the whole company still shows (0.85 of the way: at 0.8 its rooms touch the stage's edges,
-    # which the page fades), and still from then on, its astronauts at work; the page plays only the still part
+    # the camera in to 0.72 of the way (at 0.8 its rooms touched the builder's stage; the canvas is wider than that
+    # stage, and the page crops to the HQ), then still, its astronauts at work; the page plays only the still part
     # ("kasli na tu animaci zoomu"), from data-loop-from, so the poster is a frame of that part
     page.evaluate("""() => { const o = CO.builder.office;
       const p0 = o.camera.position.clone(), t0 = o.controls.target.clone();
-      o.tween(t0.clone().add(p0.clone().sub(t0).multiplyScalar(0.85)), t0, 3500); }""")
+      o.tween(t0.clone().add(p0.clone().sub(t0).multiplyScalar(0.72)), t0, 3500); }""")
     record(page, sel, seconds, 'office')
     page.close()
     frame_poster('office', 5.0)
+    # the HQ's box in the frame: what is lit after the stars are smoothed away (its plate, rooms and the rock under it)
+    import numpy as np
+    from PIL import ImageFilter
+    im = Image.open(capture.OUT / 'office.webp').convert('L').filter(ImageFilter.MedianFilter(9))
+    a = np.asarray(im, np.float32)
+    ys, xs = np.nonzero(a > 46)
+    f = lambda v, d: round(float(v) / d * 100, 2)
+    print('office: the HQ in the frame (left, top, width, height, % of the frame):',
+          f(xs.min(), a.shape[1]), f(ys.min(), a.shape[0]), f(xs.max() - xs.min(), a.shape[1]), f(ys.max() - ys.min(), a.shape[0]))
 
 
 def frame_poster(name, at):
@@ -120,36 +131,48 @@ def frame_poster(name, at):
     Path(tmp).unlink()
 
 
+# the Quant Lab's clock run faster: its first four stages (BUILD to THE BAR, 16.6 s of its time, ql.js BASE) in FAST
+# real seconds, then FOUND at its own pace ("nacasovat animaci ze uz po 5 sekundach se zrodi hero agent"). Its reactor
+# reads performance.now(), so that is what is bent, from the moment __warp is set
+LAB_FAST, LAB_FOUND = 5.0, 7.0
+LAB_WARP = """(() => { const real = performance.now.bind(performance), K = 16.6 / %f, A = %f * 1000;
+  window.__warp = null;
+  performance.now = () => { const r = real(); if (window.__warp == null) return r; const e = r - window.__warp; return window.__warp + (e < A ? e * K : A * K + (e - A)); }; })()""" % (LAB_FAST, LAB_FAST)
+
+
 def lab(b):
-    """step 3: the Quant Lab's reactor in its Coming soon mode (outbox/quant-lab-v2, another session's page, served on
-    8801 and read only): one whole loop of its five stages, BUILD to FOUND, so the clip loops into itself. It draws
+    """step 3: the Quant Lab's page in its Coming soon mode (outbox/quant-lab-v2, another session's page, served here
+    and read only), whole from its heading to its reactor ("zobrazit celkove tu stranku i s tim nadpisem quant lab"):
+    its stages BUILD to THE BAR in 5 s, then FOUND, the agent born, at its own 7 s; the clip then loops. It draws
     CoinGecko's coin logos into its canvas, which taints it, and a tainted canvas's own stream stops: so the window is
-    filmed instead (Playwright's video), and cut to the reactor by ffmpeg"""
+    filmed instead (Playwright's video) and cut by ffmpeg"""
     import shutil
-    # a window of 1100 so the reactor is less wide than tall-ish (it stands beside its words now: "dej to jen vedle
-    # toho napravo"), and its stage rail with it (BUILD, BLAST, BLIND, THE BAR, FOUND)
-    vw, vh, total = 1100, 1000, 23.6            # its five stages, 3.2 + 4.4 + 3.4 + 5.6 + 7.0 s (ql.js STAGES)
+    vw, vh, total = 1400, 1100, LAB_FAST + LAB_FOUND   # 1400 wide: its six score tiles stay one row
     tmpdir = Path(tempfile.mkdtemp())
     ctx = b.new_context(viewport={'width': vw, 'height': vh}, device_scale_factor=1, record_video_dir=str(tmpdir), record_video_size={'width': vw, 'height': vh})
     t0 = time.time()
     page = ctx.new_page()
-    page.goto('http://127.0.0.1:8801/?mode=sim', wait_until='load', timeout=60000)
+    page.add_init_script(LAB_WARP)
+    page.goto(capture.serve(capture.OUTBOX / 'quant-lab-v2') + '?mode=sim', wait_until='load', timeout=60000)
     page.wait_for_function("() => document.fonts.status === 'loaded' && document.querySelector('#rx').width > 0", timeout=60000)
-    page.evaluate("() => document.querySelector('.q2-reactor').scrollIntoView({ block: 'center' })")
+    page.evaluate("() => document.querySelector('.q2-hero').scrollIntoView({ block: 'start' })")
+    page.evaluate("() => window.scrollBy(0, -14)")
     time.sleep(3)
-    r = page.evaluate("() => { const r = document.querySelector('.q2-reactor').getBoundingClientRect(); return [r.left, r.top, r.width, r.height].map(Math.round); }")
-    page.click('#rail [data-st="0"]')           # from the top: BUILD
+    r = page.evaluate("""() => { const a = document.querySelector('.q2-hero').getBoundingClientRect(), b = document.querySelector('.q2-reactor').getBoundingClientRect();
+      return [Math.min(a.left, b.left) - 6, a.top - 10, Math.max(a.right, b.right) - Math.min(a.left, b.left) + 12, b.bottom - a.top + 12].map(Math.round); }""")
+    page.evaluate('() => { window.__warp = performance.now(); }')
+    page.click('#rail [data-st="0"]')           # from the top: BUILD, on the bent clock
     start = time.time() - t0
-    time.sleep(total + 1)
+    time.sleep(total + 0.6)
     video = page.video.path()
     ctx.close()
     CLIPS.mkdir(exist_ok=True)
-    x, y, w, h = r[0], r[1], r[2] // 2 * 2, r[3] // 2 * 2
+    x, y, w, h = r[0] // 2 * 2, r[1] // 2 * 2, r[2] // 2 * 2, r[3] // 2 * 2
     ffmpeg('-ss', f'{start:.2f}', '-i', str(video), '-t', str(total), '-vf', f'crop={w}:{h}:{x}:{y}', '-c:v', 'libvpx', '-b:v', '6M', '-crf', '8',
            '-qmin', '2', '-qmax', '30', '-auto-alt-ref', '0', '-pix_fmt', 'yuv420p', str(CLIPS / 'lab.webm'))
     shutil.rmtree(tmpdir, ignore_errors=True)
-    print('lab: reactor', w, 'x', h, 'from', round(start, 2), 's,', total, 's,', (CLIPS / 'lab.webm').stat().st_size // 1024, 'KB')
-    frame_poster('lab', 21.0)
+    print('lab: the page', w, 'x', h, 'from', round(start, 2), 's,', total, 's,', (CLIPS / 'lab.webm').stat().st_size // 1024, 'KB')
+    frame_poster('lab', LAB_FAST + 3.2)        # the agent found
 
 
 def doors(b, seconds=12):
@@ -181,10 +204,28 @@ def farmer(b, seconds=12):
     page.close()
 
 
-def universe(b, seconds=20, keep=18):
-    """the Universe with more companies than the live one has today (six, 2026-10-30: "pridej tam trochu vic firem"):
-    our mock's (outbox/company-live), its sample companies spread over its orbits, `keep` of them and its products;
-    where its sun stands on the canvas is printed, for the page's own sun over it (quest.css .stage.uni .sun)"""
+def universe(b, seconds=20):
+    """step 5: the LIVE Universe (cymetica.com/company/app#universe), its sky, its sun, every real company and product
+    on its orbits ("v univerzu je pozadi mnohem lepe udelane"), the camera still; its map idles after 1.5 s without
+    input, so it is poked awake every 0.8 s. The companies it has today are printed."""
+    page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=1)
+    page.goto('https://cymetica.com/company/app#universe', wait_until='domcontentloaded', timeout=60000)
+    page.wait_for_function("() => window.CO && CO.uv && CO.uv.camera && CO.uv.items && CO.uv.items.length", timeout=90000)
+    time.sleep(8)
+    page.evaluate("() => { setInterval(() => { CO.uv.lastInput = performance.now(); }, 800); }")
+    time.sleep(1)
+    sel = '#uv3d canvas'
+    print('universe (live): companies', page.evaluate("() => CO.uv.items.filter(it => !it.kind).length"),
+          'products', page.evaluate("() => CO.uv.items.filter(it => it.kind === 'product').length"))
+    poster(page, sel, 'universe')
+    record(page, sel, seconds, 'universe')
+    page.close()
+
+
+def universe_mock(b, seconds=20, keep=18):
+    """(the eighth take's step 5) the Universe with more companies than the live one has: our mock's
+    (outbox/company-live), its sample companies spread over its orbits, `keep` of them and its products; where its sun
+    stands on the canvas is printed, for the page's own sun over it"""
     page = capture.universe(b, viewport={'width': 1920, 'height': 1080}, dsf=0.75)
     page.evaluate("""(keep) => { const cos = CO.uv.items.filter(it => !it.kind && it.plot), step = cos.length / keep;
       cos.forEach((it, i) => { it.plot.root.visible = Math.floor(i / step) * step <= i && i - Math.floor(i / step) * step < 1; }); }""", keep)
@@ -228,13 +269,14 @@ def workshop(b, fps=30, at=None):
 
 
 SHOTS = {'office': office, 'workshop': workshop, 'lab': lab, 'farmer': farmer, 'universe': universe, 'doors': doors}
+EXTRA = {'universe-mock': universe_mock}
 
 
 def main(names):
     with sync_playwright() as p:
         b = p.chromium.launch(channel='chrome', args=capture.GPU)
         for name in names:
-            SHOTS[name](b)
+            (SHOTS.get(name) or EXTRA[name])(b)
         b.close()
 
 

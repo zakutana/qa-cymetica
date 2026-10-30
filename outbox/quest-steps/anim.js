@@ -1,8 +1,8 @@
 /* The Cymetica Quest, step by step: what moves (the operator, 2026-10-30: "v kazdem kroku musi byt top animace").
 
    - the clips (record.py): each plays only while it is on screen and cross-fades into itself at its loop point; the
-     office plays only its still part (data-loop-from: "kasli na tu animaci zoomu");
-   - the first screen's five companies, standing round the sun ("nemusi to byt animace, staci at stoji na miste");
+     office plays only its still part (data-loop-from: "kasli na tu animaci zoomu"); one that has not started a second
+     after coming on screen is asked again, and its poster stands behind it (ninth take: "animace se nespusti");
    - step 2's Cymetica pipeline, in step with the workshop clip: an idea typed in, through the pipeline's six
      chambers, a product out; and the ring of the products already built, as holograms, turned by dragging;
    - step 4's users, walking from the Promo Market's briefs to the product;
@@ -49,7 +49,9 @@
   document.querySelectorAll('.clip').forEach(function (box) {
     var a = box.querySelector('video'), vids = [a], from = +box.dataset.loopFrom || 0;
     if (box.classList.contains('xf')) { var b = a.cloneNode(true); b.classList.add('b'); box.appendChild(b); vids.push(b); }
-    vids.forEach(function (v) { v.muted = true; v.playsInline = true; });
+    vids.forEach(function (v) { v.muted = true; v.playsInline = true; v.addEventListener('error', function () { box.classList.add('dead'); }); });
+    // the poster behind the video too: a video that does not paint shows its poster, never a hole
+    if (a.getAttribute('poster')) box.style.background = 'url(' + a.getAttribute('poster') + ') 50% 50% / cover no-repeat';
     var cur = 0, on = false, raf = 0, started = false;
     function play(v) { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
     function begin() { if (started) return; started = true; if (from) a.currentTime = from; play(a); }
@@ -67,27 +69,15 @@
     }
     if (reduce) return;
     seen(box, function (vis) {
-      if (vis && !on) { on = true; if (!started) { if (a.readyState >= 1) begin(); else a.addEventListener('loadedmetadata', begin, { once: true }); } else play(vids[cur]); raf = requestAnimationFrame(tick); }
+      if (vis && !on) {
+        on = true;
+        if (!started) { if (a.readyState >= 1) begin(); else a.addEventListener('loadedmetadata', begin, { once: true }); } else play(vids[cur]);
+        raf = requestAnimationFrame(tick);
+        setTimeout(function () { if (on && vids[cur].paused) { started = true; play(vids[cur]); } }, 1200);
+      }
       else if (!vis && on) { on = false; cancelAnimationFrame(raf); vids.forEach(function (v) { v.pause(); }); }
     });
   });
-
-  /* ---------------- the first screen: five companies standing round the sun ---------------- */
-  // where each stands from the sun's middle (a share of the sun's size), and whether in front of it or behind it
-  (function () {
-    var sun = document.getElementById('sun'); if (!sun) return;
-    var ball = sun.querySelector('.ball'), cos = [].slice.call(sun.querySelectorAll('.co'));
-    var P = [[-0.14, 0.12, 1], [0.32, -0.08, 0], [-0.42, -0.1, 0], [0.17, 0.15, 1], [-0.06, -0.3, 0]];
-    function place() {
-      var cx = sun.clientWidth / 2, cy = sun.clientHeight / 2, s = ball.offsetWidth;
-      cos.forEach(function (c, i) {
-        var p = P[i];
-        c.style.left = (cx + p[0] * s).toFixed(1) + 'px'; c.style.top = (cy + p[1] * s).toFixed(1) + 'px';
-        c.classList.toggle('back', !p[2]);
-      });
-    }
-    place(); window.addEventListener('resize', place);
-  })();
 
   /* ---------------- step 2: the Cymetica pipeline, an idea in and a product out ---------------- */
   // ("musi to byt viditelne ze je to cymetica pipeline a ze dovnitr vchazi idea a vystupuje moje apka"): in step with

@@ -76,13 +76,14 @@
   document.querySelectorAll('[data-figure]').forEach(function (el) { el.textContent = fmt(get(el.dataset.figure)); });
   document.querySelectorAll('[data-link]').forEach(function (a) { a.href = Q.links[a.dataset.link]; a.target = '_blank'; a.rel = 'noopener'; });
 
-  // ---- the rail: Capital Maximizer's tabs in a capsule of crystal, a hexagon a step, the step you are on lit
+  // ---- the rail: the quest's path as Capital Maximizer's (outbox/capital-maximizer/mock.html .rail): a hexagon a
+  // step, joined by lines that light as far as you have come, the step you are on lit
   var rail = document.getElementById('rail');
   rail.innerHTML = Q.steps.map(function (s, i) {
     return '<a data-step="' + (i + 1) + '" href="#s' + (i + 1) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + HEX + '"/></svg>' +
       '<span class="lab"><em>' + s.n + '</em>' + s.label + '</span><span class="sh">' + s.short + '</span></a>';
-  }).join('') + '<span class="fill"></span>';
-  var steps = [].slice.call(rail.querySelectorAll('a')), fill = rail.querySelector('.fill');
+  }).join('<i></i>');
+  var steps = [].slice.call(rail.querySelectorAll('a')), lines = [].slice.call(rail.querySelectorAll('i'));
   document.querySelectorAll('#rail a').forEach(function (a) {
     a.addEventListener('click', function (e) {
       e.preventDefault();
@@ -114,15 +115,13 @@
         a.classList.toggle('on', n === active);
         a.classList.toggle('done', n < active);
       });
-      var on = steps[active - 1];
-      if (on) { fill.style.opacity = 1; fill.style.left = on.offsetLeft + 'px'; fill.style.width = on.offsetWidth + 'px'; }
-      else fill.style.opacity = 0;
+      // the line after step k is lit once step k is done
+      lines.forEach(function (l, i) { l.classList.toggle('lit', i + 1 < active); });
     }
   }
   var queued = false;
   window.addEventListener('scroll', function () { if (!queued) { queued = true; requestAnimationFrame(function () { queued = false; frame(); }); } }, { passive: true });
   window.addEventListener('resize', function () { frame(true); });
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { frame(true); });
   frame();
   S.ready = true;
 })();
