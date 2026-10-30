@@ -21,16 +21,19 @@ that setup.
 
 ## The page, top to bottom
 
-Their crumb; the mark (a flask in a hexagon whose equity line breaks through the bar and out of the flask) and the
-wordmark; six numbers with an icon each; the **reactor** (BUILD, BLAST, BLIND, THE BAR, FOUND: click a stage to jump;
+Their crumb; the mark and the wordmark in the family of our Airdrop Farmer and Agent Casino (the operator: the old one
+"zaostava" beside them): a round head with a dashed ring and two green eyes that blink, here a flask's bulb, its neck
+and two bubbles on top where the farmer has his hat and sprout, the liquid's surface an equity line going up; QUANT
+small, cyan and spaced over LAB in Archivo Black, the tagline a tooltip; six numbers with an icon each; the **reactor** (BUILD, BLAST, BLIND, THE BAR, FOUND: click a stage to jump;
 ⏸ or space pauses, and paused, a stage click or ← → shows that stage finished);
 
 The reactor shows the lab's state, named in the badge beside the stages:
 
-* **Replay**: no search running, so it plays the last finished one (`REPLAY · #3 · 27 OCT`).
-* **Failed**: the newest search failed, so a FAILED stage comes first. The search's pulse flatlines (0 of 0 jobs, died
-  after 44 s), the reason is given as a label and never as their raw error (#232), and the failures in a row are counted.
-  Then the replay of the last good search follows. This is our real state today: #5, #7 and #9.
+* **Replay**: no search running, so it plays the last finished one (`REPLAY · 27 OCT`).
+* **Failed**: the newest searches failed, so the badge turns red and counts them first (`⚠️ LAST 3 FAILED · ↻ REPLAY ·
+  27 OCT`); its tooltip names them and the reason as a label, never their raw error (#232). A failure is not a step of
+  a search, so it has no stage and no screen: round 5 put one first in the rail and the operator could not read it
+  ("TO NECHAPU TU FAILED ZALOZKU"). This is our real state today: #5, #7 and #9.
 * **Live**: a search is running. It reads the fields their WebSocket sends (`done_jobs`, `total_jobs`, `percent`,
   `eta_seconds`): the cells fill as the jobs do, with the count, percent and time left. Search now (their button, with
   their cost line as its tooltip) is the only way into it here, and it is a preview: a timer at #3's real pace (32 min
