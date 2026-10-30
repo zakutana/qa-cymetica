@@ -21,7 +21,9 @@ that setup.
 
 ## The page, top to bottom
 
-Their crumb; six numbers with an icon each; the **reactor** (BUILD, BLAST, BLIND, THE BAR, BOT: click a stage to jump);
+Their crumb; the mark (a flask in a hexagon whose equity line breaks through the bar and out of the flask) and the
+wordmark; six numbers with an icon each; the **reactor** (BUILD, BLAST, BLIND, THE BAR, BOT: click a stage to jump;
+⏸ or space pauses, and paused, a stage click or ← → shows that stage finished);
 the **blind test** rows (setup chips, coin, settings, search % to blind %, a gauge against the bar, a tick or a cross);
 **bots** with the owner's rule as chips; a foot with *What was tested*, *Log* and *Can tune / can't* (their own
 `can_tune` / `cannot_tune` lists, cut to the part before the colon; the full sentences are tooltips).

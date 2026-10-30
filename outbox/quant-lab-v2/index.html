@@ -25,8 +25,30 @@
   </div>
 
   <header class="q2-hero">
-    <h1>QUANT LAB</h1>
-    <p class="q2-tag">🧪 Finds bots that win on data they never saw</p>
+    <!-- the mark: a flask in a hexagon; the equity line inside breaks through the bar and out of the flask -->
+    <svg class="q2-logo" viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <linearGradient id="q2g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+        <linearGradient id="q2liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00ff88" stop-opacity=".75"/><stop offset="1" stop-color="#00cfff" stop-opacity=".25"/></linearGradient>
+        <clipPath id="q2flask"><path d="M27 14h10v12l11 20a4 4 0 0 1-3.5 6h-25A4 4 0 0 1 16 46l11-20z"/></clipPath>
+      </defs>
+      <path class="q2-hex" d="M32 3 57.1 17.5v29L32 61 6.9 46.5v-29z" fill="#0d1520" stroke="url(#q2g)" stroke-width="2.2" stroke-linejoin="round"/>
+      <g clip-path="url(#q2flask)">
+        <path class="q2-wave" d="M6 40q5-3 10 0t10 0 10 0 10 0 10 0 10 0V56H6z" fill="url(#q2liq)"/>
+        <circle class="q2-bub" cx="24" cy="49" r="1.3" fill="#00ff88"/>
+        <circle class="q2-bub b2" cx="31" cy="50" r="1" fill="#00cfff"/>
+        <circle class="q2-bub b3" cx="38" cy="48" r="1.2" fill="#00ff88"/>
+      </g>
+      <path d="M27 14h10v12l11 20a4 4 0 0 1-3.5 6h-25A4 4 0 0 1 16 46l11-20z" fill="none" stroke="#e6edf7" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M24.5 14h15" stroke="#e6edf7" stroke-width="2.2" stroke-linecap="round"/>
+      <path class="q2-laser" d="M12 34h40" stroke="#00ff88" stroke-width="1.6" stroke-dasharray="2.4 2.2"/>
+      <path class="q2-eq" d="M20 47l5-4 4 2.5 5-7 4 2.5 7-13" fill="none" stroke="#00cfff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle class="q2-tip" cx="45" cy="28" r="2.6" fill="#00ff88"/>
+    </svg>
+    <div class="q2-word">
+      <h1><span class="q2-w1">QUANT</span><span class="q2-w2">LAB</span></h1>
+      <p class="q2-tag">Finds bots that win on data they never saw</p>
+    </div>
   </header>
 
   <section class="q2-score" id="score"></section>

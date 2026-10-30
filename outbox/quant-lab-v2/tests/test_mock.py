@@ -73,6 +73,22 @@ def test_it_runs_without_an_error_in_both_modes(page):
     assert not page.errors, page.errors
 
 
+def test_pause_holds_a_stage_still(page):
+    """The operator, 2026-10-30: a pause button, to stop on every screen and look at what is there."""
+    mode(page, "real")
+    page.click("[data-pp]")
+    for st in range(5):
+        page.click(f'[data-st="{st}"]')
+        page.wait_for_timeout(200)   # QL.t is written by the next animation frame
+        a = page.evaluate("() => [window.QL.stage, window.QL.t]")
+        page.wait_for_timeout(700)
+        b = page.evaluate("() => [window.QL.stage, window.QL.t]")
+        assert a == b and a[0] == st, (st, a, b)
+    page.click("[data-pp]")
+    page.wait_for_timeout(500)
+    assert page.evaluate("() => window.QL.t") != b[1], "play did not resume"
+
+
 def test_the_real_mode_shows_what_their_api_returned(page):
     mode(page, "real")
     d = data()

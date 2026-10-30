@@ -182,14 +182,28 @@
   var STAGES = [['build', '🧩', 'BUILD', 3.2], ['blast', '💥', 'BLAST', 4.4], ['blind', '🙈', 'BLIND', 3.4], ['bar', '🚧', 'THE BAR', 5.6], ['bot', '🤖', 'BOT', 4.0]];
   var TOTAL = STAGES.reduce(function (a, s) { return a + s[3]; }, 0);
   var cv = $('rx'), ctx = cv.getContext('2d'), W = 0, H = 0, DPR = 1, t0 = performance.now(), offset = 0, parts = [], shake = 0, fired = {}, cells = null;
+  var paused = false, held = 0;   // paused: the clock stands at `held`
+  var HOLD = [0.97, 0.97, 0.97, 0.995, 0.97];   // where a paused stage stands: its finished picture
   var C = { bg: '#06090f', navy: '#0d1520', navy2: '#111a28', line: '#16233a', line3: '#1e3050', text: '#e6edf7', dim: '#7f93ad', dim3: '#3a4d68', cyan: '#00cfff', green: '#00ff88', red: '#ff4444', blue: '#3b82f6' };
   var MONO = "'JetBrains Mono', monospace", BLACK = "'Archivo Black', sans-serif";
 
   function size() { DPR = Math.min(2, window.devicePixelRatio || 1); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * DPR; cv.height = H * DPR; }
   function rail() {
-    $('rail').innerHTML = STAGES.map(function (s, i) { return '<button data-st="' + i + '"><span class="q2-e">' + s[1] + '</span><span class="q2-t">' + s[2] + '</span><i></i></button>'; }).join('');
+    $('rail').innerHTML = '<button class="q2-pp" data-pp title="Pause / play (space). Paused, a click on a stage shows it finished; ← → step.">⏸</button>' +
+      STAGES.map(function (s, i) { return '<button data-st="' + i + '"><span class="q2-e">' + s[1] + '</span><span class="q2-t">' + s[2] + '</span><i></i></button>'; }).join('');
   }
-  function now() { return ((performance.now() - t0) / 1000 + offset) % TOTAL; }
+  function now() { return paused ? held : ((performance.now() - t0) / 1000 + offset) % TOTAL; }
+  function startOf(i) { var a = 0; for (var k = 0; k < i; k++) a += STAGES[k][3]; return a; }
+  function pause(on) {
+    if (on === paused) return;
+    if (on) { held = now(); paused = true; } else { t0 = performance.now(); offset = held; paused = false; }
+    var b = document.querySelector('[data-pp]'); b.textContent = paused ? '▶' : '⏸'; b.classList.toggle('q2-on', paused);
+  }
+  function goStage(i) {
+    i = (i + STAGES.length) % STAGES.length; fired = {}; parts = []; lastStage = -1;
+    if (paused) held = startOf(i) + STAGES[i][3] * HOLD[i];
+    else { t0 = performance.now(); offset = startOf(i) + 0.001; }
+  }
   function stageAt(t) { var a = 0; for (var i = 0; i < STAGES.length; i++) { if (t < a + STAGES[i][3]) return [i, (t - a) / STAGES[i][3]]; a += STAGES[i][3]; } return [STAGES.length - 1, 1]; }
   function ease(p) { p = Math.max(0, Math.min(1, p)); return 1 - Math.pow(1 - p, 3); }
   function seg(p, a, b) { return Math.max(0, Math.min(1, (p - a) / (b - a))); }
@@ -435,14 +449,16 @@
       ctx.globalAlpha = q.life; ctx.fillStyle = q.c; ctx.fillRect(q.x, q.y, q.s, q.s);
     }
     ctx.globalAlpha = 1; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); scan();
-    var btns = $('rail').children;
+    var btns = document.querySelectorAll('[data-st]');
     for (var j = 0; j < btns.length; j++) { btns[j].className = j === si ? 'q2-on' : j < si ? 'q2-done' : ''; btns[j].lastChild.style.width = j === si ? (p * 100) + '%' : '0'; }
+    window.QL.t = t; window.QL.stage = si; window.QL.paused = paused;
     requestAnimationFrame(frame);
   }
 
   // ---------------------------------------------------------------- modes
   function setMode(m) {
     M = m === 'sim' ? SIM : REAL; cells = null; fired = {}; parts = []; t0 = performance.now(); offset = 0;
+    if (paused) held = startOf(window.QL.stage || 0) + STAGES[window.QL.stage || 0][3] * HOLD[window.QL.stage || 0];   // a paused page stays paused, on the same stage
     [].forEach.call(document.querySelectorAll('[data-mode]'), function (b) { b.className = b.getAttribute('data-mode') === m ? 'q2-on' : ''; });
     $('simtag').hidden = m !== 'sim';
     renderScore(); renderTop(); renderBots(); renderCaps();
@@ -452,8 +468,14 @@
   }
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-mode]'); if (b) return setMode(b.getAttribute('data-mode'));
+    if (e.target.closest('[data-pp]')) return pause(!paused);
     var s = e.target.closest('[data-st]');
-    if (s) { var i = +s.getAttribute('data-st'), a = 0; for (var k = 0; k < i; k++) a += STAGES[k][3]; if (i === 0) fired = {}; t0 = performance.now(); offset = a + 0.001; }
+    if (s) goStage(+s.getAttribute('data-st'));
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.target.closest('input, textarea')) return;
+    if (e.key === ' ') { e.preventDefault(); pause(!paused); }
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { pause(true); goStage(stageAt(now())[0] + (e.key === 'ArrowRight' ? 1 : -1)); }
   });
   window.addEventListener('resize', size);
   rail(); size();
