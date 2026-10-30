@@ -8,7 +8,6 @@ Fifth take (the operator, 2026-10-30).
           sun.webp            Cymetica's sun alone, from our Universe mock, its light as alpha
           co-1..5.webp        five companies from our Universe mock, each alone and cut out, to float round the sun
   01      builder-card.webp   the LIVE builder's Start card as it stands, laid over the office clip where the page puts it
-  03      agent.webp          the Hero Agent (Antigravity, outbox/quest/gen), drawn by step 3's Quant Lab (anim.js)
   04      promo.webp          their Promo Market through our read-only mirror (outbox/promo-market-v3/live, ?v2), with
                               three sample briefs: their market has none open today
 
@@ -227,31 +226,6 @@ def stations(b):
     page.close()
 
 
-# the products in step 2's strip ("micro panel pod ten zeleny text kde uz uvidi already built products ikonky a budou
-# si moct do boku scrollovat"): Build it Better's own list (GET /api/v1/build-it-better/apps/leaderboard), the most
-# visited first, leaving out what is a page of the platform itself rather than a product someone built
-BUILT_SKIP = {'/company', '/my-files', '/my-agents', '/nexus-panel', '/usage'}
-
-
-def apps(_b, n=14):
-    import json
-    import urllib.request
-    with urllib.request.urlopen('https://cymetica.com/api/v1/build-it-better/apps/leaderboard', timeout=30) as r:
-        data = json.load(r)
-    (OUT / 'apps').mkdir(exist_ok=True)
-    picked = [a for a in data['apps'] if a.get('preview_url') and a['path'] not in BUILT_SKIP][:n]
-    for a in picked:
-        slug = a['path'].strip('/').replace('/', '-')
-        with urllib.request.urlopen('https://cymetica.com' + a['preview_url'], timeout=30) as r:
-            img = Image.open(io.BytesIO(r.read())).convert('RGB')
-        img = img.resize((480, round(480 * img.height / img.width)), Image.LANCZOS)
-        img.save(OUT / 'apps' / f'{slug}.webp', quality=80, method=6)
-    print('apps: of', data['count'], 'built, in the strip:', json.dumps([[a['name'], a['path'].strip('/')] for a in picked]))
-
-
-def agent(_b):
-    # the Hero Agent (Antigravity, outbox/quest/gen): step 3's Quant Lab draws it out of a hologram scan (anim.js)
-    save(Image.open(QUEST / 'gen' / 'lab-16x9.png').convert('RGB'), 'agent.webp', quality=82)
 
 
 def universe(b, query='?season0', viewport=None, dsf=2):
@@ -321,7 +295,7 @@ def farmer(b):
     page.close()
 
 
-SHOTS = {'sky': sky, 'sun': sun, 'stations': stations, 'builder': builder, 'agent': agent, 'promo': promo, 'apps': apps}
+SHOTS = {'sky': sky, 'sun': sun, 'stations': stations, 'builder': builder, 'promo': promo}
 
 
 def main(names):

@@ -100,42 +100,54 @@ def office(b, seconds=16):
       const f = (v, d) => +(v / d * 100).toFixed(2);
       return { left: f(c.left - s.left, s.width), top: f(c.top - s.top, s.height), width: f(c.width, s.width), height: f(c.height, s.height),
                card: [f(k.left - s.left, s.width), f(k.top - s.top, s.height), f(k.width, s.width)] }; }"""))
-    poster(page, sel, 'office')
-    # in once, only as far as the whole company still shows ("staci jedna animace ze se to priblizi jen na uroven ze jde
-    # videt cela firma"; 0.85 of the way: at 0.8 its rooms touch the stage's edges, which the page fades), then still,
-    # its astronauts at work; the page plays the way in once and repeats only the still part (data-loop-from)
+    # the camera in, as far as the whole company still shows (0.85 of the way: at 0.8 its rooms touch the stage's edges,
+    # which the page fades), and still from then on, its astronauts at work; the page plays only the still part
+    # ("kasli na tu animaci zoomu"), from data-loop-from, so the poster is a frame of that part
     page.evaluate("""() => { const o = CO.builder.office;
       const p0 = o.camera.position.clone(), t0 = o.controls.target.clone();
       o.tween(t0.clone().add(p0.clone().sub(t0).multiplyScalar(0.85)), t0, 3500); }""")
     record(page, sel, seconds, 'office')
     page.close()
+    frame_poster('office', 5.0)
 
 
-def station(b, seconds=6):
-    """step 1's way in ("aby to zacinalo takto ... a ten zoom by sel dovnitr a pak by zobrazil ty headquarters"): the
-    LIVE builder's first step, the company's station turning in its space, before the name is typed; the page zooms
-    into it and on into the office clip"""
-    page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=0.75)
-    page.goto('https://cymetica.com/company/app/builder', wait_until='domcontentloaded', timeout=60000)
-    page.wait_for_function("() => { const e = document.getElementById('b-prev'); return e && e.classList.contains('has3d') && e.querySelector('canvas'); }", timeout=90000)
-    # the look he showed (2026-10-30): Rift Hold, the split asteroid with the bridge of light; the builder opens on a
-    # look of its own, so its arrow is pressed until that one stands
-    for _ in range(20):
-        if page.evaluate("() => CO.builder.o.skin") == 'rift':
-            break
-        page.click('#lk-next')
-        time.sleep(0.4)
-    # and its warm light, as in his picture: the builder's own gold accent, if it has one
-    acc = page.evaluate("() => (CO.ACCENTS || []).map(a => a.key).find(k => /gold|amber|yellow|sun/.test(k)) || null")
-    if acc:
-        page.click(f'#lk-acc .acc[data-k="{acc}"]')
-    print('station: look', page.evaluate("() => CO.builder.o.skin"), 'accent', acc)
-    time.sleep(5)
-    sel = '#b-prev canvas'
-    print('station: canvas', page.evaluate("(s) => { const c = document.querySelector(s); return [c.width, c.height]; }", sel))
-    poster(page, sel, 'station')
-    record(page, sel, seconds, 'station')
-    page.close()
+def frame_poster(name, at):
+    """the clip's frame at `at` seconds as its poster"""
+    fd, tmp = tempfile.mkstemp(suffix='.png')
+    os.close(fd)
+    ffmpeg('-ss', str(at), '-i', str(CLIPS / f'{name}.webm'), '-frames:v', '1', '-c:v', 'png', '-f', 'image2', tmp)
+    capture.save(Image.open(tmp).convert('RGB'), f'{name}.webp', quality=82)
+    Path(tmp).unlink()
+
+
+def lab(b):
+    """step 3: the Quant Lab's reactor in its Coming soon mode (outbox/quant-lab-v2, another session's page, served on
+    8801 and read only): one whole loop of its five stages, BUILD to FOUND, so the clip loops into itself. It draws
+    CoinGecko's coin logos into its canvas, which taints it, and a tainted canvas's own stream stops: so the window is
+    filmed instead (Playwright's video), and cut to the reactor by ffmpeg"""
+    import shutil
+    vw, vh, total = 1600, 1100, 23.6            # its five stages, 3.2 + 4.4 + 3.4 + 5.6 + 7.0 s (ql.js STAGES)
+    tmpdir = Path(tempfile.mkdtemp())
+    ctx = b.new_context(viewport={'width': vw, 'height': vh}, device_scale_factor=1, record_video_dir=str(tmpdir), record_video_size={'width': vw, 'height': vh})
+    t0 = time.time()
+    page = ctx.new_page()
+    page.goto('http://127.0.0.1:8801/?mode=sim', wait_until='load', timeout=60000)
+    page.wait_for_function("() => document.fonts.status === 'loaded' && document.querySelector('#rx').width > 0", timeout=60000)
+    page.evaluate("() => document.querySelector('#rx').scrollIntoView({ block: 'center' })")
+    time.sleep(3)
+    r = page.evaluate("() => { const r = document.querySelector('#rx').getBoundingClientRect(); return [r.left, r.top, r.width, r.height].map(Math.round); }")
+    page.click('#rail [data-st="0"]')           # from the top: BUILD
+    start = time.time() - t0
+    time.sleep(total + 1)
+    video = page.video.path()
+    ctx.close()
+    CLIPS.mkdir(exist_ok=True)
+    x, y, w, h = r[0], r[1], r[2] // 2 * 2, r[3] // 2 * 2
+    ffmpeg('-ss', f'{start:.2f}', '-i', str(video), '-t', str(total), '-vf', f'crop={w}:{h}:{x}:{y}', '-c:v', 'libvpx', '-b:v', '6M', '-crf', '8',
+           '-qmin', '2', '-qmax', '30', '-auto-alt-ref', '0', '-pix_fmt', 'yuv420p', str(CLIPS / 'lab.webm'))
+    shutil.rmtree(tmpdir, ignore_errors=True)
+    print('lab: reactor', w, 'x', h, 'from', round(start, 2), 's,', total, 's,', (CLIPS / 'lab.webm').stat().st_size // 1024, 'KB')
+    frame_poster('lab', 21.0)
 
 
 def farmer(b, seconds=12):
@@ -153,15 +165,18 @@ def farmer(b, seconds=12):
     page.close()
 
 
-def universe(b, seconds=20):
-    """the LIVE Universe, read anonymously: every company on its orbit round Cymetica's sun, the camera where the page
-    puts it, after its flight in"""
-    page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=0.75)
-    page.goto('https://cymetica.com/company/app#universe', wait_until='domcontentloaded', timeout=60000)
-    page.wait_for_function("() => window.CO && CO.uv && CO.uv.camera && document.getElementById('uvstage').classList.contains('is3d')", timeout=90000)
-    time.sleep(14)
-    print('universe: companies on the map:', page.evaluate("() => CO.uv.items.filter(it => !it.kind).length"))
+def universe(b, seconds=20, keep=18):
+    """the Universe with more companies than the live one has today (six, 2026-10-30: "pridej tam trochu vic firem"):
+    our mock's (outbox/company-live), its sample companies spread over its orbits, `keep` of them and its products;
+    where its sun stands on the canvas is printed, for the page's own sun over it (quest.css .stage.uni .sun)"""
+    page = capture.universe(b, viewport={'width': 1920, 'height': 1080}, dsf=0.75)
+    page.evaluate("""(keep) => { const cos = CO.uv.items.filter(it => !it.kind && it.plot), step = cos.length / keep;
+      cos.forEach((it, i) => { it.plot.root.visible = Math.floor(i / step) * step <= i && i - Math.floor(i / step) * step < 1; }); }""", keep)
+    time.sleep(2)
     sel = '#uv3d canvas'
+    print('universe: companies shown', page.evaluate("() => CO.uv.items.filter(it => !it.kind && it.plot && it.plot.root.visible).length"),
+          'sun at (% of the canvas)', page.evaluate("""() => { const p = CO.uv.heartAt.clone().project(CO.uv.camera);
+            return [+((p.x + 1) / 2 * 100).toFixed(1), +((1 - p.y) / 2 * 100).toFixed(1)]; }"""))
     poster(page, sel, 'universe')
     record(page, sel, seconds, 'universe')
     page.close()
@@ -196,7 +211,7 @@ def workshop(b, fps=30, at=None):
     page.close()
 
 
-SHOTS = {'station': station, 'office': office, 'farmer': farmer, 'universe': universe, 'workshop': workshop}
+SHOTS = {'office': office, 'workshop': workshop, 'lab': lab, 'farmer': farmer, 'universe': universe}
 
 
 def main(names):

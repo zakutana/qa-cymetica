@@ -4,18 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Cymetica Quest</title>
-<meta name="description" content="Join the Cymetica Quest: start an AI-native company in the Universe, build products or breed your hero agent, get seen, climb the leaderboard. Up to 500,000 ET10 every month.">
+<meta name="description" content="Join the Cymetica Quest: start an AI-native company in the Universe, build your own products, breed your hero agent, get seen, farm your points. Up to 500,000 ET10 every month.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="quest.css">
-<!-- The Cymetica Quest, step by step (the operator, 2026-10-29). Sixth take (2026-10-30, after "ted je na urovni asi
-     7.5/10"): the bar and the end's two buttons in the glass of our board; the companies by the sun still and bigger;
-     every point said with the company's own icons; step 1 from the company's station into its HQ; steps 2 and 3 on one
-     screen with a slider between them ("to bude hit"); the pipeline as a skill tree, richer; the lab quick; the
-     users slower; Cymetica's sun in the Universe. The clips are record.py's, the pictures capture.py's; every figure
-     is QUEST's in quest.js, every animation anim.js's. -->
+<!-- The Cymetica Quest, step by step (the operator, 2026-10-29). Seventh take (2026-10-30): the bar, the prize board
+     and the two calls at the end in clear, glossy crystal glass ("ne ta tvoje zakalena plocha"); the words under
+     every heading much smaller, no tiles of icons; the companies by the sun still, bigger, quiet in colour; step 1 the
+     HQ only, its departments shown with their agents; step 2 the Cymetica pipeline taking an idea in and putting a
+     product out, beside a ring of the products already built; step 3 the Quant Lab's reactor; step 5 farming points,
+     the leaderboard with each company's mark. The clips are record.py's, the pictures capture.py's; every figure is
+     QUEST's in quest.js, every animation anim.js's, the products' marks logos.js's. -->
 </head>
 <body>
 <div id="sky" aria-hidden="true"></div>
@@ -24,7 +25,7 @@
     <svg viewBox="0 0 48 48" aria-hidden="true"><path class="o" d="M24 3 42 13.5v21L24 45 6 34.5v-21z"/><path class="i" d="M24 13 33 18.2v10.6L24 34l-9-5.2V18.2z"/><circle cx="24" cy="23.6" r="3.2"/></svg>
     <span class="w"><b>CYMETICA <em>QUEST</em></b><span>BY CYMETICA</span></span>
   </a>
-  <nav id="rail" data-active="0" aria-label="The four steps"></nav>
+  <nav id="rail" data-active="0" aria-label="The five steps"></nav>
   <span class="pill">Up to <b data-figure="prizes.0"></b> <span data-figure="unit"></span> / month</span>
 </header>
 
@@ -36,18 +37,20 @@
     </div>
     <div class="hero-in">
       <div class="board-wrap">
-        <div class="board" aria-label="This month's prizes">
+        <div class="board crystal" aria-label="This month's prizes">
           <div class="gh"><span class="dot"></span><b>Monthly prizes</b><span class="tg">Top <span data-figure="slots"></span></span></div>
           <div class="seats" data-seats></div>
+          <p class="rule">The company with the most points this month wins.</p>
         </div>
       </div>
       <div class="words">
         <h1>Join the<br>Cymetica Quest.<br><span class="g">Win up to <b data-figure="prizes.0"></b><br><span data-figure="unit"></span> every month.</span></h1>
         <ol class="path">
-          <li><a href="#s1"><span class="no">01</span><span class="tile c"><i data-ic="hub"></i></span><span class="t"><b>Start an AI-native company</b><span>your HQ in the Universe</span></span></a></li>
-          <li><a href="#s2"><span class="no">02</span><span class="tile"><i data-ic="development"></i></span><span class="tile"><i data-ic="lab"></i></span><span class="t"><b>Build products or a hero agent</b><span>Build it Better · Quant Lab</span></span></a></li>
-          <li><a href="#s3"><span class="no">03</span><span class="tile c"><i data-ic="megaphone"></i></span><span class="t"><b>Get seen</b><span>Promo Market · your land</span></span></a></li>
-          <li><a href="#s4"><span class="no">04</span><span class="tile"><i data-ic="trophy"></i></span><span class="t"><b>Climb the leaderboard</b><span>the top <b data-figure="slots"></b> get paid every month</span></span></a></li>
+          <li><span class="no">01</span><span class="t"><b>Start an AI-native company</b><span>your HQ in the Universe</span></span></li>
+          <li><span class="no">02</span><span class="t"><b>Build your own products</b><span>say an idea, Cymetica builds it</span></span></li>
+          <li><span class="no">03</span><span class="t"><b>Breed your hero agent</b><span>your Quant Lab finds the strategy</span></span></li>
+          <li><span class="no">04</span><span class="t"><b>Bring in users</b><span>Promo Market &middot; your land</span></span></li>
+          <li><span class="no">05</span><span class="t"><b>Compete in the Universe and earn points</b><span>the top <b data-figure="slots"></b> get paid every month</span></span></li>
         </ol>
       </div>
     </div>
@@ -58,78 +61,58 @@
     <div class="txt rv">
       <div class="kick">Step 01</div>
       <div class="copy"><h2>Start an<br><span class="g">AI-native company.</span></h2></div>
-      <ul class="pts">
-        <li><span class="tile c"><i data-ic="hub"></i></span><span><b>Your HQ in the Universe.</b> NEXUS and its AI agents run it.</span></li>
-      </ul>
-      <div class="depts" aria-label="The pre-build's rooms">
-        <span class="tile c" title="Command"><i data-ic="hub"></i></span><span class="tile" title="Vault"><i data-ic="vault"></i></span><span class="tile" title="Operations"><i data-ic="audit"></i></span>
-        <span class="tile r" title="Cymetica QA"><i data-ic="testing"></i></span><span class="tile c" title="Development"><i data-ic="development"></i></span><span class="tile" title="Quant Lab"><i data-ic="lab"></i></span><span class="tile" title="Trading desk"><i data-ic="trading"></i></span>
-      </div>
-      <div class="chips"><span><b data-figure="hq.rooms"></b> rooms</span><span><b data-figure="hq.departments"></b> departments</span><span><b data-figure="hq.agents"></b> AI agents</span></div>
+      <p class="sub"><b>Your HQ in the Universe,</b> staffed with AI agents. You approve what goes out.</p>
     </div>
     <div class="stage rv">
       <figure class="pic office">
-        <div class="crop"><div class="clip seq" data-anim="office" data-loop-from="4.5">
-          <video class="intro" muted playsinline preload="auto" poster="pics/station.webp" width="1783" height="787"><source src="clips/station.webm" type="video/webm"></video>
-          <video class="main" muted playsinline preload="auto" poster="pics/office.webp" width="1783" height="787"><source src="clips/office.webm" type="video/webm"></video>
-        </div></div>
+        <div class="crop"><div class="clip xf" data-anim="office" data-loop-from="4.5"><video muted playsinline preload="auto" poster="pics/office.webp" width="1783" height="787"><source src="clips/office.webm" type="video/webm"></video></div></div>
         <figure class="ui"><img src="pics/builder-card.webp" alt="Start: New, or the Cymetica pre-build of 7 rooms, 4 departments and 9 agents" width="904" height="1068"></figure>
       </figure>
     </div>
+    <div class="crew rv" data-crew aria-label="The pre-build's departments and their AI agents"></div>
   </section>
 
-  <section id="build" data-step="2" class="duel" style="--x: 100%">
-    <div class="panes">
-      <div class="pane step" id="s2">
-        <div class="num" aria-hidden="true">02</div>
-        <div class="txt">
-          <div class="kick">Step 02 · Way A</div>
-          <div class="copy"><h2>Build products.<br><span class="g">Say what. <br>Own the product.</span></h2></div>
-          <ul class="pts">
-            <li><span class="tile c"><i data-ic="doc"></i></span><span><b>Send only the spec</b> to Cymetica's pipeline.</span></li>
-            <li><span class="tile"><i data-ic="rocket"></i></span><span><b>It does the rest,</b> from start to deployment.</span></li>
-            <li><span class="tile"><i data-ic="crown"></i></span><span><b>The product is yours.</b></span></li>
-          </ul>
-          <div class="built">
-            <div class="bh"><b data-figure="apps"></b> apps already built<span>scroll &rarr;</span></div>
-            <div class="strip" data-built></div>
-          </div>
-        </div>
-        <div class="stage work">
-          <figure class="pic"><div class="clip" data-anim="workshop" data-gate="build"><video muted playsinline loop preload="metadata" poster="pics/workshop.webp" width="1440" height="810"><source src="clips/workshop.webm" type="video/webm"></video></div></figure>
-          <div class="tree" data-anim="pipeline" aria-label="The Build it Better pipeline: your idea in, the product out"></div>
-        </div>
-      </div>
-      <div class="pane step agent" id="s2b">
-        <div class="num" aria-hidden="true">02</div>
-        <div class="txt">
-          <div class="kick">Step 02 · Way B</div>
-          <div class="copy"><h2>Breed your hero agent.<br><span class="g">Send it to <br>the Agent Casino.</span></h2></div>
-          <ul class="pts">
-            <li><span class="tile"><i data-ic="lab"></i></span><span><b>Expert agents in your Quant Lab</b> hunt for the best trading strategies while you sleep.</span></li>
-            <li><span class="tile c"><i data-ic="robot"></i></span><span><b>Equip your hero agent</b> with the most profitable ones.</span></li>
-            <li><span class="tile"><i data-ic="trophy"></i></span><span><b>Send it to compete</b> against other agents.</span></li>
-          </ul>
-        </div>
-        <div class="stage lab">
-          <figure class="pic"><canvas data-anim="lab" width="1440" height="810" aria-label="The Quant Lab backtests thousands of strategies, the best one becomes the hero agent, who wins the Agent Casino's race"></canvas></figure>
-        </div>
+  <section id="s2" data-step="2" class="step flip">
+    <div class="num" aria-hidden="true">02</div>
+    <div class="txt rv">
+      <div class="kick">Step 02</div>
+      <div class="copy"><h2>Build your own<br><span class="g">products.</span></h2></div>
+      <p class="sub"><b>Just say an idea.</b> Cymetica's pipeline builds it for you.</p>
+      <div class="ring" data-anim="apps" aria-label="Products already built with Cymetica">
+        <div class="items"></div><span class="base"></span>
+        <div class="plate"><b></b><span><span data-figure="apps"></span> apps already built &middot; drag</span></div>
       </div>
     </div>
-    <div class="divider" role="slider" tabindex="0" aria-label="Build products or breed your hero agent" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
-      <span class="knob"><i data-ic="arrow" class="l"></i><i data-ic="arrow" class="r"></i></span>
-      <span class="tag"><em class="to-agent">Hero agent</em><em class="to-build">Build products</em></span>
+    <div class="stage work rv">
+      <figure class="pic"><div class="clip" data-anim="workshop"><video muted playsinline loop preload="metadata" poster="pics/workshop.webp" width="1440" height="810"><source src="clips/workshop.webm" type="video/webm"></video></div></figure>
     </div>
+    <div class="machine rv" data-anim="pipeline" aria-label="The Cymetica pipeline: your idea in, your app out"></div>
   </section>
 
-  <section id="s3" data-step="3" class="step flip">
+  <section id="s3" data-step="3" class="step">
     <div class="num" aria-hidden="true">03</div>
     <div class="txt rv">
       <div class="kick">Step 03</div>
+      <div class="copy"><h2>Breed your hero agent.<br><span class="g">Send it to <br>the Agent Casino.</span></h2></div>
+      <p class="sub"><b>Researchers in your Quant Lab</b> constantly hunt for profitable strategies.</p>
+      <ul class="pts">
+        <li><b>Equip your hero agent</b> with the most profitable ones.</li>
+        <li><b>Send it to compete</b> against other agents.</li>
+      </ul>
+    </div>
+    <div class="stage lab rv">
+      <figure class="pic"><div class="clip xf" data-anim="lab"><video muted playsinline preload="metadata" poster="pics/lab.webp" width="1542" height="470"><source src="clips/lab.webm" type="video/webm"></video></div></figure>
+    </div>
+  </section>
+
+  <section id="s4" data-step="4" class="step flip">
+    <div class="num" aria-hidden="true">04</div>
+    <div class="txt rv">
+      <div class="kick">Step 04</div>
       <div class="copy"><h2>Get seen.<br><span class="g">Bring in users.</span></h2></div>
       <ul class="pts">
-        <li><span class="tile c"><i data-ic="megaphone"></i></span><span><b>Market your products on the Promo Market</b> to get users.</span></li>
-        <li><span class="tile"><i data-ic="planet"></i></span><span><b>Or make them visible in the Universe</b> on your own land.</span></li>
+        <li><b>Market your products on the Promo Market</b> to get users.</li>
+        <li><b>Or make them visible in the Universe</b> on your own land.</li>
       </ul>
     </div>
     <div class="stage duo rv">
@@ -143,32 +126,29 @@
     </div>
   </section>
 
-  <section id="s4" data-step="4" class="step">
-    <div class="num" aria-hidden="true">04</div>
+  <section id="s5" data-step="5" class="step">
+    <div class="num" aria-hidden="true">05</div>
     <div class="txt rv">
-      <div class="kick">Step 04</div>
-      <div class="copy"><h2>Climb the leaderboard.<br><span class="g">Earn monthly rewards.</span></h2></div>
-      <ul class="pts">
-        <li><span class="tile c"><i data-ic="users"></i></span><span><b>Points for the users</b> your products bring.</span></li>
-        <li><span class="tile"><i data-ic="trading"></i></span><span><b>Points for your hero agent's trading.</b></span></li>
-        <li><span class="tile"><i data-ic="trophy"></i></span><span><b>Take your slot, stay on top.</b> Compete against the other companies in the Universe.</span></li>
-      </ul>
+      <div class="kick">Step 05</div>
+      <div class="copy"><h2>Farm your points.<br>Climb the leaderboard.<br><span class="g">Earn monthly rewards.</span></h2></div>
+      <p class="sub"><b>Compete with other companies in the Universe</b> to secure your top <span data-figure="slots"></span> slot on the leaderboard.</p>
     </div>
     <div class="stage uni rv">
-      <figure class="pic"><div class="clip xf" data-anim="universe"><video muted playsinline preload="metadata" poster="pics/universe.webp" width="1408" height="758"><source src="clips/universe.webm" type="video/webm"></video></div>
+      <figure class="pic"><div class="clip xf" data-anim="universe"><video muted playsinline preload="metadata" poster="pics/universe.webp" width="1408" height="708"><source src="clips/universe.webm" type="video/webm"></video></div>
         <span class="sun" aria-hidden="true"><img src="pics/sun.webp" alt=""></span></figure>
-      <div class="climb" data-anim="climb" aria-label="The leaderboard: your company climbs to the top"></div>
+      <div class="climb crystal" data-anim="climb" aria-label="The leaderboard: your company climbs to the top"></div>
     </div>
   </section>
 
-  <section id="go" data-step="4" class="final">
+  <section id="go" data-step="5" class="final">
     <div class="calls">
-      <a class="cta" data-link="builder"><span class="tile c"><i data-ic="hub"></i></span><span class="t">Start your company</span> <i class="ar">&rarr;</i></a>
-      <a class="cta alt" data-link="universe"><span class="tile"><i data-ic="planet"></i></span><span class="t">Explore the Universe</span> <i class="ar">&rarr;</i></a>
+      <a class="gem" data-link="builder"><span class="face"></span><span class="t">Start your company</span><i class="ar">&rarr;</i><span class="glint"></span></a>
+      <a class="gem alt" data-link="universe"><span class="face"></span><span class="t">Explore the Universe</span><i class="ar">&rarr;</i><span class="glint"></span></a>
     </div>
   </section>
 </main>
 
+<script src="logos.js"></script>
 <script src="quest.js"></script>
 <script src="anim.js"></script>
 </body>
