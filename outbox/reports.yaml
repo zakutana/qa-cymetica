@@ -6919,3 +6919,76 @@ footer: >
   no duplicate tickets. Every figure above was
   read from the live service at the time stated, and each finding ships with
   the command that reproduces it.
+  - key: quant-lab-daily-search-completes
+    findings: [CYM-quant-lab-daily-search-completes]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/company/app/experiments
+    title: >-
+      Quant Lab: 3 searches in a row (Oct 28, 29, 30) failed before running a single backtest, at the same database
+      query; none has completed since Oct 27
+    expected: >
+      The Quant Lab's search completes. Its page says "The lab searches by itself every day", and when a search fails,
+      "The last search stopped: ... It tries again on the next pass." So a failed search is followed, at the latest
+      on the next daily pass, by one that completes.
+    actual: >
+      Read on 2026-10-30 at 13:57 UTC, signed in as the owner of our company 14 (plan Pro, access allowed).
+      GET /api/v1/company/14/quant-lab/search/results?limit=12 lists four searches. #9 (origin daily, requested
+      2026-10-30 10:09:52 UTC), #7 (daily, 2026-10-29 10:09:32) and #5 (origin owner, 2026-10-28 10:09:16) are all
+      status "failed" with total_jobs 0, done_jobs 0 and started_at null, finished 44, 42 and 84 seconds after they
+      were requested, and all three carry the same error: "OperationalError: (psycopg2.OperationalError) server
+      closed the connection unexpectedly ... [SQL: SELECT company_quant_combos.combo_key ...,
+      company_quant_combos.data_fp ... FROM company_quant_combos WHERE company_quant_combos.company_id = ...". The
+      last search that completed is #3 (daily, finished 2026-10-27 14:01:08 UTC: 1,728 combinations, 5 checked on
+      the held-back period, 0 won). GET /api/v1/company/14/quant-lab/search agrees: search is #9 (failed),
+      last_finished is #3. So no search has completed for 72 hours, and the retry the page promises came every day
+      and failed the same way, at the same query, before a single backtest ran.
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/14/quant-lab/search/results?limit=12 as the owner -> searches: #9 failed (daily, 2026-10-30T10:09:52Z), #7 failed (daily, 2026-10-29T10:09:32Z), #5 failed (owner, 2026-10-28T10:09:16Z), each total_jobs 0, started_at null, the same OperationalError at "SELECT company_quant_combos.combo_key ... FROM company_quant_combos"; #3 done, finished 2026-10-27T14:01:08Z'
+      - 'GET https://cymetica.com/api/v1/company/14/quant-lab/search as the owner -> search.id 9, status failed; last_finished.id 3, finished_at 2026-10-27T14:01:08Z'
+      - 'Open https://cymetica.com/company/app/experiments as the owner -> "The last search stopped: OperationalError: ... It tries again on the next pass."'
+    body: >
+      A Pro owner's lab has not searched for three days. The page tells them it will try again, and every retry since
+      Oct 28 has stopped at the same query before the first backtest, so this is not a one-off. We read one company
+      (ours); we cannot see whether other owners' searches fail too. Our check reads the owner's search status and
+      history and fails while the newest search has failed and none has completed in the last 48 hours (two daily
+      passes); it passes once a search completes, even with the old failures still in the history, is not judged
+      while a search is queued or running, and is inconclusive if the company or the lab cannot be read or the plan
+      does not include it. GET requests only.
+
+  - key: quant-lab-search-error-names-no-internals
+    findings: [CYM-quant-lab-search-error-names-no-internals]
+    severity: low
+    category: security
+    url: https://cymetica.com/company/app/experiments
+    title: >-
+      Quant Lab: a failed search shows the owner the raw database error, with the SQL query, the table
+      company_quant_combos and three of its column names
+    expected: >
+      When a search fails, the owner reads a reason written for a person, and the API's error field carries no SQL
+      text, database driver or exception names; those stay in your logs.
+    actual: >
+      Read on 2026-10-30 at 13:57 UTC, signed in as the owner of our company 14. The three failed searches #9, #7 and
+      #5 in GET /api/v1/company/14/quant-lab/search/results each carry the same error, 400 characters, cut off in
+      the middle of a word: "OperationalError: (psycopg2.OperationalError) server closed the connection
+      unexpectedly / This probably means the server terminated abnormally / before or while processing the request.
+      / [SQL: SELECT company_quant_combos.combo_key AS company_quant_combos_combo_key, company_quant_combos.data_fp
+      AS company_quant_combos_data_fp / FROM company_quant_combos / WHERE company_quant_combos.company_id =
+      %(compan". GET /api/v1/company/14/quant-lab/search returns the same text in search.error, and the Experiments
+      page prints it as it comes: quantsearch.js line() returns 'The last search stopped: ' + esc(s.error || 'no
+      reason recorded') + '. It tries again on the next pass.' So the owner's page shows a Python exception, the
+      database driver (psycopg2), a table name, three column names (combo_key, data_fp, company_id) and half a bind
+      parameter, in the middle of an English sentence.
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/14/quant-lab/search/results?limit=12 as the owner -> searches[0..2].error: "OperationalError: (psycopg2.OperationalError) server closed the connection unexpectedly ... [SQL: SELECT company_quant_combos.combo_key AS company_quant_combos_combo_key, company_quant_combos.data_fp AS company_quant_combos_data_fp FROM company_quant_combos WHERE company_quant_combos.company_id = %(compan"'
+      - 'GET https://cymetica.com/api/v1/company/14/quant-lab/search as the owner -> search.error, the same text'
+      - 'GET https://cymetica.com/static/company/quantsearch.js -> line(s): if (s.status === ''failed'') return ''The last search stopped: '' + esc(s.error || ''no reason recorded'') + ''. It tries again on the next pass.'''
+    body: >
+      The API is owner-only, so this reaches owners, not the public; but every owner whose search fails is shown
+      your schema and stack, and the sentence means nothing to them. Storing or serving a short reason for a person
+      (and keeping the exception in your logs) would fix it; a fix in the page alone would leave the same text in
+      the API that owners' agents read. Our check reads the error of every failed search in the owner's search
+      status and history (limit=12) and fails while one names an SQL statement, a database driver or ORM, an
+      exception class at its start, or a Python traceback; it passes for a null error or any sentence written for a
+      person, and is inconclusive when no failed search is listed. GET requests only.
+
