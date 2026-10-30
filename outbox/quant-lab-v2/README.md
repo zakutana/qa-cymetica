@@ -28,11 +28,12 @@ the **blind test** rows (setup chips, coin, settings, search % to blind %, a gau
 **bots** with the owner's rule as chips; a foot with *What was tested*, *Log* and *Can tune / can't* (their own
 `can_tune` / `cannot_tune` lists, cut to the part before the colon; the full sentences are tooltips).
 
-The last stage, HERO, is the birth of a hero agent: the winning setup crushed into a core, a flash and shockwaves, the
-agent (our robot mascot, `agentSVG` in ql.js: shell, visor, LEDs, no face) built from the feet up under a scan beam,
-HERO AGENT BORN, then its card trading the same setup on paper. With no winner the agent stays dark: NO HERO AGENT.
-Coin logos are CoinGecko's (`assets.coingecko.com`), the source their own /perpetual pages load BTC and ETH from; the
-other icons are one line set of ours (`IC` in ql.js). Every name and model / skill icon is theirs: models and
+The last stage, FOUND: the winning setup crushed into a core, a flash and shockwaves, the agent (our own picture from
+the Quest steps page, `pics/agent.webp`, its edges faded to transparent so it sits in the grid with no frame) built
+from the floor up as a hologram under a scan beam, its eyes burning, PROFITABLE AGENT FOUND, then its card trading the
+same setup on paper. With no winner the agent stays dark: NO PROFITABLE AGENT. No "hero agent" anywhere (the operator,
+2026-10-30). Coin logos are CoinGecko's (`assets.coingecko.com`), the source their own /perpetual pages load BTC and
+ETH from; the tile and stage icons are the colourful emoji he preferred. Every name and model / skill icon is theirs: models and
 combinations from `/adm`, skills from `/skills-n-tools`, the method and the limits from `/api/v1/company/{id}/quant-lab/search`. The premium models (PRION, SYNAPSE, TELOMERE) stay out of the
 simulated setups, because their own list says the lab never equips them. Their `style.css` and `xp.css` are loaded live
 from cymetica.com; every class of ours starts `q2-` because theirs styles short global names (`.on`, `.n`, `.bar`, `.up`).

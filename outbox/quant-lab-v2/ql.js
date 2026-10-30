@@ -34,51 +34,9 @@
   function coinUrl(s) { return COIN[s] ? 'https://assets.coingecko.com/coins/images/' + COIN[s] : ''; }
   function coinTag(s) { return '<span class="q2-coin"><img src="' + coinUrl(s) + '" alt=""></span><b class="q2-ct">' + esc(s) + '</b>'; }
 
-  // the icon set: one line weight, currentColor, so each tile colours its own
-  var IC = {
-    search: '<circle cx="11" cy="11" r="7.5"/><path d="M11 11l5-5"/><path d="M21 21l-4.6-4.6"/><circle cx="11" cy="11" r="1.4" fill="currentColor"/><path d="M11 5.5a5.5 5.5 0 0 1 5.5 5.5" opacity=".5"/>',
-    failed: '<path d="M12 2.8l9.6 17.4H2.4z"/><path d="M12.8 8.5l-2.6 5h3.4l-2.4 4.6"/>',
-    tried: '<rect x="3" y="3" width="5" height="5" rx="1.2"/><rect x="9.5" y="3" width="5" height="5" rx="1.2"/><rect x="16" y="3" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="3" y="9.5" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="9.5" y="9.5" width="5" height="5" rx="1.2"/><rect x="16" y="9.5" width="5" height="5" rx="1.2"/><rect x="3" y="16" width="5" height="5" rx="1.2"/><rect x="9.5" y="16" width="5" height="5" rx="1.2" fill="currentColor"/><rect x="16" y="16" width="5" height="5" rx="1.2"/>',
-    blind: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path d="M3.5 20.5l17-17"/>',
-    bar: '<path d="M1.5 12.5h21" stroke-dasharray="2.6 2.2"/><path d="M4 20.5l4.5-5 3 2.2L19 5"/><path d="M14.5 5H19v4.5"/>',
-    bot: '<path d="M12 1.8v2.7"/><circle cx="12" cy="1.8" r="1.1" fill="currentColor"/><path d="M4.5 9.5a7.5 5 0 0 1 15 0v5.5a4 4 0 0 1-4 4h-7a4 4 0 0 1-4-4z"/><path d="M7.3 10.2l3.6.7v2l-3.6-.3zM16.7 10.2l-3.6.7v2l3.6-.3z" fill="currentColor"/><path d="M10 16.4h4"/><path d="M2.5 11v3.5M21.5 11v3.5"/>',
-    build: '<path d="M12 2l8.7 5v10L12 22l-8.7-5V7z"/><path d="M12 8v8M8 12h8"/>',
-    blast: '<path d="M12 1.5v5M12 17.5v5M1.5 12h5M17.5 12h5M4.6 4.6l3.5 3.5M15.9 15.9l3.5 3.5M19.4 4.6l-3.5 3.5M8.1 15.9l-3.5 3.5"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/>'
-  };
-  function icon(k) { return '<svg class="q2-i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[k] + '</svg>'; }
-
-  // the hero agent: a robot (shell, visor, LEDs), never a face; u keeps its gradient ids apart when drawn twice
-  function agentSVG(u, grey) {
-    var A = grey ? '#3a4d68' : '#00cfff', B = grey ? '#3a4d68' : '#00ff88', L = grey ? '#7f93ad' : '#00ff88';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 220" aria-hidden="true"><defs>' +
-      '<linearGradient id="' + u + 's" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e3050"/><stop offset="1" stop-color="#06090f"/></linearGradient>' +
-      '<linearGradient id="' + u + 'r" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="' + A + '"/><stop offset="1" stop-color="' + B + '"/></linearGradient>' +
-      '<radialGradient id="' + u + 'c"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="' + L + '"/><stop offset="1" stop-color="' + L + '" stop-opacity="0"/></radialGradient>' +
-      '<filter id="' + u + 'g" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
-      // shoulders and chest
-      '<path d="M14 220c2-44 34-66 86-66s84 22 86 66z" fill="url(#' + u + 's)" stroke="url(#' + u + 'r)" stroke-width="3"/>' +
-      '<path d="M20 206c4-26 20-40 46-46l8 20c-18 4-30 14-36 30z" fill="#111a28" stroke="' + A + '" stroke-width="2"/>' +
-      '<path d="M180 206c-4-26-20-40-46-46l-8 20c18 4 30 14 36 30z" fill="#111a28" stroke="' + A + '" stroke-width="2"/>' +
-      '<rect x="80" y="130" width="40" height="30" rx="8" fill="#0d1520" stroke="#1e3050" stroke-width="2"/>' +
-      '<path d="M100 172l16 9v18l-16 9-16-9v-18z" fill="#06090f" stroke="' + B + '" stroke-width="2.5"/>' +
-      '<circle cx="100" cy="190" r="13" fill="url(#' + u + 'c)" filter="url(#' + u + 'g)"/>' +
-      '<path d="M93 194l7-9 7 9" fill="none" stroke="#06090f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
-      // antenna and crest
-      '<path d="M146 44l18-28" stroke="#1e3050" stroke-width="4" stroke-linecap="round"/><circle cx="165" cy="14" r="5" fill="' + L + '" filter="url(#' + u + 'g)"/>' +
-      '<path d="M90 26l10-22 10 22z" fill="url(#' + u + 'r)"/>' +
-      // ear pods
-      '<rect x="26" y="70" width="16" height="40" rx="7" fill="#111a28" stroke="' + A + '" stroke-width="2"/><rect x="158" y="70" width="16" height="40" rx="7" fill="#111a28" stroke="' + A + '" stroke-width="2"/>' +
-      '<circle cx="34" cy="82" r="2.6" fill="' + L + '"/><circle cx="34" cy="92" r="2.6" fill="' + L + '" opacity=".5"/><circle cx="166" cy="82" r="2.6" fill="' + L + '"/><circle cx="166" cy="92" r="2.6" fill="' + L + '" opacity=".5"/>' +
-      // helmet
-      '<path d="M100 22c42 0 60 26 60 60v24c0 20-20 34-60 34s-60-14-60-34V82c0-34 18-60 60-60z" fill="url(#' + u + 's)" stroke="url(#' + u + 'r)" stroke-width="3.5"/>' +
-      '<path d="M62 40c10-9 22-13 38-13" fill="none" stroke="#ffffff" stroke-opacity=".25" stroke-width="3" stroke-linecap="round"/>' +
-      // visor and its eyes
-      '<path d="M52 72c0-10 8-16 18-16h60c10 0 18 6 18 16v16c0 10-8 16-18 16H70c-10 0-18-6-18-16z" fill="#06090f" stroke="url(#' + u + 'r)" stroke-width="3"/>' +
-      '<g filter="url(#' + u + 'g)" fill="' + L + '"><path d="M66 72l29 6v9l-29-3z"/><path d="M134 72l-29 6v9l29-3z"/></g>' +
-      '<path d="M60 96l18-34" stroke="#ffffff" stroke-opacity=".12" stroke-width="6"/>' +
-      // grille
-      '<g stroke="' + A + '" stroke-width="3" stroke-linecap="round" opacity=".8"><path d="M86 118h28"/><path d="M90 126h20"/></g></svg>';
-  }
+  // the agent: our own picture (the Quest steps page's, outbox/quest-steps/pics/agent.webp), cropped to the scene and the head
+  var AGENT = 'pics/agent.webp', HEAD = 'pics/agent-head.webp';
+  function headImg(cls) { return '<img class="' + cls + '" src="' + HEAD + '" alt="">'; }
 
   function setupKey(s) { return [s.base].concat(s.skills).join('+'); }
   function baseOf(s) { return s.kind === 'combo' ? COMBOS[s.base] : MODELS[s.base]; }
@@ -157,16 +115,16 @@
 
   // ---------------------------------------------------------------- DOM
   function tile(k, ic, n, l, cls, tip) {
-    return '<div class="q2-tile ' + (cls || '') + (n === 0 ? ' q2-zero' : '') + '" title="' + esc(tip) + '"><span class="q2-ic">' + icon(ic) + '</span><span class="q2-n" data-k="' + k + '">' + num(n) + '</span><span class="q2-l">' + l + '</span></div>';
+    return '<div class="q2-tile ' + (cls || '') + (n === 0 ? ' q2-zero' : '') + '" title="' + esc(tip) + '"><span class="q2-ic">' + (ic === 'head' ? headImg('q2-hd') : ic) + '</span><span class="q2-n" data-k="' + k + '">' + num(n) + '</span><span class="q2-l">' + l + '</span></div>';
   }
   function renderScore() {
     $('score').innerHTML =
-      tile('searches', 'search', M.searches, 'Searches', '', M.mode === 'real' ? 'Searches run: daily, or when you ask' : 'One search') +
-      tile('failed', 'failed', M.failed, 'Failed', M.failed ? 'q2-down' : '', M.failed ? M.failedWhy : 'None failed') +
-      tile('tried', 'tried', M.tried, 'Tried', 'q2-cy', M.setups.length + ' setups × ' + M.markets.length + ' markets × ' + M.settings + ' settings, each replayed on past prices') +
-      tile('checked', 'blind', M.checked, 'Blind-tested', '', 'The best few, re-run on the later period the search never saw') +
-      tile('won', 'bar', M.won, 'Beat the bar', M.won ? 'q2-up' : 'q2-down', 'Won on the blind period by more than the bar, which rises with every try') +
-      tile('bots', 'bot', M.bots, 'Hero agents', M.bots ? 'q2-up' : '', M.mode === 'real' ? 'Paper bots started from winners' : 'Paper bots started with exactly the winning setup');
+      tile('searches', '🔎', M.searches, 'Searches', '', M.mode === 'real' ? 'Searches run: daily, or when you ask' : 'One search') +
+      tile('failed', '⚠️', M.failed, 'Failed', M.failed ? 'q2-down' : '', M.failed ? M.failedWhy : 'None failed') +
+      tile('tried', '🧮', M.tried, 'Tried', 'q2-cy', M.setups.length + ' setups × ' + M.markets.length + ' markets × ' + M.settings + ' settings, each replayed on past prices') +
+      tile('checked', '🙈', M.checked, 'Blind-tested', '', 'The best few, re-run on the later period the search never saw') +
+      tile('won', '🏁', M.won, 'Beat the bar', M.won ? 'q2-up' : 'q2-down', 'Won on the blind period by more than the bar, which rises with every try') +
+      tile('bots', 'head', M.bots, 'Agents found', M.bots ? 'q2-up' : '', M.mode === 'real' ? 'Paper bots started from winners' : 'Paper bots started with exactly the winning setup');
   }
   function gauge(c, lo, hi) {
     function x(v) { return ((v - lo) / (hi - lo) * 100).toFixed(2) + '%'; }
@@ -202,19 +160,19 @@
     if (M.mode === 'sim') {
       $('bots').innerHTML = M.botList.map(function (b) {
         var c = b.cand;
-        return '<div class="q2-bot" data-setup="' + esc(c.setup_key) + '"><div class="q2-bt"><span class="q2-av">' + agentSVG('bc' + c.market) + '</span><div><div class="q2-nm">' + esc(baseOf(c.setup)[1]) + ' · ' + esc(c.market) + ' <span class="q2-coin q2-cs2"><img src="' + coinUrl(c.market) + '" alt=""></span></div>' +
-          '<div class="q2-bst"><i></i>HERO AGENT · PAPER · RUNNING</div></div><span class="q2-ret ' + (b.ret >= 0 ? 'q2-up' : 'q2-down') + '">' + pct(b.ret) + '</span></div>' +
+        return '<div class="q2-bot" data-setup="' + esc(c.setup_key) + '"><div class="q2-bt"><span class="q2-av">' + headImg('') + '</span><div><div class="q2-nm">' + esc(baseOf(c.setup)[1]) + ' · ' + esc(c.market) + ' <span class="q2-coin q2-cs2"><img src="' + coinUrl(c.market) + '" alt=""></span></div>' +
+          '<div class="q2-bst"><i></i>PROFITABLE · PAPER · RUNNING</div></div><span class="q2-ret ' + (b.ret >= 0 ? 'q2-up' : 'q2-down') + '">' + pct(b.ret) + '</span></div>' +
           '<div class="q2-same" title="The bot trades the setup that won, nothing mapped or swapped">✓ SAME SETUP AS THE WINNER</div>' + setupChips(c.setup) +
           spark(b.pts) + '<div class="q2-acts"><button title="Pause">⏸</button><button title="Vary: the lab proposes the next variation">⟳</button><button title="Remove">✕</button>' +
           '<span class="q2-kp"><span><b>' + b.trades + '</b> trades</span><span>DD <b>' + b.dd.toFixed(1) + '%</b></span><span><b>' + esc(c.settings.replace(' / ', ' · ')) + '</b></span></span></div></div>';
       }).join('');
     } else if (D.experiments.length) {
       $('bots').innerHTML = D.experiments.map(function (x) {
-        return '<div class="q2-bot" data-setup="' + esc(x.title) + '"><div class="q2-bt"><span class="q2-av">' + agentSVG('bx' + x.id) + '</span><div><div class="q2-nm">' + esc(x.title) + '</div><div class="q2-bst"><i></i>' + esc(String(x.status).toUpperCase()) + '</div></div>' +
+        return '<div class="q2-bot" data-setup="' + esc(x.title) + '"><div class="q2-bt"><span class="q2-av">' + headImg('') + '</span><div><div class="q2-nm">' + esc(x.title) + '</div><div class="q2-bst"><i></i>' + esc(String(x.status).toUpperCase()) + '</div></div>' +
           '<span class="q2-ret ' + ((x.return_pct || 0) >= 0 ? 'q2-up' : 'q2-down') + '">' + pct(x.return_pct) + '</span></div></div>';
       }).join('');
     } else {
-      $('bots').innerHTML = '<div class="q2-empty"><span class="q2-ebot">' + agentSVG('be', true) + '</span><span class="q2-big">0</span><span>No hero agent yet. Winners land here as paper bots.</span></div>';
+      $('bots').innerHTML = '<div class="q2-empty">' + headImg('q2-ebot') + '<span class="q2-big">0</span><span>No profitable agent yet. Winners land here as paper bots.</span></div>';
     }
   }
   function renderCaps() {
@@ -232,7 +190,7 @@
   }
 
   // ---------------------------------------------------------------- the reactor
-  var STAGES = [['build', 'build', 'BUILD', 3.2], ['blast', 'blast', 'BLAST', 4.4], ['blind', 'blind', 'BLIND', 3.4], ['bar', 'bar', 'THE BAR', 5.6], ['bot', 'bot', 'HERO', 7.0]];
+  var STAGES = [['build', '🧩', 'BUILD', 3.2], ['blast', '💥', 'BLAST', 4.4], ['blind', '🙈', 'BLIND', 3.4], ['bar', '🚧', 'THE BAR', 5.6], ['bot', '🏆', 'FOUND', 7.0]];
   var TOTAL = STAGES.reduce(function (a, s) { return a + s[3]; }, 0);
   var cv = $('rx'), ctx = cv.getContext('2d'), W = 0, H = 0, DPR = 1, t0 = performance.now(), offset = 0, parts = [], shake = 0, fired = {}, cells = null;
   var paused = false, held = 0;   // paused: the clock stands at `held`
@@ -243,9 +201,7 @@
   function size() { DPR = Math.min(2, window.devicePixelRatio || 1); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * DPR; cv.height = H * DPR; }
   function rail() {
     $('rail').innerHTML = '<button class="q2-pp" data-pp aria-label="Pause">⏸</button>' +
-      STAGES.map(function (s, i) { return '<button data-st="' + i + '"><span class="q2-e">' + icon(s[1]) + '</span><span class="q2-t">' + s[2] + '</span><i></i></button>'; }).join('');
-    $('h-blind').innerHTML = icon('blind') + 'BLIND TEST';
-    $('h-bots').innerHTML = icon('bot') + 'HERO AGENTS';
+      STAGES.map(function (s, i) { return '<button data-st="' + i + '"><span class="q2-e">' + s[1] + '</span><span class="q2-t">' + s[2] + '</span><i></i></button>'; }).join('');
   }
   function now() { return paused ? held : ((performance.now() - t0) / 1000 + offset) % TOTAL; }
   function startOf(i) { var a = 0; for (var k = 0; k < i; k++) a += STAGES[k][3]; return a; }
@@ -290,10 +246,10 @@
   function scan() {
     ctx.fillStyle = 'rgba(0, 0, 0, .18)'; for (var y = 0; y < H; y += 3) ctx.fillRect(0, y, W, 1);
   }
-  var IMG = {};   // the coin logos and the hero agent, as images the canvas can draw
+  var IMG = {};   // the coin logos and the agent's picture, as images the canvas can draw
   Object.keys(COIN).forEach(function (s) { var im = new Image(); im.src = coinUrl(s); IMG[s] = im; });
-  function svgImage(svg) { var im = new Image(); im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); return im; }
-  IMG.agent = svgImage(agentSVG('cv')); IMG.agentGrey = svgImage(agentSVG('cg', true));
+  IMG.agent = new Image(); IMG.agent.src = AGENT;
+  var EYES = [[502 / 1000, 265 / 1016], [574 / 1000, 260 / 1016]];   // where the agent's eyes sit in pics/agent.webp
   function ready(im) { return im && im.complete && im.naturalWidth > 0; }
   function coin(sym, x, y, r, label) {
     ctx.beginPath(); ctx.arc(x, y, r + 2, 0, Math.PI * 2); ctx.fillStyle = C.navy; ctx.fill();
@@ -469,8 +425,8 @@
     });
   }
 
-  // 5 HERO: a winner is born as a paper bot with the very same setup; no winner, no hero agent
-  var flash = 0, rings = [];
+  // 5 FOUND: a winner becomes a paper bot with the very same setup; no winner, no agent
+  var flash = 0, rings = [], ringX = 0, ringY = 0;
   function hexPath(cx, cy, r, rot) {
     ctx.beginPath();
     for (var k = 0; k < 6; k++) { var a = rot + k * Math.PI / 3; ctx[k ? 'lineTo' : 'moveTo'](cx + Math.cos(a) * r, cy + Math.sin(a) * r); }
@@ -481,25 +437,40 @@
     for (var k = 1; k < 7; k++) { var f = k / 7; ctx.lineTo(x1 + (x2 - x1) * f + (Math.random() - 0.5) * 26, y1 + (y2 - y1) * f + (Math.random() - 0.5) * 26); }
     ctx.lineTo(x2, y2); ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.shadowColor = color; ctx.shadowBlur = 14; ctx.stroke(); ctx.shadowBlur = 0;
   }
-  function slam(s, x, y, size, p0, p) {   // a title that lands hard, split into cyan and green for a beat
+  function slam(s, x, y, size, p0, p, color) {   // a title that lands hard, split into cyan and green for a beat
     var a = ease(seg(p, p0, p0 + 0.06)), sc = 1 + (1 - a) * 1.4, gl = (1 - seg(p, p0 + 0.06, p0 + 0.16)) * 5;
     if (a <= 0) return;
     ctx.save(); ctx.globalAlpha = a; ctx.translate(x, y); ctx.scale(sc, sc);
     if (gl > 0.2) { txt(s, -gl, 0, '400 ' + size + 'px ' + BLACK, C.cyan, 'left'); txt(s, gl, 0, '400 ' + size + 'px ' + BLACK, C.green, 'left'); }
-    txt(s, 0, 0, '400 ' + size + 'px ' + BLACK, C.text, 'left', 22); ctx.restore();
+    txt(s, 0, 0, '400 ' + size + 'px ' + BLACK, color || C.text, 'left', 22); ctx.restore();
+  }
+  // the agent's picture, its edges melted into the dark so it is not a framed photo
+  function agentBox() { var ih = H * 1.25, iw = ih * 1000 / 1016; return { x: W * 0.02, y: -H * 0.08, w: iw, h: ih }; }
+  var AGM = null;   // the picture with its edges faded to transparent, made once: the grid shows through, no frame
+  function agentMasked() {
+    if (AGM || !ready(IMG.agent)) return AGM;
+    var c = document.createElement('canvas'); c.width = 1000; c.height = 1016;
+    var x = c.getContext('2d'); x.drawImage(IMG.agent, 0, 0, 1000, 1016); x.globalCompositeOperation = 'destination-in';
+    [[1000, 0, [[0, 0], [0.16, 1], [0.64, 1], [1, 0]]], [0, 1016, [[0, 0], [0.06, 1], [0.7, 1], [1, 0]]]].forEach(function (m) {
+      var gr = x.createLinearGradient(0, 0, m[0], m[1]); m[2].forEach(function (s) { gr.addColorStop(s[0], 'rgba(0, 0, 0, ' + s[1] + ')'); });
+      x.fillStyle = gr; x.fillRect(0, 0, 1000, 1016);
+    });
+    AGM = c; return AGM;
   }
   function drawBot(p, t) {
-    var S = Math.min(H * 0.8, W * 0.3), aw = S * 200 / 220, ax = W * 0.24, ay = H / 2 - S / 2 + 8;
+    var g = agentBox();
     if (!M.won) {   // no winner: the agent stays dark
-      var a = ease(seg(p, 0, 0.25)), jit = Math.random() < 0.06 ? (Math.random() - 0.5) * 10 : 0;
-      ctx.globalAlpha = 0.55 * a; if (ready(IMG.agentGrey)) ctx.drawImage(IMG.agentGrey, ax - aw / 2 + jit, ay, aw, S); ctx.globalAlpha = 1;
-      txt('0', W * 0.48, H * 0.4, '400 150px ' + BLACK, C.red, 'center', 30);
-      slam('NO WINNER', W * 0.58, H * 0.36, 44, 0.1, p);
-      slam('NO HERO AGENT', W * 0.58, H * 0.36 + 56, 44, 0.18, p);
-      txt(M.checked + ' BLIND-TESTED · ' + M.checked + ' THROWN OUT', W * 0.58, H * 0.36 + 112, '700 15px ' + MONO, C.dim, 'left');
+      var a = ease(seg(p, 0, 0.25)), jit = Math.random() < 0.06 ? (Math.random() - 0.5) * 12 : 0;
+      var dark = agentMasked();
+      if (dark) { ctx.save(); ctx.globalAlpha = a; ctx.filter = 'grayscale(1) brightness(.35)'; ctx.drawImage(dark, g.x + jit, g.y, g.w, g.h); ctx.restore(); }
+      txt('0', W * 0.47, H * 0.42, '400 150px ' + BLACK, C.red, 'center', 30);
+      slam('NO WINNER', W * 0.56, H * 0.36, 44, 0.1, p);
+      slam('NO PROFITABLE AGENT', W * 0.56, H * 0.36 + 56, 44, 0.18, p);
+      txt(M.checked + ' BLIND-TESTED · ' + M.checked + ' THROWN OUT', W * 0.56, H * 0.36 + 112, '700 15px ' + MONO, C.dim, 'left');
       return;
     }
-    var b = M.botList[0], c = b.cand, cx = ax, cy = H / 2;
+    var b = M.botList[0], c = b.cand, cx = g.x + g.w * 0.55, cy = g.y + g.h * 0.42;
+    ringX = cx; ringY = cy;
     // 1 charge: the winning setup flies in and is crushed into a core
     if (p < 0.15) {
       var f = ease(seg(p, 0, 0.11)), orb = 6 + 40 * seg(p, 0.05, 0.15);
@@ -512,46 +483,57 @@
       return;
     }
     once('flash', function () { flash = 1; shake = 26; burst(cx, cy, C.green, 160, 13); burst(cx, cy, C.cyan, 90, 9); rings.push(0, -0.12, -0.24); });   // three waves, a beat apart
-    // 2 materialise: a pillar of light, two hex rings, the agent built from the feet up under a scan beam
-    var rev = ease(seg(p, 0.16, 0.42)), fl = Math.sin(t * 2.2) * 6 * seg(p, 0.42, 0.5);
-    var pil = ctx.createLinearGradient(cx - 90, 0, cx + 90, 0); pil.addColorStop(0, 'rgba(0, 255, 136, 0)'); pil.addColorStop(0.5, 'rgba(0, 255, 136, .14)'); pil.addColorStop(1, 'rgba(0, 255, 136, 0)');
-    ctx.fillStyle = pil; ctx.fillRect(cx - 90, 0, 180, H);
-    var halo = ctx.createRadialGradient(cx, cy, 10, cx, cy, S * 0.75); halo.addColorStop(0, 'rgba(0, 255, 136, .28)'); halo.addColorStop(1, 'rgba(0, 207, 255, 0)');
-    ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(cx, cy, S * 0.75, 0, Math.PI * 2); ctx.fill();
+    // 2 materialise: a pillar of light and two hex rings, the agent built from the floor up under a scan beam, a hologram until it is whole
+    var rev = ease(seg(p, 0.16, 0.42)), zoom = 1 + 0.035 * seg(p, 0.42, 1), R = g.h * 0.5;
+    var pil = ctx.createLinearGradient(cx - 110, 0, cx + 110, 0); pil.addColorStop(0, 'rgba(0, 255, 136, 0)'); pil.addColorStop(0.5, 'rgba(0, 255, 136, .16)'); pil.addColorStop(1, 'rgba(0, 255, 136, 0)');
+    ctx.fillStyle = pil; ctx.fillRect(cx - 110, 0, 220, H);
     ctx.lineWidth = 2; ctx.setLineDash([10, 8]);
-    hexPath(cx, cy, S * 0.56, t * 0.6); ctx.strokeStyle = 'rgba(0, 207, 255, .55)'; ctx.stroke();
-    hexPath(cx, cy, S * 0.64, -t * 0.4); ctx.strokeStyle = 'rgba(0, 255, 136, .45)'; ctx.stroke(); ctx.setLineDash([]);
-    if (ready(IMG.agent)) {
-      var top = ay + S * (1 - rev);
-      ctx.save(); ctx.beginPath(); ctx.rect(ax - aw, top + fl, aw * 2, S + 20); ctx.clip();
-      ctx.shadowColor = C.green; ctx.shadowBlur = 40; ctx.drawImage(IMG.agent, ax - aw / 2, ay + fl, aw, S); ctx.shadowBlur = 0; ctx.restore();
+    hexPath(cx, cy, R * 0.86, t * 0.6); ctx.strokeStyle = 'rgba(0, 207, 255, .5)'; ctx.stroke();
+    hexPath(cx, cy, R * 0.98, -t * 0.4); ctx.strokeStyle = 'rgba(0, 255, 136, .4)'; ctx.stroke(); ctx.setLineDash([]);
+    var am = agentMasked();
+    if (am) {
+      var top = g.y + g.h * (1 - rev), ex0 = g.x + g.w * EYES[0][0], ey0 = g.y + g.h * EYES[0][1];
+      ctx.save(); ctx.beginPath(); ctx.rect(g.x - 20, top, g.w + 40, g.h); ctx.clip();
+      ctx.translate(ex0, ey0); ctx.scale(zoom, zoom); ctx.translate(-ex0, -ey0);   // a slow push in on the face
+      if (rev < 1) ctx.globalAlpha = 0.7 + Math.random() * 0.3;
+      ctx.drawImage(am, g.x, g.y, g.w, g.h);
+      if (rev < 1) {   // hologram: a cyan cast over the agent only, and a few torn slices
+        ctx.globalAlpha = 0.5; ctx.filter = 'sepia(1) hue-rotate(130deg) saturate(4)'; ctx.drawImage(am, g.x, g.y, g.w, g.h);
+        ctx.filter = 'none'; ctx.globalAlpha = 0.9;
+        for (var sl = 0; sl < 3; sl++) { var sy = top + Math.random() * (g.y + g.h - top), sh = 4 + Math.random() * 14, off = (Math.random() - 0.5) * 30;
+          ctx.drawImage(am, 0, (sy - g.y) / g.h * 1016, 1000, sh / g.h * 1016, g.x + off, sy, g.w, sh); }
+      } else {   // alive: the eyes burn
+        ctx.globalCompositeOperation = 'lighter';
+        EYES.forEach(function (e) {
+          var x = g.x + g.w * e[0], y = g.y + g.h * e[1], rad = 16 * (0.85 + 0.35 * Math.sin(t * 4));
+          var eg = ctx.createRadialGradient(x, y, 0, x, y, rad); eg.addColorStop(0, 'rgba(0, 255, 136, .9)'); eg.addColorStop(1, 'rgba(0, 255, 136, 0)');
+          ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(x, y, rad, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      ctx.restore();
       if (rev < 1) {
-        ctx.fillStyle = '#ffffff'; ctx.shadowColor = C.green; ctx.shadowBlur = 30; ctx.fillRect(ax - aw * 0.62, top + fl - 2, aw * 1.24, 4); ctx.shadowBlur = 0;
-        if (Math.random() < 0.7) { burst(ax - aw * 0.6, top + fl, C.green, 2, 4); burst(ax + aw * 0.6, top + fl, C.cyan, 2, 4); }
-      } else {   // alive: the visor's scan and the eyes' pulse
-        var vx0 = ax - aw / 2 + aw * 52 / 200, vw = aw * 96 / 200, vy = ay + fl + S * 58 / 220, vh = S * 44 / 220, sx = vx0 + ((t * 0.9) % 1) * vw;
-        ctx.save(); ctx.beginPath(); ctx.rect(vx0, vy, vw, vh); ctx.clip();
-        var sg = ctx.createLinearGradient(sx - 30, 0, sx + 4, 0); sg.addColorStop(0, 'rgba(0, 255, 136, 0)'); sg.addColorStop(1, 'rgba(230, 237, 247, .55)');
-        ctx.fillStyle = sg; ctx.fillRect(sx - 30, vy, 34, vh); ctx.restore();
-        if (Math.random() < 0.25) parts.push({ x: ax + (Math.random() - 0.5) * aw, y: ay + S * 0.9, vx: (Math.random() - 0.5) * 0.6, vy: -1.5 - Math.random() * 2, g: -0.01, life: 1, c: Math.random() < 0.5 ? C.green : C.cyan, s: 1.5 + Math.random() * 2 });
+        ctx.fillStyle = '#ffffff'; ctx.shadowColor = C.green; ctx.shadowBlur = 30; ctx.fillRect(g.x + g.w * 0.1, top - 2, g.w * 0.8, 4); ctx.shadowBlur = 0;
+        if (Math.random() < 0.7) { burst(g.x + g.w * 0.12, top, C.green, 2, 4); burst(g.x + g.w * 0.88, top, C.cyan, 2, 4); }
+      } else if (Math.random() < 0.25) {
+        parts.push({ x: g.x + g.w * (0.3 + Math.random() * 0.5), y: H * 0.95, vx: (Math.random() - 0.5) * 0.6, vy: -1.5 - Math.random() * 2, g: -0.01, life: 1, c: Math.random() < 0.5 ? C.green : C.cyan, s: 1.5 + Math.random() * 2 });
       }
     }
     // 3 the title lands
-    var px0 = W * 0.47, pw = W - px0 - 40;
-    ctx.font = '400 54px ' + BLACK; var gap = ctx.measureText('HERO AGENT ').width;
-    slam('HERO AGENT', px0, 62, 54, 0.38, p);
-    slam('BORN', px0 + gap, 62, 54, 0.44, p);
+    var px0 = W * 0.4, pw = W - px0 - 40;
+    slam('PROFITABLE AGENT', px0, 56, 50, 0.38, p);
+    slam('FOUND', px0, 112, 50, 0.44, p, C.green);
     once('t1', function () { if (p >= 0.44) shake = Math.max(shake, 12); });
     // 4 its card: the same setup, now trading on paper
     var pa = ease(seg(p, 0.5, 0.62)), dx = (1 - pa) * 120;
     if (pa <= 0) return;
     ctx.save(); ctx.globalAlpha = pa; ctx.translate(dx, 0);
-    coin(c.market, px0 + 16, 124, 16);
-    txt(baseOf(c.setup)[1].toUpperCase() + ' · ' + c.market, px0 + 44, 124, '400 24px ' + BLACK, C.text, 'left');
-    txt('● PAPER · TRADES THE SETUP THAT WON', px0, 160, '700 13px ' + MONO, C.green, 'left', 6);
-    var cxp = px0; [baseOf(c.setup)[0] + ' ' + baseOf(c.setup)[1]].concat(c.setup.skills.map(function (k) { return SKILLS[k][0] + ' ' + SKILLS[k][1]; })).forEach(function (s, i) { cxp += chip(s, cxp, 196, i ? C.blue : C.green, 14) + 8; });
-    txt('✓ SAME SETUP', cxp + 8, 196, '700 14px ' + MONO, C.green, 'left', 8);
-    var drawn = Math.max(2, Math.floor(ease(seg(p, 0.58, 0.96)) * b.pts.length)), lo = Math.min.apply(null, b.pts), hi = Math.max.apply(null, b.pts), ex = px0, ew = pw - 200, ey = 236, eh = H - ey - 64;
+    coin(c.market, px0 + 16, 170, 16);
+    txt(baseOf(c.setup)[1].toUpperCase() + ' · ' + c.market, px0 + 44, 170, '400 24px ' + BLACK, C.text, 'left');
+    txt('● PAPER · TRADES THE SETUP THAT WON', px0, 204, '700 13px ' + MONO, C.green, 'left', 6);
+    var cxp = px0; [baseOf(c.setup)[0] + ' ' + baseOf(c.setup)[1]].concat(c.setup.skills.map(function (k) { return SKILLS[k][0] + ' ' + SKILLS[k][1]; })).forEach(function (s, i) { cxp += chip(s, cxp, 238, i ? C.blue : C.green, 14) + 8; });
+    txt('✓ SAME SETUP', cxp + 8, 238, '700 14px ' + MONO, C.green, 'left', 8);
+    var drawn = Math.max(2, Math.floor(ease(seg(p, 0.58, 0.96)) * b.pts.length)), lo = Math.min.apply(null, b.pts), hi = Math.max.apply(null, b.pts), ex = px0, ew = pw - 200, ey = 278, eh = H - ey - 56;
     rr(ex - 10, ey - 10, pw + 10, eh + 20, 14); ctx.fillStyle = 'rgba(13, 21, 32, .85)'; ctx.fill(); ctx.strokeStyle = 'rgba(0, 255, 136, .35)'; ctx.lineWidth = 1.5; ctx.stroke();
     ctx.beginPath();
     for (var i = 0; i < drawn; i++) { var qx = ex + 10 + i / (b.pts.length - 1) * (ew - 20), qy = ey + 10 + (eh - 20) - (b.pts[i] - lo) / ((hi - lo) || 1) * (eh - 20); i ? ctx.lineTo(qx, qy) : ctx.moveTo(qx, qy); }
@@ -572,7 +554,7 @@
     for (var r = rings.length - 1; r >= 0; r--) {   // shockwaves: each a radius growing out of the birth point
       rings[r] += 0.022; if (rings[r] > 1) { rings.splice(r, 1); continue; }
       var rr0 = rings[r]; if (rr0 <= 0) continue;
-      ctx.beginPath(); ctx.arc(W * 0.24, H / 2, rr0 * W * 0.7, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(0, 255, 136, ' + (1 - rr0) * 0.8 + ')'; ctx.lineWidth = 6 * (1 - rr0) + 1; ctx.stroke();
+      ctx.beginPath(); ctx.arc(ringX, ringY, rr0 * W * 0.7, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(0, 255, 136, ' + (1 - rr0) * 0.8 + ')'; ctx.lineWidth = 6 * (1 - rr0) + 1; ctx.stroke();
     }
     for (var i = parts.length - 1; i >= 0; i--) {
       var q = parts[i]; q.x += q.vx; q.y += q.vy; q.vy += q.g == null ? 0.12 : q.g; q.vx *= 0.98; q.life -= 0.018;
