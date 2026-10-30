@@ -17,7 +17,7 @@ revenue share), which is unchanged.
    Quant Lab's reactor, 18 companies in the Universe.
 8. **This one** (2026-10-30), after the seventh:
    - **The glass polished clear** ("musi byt uplne pruhledne jako bys ho vylestil"): no fill and no blur anywhere,
-     only rims and a glint. The top bar alone keeps a dark tint, so what scrolls under it does not run into its tabs.
+     only rims and a glint. The top bar keeps a light dark tint, as in the seventh take.
    - **The first screen is only its slogan** beside the prize board: join the quest, earn points, climb the
      leaderboard, earn up to 500,000 ET10 monthly. The 1 to 5 list is gone.
    - **Step 1:** the HQ larger on the right; under the heading only the nine agents, led by NEXUS, named by role.
@@ -71,8 +71,6 @@ goes to him.
   points" are its 4th and 5th, now that the agent has its own step.
 - **The nine agents** are named by role (Developer, Lab scientist, Trader, QA tester, Auditor, Supervisor, three
   Researchers), as the pre-build has them; NEXUS leads them and is said in the line above.
-- **The top bar** keeps a dark tint under its rim while every other glass is clear, because a clear bar ran the page's
-  words into its tabs.
 - **The companies by the sun** are about a quarter of its disc. That is over his earlier eighth, because he said they
   were still too small.
 - **The clips** stay out of git. Their posters are kept.

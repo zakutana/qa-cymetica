@@ -43,7 +43,7 @@ main { position: relative; z-index: 2; }
 /* (a clear pane over the page: no frost; a dark that fades from its top edge keeps the rail readable over a heading
    scrolling under it) */
 #bar { position: fixed; z-index: 10; left: 0; right: 0; top: 0; height: 80px; display: flex; align-items: center; gap: 32px; padding: 0 max(24px, 3vw);
-  background: linear-gradient(180deg, rgba(5, 7, 12, .95), rgba(5, 7, 12, .84));
+  background: linear-gradient(180deg, rgba(5, 7, 12, .86), rgba(5, 7, 12, .55));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 14px 40px rgba(0, 0, 0, .35); }
 #bar::before { content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(100deg, rgba(255, 255, 255, 0) 22%, rgba(255, 255, 255, .07) 28%, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0) 70%, rgba(255, 255, 255, .05) 74%, rgba(255, 255, 255, 0) 78%); }
