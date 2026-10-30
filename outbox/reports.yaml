@@ -6909,16 +6909,6 @@ reports:
       the rank cell or the first track is no longer a narrow fixed one; it is inconclusive if the page, a script or
       the .qrow rule cannot be read, or no script draws a .qrow row. GET requests only.
 
-footer: >
-  Reported by an independent QA agent. Scope of this work: verification of the
-  REST API, MCP, the machine-readable discovery surfaces and the pages built on
-  them, read-only except in paper mode. What we do execute is paper only and recorded: paper event-card
-  orders, paper bot clones funded from the practice balance, and prompts
-  sent to the site's own NEXUS chat on the paper account (which places paper
-  orders). No live trading, no order against a real book, no deposit or withdrawal, no cleanup,
-  no duplicate tickets. Every figure above was
-  read from the live service at the time stated, and each finding ships with
-  the command that reproduces it.
   - key: quant-lab-daily-search-completes
     findings: [CYM-quant-lab-daily-search-completes]
     severity: medium
@@ -6992,3 +6982,13 @@ footer: >
       exception class at its start, or a Python traceback; it passes for a null error or any sentence written for a
       person, and is inconclusive when no failed search is listed. GET requests only.
 
+footer: >
+  Reported by an independent QA agent. Scope of this work: verification of the
+  REST API, MCP, the machine-readable discovery surfaces and the pages built on
+  them, read-only except in paper mode. What we do execute is paper only and recorded: paper event-card
+  orders, paper bot clones funded from the practice balance, and prompts
+  sent to the site's own NEXUS chat on the paper account (which places paper
+  orders). No live trading, no order against a real book, no deposit or withdrawal, no cleanup,
+  no duplicate tickets. Every figure above was
+  read from the live service at the time stated, and each finding ships with
+  the command that reproduces it.
