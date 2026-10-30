@@ -22,8 +22,21 @@ that setup.
 ## The page, top to bottom
 
 Their crumb; the mark (a flask in a hexagon whose equity line breaks through the bar and out of the flask) and the
-wordmark; six numbers with an icon each; the **reactor** (BUILD, BLAST, BLIND, THE BAR, BOT: click a stage to jump;
+wordmark; six numbers with an icon each; the **reactor** (BUILD, BLAST, BLIND, THE BAR, FOUND: click a stage to jump;
 ⏸ or space pauses, and paused, a stage click or ← → shows that stage finished);
+
+The reactor shows the lab's state, named in the badge beside the stages:
+
+* **Replay**: no search running, so it plays the last finished one (`REPLAY · #3 · 27 OCT`).
+* **Failed**: the newest search failed, so a FAILED stage comes first. The search's pulse flatlines (0 of 0 jobs, died
+  after 44 s), the reason is given as a label and never as their raw error (#232), and the failures in a row are counted.
+  Then the replay of the last good search follows. This is our real state today: #5, #7 and #9.
+* **Live**: a search is running. It reads the fields their WebSocket sends (`done_jobs`, `total_jobs`, `percent`,
+  `eta_seconds`): the cells fill as the jobs do, with the count, percent and time left. Search now (their button, with
+  their cost line as its tooltip) is the only way into it here, and it is a preview: a timer at #3's real pace (32 min
+  for 1,728), marked `LIVE · PREVIEW · NOTHING SENT`. When it finishes it becomes the replay.
+* Not drawn: a "best so far" agent for a replay with no winner (there has never been a winner to show), the time of
+  the next daily search, and a phone layout.
 the **blind test** rows (setup chips, coin, settings, search % to blind %, a gauge against the bar, a tick or a cross);
 **bots** with the owner's rule as chips; a foot with *What was tested*, *Log* and *Can tune / can't* (their own
 `can_tune` / `cannot_tune` lists, cut to the part before the colon; the full sentences are tooltips).
@@ -39,6 +52,5 @@ simulated setups, because their own list says the lab never equips them. Their `
 from cymetica.com; every class of ours starts `q2-` because theirs styles short global names (`.on`, `.n`, `.bar`, `.up`).
 The page sends nothing: no fetch, no form; the buttons are pictures.
 
-Tests: `python -m pytest outbox/quant-lab-v2/tests -o addopts="" -p no:cacheprovider` (both modes run, the real numbers
-equal `data.js`, the simulation comes from one model, glance-length text, no type under 11 px, the site palette, nothing sent).
-Desktop first; under 1100 px the rows fold, a phone layout is not drawn.
+No test suite: a design page is judged by the operator's eye (2026-10-30). Desktop first; under 1100 px the rows fold,
+a phone layout is not drawn.

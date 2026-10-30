@@ -66,6 +66,19 @@ body.q2 { background: #0a0e17; }
 .q2-rail button.q2-on .q2-e { filter: none; }
 .q2-rail button.q2-done { color: #7f93ad; }
 .q2-rail button i { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: #00cfff; box-shadow: 0 0 10px #00cfff; }
+/* the failed stage in red */
+.q2-rail button.q2-f.q2-on { color: #ff4444; background: linear-gradient(180deg, rgba(255, 68, 68, .16), transparent); }
+.q2-rail button.q2-f i { background: #ff4444; box-shadow: 0 0 10px #ff4444; }
+/* which search the reactor shows, and the lab's own Search now */
+.q2-lab { flex: none; display: flex; align-items: center; padding: 0 18px; border-right: 1px solid #111a28; font: 700 12px 'JetBrains Mono', monospace;
+  letter-spacing: .12em; color: #00cfff; white-space: nowrap; }
+.q2-lab.q2-fl { color: #ff4444; }
+.q2-lab.q2-lv { color: #00ff88; animation: q2-blink 1.2s ease-in-out infinite; }
+@keyframes q2-blink { 50% { opacity: .45; } }
+.q2-rail button.q2-go { flex: none; padding: 12px 22px; color: #0a0e17; background: #00ff88; letter-spacing: .12em; font-weight: 800;
+  box-shadow: inset 0 0 22px rgba(255, 255, 255, .35), 0 0 24px rgba(0, 255, 136, .35); }
+.q2-rail button.q2-go:hover { background: #33ffa0; }
+.q2-rail button.q2-go:disabled { cursor: default; color: #00ff88; background: rgba(0, 255, 136, .1); box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .5); }
 .q2-stage { position: relative; }
 .q2-stage canvas { display: block; width: 100%; height: 470px; }
 .q2-simtag { position: absolute; right: 14px; bottom: 12px; font: 700 11px 'JetBrains Mono', monospace; letter-spacing: .2em; color: #00ff88;

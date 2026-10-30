@@ -189,21 +189,54 @@
     $('paper').title = D.cost;
   }
 
+  // ---------------------------------------------------------------- the lab's state: what the reactor shows
+  //  replay  no search running: the last finished search, played over and over
+  //  failed  the newest search failed: that first (how it died, how many in a row), then the replay of the last good one
+  //  live    a search running: the fields their WebSocket sends while it runs (done_jobs, total_jobs, percent, eta_seconds).
+  //          In this mock only Search now starts it, and it is a preview: a timer at #3's real pace, nothing is sent.
+  var byNew = D.searches.slice().sort(function (a, b) { return a.requested_at < b.requested_at ? 1 : -1; });
+  var FAILS = [];   // the failed searches in a row, newest first
+  for (var fi = 0; fi < byNew.length && byNew[fi].status === 'failed'; fi++) FAILS.push(byNew[fi]);
+  var LAST_GOOD = byNew.filter(function (s) { return s.status === 'done'; })[0];
+  var PACE = (Date.parse(LAST_GOOD.finished_at) - Date.parse(LAST_GOOD.requested_at)) / 1000 / LAST_GOOD.total_jobs;   // seconds a combination, #3's
+  function day(iso) { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }).toUpperCase(); }
+  function errLabel(e) { return /closed the connection|OperationalError/.test(e || '') ? 'DATABASE CONNECTION LOST' : String(e || 'NO REASON GIVEN').split(':')[0].toUpperCase(); }   // never the raw text (#232)
+  function dataState(m) { return m === 'real' && FAILS.length ? 'failed' : 'replay'; }
+  function dur(s) { return s < 90 ? s + ' S' : Math.round(s / 60) + ' MIN'; }   // their page's own rounding
+  function feed(p) {   // a running search as their WebSocket reports it, here from a timer
+    var f = seg(p, 0, 0.9), total = M.tried;
+    return { status: 'running', done_jobs: Math.round(total * f), total_jobs: total, percent: Math.floor(f * 100), eta_seconds: Math.round((1 - f) * total * PACE) };
+  }
+
   // ---------------------------------------------------------------- the reactor
-  var STAGES = [['build', '🧩', 'BUILD', 3.2], ['blast', '💥', 'BLAST', 4.4], ['blind', '🙈', 'BLIND', 3.4], ['bar', '🚧', 'THE BAR', 5.6], ['bot', '🏆', 'FOUND', 7.0]];
-  var TOTAL = STAGES.reduce(function (a, s) { return a + s[3]; }, 0);
+  var BASE = [['build', '🧩', 'BUILD', 3.2, 0.97], ['blast', '💥', 'BLAST', 4.4, 0.97], ['blind', '🙈', 'BLIND', 3.4, 0.97], ['bar', '🚧', 'THE BAR', 5.6, 0.995], ['bot', '🏆', 'FOUND', 7.0, 0.97]];
+  // a stage: key, icon, word, seconds, where a paused stage stands (its finished picture)
+  function stagesFor(s) {
+    var st = BASE.map(function (x) { return x.slice(); });
+    if (s === 'live') st[1][3] = 12;   // the search itself is the long part
+    if (s === 'failed') st.unshift(['fail', '⚠️', 'FAILED', 5.2, 0.97]);
+    return st;
+  }
+  var LAB = 'replay', RUN = '', STAGES = BASE, TOTAL = 0;
   var cv = $('rx'), ctx = cv.getContext('2d'), W = 0, H = 0, DPR = 1, t0 = performance.now(), offset = 0, parts = [], shake = 0, fired = {}, cells = null;
   var paused = false, held = 0;   // paused: the clock stands at `held`
-  var HOLD = [0.97, 0.97, 0.97, 0.995, 0.97];   // where a paused stage stands: its finished picture
-  var C = { bg: '#06090f', navy: '#0d1520', navy2: '#111a28', line: '#16233a', line3: '#1e3050', text: '#e6edf7', dim: '#7f93ad', dim3: '#3a4d68', cyan: '#00cfff', green: '#00ff88', red: '#ff4444', blue: '#3b82f6' };
+  var C ={ bg: '#06090f', navy: '#0d1520', navy2: '#111a28', line: '#16233a', line3: '#1e3050', text: '#e6edf7', dim: '#7f93ad', dim3: '#3a4d68', cyan: '#00cfff', green: '#00ff88', red: '#ff4444', blue: '#3b82f6' };
   var MONO = "'JetBrains Mono', monospace", BLACK = "'Archivo Black', sans-serif";
 
   function size() { DPR = Math.min(2, window.devicePixelRatio || 1); W = cv.clientWidth; H = cv.clientHeight; cv.width = W * DPR; cv.height = H * DPR; }
   function rail() {
-    $('rail').innerHTML = '<button class="q2-pp" data-pp aria-label="Pause">⏸</button>' +
-      STAGES.map(function (s, i) { return '<button data-st="' + i + '"><span class="q2-e">' + s[1] + '</span><span class="q2-t">' + s[2] + '</span><i></i></button>'; }).join('');
+    $('rail').innerHTML = '<button class="q2-pp' + (paused ? ' q2-on' : '') + '" data-pp aria-label="' + (paused ? 'Play' : 'Pause') + '">' + (paused ? '▶' : '⏸') + '</button>' +
+      STAGES.map(function (s, i) { return '<button data-st="' + i + '"' + (s[0] === 'fail' ? ' class="q2-f"' : '') + '><span class="q2-e">' + s[1] + '</span><span class="q2-t">' + s[2] + '</span><i></i></button>'; }).join('') +
+      '<span class="q2-lab" id="lab"></span><button class="q2-go" data-go title="' + esc(D.cost) + '">⚡ SEARCH NOW</button>';
   }
-  function now() { return paused ? held : ((performance.now() - t0) / 1000 + offset) % TOTAL; }
+  function setLab(s, run) {   // what the reactor shows; it starts from its first stage
+    LAB = s; RUN = run; STAGES = stagesFor(s); TOTAL = STAGES.reduce(function (a, x) { return a + x[3]; }, 0);
+    fired = {}; parts = []; rings = []; flash = 0; lastStage = -1; labText = null;
+    if (paused) held = STAGES[0][3] * STAGES[0][4]; else { t0 = performance.now(); offset = 0; }
+    rail();
+  }
+  function raw() { return paused ? held : (performance.now() - t0) / 1000 + offset; }
+  function now() { return raw() % TOTAL; }
   function startOf(i) { var a = 0; for (var k = 0; k < i; k++) a += STAGES[k][3]; return a; }
   function pause(on) {
     if (on === paused) return;
@@ -212,8 +245,21 @@
   }
   function goStage(i) {
     i = (i + STAGES.length) % STAGES.length; fired = {}; parts = []; lastStage = -1;
-    if (paused) held = startOf(i) + STAGES[i][3] * HOLD[i];
+    if (paused) held = startOf(i) + STAGES[i][3] * STAGES[i][4];
     else { t0 = performance.now(); offset = startOf(i) + 0.001; }
+  }
+  // the badge beside the stages: which search this is, or that one is running
+  var labText = null;
+  function badge(si, p) {
+    var k = STAGES[si][0], s, cls;
+    if (LAB === 'live') {
+      var f = k === 'blast' ? feed(p) : null, pc = f ? f.percent : si < 1 ? 0 : 100;
+      s = '● LIVE · PREVIEW · NOTHING SENT'; cls = 'q2-lv';
+      var go = document.querySelector('[data-go]'), gt = '● RUNNING ' + pc + '%'; if (go && go.textContent !== gt) { go.disabled = true; go.textContent = gt; }
+    } else if (k === 'fail') { s = '✕ #' + FAILS[0].id + ' FAILED · ' + FAILS.length + ' IN A ROW'; cls = 'q2-fl'; }
+    else { s = '↻ REPLAY · ' + RUN; cls = ''; }
+    if (s === labText) return;
+    labText = s; var el = $('lab'); el.textContent = s; el.className = 'q2-lab ' + cls;
   }
   function stageAt(t) { var a = 0; for (var i = 0; i < STAGES.length; i++) { if (t < a + STAGES[i][3]) return [i, (t - a) / STAGES[i][3]]; a += STAGES[i][3]; } return [STAGES.length - 1, 1]; }
   function ease(p) { p = Math.max(0, Math.min(1, p)); return 1 - Math.pow(1 - p, 3); }
@@ -262,6 +308,57 @@
     txt(num(n), x, y, '400 64px ' + BLACK, color || C.text, 'left', 24);
     txt(label, x + 4, y + 46, '700 15px ' + MONO, C.dim, 'left');
     if (sub) txt(sub, x + 4, y + 72, '700 13px ' + MONO, C.dim3, 'left');
+  }
+
+  // 0 FAILED: the newest search died before its first combination (their API: 0 of 0 jobs); then the ones before it
+  function glitch(n, amp) {   // tear a few rows of what is drawn sideways
+    for (var k = 0; k < n; k++) { var sy = Math.random() * H, sh = 4 + Math.random() * 26, off = (Math.random() - 0.5) * amp;
+      ctx.drawImage(cv, 0, sy * DPR, W * DPR, sh * DPR, off, sy, W, sh); }
+  }
+  var BEAT = [[0, 0], [6, -5], [12, 0], [24, 0], [28, 7], [34, -46], [40, 20], [45, 0], [170, 0]];   // one heartbeat on a monitor
+  function beat(ph) {
+    for (var k = 1; k < BEAT.length; k++) if (ph <= BEAT[k][0]) { var a = BEAT[k - 1], b = BEAT[k]; return a[1] + (b[1] - a[1]) * (ph - a[0]) / (b[0] - a[0]); }
+    return 0;
+  }
+  function drawFail(p, t) {
+    var s = FAILS[0], took = Math.round((Date.parse(s.finished_at) - Date.parse(s.requested_at)) / 1000), dead = p >= 0.3;
+    var x0 = 30, tw = W * 0.42, ty = 150;
+    txt('LAST SEARCH', x0, 24, '700 14px ' + MONO, C.dim, 'left');
+    txt('#' + s.id + ' · ' + day(s.requested_at) + ' · ' + (s.origin === 'owner' ? 'YOU' : 'DAILY'), x0, 92, '400 30px ' + BLACK, dead ? C.red : C.text, 'left', dead ? 14 : 0);
+    // its pulse while it starts, then the flat line: it lived `took` seconds and ran 0 of 0 jobs
+    var cy = ty + 8;
+    ctx.beginPath();
+    for (var x = 0; x <= tw; x += 2) ctx[x ? 'lineTo' : 'moveTo'](x0 + x, dead ? cy : cy + beat(((x + t * 240) % 170 + 170) % 170));
+    ctx.strokeStyle = dead ? C.red : C.cyan; ctx.lineWidth = dead ? 3 : 2.4; ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = dead ? 18 : 12; ctx.stroke(); ctx.shadowBlur = 0;
+    if (!dead) txt('STARTING… ' + Math.round(seg(p, 0, 0.3) * took) + ' S', x0, ty + 60, '700 15px ' + MONO, C.cyan, 'left');
+    else {
+      once('die', function () { shake = 30; flash = 0.12; burst(x0 + tw, cy, C.red, 120, 11); burst(x0 + tw / 2, cy, C.red, 60, 8); });
+      txt('✕', x0 + tw + 34, cy, '400 34px ' + BLACK, C.red, 'center', 18);
+      txt('0 OF 0 JOBS · DIED AT 0% AFTER ' + took + ' S', x0, ty + 60, '700 15px ' + MONO, C.red, 'left');
+    }
+    // the title and why
+    var rx = W * 0.52;
+    slam('SEARCH FAILED', rx, 92, 58, 0.3, p, C.red);
+    if (p > 0.38) txt(errLabel(s.error), rx + 4, 162, '700 20px ' + MONO, C.text, 'left', 8);
+    // the run of failures, newest last, each with a cross
+    var n = FAILS.length, cw = Math.min(200, (tw - 14 * (n - 1)) / n), list = FAILS.slice().reverse();
+    list.forEach(function (f, i) {
+      var a = ease(seg(p, 0.46 + i * 0.07, 0.56 + i * 0.07)), x = x0 + i * (cw + 14), y = 250 + (1 - a) * -120;
+      if (a <= 0) return;
+      once('f' + i, function () { shake = Math.max(shake, 10); burst(x + cw / 2, 300, C.red, 30, 6); });
+      ctx.globalAlpha = a; rr(x, y, cw, 100, 12); ctx.fillStyle = 'rgba(255, 68, 68, .08)'; ctx.fill(); ctx.strokeStyle = C.red; ctx.lineWidth = 1.5; ctx.stroke();
+      txt('#' + f.id, x + 16, y + 30, '400 26px ' + BLACK, C.text, 'left');
+      txt('✕', x + cw - 22, y + 30, '400 26px ' + BLACK, C.red, 'center', 12);
+      txt(day(f.requested_at), x + 16, y + 70, '700 14px ' + MONO, C.dim, 'left');
+      ctx.globalAlpha = 1;
+    });
+    slam(n + ' IN A ROW', rx, 300, 58, 0.66, p, C.red);
+    // and on to the last search that finished
+    var g = ease(seg(p, 0.8, 0.9));
+    if (g > 0) { ctx.globalAlpha = g; txt('↻ REPLAYING THE LAST GOOD SEARCH · #' + LAST_GOOD.id + ' · ' + day(LAST_GOOD.finished_at) + '  →', x0 + (1 - g) * -80, H - 40, '700 17px ' + MONO, C.cyan, 'left', 10); ctx.globalAlpha = 1; }
+    // the screen itself breaks for a moment when it dies, and twitches after
+    if (p >= 0.3 && p < 0.4) { glitch(8, 60); ctx.fillStyle = 'rgba(255, 68, 68, ' + (0.18 * (1 - seg(p, 0.3, 0.4))) + ')'; ctx.fillRect(0, 0, W, H); }
+    else if (dead && Math.random() < 0.05) glitch(3, 24);
   }
 
   // 1 BUILD: a setup is assembled (sim: model or combination + skills); then every setup lands in the grid
@@ -314,10 +411,12 @@
     });
     cells = { mode: M.mode, v: v, hot: hot }; return cells;
   }
-  function drawBlast(p) {
+  function drawBlast(p, t) {
     var cl = cellsFor(), n = M.setups.length, m = M.markets.length, x0 = 200, y0 = 70, mw = W - x0 - 330, ch = Math.min(16.5, (H - y0 - 16) / n), cw = mw / m;
     M.markets.forEach(function (s, j) { coin(s, x0 + j * cw + cw / 2, 26, 13, true); });
-    var total = n * m, lit = Math.floor(ease(seg(p, 0, 0.82)) * total), k = M.settings, sq = Math.min(4, (cw - 10) / Math.ceil(k / 3) - 1);
+    // live: the cells follow the feed's done_jobs, evenly, as a running search does; a replay eases through it
+    var live = LAB === 'live', fd = live ? feed(p) : null, prog = live ? fd.done_jobs / fd.total_jobs : ease(seg(p, 0, 0.82)), hotAt = live ? 0.92 : 0.84;
+    var total = n * m, lit = Math.floor(prog * total), k = M.settings, sq = Math.min(4, (cw - 10) / Math.ceil(k / 3) - 1);
     for (var i = 0; i < n; i++) {
       var s = M.setups[i];
       ctx.font = '700 11px ' + MONO; var lab = setupText(s); if (lab.length > 22) lab = lab.slice(0, 21) + '…';
@@ -334,7 +433,7 @@
       }
     }
     if (lit < total) { var bi = Math.floor(lit / m); ctx.fillStyle = 'rgba(0, 207, 255, .12)'; ctx.fillRect(x0, y0 + bi * ch, mw, ch); }
-    if (p > 0.84) {
+    if (p > hotAt) {
       var pulse = 0.5 + 0.5 * Math.sin(p * 60);
       cl.hot.forEach(function (h, r) {
         if (h[0] < 0) return; var x = x0 + h[1] * cw, y = y0 + h[0] * ch;
@@ -343,9 +442,17 @@
       });
       once('top5', function () { shake = 6; });
     }
-    var shownN = Math.round(ease(seg(p, 0, 0.82)) * M.tried);
-    bigCounter(shownN, 'TRIED', M.setups.length + ' × ' + m + ' × ' + k, W - 300, H * 0.36, C.cyan);
-    txt('ON PAST PRICES', W - 296, H * 0.36 + 98, '700 13px ' + MONO, C.dim3, 'left');
+    if (live) {   // the feed's numbers, as their page words them: done of total, percent, time left
+      txt('● LIVE', W - 296, H * 0.36 - 64, '400 22px ' + BLACK, 'rgba(0, 255, 136, ' + (0.55 + 0.45 * Math.sin(t * 6)) + ')', 'left', 14);
+      bigCounter(fd.done_jobs, 'OF ' + num(fd.total_jobs) + ' · ' + fd.percent + '%', null, W - 300, H * 0.36, C.green);
+      txt(fd.eta_seconds ? 'LEFT ≈ ' + dur(fd.eta_seconds) : 'ALL REPLAYED', W - 296, H * 0.36 + 72, '700 15px ' + MONO, C.text, 'left');
+      var bw = 270, by = H * 0.36 + 98;
+      rr(W - 296, by - 5, bw, 10, 5); ctx.fillStyle = C.navy2; ctx.fill();
+      rr(W - 296, by - 5, Math.max(10, bw * prog), 10, 5); ctx.fillStyle = C.green; ctx.shadowColor = C.green; ctx.shadowBlur = 14; ctx.fill(); ctx.shadowBlur = 0;
+    } else {
+      bigCounter(Math.round(prog * M.tried), 'TRIED', M.setups.length + ' × ' + m + ' × ' + k, W - 300, H * 0.36, C.cyan);
+      txt('ON PAST PRICES', W - 296, H * 0.36 + 98, '700 13px ' + MONO, C.dim3, 'left');
+    }
   }
 
   // 3 BLIND: the best few rise; the last part of history is walled off from the search
@@ -543,14 +650,15 @@
     ctx.restore();
   }
 
-  var DRAW = [drawBuild, drawBlast, drawBlind, drawBar, drawBot], lastStage = -1;
+  var DRAW = { fail: drawFail, build: drawBuild, blast: drawBlast, blind: drawBlind, bar: drawBar, bot: drawBot }, lastStage = -1;
   function frame() {
+    if (LAB === 'live' && raw() >= TOTAL) setLab('replay', 'PREVIEW RUN');   // the run finished: it is now the last search
     var t = now(), sp = stageAt(t), si = sp[0], p = sp[1];
     if (si !== lastStage) { if (si === 0) fired = {}; lastStage = si; parts = []; rings = []; flash = 0; }
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     backdrop(t);
     if (shake > 0.3) { ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake); shake *= 0.86; } else shake = 0;
-    DRAW[si](p, t);
+    DRAW[STAGES[si][0]](p, t);
     for (var r = rings.length - 1; r >= 0; r--) {   // shockwaves: each a radius growing out of the birth point
       rings[r] += 0.022; if (rings[r] > 1) { rings.splice(r, 1); continue; }
       var rr0 = rings[r]; if (rr0 <= 0) continue;
@@ -565,15 +673,18 @@
     if (flash > 0.02) { ctx.fillStyle = 'rgba(230, 237, 247, ' + flash + ')'; ctx.fillRect(0, 0, W, H); flash *= 0.86; }
     scan();
     var btns = document.querySelectorAll('[data-st]');
-    for (var j = 0; j < btns.length; j++) { btns[j].className = j === si ? 'q2-on' : j < si ? 'q2-done' : ''; btns[j].lastChild.style.width = j === si ? (p * 100) + '%' : '0'; }
-    window.QL.t = t; window.QL.stage = si; window.QL.paused = paused;
+    for (var j = 0; j < btns.length; j++) { btns[j].className = (STAGES[j][0] === 'fail' ? 'q2-f ' : '') + (j === si ? 'q2-on' : j < si ? 'q2-done' : ''); btns[j].lastChild.style.width = j === si ? (p * 100) + '%' : '0'; }
+    badge(si, p);
+    window.QL.t = t; window.QL.stage = si; window.QL.paused = paused; window.QL.lab = LAB;
     requestAnimationFrame(frame);
   }
 
   // ---------------------------------------------------------------- modes
   function setMode(m) {
-    M = m === 'sim' ? SIM : REAL; cells = null; fired = {}; parts = []; t0 = performance.now(); offset = 0;
-    if (paused) held = startOf(window.QL.stage || 0) + STAGES[window.QL.stage || 0][3] * HOLD[window.QL.stage || 0];   // a paused page stays paused, on the same stage
+    M = m === 'sim' ? SIM : REAL; cells = null;
+    var keep = window.QL.stage || 0;
+    setLab(dataState(m), m === 'sim' ? 'LAST SEARCH' : '#' + LAST_GOOD.id + ' · ' + day(LAST_GOOD.finished_at));
+    if (paused) { keep = Math.min(keep, STAGES.length - 1); held = startOf(keep) + STAGES[keep][3] * STAGES[keep][4]; }   // a paused page stays paused, on the same stage
     [].forEach.call(document.querySelectorAll('[data-mode]'), function (b) { b.className = b.getAttribute('data-mode') === m ? 'q2-on' : ''; });
     $('simtag').hidden = m !== 'sim';
     renderScore(); renderTop(); renderBots(); renderCaps();
@@ -584,6 +695,10 @@
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-mode]'); if (b) return setMode(b.getAttribute('data-mode'));
     if (e.target.closest('[data-pp]')) return pause(!paused);
+    if (e.target.closest('[data-go]')) {   // their Search now would POST; this mock only plays what a running search looks like
+      if (LAB === 'live') return;
+      pause(false); return setLab('live', '');
+    }
     var s = e.target.closest('[data-st]');
     if (s) goStage(+s.getAttribute('data-st'));
   });
@@ -593,7 +708,7 @@
     else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { pause(true); goStage(stageAt(now())[0] + (e.key === 'ArrowRight' ? 1 : -1)); }
   });
   window.addEventListener('resize', size);
-  rail(); size();
+  size();
   setMode(/[?&]mode=sim/.test(location.search) ? 'sim' : 'real');
   requestAnimationFrame(frame);
   window.QL.ready = true;
