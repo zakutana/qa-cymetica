@@ -7,6 +7,7 @@
 ## Změněná pravidla
 - **Stav kontroly může nově změnit i rozdělení reportu, ale vždy s odkazem na tu událost, a deník rozdělení na neplatnou kontrolu odmítne.** Dřív se takový řádek přesunul bez příčiny a dvě skládání téhož dávala jiný výsledek. Všichni tři čtenáři: nic neoslabuje a tvých rozhodnutí se nedotýká.
 ## Čeká na tebe
+- **Quant Lab v2 (outbox/quant-lab-v2) je hotový pro Build it Better: spec a šest obrázků leží v 1-build-it-better/, podání jde přes scripts/bb.py po tvém pushi (obrázky se berou z GitHubu); příkaz je v README.** Napiš „pošli quant lab“.
 - **#112 a #136: kontrola termínů teď soudí i naše vlastní opožděné žádosti (mezi nimi Airdrop Farmer) a FAIL by znovu otevřel zaplacené zářijové reporty. Zadržel jsem ho; doporučuju soudit jen žádosti cizích lidí.** Napiš „omez kontrolu“.
 - **#46: Cymetica 22. 10. odpověděla přesně to, co náš report nabídl uznat jako vadu dokumentace (nástroje jsou vidět, ale bez klíče je nejde zavolat). Doporučuju to tak vést a FAIL už neposílat.** Napiš „#46 jako dokumentace“.
 - **#93: jejich dokumentace si odporuje (všechny trasy klonů prý berou klíč, jedna z nich jen přihlášení) a náš FAIL z 21. 10. popisoval tři zářijové trasy místo téhle nové. Doporučuju na ni podat nový report.** Napiš „podej nový“.

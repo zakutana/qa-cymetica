@@ -6,8 +6,10 @@ match what Cymetica is building in **ET-33142** (Nexus, 2026-10-29): the search 
 or a Named Combination, plus skills), and a setup that passes the held-back check starts as a paper bot with exactly
 that setup.
 
-**Open:** `python -m http.server 8801 --bind 127.0.0.1 --directory outbox/quant-lab-v2` (the `quant-lab-v2` entry in
-`.claude/launch.json`), then http://127.0.0.1:8801/. `?mode=sim` opens on the ET-33142 view.
+**Open:** `python outbox/quant-lab-v2/serve.py` (the `quant-lab-v2` entry in `.claude/launch.json`), then
+http://127.0.0.1:8801/. `?mode=sim` opens on the ET-33142 view. The server sends every file with `Cache-Control:
+no-store`: a bare http.server let the operator's browser keep an old index.html under new styles (2026-10-30, "a co
+je toto za hnus?"); the `?v=` on the page's own files breaks the copies kept from before that.
 
 ## Two modes (the pill top right)
 
@@ -21,10 +23,11 @@ that setup.
 
 ## The page, top to bottom
 
-Their crumb; the mark and the wordmark in the family of our Airdrop Farmer and Agent Casino (the operator: the old one
-"zaostava" beside them): a round head with a dashed ring and two green eyes that blink, here a flask's bulb, its neck
-and two bubbles on top where the farmer has his hat and sprout, the liquid's surface an equity line going up; QUANT
-small, cyan and spaced over LAB in Archivo Black, the tagline a tooltip; six numbers with an icon each; the **reactor** (BUILD, BLAST, BLIND, THE BAR, FOUND: click a stage to jump;
+Their crumb; the mark, our own and nobody else's (the operator, 2026-10-30: the first one "zaostava" beside our
+Airdrop Farmer and Agent Casino, and a copy of the farmer's round head was refused, "mas byt originalni a vymyslet
+nove"): an Erlenmeyer flask that is a radar scope, with a faint grid of the setups tried inside, the sweep going
+round and the one green blip it finds, a ring going out each time the sweep hits it; QUANT LAB in Archivo Black,
+LAB green, the tagline under it; six numbers with an icon each; the **reactor** (BUILD, BLAST, BLIND, THE BAR, FOUND: click a stage to jump;
 ⏸ or space pauses, and paused, a stage click or ← → shows that stage finished);
 
 The reactor shows the lab's state, named in the badge beside the stages:
@@ -56,4 +59,14 @@ from cymetica.com; every class of ours starts `q2-` because theirs styles short 
 The page sends nothing: no fetch, no form; the buttons are pictures.
 
 No test suite: a design page is judged by the operator's eye (2026-10-30). Desktop first; under 1100 px the rows fold,
-a phone layout is not drawn.
+a phone layout is not drawn ("NA TELEFON ZOBRAZENI KASLI", 2026-10-30).
+
+## Build it Better
+
+The request is `1-build-it-better/spec.txt` (5,575 characters in 22 lines; the form takes 8,000 and 40) with pictures
+1-6 beside it, shot from this mock at 1920 px (1 the page on BLAST, 2 on FOUND, 3 the blind test and the empty bots, 4
+the born bot, 5 THE BAR, 6 the mark). It is filed with `scripts/bb.py` once the operator has pushed (the spec links the
+folder on GitHub and the pictures are read from there) and said so; without `--confirm` it prints the body and sends
+nothing:
+
+    python scripts/bb.py file --app-url https://cymetica.com/company/app/experiments --improvements-file outbox/quant-lab-v2/1-build-it-better/spec.txt --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/quant-lab-v2/1-build-it-better/1-lab.png --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/quant-lab-v2/1-build-it-better/2-found.png --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/quant-lab-v2/1-build-it-better/3-blind-bots.png --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/quant-lab-v2/1-build-it-better/4-bot.png --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/quant-lab-v2/1-build-it-better/5-the-bar.png --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/quant-lab-v2/1-build-it-better/6-logo.png --confirm

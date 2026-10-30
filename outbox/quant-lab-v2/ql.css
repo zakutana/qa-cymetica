@@ -12,20 +12,22 @@ body.q2 { background: #0a0e17; }
 .q2-mode button[data-mode="sim"].q2-on { background: #00ff88; box-shadow: 0 0 18px rgba(0, 255, 136, .55); }
 
 /* the mark and the wordmark */
-/* the lockup is the Airdrop Farmer's (airdrop-farmer.live.css .brand): the word on top small, cyan and spaced, the
-   name under it in Archivo Black, white; here at a page title's size */
-.q2-hero { display: flex; align-items: center; gap: 16px; margin: 20px 0 18px; }
-.q2-logo { width: 88px; height: 88px; flex: none; overflow: visible; filter: drop-shadow(0 0 14px rgba(0, 255, 136, .3)); }
-.q2-eyes rect { transform-box: fill-box; transform-origin: center; animation: q2-blink 5s infinite; }
-@keyframes q2-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.12); } }
-.q2-bub { transform-box: fill-box; animation: q2-bub 3s ease-in-out infinite; }
-.q2-bub.b2 { animation-delay: -1.5s; }
-@keyframes q2-bub { 50% { transform: translateY(-2.5px); } }
-.q2-eq { stroke-dasharray: 48; animation: q2-eq 5s ease-out infinite; }
-@keyframes q2-eq { 0% { stroke-dashoffset: 48; } 40%, 100% { stroke-dashoffset: 0; } }
-.q2-word { display: flex; flex-direction: column; margin: 0; line-height: 1.02; }
-.q2-word span { color: #00cfff; font-size: 18px; font-weight: 600; letter-spacing: .32em; }
-.q2-word b { color: #e6edf7; font: 400 50px 'Archivo Black', sans-serif; letter-spacing: .02em; margin-top: 2px; }
+/* the mark (index.html says what it is) and the wordmark */
+.q2-hero { display: flex; align-items: center; gap: 18px; margin: 20px 0 18px; }
+.q2-logo { width: 84px; height: 84px; flex: none; overflow: visible; filter: drop-shadow(0 0 14px rgba(0, 255, 136, .3)); }
+.q2-sweep { transform-box: view-box; transform-origin: 32px 40px; animation: q2-sweep 3s linear infinite; }
+@keyframes q2-sweep { to { transform: rotate(360deg); } }
+.q2-blip { transform-box: fill-box; transform-origin: center; animation: q2-blip 3s ease-out infinite; }
+@keyframes q2-blip { 0% { transform: scale(.7); opacity: .45; } 3% { transform: scale(1.6); opacity: 1; } 30% { transform: scale(1); opacity: 1; } 100% { transform: scale(.7); opacity: .45; } }
+.q2-ring { transform-box: fill-box; transform-origin: center; opacity: 0; animation: q2-ring 3s ease-out infinite; }
+@keyframes q2-ring { 0%, 2% { transform: scale(1); opacity: 0; } 3% { opacity: .9; } 45%, 100% { transform: scale(4.5); opacity: 0; } }
+.q2-word { display: flex; flex-direction: column; gap: 6px; }
+.q2-hero h1 { margin: 0; font: 400 52px/.92 'Archivo Black', sans-serif; letter-spacing: .03em; display: flex; gap: 14px; }
+.q2-w1 { color: #e6edf7; }
+.q2-w2 { position: relative; color: #00ff88; text-shadow: 0 0 22px rgba(0, 255, 136, .55); }
+.q2-w2::after { content: ''; position: absolute; left: 0; right: 0; bottom: -7px; height: 3px; border-radius: 2px;
+  background: linear-gradient(90deg, #00cfff, #00ff88); box-shadow: 0 0 12px #00ff88; }
+.q2-tag { font: 600 13px 'JetBrains Mono', monospace; color: #7f93ad; margin: 4px 0 0; letter-spacing: .06em; text-transform: uppercase; }
 
 /* the score: six numbers, an icon each */
 .q2-score { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }

@@ -317,8 +317,9 @@
   // 1 BUILD: a setup is assembled (sim: model or combination + skills); then every setup lands in the grid
   function drawBuild(p) {
     // narrow screens: the assembly on top, the grid under it, instead of side by side
-    var narrow = W < 1300, n = M.setups.length, gx = narrow ? 30 : W * 0.47, gy = narrow ? 150 : 60, cols = narrow ? 4 : M.mode === 'sim' ? 3 : 4,
-      cw = (W - gx - 30) / cols, chh = Math.min(42, (H - gy - 30) / Math.ceil(n / cols));
+    var narrow = W < 1300, n = M.setups.length, gx = narrow ? 30 : W * 0.47, cols = narrow ? 4 : M.mode === 'sim' ? 3 : 4, rows = Math.ceil(n / cols),
+      cw = (W - gx - 30) / cols, chh = Math.min(42, (H - (narrow ? 180 : 90)) / rows),
+      gy = narrow ? 150 : Math.max(60, (H - rows * chh) / 2);   // wide: the grid stands level with the number beside it
     if (M.mode === 'sim') {
       var f = M.candidates[0].setup, b = baseOf(f), pa = ease(seg(p, 0, 0.42)), cx = W * (narrow ? 0.04 : 0.07), cy = narrow ? 80 : H * 0.46;
       var parts3 = [b[0] + ' ' + b[1]].concat(f.skills.map(function (k) { return SKILLS[k][0] + ' ' + SKILLS[k][1]; }));

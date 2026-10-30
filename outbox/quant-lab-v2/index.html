@@ -12,7 +12,7 @@
 <!-- their live styles, so the crumb, buttons and tokens are theirs; ql.css is the redesign -->
 <link rel="stylesheet" href="https://cymetica.com/static/company/style.css?v=6ae48af0">
 <link rel="stylesheet" href="https://cymetica.com/static/company/xp.css?v=6ae48af0">
-<link rel="stylesheet" href="ql.css">
+<link rel="stylesheet" href="ql.css?v=7"><!-- ?v= breaks the copies a browser kept from before serve.py said no-store -->
 </head>
 <body class="xp q2">
 <main class="xpage">
@@ -25,32 +25,33 @@
   </div>
 
   <header class="q2-hero">
-    <!-- the mark, in the family of our Airdrop Farmer (outbox/airdrop-farms, #aflogo) and Agent Casino: a round head
-         with a dashed inner ring and two green eyes, its theme on top. Here the head is a flask's bulb, the neck and
-         two rising bubbles stand where the farmer's hat and sprout do, and the liquid's surface is an equity line going up. -->
+    <!-- the mark: an Erlenmeyer flask that is a radar scope. Inside, a faint grid of the setups tried, the sweep going
+         round and the one green blip it keeps finding, a ring going out each time the sweep hits it. Our own, not the
+         family's round head (the operator, 2026-10-30: "mas byt originalni a vymyslet nove"). -->
     <svg class="q2-logo" viewBox="0 0 64 64" aria-hidden="true">
       <defs>
         <linearGradient id="q2g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
-        <linearGradient id="q2h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00ff88"/><stop offset="1" stop-color="#00cfff"/></linearGradient>
-        <linearGradient id="q2liq" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00ff88" stop-opacity=".42"/><stop offset="1" stop-color="#00cfff" stop-opacity=".06"/></linearGradient>
-        <filter id="q2glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-        <clipPath id="q2bulb"><circle cx="32" cy="41" r="15.4"/></clipPath>
+        <radialGradient id="q2scope" cx="32" cy="40" r="27" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00ff88" stop-opacity=".2"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></radialGradient>
+        <linearGradient id="q2wedge" x1="32" y1="20" x2="46" y2="26" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#00ff88" stop-opacity="0"/><stop offset="1" stop-color="#00ff88" stop-opacity=".55"/></linearGradient>
+        <filter id="q2glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="1.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <clipPath id="q2in"><path d="M25 6V21.5L8.6 49.6Q6.6 53.3 9.4 56Q10.6 57 12.6 57H51.4Q53.4 57 54.6 56Q57.4 53.3 55.4 49.6L39 21.5V6Z"/></clipPath>
       </defs>
-      <path d="M27 12V24.75A17 17 0 1 0 37 24.75V12" fill="#070b10" stroke="url(#q2g)" stroke-width="3" stroke-linejoin="round"/>
-      <circle cx="32" cy="41" r="12" fill="none" stroke="#00cfff" stroke-opacity=".4" stroke-width="1" stroke-dasharray="1.6 2.6"/>
-      <g clip-path="url(#q2bulb)">
-        <path d="M14 54 21 50.5 26 52.5 32 48 37 49.5 43 45 50 42V60H14z" fill="url(#q2liq)"/>
-        <path class="q2-eq" d="M14 54 21 50.5 26 52.5 32 48 37 49.5 43 45 50 42" fill="none" stroke="#00ff88" stroke-width="2" stroke-linejoin="round" filter="url(#q2glow)"/>
+      <path d="M25 6V21.5L8.6 49.6Q6.6 53.3 9.4 56Q10.6 57 12.6 57H51.4Q53.4 57 54.6 56Q57.4 53.3 55.4 49.6L39 21.5V6Z" fill="#070b10"/>
+      <g clip-path="url(#q2in)">
+        <path d="M8 24H56M8 32H56M8 40H56M8 48H56M20 8V57M28 8V57M36 8V57M44 8V57" stroke="#00cfff" stroke-opacity=".14" stroke-width="1"/>
+        <circle cx="32" cy="40" r="27" fill="url(#q2scope)"/>
+        <g fill="#00cfff" fill-opacity=".42"><circle cx="21" cy="46" r="1.3"/><circle cx="27.5" cy="51.5" r="1.2"/><circle cx="36.5" cy="53" r="1.3"/><circle cx="45.5" cy="48" r="1.2"/><circle cx="23" cy="37.5" r="1.1"/><circle cx="33" cy="29" r="1.1"/><circle cx="40" cy="44.5" r="1.3"/><circle cx="30.5" cy="42.5" r="1.1"/></g>
+        <g class="q2-sweep"><path d="M32 40V13A27 27 0 0 1 51.1 20.9Z" fill="url(#q2wedge)"/><path d="M32 40L51.1 20.9" stroke="#00ff88" stroke-width="1.6" stroke-linecap="round" filter="url(#q2glow)"/></g>
+        <circle class="q2-ring" cx="41" cy="33" r="3" fill="none" stroke="#00ff88" stroke-width="1.2"/>
+        <circle class="q2-blip" cx="41" cy="33" r="2.8" fill="#00ff88" filter="url(#q2glow)"/>
       </g>
-      <g class="q2-eyes">
-        <rect x="24.5" y="33" width="5" height="9" rx="2.5" fill="#00ff88" filter="url(#q2glow)"/>
-        <rect x="34.5" y="33" width="5" height="9" rx="2.5" fill="#00ff88" filter="url(#q2glow)"/>
-      </g>
-      <rect x="23.5" y="8.5" width="17" height="4.6" rx="2.3" fill="url(#q2h)"/>
-      <circle class="q2-bub" cx="30" cy="4.6" r="2.4" fill="#00ff88"/>
-      <circle class="q2-bub b2" cx="35.6" cy="2.2" r="1.6" fill="#00cfff"/>
+      <path d="M25 6V21.5L8.6 49.6Q6.6 53.3 9.4 56Q10.6 57 12.6 57H51.4Q53.4 57 54.6 56Q57.4 53.3 55.4 49.6L39 21.5V6Z" fill="none" stroke="url(#q2g)" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M22.5 6H41.5" stroke="url(#q2g)" stroke-width="3" stroke-linecap="round"/>
     </svg>
-    <h1 class="q2-word" title="Finds bots that win on data they never saw"><span>QUANT</span><b>LAB</b></h1>
+    <div class="q2-word">
+      <h1><span class="q2-w1">QUANT</span><span class="q2-w2">LAB</span></h1>
+      <p class="q2-tag">Finds bots that win on data they never saw</p>
+    </div>
   </header>
 
   <section class="q2-score" id="score"></section>
@@ -84,7 +85,7 @@
     <span class="q2-paper" id="paper">📄 PAPER ONLY</span>
   </footer>
 </main>
-<script src="data.js"></script>
-<script src="ql.js"></script>
+<script src="data.js?v=7"></script>
+<script src="ql.js?v=7"></script>
 </body>
 </html>
