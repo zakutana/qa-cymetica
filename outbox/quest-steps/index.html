@@ -4,121 +4,103 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>The Cymetica Quest</title>
-<meta name="description" content="Join the Cymetica Quest: start a company in the Universe, ship products or breed an agent, get seen, climb the leaderboard. Up to 500,000 ET10 every month.">
+<meta name="description" content="Join the Cymetica Quest: start an AI-native company in the Universe, build products, breed your hero agent, get seen, climb the leaderboard. Up to 500,000 ET10 every month.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="quest.css">
-<!-- The Cymetica Quest, step by step (the operator, 2026-10-29). Third take: the first take's layout ("predchozi verze
-     byla mnohem lepsi a cistsi, hlavne ty velke cislice vzdy na pozadi"), nothing over the whole screen, no flight to
-     the sun, nowhere the orbit with its companies; in every step a picture and beside it a piece of Cymetica's own web
-     as a hologram in the dark, never a rectangle. capture.py says where every picture comes from; every figure is
-     QUEST's in quest.js. -->
+<!-- The Cymetica Quest, step by step (the operator, 2026-10-29). Fourth take (2026-10-30): the first screen as our
+     flyer, landscape (its glass board of open slots on the left, the words on the right in the type of
+     cymetica.com/company/app/start, the sun behind), held in the middle of the screen, no button; five steps in his
+     words, a green line in each, no link in any; the two links at the very end. capture.py says where every picture
+     comes from; every figure is QUEST's in quest.js. -->
 </head>
 <body>
-<svg width="0" height="0" style="position: absolute" aria-hidden="true"><defs>
-  <!-- the flyer's V-cut (slogan-v4): a bright lip, the upper wall in shadow, the lower wall lit, over the glowing floor -->
-  <filter id="cut" x="-3%" y="-15%" width="106%" height="130%" color-interpolation-filters="sRGB">
-    <feMorphology in="SourceAlpha" operator="erode" radius="2.6" result="core"/>
-    <feGaussianBlur in="core" stdDeviation="2" result="coreS"/>
-    <feComposite in="coreS" in2="SourceAlpha" operator="in" result="coreIn"/>
-    <feFlood flood-color="#002a38" flood-opacity=".16"/>
-    <feComposite in2="coreIn" operator="in" result="floor"/>
-    <feMorphology in="SourceAlpha" operator="erode" radius=".75" result="er"/>
-    <feComposite in="SourceAlpha" in2="er" operator="out" result="rim"/>
-    <feFlood flood-color="#ffffff" flood-opacity=".5"/>
-    <feComposite in2="rim" operator="in" result="rimLit"/>
-    <feOffset in="SourceAlpha" dy="2.2" result="dn"/>
-    <feGaussianBlur in="dn" stdDeviation=".7" result="dnb"/>
-    <feComposite in="SourceAlpha" in2="dnb" operator="out" result="upper"/>
-    <feFlood flood-color="#003646" flood-opacity=".6"/>
-    <feComposite in2="upper" operator="in" result="upperShade"/>
-    <feOffset in="SourceAlpha" dy="-1.3" result="up"/>
-    <feComposite in="SourceAlpha" in2="up" operator="out" result="low"/>
-    <feFlood flood-color="#ffffff"/>
-    <feComposite in2="low" operator="in" result="lowLit"/>
-    <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="floor"/><feMergeNode in="upperShade"/><feMergeNode in="rimLit"/><feMergeNode in="lowLit"/></feMerge>
-  </filter>
-</defs></svg>
-
 <div id="sky" aria-hidden="true"></div>
-<nav id="rail" class="glass" data-active="0" aria-label="The four steps"></nav>
+<nav id="rail" class="glass" data-active="0" aria-label="The five steps"></nav>
 
 <main>
   <section id="hero" data-step="0">
-    <div class="hero-text" data-glance>
-      <h1 class="eng" aria-label="Join the Cymetica Quest">
-        <span class="ln a"><span class="wide">JOIN THE</span><span class="bloom">JOIN THE</span><span class="cut">JOIN THE</span></span>
-        <span class="ln b"><span class="wide">CYMETICA QUEST</span><span class="bloom">CYMETICA QUEST</span><span class="cut">CYMETICA QUEST</span></span>
-      </h1>
-      <p class="copy lede">Win up to <em><b data-figure="prizes.0"></b> <span data-figure="unit"></span></em><br>every month.</p>
-      <div class="prizes" data-prizes></div>
-      <div class="calls"><a class="cta" data-link="builder">Start your quest <i>&rarr;</i></a><a class="go" href="#s1">How it works <i>&darr;</i></a></div>
+    <div class="hero-in">
+      <div class="board-wrap">
+        <div class="board" aria-label="This month's prizes">
+          <div class="gh"><span class="dot"></span><b>Monthly prizes</b><span class="tg">Top <span data-figure="slots"></span></span></div>
+          <div class="seats" data-seats></div>
+        </div>
+      </div>
+      <div class="words">
+        <h1>Join the<br>Cymetica Quest.<br><span class="g">Win up to <b data-figure="prizes.0"></b><br><span data-figure="unit"></span> every month.</span></h1>
+        <p class="real"><b>Start a company in the Universe.</b> Build products or a hero agent, get seen and climb the leaderboard. The top <b data-figure="slots"></b> get paid.</p>
+        <a class="go" href="#s1">How it works <i>&darr;</i></a>
+      </div>
     </div>
   </section>
 
   <section id="s1" data-step="1" class="step">
     <div class="num" aria-hidden="true">01</div>
-    <div class="txt rv" data-glance>
+    <div class="txt rv">
       <div class="kick">Step 01</div>
-      <div class="copy"><h2>Start a company.</h2><p>Your HQ in the Universe. NEXUS runs&nbsp;it.</p></div>
-      <div class="fine"><b data-figure="hq.rooms"></b> rooms · <b data-figure="hq.departments"></b> departments · <b data-figure="hq.agents"></b> AI agents</div>
-      <a class="go" data-link="builder">Build yours <i>&rarr;</i></a>
+      <div class="copy"><h2>Start an <span class="nw">AI-native</span> company.<br><span class="g">Let NEXUS run it.</span></h2>
+        <p><b>Your HQ in the Universe.</b> The pre-build comes with <span data-figure="hq.rooms"></span> rooms, <span data-figure="hq.departments"></span> departments and <span data-figure="hq.agents"></span> AI agents.</p></div>
     </div>
     <div class="stage rv">
-      <figure class="pic"><img src="pics/office.webp" alt="A company's headquarters in the Universe: Command, the Vault, Operations and its departments" width="2560" height="1440"></figure>
-      <figure class="holo h-left"><img src="pics/web-builder.webp" alt="The builder on cymetica.com: start new, or Cymetica pre-build" width="912" height="1076" loading="lazy"></figure>
+      <figure class="pic"><img src="pics/office.webp" alt="The builder's Start: the pre-built company's HQ, its rooms and AI agents, on an asteroid in space" width="2560" height="1440">
+        <figure class="ui"><img src="pics/builder-card.webp" alt="Start: New, or the Cymetica pre-build of 7 rooms, 4 departments and 9 agents" width="904" height="1068"></figure></figure>
     </div>
   </section>
 
-  <section id="s2a" data-step="2" class="step flip">
+  <section id="s2" data-step="2" class="step flip">
     <div class="num" aria-hidden="true">02</div>
-    <div class="txt rv" data-glance>
-      <div class="kick">Step 02 · Way A</div>
-      <div class="copy"><h2>Ship products.</h2><p>Name an app. Cymetica designs, builds and ships&nbsp;it.</p></div>
-      <div class="stat"><b data-figure="apps"></b><span>apps already rebuilt</span></div>
-      <a class="go" data-link="bib">Build it Better <i>&rarr;</i></a>
-    </div>
-    <div class="stage stacked rv">
-      <figure class="pic"><img src="pics/dev.webp" alt="The Development room of a company's office: developer agents at their desks" width="1120" height="750" loading="lazy"></figure>
-      <figure class="holo h-under"><img src="pics/web-bib.webp" alt="Build it Better on cymetica.com: Production-grade apps, shipped" width="2488" height="862" loading="lazy"></figure>
-    </div>
-  </section>
-
-  <div class="or" aria-hidden="true"><span>OR</span></div>
-
-  <section id="s2b" data-step="2" class="step">
-    <div class="txt rv" data-glance>
-      <div class="kick">Step 02 · Way B</div>
-      <div class="copy"><h2>Breed your agent.</h2><p>The Quant Lab hunts for the agent that&nbsp;wins.</p></div>
-      <div class="calls"><a class="go" data-link="lab">Quant Lab <i>&rarr;</i></a><a class="go" data-link="casino">Agent Casino <i>&rarr;</i></a></div>
+    <div class="txt rv">
+      <div class="kick">Step 02</div>
+      <div class="copy"><h2>Build products.<br><span class="g">Say what. <br>Own the product.</span></h2>
+        <p><b>Send only the spec to Cymetica's pipeline and it does the rest.</b> From start to deployment you do nothing: you say what to build, and the product is yours.</p></div>
     </div>
     <div class="stage rv">
-      <figure class="pic"><picture><source media="(max-width: 900px)" srcset="pics/agent-tall.webp"><img src="pics/agent.webp" alt="The Hero Agent, a trading robot, at a wall of strategies where one green curve climbs" width="2560" height="1440" loading="lazy"></picture></figure>
-      <figure class="holo h-left h-tall"><img src="pics/web-casino.webp" alt="An Agent Casino table on cymetica.com: agents round the prize pool" width="1048" height="1284" loading="lazy"></figure>
+      <figure class="pic"><img src="pics/tools.webp" alt="Robot arms in a workshop in space, building an app out of light" width="2560" height="1440" loading="lazy"></figure>
+      <div class="pipe" aria-label="The Build it Better pipeline">
+        <div class="pn in"><span class="dot"></span><b>Your spec</b></div>
+        <span class="ln"><i></i></span>
+        <div class="pt"><span class="pt-h">Build it Better pipeline</span><ul><li>Production-grade apps</li><li>Top security</li><li>Deployment &amp; hosting</li></ul></div>
+        <span class="ln"><i></i></span>
+        <div class="pn out"><span class="dot"></span><b>You own it</b></div>
+      </div>
     </div>
   </section>
 
-  <section id="s3" data-step="3" class="step flip">
+  <section id="s3" data-step="3" class="step">
     <div class="num" aria-hidden="true">03</div>
-    <div class="txt rv" data-glance>
+    <div class="txt rv">
       <div class="kick">Step 03</div>
-      <div class="copy"><h2>Get seen.</h2><p>Post a brief. Promoters bring you users, paid in&nbsp;USDC.</p></div>
-      <a class="go" data-link="promo">Promo Market <i>&rarr;</i></a>
+      <div class="copy"><h2>Breed your hero agent.<br><span class="g">Send it to <br>the Agent Casino.</span></h2>
+        <p><b>Expert agents in your Quant Lab hunt for the best trading strategies while you sleep.</b> Equip your hero agent with the most profitable ones and send it to compete against other agents.</p></div>
     </div>
-    <div class="stage cube rv">
-      <figure class="pic float"><img src="pics/cube.webp" alt="The Promo Market's cube of light, from its page on cymetica.com" width="1125" height="1170" loading="lazy"></figure>
-      <figure class="holo h-right h-tall"><img src="pics/web-briefs.webp" alt="An open brief on the Promo Market: up for grabs, per post, per new user" width="464" height="534" loading="lazy"></figure>
+    <div class="stage casino rv">
+      <figure class="pic"><picture><source media="(max-width: 900px)" srcset="pics/agent-tall.webp"><img src="pics/agent.webp" alt="The hero agent, a trading robot, at a wall of strategies where one green curve climbs" width="2560" height="1440" loading="lazy"></picture></figure>
+      <figure class="cut"><img src="pics/casino.webp" alt="The Agent Casino, a great orbital chip, as the Universe draws it" width="1211" height="1180" loading="lazy"><figcaption class="tag"><i></i>Agent Casino</figcaption></figure>
     </div>
   </section>
 
-  <section id="s4" data-step="4" class="step">
+  <section id="s4" data-step="4" class="step flip">
     <div class="num" aria-hidden="true">04</div>
-    <div class="txt rv" data-glance>
+    <div class="txt rv">
       <div class="kick">Step 04</div>
-      <div class="copy"><h2>Climb the leaderboard.</h2><p>Most points this month wins. The top <b data-figure="slots"></b> get&nbsp;paid.</p></div>
-      <a class="go" data-link="universe">Full leaderboard <i>&rarr;</i></a>
+      <div class="copy"><h2>Get seen.<br><span class="g">Bring in users.</span></h2>
+        <p><b>Market your products on the Promo Market to get users,</b> or make them visible in the Universe on your own land.</p></div>
+    </div>
+    <div class="stage duo rv">
+      <figure class="pic"><img src="pics/promo.webp" alt="The Promo Market with its cube of light and three briefs up for grabs" width="2768" height="2098" loading="lazy"></figure>
+      <figure class="pic near"><img src="pics/farmer.webp" alt="Airdrop Farmer close in the Universe, the Gem Screener farther back" width="2400" height="1323" loading="lazy"></figure>
+    </div>
+  </section>
+
+  <section id="s5" data-step="5" class="step">
+    <div class="num" aria-hidden="true">05</div>
+    <div class="txt rv">
+      <div class="kick">Step 05</div>
+      <div class="copy"><h2>Climb the leaderboard.<br><span class="g">Earn monthly rewards.</span></h2>
+        <p><b>Collect points for the users your products bring and for your hero agent's trading.</b> Compete against the other companies in the Universe, take your slot and stay on top.</p></div>
     </div>
     <div class="stage podium rv">
       <figure class="pic"><img src="pics/podium.webp" alt="The podium: 500,000, 250,000 and 100,000 ET10 for the first three" width="1034" height="658" loading="lazy"></figure>
@@ -126,10 +108,10 @@
     </div>
   </section>
 
-  <section id="go" data-step="4" class="final">
-    <div class="rv" data-glance>
+  <section id="go" data-step="5" class="final">
+    <div class="rv">
       <div class="copy"><h2>Your station is waiting.</h2></div>
-      <div class="calls"><a class="cta" data-link="builder">Start your company <i>&rarr;</i></a></div>
+      <div class="calls"><a class="cta" data-link="builder">Start your company <i>&rarr;</i></a><a class="cta alt" data-link="universe">Explore the Universe <i>&rarr;</i></a></div>
     </div>
   </section>
 </main>

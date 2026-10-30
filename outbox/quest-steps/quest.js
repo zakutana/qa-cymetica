@@ -1,5 +1,5 @@
-/* The Cymetica Quest, step by step: the figures, the rail, and what moves as you scroll (each step rises in) or point
-   (each step's hologram of the web leans a little towards the pointer). No library.
+/* The Cymetica Quest, step by step: the figures, the board's three open slots, the rail, and what moves as you scroll
+   (each step rises in) or point (the leaderboard's rows lean a little towards the pointer). No library.
 
    QUEST holds every figure and every address on the page. Nothing else may type a number (tests/test_quest_steps.py). */
 (function () {
@@ -10,25 +10,22 @@
     // (outbox/company-live/uv-data.js CO.SEASON.prizes), so the page and its podium picture are the same figures.
     // Cymetica's own sample was 50,000 / 30,000 / 10,000; their operator sets the real prize. It changes here and there.
     prizes: [500000, 250000, 100000],
-    places: ['1st', '2nd', '3rd'],
     unit: 'ET10',
     slots: 3,
-    // the builder's pre-built company, read on cymetica.com/company/app/builder 2026-10-29: "7 rooms · 4 departments · 9 agents"
+    // the builder's pre-built company, read on cymetica.com/company/app/builder 2026-10-30: "7 rooms · 4 departments · 9 agents"
     hq: { rooms: 7, departments: 4, agents: 9 },
-    apps: 133,                          // /build-it-better, "See the 133 apps already rebuilt", read 2026-10-29
+    // his five, 2026-10-30 (the second and third were one step's two ways before)
     steps: [
       { n: '01', label: 'Start a company', short: 'Start' },
       { n: '02', label: 'Build', short: 'Build' },
-      { n: '03', label: 'Get seen', short: 'Get seen' },
-      { n: '04', label: 'Climb', short: 'Climb' }
+      { n: '03', label: 'Hero agent', short: 'Agent' },
+      { n: '04', label: 'Get seen', short: 'Get seen' },
+      { n: '05', label: 'Climb', short: 'Climb' }
     ],
+    // the only two links on the page, at its end ("to bude az na konci")
     links: {
       builder: 'https://cymetica.com/company/app/builder',
-      universe: 'https://cymetica.com/company/app#universe',
-      bib: 'https://cymetica.com/build-it-better',
-      lab: 'https://cymetica.com/company/app/experiments',
-      casino: 'https://cymetica.com/agent-casino',
-      promo: 'https://cymetica.com/promo-market'
+      universe: 'https://cymetica.com/company/app#universe'
     }
   };
   var S = window.QUEST_STATE = { ready: false, active: 0 };
@@ -38,11 +35,12 @@
   function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ---- the prize chips, the figures, the links, from QUEST
-  document.querySelectorAll('[data-prizes]').forEach(function (host) {
+  // ---- the board's open slots (the flyer's .seat), the figures, the links, from QUEST
+  document.querySelectorAll('[data-seats]').forEach(function (host) {
     host.innerHTML = Q.prizes.map(function (_, i) {
-      return '<div class="pz p' + (i + 1) + '"><span class="pl" data-figure="places.' + i + '"></span><b data-figure="prizes.' + i + '"></b>' +
-        '<span class="un" data-figure="unit"></span></div>';
+      return '<div class="seat p' + (i + 1) + '"><span class="rk">' + (i + 1) + '</span><span class="open">?</span>' +
+        '<span class="who"><b>Open slot</b><span>could be yours</span></span>' +
+        '<span class="pay"><b data-figure="prizes.' + i + '"></b><span data-figure="unit"></span></span></div>';
     }).join('');
   });
   document.querySelectorAll('[data-figure]').forEach(function (el) { el.textContent = fmt(get(el.dataset.figure)); });
