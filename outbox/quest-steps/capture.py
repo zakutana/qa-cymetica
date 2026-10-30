@@ -102,10 +102,37 @@ def builder(b):
 
 
 def promo(b):
-    """step 4's first picture: the Promo Market's own page with briefs up for grabs. Their market has none open today,
-    so it is drawn by our read-only mirror of their live page (outbox/promo-market-v3/live, ?v2: their look as it is),
-    its sample brief and two more of Cymetica's products beside it, from one model: the counters are the cards' sum.
-    The page is cut to its opening (the words, the cube, the counters) and the briefs under it."""
+    """step 4's first picture: the Promo Market's own page with briefs up for grabs, its cube left out (record.py
+    promo_cube films the cube turning, laid over this picture where it stands); where the cube's box is in the picture
+    is printed, for the page (quest.css .promo3d .cube)"""
+    page, srv, r = promo_page(b)
+    cube = promo_cube_box(page, r)
+    page.add_style_tag(content='section.hero .pm-cube-box { visibility: hidden !important; }')
+    page.evaluate("() => { const a = document.querySelector('section.hero .aura'); if (a) a.parentElement.classList.add('pm-cube-box'); }")
+    time.sleep(1)
+    save(shot(page, r, 24).convert('RGB'), 'promo.webp')
+    print('promo: the cube in the picture (left, top, width, height, %):', cube['pct'])
+    page.close()
+    srv.shutdown()
+
+
+def promo_cube_box(page, r, pad=24, margin=34):
+    """the Promo Market's cube (their CSS 3D: aura, pool, sparks, the turning cube) as a box in the page and as a
+    share of promo()'s picture (the opening cut with `pad` round it)"""
+    box = page.evaluate("""(m) => { const host = document.querySelector('section.hero .aura').parentElement;
+      let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+      host.querySelectorAll('*').forEach(e => { const q = e.getBoundingClientRect(); if (!q.width) return; x0 = Math.min(x0, q.left); y0 = Math.min(y0, q.top); x1 = Math.max(x1, q.right); y1 = Math.max(y1, q.bottom); });
+      return { x: x0 - m, y: y0 - m, width: x1 - x0 + 2 * m, height: y1 - y0 + 2 * m }; }""", margin)
+    X0, Y0, W, H = r['x'] - pad, r['y'] - pad, r['width'] + 2 * pad, r['height'] + 2 * pad
+    box['pct'] = [round((box['x'] - X0) / W * 100, 2), round((box['y'] - Y0) / H * 100, 2), round(box['width'] / W * 100, 2), round(box['height'] / H * 100, 2)]
+    return box
+
+
+def promo_page(b):
+    """the Promo Market's own page with briefs up for grabs. Their market has none open today, so it is drawn by our
+    read-only mirror of their live page (outbox/promo-market-v3/live, ?v2: their look as it is), its sample brief and
+    two more of Cymetica's products beside it, from one model: the counters are the cards' sum. Folded to its opening
+    (the words, the cube, the counters) and the briefs under it; returns the page, the mirror and that cut"""
     sys.path.insert(0, str(OUTBOX / 'promo-market-v3' / 'live'))
     import sample
     import serve as mirror
@@ -144,9 +171,7 @@ def promo(b):
       return { x: a.left, y: a.top, width: a.width, height: z.bottom - a.top, cards: cards.length }; }""")
     print('promo: briefs drawn', r.pop('cards'))
     time.sleep(1)
-    save(shot(page, r, 24).convert('RGB'), 'promo.webp')
-    page.close()
-    srv.shutdown()
+    return page, srv, r
 
 
 def sky(_b):

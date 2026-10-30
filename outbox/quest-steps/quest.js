@@ -76,13 +76,13 @@
   document.querySelectorAll('[data-figure]').forEach(function (el) { el.textContent = fmt(get(el.dataset.figure)); });
   document.querySelectorAll('[data-link]').forEach(function (a) { a.href = Q.links[a.dataset.link]; a.target = '_blank'; a.rel = 'noopener'; });
 
-  // ---- the rail: the quest's path as Capital Maximizer's (outbox/capital-maximizer/mock.html .rail): a hexagon a
-  // step, joined by lines that light as far as you have come, the step you are on lit
+  // ---- the rail: the quest's track: a hexagon a step with its number in it, the lines between them filling as you
+  // read down the page (a spark at the fill's front), the step you are on lit
   var rail = document.getElementById('rail');
   rail.innerHTML = Q.steps.map(function (s, i) {
-    return '<a data-step="' + (i + 1) + '" href="#s' + (i + 1) + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + HEX + '"/></svg>' +
-      '<span class="lab"><em>' + s.n + '</em>' + s.label + '</span><span class="sh">' + s.short + '</span></a>';
-  }).join('<i></i>');
+    return '<a data-step="' + (i + 1) + '" href="#s' + (i + 1) + '"><span class="hx"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + HEX + '"/></svg><em>' + (i + 1) + '</em></span>' +
+      '<span class="lab">' + s.label + '</span><span class="sh">' + s.short + '</span></a>';
+  }).join('<i><b></b></i>');
   var steps = [].slice.call(rail.querySelectorAll('a')), lines = [].slice.call(rail.querySelectorAll('i'));
   document.querySelectorAll('#rail a').forEach(function (a) {
     a.addEventListener('click', function (e) {
@@ -104,6 +104,7 @@
 
   // ---- on every scroll: which step is on screen, the rail's lit tab and the light under it
   var sections = [].slice.call(document.querySelectorAll('section[data-step]'));
+  var stepSecs = Q.steps.map(function (_, i) { return document.getElementById('s' + (i + 1)); });
   function frame(force) {
     var mid = innerHeight / 2, active = 0;
     sections.forEach(function (s) { var r = s.getBoundingClientRect(); if (r.top <= mid && r.bottom > mid) active = +s.dataset.step; });
@@ -115,9 +116,14 @@
         a.classList.toggle('on', n === active);
         a.classList.toggle('done', n < active);
       });
-      // the line after step k is lit once step k is done
-      lines.forEach(function (l, i) { l.classList.toggle('lit', i + 1 < active); });
     }
+    // the line from step k to step k + 1 fills as the middle of the window goes from one's top to the next one's
+    var tops = stepSecs.map(function (s) { return s.getBoundingClientRect().top; });
+    lines.forEach(function (l, i) {
+      var p = (mid - tops[i]) / (tops[i + 1] - tops[i]); p = p < 0 ? 0 : p > 1 ? 1 : p;
+      l.firstChild.style.width = (p * 100).toFixed(1) + '%';
+      l.classList.toggle('run', p > 0 && p < 1);
+    });
   }
   var queued = false;
   window.addEventListener('scroll', function () { if (!queued) { queued = true; requestAnimationFrame(function () { queued = false; frame(); }); } }, { passive: true });

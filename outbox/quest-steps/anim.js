@@ -112,14 +112,14 @@
         '<div class="chs">' + CH.map(function (c) {
           return '<div class="ch ' + c[2] + '"><span class="ci">' + window.QUEST_ICON_SVG(c[0]) + '</span><b>' + c[1] + '</b><span class="fx">' + FX[c[2]] + '</span><span class="ok">&check;</span></div>';
         }).join('') + '</div></div>' +
-      '<div class="outlet"><span class="cap">Your app</span><div class="app"><span class="lg"></span><span class="an"><b></b><i>Live &middot; yours</i></span></div><span class="burst"></span></div>';
+      // out of the pipeline, the ring of the products already built ("to tocici dej spis jako vystup z te pipeline"):
+      // it turns yours to the front as it goes live (the ring's own code, below, reads S.out)
+      '<div class="outlet">' +
+        '<div class="ring" data-anim="apps" aria-label="Products already built with Cymetica, their live pages"><div class="items"></div><span class="base"></span>' +
+        '<div class="plate"><b></b><span>' + fmt(Q.apps) + ' apps already built &middot; drag</span></div></div><span class="burst"></span></div>';
     var tx = m.querySelector('.tx'), orb = m.querySelector('.orb'), lit = m.querySelector('.lit'), chs = [].slice.call(m.querySelectorAll('.ch'));
-    var app = m.querySelector('.app'), lg = m.querySelector('.lg'), an = m.querySelector('.an b');
     var idea = -1, lastT = 99;
-    function setIdea(i) {
-      idea = i; var d = Q.ideas[i];
-      lg.innerHTML = shot(d[2]); an.textContent = d[1];
-    }
+    function setIdea(i) { idea = i; }
     setIdea(0);
     run('pipeline', m, function (t) {
       var T = vid && !vid.paused && vid.readyState >= 2 ? vid.currentTime % 10 : t % 10;
@@ -142,30 +142,40 @@
       });
       m.classList.toggle('out', T >= 6.3 && T < 9.2);
       m.classList.toggle('pop', T >= 6.3 && T < 7.1);
+      S.out = { key: d[2], on: T >= 6.0 && T < 9.4 };
     });
   })();
 
-  /* ---------------- step 2: the ring of products already built, their live pages as holograms ---------------- */
-  // ("nechci at to jsou ikonky ale screeny z live aplikaci holograficky"): turning slowly, turned faster by a drag; the
-  // one in front says its name
+  /* ---------------- step 2: the ring of products already built, the pipeline's output ---------------- */
+  // their live pages as holograms ("screeny z live aplikaci holograficky"), turning slowly, turned faster by a drag;
+  // the one in front says its name. While the pipeline lets an app out (S.out), the ring turns that app to the front,
+  // lit and tagged as yours
   (function () {
     var ring = document.querySelector('[data-anim=apps]'); if (!ring) return;
     var wrap = ring.querySelector('.items'), plate = ring.querySelector('.plate b');
     var items = Q.built.map(function (a) {
       var e = document.createElement('div'); e.className = 'it';
       e.innerHTML = '<span class="mk">' + shot(a[1]) + '</span>';
-      wrap.appendChild(e); return { el: e, name: a[0] };
+      wrap.appendChild(e); return { el: e, name: a[0], key: a[1] };
     });
-    var n = items.length, drag = 0, vel = 0, down = false, x0 = 0, front = -1;
+    var n = items.length, drag = 0, vel = 0, down = false, x0 = 0, front = -1, rot = 0, lastT = 0, mine = -1;
     ring.addEventListener('pointerdown', function (e) { down = true; x0 = e.clientX; ring.setPointerCapture(e.pointerId); ring.classList.add('grab'); });
     ring.addEventListener('pointermove', function (e) { if (!down) return; var dx = e.clientX - x0; x0 = e.clientX; drag += dx * 0.45; vel = dx * 0.45; });
     function up() { down = false; ring.classList.remove('grab'); }
     ring.addEventListener('pointerup', up); ring.addEventListener('pointercancel', up);
     ring.addEventListener('wheel', function (e) { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { drag -= e.deltaX * 0.3; e.preventDefault(); } }, { passive: false });
     run('apps', ring, function (t) {
+      var dt = Math.min(0.1, Math.max(0, t - lastT)); lastT = t;
       if (!down) { drag += vel; vel *= 0.94; }
+      // yours coming out: turn the ring the short way round until it stands in front; otherwise turn slowly
+      var out = S.out || {}, want = -1;
+      if (out.on && !down) for (var j = 0; j < n; j++) if (items[j].key === out.key) want = j;
+      if (want >= 0) {
+        var gap = ((-want * 360 / n - drag - rot) % 360 + 540) % 360 - 180;
+        rot += gap * Math.min(1, dt * 5);
+      } else rot += dt * 9;
       // a ring seen a little from above: the front ones lower and bigger, the back ones higher, small and faint
-      var W = wrap.clientWidth, R = W * 0.4, base = t * 9 + drag, best = -2, bi = 0;
+      var W = wrap.clientWidth, R = W * 0.4, base = rot + drag, best = -2, bi = 0;
       items.forEach(function (it, i) {
         var a = (base + i * 360 / n) * Math.PI / 180, z = Math.cos(a), x = Math.sin(a) * R, k = (z + 1) / 2;
         // each page turned to face the way round the ring, as a card on a carousel
@@ -178,7 +188,56 @@
         if (front >= 0) items[front].el.classList.remove('front');
         front = bi; items[bi].el.classList.add('front'); plate.textContent = items[bi].name;
       }
+      var m2 = want >= 0 && bi === want ? want : -1;
+      if (m2 !== mine) {
+        if (mine >= 0) items[mine].el.classList.remove('mine');
+        mine = m2; if (mine >= 0) items[mine].el.classList.add('mine');
+        ring.classList.toggle('mine', mine >= 0);
+        plate.textContent = (mine >= 0 ? 'Your ' : '') + items[bi].name;
+      }
     });
+  })();
+
+  /* ---------------- the sky: stars that twinkle over the still deep space (#sky) ---------------- */
+  // a few hundred, seeded, most faint and white, some cyan and green, a handful with a cross of light; drawn at the
+  // window's own pixel ratio (up to 2) and redrawn 30 times a second, not more
+  (function () {
+    var cv = document.getElementById('twinkle'); if (!cv) return;
+    var ctx = cv.getContext('2d'), stars = [], flares = [], W = 0, H = 0;
+    var COL = ['#eef6fa', '#cbe8ff', '#00cfff', '#00ff88', '#9fc4ff'];
+    function size() {
+      var d = Math.min(2, window.devicePixelRatio || 1); W = innerWidth; H = innerHeight;
+      cv.width = Math.round(W * d); cv.height = Math.round(H * d); ctx.setTransform(d, 0, 0, d, 0, 0);
+      var s = 7; function r() { s = (s * 16807) % 2147483647; return s / 2147483647; }
+      stars = []; flares = [];
+      var count = Math.max(120, Math.min(320, Math.round(W * H / 8200)));
+      for (var i = 0; i < count; i++) {
+        var p = r();
+        stars.push({ x: r() * W, y: r() * H, r: 0.5 + Math.pow(r(), 2.6) * 1.6, a: 0.25 + r() * 0.7, ph: r() * 6.283, sp: 0.4 + r() * 1.3,
+          c: COL[p < 0.64 ? 0 : p < 0.84 ? 1 : p < 0.93 ? 2 : p < 0.97 ? 3 : 4] });
+      }
+      for (var k = 0; k < 9; k++) flares.push({ x: (0.05 + r() * 0.9) * W, y: (0.08 + r() * 0.86) * H, l: 7 + r() * 10, ph: r() * 6.283, c: k % 3 ? '#eef6fa' : '#00cfff' });
+    }
+    function draw(t) {
+      ctx.clearRect(0, 0, W, H);
+      stars.forEach(function (s) {
+        var tw = 0.62 + 0.38 * Math.sin(t * s.sp + s.ph);
+        ctx.fillStyle = s.c;
+        if (s.r > 1.25) { ctx.globalAlpha = s.a * tw * 0.16; ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 3.2, 0, 6.283); ctx.fill(); }
+        ctx.globalAlpha = s.a * tw; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.283); ctx.fill();
+      });
+      flares.forEach(function (f) {
+        var p = 0.6 + 0.4 * Math.sin(t * 0.8 + f.ph), L = f.l * p;
+        ctx.globalAlpha = 0.5 * p; ctx.strokeStyle = f.c; ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.moveTo(f.x - L, f.y); ctx.lineTo(f.x + L, f.y); ctx.moveTo(f.x, f.y - L); ctx.lineTo(f.x, f.y + L); ctx.stroke();
+        ctx.globalAlpha = 0.9 * p; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(f.x, f.y, 1.2, 0, 6.283); ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+    }
+    size(); window.addEventListener('resize', size);
+    if (reduce) { draw(0); return; }
+    var last = 0;
+    (function tick(now) { if (now - last > 33) { last = now; draw(now / 1000); } requestAnimationFrame(tick); })(0);
   })();
 
   /* ---------------- step 4: users walk from the briefs to the product ---------------- */

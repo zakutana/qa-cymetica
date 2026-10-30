@@ -4,7 +4,7 @@ Asked for by the operator on 2026-10-29: a new page for the Cymetica Quest, expl
 quest, win up to 500,000 ET10 every month), then how. It stands beside `outbox/quest` (the scroll film, still on the 5 %
 revenue share), which is unchanged.
 
-## Ten takes
+## Eleven takes
 
 1. **a1cb3cf5, 7/10**: real screenshots, each in a glass browser frame. "Nedavej to do panelu ... at to splyva."
 2. **60da77f5, 4/10**: everything full screen, a flight in to the sun, the orbit with its companies. "Predchozi verze
@@ -21,18 +21,27 @@ revenue share), which is unchanged.
 9. **827a4b4a**: the floating bar with the quest's path, the HQ alone and close, the whole Quant Lab with the agent by
    the fifth second, the live Universe big, smaller doors; a glowing-star sky and the start tutorial's sun with its
    companies on the first screen, both taken back in the tenth.
-10. **This one** (2026-10-30), after the ninth, looked at in Firefox, his browser:
-   - **The first screen's sky is the eighth take's again** ("vesmir na uvodni strane ... byl predtim top"), and the
-     sun stands alone, smaller and further off, no companies round it ("ty tam nedavej").
-   - **Every step as step 2 was**: STEP 0N, the words, and under them the big number; nothing beside the words.
-   - **Step 2:** the ring of products beside the number, under the words' level ("moc vysoko").
-   - **Step 3:** the Quant Lab's page stands in space as the Promo Market does ("jen placka na tme"): turned towards
-     its words, its edges melting into the dark, a light behind it and a pool of light under it.
-   - **Step 5:** Cymetica's sun over the live Universe where theirs stands; the live page draws its sun on canvases of
-     its own, which the map's recording left out, so the clip showed only a star ("co to ma byt to slunce?").
-   - **The clips load only when their step is near** and let go when it is far: in Firefox a playing clip's time stood
-     still (never paused) while the page's other clips were loading. That was step 2's "animace se nespusti";
-     measured in Firefox, every step's clip now plays there and in Chrome, down the page and back.
+10. **0f21ed9a**, looked at in Firefox, his browser: the eighth take's sky back and the sun alone, every step's big
+   number under its words, the Quant Lab set into space, Cymetica's sun over the live Universe, and the clips loaded
+   only near their step (in Firefox a playing clip stood still while the others loaded: step 2's "animace se
+   nespusti").
+11. **This one** (2026-10-31), after the tenth:
+   - **Deep space behind the whole page**, still while the page moves over it, its stars twinkling (anim.js), as
+     Gemini's guide on 8802 has it ("koukni jak udelal gemini vsude vesmirne pozadi ... vypada to celkem huste").
+   - **The first screen**: the words big on the left as the start page's, "Cymetica Quest." first and green, every
+     line whole; the prize board on the right, turned the other way; the sun further right and off, whole and bright
+     (a glowing core under its strands: "ted v nem jsou diry").
+   - **The top has no panel**: the brand, the quest's track (a numbered hexagon a step, the lines filling as you read,
+     a spark at the front) and the prize stand on the sky over a dark that fades downwards.
+   - **Bullets under every heading**, each on a hexagon, strung on one line of light.
+   - **Every picture further from its number** (a wider gap, the page wider); step 1's HQ further right.
+   - **Step 2:** the arms beside the number; under them the pipeline, and out of it the ring of products already built,
+     which turns your new app to the front as it goes live, tagged yours.
+   - **Step 3:** "Quant Lab" is the green words; the Agent Casino is a point under them.
+   - **Step 4:** the Promo Market's cube turns as on their page (record.py promo_cube: their CSS animations set frame by
+     frame, a seamless 18 s loop, laid where the cube stands in the picture).
+   - **Step 5:** the live Universe with the leaderboard's companies on it too (record.py universe: fourteen, the eight
+     added in our recording browser only).
 
 ## Open it
 
@@ -67,8 +76,8 @@ goes to him.
 | 02 | the workshop and the pipeline | our three.js scene and anim.js; the ideas map to real Build it Better products |
 | 02 | the ring of products | LIVE: each product's own page, captured (capture.py apps) |
 | 03 | the Quant Lab's page | outbox/quant-lab-v2's Coming soon mode, filmed on a bent clock: a simulation, and it says so on screen |
-| 04 | the Promo Market and the Airdrop Farmer | their page through our read-only mirror with three sample briefs; our Universe mock, composed |
-| 05 | the Universe | LIVE cymetica.com/company/app#universe, recorded: its six companies and four products today |
+| 04 | the Promo Market and the Airdrop Farmer | their page through our read-only mirror with three sample briefs, its own cube turning (their CSS, filmed frame by frame); our Universe mock, composed |
+| 05 | the Universe | LIVE cymetica.com/company/app#universe, recorded: its six companies and four products today, and the leaderboard's eight sample companies added to its answer in our browser |
 | 05 | the leaderboard | samples (QUEST.board), with our mock's stations as marks |
 | end | the two cards | LIVE cymetica.com/company/app/start, its room and its Universe, recorded; our sun over the Universe, as their poster shows none |
 
@@ -78,13 +87,16 @@ goes to him.
   points" are its 4th and 5th, now that the agent has its own step.
 - **The nine agents** are named by role (Developer, Lab scientist, Trader, QA tester, Auditor, Supervisor, three
   Researchers), as the pre-build has them; NEXUS leads them and is said in the line above.
-- **The first screen's sun** is about a third smaller than the eighth take's (its ball about 106 px at 2000 px wide),
-  for "too close".
+- **The first screen's words**: "Cymetica Quest." first and green, then "Join. Earn points. / Climb the leaderboard.
+  / Earn up to 500,000 ET10 / every month." with the prize green; he left the opening to us ("CYMETICA QUEST zelene
+  nebo join? ... musis to vymyslet").
+- **The first screen's sun** is about 80 px across its ball at 2000 px wide, top right over the board.
 - **The Quant Lab** carries the Promo Market's scan lines too, faintly; he once said not to make it holographic, and
   this round asked for it set into space as the Promo Market is.
-- **Step 5 is the live Universe**, six companies today; the seventh take's eighteen were our mock's samples
-  (record.py universe-mock still makes that clip). His words this round were about the sky, and the live sky is the
-  one he called better.
+- **Step 5 is the live Universe** with the leaderboard's eight sample companies added in our recording browser, so
+  the names on the board stand in the map too; the live one has six today. Nothing is sent to Cymetica: the answer is
+  changed as it arrives in our browser (record.py EXTRA_COMPANIES).
+- **The top bar** keeps its three parts (brand, track, prize) and drops the panel round them.
 - **The Quant Lab's clock** runs 3.3 times faster through its first four stages so the agent is found at the fifth
   second, then at its own pace; nothing in the lab's page was changed.
 - **The clips** stay out of git. Their posters are kept.
