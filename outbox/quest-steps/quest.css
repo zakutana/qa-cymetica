@@ -1,18 +1,19 @@
-/* The Cymetica Quest, step by step: fifth take. The top bar is Capital Maximizer's (its brand, its rail of hexagons
-   joined by fine lines, a pill); the first screen is our flyer laid on its side (the board's glass of open slots on the
-   left, the words in the type of cymetica.com/company/app/start on the right), over a sharp deep space with Cymetica's
-   sun and five small companies floating round it. Then the steps side by side with their big hollow numbers behind,
-   every picture and clip melting into the dark, each step moving (anim.js). Cymetica's palette: green on the prize and
-   the call, cyan for the way, blue for the third place. Nothing under 20 px in a step on a wide screen, 16 on a phone. */
+/* The Cymetica Quest, step by step: sixth take. The bar across the top and the two buttons at the end are made of the
+   glass of our board (the operator: "me se obecne libi ten skleneny styl naseho boardu"); the first screen is our flyer
+   laid on its side over a sharp deep space with Cymetica's sun and five small companies standing round it; every point
+   is said with the company's own icons; the second step's two ways share one screen and a slider. Every picture and
+   clip melts into the dark. Cymetica's palette: green on the prize and the call, cyan for the way, blue for the third
+   place. */
 :root {
   --bg: #05070c; --deep: #06090f; --line: #1e3050; --text: #eef6fa; --dim: #a9bfcd; --mute: #7f93ad;
-  --green: #00ff88; --cyan: #00cfff; --blue: #3b82f6;
+  --green: #00ff88; --cyan: #00cfff; --blue: #3b82f6; --red: #ff4444;
   --rs1: #00ff88; --rs2: #00cfff; --rs3: #3b82f6;
   --ease: cubic-bezier(.2, .8, .2, 1);
+  /* the board's glass (the flyer's .glass): a lit sheen, a cyan breath in its corner, the dark through it */
   --glass:
-    linear-gradient(135deg, rgba(255, 255, 255, .14) 0%, rgba(255, 255, 255, .04) 24%, rgba(255, 255, 255, 0) 44%),
-    radial-gradient(120% 90% at 0% 0%, rgba(0, 207, 255, .14), rgba(0, 207, 255, 0) 60%),
-    linear-gradient(180deg, rgba(14, 28, 40, .5), rgba(6, 8, 16, .7));
+    linear-gradient(135deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .05) 24%, rgba(255, 255, 255, 0) 44%),
+    radial-gradient(120% 90% at 0% 0%, rgba(0, 207, 255, .16), rgba(0, 207, 255, 0) 60%),
+    linear-gradient(180deg, rgba(14, 28, 40, .55), rgba(6, 8, 16, .72));
   --rim: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(0, 207, 255, .2), inset 0 -22px 36px -22px rgba(0, 207, 255, .22),
     0 0 0 1px rgba(0, 207, 255, .32), 0 0 70px rgba(0, 207, 255, .16), -8px 30px 54px rgba(0, 0, 0, .55);
   --fade: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 16%, #000 82%, transparent 100%);
@@ -24,18 +25,30 @@ body { min-height: 100vh; font-family: 'JetBrains Mono', monospace; color: var(-
 a { color: inherit; text-decoration: none; }
 img, video, canvas { display: block; max-width: 100%; height: auto; }
 figure { margin: 0; }
+ul, ol { list-style: none; }
+
+/* ---- an icon on its tile, as the builder's own (its card's row of department icons): a rounded square of tinted
+   glass, a rim in the icon's colour, a breath of its light */
+.tile { display: inline-grid; place-items: center; flex: none; width: 46px; height: 46px; border-radius: 12px; color: var(--green);
+  background: linear-gradient(180deg, rgba(0, 255, 136, .14), rgba(0, 255, 136, .04)); box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .45), 0 0 18px rgba(0, 255, 136, .14); }
+.tile.c { color: var(--cyan); background: linear-gradient(180deg, rgba(0, 207, 255, .16), rgba(0, 207, 255, .04)); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .5), 0 0 18px rgba(0, 207, 255, .16); }
+.tile.r { color: var(--red); background: linear-gradient(180deg, rgba(255, 68, 68, .16), rgba(255, 68, 68, .04)); box-shadow: inset 0 0 0 1px rgba(255, 68, 68, .5), 0 0 18px rgba(255, 68, 68, .14); }
+.tile i, .tile svg { display: block; width: 24px; height: 24px; }
+[data-ic] svg { width: 100%; height: 100%; }
 
 /* ---- the sky: the flyer's nebula and stars made at 3840 x 2160 (capture.py sky), fading into the page's dark */
 #sky { position: absolute; left: 0; right: 0; top: 0; height: 1500px; z-index: 0; pointer-events: none;
   background: linear-gradient(180deg, rgba(5, 7, 12, 0) 0%, rgba(5, 7, 12, 0) 45%, var(--bg) 92%), url(pics/space.webp) 50% 0% / cover no-repeat; }
 main { position: relative; z-index: 2; }
 
-/* ---- the top bar: Capital Maximizer's brand, rail and pill, a bar across the top with a line of light under it */
+/* ---- the top bar: Capital Maximizer's brand, rail and pill, on a sheet of the board's glass across the top */
 #bar { position: fixed; z-index: 10; left: 0; right: 0; top: 0; height: 84px; display: flex; align-items: center; gap: 36px;
-  padding: 0 max(24px, 3vw); background: linear-gradient(180deg, rgba(5, 7, 12, .94), rgba(5, 7, 12, .66));
-  backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3); }
-#bar::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; pointer-events: none;
-  background: linear-gradient(90deg, rgba(0, 207, 255, 0), rgba(0, 207, 255, .45) 25%, rgba(0, 255, 136, .4) 75%, rgba(0, 255, 136, 0)); }
+  padding: 0 max(24px, 3vw); background: var(--glass), rgba(5, 7, 12, .55);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 -1px 0 rgba(0, 207, 255, .3), 0 12px 40px rgba(0, 0, 0, .5);
+  backdrop-filter: blur(16px) saturate(1.35); -webkit-backdrop-filter: blur(16px) saturate(1.35); }
+#bar::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, rgba(0, 207, 255, 0), rgba(0, 207, 255, .6) 25%, rgba(0, 255, 136, .55) 75%, rgba(0, 255, 136, 0));
+  box-shadow: 0 0 14px rgba(0, 207, 255, .5); }
 .brand { display: flex; align-items: center; gap: 13px; flex: none; }
 .brand svg { width: 44px; height: 44px; flex: none; filter: drop-shadow(0 0 14px rgba(0, 255, 136, .32)); }
 .brand .o { fill: rgba(0, 255, 136, .07); stroke: var(--green); stroke-width: 1.6; }
@@ -45,7 +58,7 @@ main { position: relative; z-index: 2; }
 .brand .w b { display: block; font: 400 21px 'Archivo Black', sans-serif; letter-spacing: .015em; }
 .brand .w b em { font-style: normal; color: var(--green); }
 .brand .w span { display: block; margin-top: 6px; font: 600 11px 'JetBrains Mono'; letter-spacing: .34em; color: var(--mute); }
-#rail { flex: 1; min-width: 0; max-width: 1120px; margin: 0 auto; display: flex; align-items: center; }
+#rail { flex: 1; min-width: 0; max-width: 980px; margin: 0 auto; display: flex; align-items: center; }
 #rail a { display: flex; align-items: center; gap: 12px; flex: none; color: var(--mute); white-space: nowrap; cursor: pointer; transition: color .3s; }
 #rail a svg { width: 26px; height: 26px; flex: none; overflow: visible; }
 #rail a svg path { fill: var(--deep); stroke: var(--line); stroke-width: 1.4; transition: fill .3s, stroke .3s, filter .3s; }
@@ -59,8 +72,8 @@ main { position: relative; z-index: 2; }
 #rail a.on svg path { stroke: var(--green); fill: var(--green); filter: drop-shadow(0 0 6px rgba(0, 255, 136, .8)); }
 #rail i { flex: 1; height: 1px; min-width: 22px; margin: 0 16px; background: var(--line); transition: background .4s; }
 #rail i.lit { background: linear-gradient(90deg, var(--green), var(--cyan)); }
-.pill { flex: none; padding: 9px 15px; border-radius: 8px; font: 700 14px 'JetBrains Mono'; letter-spacing: .2em; text-transform: uppercase;
-  color: var(--cyan); border: 1px solid rgba(0, 207, 255, .5); box-shadow: inset 0 0 14px rgba(0, 207, 255, .12), 0 0 18px rgba(0, 207, 255, .12); }
+.pill { flex: none; padding: 9px 15px; border-radius: 9px; font: 700 14px 'JetBrains Mono'; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--cyan); background: var(--glass); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), inset 0 0 0 1px rgba(0, 207, 255, .5), 0 0 22px rgba(0, 207, 255, .16); }
 .pill b { font-weight: 800; color: var(--green); }
 
 /* ---- type: the start page's (.lp-h1, .lp-real), a size up for a page read from a distance */
@@ -69,45 +82,43 @@ h1, h2 { font-family: 'Archivo Black', sans-serif; font-weight: 400; letter-spac
 h2 { margin-top: 16px; font-size: clamp(36px, 2.75vw, 54px); line-height: 1.06; text-wrap: balance; }
 h1 .g, h2 .g { color: var(--green); text-shadow: 0 0 28px rgba(0, 255, 136, .45), 0 3px 18px rgba(0, 0, 0, .8); }
 h1 b { font-weight: 400; }
-.copy p, .real { margin-top: 24px; max-width: 34em; font: 500 clamp(21px, 1.3vw, 25px)/1.6 'JetBrains Mono'; color: var(--dim); text-shadow: 0 2px 14px rgba(0, 0, 0, .9); }
-.copy p b, .real b { font-weight: 700; color: var(--text); }
-.go { display: inline-flex; align-items: center; gap: 10px; margin-top: 34px; font: 800 22px 'JetBrains Mono'; color: var(--cyan);
-  text-shadow: 0 0 12px rgba(0, 207, 255, .6); border-bottom: 2px solid rgba(0, 207, 255, .35); padding-bottom: 4px; }
-.go i, .cta i { font-style: normal; transition: transform .25s; }
-.go:hover i { transform: translateY(4px); }
-.cta:hover i { transform: translateX(6px); }
-.calls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 26px; }
-.cta { display: inline-flex; align-items: center; gap: 12px; padding: 22px 42px; border-radius: 16px;
-  font: 400 28px 'Archivo Black', sans-serif; letter-spacing: .02em; color: #03140c;
-  background: linear-gradient(180deg, #7dffc0, var(--green) 55%, #00d47a);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .35) inset, 0 0 40px rgba(0, 255, 136, .45), 0 12px 30px rgba(0, 0, 0, .5);
-  transition: box-shadow .3s, transform .3s; }
-.cta:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255, 255, 255, .45) inset, 0 0 64px rgba(0, 255, 136, .65), 0 14px 34px rgba(0, 0, 0, .5); }
-.cta.alt { color: var(--cyan); background: var(--glass); box-shadow: var(--rim); text-shadow: 0 0 14px rgba(0, 207, 255, .6); }
-.cta.alt:hover { box-shadow: var(--rim), 0 0 60px rgba(0, 207, 255, .35); }
 
-/* ---- the first screen: the flyer's board on the left, the words on the right, the sun and its companies above */
+/* every step's points: an icon on its tile, the point in a line */
+.pts { margin-top: 26px; display: grid; gap: 14px; max-width: 34em; }
+.pts li { display: flex; align-items: center; gap: 16px; font: 500 clamp(20px, 1.2vw, 23px)/1.4 'JetBrains Mono'; color: var(--dim); text-shadow: 0 2px 12px rgba(0, 0, 0, .9); }
+.pts li b { font-weight: 700; color: var(--text); }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.chips span { padding: 8px 14px; border-radius: 10px; font: 600 20px 'JetBrains Mono'; color: var(--dim); background: var(--glass); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), inset 0 0 0 1px rgba(0, 207, 255, .25); }
+.chips b { font: 400 22px 'Archivo Black', sans-serif; color: var(--green); margin-right: 6px; }
+.depts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+
+/* ---- the first screen: the flyer's board on the left, the words and the four steps on the right, the sun above */
 #hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 150px 0 70px; overflow-x: clip; }
 .hero-in { position: relative; z-index: 2; width: min(1480px, calc(100% - 12vw)); margin: 0 auto; display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 5vw; align-items: center; }
 .hero-in h1 { font-size: clamp(38px, 3.2vw, 62px); line-height: 1.04; }
-.hero-in .real { max-width: 30em; }
-/* the sun with five companies round it ("1/8 velikosti slunce max"): the ball's own light as a picture with alpha,
-   .core is the bright ball (capture.py prints it: 23.5 % of the picture), each company at most an eighth of it */
+/* the four steps ("udelej to nejak huste v bodech ... a zde taky das tam i ty huste ikonky agentu co mame ve firme") */
+.path { margin-top: 30px; display: grid; gap: 10px; }
+.path a { display: flex; align-items: center; gap: 14px; padding: 10px 16px 10px 12px; border-radius: 14px; transition: background .3s, box-shadow .3s, transform .3s; }
+.path a:hover { background: var(--glass); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 0 0 1px rgba(0, 207, 255, .3); transform: translateX(4px); }
+.path .no { font: 800 20px 'JetBrains Mono'; color: var(--cyan); width: 30px; text-shadow: 0 0 10px rgba(0, 207, 255, .6); }
+.path .t { display: grid; gap: 2px; margin-left: 4px; }
+.path .t b { font: 400 22px 'Archivo Black', sans-serif; color: #ffffff; }
+.path .t span { font: 600 18px 'JetBrains Mono'; color: var(--mute); }
+.path .t span b { font: 800 18px 'JetBrains Mono'; color: var(--green); }
+/* the sun with five companies standing round it: the ball's own light as a picture with alpha; .core is its visible
+   disc, and each company is an eighth of it at most ("nesmi byt moc velke ... 1/8"), not less than a tenth */
 #sun { position: absolute; z-index: 1; left: calc(50% + 230px); top: 18px; width: 760px; height: 440px; pointer-events: none; isolation: isolate; }
 #sun .ball { position: absolute; z-index: 2; left: 50%; top: 50%; width: 640px; height: 640px; transform: translate(-50%, -50%); }
 #sun .ball img { width: 100%; height: 100%; }
-#sun .core { position: absolute; left: 50%; top: 50%; width: 150px; height: 150px; transform: translate(-50%, -50%); border-radius: 50%; }
-#sun .co { position: absolute; left: 0; top: 0; width: 18px; height: 18px; will-change: transform; }
-#sun .co img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 4px rgba(0, 207, 255, .55)); }
-/* the flyer's glass (.glass there): tilted on its left edge, a lit top edge, a cyan rim, the frost drawn in gradients */
+#sun .core { position: absolute; left: 50%; top: 50%; width: 240px; height: 240px; transform: translate(-50%, -50%); border-radius: 50%; }
+#sun .co { position: absolute; left: 0; top: 0; width: 30px; height: 30px; will-change: transform; transition: opacity .3s; }
+#sun .co.back { width: 26px; height: 26px; opacity: .78; }
+#sun .co img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 0 6px rgba(0, 207, 255, .6)); }
+/* the flyer's glass (.glass there): tilted on its left edge, a lit top edge, a cyan rim */
 .board-wrap { perspective: 1900px; perspective-origin: 0% 40%; }
 .board { position: relative; padding: 38px 44px 28px; border-radius: 30px; transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, .05) 24%, rgba(255, 255, 255, 0) 44%),
-    radial-gradient(120% 90% at 0% 0%, rgba(0, 207, 255, .16), rgba(0, 207, 255, 0) 60%),
-    linear-gradient(180deg, rgba(14, 28, 40, .55), rgba(6, 8, 16, .72));
-  border: 1px solid rgba(255, 255, 255, .14);
+  background: var(--glass); border: 1px solid rgba(255, 255, 255, .14);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(0, 207, 255, .2), inset 0 -28px 44px -28px rgba(0, 207, 255, .22),
     0 0 0 1px rgba(0, 207, 255, .32), 0 0 90px rgba(0, 207, 255, .18), -10px 40px 70px rgba(0, 0, 0, .65);
   backdrop-filter: blur(10px) saturate(1.3); -webkit-backdrop-filter: blur(10px) saturate(1.3); }
@@ -116,7 +127,7 @@ h1 b { font-weight: 400; }
 .board > * { position: relative; }
 .gh { display: flex; align-items: center; gap: 14px; }
 .gh .dot { width: 13px; height: 13px; border-radius: 50%; background: var(--rs1); box-shadow: 0 0 16px var(--rs1); }
-.gh b { font: 400 34px 'Archivo Black', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: transparent; -webkit-background-clip: text; background-clip: text;
+.gh b, .cta .t { font: 400 34px 'Archivo Black', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: transparent; -webkit-background-clip: text; background-clip: text;
   background-image: linear-gradient(180deg, #effffb, #4dffcc 50%, #00dcb4); filter: drop-shadow(0 0 12px rgba(0, 240, 170, .45)); }
 .gh .tg { margin-left: auto; white-space: nowrap; font: 800 20px 'JetBrains Mono'; letter-spacing: .2em; text-transform: uppercase; color: var(--rs1); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
 .seats { margin-top: 12px; }
@@ -137,7 +148,7 @@ h1 b { font-weight: 400; }
 .p2 .pay b { color: var(--rs2); text-shadow: 0 0 20px rgba(0, 207, 255, .5); }
 .p3 .pay b { color: var(--rs3); text-shadow: 0 0 16px rgba(59, 130, 246, .45); }
 
-/* ---- the steps: the words on one side, what moves on the other, the next step the other way round */
+/* ---- the steps: the words on one side, what moves on the other */
 .step { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: 5vw; align-items: center;
   width: min(1780px, 100%); margin: 0 auto; padding: 130px 6vw 150px; min-height: 92vh; }
 .step.flip { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
@@ -156,62 +167,122 @@ h1 b { font-weight: 400; }
 /* every picture, clip and canvas: no frame, its edges melting into the dark */
 .stage { position: relative; z-index: 2; }
 .pic { position: relative; }
-.pic > img, .pic > .clip, .pic > canvas, .pic picture img, .crop { width: 100%; -webkit-mask-image: var(--fade); mask-image: var(--fade);
+.pic > img, .pic > .clip, .pic > canvas, .crop { width: 100%; -webkit-mask-image: var(--fade); mask-image: var(--fade);
   -webkit-mask-composite: source-in; mask-composite: intersect; }
 .clip { position: relative; }
 .clip video { width: 100%; }
-.clip.xf video { transition: opacity .9s linear; }
-.clip.xf video.b { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; }
+.clip.xf video, .clip.seq video { transition: opacity .9s linear; }
+.clip.xf video.b, .clip.seq video.b { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; }
 
-/* step 1: the live builder's office clip, cropped to the stage the page shows (record.py prints where its wider
-   canvas stands: 0.05 % in, 125.95 % of the stage wide), and its card where the page puts it, now a hologram:
-   turned on its left edge like the board, lines of light through it, a breath of flicker, a sweep of light */
+/* step 1: the company's station (the live builder's first step), the page diving into it, then its office (the live
+   builder's Start) coming in once and holding; the office's canvas runs wider than the stage (record.py prints where:
+   0.05 % in, 125.95 % of the stage wide), so the clips are cut to the stage; the card, where the page puts it, a
+   hologram that holds still ("na tom panelu nema byt porad ta animace") */
 #s1 .pic { width: 116%; margin-left: -4%; }
 .crop { position: relative; aspect-ratio: 1888 / 1052; overflow: hidden; }
 .crop .clip { position: absolute; left: .05%; top: .1%; width: 125.95%; height: 99.81%; }
-.crop video { height: 100%; object-fit: fill; }
-.ui { position: absolute; z-index: 2; left: 1.22%; top: 2.19%; width: 23.73%; transform: perspective(1300px) rotateY(16deg) rotateX(2deg); transform-origin: 0% 50%; }
-.ui img { width: 100%; opacity: .9; animation: flicker 7s steps(1) infinite;
+.crop video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: fill; }
+.clip.seq .intro { transform-origin: 50.8% 53%; }
+.clip.seq.zoom .intro { animation: dive 3.4s cubic-bezier(.55, 0, .8, .2) forwards; }
+@keyframes dive { 0% { transform: scale(1); filter: brightness(1); } 75% { filter: brightness(1.25); } 100% { transform: scale(3.2); filter: brightness(1.9) blur(2px); } }
+.clip.seq .main { opacity: 0; }
+.clip.seq.in .main { opacity: 1; }
+.clip.seq.in .intro { opacity: 0; transition: opacity .9s linear; }
+.ui { position: absolute; z-index: 2; left: 1.22%; top: 2.19%; width: 23.73%; transform: perspective(1300px) rotateY(16deg) rotateX(2deg); transform-origin: 0% 50%;
+  opacity: 0; transition: opacity 1.1s var(--ease) .3s; }
+.pic.on .ui { opacity: 1; }
+.ui img { width: 100%; opacity: .92;
   filter: drop-shadow(0 0 14px rgba(0, 207, 255, .45)) drop-shadow(0 0 2px rgba(150, 240, 255, .6)) brightness(1.06);
-  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 3px, rgba(0, 0, 0, .72) 3px 5px); mask-image: repeating-linear-gradient(180deg, #000 0 3px, rgba(0, 0, 0, .72) 3px 5px); }
-.ui::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 22%; pointer-events: none; border-radius: 12px;
-  background: linear-gradient(180deg, rgba(0, 207, 255, 0), rgba(0, 207, 255, .14) 70%, rgba(190, 250, 255, .35) 96%, rgba(0, 207, 255, 0));
-  animation: sweep 4.5s cubic-bezier(.45, 0, .55, 1) infinite; }
-@keyframes sweep { 0% { transform: translateY(-30%); opacity: 0; } 12% { opacity: 1; } 78% { opacity: 1; } 100% { transform: translateY(420%); opacity: 0; } }
-@keyframes flicker { 0%, 100% { opacity: .9; } 47% { opacity: .8; } 48% { opacity: .92; } 49% { opacity: .74; } 50% { opacity: .9; } }
+  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 3px, rgba(0, 0, 0, .74) 3px 5px); mask-image: repeating-linear-gradient(180deg, #000 0 3px, rgba(0, 0, 0, .74) 3px 5px); }
 
-/* step 2: the workshop clip, and over its dark left the pipeline as Capital Maximizer's skill tree (anim.js) */
+/* step 2: two ways on one screen. The agent's pane lies over the builder's, cut at the slider's handle (--x, set by
+   anim.js): to the handle's right is the agent, to its left the builder ("kdyz ho presunu zprava doleva tak se zobrazi
+   krok s agentem") */
+.duel { position: relative; overflow-x: clip; }
+.duel .panes { display: grid; grid-template-columns: minmax(0, 1fr); }
+/* each pane its own layer (its words and stage stack inside it), the agent's over the builder's */
+.duel .pane { grid-area: 1 / 1; background: var(--bg); z-index: 0; isolation: isolate; }
+.duel .pane.agent { z-index: 1; clip-path: inset(0 0 0 var(--x)); }
+.divider { position: absolute; z-index: 8; top: 6%; bottom: 6%; left: clamp(42px, var(--x), calc(100% - 42px)); width: 80px; transform: translateX(-50%); cursor: ew-resize; touch-action: none; outline: none; }
+.divider::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(0, 207, 255, 0), rgba(0, 207, 255, .85) 20%, rgba(0, 255, 136, .85) 80%, rgba(0, 255, 136, 0));
+  box-shadow: 0 0 16px rgba(0, 255, 136, .6); }
+.divider .knob { position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; transform: translate(-50%, -50%); border-radius: 50%; display: flex; align-items: center; justify-content: center; gap: 2px;
+  color: #ffffff; background: var(--glass), rgba(5, 7, 12, .6); box-shadow: var(--rim), 0 0 0 1px rgba(0, 255, 136, .5), 0 0 40px rgba(0, 255, 136, .35);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform .3s var(--ease), box-shadow .3s; }
+.divider .knob i { width: 24px; height: 24px; display: block; }
+.divider .knob i.l { transform: scaleX(-1); }
+.divider:hover .knob, .duel.dragging .knob { transform: translate(-50%, -50%) scale(1.1); box-shadow: var(--rim), 0 0 0 1px var(--green), 0 0 60px rgba(0, 255, 136, .55); }
+.divider:focus-visible .knob { box-shadow: var(--rim), 0 0 0 3px var(--cyan); }
+/* the other way's name beside the knob, on the side it comes from */
+.divider .tag { position: absolute; right: calc(50% + 50px); top: 50%; transform: translateY(-50%); white-space: nowrap; padding: 6px 14px; border-radius: 9px;
+  font: 800 18px 'JetBrains Mono'; letter-spacing: .14em; text-transform: uppercase; color: var(--green); background: var(--glass), rgba(5, 7, 12, .7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3), inset 0 0 0 1px rgba(0, 255, 136, .45); }
+.divider .tag em { font-style: normal; }
+.divider .tag .to-agent::before { content: '\2190  '; }
+.divider .tag .to-build::after { content: '  \2192'; }
+.duel.on-agent .divider .tag { display: none; }
+.divider .tag .to-build, .duel.on-agent .divider .tag .to-agent { display: none; }
+.duel.on-agent .divider .tag .to-build { display: inline; }
+/* way A: the products already built, a strip to scroll sideways under the points */
+.built { margin-top: 26px; max-width: 640px; }
+.built .bh { display: flex; align-items: baseline; gap: 10px; font: 700 20px 'JetBrains Mono'; color: var(--dim); }
+.built .bh b { font: 400 30px 'Archivo Black', sans-serif; color: var(--green); text-shadow: 0 0 18px rgba(0, 255, 136, .5); }
+.built .bh span { margin-left: auto; font: 700 16px 'JetBrains Mono'; letter-spacing: .14em; text-transform: uppercase; color: var(--cyan); }
+.strip { display: flex; gap: 12px; margin-top: 12px; padding: 4px 2px 14px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: rgba(0, 207, 255, .5) transparent;
+  -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
+.strip .app { flex: none; width: 176px; scroll-snap-align: start; border-radius: 12px; overflow: hidden; background: var(--glass);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .25), inset 0 0 0 1px rgba(0, 207, 255, .28); transition: transform .25s var(--ease), box-shadow .25s; }
+.strip .app:hover { transform: translateY(-3px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), inset 0 0 0 1px rgba(0, 255, 136, .6), 0 10px 26px rgba(0, 255, 136, .18); }
+.strip .app img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.strip .app figcaption { padding: 8px 10px 10px; font: 700 16px Inter, sans-serif; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* way A's stage: the workshop clip, and over its dark left the pipeline as Capital Maximizer's skill tree (anim.js) */
 .stage.work .pic { width: 96%; margin-left: 6%; }
-.tree { position: absolute; z-index: 3; left: 0; top: -6%; bottom: -6%; width: 38%; }
-.tree::before { content: ''; position: absolute; inset: 0 -30% 0 -14%; z-index: -1; pointer-events: none;
-  background: radial-gradient(closest-side, rgba(5, 7, 12, .78), rgba(5, 7, 12, 0)); }
+.tree { position: absolute; z-index: 3; left: 0; top: -7%; bottom: -7%; width: 40%; }
+.tree::before { content: ''; position: absolute; inset: 0 -32% 0 -16%; z-index: -1; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(5, 7, 12, .84), rgba(5, 7, 12, 0)); }
+.tree::after { content: ''; position: absolute; inset: -4% -14%; z-index: -1; pointer-events: none; opacity: .55;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='48' viewBox='0 0 28 48'><path d='M14 0 28 8v16L14 32 0 24V8z M14 32v16' fill='none' stroke='%231e3050' stroke-width='1'/></svg>");
+  -webkit-mask-image: radial-gradient(closest-side, #000, transparent); mask-image: radial-gradient(closest-side, #000, transparent); }
 .tree .wires { position: absolute; left: 0; top: 0; overflow: visible; }
 .tree .lk { fill: none; stroke: var(--line); stroke-width: 1.6; }
 .tree .lk.lit { stroke: var(--green); stroke-width: 2.4; filter: drop-shadow(0 0 5px rgba(0, 255, 136, .8)); }
+.tree .lk.flow { stroke: #d8fff0; stroke-width: 2; stroke-dasharray: 2 16; stroke-linecap: round; opacity: 0; transition: opacity .3s; filter: drop-shadow(0 0 4px rgba(0, 255, 200, 1)); }
 .tree .pk { fill: #e8fffb; filter: drop-shadow(0 0 6px rgba(0, 255, 200, 1)) drop-shadow(0 0 14px rgba(0, 255, 136, .8)); transition: opacity .15s; }
-.nd { position: absolute; width: 34px; height: 34px; transform: translate(-50%, -50%); }
-.nd svg { width: 100%; height: 100%; overflow: visible; transition: transform .25s var(--ease); }
-.nd svg path { fill: var(--deep); stroke: var(--line); stroke-width: 1.5; transition: fill .3s, stroke .3s, filter .3s; }
-.nd .w { position: absolute; white-space: nowrap; color: var(--mute); transition: color .3s; text-shadow: 0 2px 10px rgba(0, 0, 0, .95); }
-.nd.r .w { left: 46px; top: 50%; transform: translateY(-50%); }
-.nd.b .w { left: 50%; top: 44px; transform: translateX(-50%); }
-.nd .w b { display: block; font: 700 21px Inter, sans-serif; }
-.nd .w i { display: block; margin-top: 2px; font: 800 20px 'JetBrains Mono'; font-style: normal; letter-spacing: .08em; color: var(--cyan); }
-.nd.lit svg path { stroke: var(--green); fill: rgba(0, 255, 136, .16); }
-.nd.lit .w { color: #ffffff; }
-.nd.pop svg { transform: scale(1.35); }
-.nd.pop svg path { filter: drop-shadow(0 0 10px rgba(0, 255, 136, 1)); }
-.nd.root svg path { stroke: var(--cyan); fill: rgba(0, 207, 255, .2); filter: drop-shadow(0 0 8px rgba(0, 207, 255, .8)); }
-.nd.apex { width: 50px; height: 50px; }
-.nd.apex.r .w { left: 62px; }
-.nd.apex.lit svg path { fill: var(--green); filter: drop-shadow(0 0 14px rgba(0, 255, 136, .95)); }
+.nd { position: absolute; width: 46px; height: 46px; transform: translate(-50%, -50%); }
+.nd .hx { position: absolute; inset: 0; display: grid; place-items: center; color: var(--mute); transition: color .3s; }
+.nd .hx > svg { grid-area: 1 / 1; }
+.nd .hx .h { width: 100%; height: 100%; overflow: visible; transition: transform .25s var(--ease); }
+.nd .hx .h path { fill: var(--deep); stroke: var(--line); stroke-width: 1.4; transition: fill .3s, stroke .3s, filter .3s; }
+.nd .hx > svg:not(.h):not(.ring) { width: 46%; height: 46%; position: relative; }
+.nd .hx .ring { width: 100%; height: 100%; overflow: visible; opacity: 0; }
+.nd .hx .ring path { fill: none; stroke: var(--green); stroke-width: 1.2; }
+.nd .w { position: absolute; white-space: nowrap; padding: 5px 12px 6px; border-radius: 10px; color: var(--mute); transition: color .3s, box-shadow .3s, background .3s;
+  background: rgba(8, 14, 24, .72); box-shadow: inset 0 0 0 1px rgba(30, 48, 80, .9); }
+.nd.r .w { left: 58px; top: 50%; transform: translateY(-50%); }
+.nd.b .w { left: 50%; top: 56px; transform: translateX(-50%); }
+.nd .w b { display: block; font: 700 20px Inter, sans-serif; }
+.nd .w i { display: block; margin-top: 1px; font: 800 16px 'JetBrains Mono'; font-style: normal; letter-spacing: .08em; color: var(--cyan); }
+.nd.lit .hx { color: var(--green); }
+.nd.lit .hx .h path { stroke: var(--green); fill: rgba(0, 255, 136, .14); filter: drop-shadow(0 0 7px rgba(0, 255, 136, .6)); }
+.nd.lit .w { color: #ffffff; background: linear-gradient(90deg, rgba(0, 255, 136, .12), rgba(8, 14, 24, .78)); box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .55), 0 0 18px rgba(0, 255, 136, .16); }
+.nd.pop .hx .h { transform: scale(1.22); }
+.nd.pop .hx .ring { animation: ring .6s var(--ease) forwards; }
+@keyframes ring { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(2.1); opacity: 0; } }
+.nd.root .hx { color: var(--cyan); }
+.nd.root .hx .h path { stroke: var(--cyan); fill: rgba(0, 207, 255, .18); filter: drop-shadow(0 0 8px rgba(0, 207, 255, .8)); }
+.nd.apex { width: 66px; height: 66px; }
+.nd.apex.r .w { left: 78px; }
+.nd.apex.lit .hx { color: #03140c; }
+.nd.apex.lit .hx .h path { fill: var(--green); filter: drop-shadow(0 0 16px rgba(0, 255, 136, .95)); }
 .nd.apex .w i { color: var(--green); font: 400 26px 'Archivo Black', sans-serif; letter-spacing: .04em; }
+.tree.done .nd.apex .w { box-shadow: inset 0 0 0 1px var(--green), 0 0 34px rgba(0, 255, 136, .35); }
 .tree.done .nd.apex .w i { text-shadow: 0 0 22px rgba(0, 255, 136, .9); }
 
-/* step 3: the Quant Lab's canvas */
+/* way B: the Quant Lab's canvas */
 .stage.lab .pic { width: 104%; }
 
-/* step 4: the Promo Market, the farmer's clip under it, users running between them */
+/* step 3: the Promo Market, the farmer's clip under it, users walking between them */
 .stage.duo .pic { width: 84%; }
 .stage.duo .pic:first-child > img { -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 6%, #000 80%, transparent 100%);
   mask-image: linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 6%, #000 80%, transparent 100%); }
@@ -224,14 +295,17 @@ h1 b { font-weight: 400; }
 .users b { font: 400 34px 'Archivo Black', sans-serif; color: var(--green); margin-right: 6px; text-shadow: 0 0 18px rgba(0, 255, 136, .6); }
 .plus { position: absolute; z-index: 4; left: 48%; top: 40%; font: 800 22px 'JetBrains Mono'; color: var(--green); opacity: 0; pointer-events: none;
   text-shadow: 0 0 14px rgba(0, 255, 136, .9), 0 2px 10px rgba(0, 0, 0, .9); }
-.plus.go { animation: plus 1.1s var(--ease) forwards; }
+.plus.go { animation: plus 1.6s var(--ease) forwards; }
 @keyframes plus { 0% { opacity: 0; transform: translate(-50%, 0) scale(.7); } 20% { opacity: 1; transform: translate(-50%, -14px) scale(1.05); } 100% { opacity: 0; transform: translate(-50%, -60px) scale(1); } }
 .flow { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; overflow: visible; }
 .flow .fl { fill: none; stroke: rgba(0, 207, 255, .3); stroke-width: 1.6; stroke-dasharray: 4 9; }
 .flow .u { fill: var(--green); filter: drop-shadow(0 0 6px rgba(0, 255, 136, 1)); }
 
-/* step 5: the whole live Universe, and the leaderboard under it, your company climbing it */
+/* step 4: the whole live Universe with Cymetica's sun at its middle ("neni tam cymetica slunce"; record.py: the
+   map's own sun stands at 58.3 %, 39.4 % of its clip), and the leaderboard under it, your company climbing it */
 .stage.uni .pic { width: 104%; margin-left: -2%; }
+.stage.uni .sun { position: absolute; z-index: 2; left: 58.3%; top: 39.4%; width: 34%; transform: translate(-50%, -50%); pointer-events: none; }
+.stage.uni .sun img { width: 100%; }
 .climb { position: relative; z-index: 3; width: 84%; margin: -9% auto 0; height: calc(6 * 62px); }
 .row { position: absolute; left: 0; right: 0; top: 0; height: 62px; display: grid; grid-template-columns: 46px 30px minmax(0, 1fr) auto 196px; align-items: center; gap: 16px;
   padding: 0 20px; border-radius: 12px; background: rgba(8, 14, 24, .82); box-shadow: inset 0 0 0 1px rgba(30, 48, 80, .9);
@@ -241,23 +315,46 @@ h1 b { font-weight: 400; }
 .row svg path { fill: var(--deep); stroke: var(--line); stroke-width: 1.5; }
 .row .nm { position: static; transform: none; padding: 0; border: 0; background: none; box-shadow: none; text-transform: none; letter-spacing: 0;
   font: 700 22px Inter, sans-serif; color: var(--text); overflow: hidden; text-overflow: ellipsis; }
-.row .pts { font: 600 20px 'JetBrains Mono'; color: var(--dim); white-space: nowrap; }
-.row .pts b { font-weight: 800; color: var(--text); }
+.row .pp { font: 600 20px 'JetBrains Mono'; color: var(--dim); white-space: nowrap; }
+.row .pp b { font-weight: 800; color: var(--text); }
 .row .pz { font: 800 20px 'JetBrains Mono'; text-align: right; color: var(--mute); white-space: nowrap; }
 .row.paid .pz { color: var(--cyan); }
 .row.paid svg path { stroke: var(--cyan); }
 .row.me { background: linear-gradient(90deg, rgba(0, 255, 136, .16), rgba(8, 14, 24, .86) 60%); box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .6), 0 0 30px rgba(0, 255, 136, .2); z-index: 2; }
-.row.me .nm, .row.me .pts b, .row.me .rk { color: var(--green); }
+.row.me .nm, .row.me .pp b, .row.me .rk { color: var(--green); }
 .row.me svg path { fill: var(--green); stroke: var(--green); filter: drop-shadow(0 0 6px rgba(0, 255, 136, .8)); }
 .climb.won .row.me { box-shadow: inset 0 0 0 1px var(--green), 0 0 50px rgba(0, 255, 136, .45); }
 .climb.won .row.me .pz { color: var(--green); text-shadow: 0 0 14px rgba(0, 255, 136, .8); }
 
-/* ---- the end: the only two links on the page */
-.final { position: relative; padding: 140px 6vw 200px; text-align: center; }
-.final h2 { font-size: clamp(44px, 4.6vw, 88px); }
-.final .calls { margin-top: 44px; }
-.final::before { content: ''; position: absolute; left: 50%; top: 40%; width: 1100px; height: 520px; transform: translate(-50%, -50%); z-index: -1;
-  background: radial-gradient(closest-side, rgba(0, 255, 136, .16), rgba(0, 207, 255, .07) 55%, rgba(0, 207, 255, 0)); pointer-events: none; }
+/* ---- the end: the only two links on the page, two sheets of the board's glass ("udelej je huste") */
+.final { position: relative; padding: 120px 6vw 200px; }
+.final .calls { display: flex; flex-wrap: wrap; justify-content: center; gap: 34px; perspective: 1400px; }
+.final::before { content: ''; position: absolute; left: 50%; top: 45%; width: 1200px; height: 460px; transform: translate(-50%, -50%); z-index: -1;
+  background: radial-gradient(closest-side, rgba(0, 255, 136, .14), rgba(0, 207, 255, .06) 55%, rgba(0, 207, 255, 0)); pointer-events: none; }
+.cta { position: relative; display: inline-flex; align-items: center; gap: 22px; min-width: 520px; padding: 28px 40px 28px 28px; border-radius: 26px; overflow: hidden;
+  background: var(--glass); border: 1px solid rgba(255, 255, 255, .14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(0, 255, 136, .3), inset 0 -26px 40px -26px rgba(0, 255, 136, .28),
+    0 0 0 1px rgba(0, 255, 136, .5), 0 0 70px rgba(0, 255, 136, .22), 0 26px 54px rgba(0, 0, 0, .6);
+  backdrop-filter: blur(12px) saturate(1.3); -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  transform: rotateX(2deg); transition: transform .35s var(--ease), box-shadow .35s; }
+.cta::before { content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background: linear-gradient(112deg, rgba(255, 255, 255, 0) 52%, rgba(255, 255, 255, .06) 60%, rgba(220, 255, 248, .09) 63%, rgba(255, 255, 255, 0) 70%); }
+.cta::after { content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 30%; pointer-events: none; opacity: 0;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(220, 255, 248, .18), rgba(255, 255, 255, 0)); transform: skewX(-18deg); }
+.cta:hover { transform: rotateX(0) translateY(-4px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), inset 0 0 0 1px rgba(0, 255, 136, .45), inset 0 -26px 40px -26px rgba(0, 255, 136, .4),
+    0 0 0 1px var(--green), 0 0 100px rgba(0, 255, 136, .36), 0 30px 60px rgba(0, 0, 0, .6); }
+.cta:hover::after { animation: shine .9s var(--ease); }
+@keyframes shine { 0% { left: -40%; opacity: 0; } 30% { opacity: 1; } 100% { left: 120%; opacity: 0; } }
+.cta .tile { width: 64px; height: 64px; border-radius: 16px; }
+.cta .tile i { width: 32px; height: 32px; }
+.cta .t { font-size: 30px; letter-spacing: .04em; }
+.cta .ar { margin-left: auto; font: 800 32px 'JetBrains Mono'; font-style: normal; color: var(--green); text-shadow: 0 0 14px rgba(0, 255, 136, .8); transition: transform .25s; }
+.cta:hover .ar { transform: translateX(6px); }
+.cta.alt { box-shadow: var(--rim); }
+.cta.alt .t { background-image: linear-gradient(180deg, #f0fbff, #7fe6ff 50%, #00b8e6); filter: drop-shadow(0 0 12px rgba(0, 207, 255, .45)); }
+.cta.alt .ar { color: var(--cyan); text-shadow: 0 0 14px rgba(0, 207, 255, .8); }
+.cta.alt:hover { box-shadow: var(--rim), 0 0 0 1px var(--cyan), 0 0 100px rgba(0, 207, 255, .34); }
 
 /* ---- rising in */
 .rv { opacity: 0; transform: translateY(40px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
@@ -282,10 +379,13 @@ h1 b { font-weight: 400; }
   #hero { min-height: 0; padding: 300px 0 50px; }
   #sun { left: 50%; top: 40px; width: 380px; height: 240px; transform: translateX(-50%); }
   #sun .ball { width: 340px; height: 340px; }
-  #sun .core { width: 80px; height: 80px; }
-  #sun .co { width: 10px; height: 10px; }
+  #sun .core { width: 128px; height: 128px; }
+  #sun .co { width: 16px; height: 16px; } #sun .co.back { width: 14px; height: 14px; }
   .hero-in { width: calc(100% - 32px); display: flex; flex-direction: column-reverse; gap: 34px; }
   .hero-in h1 { font-size: 34px; }
+  .path a { padding: 8px 6px; gap: 10px; }
+  .path .t b { font-size: 18px; } .path .t span { font-size: 15px; }
+  .tile { width: 38px; height: 38px; border-radius: 10px; } .tile i { width: 20px; height: 20px; }
   .board-wrap { perspective: none; width: 100%; }
   .board { transform: none; padding: 20px 16px 14px; border-radius: 20px; }
   .gh { gap: 10px; } .gh b { font-size: 19px; letter-spacing: .04em; white-space: nowrap; } .gh .tg { font-size: 16px; letter-spacing: .12em; }
@@ -300,30 +400,34 @@ h1 b { font-weight: 400; }
   .step.flip .num { right: 8px; }
   .kick { font-size: 16px; letter-spacing: .2em; }
   h2 { font-size: 32px; margin-top: 10px; }
-  .copy p, .real { font-size: 17px; margin-top: 14px; }
-  .go { font-size: 18px; margin-top: 22px; }
+  .pts li { font-size: 16px; gap: 12px; }
+  .chips span { font-size: 16px; } .chips b { font-size: 18px; }
   #s1 .pic, .stage.work .pic, .stage.lab .pic, .stage.uni .pic, .stage.duo .pic { width: 100%; margin-left: 0; }
   .ui { width: 30%; }
-  .tree { position: relative; top: auto; bottom: auto; width: 100%; height: 520px; margin-top: 10px; }
+  .divider { top: 2%; bottom: 2%; }
+  .divider .knob { width: 58px; height: 58px; }
+  .divider .tag { font-size: 14px; }
+  .tree { position: relative; top: auto; bottom: auto; width: 100%; height: 560px; margin-top: 10px; }
   .tree::before { display: none; }
-  .nd .w b { font-size: 16px; } .nd .w i { font-size: 16px; } .nd.apex .w i { font-size: 20px; }
-  .nd.r .w { left: 40px; white-space: normal; width: 40vw; }
+  .nd .w b { font-size: 16px; } .nd .w i { font-size: 14px; } .nd.apex .w i { font-size: 20px; }
+  .nd.r .w { left: 52px; white-space: normal; width: 34vw; }
+  .strip .app { width: 140px; }
   .stage.duo .near { width: 90%; margin-top: 6%; }
-  .nm { font-size: 16px; padding: 3px 8px; }
+  .nm { font-size: 14px; padding: 3px 8px; }
   .users { font-size: 16px; } .users b { font-size: 24px; }
   .plus { font-size: 16px; }
   .climb { width: 100%; margin-top: 4%; height: calc(6 * 50px); }
   .row { height: 50px; grid-template-columns: 26px 20px minmax(0, 1fr) auto; gap: 8px; padding: 0 10px; }
   .row .pz { display: none; }
-  .row .rk, .row .pts { font-size: 16px; } .row .nm { font-size: 16px; }
+  .row .rk, .row .pp { font-size: 16px; } .row .nm { font-size: 16px; }
   .row svg { width: 20px; height: 20px; }
   .final { padding: 60px 16px 120px; }
-  .final h2 { font-size: 34px; }
-  .cta { font-size: 20px; padding: 18px 28px; }
-  .calls { flex-direction: column; gap: 16px; }
+  .cta { min-width: 0; width: 100%; padding: 20px; gap: 14px; }
+  .cta .t { font-size: 20px; }
+  .cta .tile { width: 46px; height: 46px; }
   .final::before { width: 100vw; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ui img, .ui::after { animation: none; }
+  .clip.seq.zoom .intro { animation: none; }
   .rv { opacity: 1; transform: none; transition: none; }
 }

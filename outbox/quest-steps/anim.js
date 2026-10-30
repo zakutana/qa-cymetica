@@ -1,13 +1,14 @@
 /* The Cymetica Quest, step by step: what moves ("v kazdem kroku musi byt top animace", the operator, 2026-10-30).
 
-   - the clips (record.py): each plays only while it is on screen; office, farmer and Universe cross-fade into
-     themselves at the loop point, the workshop is a true loop;
-   - the first screen's sun with five companies round it, in front of it and behind it;
-   - step 2's pipeline, a skill tree as Capital Maximizer's, in step with the workshop clip: the idea in, the product out;
-   - step 3's Quant Lab: strategies backtested, the losers fall away, the best one becomes the hero agent, who wins
-     the Agent Casino's race;
-   - step 4's users, running from the Promo Market's briefs to the product;
-   - step 5's leaderboard, your company climbing it.
+   - the clips (record.py): each plays only while it is on screen; step 1 dives from the company's station into its
+     HQ, which comes in once and then holds; farmer and Universe cross-fade into themselves, the workshop is a true loop;
+   - the first screen's sun with five companies standing round it, in front of it and behind it;
+   - step 2's slider between its two ways, building products and breeding the hero agent;
+   - way A's pipeline, a skill tree as Capital Maximizer's, in step with the workshop clip: the idea in, the product out;
+   - way B's Quant Lab: strategies backtested, the losers fall away, the best one becomes the hero agent, who wins the
+     Agent Casino's race, in under 7 s, then it holds;
+   - step 3's users, walking from the Promo Market's briefs to the product;
+   - step 4's leaderboard, your company climbing it.
 
    Each live one draws only while it is on screen and counts its frames in QUEST_STATE.frames (the tests read them).
    Figures come from QUEST (quest.js). No library. */
@@ -25,12 +26,16 @@
     if (!('IntersectionObserver' in window)) { cb(true); return; }
     new IntersectionObserver(function (es) { es.forEach(function (e) { cb(e.isIntersecting); }); }, { threshold: 0.04 }).observe(el);
   }
-  // draw(t) every frame while `el` is on screen, t in seconds since the animation first ran
-  function run(name, el, draw) {
-    var on = false, raf = 0, t0 = 0, last = 0;
+  // draw(t) every frame while `el` is on screen (and opts.gate(), if given, says yes), t in seconds since it first ran;
+  // opts.restart: t starts again from 0 each time it comes back on
+  function run(name, el, draw, opts) {
+    opts = opts || {};
+    var vis = false, on = false, raf = 0, t0 = 0, last = 0;
     S.frames[name] = 0;
     function tick(now) {
-      if (!on) return;
+      if (!vis) { on = false; return; }
+      var ok = !opts.gate || opts.gate();
+      if (!ok) { if (opts.restart) last = 0; t0 = 0; raf = requestAnimationFrame(tick); return; }
       if (!t0) t0 = now - last * 1000;
       last = (now - t0) / 1000;
       draw(last); S.frames[name]++;
@@ -38,56 +43,113 @@
     }
     if (reduce) { draw(1e3); return; }
     seen(el, function (v) {
-      if (v && !on) { on = true; t0 = 0; raf = requestAnimationFrame(tick); }
-      else if (!v && on) { on = false; cancelAnimationFrame(raf); }
+      vis = v;
+      if (v && !on) { on = true; t0 = 0; if (opts.restart) last = 0; raf = requestAnimationFrame(tick); }
     });
   }
 
+  /* ---------------- step 2's slider: building products, or breeding the hero agent, on one screen ---------------- */
+  // ("a kdyz ho presunu zprava doleva tak se zobrazi krok s agentem a kdyz pojedu zpet zacne se zobrazovat to build a
+  // produkt"): the agent's pane lies over the builder's, cut at the handle; drag it, or click, or the arrow keys
+  // X: where the handle stands, % of the screen's width; its ends are 0 (all agent) and 100 (all builder), the knob
+  // kept on screen by quest.css
+  var duel = document.getElementById('build'), X = 100;
+  var shown = { build: function () { return X > 12; }, agent: function () { return X < 65; } };
+  (function () {
+    if (!duel) return;
+    var div = duel.querySelector('.divider'), tw = 0, nudged = false;
+    function set(v) {
+      X = clamp(v, 0, 100);
+      duel.style.setProperty('--x', X.toFixed(2) + '%');
+      div.setAttribute('aria-valuenow', Math.round(X));
+      var side = X < 50 ? 'agent' : 'build';
+      if (side !== S.side) { S.side = side; duel.classList.toggle('on-agent', side === 'agent'); }
+    }
+    function to(v, ms) {
+      cancelAnimationFrame(tw);
+      var a = X, t0 = performance.now(); ms = ms || 650;
+      (function f(now) { var k = ease(Math.min(1, (now - t0) / ms)); set(a + (v - a) * k); if (k < 1) tw = requestAnimationFrame(f); })(t0);
+    }
+    window.QUEST_SIDE = function (side) { to(side === 'agent' ? 0 : 100); };
+    var drag = false, moved = 0, x0 = 0;
+    div.addEventListener('pointerdown', function (e) { drag = true; moved = 0; x0 = e.clientX; div.setPointerCapture(e.pointerId); cancelAnimationFrame(tw); duel.classList.add('dragging'); });
+    div.addEventListener('pointermove', function (e) {
+      if (!drag) return;
+      moved = Math.max(moved, Math.abs(e.clientX - x0));
+      var r = duel.getBoundingClientRect(); set((e.clientX - r.left) / r.width * 100);
+    });
+    function up() {
+      if (!drag) return; drag = false; duel.classList.remove('dragging');
+      // a click turns it to the other side; a drag lets go to the nearer one
+      if (moved < 6) to(X < 50 ? 100 : 0); else to(X < 50 ? 0 : 100);
+    }
+    div.addEventListener('pointerup', up); div.addEventListener('pointercancel', up);
+    div.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft') { to(0); e.preventDefault(); } if (e.key === 'ArrowRight') { to(100); e.preventDefault(); } });
+    // the first time it comes on screen, the handle shows it can be moved: a little way in, and back
+    seen(duel, function (v) {
+      if (!v || nudged || reduce) return; nudged = true;
+      setTimeout(function () { to(86, 700); setTimeout(function () { if (!drag && X > 80) to(100, 700); }, 900); }, 900);
+    });
+    set(X);
+  })();
+
   /* ---------------- the clips ---------------- */
-  // .clip.xf: a second copy of the video under the first; near the end the other one starts from the top and fades in
+  // .clip.xf: a second copy of the video under the first; near the end the other one starts (from data-loop-from)
+  // and fades in. .clip.seq: first its intro (step 1's station), the page diving into it, then the main clip fades in.
+  // data-gate: plays only while that side of step 2's slider shows.
   var XF = 0.9;
   document.querySelectorAll('.clip').forEach(function (box) {
-    var a = box.querySelector('video'), vids = [a];
-    if (box.classList.contains('xf')) { var b = a.cloneNode(true); b.classList.add('b'); box.appendChild(b); vids.push(b); }
-    vids.forEach(function (v) { v.muted = true; v.playsInline = true; });
-    var cur = 0, on = false, raf = 0;
+    var intro = box.querySelector('video.intro'), a = box.querySelector('video:not(.intro)'), vids = [a];
+    var loopFrom = +box.dataset.loopFrom || 0, gate = shown[box.dataset.gate] || null;
+    if (box.classList.contains('xf') || box.classList.contains('seq')) { var b = a.cloneNode(true); b.classList.add('b'); b.classList.remove('main'); box.appendChild(b); vids.push(b); }
+    vids.concat(intro ? [intro] : []).forEach(function (v) { v.muted = true; v.playsInline = true; });
+    var cur = 0, on = false, raf = 0, phase = intro ? 'intro' : 'main', fig = box.closest('.pic');
     function play(v) { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
     function tick() {
       if (!on) return;
-      if (vids.length > 1) {
-        var v = vids[cur], o = vids[1 - cur];
-        if (isFinite(v.duration) && v.currentTime > v.duration - XF && o.paused) {
-          o.currentTime = 0; play(o); o.style.opacity = 1; v.style.opacity = 0;
-          setTimeout(function () { v.pause(); }, XF * 1000 + 60);
-          cur = 1 - cur;
+      if (gate && !gate()) { vids.forEach(function (v) { if (!v.paused) v.pause(); }); raf = requestAnimationFrame(tick); return; }
+      if (phase === 'intro') {
+        if (intro.paused) { play(intro); box.classList.add('zoom'); }
+        if (isFinite(intro.duration) && intro.currentTime > Math.min(intro.duration - 0.25, 3.3)) {
+          phase = 'main'; a.currentTime = 0; play(a); box.classList.add('in'); if (fig) fig.classList.add('on');
+          setTimeout(function () { intro.pause(); }, 1000);
+        }
+      } else {
+        var v = vids[cur];
+        if (v.paused && !(vids[1 - cur] && !vids[1 - cur].paused)) play(v);
+        if (vids.length > 1) {
+          var o = vids[1 - cur];
+          if (isFinite(v.duration) && v.currentTime > v.duration - XF && o.paused) {
+            o.currentTime = loopFrom; play(o); o.style.opacity = 1; v.style.opacity = 0;
+            setTimeout(function () { v.pause(); }, XF * 1000 + 60);
+            cur = 1 - cur;
+          }
         }
       }
       raf = requestAnimationFrame(tick);
     }
-    if (reduce) return;
+    if (reduce) { box.classList.add('in'); if (fig) fig.classList.add('on'); return; }
     seen(box, function (vis) {
-      if (vis && !on) { on = true; play(vids[cur]); raf = requestAnimationFrame(tick); }
-      else if (!vis && on) { on = false; cancelAnimationFrame(raf); vids.forEach(function (v) { v.pause(); }); }
+      if (vis && !on) { on = true; raf = requestAnimationFrame(tick); }
+      else if (!vis && on) { on = false; cancelAnimationFrame(raf); vids.concat(intro ? [intro] : []).forEach(function (v) { v.pause(); }); }
     });
   });
 
-  /* ---------------- the first screen: companies round the sun ---------------- */
+  /* ---------------- the first screen: companies by the sun ---------------- */
+  // ("ty company nemaji rotovat a jsou strasne malinke"): five, each where it stands round the sun, floating a little;
+  // two in front of it (over its disc's edge), three behind it; none more than an eighth of its disc (quest.css .core)
   (function () {
     var sun = document.getElementById('sun'); if (!sun) return;
     var ball = sun.querySelector('.ball'), cos = [].slice.call(sun.querySelectorAll('.co'));
-    // each on its own tilted ellipse round the sun: radii in px, a turn in seconds, where it starts, the tilt; the first
-    // passes in front of the sun's ball about two seconds in, the others are spread round
-    var O = [[210, 58, 26, Math.PI / 2 - 2 * Math.PI * 2 / 26, -0.16], [300, 74, 38, 2.6, 0.1], [160, 46, 21, 4.4, -0.3],
-             [360, 92, 47, 0.7, 0.2], [250, 66, 31, 5.6, -0.05]];
+    // where each stands from the sun's middle (px at a 640 px sun), in front (1) or behind (0), its float's phase
+    var P = [[-76, 74, 1, 0], [196, -46, 0, 1.7], [-262, -58, 0, 3.1], [96, 92, 1, 4.4], [-36, -178, 0, 5.6]];
     run('sun', sun, function (t) {
-      // the ball stands in the middle of #sun (centred by its own transform); the orbits scale with the sun's size
       var cx = sun.clientWidth / 2, cy = sun.clientHeight / 2, s = ball.offsetWidth / 640;
       cos.forEach(function (c, i) {
-        var o = O[i], a = o[3] + Math.PI * 2 * t / o[2], x = s * o[0] * Math.cos(a), y = s * o[1] * Math.sin(a), d = Math.sin(a);
-        var X = x * Math.cos(o[4]) - y * Math.sin(o[4]), Y = x * Math.sin(o[4]) + y * Math.cos(o[4]), k = 0.72 + 0.28 * (d + 1) / 2;
-        c.style.transform = 'translate(' + (cx + X).toFixed(1) + 'px,' + (cy + Y).toFixed(1) + 'px) translate(-50%,-50%) scale(' + k.toFixed(3) + ')';
-        c.style.zIndex = d > 0 ? 3 : 1;
-        c.style.opacity = (0.5 + 0.5 * (d + 1) / 2).toFixed(3);
+        var p = P[i], y = p[1] * s + 3.5 * Math.sin(Math.PI * 2 * t / 6.5 + p[3]);
+        c.style.transform = 'translate(' + (cx + p[0] * s).toFixed(1) + 'px,' + (cy + y).toFixed(1) + 'px) translate(-50%,-50%)';
+        c.style.zIndex = p[2] ? 3 : 1;
+        c.classList.toggle('back', !p[2]);
       });
     });
   })();
@@ -98,10 +160,10 @@
     var vid = document.querySelector('#s2 video');
     // where each node stands in the tree's box (x, y in %), its words, when it lights (s into the workshop's 10 s),
     // and its label's side; the links say which lights which
-    var N = [['idea', 50, 3, 'Idea', 'you say what', 0.35, 'r'], ['spec', 50, 15, 'Spec', '', 1.8, 'r'], ['design', 50, 27, 'Design', '', 2.4, 'r'],
-             ['fe', 14, 42, 'Frontend', '', 3.1, 'b'], ['be', 50, 42, 'Backend', '', 3.25, 'b'], ['da', 84, 42, 'Data', '', 3.4, 'b'],
-             ['sec', 50, 61, 'Top security', '', 4.7, 'r'], ['dep', 50, 72, 'Deploy', '', 5.4, 'r'], ['host', 50, 83, 'Hosting', '', 6.0, 'r'],
-             ['prod', 50, 97, 'Production-grade app', 'Yours', 6.45, 'r']];
+    var N = [['idea', 50, 3, 'Idea', 'you say what', 0.35, 'r', 'bulb'], ['spec', 50, 15, 'Spec', '', 1.8, 'r', 'doc'], ['design', 50, 27, 'Design', '', 2.4, 'r', 'design'],
+             ['fe', 14, 43, 'Frontend', '', 3.1, 'b', 'monitor'], ['be', 50, 43, 'Backend', '', 3.25, 'b', 'server'], ['da', 86, 43, 'Data', '', 3.4, 'b', 'data'],
+             ['sec', 50, 62, 'Top security', '', 4.7, 'r', 'shield'], ['dep', 50, 73, 'Deploy', '', 5.4, 'r', 'rocket'], ['host', 50, 84, 'Hosting', '', 6.0, 'r', 'cloud'],
+             ['prod', 50, 97, 'Production-grade app', 'Yours', 6.45, 'r', 'crown']];
     var E = [['idea', 'spec', 1.4, 1.8], ['spec', 'design', 2.0, 2.4], ['design', 'fe', 2.6, 3.1], ['design', 'be', 2.6, 3.25], ['design', 'da', 2.6, 3.4],
              ['fe', 'sec', 4.2, 4.7], ['be', 'sec', 4.2, 4.7], ['da', 'sec', 4.2, 4.7], ['sec', 'dep', 5.0, 5.4], ['dep', 'host', 5.6, 6.0], ['host', 'prod', 6.05, 6.45]];
     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'wires'); svg.setAttribute('aria-hidden', 'true');
@@ -111,14 +173,16 @@
       var d = document.createElement('div');
       d.className = 'nd ' + n[6] + (n[0] === 'prod' ? ' apex' : '') + (n[0] === 'idea' ? ' root' : '');
       d.style.left = n[1] + '%'; d.style.top = n[2] + '%';
-      d.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + HEX + '"/></svg><span class="w"><b>' + n[3] + '</b>' + (n[4] ? '<i>' + n[4] + '</i>' : '') + '</span>';
+      // a hexagon with the step's icon in it and a ring that bursts out of it when it lights; the words on a chip of glass
+      d.innerHTML = '<span class="hx"><svg class="h" viewBox="0 0 24 24" aria-hidden="true"><path d="' + HEX + '"/></svg>' + window.QUEST_ICON_SVG(n[7]) +
+        '<svg class="ring" viewBox="0 0 24 24" aria-hidden="true"><path d="' + HEX + '"/></svg></span><span class="w"><b>' + n[3] + '</b>' + (n[4] ? '<i>' + n[4] + '</i>' : '') + '</span>';
       tree.appendChild(d); nodes[n[0]] = { el: d, at: n[5] };
     });
     var links = E.map(function (e) {
-      var base = document.createElementNS(svg.namespaceURI, 'path'), lit = document.createElementNS(svg.namespaceURI, 'path'), dot = document.createElementNS(svg.namespaceURI, 'circle');
-      base.setAttribute('class', 'lk'); lit.setAttribute('class', 'lk lit'); dot.setAttribute('class', 'pk'); dot.setAttribute('r', 5);
-      svg.appendChild(base); svg.appendChild(lit); svg.appendChild(dot);
-      return { a: e[0], b: e[1], t0: e[2], t1: e[3], base: base, lit: lit, dot: dot, len: 1 };
+      var mk = function (cls) { var p = document.createElementNS(svg.namespaceURI, 'path'); p.setAttribute('class', cls); svg.appendChild(p); return p; };
+      var base = mk('lk'), lit = mk('lk lit'), flow = mk('lk flow'), dot = document.createElementNS(svg.namespaceURI, 'circle');
+      dot.setAttribute('class', 'pk'); dot.setAttribute('r', 5); svg.appendChild(dot);
+      return { a: e[0], b: e[1], t0: e[2], t1: e[3], base: base, lit: lit, flow: flow, dot: dot, len: 1 };
     });
     function layout() {
       var W = tree.clientWidth, H = tree.clientHeight;
@@ -127,7 +191,7 @@
         var A = nodes[l.a].el, B = nodes[l.b].el;
         var ax = A.offsetLeft, ay = A.offsetTop, bx = B.offsetLeft, by = B.offsetTop, my = (ay + by) / 2;
         var d = ax === bx ? 'M' + ax + ' ' + ay + ' L' + bx + ' ' + by : 'M' + ax + ' ' + ay + ' C' + ax + ' ' + my + ' ' + bx + ' ' + my + ' ' + bx + ' ' + by;
-        l.base.setAttribute('d', d); l.lit.setAttribute('d', d);
+        l.base.setAttribute('d', d); l.lit.setAttribute('d', d); l.flow.setAttribute('d', d);
         l.len = l.lit.getTotalLength(); l.lit.style.strokeDasharray = l.len;
       });
     }
@@ -141,6 +205,9 @@
       links.forEach(function (l) {
         var k = win(T, l.t0, l.t1) * reset;
         l.lit.style.strokeDashoffset = (l.len * (1 - k)).toFixed(1);
+        // once a link is lit, light keeps running along it (its dashes drift), until the tree gives itself back
+        l.flow.style.opacity = k >= 1 ? 1 : 0;
+        l.flow.style.strokeDashoffset = (-t * 38).toFixed(1);
         var moving = T >= l.t0 && T < l.t1;
         l.dot.style.opacity = moving ? 1 : 0;
         if (moving) { var p = l.lit.getPointAtLength(l.len * k); l.dot.setAttribute('cx', p.x.toFixed(1)); l.dot.setAttribute('cy', p.y.toFixed(1)); }
@@ -152,13 +219,13 @@
       });
       tree.classList.toggle('done', T >= 6.45 && T < 9.1);
       clock = T;
-    });
+    }, { gate: shown.build });
   })();
 
   /* ---------------- step 3: the Quant Lab breeds the hero agent ---------------- */
   (function () {
     var cv = document.querySelector('[data-anim=lab]'); if (!cv) return;
-    var g = cv.getContext('2d'), W = 1440, H = 810, P = 14;
+    var g = cv.getContext('2d'), W = 1440, H = 810;
     var agent = new Image(); agent.src = 'pics/agent.webp';
     // the strategies: random walks of one seed, a few with a drift that keeps them alive
     var R = (function (s) { return function () { s = (s * 16807) % 2147483647; return s / 2147483647; }; })(42);
@@ -195,12 +262,16 @@
       for (var k = 0; k < 6; k++) { var a = Math.PI / 6 + k * Math.PI / 3; g[k ? 'lineTo' : 'moveTo'](x + r * Math.cos(a), y + r * Math.sin(a)); }
       g.closePath(); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = 2; g.stroke(); }
     }
+    // "trva moc dlouho a musim cekat nez se dokonci": the whole story told 1.9 times as fast as it was drawn (in under
+    // 7 s), then it holds on its end (the hero agent, the race won); it starts again each time the slider shows it
+    var SPEED = 1.9, END = 12.85;
+    S.labSeconds = END / SPEED;
     run('lab', cv, function (t) {
-      var T = t % P, sc = cv.width / W;
+      var T = Math.min(t * SPEED, END), sc = cv.width / W;
       g.setTransform(sc, 0, 0, sc, 0, 0);
       g.clearRect(0, 0, W, H);
       g.fillStyle = '#05070c'; g.fillRect(0, 0, W, H);
-      var fadeIn = win(T, 0, 0.6), fadeOut = 1 - win(T, 13.3, 14);
+      var fadeIn = win(T, 0, 0.6), fadeOut = 1;
       g.globalAlpha = fadeIn * fadeOut;
       // the hero agent, out of a hologram scan (8.0 - 10.4 s), on the right
       var scan = win(T, 8.0, 10.2);
@@ -313,7 +384,7 @@
         if (T > 12.5) { g.globalAlpha = fadeOut * rc * win(T, 12.5, 12.8); text('WINS', bx + 290 + bw * 0.5 * 1.02 + 16, by + 32, 28, '#00ff88', 800, 'left', 3); }
       }
       g.globalAlpha = 1;
-    });
+    }, { gate: shown.agent, restart: true });
   })();
 
   /* ---------------- step 4: users run from the briefs to the product ---------------- */
@@ -325,7 +396,10 @@
     // the briefs' "See my offer" buttons in promo.webp (x, y in %), and where the farmer stands in its clip
     var FROM = [[17, 93], [50, 93], [83, 93]], TO = [30, 48];
     FROM.forEach(function () { var p = document.createElementNS(NS, 'path'); p.setAttribute('class', 'fl'); svg.appendChild(p); paths.push(p); });
-    for (var i = 0; i < 9; i++) { var c = document.createElementNS(NS, 'circle'); c.setAttribute('r', 6); c.setAttribute('class', 'u'); svg.appendChild(c); dots.push({ el: c, path: i % 3, off: i * 0.47, arrived: -1 }); }
+    // ("step 4 animace je moc rychla"): six users at a time, each 5.2 s from a brief to the product
+    var PER = 5.2;
+    S.flowSeconds = PER;
+    for (var i = 0; i < 6; i++) { var c = document.createElementNS(NS, 'circle'); c.setAttribute('r', 6); c.setAttribute('class', 'u'); svg.appendChild(c); dots.push({ el: c, path: i % 3, off: i * PER / 6, arrived: -1 }); }
     function layout() {
       var s = stage.getBoundingClientRect(), a = promo.getBoundingClientRect(), b = near.getBoundingClientRect();
       svg.setAttribute('viewBox', '0 0 ' + s.width + ' ' + s.height);
@@ -337,7 +411,6 @@
       });
     }
     layout(); window.addEventListener('resize', layout);
-    var PER = 2.8;
     run('flow', svg, function (t) {
       dots.forEach(function (d) {
         var cyc = (t + d.off) / PER, k = cyc % 1, n = Math.floor(cyc), p = paths[d.path];
@@ -360,7 +433,7 @@
     rows.forEach(function (r) {
       r.el = document.createElement('div'); r.el.className = 'row' + (r.me ? ' me' : '');
       r.el.innerHTML = '<span class="rk"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + HEX + '"/></svg><span class="nm">' + r.name + '</span>' +
-        '<span class="pts"><b></b> pts</span><span class="pz"></span>';
+        '<span class="pp"><b></b> pts</span><span class="pz"></span>';
       box.appendChild(r.el);
     });
     var STEP = 2.2, P = Q.board.length * STEP + 4.5, last = -1;
@@ -386,7 +459,7 @@
       me.pts = pts;
       var at = n - passed;
       if (at !== last) { var order = others.slice(); order.splice(at, 0, me); place(order); last = at; }
-      rows.forEach(function (r) { r.el.querySelector('.pts b').textContent = fmt(r.pts); });
+      rows.forEach(function (r) { r.el.querySelector('.pp b').textContent = fmt(r.pts); });
       box.classList.toggle('won', at === 0);
     });
   })();

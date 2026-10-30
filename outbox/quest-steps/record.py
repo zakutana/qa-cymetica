@@ -4,7 +4,8 @@ each into pics/ (kept: what the page shows before a clip plays, or if it is miss
 Fifth take (the operator, 2026-10-30): "v kazdem kroku musi byt top animace".
 
   clip            what moves                                              from
-  office.webm     the HQ, its astronauts walking between the rooms        LIVE builder, its Start, 1920 x 1080 laid out
+  station.webm    the company's station (Rift Hold, gold) turning         LIVE builder, its first step
+  office.webm     the HQ coming in once, then its astronauts at work      LIVE builder, its Start, 1920 x 1080 laid out
   workshop.webm   the arms take the idea and build the product, 10 s      scenes/tools.html, frame by frame: a true loop
   farmer.webm     the Airdrop Farmer turning and blinking, the gem turning our Universe mock, a still camera (capture.py)
   universe.webm   the whole Universe: every company on its orbit          LIVE cymetica.com/company/app#universe
@@ -100,13 +101,40 @@ def office(b, seconds=16):
       return { left: f(c.left - s.left, s.width), top: f(c.top - s.top, s.height), width: f(c.width, s.width), height: f(c.height, s.height),
                card: [f(k.left - s.left, s.width), f(k.top - s.top, s.height), f(k.width, s.width)] }; }"""))
     poster(page, sel, 'office')
-    # in close enough to see the astronauts walk ("musi jit videt jak ti astronauti chodi po office"), and back out to
-    # where the page puts the camera, so the clip ends where it began and its loop is one movement
-    page.evaluate("""(s) => { const o = CO.builder.office, V = o.camera.position.constructor;
-      const p0 = o.camera.position.clone(), t0 = o.controls.target.clone(), t1 = t0.clone().add(new V(0, 0.6, 0));
-      const p1 = t1.clone().add(p0.clone().sub(t0).multiplyScalar(0.48)), half = s * 1000 / 2 - 600;
-      o.tween(p1, t1, half, () => setTimeout(() => o.tween(p0, t0, half), 1100)); }""", seconds)
+    # in once, only as far as the whole company still shows ("staci jedna animace ze se to priblizi jen na uroven ze jde
+    # videt cela firma"; 0.85 of the way: at 0.8 its rooms touch the stage's edges, which the page fades), then still,
+    # its astronauts at work; the page plays the way in once and repeats only the still part (data-loop-from)
+    page.evaluate("""() => { const o = CO.builder.office;
+      const p0 = o.camera.position.clone(), t0 = o.controls.target.clone();
+      o.tween(t0.clone().add(p0.clone().sub(t0).multiplyScalar(0.85)), t0, 3500); }""")
     record(page, sel, seconds, 'office')
+    page.close()
+
+
+def station(b, seconds=6):
+    """step 1's way in ("aby to zacinalo takto ... a ten zoom by sel dovnitr a pak by zobrazil ty headquarters"): the
+    LIVE builder's first step, the company's station turning in its space, before the name is typed; the page zooms
+    into it and on into the office clip"""
+    page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=0.75)
+    page.goto('https://cymetica.com/company/app/builder', wait_until='domcontentloaded', timeout=60000)
+    page.wait_for_function("() => { const e = document.getElementById('b-prev'); return e && e.classList.contains('has3d') && e.querySelector('canvas'); }", timeout=90000)
+    # the look he showed (2026-10-30): Rift Hold, the split asteroid with the bridge of light; the builder opens on a
+    # look of its own, so its arrow is pressed until that one stands
+    for _ in range(20):
+        if page.evaluate("() => CO.builder.o.skin") == 'rift':
+            break
+        page.click('#lk-next')
+        time.sleep(0.4)
+    # and its warm light, as in his picture: the builder's own gold accent, if it has one
+    acc = page.evaluate("() => (CO.ACCENTS || []).map(a => a.key).find(k => /gold|amber|yellow|sun/.test(k)) || null")
+    if acc:
+        page.click(f'#lk-acc .acc[data-k="{acc}"]')
+    print('station: look', page.evaluate("() => CO.builder.o.skin"), 'accent', acc)
+    time.sleep(5)
+    sel = '#b-prev canvas'
+    print('station: canvas', page.evaluate("(s) => { const c = document.querySelector(s); return [c.width, c.height]; }", sel))
+    poster(page, sel, 'station')
+    record(page, sel, seconds, 'station')
     page.close()
 
 
@@ -168,7 +196,7 @@ def workshop(b, fps=30, at=None):
     page.close()
 
 
-SHOTS = {'office': office, 'farmer': farmer, 'universe': universe, 'workshop': workshop}
+SHOTS = {'station': station, 'office': office, 'farmer': farmer, 'universe': universe, 'workshop': workshop}
 
 
 def main(names):
