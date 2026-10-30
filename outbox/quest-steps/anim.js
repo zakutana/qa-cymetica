@@ -1,8 +1,9 @@
 /* The Cymetica Quest, step by step: what moves (the operator, 2026-10-30: "v kazdem kroku musi byt top animace").
 
    - the clips (record.py): each plays only while it is on screen and cross-fades into itself at its loop point; the
-     office plays only its still part (data-loop-from: "kasli na tu animaci zoomu"); one that has not started a second
-     after coming on screen is asked again, and its poster stands behind it (ninth take: "animace se nespusti");
+     office plays only its still part (data-loop-from: "kasli na tu animaci zoomu"). A clip is loaded only when its
+     step comes near and let go when it is far: Firefox, his browser, stalls a playing clip (time stuck, never paused)
+     while the page's other clips are loading ("animace se nespusti", measured 2026-10-30); its poster stands behind it;
    - step 2's Cymetica pipeline, in step with the workshop clip: an idea typed in, through the pipeline's six
      chambers, a product out; and the ring of the products already built, as holograms, turned by dragging;
    - step 4's users, walking from the Promo Market's briefs to the product;
@@ -47,14 +48,26 @@
   // and fades in, so the loop has no seam
   var XF = 0.9;
   document.querySelectorAll('.clip').forEach(function (box) {
-    var a = box.querySelector('video'), vids = [a], from = +box.dataset.loopFrom || 0;
+    var a = box.querySelector('video'), from = +box.dataset.loopFrom || 0, srcEl = a.querySelector('source'), url = srcEl ? srcEl.getAttribute('src') : a.getAttribute('src');
+    if (srcEl) srcEl.remove();                       // nothing loads until the step is near
+    a.removeAttribute('src'); a.preload = 'none';
+    var vids = [a];
     if (box.classList.contains('xf')) { var b = a.cloneNode(true); b.classList.add('b'); box.appendChild(b); vids.push(b); }
-    vids.forEach(function (v) { v.muted = true; v.playsInline = true; v.addEventListener('error', function () { box.classList.add('dead'); }); });
+    vids.forEach(function (v) { v.muted = true; v.playsInline = true; v.addEventListener('error', function () { if (v.getAttribute('src')) box.classList.add('dead'); }); });
     // the poster behind the video too: a video that does not paint shows its poster, never a hole
     if (a.getAttribute('poster')) box.style.background = 'url(' + a.getAttribute('poster') + ') 50% 50% / cover no-repeat';
     var cur = 0, on = false, raf = 0, started = false;
-    function play(v) { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
-    function begin() { if (started) return; started = true; if (from) a.currentTime = from; play(a); }
+    function play(v) { if (!v.getAttribute('src')) attach(v); var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+    function attach(v) { if (v.getAttribute('src')) return; v.preload = 'auto'; v.src = url; }
+    function detach() {
+      vids.forEach(function (v) { v.pause(); if (v.getAttribute('src')) { v.removeAttribute('src'); v.load(); } v.style.opacity = ''; });
+      cur = 0; started = false;
+    }
+    function begin() { if (started) return; started = true; attach(a); if (from) a.currentTime = from; play(a); }
+    // near: loaded (the copy that cross-fades in too, once it is on screen); far: let go
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) attach(a); else detach(); }); }, { rootMargin: '60% 0px' }).observe(box);
+    }
     function tick() {
       if (!on) return;
       if (vids.length > 1) {
@@ -71,9 +84,10 @@
     seen(box, function (vis) {
       if (vis && !on) {
         on = true;
-        if (!started) { if (a.readyState >= 1) begin(); else a.addEventListener('loadedmetadata', begin, { once: true }); } else play(vids[cur]);
+        if (!started) begin(); else play(vids[cur]);
+        if (vids[1]) attach(vids[1]);
         raf = requestAnimationFrame(tick);
-        setTimeout(function () { if (on && vids[cur].paused) { started = true; play(vids[cur]); } }, 1200);
+        setTimeout(function () { if (on && vids[cur].paused) play(vids[cur]); }, 1200);
       }
       else if (!vis && on) { on = false; cancelAnimationFrame(raf); vids.forEach(function (v) { v.pause(); }); }
     });

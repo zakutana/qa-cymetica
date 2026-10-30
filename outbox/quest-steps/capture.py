@@ -4,12 +4,9 @@ record.py's).
 Fifth take (the operator, 2026-10-30).
 
   where   file                what, and from where
-  top     space.webp          the flyer's nebula (revenue-share-flyer/nebula.py) at 3840 x 2160, with stars that glow
-                              as the live Universe's do (ninth take: "ty hvezdy jsou trapne tecky")
-          hero.webp           the sun with six companies on their orbits round it: the LIVE start tutorial's own scene
-                              (cymetica.com/company/app/start), cut round its sun, its edges faded (ninth take)
-          sun.webp            Cymetica's sun alone, from our Universe mock, its light as alpha (the end's Universe door)
-          co-1..5.webp        (eighth take and before) five companies from our mock, cut out, to float round the sun
+  top     space.webp          the flyer's nebula and stars (revenue-share-flyer/nebula.py) made sharp at 3840 x 2160
+          sun.webp            Cymetica's sun alone, from our Universe mock, its light as alpha (the first screen, step
+                              5's live Universe, the end's Universe door)
   01      builder-card.webp   the LIVE builder's Start card as it stands, laid over the office clip where the page puts it
   04      promo.webp          their Promo Market through our read-only mirror (outbox/promo-market-v3/live, ?v2), with
                               three sample briefs: their market has none open today
@@ -31,7 +28,7 @@ import time
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageChops, ImageFilter
+from PIL import Image, ImageChops
 from playwright.sync_api import sync_playwright
 
 HERE = Path(__file__).resolve().parent
@@ -153,91 +150,15 @@ def promo(b):
 
 
 def sky(_b):
-    """the page's deep space, sharp, at 3840 x 2160 (landscape, so a wide screen never stretches it): the flyer's
-    nebula (revenue-share-flyer/nebula.py; its own stars stay under as dust) and over it stars as the live Universe
-    draws them ("ty hvezdy jsou trapne tecky, v univerzu je pozadi mnohem lepe udelane"): thousands with a soft glow a
-    few pixels wide, dozens bright with a wide halo, a dozen with short spikes, each its own colour. The sun is not in
-    it (hero.webp)."""
+    """the first screen's deep space, sharp ("ten vesmir ... ma spatne rozliseni ze je jeste rozmazany"): the flyer's
+    nebula and stars (revenue-share-flyer/nebula.py) made at 3840 x 2160, landscape, so a wide screen never stretches
+    it; the sun is not in it (sun.webp, its own layer). The ninth take's glowing stars went back out at his word:
+    "vesmir na uvodni strane si dojebal, ten byl predtim top"."""
     sys.path.insert(0, str(OUTBOX / 'revenue-share-flyer'))
     import nebula
-    W, H = 3840, 2160
-    nebula.W, nebula.H = W, H
-    base = np.clip(nebula.make(7, 0.8), 0, 255).astype(np.float32)
-    rng = np.random.default_rng(11)
-    light = np.zeros((H, W, 3), np.float32)
-    palette = np.array([[1.0, 1.0, 1.0], [0.8, 0.9, 1.0], [0.72, 0.93, 1.0], [1.0, 0.9, 0.78]], np.float32)
-
-    def add(k, x0, y0, col):   # a kernel at (x0, y0), clipped to the picture
-        h, w = k.shape
-        xa, ya, xb, yb = max(0, x0), max(0, y0), min(W, x0 + w), min(H, y0 + h)
-        if xb <= xa or yb <= ya:
-            return
-        light[ya:yb, xa:xb] += k[ya - y0:yb - y0, xa - x0:xb - x0, None] * col
-
-    def stars(n, s_lo, s_hi, b_lo, b_hi, power, halo=0.0, halo_k=4.5):
-        out = []
-        for _ in range(n):
-            s = rng.uniform(s_lo, s_hi)
-            b = b_lo + (b_hi - b_lo) * rng.random() ** power
-            c = palette[rng.choice(4, p=[0.45, 0.3, 0.15, 0.1])]
-            x, y = rng.uniform(0, W), rng.uniform(0, H)
-            r = int(s * (halo_k if halo else 1) * 3) + 1
-            x0, y0 = int(x) - r, int(y) - r
-            xs, ys = np.arange(x0, x0 + 2 * r + 1) - x, np.arange(y0, y0 + 2 * r + 1) - y
-            k = np.exp(-(ys ** 2) / (2 * s * s))[:, None] * np.exp(-(xs ** 2) / (2 * s * s))[None, :]
-            if halo:
-                hs = s * halo_k
-                k = k + halo * np.exp(-(ys ** 2) / (2 * hs * hs))[:, None] * np.exp(-(xs ** 2) / (2 * hs * hs))[None, :]
-            add((b * k).astype(np.float32), x0, y0, c)
-            out.append((x, y, b))
-        return out
-
-    stars(6000, 0.9, 1.4, 0.15, 0.45, 2.0)                  # the many: small, sharp, most of them faint
-    stars(2600, 1.6, 3.0, 0.35, 1.0, 2.0)                   # a few thousand with a soft glow a few pixels wide
-    bright = stars(70, 2.6, 4.2, 0.8, 1.0, 1.0, halo=0.16)  # bright, a wide halo
-    spikes = np.zeros((H, W), np.float32)
-    for x, y, b in bright[:14]:                             # a dozen with short spikes
-        x, y, L = int(x), int(y), int(rng.uniform(40, 90))
-        for k in range(-L, L + 1):
-            f = (1 - abs(k) / L) ** 3 * 0.55 * b
-            if 0 <= x + k < W and 0 <= y < H:
-                spikes[y, x + k] += f
-            if 0 <= y + k < H and 0 <= x < W:
-                spikes[y + k, x] += f
-    for r_, g in ((1.5, 1.0), (8.0, 0.6)):
-        sp = np.asarray(Image.fromarray(np.clip(spikes * 255, 0, 255).astype(np.uint8), 'L').filter(ImageFilter.GaussianBlur(r_)), np.float32) / 255
-        light += sp[..., None] * g * np.array([0.92, 0.97, 1.0], np.float32)
-    starlight = np.clip(light * 255, 0, 255)
-    out = 255 - (255 - base) * (255 - starlight) / 255     # screen
-    save(Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), 'RGB'), 'space.webp', quality=86)
-
-
-def hero(b):
-    """the first screen's sun with the companies round it: the LIVE start tutorial's own scene
-    (cymetica.com/company/app/start: its #lp-space canvas with the sun's glow canvases over it), the sun at its middle
-    and six stations on two orbits in its own perspective ("kolem slunce company ... ma to vypadat realisticky"), cut
-    round the sun at 2x with its edges faded, so it lays over the page's sky where the sun stands. Prints where the
-    sun's middle is in it, for the page (quest.css #sun)."""
-    page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=2)
-    page.goto('https://cymetica.com/company/app/start', wait_until='domcontentloaded', timeout=60000)
-    page.wait_for_function("() => document.querySelector('#lp-space canvas') && document.querySelector('#lp-space .lp-col')", timeout=90000)
-    time.sleep(10)
-    page.add_style_tag(content='.lp-hero { visibility: hidden !important; }')   # their words and tiles; the scene stays
-    time.sleep(1.5)
-    cx, cy = page.evaluate("() => { const r = document.querySelector('#lp-space .lp-col').getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }")
-    # the orbits' reach round the sun today (read off the page, 2026-10-30): 420 left, 470 right, 240 up, 400 down
-    w, h = 1080, 920
-    x0, y0 = min(max(0, cx - 540), 1920 - w), min(max(0, cy - 380), 1080 - h)
-    img = Image.open(io.BytesIO(page.screenshot(clip={'x': x0, 'y': y0, 'width': w, 'height': h}))).convert('RGBA')
-    page.close()
-    # its edges faded over the outer 150 px (300 at 2x), so its own sky melts into the page's
-    a, f = np.ones((img.height, img.width), np.float32), 300
-    ramp = np.linspace(0, 1, f, dtype=np.float32) ** 1.6
-    a[:f, :] *= ramp[:, None]; a[-f:, :] *= ramp[::-1][:, None]; a[:, :f] *= ramp[None, :]; a[:, -f:] *= ramp[::-1][None, :]
-    img.putalpha(Image.fromarray((a * 255).astype(np.uint8), 'L'))
-    save(img, 'hero.webp', quality=82)
-    print('hero: the sun at', round((cx - x0) / w * 100, 1), '%,', round((cy - y0) / h * 100, 1), '% of the sprite;', w, 'x', h, 'CSS px, at 2x;',
-          (OUT / 'hero.webp').stat().st_size // 1024, 'KB')
+    nebula.W, nebula.H = 3840, 2160
+    img = Image.fromarray(np.clip(nebula.make(7, 0.5), 0, 255).astype(np.uint8), 'RGB')
+    save(img, 'space.webp', quality=88)
 
 
 def sun(b):
@@ -397,7 +318,7 @@ def apps(_b, n=13):
     print('apps: of', data['count'], 'built, in the ring:', json.dumps([[a['name'], a['path'].strip('/')] for a in picked]))
 
 
-SHOTS = {'sky': sky, 'hero': hero, 'sun': sun, 'stations': stations, 'builder': builder, 'promo': promo, 'apps': apps}
+SHOTS = {'sky': sky, 'sun': sun, 'stations': stations, 'builder': builder, 'promo': promo, 'apps': apps}
 
 
 def main(names):

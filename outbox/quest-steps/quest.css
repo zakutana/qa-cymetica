@@ -32,11 +32,11 @@ ul, ol { list-style: none; }
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
 .crystal > * { position: relative; z-index: 1; }
 
-/* ---- the sky: the flyer's nebula with stars that glow, 3840 x 2160 (capture.py sky), fading into the page's dark */
-#sky { position: absolute; left: 0; right: 0; top: 0; height: 1600px; z-index: 0; pointer-events: none;
-  background: linear-gradient(180deg, rgba(5, 7, 12, 0) 0%, rgba(5, 7, 12, 0) 50%, var(--bg) 94%), url(pics/space.webp) 50% 0% / cover no-repeat; }
-/* (main is no stacking context of its own, so the sun's sprite can screen onto the sky under it) */
-main { position: relative; }
+/* ---- the sky: the flyer's nebula and stars made at 3840 x 2160 (capture.py sky), fading into the page's dark (the
+   eighth take's, back: "vesmir na uvodni strane ... byl predtim top") */
+#sky { position: absolute; left: 0; right: 0; top: 0; height: 1500px; z-index: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(5, 7, 12, 0) 0%, rgba(5, 7, 12, 0) 45%, var(--bg) 92%), url(pics/space.webp) 50% 0% / cover no-repeat; }
+main { position: relative; z-index: 2; }
 
 /* ---- the top bar: a sheet of crystal floating over the page, not a band across it; on it Capital Maximizer's brand,
    the quest's path as his rail (a hexagon a step, joined by lines that light as far as you have come), the prize in a
@@ -91,18 +91,15 @@ h1 b { font-weight: 400; }
   clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); }
 .pts li b { font-weight: 700; color: var(--text); }
 
-/* ---- the first screen: the flyer's board on the left, the slogan on the right under the sun, the sun and the
-   companies round it above (the live start tutorial's own scene, capture.py hero: six stations on two orbits in its
-   perspective, "ma to vypadat realisticky") */
-#hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 110px 0 60px; overflow-x: clip; }
-.hero-in { position: relative; z-index: 2; width: min(1560px, calc(100% - 10vw)); margin: 0 auto; display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); column-gap: 5vw; align-items: center; }
-/* the slogan alone ("jen bude proste hlavni slogan"), the start page's type, under the orbits */
-.hero-in .words { padding-top: 420px; }
-.hero-in h1 { font-size: clamp(36px, 2.6vw, 52px); line-height: 1.08; }
-/* the sprite's own sky screens onto the page's, so its faded edge leaves no rectangle */
-#sun { position: absolute; z-index: 1; right: calc(50% - 900px); top: 4px; width: 800px; pointer-events: none; }
-#sun img { width: 100%; height: auto; mix-blend-mode: screen; }
+/* ---- the first screen: the flyer's board on the left, the slogan on the right, the sun above it */
+#hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 150px 0 70px; overflow-x: clip; }
+.hero-in { position: relative; z-index: 2; width: min(1480px, calc(100% - 12vw)); margin: 0 auto; display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); column-gap: 5vw; align-items: center; }
+/* the slogan alone ("jen bude proste hlavni slogan"), the start page's type */
+.hero-in h1 { font-size: clamp(38px, 3.1vw, 60px); line-height: 1.06; }
+/* Cymetica's sun alone, far off in the deep ("slunce je moc blizko s firmama, ty tam nedavej"): its light as alpha */
+#sun { position: absolute; z-index: 1; left: calc(50% + 560px); top: 205px; width: 460px; transform: translate(-50%, -50%); pointer-events: none; }
+#sun img { width: 100%; height: auto; }
 /* the flyer's glass, now crystal: tilted on its left edge, clear, glossy */
 .board-wrap { perspective: 1900px; perspective-origin: 0% 40%; }
 .board { padding: 36px 44px 26px; border-radius: 30px; transform: rotateY(12deg) rotateX(2.6deg); transform-origin: 0% 50%; }
@@ -129,19 +126,21 @@ h1 b { font-weight: 400; }
 .board .rule { margin-top: 12px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .12); font: 600 15px 'JetBrains Mono'; color: var(--dim); }
 
 /* ---- the steps: the words on one side, what moves on the other */
-.step { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); column-gap: 5vw; align-items: center;
-  width: min(1780px, 100%); margin: 0 auto; padding: 130px 6vw 150px; min-height: 92vh; }
+/* every step as step 2 has it ("prvne STEP 02, pod tim text a pod tim az to velke 02, tak by to melo byt porad, jen
+   na urovni toho textu nesmi nic byt"): the words, and under them the step's number; the picture beside both */
+.step { position: relative; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: auto auto; column-gap: 5vw;
+  align-content: center; width: min(1780px, 100%); margin: 0 auto; padding: 130px 6vw 150px; min-height: 92vh; }
+.step .txt { position: relative; z-index: 3; grid-column: 1; grid-row: 1; align-self: end; }
+.step .num { grid-column: 1; grid-row: 2; align-self: start; }
+.step .stage { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
 .step.flip { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
-.step.flip .txt { order: 2; }
-.step .txt { position: relative; z-index: 3; }
-/* the step's number, huge and hollow, faint as the first take had it, standing above its words so the heading crosses
-   only its foot ("ty texty pres cislo vypadaji divne", "moc prekryva tu velkou jednicku") */
-.num { position: absolute; top: -3%; left: 1vw; z-index: 0; pointer-events: none;
-  font: 400 clamp(220px, 23vw, 440px)/1 'Archivo Black', sans-serif; color: transparent;
-  -webkit-text-stroke: 1.5px rgba(0, 207, 255, .15); background: linear-gradient(180deg, rgba(0, 255, 136, .06), rgba(0, 207, 255, 0) 72%);
+.step.flip .txt, .step.flip .num { grid-column: 2; }
+.step.flip .stage { grid-column: 1; }
+/* the step's number, huge and hollow, faint as the first take had it, under its words and never beside them */
+.num { position: relative; z-index: 0; margin: 14px 0 0 -.05em; pointer-events: none; white-space: nowrap;
+  font: 400 clamp(220px, 21vw, 420px)/.8 'Archivo Black', sans-serif; color: transparent;
+  -webkit-text-stroke: 1.5px rgba(0, 207, 255, .17); background: linear-gradient(180deg, rgba(0, 255, 136, .07), rgba(0, 207, 255, 0) 72%);
   -webkit-background-clip: text; background-clip: text; }
-.step.flip .num { left: auto; right: 1vw; }
-.step.build .num { top: 42%; }
 .step::before { content: ''; position: absolute; inset: 10% 0; z-index: -1; pointer-events: none;
   background: radial-gradient(40% 45% at 66% 50%, rgba(0, 207, 255, .07), rgba(0, 207, 255, 0) 70%); }
 .step.flip::before { background: radial-gradient(40% 45% at 34% 50%, rgba(0, 255, 136, .06), rgba(0, 255, 136, 0) 70%); }
@@ -165,17 +164,16 @@ h1 b { font-weight: 400; }
 .crew b { font: 400 46px/1 'Archivo Black', sans-serif; color: var(--green); text-shadow: 0 0 22px rgba(0, 255, 136, .55); }
 .crew span { font: 700 16px 'JetBrains Mono'; letter-spacing: .06em; color: var(--text); }
 .names { margin-top: 10px; max-width: 32em; font: 600 14px/1.8 'JetBrains Mono'; letter-spacing: .03em; color: var(--mute); text-shadow: 0 2px 10px rgba(0, 0, 0, .9); }
-.names i { font-style: normal; margin: 0 7px; color: rgba(0, 207, 255, .55); }
+.names i { font-style: normal; margin: 0 2px 0 7px; color: rgba(0, 207, 255, .55); }
 .names b { font-weight: 800; color: var(--green); }
 .crop { position: relative; aspect-ratio: 1310 / 787; overflow: hidden; }
 .crop .clip { position: absolute; left: -21.09%; top: 0; width: 136.05%; height: 100%; }
 .crop video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: fill; }
-/* step 2: the words and beside them the ring, lower than before ("ten panel s apkama je moc nahore"); under both, the
-   arms and the pipeline as one machine, the whole step on one screen */
-.step.build { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); min-height: 0; padding-top: 110px; padding-bottom: 90px; }
-.step.build .txt { grid-column: 1; grid-row: 1; align-self: center; }
-.step.build .ring { grid-column: 2; grid-row: 1; align-self: center; margin-top: 36px; }
-.step.build .stage { grid-column: 1 / -1; grid-row: 2; margin-top: -4px; }
+/* step 2: the words, under them the number with the ring of products beside it (nothing beside the words: "to kolo
+   produktu co se toci je moc vysoko"); under all of it, the arms and the pipeline as one machine */
+.step.build { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); grid-template-rows: auto auto auto; min-height: 0; padding-top: 110px; padding-bottom: 90px; }
+.step.build .ring { grid-column: 2; grid-row: 2; align-self: center; }
+.step.build .stage { grid-column: 1 / -1; grid-row: 3; align-self: start; margin-top: -30px; }
 /* the ring of products already built: their live pages as holograms over a projector of light */
 .ring { position: relative; height: 350px; cursor: grab; touch-action: pan-y; user-select: none; }
 .ring.grab { cursor: grabbing; }
@@ -289,10 +287,19 @@ h1 b { font-weight: 400; }
 .machine.pop .outlet .burst { animation: burst .8s var(--ease) forwards; }
 @keyframes burst { 0% { transform: scale(.4); opacity: 1; } 100% { transform: scale(4.2); opacity: 0; } }
 
-/* step 3: the Quant Lab's reactor (outbox/quant-lab-v2) beside its words, as it is, no hologram ("to nedelej
-   holograficky a dej to jen vedle toho napravo"); only its outermost edge softened into the page */
-.stage.lab .reactor .clip { border-radius: 14px; overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 2%, #000 98%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 2%, #000 98%, transparent 100%); }
+/* step 3: the Quant Lab's page (outbox/quant-lab-v2) beside its words, standing in space as the Promo Market does
+   ("je moc proste, jen placka na tme ... jak je treba promo market lepe udelany"): turned towards its words, its
+   edges melting into the dark, a light behind it and a pool of light under it */
+.stage.lab { perspective: 1400px; }
+.stage.lab .reactor { position: relative; transform: rotateY(-26deg) rotateX(6deg) rotateZ(1.2deg) scale(.94); transform-origin: 0% 50%; }
+.stage.lab .reactor .clip { opacity: .95;
+  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .8) 2px 4px), linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent), linear-gradient(180deg, transparent, #000 4%, #000 90%, transparent);
+  mask-image: repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .8) 2px 4px), linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent), linear-gradient(180deg, transparent, #000 4%, #000 90%, transparent);
+  -webkit-mask-composite: source-in, source-in; mask-composite: intersect; }
+.stage.lab .reactor::before { content: ''; position: absolute; z-index: -1; inset: 4% 2%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(0, 207, 255, .2), rgba(0, 255, 136, .07) 60%, rgba(0, 207, 255, 0)); filter: blur(28px); }
+.stage.lab .reactor::after { content: ''; position: absolute; left: 6%; right: 6%; bottom: -9%; height: 16%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(0, 207, 255, .3), rgba(0, 207, 255, 0)); filter: blur(8px); }
 
 /* step 4: the Promo Market tilted far back as a hologram ("zesikma, jak je nas leaderboard, ale mnohem vic,
    holograficky"), and beside it the Universe close with the Airdrop Farmer and the Gem Screener */
@@ -325,6 +332,11 @@ h1 b { font-weight: 400; }
    mark, yours climbing it */
 #s5 { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); column-gap: 3vw; }
 .stage.uni .pic { width: 112%; margin-left: -6%; }
+/* its sun: the live page draws it on its own canvases over the map, which the map's recording leaves out ("co to zas
+   ma byt to slunce?"), so Cymetica's sun is laid where theirs stands, its ball their ball's size (measured off the live
+   page, 2026-10-30: 58.4 %, 38.2 %, 6.2 % of the map wide) */
+.stage.uni .sun { position: absolute; z-index: 2; left: 58.4%; top: 38.2%; width: 27%; transform: translate(-50%, -50%); pointer-events: none; }
+.stage.uni .sun img { width: 100%; }
 .climb { position: relative; z-index: 3; width: 84%; margin: -15% auto 0; padding: 10px; border-radius: 20px; height: calc(6 * 54px + 20px); }
 .row { position: absolute; left: 10px; right: 10px; top: 10px; height: 54px; display: grid; grid-template-columns: 34px 40px minmax(0, 1fr) 160px 140px; align-items: center; gap: 10px;
   padding: 0 14px; border-radius: 12px; transition: transform .7s var(--ease), background .4s, box-shadow .4s; }
@@ -410,9 +422,8 @@ h1 b { font-weight: 400; }
   #rail a .sh { display: none; }
   #rail a.on .sh { display: inline; margin-left: 6px; font-size: 14px; }
   #hero { min-height: 0; padding: 300px 0 50px; }
-  #sun { left: 50%; right: auto; top: 20px; width: 420px; transform: translateX(-50%); }
+  #sun { left: 50%; top: 150px; width: 300px; }
   .hero-in { width: calc(100% - 32px); display: flex; flex-direction: column-reverse; gap: 34px; }
-  .hero-in .words { padding-top: 0; }
   .hero-in h1 { font-size: 32px; }
   .board-wrap { perspective: none; width: 100%; }
   .board { transform: none; padding: 20px 16px 14px; border-radius: 20px; }
@@ -424,8 +435,8 @@ h1 b { font-weight: 400; }
   .board .rule { font-size: 13px; }
   .step, .step.flip { display: block; min-height: 0; padding: 70px 16px 90px; }
   .step .stage { margin-top: 36px; }
-  .num { font-size: 150px; top: 40px; transform: none; left: 8px; }
-  .step.flip .num { right: 8px; }
+  .num { position: absolute; font-size: 150px; top: 40px; left: 8px; margin: 0; }
+  .step.flip .num { left: auto; right: 8px; }
   .kick { font-size: 14px; letter-spacing: .2em; }
   h2 { font-size: 32px; margin-top: 10px; }
   .sub { font-size: 15px; } .pts li { font-size: 14px; }
