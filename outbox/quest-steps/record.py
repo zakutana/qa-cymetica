@@ -406,10 +406,12 @@ UV_SPREAD = """([you, target, T, K]) => { const o = CO.uv, cam = o.camera, V = c
     for (let k = 0; k < 180; k++) { const d = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * step, r = room(ends(it, th0 + d, w));
       if (r >= K) { best = { th: th0 + d, r }; break; } if (!best || r > best.r) best = { th: th0 + d, r }; }
     if (best.th !== th0) log.push(name(it) + ' ' + (best.th - th0).toFixed(2) + ' rad'); put(it, best.th, w); });
-  let worst = Infinity;
-  placed.forEach((q, i) => placed.forEach((u, j) => { if (j > i && q.it !== u.it) worst = Math.min(worst, ...q.pts.map((p, k) => Math.hypot(p.x - u.pts[k].x, p.y - u.pts[k].y) / (p.rad + u.pts[k].rad))); }));
+  let worst = [Infinity];
+  placed.forEach((q, i) => placed.forEach((u, j) => { if (j > i && q.it !== u.it) {
+    const r = Math.min(...q.pts.map((p, k) => Math.hypot(p.x - u.pts[k].x, p.y - u.pts[k].y) / (p.rad + u.pts[k].rad)));
+    if (r < worst[0]) worst = [r, name(q.it) + (q.pts[0].rad === 70 ? "'s tag" : ''), name(u.it) + (u.pts[0].rad === 70 ? "'s tag" : '')]; } }));
   const mine = me && placed.find(q => q.it === me), top = mine && at(me, mine.th, 1.2);
-  return { moved: log, closest: +worst.toFixed(2), you: mine && [top.x / W, top.y / H] }; }"""
+  return { moved: log, closest: [+worst[0].toFixed(2), worst[1], worst[2]], you: mine && [top.x / W, top.y / H] }; }"""
 
 
 # fourteenth take ("si uplne znicil tu obeznou drahu ... ma byt vetsi mnohem ten vesmir a ta tabule v nem jakoby
