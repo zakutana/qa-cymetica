@@ -46,6 +46,13 @@ revenue share), which is unchanged.
      round, the Universe's three products on its faces (Gem Screener, Agent Casino, Airdrop Farmer, two faces each),
      12.5 % of the clip a side. Two clips of one camera (record.py market): the orbit keyed as light, the building
      keyed hard over it, so its dark metal does not let the sky through. Users walk from the building to the farmer.
+   - **Its second round** ("step 3 tam mas nejake divne slunce, to smaz a chybi ti vzducholod kolem promo marketu a na
+     poslednim kroku vylepsi ten leaderboard screen moc male marginy ... a je to cele male"): the sun gone from step
+     3's orbit; the PROMO airship back round the building, its clip one lap of the airship long (30 s, the Universe's
+     80 s lap would have jumped back at every loop), everything else of the building turned to repeat at that length;
+     the picture panned so the airship's far side stays in it (measured over a lap: its hull 58 to 92 % across). The
+     leaderboard in step 5 a third bigger: 452 px wide, rows 60 px apart, its names 16 px, more room inside and
+     round it, a little lower so it leaves the farmer clear.
 14. **c71c5ba3** (2026-10-31), after the thirteenth:
    - **The mark** ("logo je velmi trapne"): made as Cymetica's own product marks are (Agent Casino's, live): a dark
      disc in a ring of their cyan-to-green, a dotted ring inside, two chevrons climbing, cyan under green; the name

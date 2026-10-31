@@ -375,7 +375,7 @@
     var NS = svg.namespaceURI, glows = [], paths = [], dots = [], users = 0, lastW = 0;
     // fifteenth take: from the Promo Market's platform, its left and front (x, y in % of the clip, record.py market),
     // to the farmer's ring, its right side
-    var FROM = [[73, 77], [75, 85], [80, 90]], TO = [59.5, 62.5];
+    var FROM = [[61.5, 77], [63.5, 85], [68.5, 90]], TO = [49.3, 62.5];
     // the cube's faces change their page every 2.4 s, two of three lit, as the Promo Market's own (promo_market_v2.js)
     setInterval(function () {
       document.querySelectorAll('.holo:not(.fast) .hstage').forEach(function (st) {

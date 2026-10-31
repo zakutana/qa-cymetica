@@ -280,7 +280,13 @@ def farmer(b, seconds=12):
 # Market (u3d.js adPromo) big in front on the right, its own hologram away (everything over the projector's lens: the
 # page sets the Promo Market's live cube there), its ticker band without its figure (that reads ../promo-market/data.js,
 # which this server does not serve, so it said 0 UP FOR GRABS)
-MARKET = dict(ga=0.32, cl=3, ca=0.75, az=1.25, el=0.55, dist=13.0, ty=0.3, pk=0.2, pr=3.0, ps=2.8)
+# Its second round ("step 3 tam mas nejake divne slunce, to smaz a chybi ti vzducholod kolem promo marketu"): the sun
+# (u3d.js core(), coreG) hidden; the PROMO airship back, circling it; the building's clip one whole lap of the airship
+# long (`lap` s, 80 in the Universe: a 12 s clip would have jumped it back a sixth of a lap at every loop), and so
+# everything of the building seamless at that length: its rings turned whole quarters, its band a whole width, its bob
+# twice, its slow turn held still, its own clock run at `tsc` so the billboard's magenta and amber come round 4 times
+MARKET = dict(ga=0.32, cl=3, ca=0.75, az=1.25, el=0.55, dist=13.0, ty=0.3, pk=0.2, pr=3.0, ps=2.8, lap=30.0, tsc=28 / 30,
+              pan=1.0)   # the airship's hull, measured over a lap: 58 to 92 % of the canvas across (at 0: 70 to 104)
 MARKET_SETUP = """(o) => { const uv = CO.uv, V = uv.camera.position.constructor, up = new V(0, 1, 0);
   uv.arc = function () {}; (uv.arcs || []).forEach(a => { uv.scene.remove(a.head, a.streak); }); uv.arcs = [];
   const by = id => uv.items.find(x => x.c.id === id);
@@ -300,7 +306,16 @@ MARKET_SETUP = """(o) => { const uv = CO.uv, V = uv.camera.position.constructor,
   const p = T.clone().lerp(cam, o.pk).addScaledVector(right, h * o.pr); p.y = f0.y;
   P.plot.root.position.copy(p); P.plot.root.scale.multiplyScalar(o.ps);
   P.plot.root.traverse(n => { if (n.isGroup && Math.abs(n.scale.x - 0.85) < 1e-3 && n.children.length > 20) window.__st = n; });
-  const st = window.__st; st.children.forEach(ch => { if (ch.isPoints || ch.isSprite || ch.position.y > 5.85) ch.visible = false; });
+  const st = window.__st, airship = st.children.find(ch => ch.isGroup && Math.abs(ch.position.y - 7.65) < 0.02);
+  st.children.forEach(ch => { if (ch !== airship && (ch.isPoints || ch.isSprite || ch.position.y > 5.85)) ch.visible = false; });
+  const rings = st.children.filter(ch => ch.isGroup && [3.05, 4.1].some(y => Math.abs(ch.position.y - y) < 0.01));
+  const b = P.plot.b, tick0 = b.tick, L = o.lap, body = P.plot.body;
+  Object.defineProperty(body.rotation, 'y', { get() { return this._y; }, set() {} });
+  let bob = 0; Object.defineProperty(body.position, 'y', { get() { return bob; }, set() {} });
+  b.tick = (t) => { tick0(t * o.tsc); const w = 2 * Math.PI * t / L;
+    airship.rotation.y = w; rings[0].rotation.y = Math.PI / 2 * 6 * t / L; rings[1].rotation.y = -Math.PI / 2 * 8 * t / L;
+    window.__band.material.map.offset.x = -t / L; bob = Math.sin(2 * w) * 0.22; };
+  if (uv.coreG) uv.coreG.visible = false;
   st.children.forEach(ch => { const gp = ch.geometry && ch.geometry.parameters; if (gp && gp.openEnded && Math.abs(gp.radiusTop - 1.6) < 1e-6) window.__band = ch; });
   const tex = window.__band.material.map, cv = tex.image, g2 = cv.getContext('2d'), H = cv.height;
   g2.clearRect(0, 0, cv.width, H); g2.font = '800 40px "JetBrains Mono", monospace'; g2.textBaseline = 'middle';
@@ -308,6 +323,8 @@ MARKET_SETUP = """(o) => { const uv = CO.uv, V = uv.camera.position.constructor,
     g2.fillStyle = col; g2.fillText(t, x, H / 2 + 2); x += g2.measureText(t).width + 30; g2.fillStyle = '#00cfff'; g2.fillRect(x - 20, H / 2 - 4, 8, 8); x += 14; });
   g2.fillStyle = 'rgba(0,207,255,.6)'; g2.fillRect(0, 4, cv.width, 3); g2.fillRect(0, H - 7, cv.width, 3); tex.needsUpdate = true;
   [F, G, C, P].forEach(x => { x.anchor.set(x.plot.root.position.x, x.plot.root.position.y + (x.plot.top + 0.5) * (x.plot.k || 1) * (x === P ? o.ps : 1), x.plot.root.position.z); });
+  // the picture panned right (the scene left), so the airship's lap on the far side stays in it
+  T.addScaledVector(right, h * o.pan); cam.addScaledVector(right, h * o.pan);
   uv.tween(cam, T, 0);
   if (uv.sky) uv.sky.visible = false; uv.scene.background = new uv.scene.background.constructor(0x000000); }"""
 # where the projector's lens and the three products' names stand, in % of the canvas
@@ -319,14 +336,17 @@ MARKET_WHERE = """() => { const uv = CO.uv, cam = uv.camera, V = cam.position.co
 
 
 def market(b, seconds=12):
-    """step 3: two clips of one camera (MARKET), cut to the same box: the orbit (its lanes, the sun, the farmer, the gem
-    and the Agent Casino; keyed as light, data-key="glow", the lanes being 2 to 7 % bright) and the Promo Market alone
-    (keyed hard as the HQ is: under the glow key its dark metal would let the sky through)"""
+    """step 3: two clips of one camera (MARKET), cut to the same box: the orbit (its lanes, the farmer, the gem and the
+    Agent Casino; keyed as light, data-key="glow", the lanes being 2 to 7 % bright), `seconds` long, and the Promo
+    Market with its airship alone (keyed hard as the HQ is: under the glow key its dark metal would let the sky
+    through), one lap of the airship long"""
     page = capture.universe(b, viewport={'width': 1600, 'height': 1000}, dsf=1.25)
     page.evaluate(MARKET_SETUP, MARKET)
     time.sleep(3)
     sel = '#uv3d canvas'
     box, size = lit_box(page, sel, 0.03)
+    # to the canvas's right edge: what is lit now leaves out the airship's far side (cut at 85 % when it was measured)
+    box = (box[0], box[1], (size[0] - box[0]) // 2 * 2, box[3])
     x, y, w, h = box
     pct = lambda pt: (round((pt[0] - x) / w * 100, 1), round((pt[1] - y) / h * 100, 1))
     print('market: canvas', size, 'box', box, 'aspect', f'{w} / {h}',
@@ -341,7 +361,7 @@ def market(b, seconds=12):
     page.evaluate(f"() => {{ const r = {by}; ['ad-farmer', 'ad-gem', 'ad-casino'].forEach(id => {{ r(id).visible = false; }}); r('ad-promo').visible = true; }}")
     page.evaluate(capture.HIDE_SKY)
     time.sleep(1)
-    record(page, sel, seconds, 'market-building', bps=16_000_000, crop=box)
+    record(page, sel, MARKET['lap'], 'market-building', bps=16_000_000, crop=box)
     page.close()
     frame_poster('market-orbit', 1.0)
     frame_poster('market-building', 1.0)
