@@ -4,7 +4,7 @@ Asked for by the operator on 2026-10-29: a new page for the Cymetica Quest, expl
 quest, win up to 500,000 ET10 every month), then how. It stands beside `outbox/quest` (the scroll film, still on the 5 %
 revenue share), which is unchanged.
 
-## Thirteen takes
+## Fourteen takes
 
 1. **a1cb3cf5, 7/10**: real screenshots, each in a glass browser frame. "Nedavej to do panelu ... at to splyva."
 2. **60da77f5, 4/10**: everything full screen, a flight in to the sun, the orbit with its companies. "Predchozi verze
@@ -28,7 +28,30 @@ revenue share), which is unchanged.
 11. **b7891eca** (2026-10-31): deep space behind the whole page with twinkling stars (as Gemini's guide has it), the
    first screen's words big on the left, the top a quest track with no panel, hexagon bullets, the Promo Market's cube
    turning, fourteen companies in the Universe. "To uz je husty 1 screen."
-13. **This one** (2026-10-31), after the twelfth:
+14. **This one** (2026-10-31), after the thirteenth:
+   - **The mark** ("logo je velmi trapne"): made as Cymetica's own product marks are (Agent Casino's, live): a dark
+     disc in a ring of their cyan-to-green, a dotted ring inside, two chevrons climbing, cyan under green; the name
+     stacked beside it, CYMETICA small over QUEST.
+   - **Sharp** ("headquarters mi prijde jeste trochu rozmazane a build it better taky"): the HQ drawn at 1.5 and cut to
+     itself when filmed (1500 x 1132, it had about 800 px), the Universe the same (1600 x 862); the workshop at 1920 x
+     1080 with no depth of field. Looked at with a pixel ratio of 1.5 too.
+   - **The workshop** ("az moc sviti vse", "ta zed na pozadi s napisem ma byt na miste, nema se hybat"): the camera
+     still (the wall and its name do not move by a pixel between frames), bloom 0.55 to 0.3, the neon 1.8 to 1.3.
+   - **The orbits** ("si nejak smazal ty obezne drahy ... jsou skoro neviditelne"): the lanes are light of 2 to 7 %,
+     which the HQ's key cut away; the two Universes get their own key (data-key="glow"), which lays dim light onto the
+     page's sky as light, and a dark under them as their own sky was.
+   - **Step 3** ("jsou asi moc nahore", "co je to jako za animace nejakeho pruhu pres ty apky"): the farmer and the gem
+     each set on a lane, the camera raised over them; the stripe was our Universe mock's arc (work going in to
+     Cymetica), now off; the Universe in the middle of the band, the Promo Market at its foot, the users walking into
+     the farmer's ring.
+   - **Step 4** ("jak najedu na ten slide tak uz chci aby se hned za 2 sekundy zrodil agent"): every time the step
+     comes on screen the clip starts two seconds before the birth (measured 2.2 s in Firefox and Chrome), then loops
+     whole.
+   - **Step 5** ("ma byt vetsi mnohem ten vesmir a ta tabule v nem jakoby mensi, podobne jak to je v live aplikaci"):
+     the whole live Universe, filmed with its sun in the middle and its outer lane whole, 1,250 px across; the board
+     300 px, tilted, in its bottom-right corner over the outer lane, where no company stands, as the live map has its
+     own.
+13. **ad9510a3** (2026-10-31), after the twelfth:
    - **No hexagon** in the mark or the track ("nelibi se mi ten hexagon co pouzivas v logu a stepech"): the mark a
      green sun with a world going round it on its orbit, the track's steps round lights, the pipeline's mark a ring.
    - **One space everywhere** ("pozadi za headquarters je divne, ma byt stejne jako vsude jinde v questu"; "musi to
@@ -118,16 +141,16 @@ goes to him.
   760 px at 2000 px wide), as step 1's HQ fills it ("proc je to vsude tak nizko dycky vedle toho textu? jedine
   headquarters je v idealni pozici hned vedle napravo"; "nekde mas velkou mezeru nahore nekde dole, musis to budto dat
   doprostred nebo vychytat tak at to zabira stejnou plochu jak headquarters", 2026-10-31). The HQ, the workshop and the
-  Quant Lab fill it; step 3's two pictures fill it between them, the Universe at its top and the Promo Market at its
-  foot; step 5's Universe and board stand in its middle, as tall as the board beside the Universe lets them be. The
+  Quant Lab fill it; step 3's Universe stands in its middle with the Promo Market at its foot (the fourteenth take: the
+  thirteenth's Universe at the top was "moc nahore"); step 5's Universe fills it, the board small in its corner. The
   twelfth take had read "na preskacku" as the picture lower than the words, and that reading was wrong.
 - **Marketing** is not in the pre-build (Cymetica QA, Development, Quant Lab, Trading desk): it is a department the
   owner adds (data.js, ET-32484). Step 3 still says "your Marketing department", as the step is the owner's next
   move; step 1's "4 departments" is the pre-build's.
 - **The links**: every product a step names links to its live page (QUEST.links), each answering 200 on 2026-10-31.
   Until the twelfth take the two doors at the end were the only links ("to bude az na konci"); he asked for them.
-- **The Quant Lab's timing**: five words a second (a skim) from when its picture is a third on screen, then two
-  seconds; with a longer text it starts earlier, never before its first frame.
+- **The Quant Lab's timing**: the agent is born two seconds after the step is nearly half on screen, every time it
+  comes back on screen; the twelfth take's reading time is gone (he looks at the picture first).
 - **The first screen's words**: "Cymetica Quest." first and green, then "Join. Earn points. / Climb the leaderboard.
   / Earn up to 500,000 ET10 / every month." with the prize green; he left the opening to us ("CYMETICA QUEST zelene
   nebo join? ... musis to vymyslet").
@@ -137,10 +160,13 @@ goes to him.
 - **Step 5 is the live Universe** with the leaderboard's eight sample companies added in our recording browser, so
   the names on the board stand in the map too; the live one has six today. Nothing is sent to Cymetica: the answer is
   changed as it arrives in our browser (record.py EXTRA_COMPANIES).
-- **The top bar** keeps its three parts (brand, track, prize) and drops the panel round them.
+- **The top bar** keeps its three parts (brand, track, prize) and drops the panel round them. **The mark** is drawn
+  to Agent Casino's level, not copied from it: their disc and ring, our own sign.
 - **The clips** stay out of git. Their posters are kept.
 - **Keyed clips** (the HQ, the Universe, the farmer, both doors): filmed on black and keyed in the page, alpha from
-  each pixel's brightest channel (0.025 to 0.12), so the darkest metal stays whole and the black goes. A browser
+  each pixel's brightest channel: the HQ's from 0.025 to 0.12, so the darkest metal stays whole and the black goes;
+  the Universe's (data-key="glow") from 0 to 0.45 with its colour kept, so a lane of 3 % adds its light to the sky
+  instead of being cut. A browser
   without WebGL shows them on black. Playwright's WebKit on Windows never finishes loading a WebM (the twelfth take
   hangs it the same way), so WebKit was looked at with the posters, which are keyed by the same shader.
 

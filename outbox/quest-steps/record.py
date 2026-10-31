@@ -12,7 +12,10 @@ Fifth take (the operator, 2026-10-30): "v kazdem kroku musi byt top animace".
   universe.webm     the whole Universe: every company on its orbit          LIVE cymetica.com/company/app#universe (a door too)
 
   The office, the farmer and the Universe are filmed with their own skies hidden, on black: the page keys the black
-  away (anim.js data-key), so they stand in its one space (thirteenth take).
+  away (anim.js data-key), so they stand in its one space (thirteenth take). Fourteenth take: the office and the
+  Universe drawn at 1.5 and cut to what the page shows (record(crop=), lit_box), then scaled to 1500 and 1600 wide; the
+  Universe with its sun in the middle (UV_CENTER); the farmer and the gem on their lanes (FARMER_LANES), the map's arcs
+  off; the workshop at 1920 x 1080.
 
     python outbox/quest-steps/record.py                  # every one
     python outbox/quest-steps/record.py office farmer    # some
@@ -64,9 +67,10 @@ def ffmpeg(*args, stdin=None):
     subprocess.run([FFMPEG, '-hide_banner', '-loglevel', 'error', '-y', *args], input=stdin, check=True)
 
 
-def record(page, sel, seconds, name, bps=8_000_000):
+def record(page, sel, seconds, name, bps=8_000_000, crop=None, width=None):
     """the canvas `sel` for `seconds`, kept as clips/<name>.webm (remuxed, so it knows its length), and its first
-    frame as pics/<name>.webp"""
+    frame as pics/<name>.webp; with `crop` (x, y, w, h in the canvas's pixels) only that part, encoded again, so every
+    pixel of the clip is one the page shows (fourteenth take: "headquarters mi prijde jeste trochu rozmazane")"""
     CLIPS.mkdir(exist_ok=True)
     r = page.evaluate(RECORD, [sel, int(seconds * 1000), bps])
     fd, tmp = tempfile.mkstemp(suffix='.webm')
@@ -74,10 +78,32 @@ def record(page, sel, seconds, name, bps=8_000_000):
     raw = Path(tmp)
     raw.write_bytes(base64.b64decode(r['b64']))
     out = CLIPS / f'{name}.webm'
-    ffmpeg('-i', str(raw), '-c', 'copy', str(out))
+    if crop:
+        x, y, w, h = crop
+        ffmpeg('-i', str(raw), '-vf', f'crop={w}:{h}:{x}:{y}' + (f',scale={width}:-2:flags=lanczos' if width else ''), '-c:v', 'libvpx', '-b:v', '10M', '-crf', '5', '-qmin', '2', '-qmax', '24',
+               '-auto-alt-ref', '0', '-g', '30', '-pix_fmt', 'yuv420p', str(out))
+    else:
+        ffmpeg('-i', str(raw), '-c', 'copy', str(out))
     raw.unlink()
-    print(f'{out.name} {r["w"]}x{r["h"]} {r["mime"]} {out.stat().st_size // 1024} KB')
+    print(f'{out.name} {r["w"]}x{r["h"]}{" cropped to %dx%d" % crop[2:] if crop else ""} {r["mime"]} {out.stat().st_size // 1024} KB')
     return out
+
+
+def lit_box(page, sel, margin, th=12):
+    """what is lit in the canvas `sel` now (filmed on black), widened by `margin` of its size on every side, in even
+    canvas pixels; and the canvas's size"""
+    import numpy as np
+    from PIL import ImageFilter
+    data = page.evaluate("(sel) => document.querySelector(sel).toDataURL('image/png')", sel)
+    im = Image.open(io.BytesIO(base64.b64decode(data.split(',', 1)[1]))).convert('L').filter(ImageFilter.MedianFilter(5))
+    a = np.asarray(im, np.float32)
+    ys, xs = np.nonzero(a > th)
+    W_, H_ = a.shape[1], a.shape[0]
+    x0, x1, y0, y1 = xs.min(), xs.max(), ys.min(), ys.max()
+    mx, my = (x1 - x0) * margin, (y1 - y0) * margin
+    x0, y0 = max(0, int(x0 - mx)) // 2 * 2, max(0, int(y0 - my)) // 2 * 2
+    x1, y1 = min(W_, int(x1 + mx)), min(H_, int(y1 + my))
+    return (x0, y0, (x1 - x0) // 2 * 2, (y1 - y0) // 2 * 2), (W_, H_)
 
 
 def poster(page, sel, name):
@@ -87,12 +113,13 @@ def poster(page, sel, name):
     capture.save(img, f'{name}.webp', quality=82)
 
 
-def office(b, seconds=24, closer=1.0):
-    """the live builder's Start in 3D at 1920 x 1080, drawn at 0.75 of it, its astronauts walking; twelfth take: the
+def office(b, seconds=24, closer=1.0, dsf=1.5):
+    """the live builder's Start in 3D at 1920 x 1080, drawn at `dsf` of it, its astronauts walking; twelfth take: the
     camera where the builder leaves it, the whole HQ in the picture with space round it ("proc ty headquarters mas
-    useknute nahore a dole?", his picture of it whole), and the HQ's box in the frame printed, for the page's crop
-    (quest.css #s1 .crop). `closer` < 1 moves the camera in (the ninth take's 0.72 cut the rooms off)"""
-    page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=0.75)
+    useknute nahore a dole?", his picture of it whole); fourteenth take: drawn at 1.5 and cut to the HQ, so the page
+    shows the HQ from about 1,500 of its own pixels, not the 800 it had ("jeste trochu rozmazane"). `closer` < 1 moves
+    the camera in (the ninth take's 0.72 cut the rooms off)"""
+    page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=dsf)
     page.goto('https://cymetica.com/company/app/builder', wait_until='domcontentloaded', timeout=60000)
     time.sleep(12)
     page.fill('#f-name', 'Moonshot Labs')          # typed, never submitted
@@ -121,19 +148,13 @@ def office(b, seconds=24, closer=1.0):
         page.evaluate("""(k) => { const o = CO.builder.office;
           const p0 = o.camera.position.clone(), t0 = o.controls.target.clone();
           o.tween(t0.clone().add(p0.clone().sub(t0).multiplyScalar(k)), t0, 3500); }""", closer)
-    record(page, sel, seconds, 'office')
+    # the HQ's box (its plate, rooms and the rock under it), with room round it: the clip is that box alone, and the
+    # page's crop is its shape (quest.css #s1 .crop)
+    box, size = lit_box(page, sel, 0.05)
+    print('office: canvas', size, 'the HQ', box, 'aspect', f'{box[2]} / {box[3]}')
+    record(page, sel, seconds, 'office', bps=24_000_000, crop=box, width=1500)
     page.close()
     frame_poster('office', 5.0)
-    # the HQ's box in the frame: whatever is not black (its plate, rooms and the rock under it)
-    import numpy as np
-    from PIL import ImageFilter
-    im = Image.open(capture.OUT / 'office.webp').convert('L').filter(ImageFilter.MedianFilter(5))
-    a = np.asarray(im, np.float32)
-    print('office: the corners (should be black):', [int(a[:40, :40].max()), int(a[:40, -40:].max()), int(a[-40:, :40].max()), int(a[-40:, -40:].max())])
-    ys, xs = np.nonzero(a > 12)
-    f = lambda v, d: round(float(v) / d * 100, 2)
-    print('office: the HQ in the frame (left, top, width, height, % of the frame):',
-          f(xs.min(), a.shape[1]), f(ys.min(), a.shape[0]), f(xs.max() - xs.min(), a.shape[1]), f(ys.max() - ys.min(), a.shape[0]))
 
 
 def frame_poster(name, at):
@@ -200,11 +221,32 @@ def doors(b, seconds=12):
     page.close()
 
 
+# fourteenth take ("si nejak smazal ty obezne drahy na kterych jsou apky ve vesmiru ... jsou asi moc nahore"): the
+# farmer and the gem each set on a lane of the map (laneDefs: the farmer on the third out, the gem on the second, a
+# third of a radian on), the camera raised 0.55 rad over them and 7 farmer heights off, so the lanes run round and under
+# both instead of across the top of the picture; and the map's arcs off (u3d.js arc(): the streaks of work going in to
+# Cymetica, which crossed the farmer: "co je to jako za animace nejakeho pruhu pres ty apky")
+FARMER_LANES = """() => { const uv = CO.uv, V = uv.camera.position.constructor, up = new V(0, 1, 0);
+  uv.arc = function () {}; (uv.arcs || []).forEach(a => { uv.scene.remove(a.head, a.streak); }); uv.arcs = [];
+  const F = uv.items.find(x => x.c.id === 'ad-farmer'), G = uv.items.find(x => x.c.id === 'ad-gem');
+  uv.items.forEach(x => { if (x !== F && x !== G && x.plot) x.plot.root.visible = false; });
+  F.orbit = null; G.orbit = null; uv.follow = null; uv.controls.autoRotate = false;
+  const f0 = F.plot.root.position.clone(), h = (F.plot.top - F.plot.bot) * F.plot.k, a0 = Math.atan2(f0.x, f0.z);
+  const lanes = uv.laneDefs.map(l => l.r).sort((a, b) => a - b), el = 0.55, dist = 7, az = 1.25, ga = 0.32;
+  const f = new V(Math.sin(a0) * lanes[2], f0.y, Math.cos(a0) * lanes[2]), g = new V(Math.sin(a0 + ga) * lanes[1], f0.y, Math.cos(a0 + ga) * lanes[1]);
+  F.plot.root.position.copy(f); G.plot.root.position.copy(g);
+  const out = new V(f.x, 0, f.z).normalize(), along = up.clone().cross(out).normalize();
+  const T = f.clone().lerp(g, 0.45); T.y += h * 0.3;
+  const dir = out.clone().multiplyScalar(Math.cos(az)).addScaledVector(along, -Math.sin(az)).multiplyScalar(Math.cos(el)).addScaledVector(up, Math.sin(el));
+  [F, G].forEach(x => { x.anchor.set(x.plot.root.position.x, x.plot.root.position.y + (x.plot.top + 0.5) * (x.plot.k || 1), x.plot.root.position.z); if (x.el) x.el.classList.add('keep'); });
+  uv.tween(T.clone().addScaledVector(dir, h * dist), T, 0); }"""
+
+
 def farmer(b, seconds=12):
-    """our Universe mock, capture.py's composition (the farmer near, the gem behind it), the camera still while the
-    farmer turns and blinks and the gem turns; where the two names stand, for the page's own labels over the clip"""
-    page = capture.universe(b, viewport={'width': 1600, 'height': 1000}, dsf=1)
-    page.evaluate(capture.FARMER_SHOT)
+    """our Universe mock, the farmer and the gem on their lanes (FARMER_LANES), the camera still while the farmer turns
+    and blinks and the gem turns; where the two names stand, for the page's own labels over the clip"""
+    page = capture.universe(b, viewport={'width': 1600, 'height': 1000}, dsf=1.25)
+    page.evaluate(FARMER_LANES)
     # thirteenth take: its sky hidden, on black, keyed by the page (anim.js data-key) as the HQ and the Universe are
     page.evaluate("() => { const o = CO.uv; if (o.sky) o.sky.visible = false; o.scene.background = new o.scene.background.constructor(0x000000); }")
     time.sleep(3)
@@ -213,7 +255,7 @@ def farmer(b, seconds=12):
       return ['ad-farmer', 'ad-gem'].map(id => { const e = CO.uv.items.find(x => x.c.id === id).el.getBoundingClientRect();
         return [id, +((e.left + e.width / 2 - c.left) / c.width * 100).toFixed(1), +((e.top - c.top) / c.height * 100).toFixed(1)]; }); }"""))
     poster(page, sel, 'farmer')
-    record(page, sel, seconds, 'farmer')
+    record(page, sel, seconds, 'farmer', bps=16_000_000)
     page.close()
 
 
@@ -225,12 +267,27 @@ EXTRA_COMPANIES = [('Giga Fund', 'vault', 'red'), ('Bull Club', 'pyramid', 'red'
                    ('Helix Partners', 'rift', 'purple'), ('Orbit Ventures', 'vortex', 'pink')]
 
 
-def universe(b, seconds=20):
+# fourteenth take ("si uplne znicil tu obeznou drahu ... ma byt vetsi mnohem ten vesmir a ta tabule v nem jakoby
+# mensi, podobne jak to je v live aplikaci"): the camera moved sideways so the sun stands in the middle (the live map
+# keeps it right of its own board) and back by UV_BACK, so the whole outer lane is in the picture with room round it,
+# the sun a little above the middle (UV_UP of the picture's height) as the lanes' near side is the bigger
+UV_BACK, UV_UP = 1.4, -0.07
+UV_CENTER = """([k, dy]) => { const o = CO.uv, cam = o.camera, t = o.controls.target, V = cam.position.constructor;
+  const p = o.heartAt.clone().project(cam);
+  const d = cam.position.distanceTo(o.heartAt), h = 2 * d * Math.tan(cam.fov * Math.PI / 360), w = h * cam.aspect;
+  const right = new V().setFromMatrixColumn(cam.matrixWorld, 0), up = new V().setFromMatrixColumn(cam.matrixWorld, 1);
+  const shift = right.multiplyScalar(p.x * w / 2).add(up.multiplyScalar(p.y * h / 2 + h * dy));
+  const nt = t.clone().add(shift), np = cam.position.clone().add(shift);
+  o.tween(np.clone().sub(nt).multiplyScalar(k).add(nt), nt, 0); }"""
+
+
+def universe(b, seconds=20, dsf=1.5):
     """step 5: the LIVE Universe (cymetica.com/company/app#universe), its sky, its sun, its real companies and products
     on its orbits ("v univerzu je pozadi mnohem lepe udelane") and, in our browser only, the leaderboard's companies
-    beside them (EXTRA_COMPANIES, added to its /universe answer as it arrives); the camera still. Its map idles after
-    1.5 s without input, so it is poked awake every 0.8 s."""
-    page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=1)
+    beside them (EXTRA_COMPANIES, added to its /universe answer as it arrives); the camera still, the whole map in the
+    middle (UV_CENTER), drawn at `dsf` and cut to the map. Its map idles after 1.5 s without input, so it is poked
+    awake every 0.8 s."""
+    page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=dsf)
 
     def more(route):
         resp = route.fetch()
@@ -247,16 +304,19 @@ def universe(b, seconds=20):
     # thirteenth take: its own sky hidden (CO.uv.sky: its stars and nebulae), on black, so the page keys the black away
     # and the Universe stands in the page's own space as the HQ does (anim.js data-key), its orbits' dust kept
     page.evaluate("() => { const o = CO.uv; o.sky.visible = false; o.scene.background = new o.scene.background.constructor(0x000000); }")
-    time.sleep(1)
+    page.evaluate(UV_CENTER, [UV_BACK, UV_UP])
+    time.sleep(2.5)
     sel = '#uv3d canvas'
     print('universe (live): companies', page.evaluate("() => CO.uv.items.filter(it => !it.kind).length"),
-          'products', page.evaluate("() => CO.uv.items.filter(it => it.kind === 'product').length"),
-          'skins known', page.evaluate("() => Object.keys(CO.SKINS || {}).join(',')"), 'accents', page.evaluate("() => Object.keys(CO.ACCENTS || {}).join(',')"))
-    print('universe: the sun at (% of the canvas)', page.evaluate("""() => { const p = CO.uv.heartAt.clone().project(CO.uv.camera);
-      return [+((p.x + 1) / 2 * 100).toFixed(1), +((1 - p.y) / 2 * 100).toFixed(1)]; }"""))
-    poster(page, sel, 'universe')
-    record(page, sel, seconds, 'universe')
+          'products', page.evaluate("() => CO.uv.items.filter(it => it.kind === 'product').length"))
+    box, size = lit_box(page, sel, 0.035)
+    sun = page.evaluate("""() => { const p = CO.uv.heartAt.clone().project(CO.uv.camera); return [(p.x + 1) / 2, (1 - p.y) / 2]; }""")
+    x, y, w, h = box
+    print('universe: canvas', size, 'the map', box, 'aspect', f'{w} / {h}',
+          'the sun at (% of the clip)', round((sun[0] * size[0] - x) / w * 100, 2), round((sun[1] * size[1] - y) / h * 100, 2))
+    record(page, sel, seconds, 'universe', bps=24_000_000, crop=box, width=1600)
     page.close()
+    frame_poster('universe', 1.0)
 
 
 def universe_mock(b, seconds=20, keep=18):
@@ -276,14 +336,15 @@ def universe_mock(b, seconds=20, keep=18):
     page.close()
 
 
-def workshop(b, fps=30, at=None):
+def workshop(b, fps=30, at=None, W=1920, H=1080):
     """scenes/tools.html drawn frame by frame through its PERIOD (render(t) is a function of t alone, so the last frame
-    leads into the first), encoded to VP8 by Playwright's ffmpeg; `at` (seconds) only pictures those moments"""
+    leads into the first), encoded to VP8 by Playwright's ffmpeg; `at` (seconds) only pictures those moments.
+    Fourteenth take ("build it better taky [rozmazane]"): 1920 x 1080, for a picture drawn about 1,050 wide"""
     base = capture.serve(HERE)
     page = b.new_page(viewport={'width': W, 'height': H})
     page.goto(base + f'scenes/tools.html?w={W}&h={H}&frames', wait_until='load', timeout=60000)
     page.wait_for_function('window.READY === true', timeout=60000)
-    grab = "(t) => { window.render(t); return document.querySelector('canvas').toDataURL('image/jpeg', 0.93); }"
+    grab = "(t) => { window.render(t); return document.querySelector('canvas').toDataURL('image/jpeg', 0.95); }"
     if at:
         for t in at:
             Image.open(io.BytesIO(base64.b64decode(page.evaluate(grab, t).split(',', 1)[1]))).save(HERE / f'workshop-{t}.png')
@@ -297,7 +358,7 @@ def workshop(b, fps=30, at=None):
     fd, tmp = tempfile.mkstemp(suffix='.mjpeg')
     os.close(fd)
     Path(tmp).write_bytes(b''.join(frames))
-    ffmpeg('-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', str(fps), '-i', tmp, '-c:v', 'libvpx', '-b:v', '8M', '-crf', '8',
+    ffmpeg('-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', str(fps), '-i', tmp, '-c:v', 'libvpx', '-b:v', '14M', '-crf', '5',
            '-qmin', '2', '-qmax', '30', '-auto-alt-ref', '0', '-g', str(fps), '-pix_fmt', 'yuv420p', str(out))
     Path(tmp).unlink()
     capture.save(Image.open(io.BytesIO(base64.b64decode(page.evaluate(grab, 7.4).split(',', 1)[1]))).convert('RGB'), 'workshop.webp', quality=82)

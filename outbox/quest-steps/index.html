@@ -19,17 +19,19 @@
      clips are record.py's, the pictures capture.py's; every figure and address is QUEST's in quest.js, every
      animation anim.js's. Thirteenth take: no hexagon in the mark or the track; the HQ, the Universe and the farmer
      filmed on black and keyed into the page's one space (data-key); the points spaced; step 3's two pictures apart;
-     step 5's board beside the Universe. -->
+     step 5's board beside the Universe. Fourteenth take: the mark as Cymetica's product marks are; the HQ, the Universe
+     and the workshop sharp; the Universes' lanes kept (data-key="glow"); the farmer and the gem on their lanes; the
+     agent born two seconds after step 4 comes on screen; step 5's whole Universe big, its board small in its corner. -->
 </head>
 <body>
 <div id="sky" aria-hidden="true"><canvas id="twinkle"></canvas></div>
 <header id="bar">
   <a class="brand" href="#hero" aria-label="The Cymetica Quest">
-    <svg viewBox="0 0 48 48" aria-hidden="true"><defs><radialGradient id="core"><stop offset="0" stop-color="#f4fffa"/><stop offset=".45" stop-color="#00ff88"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></radialGradient></defs>
-      <circle class="o" cx="24" cy="24" r="22"/><g transform="rotate(-24 24 24)"><ellipse class="i" cx="24" cy="24" rx="20" ry="7.4"/>
-      <circle class="p" r="2.7"><animateMotion dur="9s" repeatCount="indefinite" path="M44 24A20 7.4 0 1 1 4 24A20 7.4 0 1 1 44 24"/></circle></g>
-      <circle class="c" cx="24" cy="24" r="9" fill="url(#core)"/></svg>
-    <span class="w"><b>CYMETICA <em>QUEST</em></b></span>
+    <svg viewBox="0 0 48 48" aria-hidden="true"><defs><linearGradient id="q-brand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient></defs>
+      <circle cx="24" cy="24" r="21.5" fill="#0d1520" stroke="url(#q-brand)" stroke-width="3.6"/>
+      <circle cx="24" cy="24" r="15.2" fill="none" stroke="url(#q-brand)" stroke-width="1.3" stroke-dasharray="1.6 2.4" opacity=".75"/>
+      <path class="lo" d="M15.5 30.5 24 23l8.5 7.5"/><path class="hi" d="M15.5 22.5 24 15l8.5 7.5"/></svg>
+    <span class="wm"><small>CYMETICA</small><b>QUEST</b></span>
   </a>
   <nav id="rail" data-active="0" aria-label="The five steps"></nav>
   <span class="pill"><i></i>Up to <b data-figure="prizes.0"></b> <span data-figure="unit"></span> / month</span>
@@ -64,7 +66,7 @@
     <div class="num" aria-hidden="true">01</div>
     <div class="stage rv">
       <figure class="pic office">
-        <div class="crop"><div class="clip xf" data-anim="office" data-loop-from="1" data-key><video muted playsinline preload="none" poster="pics/office.webp" width="1440" height="810"><source src="clips/office.webm" type="video/webm"></video></div></div>
+        <div class="crop"><div class="clip xf" data-anim="office" data-loop-from="1" data-key><video muted playsinline preload="none" poster="pics/office.webp" width="1500" height="1132"><source src="clips/office.webm" type="video/webm"></video></div></div>
       </figure>
     </div>
   </section>
@@ -81,7 +83,7 @@
     </div>
     <div class="num" aria-hidden="true">02</div>
     <div class="stage work rv">
-      <figure class="pic"><div class="clip" data-anim="workshop"><video muted playsinline loop preload="none" poster="pics/workshop.webp" width="1440" height="810"><source src="clips/workshop.webm" type="video/webm"></video></div></figure>
+      <figure class="pic"><div class="clip" data-anim="workshop"><video muted playsinline loop preload="none" poster="pics/workshop.webp" width="1920" height="1080"><source src="clips/workshop.webm" type="video/webm"></video></div></figure>
     </div>
     <div class="machine rv" data-anim="pipeline" aria-label="The Cymetica pipeline: your idea in, your app out, live among the apps already built"></div>
   </section>
@@ -101,8 +103,8 @@
       <figure class="promo3d"><img src="pics/promo.webp" alt="The Promo Market with its cube of light and three briefs up for grabs" width="2768" height="2098" loading="lazy">
         <div class="clip cube" data-anim="promo-cube" style="left: 64.58%; top: 12.16%; width: 22.55%; height: 32.64%"><video muted playsinline loop preload="none" poster="pics/promo-cube.webp" width="624" height="716"><source src="clips/promo-cube.webm" type="video/webm"></video></div></figure>
       <figure class="pic near">
-        <div class="clip xf" data-anim="farmer" data-key><video muted playsinline preload="none" poster="pics/farmer.webp" width="1558" height="865"><source src="clips/farmer.webm" type="video/webm"></video></div>
-        <span class="nm" style="left: 30.3%; top: 17.4%"><i></i>Airdrop Farmer</span><span class="nm" style="left: 79.5%; top: 23.3%"><i></i>Gem Screener</span>
+        <div class="clip xf" data-anim="farmer" data-key="glow"><video muted playsinline preload="none" poster="pics/farmer.webp" width="1947" height="1081"><source src="clips/farmer.webm" type="video/webm"></video></div>
+        <span class="nm" style="left: 60.1%; top: 41.3%"><i></i>Airdrop Farmer</span><span class="nm" style="left: 40.3%; top: 14.7%"><i></i>Gem Screener</span>
         <span class="users"><b>0</b> new users</span><span class="plus">+1 user</span>
       </figure>
       <svg class="flow" data-anim="flow" aria-hidden="true"></svg>
@@ -136,7 +138,7 @@
     </div>
     <div class="num" aria-hidden="true">05</div>
     <div class="stage uni rv">
-      <figure class="pic"><div class="crop uv"><div class="clip xf" data-anim="universe" data-key><video muted playsinline preload="none" poster="pics/universe.webp" width="1878" height="1011"><source src="clips/universe.webm" type="video/webm"></video></div></div>
+      <figure class="pic"><div class="clip xf" data-anim="universe" data-key="glow"><video muted playsinline preload="none" poster="pics/universe.webp" width="1600" height="862"><source src="clips/universe.webm" type="video/webm"></video></div>
         <span class="sun" aria-hidden="true"><img src="pics/sun.webp" alt=""></span></figure>
       <div class="lb-wrap"><div class="lb crystal" aria-label="The leaderboard: your company climbs to the top">
         <div class="gh"><span class="dot"></span><b>Leaderboard</b><span class="tg">This month</span></div>
@@ -148,11 +150,11 @@
   <section id="go" data-step="5" class="final">
     <div class="doors">
       <a class="door go" data-link="builder">
-        <span class="art"><span class="clip xf" data-anim="door-hq" data-loop-from="1" data-key><video muted playsinline preload="none" poster="pics/office.webp" width="1440" height="810"><source src="clips/office.webm" type="video/webm"></video></span></span>
+        <span class="art"><span class="clip xf" data-anim="door-hq" data-loop-from="1" data-key><video muted playsinline preload="none" poster="pics/office.webp" width="1500" height="1132"><source src="clips/office.webm" type="video/webm"></video></span></span>
         <span class="cta"><span class="t">Start a company<br><span>and compete</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
       </a>
       <a class="door uv" data-link="universe">
-        <span class="art"><span class="clip xf" data-anim="door-universe" data-key><video muted playsinline preload="none" poster="pics/universe.webp" width="1878" height="1011"><source src="clips/universe.webm" type="video/webm"></video></span><span class="sun" aria-hidden="true"><img src="pics/sun.webp" alt=""></span></span>
+        <span class="art"><span class="clip xf" data-anim="door-universe" data-key="glow"><video muted playsinline preload="none" poster="pics/universe.webp" width="1600" height="862"><source src="clips/universe.webm" type="video/webm"></video></span><span class="sun" aria-hidden="true"><img src="pics/sun.webp" alt=""></span></span>
         <span class="cta"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
       </a>
     </div>

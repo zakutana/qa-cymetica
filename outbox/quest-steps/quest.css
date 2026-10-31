@@ -55,13 +55,17 @@ main { position: relative; z-index: 2; }
 .brand { position: relative; display: flex; align-items: center; gap: 13px; flex: none; }
 /* the mark: no hexagon ("nelibi se mi ten hexagon co pouzivas v logu a stepech"); a green sun with a world on its
    orbit, the quest's Universe in small, the world going round once in nine seconds */
-.brand svg { width: 44px; height: 44px; flex: none; overflow: visible; filter: drop-shadow(0 0 12px rgba(0, 255, 136, .35)); }
-.brand .o { fill: none; stroke: rgba(0, 207, 255, .28); stroke-width: 1; }
-.brand .i { fill: none; stroke: var(--cyan); stroke-width: 1.5; opacity: .85; }
-.brand .p { fill: #e8fbff; filter: drop-shadow(0 0 3px var(--cyan)); }
-.brand .w { line-height: 1; }
-.brand .w b { display: block; font: 400 21px 'Archivo Black', sans-serif; letter-spacing: .015em; }
-.brand .w b em { font-style: normal; color: var(--green); }
+/* fourteenth take ("logo je velmi trapne"): the mark made as Cymetica's own product marks are (Agent Casino's, live: a
+   dark disc in a ring of their cyan-to-green, a dotted ring inside it, its sign in the middle in cyan and green, the
+   name stacked beside it, the maker small over the product big); the Quest's sign two chevrons climbing, cyan under
+   green, as the leaderboard is climbed */
+.brand svg { width: 44px; height: 44px; flex: none; display: block; filter: drop-shadow(0 0 10px rgba(0, 255, 136, .22)); }
+.brand path { fill: none; stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+.brand .lo { stroke: var(--cyan); }
+.brand .hi { stroke: var(--green); }
+.brand .wm { display: flex; flex-direction: column; gap: 4px; line-height: 1; }
+.brand .wm small { font: 700 10.5px 'JetBrains Mono', monospace; letter-spacing: .42em; color: var(--cyan); }
+.brand .wm b { font: 400 21px 'Archivo Black', sans-serif; letter-spacing: .03em; color: #f2f7ff; }
 #rail { position: relative; margin: 0 auto; display: flex; align-items: center; }
 #rail a { position: relative; display: flex; align-items: center; gap: 11px; padding: 6px 2px; color: var(--mute); white-space: nowrap; cursor: pointer; transition: color .3s; }
 #rail .nd { position: relative; flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
@@ -192,8 +196,10 @@ h1 b { font-weight: 400; }
 
 /* step 1: the live builder's HQ whole, with space round it ("proc ty headquarters mas useknute nahore a dole?"), in the
    page's own space ("pozadi za headquarters je divne, ma byt stejne jako vsude jinde"): the clip filmed on black
-   (1783 x 787, record.py office, the builder's own camera, its sky and drifting rocks hidden), keyed (anim.js), cut
-   to the HQ, 420 to 1410 px across; only the rock under it melts away where the frame ends */
+   (record.py office, the builder's own camera, its sky and drifting rocks hidden), keyed (anim.js); fourteenth take
+   ("headquarters mi prijde jeste trochu rozmazane"): drawn at 1.5 and cut to the HQ when it is filmed, so the clip is
+   the HQ alone, 1500 x 1132, about one and a half of its pixels to each of the page's; only the rock under it melts
+   away where the frame ends */
 #s1 .pic { width: 118%; margin-left: -10%; }
 #s1 .crop { -webkit-mask-image: linear-gradient(180deg, #000 82%, transparent); mask-image: linear-gradient(180deg, #000 82%, transparent); }
 /* the company in two figures ("4 departments, 9 Agents led by NEXUS"; the roles named one by one are gone) */
@@ -201,8 +207,8 @@ h1 b { font-weight: 400; }
 .crew b { font: 400 54px/1 'Archivo Black', sans-serif; color: var(--green); text-shadow: 0 0 22px rgba(0, 255, 136, .55); }
 .crew span { font: 700 18px 'JetBrains Mono'; letter-spacing: .06em; color: var(--text); }
 .crew i { width: 1px; height: 38px; margin: 0 14px; align-self: center; background: linear-gradient(180deg, rgba(0, 207, 255, 0), rgba(0, 207, 255, .7), rgba(0, 207, 255, 0)); }
-.crop { position: relative; aspect-ratio: 990 / 787; overflow: hidden; }
-.crop .clip { position: absolute; left: -42.42%; top: 0; width: 180.1%; height: 100%; }
+.crop { position: relative; aspect-ratio: 1500 / 1132; overflow: hidden; }
+.crop .clip { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 .crop video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: fill; }
 /* step 2: the words; under them the number, and beside it the arms where the ring of products was ("misto nich dej ty
    ramena roboticke"); under both, the Cymetica pipeline: the idea in, its six chambers, and out of it the ring of the
@@ -362,12 +368,16 @@ h1 b { font-weight: 400; }
 /* step 3: the Universe with the Airdrop Farmer and the Gem Screener on the left, the Promo Market as a hologram on
    the right ("a proc je porad promo market na leve strane a ukazky vesmiru napravo? ma to byt naopak"; "taky to udelej
    vetsi at je to stejne jako na jinych krocich"): each its own half, apart, as big as the other steps' pictures allow
-   two to be; the Promo Market turned only a little, towards the words, so it reads. Together they fill the band the
-   HQ fills in step 1 ("at to zabira stejnou plochu jak headquarters"): the Universe at its top, the Promo Market at
-   its foot, the users walking down from one to the other */
-.stage.duo { display: grid; grid-template-columns: minmax(0, 1.07fr) minmax(0, 1fr); column-gap: 1.5%; perspective: 1600px; width: 134%; margin-left: -24%; height: 700px; }
-.stage.duo .near { order: -1; align-self: start; }
-.stage.duo .promo3d { align-self: end; }
+   two to be; the Promo Market turned only a little, towards the words, so it reads. Fourteenth take ("ty obezne
+   drahy na kterych jsou apky ... jsou asi moc nahore"): the Universe in the middle of the band, big (its right quarter
+   is empty space, so the Promo Market stands in it at the band's foot), its edges melting into the page, the users
+   walking up from the briefs into the farmer's ring */
+.stage.duo { position: relative; perspective: 1600px; width: 134%; margin-left: -24%; height: 700px; }
+.stage.duo .near { position: absolute; z-index: 1; left: 0; top: 50%; width: 80%; transform: translateY(-52%); }
+.stage.duo .near .clip { -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 88%, transparent), linear-gradient(180deg, transparent, #000 8%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 9%, #000 88%, transparent), linear-gradient(180deg, transparent, #000 8%, #000 90%, transparent);
+  -webkit-mask-composite: source-in; mask-composite: intersect; }
+.stage.duo .promo3d { position: absolute; z-index: 2; right: 0; bottom: 0; width: 42%; }
 .promo3d { position: relative; z-index: 1; transform: rotateY(-14deg) rotateX(4deg) rotateZ(.8deg) scale(.96); transform-origin: 0% 50%; }
 /* their cube, turning as their page turns it (record.py promo_cube), laid where it stands in the picture; its box's
    edge melts into the picture round it */
@@ -380,14 +390,13 @@ h1 b { font-weight: 400; }
   -webkit-mask-composite: source-in, source-in; mask-composite: intersect; }
 .promo3d::after { content: ''; position: absolute; left: 4%; right: 4%; bottom: -8%; height: 18%; pointer-events: none;
   background: radial-gradient(closest-side, rgba(0, 207, 255, .28), rgba(0, 207, 255, 0)); filter: blur(8px); }
-.stage.duo .near { position: relative; z-index: 2; }
 .nm { position: absolute; z-index: 3; display: inline-flex; align-items: center; gap: 8px; transform: translate(-50%, -100%); padding: 5px 12px; border-radius: 7px;
   font: 800 16px 'JetBrains Mono'; letter-spacing: .1em; text-transform: uppercase; color: #ffffff; white-space: nowrap;
   background: rgba(5, 7, 12, .78); border: 1px solid rgba(0, 255, 136, .5); box-shadow: 0 0 18px rgba(0, 255, 136, .18); }
 .nm i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
-.users { position: absolute; z-index: 3; right: 6%; bottom: 16%; font: 700 18px 'JetBrains Mono'; color: var(--dim); text-shadow: 0 2px 12px rgba(0, 0, 0, .95); }
+.users { position: absolute; z-index: 3; left: 53%; top: 84%; font: 700 18px 'JetBrains Mono'; color: var(--dim); text-shadow: 0 2px 12px rgba(0, 0, 0, .95); }
 .users b { font: 400 30px 'Archivo Black', sans-serif; color: var(--green); margin-right: 6px; text-shadow: 0 0 18px rgba(0, 255, 136, .6); }
-.plus { position: absolute; z-index: 4; left: 48%; top: 40%; font: 800 20px 'JetBrains Mono'; color: var(--green); opacity: 0; pointer-events: none;
+.plus { position: absolute; z-index: 4; left: 58%; top: 79%; font: 800 20px 'JetBrains Mono'; color: var(--green); opacity: 0; pointer-events: none;
   text-shadow: 0 0 14px rgba(0, 255, 136, .9), 0 2px 10px rgba(0, 0, 0, .9); }
 .plus.go { animation: plus 1.6s var(--ease) forwards; }
 @keyframes plus { 0% { opacity: 0; transform: translate(-50%, 0) scale(.7); } 20% { opacity: 1; transform: translate(-50%, -14px) scale(1.05); } 100% { opacity: 0; transform: translate(-50%, -60px) scale(1); } }
@@ -397,53 +406,58 @@ h1 b { font-weight: 400; }
 
 /* step 5: the LIVE Universe ("tam bych asi zvetsil to universe"), its sun, companies and products, filmed without its
    own sky (record.py universe) and keyed (anim.js), so it stands in the page's space as the HQ does; the board like
-   the first screen's in that space on its right ("tu tabuli dal primo do nej ale asi zprava"), clear of the orbits
-   and the companies on them ("ten leaderboard nema prekryvat ten vesmir, musi byt v nem nejak dobre zasazeny at
-   nestini universe"): measured off its picture, the orbits run from 18 % to 99 % of the frame across, so the frame is
-   cut at 15 % and the board starts where they end */
-.stage.uni .pic { width: 85%; margin-left: -17%; }
-.crop.uv { aspect-ratio: 1596 / 1011; -webkit-mask-image: none; mask-image: none; }
-.crop.uv .clip { left: -17.65%; width: 117.65%; }
+   the first screen's in that space. Fourteenth take ("si uplne znicil tu obeznou drahu top jak byla predtim a ma byt
+   vetsi mnohem ten vesmir a ta tabule v nem jakoby mensi, podobne jak to je v live aplikaci"): the whole map, never
+   cut (record.py films it with the sun in the middle and room round its outer lane), 1,250 px across at 2000, as far
+   left as the words allow (the lane's edge clears "Earn monthly rewards." by 50 px); the board as the live map has its
+   own: small, tilted, in the map's corner over its outer lane, where no company stands (bottom right) */
+.stage.uni .pic { width: 137%; margin-left: -28%; }
+/* under each Universe, filmed on black and keyed, a dark as its own sky was ("tu obeznou drahu top jak byla
+   predtim"): its lanes are light of 2 to 7 %, which the page's nebula would wash out; melting away well inside the
+   picture, so it has no edge */
+.stage.uni .pic::before, .stage.duo .near::before { content: ''; position: absolute; z-index: -1; inset: -4% -2%; pointer-events: none;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(2, 4, 8, .62), rgba(2, 4, 8, .42) 55%, rgba(2, 4, 8, 0) 100%); }
+.stage.duo .near::before { inset: 0 18% 0 -4%; }
 /* its sun: the live page draws it on its own canvases over the map, which the map's recording leaves out ("co to zas
    ma byt to slunce?"), so Cymetica's sun is laid where theirs stands, its ball their ball's size (measured off the live
-   page, 2026-10-30: 6.2 % of the map wide; record.py universe prints where, 58.6 %, 39.6 % on 2026-10-31, in the cut
-   frame 51.3 %, 39.6 %) */
-.stage.uni .sun { position: absolute; z-index: 2; left: 51.29%; top: 39.6%; width: 31.76%; transform: translate(-50%, -50%); pointer-events: none; }
+   page, 2026-10-30: 6.2 % of the map wide; record.py universe prints where: 50.55 %, 38.78 % of the clip on
+   2026-10-31's fourteenth take) */
+.stage.uni .sun { position: absolute; z-index: 2; left: 50.55%; top: 38.78%; width: 30.5%; transform: translate(-50%, -50%); pointer-events: none; }
 .stage.uni .sun img { width: 100%; }
-.lb-wrap { position: absolute; z-index: 3; right: -9%; top: 50%; width: 400px; transform: translateY(-50%); perspective: 1900px; perspective-origin: 100% 40%; }
-.lb { padding: 22px 16px 12px; border-radius: 24px; transform: rotateY(-12deg) rotateX(2.6deg); transform-origin: 100% 50%;
-  background: linear-gradient(180deg, rgba(5, 9, 15, .72), rgba(5, 9, 15, .55)); }
-.lb .gh { padding: 0 10px; }
-.lb .gh b { font-size: 22px; }
-.lb .gh .tg { font-size: 13px; color: var(--cyan); }
-.lb .gh .dot { width: 10px; height: 10px; animation: blink 1.6s steps(1) infinite; }
+.lb-wrap { position: absolute; z-index: 3; right: -9%; top: 65%; width: 300px; perspective: 1400px; perspective-origin: 100% 40%; }
+.lb { padding: 14px 10px 8px; border-radius: 18px; transform: rotateY(-14deg) rotateX(3deg); transform-origin: 100% 50%;
+  background: linear-gradient(180deg, rgba(5, 9, 15, .58), rgba(5, 9, 15, .4)); }
+.lb .gh { padding: 0 8px; }
+.lb .gh b { font-size: 15px; }
+.lb .gh .tg { font-size: 9.5px; color: var(--cyan); }
+.lb .gh .dot { width: 8px; height: 8px; animation: blink 1.6s steps(1) infinite; }
 /* a row as the first screen's seats: the place, the station, the name over its points, the prize */
-.climb { position: relative; margin-top: 12px; height: calc(6 * 58px); }
-.row { position: absolute; left: 0; right: 0; top: 0; height: 58px; display: grid; grid-template-columns: 34px 36px minmax(0, 1fr) auto; grid-template-rows: auto auto;
-  grid-template-areas: "rk bd nm pz" "rk bd pp pz"; align-content: center; align-items: center; column-gap: 10px; row-gap: 2px;
-  padding: 0 12px; border-radius: 12px; transition: transform .7s var(--ease), background .4s, box-shadow .4s; }
+.climb { position: relative; margin-top: 8px; height: calc(6 * 40px); }
+.row { position: absolute; left: 0; right: 0; top: 0; height: 40px; display: grid; grid-template-columns: 22px 26px minmax(0, 1fr) auto; grid-template-rows: auto auto;
+  grid-template-areas: "rk bd nm pz" "rk bd pp pz"; align-content: center; align-items: center; column-gap: 7px; row-gap: 1px;
+  padding: 0 8px; border-radius: 9px; transition: transform .7s var(--ease), background .4s, box-shadow .4s; }
 .row .rk { grid-area: rk; } .row .badge { grid-area: bd; } .row .nm { grid-area: nm; } .row .pp { grid-area: pp; } .row .pz { grid-area: pz; }
-.row + .row::before { content: ''; position: absolute; left: 14px; right: 14px; top: 0; height: 1px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .14), rgba(255, 255, 255, 0)); }
-.row .rk { font: 400 22px 'Archivo Black', sans-serif; color: var(--mute); text-align: center; background: none; filter: none; -webkit-background-clip: initial; background-clip: initial; }
+.row + .row::before { content: ''; position: absolute; left: 10px; right: 10px; top: 0; height: 1px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .14), rgba(255, 255, 255, 0)); }
+.row .rk { font: 400 16px 'Archivo Black', sans-serif; color: var(--mute); text-align: center; background: none; filter: none; -webkit-background-clip: initial; background-clip: initial; }
 /* the three paid places' numbers as the first screen's board has them, lit from inside */
-.row.p1 .rk, .row.p2 .rk, .row.p3 .rk { font-size: 29px; color: transparent; -webkit-background-clip: text; background-clip: text; }
+.row.p1 .rk, .row.p2 .rk, .row.p3 .rk { font-size: 20px; color: transparent; -webkit-background-clip: text; background-clip: text; }
 .row.p1 .rk { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 12px rgba(0, 255, 136, .65)); }
 .row.p2 .rk { background-image: linear-gradient(180deg, #e6fbff, var(--rs2) 55%, #0086b5); filter: drop-shadow(0 0 10px rgba(0, 207, 255, .55)); }
 .row.p3 .rk { background-image: linear-gradient(180deg, #e3edff, var(--rs3) 55%, #1d4ea8); filter: drop-shadow(0 0 9px rgba(59, 130, 246, .5)); }
-.row .badge { width: 33px; height: 33px; border-radius: 50%; overflow: hidden; background: #07101c; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3), 0 0 0 2px rgba(30, 48, 80, .9); }
+.row .badge { width: 24px; height: 24px; border-radius: 50%; overflow: hidden; background: #07101c; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3), 0 0 0 2px rgba(30, 48, 80, .9); }
 .row.p1 .badge { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 0 0 2px var(--rs1), 0 0 16px rgba(0, 255, 136, .45); }
 .row.p2 .badge { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 0 0 2px var(--rs2), 0 0 14px rgba(0, 207, 255, .4); }
 .row.p3 .badge { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 0 0 2px var(--rs3), 0 0 12px rgba(59, 130, 246, .4); }
 .row .badge img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.55); }
 .row .nm { position: static; transform: none; padding: 0; border: 0; background: none; box-shadow: none; text-transform: none; letter-spacing: 0;
-  font: 700 14px Inter, sans-serif; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-.row .nm em { flex: none; font: 800 9px 'JetBrains Mono'; font-style: normal; letter-spacing: .12em; text-transform: uppercase; padding: 2px 5px; border-radius: 5px; color: #03140c; background: var(--green); }
-.row .pp { display: flex; align-items: center; gap: 8px; font: 600 12px 'JetBrains Mono'; color: var(--mute); white-space: nowrap; }
-.row .pp b { font: 800 14px 'JetBrains Mono'; color: var(--text); }
-.row .bar { position: relative; width: 46px; height: 4px; border-radius: 3px; background: rgba(30, 48, 80, .9); overflow: hidden; }
+  font: 700 11.5px Inter, sans-serif; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.row .nm em { flex: none; font: 800 7.5px 'JetBrains Mono'; font-style: normal; letter-spacing: .12em; text-transform: uppercase; padding: 1px 4px; border-radius: 4px; color: #03140c; background: var(--green); }
+.row .pp { display: flex; align-items: center; gap: 5px; font: 600 9.5px 'JetBrains Mono'; color: var(--mute); white-space: nowrap; }
+.row .pp b { font: 800 11px 'JetBrains Mono'; color: var(--text); }
+.row .bar { position: relative; width: 30px; height: 3px; border-radius: 3px; background: rgba(30, 48, 80, .9); overflow: hidden; }
 .row .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: linear-gradient(90deg, var(--cyan), var(--blue)); }
 .row.paid .bar i { background: linear-gradient(90deg, var(--cyan), var(--green)); }
-.row .pz { min-width: 7.4em; font: 800 14px 'JetBrains Mono'; text-align: right; color: var(--mute); white-space: nowrap; }
+.row .pz { min-width: 0; font: 800 10.5px 'JetBrains Mono'; text-align: right; color: var(--mute); white-space: nowrap; }
 .row.p1 .pz { color: var(--rs1); text-shadow: 0 0 14px rgba(0, 255, 136, .5); } .row.p2 .pz { color: var(--rs2); } .row.p3 .pz { color: var(--rs3); }
 /* yours: its own dark glass, so the row it passes slides under it and never shows through ("Sigma Collective" and
    "Your company" stood on top of each other mid-pass); lifted towards you while it passes */
@@ -473,10 +487,13 @@ h1 b { font-weight: 400; }
 .door:hover .art video, .door:hover .art .keyed { transform: scale(1.05); }
 /* both doors: the HQ and the Universe keyed into the page's own space, as in steps 1 and 5 */
 .door .art { background: url(pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
+/* the HQ's clip is the HQ alone (fourteenth take), taller than the door: stood whole in its middle, the door's own
+   space round it */
+.door .art .clip[data-anim=door-hq] { inset: 6% auto 2% 50%; aspect-ratio: 1500 / 1132; transform: translateX(-50%); }
 .door .art::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
   background: linear-gradient(180deg, rgba(5, 9, 15, 0) 52%, rgba(5, 9, 15, .92) 100%); }
 /* the Universe's sun where the live one stands in the clip (step 5's, moved by the picture's crop to 16:9) */
-.door .art .sun { position: absolute; z-index: 2; left: 59%; top: 39.6%; width: 28.2%; transform: translate(-50%, -50%); pointer-events: none; }
+.door .art .sun { position: absolute; z-index: 2; left: 50.6%; top: 38.8%; width: 31.9%; transform: translate(-50%, -50%); pointer-events: none; }
 .door .art .sun img { width: 100%; }
 .door .cta { position: relative; z-index: 4; display: flex; align-items: center; gap: 22px; margin-top: -64px; padding: 0 28px 28px 32px; }
 .door .cta .t { flex: none; font: 400 32px/1.04 'Archivo Black', sans-serif; color: #ffffff; text-transform: uppercase; letter-spacing: .01em; text-shadow: 0 3px 18px rgba(0, 0, 0, .9); }
@@ -509,7 +526,7 @@ h1 b { font-weight: 400; }
   #bar { height: 64px; gap: 10px; padding: 0 10px; }
   #rail i { width: 10px; margin: 0 3px; }
   .brand svg { width: 32px; height: 32px; }
-  .brand .w, .pill { display: none; }
+  .brand .wm, .pill { display: none; }
   #rail { gap: 2px; padding: 4px; margin-right: 0; }
   #rail a { padding: 7px 8px; gap: 0; }
   #rail .nd { width: 22px; height: 22px; }
@@ -542,7 +559,9 @@ h1 b { font-weight: 400; }
   .chs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tube .track { display: none; }
   .ch b { font-size: 12px; }
-  .stage.duo { grid-template-columns: 1fr; }
+  .stage.duo { display: grid; grid-template-columns: 1fr; height: auto; }
+  .stage.duo .near, .stage.duo .promo3d { position: relative; left: auto; right: auto; top: auto; bottom: auto; width: 100%; }
+  .stage.duo .near { transform: none; }
   .promo3d { transform: rotateY(24deg) rotateX(6deg) scale(.96); }
   .stage.duo .near { width: 96%; margin: 4% 0 0 auto; }
   .nm { font-size: 12px; padding: 3px 8px; }

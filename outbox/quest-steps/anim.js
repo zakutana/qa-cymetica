@@ -7,7 +7,7 @@
    - step 2's Cymetica pipeline, in step with the workshop clip: an idea typed in, through the pipeline's six
      chambers, a product out; and the ring of the products already built, as holograms, turned by dragging;
    - step 3's users, walking from the Promo Market's briefs to the product;
-   - step 4's Quant Lab, started so its agent is born two seconds after its words are read (data-birth);
+   - step 4's Quant Lab, started so its agent is born two seconds after the step comes on screen (data-birth);
    - step 5's leaderboard, your company climbing it, passing over the ones it beats.
 
    Each live one draws only while it is on screen and counts its frames in QUEST_STATE.frames. Figures from QUEST. */
@@ -49,10 +49,13 @@
   // through WebGL with its black made see-through, so the page's space stands behind it, in every browser alike (a
   // video's own alpha plays in Chrome and Firefox, never in Safari). Its videos stay as the source, hidden; their
   // cross-fade is mixed here; until one has a frame, its poster is keyed the same way. Without WebGL: the clip on black
-  var KEY_FS = 'precision mediump float; uniform sampler2D A, B; uniform float w; uniform vec2 sc, of; varying vec2 uv;' +
-    // black to clear, the HQ's darkest metal already whole: alpha from the brightest channel, the colour kept (it was
-    // filmed over black, so it is already the colour times its alpha)
-    'vec4 key(vec3 c) { float m = max(c.r, max(c.g, c.b)); float a = smoothstep(0.025, 0.12, m); return vec4(min(c, vec3(a)), a); }' +
+  // Two keys. The HQ's (data-key): black to clear, its darkest metal already whole. The Universe's (data-key="glow",
+  // fourteenth take: "si nejak smazal ty obezne drahy ... jsou skoro neviditelne"): its lanes are a haze of 2 to 7 %
+  // brightness, which the HQ's key cut away, so here the dim light is laid onto the page's sky as light (alpha below its
+  // brightness) and only what is bright is whole; either way alpha from the brightest channel, the colour kept (it was
+  // filmed over black, so it is already the colour times its alpha)
+  var KEY_FS = 'precision mediump float; uniform sampler2D A, B; uniform float w, lo, hi, kg; uniform vec2 sc, of; varying vec2 uv;' +
+    'vec4 key(vec3 c) { float m = max(c.r, max(c.g, c.b)); float a = smoothstep(lo, hi, m); return vec4(mix(min(c, vec3(a)), c, kg), a); }' +
     // the loop's cross-fade as a dissolve, one copy into the other: never the two half see-through (measured: one over
     // the other dimmed the HQ by a sixth mid-fade)
     'void main() { vec2 t = uv * sc + of; gl_FragColor = mix(key(texture2D(A, t).rgb), key(texture2D(B, t).rgb), w); }';
@@ -69,8 +72,10 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     var lp = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 2, gl.FLOAT, false, 0, 0);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    var U = {}; ['A', 'B', 'w', 'sc', 'of'].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
+    var U = {}; ['A', 'B', 'w', 'sc', 'of', 'lo', 'hi', 'kg'].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
     gl.uniform1i(U.A, 0); gl.uniform1i(U.B, 1);
+    var glow = box.dataset.key === 'glow';
+    gl.uniform1f(U.lo, glow ? 0.0 : 0.025); gl.uniform1f(U.hi, glow ? 0.45 : 0.12); gl.uniform1f(U.kg, glow ? 1 : 0);
     var tex = [0, 1].map(function (i) {
       var t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, t);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -130,16 +135,12 @@
     // the poster behind the video too: a video that does not paint shows its poster, never a hole (a keyed clip draws
     // its own, keyed)
     if (a.getAttribute('poster') && !key) box.style.background = 'url(' + a.getAttribute('poster') + ') 50% 50% / cover no-repeat';
-    // data-birth (the Quant Lab: its agent is born that many seconds in): the clip starts far enough in that the agent
-    // is born two seconds after its reader is done with the step's words ("vypocitas jak dlouho bude cca cist ten text a
-    // pak az mrkne na animaci tak se treba za 2 sekundy uz objevi hero agent"), read at a skim, five words a second,
-    // from the moment the picture is a third on screen; it loops from there too
-    var birth = +box.dataset.birth || 0;
-    if (birth) {
-      var txt = box.closest('section').querySelector('.txt'), words = txt ? txt.textContent.trim().split(/\s+/).length : 0;
-      from = Math.max(0, birth - (words / 5 + 2));
-      S.birth = { words: words, from: +from.toFixed(2), born: +(birth - from).toFixed(2) };
-    }
+    // data-birth (the Quant Lab: its agent is born that many seconds in): every time the step comes on screen the clip
+    // starts two seconds before the birth (fourteenth take: "jak najedu na ten slide tak uz chci aby se hned za 2
+    // sekundy zrodil agent, uzivatel bude prvne asi koukat na to nez cist text"); after that it loops whole, the lab's
+    // search included
+    var birth = +box.dataset.birth || 0, start = birth ? Math.max(0, birth - 2) : from;
+    if (birth) S.birth = { from: +start.toFixed(2), born: +(birth - start).toFixed(2) };
     var cur = 0, on = false, raf = 0, started = false;
     function play(v) { if (!v.getAttribute('src')) attach(v); var p = v.play(); if (p && p.catch) p.catch(function () {}); }
     function attach(v) { if (v.getAttribute('src')) return; v.preload = 'auto'; v.src = url; }
@@ -147,7 +148,7 @@
       vids.forEach(function (v) { v.pause(); if (v.getAttribute('src')) { v.removeAttribute('src'); v.load(); } v.style.opacity = ''; });
       cur = 0; started = false;
     }
-    function begin() { if (started) return; started = true; attach(a); if (from) a.currentTime = from; play(a); }
+    function begin() { if (started) return; started = true; attach(a); if (start) a.currentTime = start; play(a); }
     // near: loaded (the copy that cross-fades in too, once it is on screen); far: let go
     if ('IntersectionObserver' in window) {
       new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) attach(a); else detach(); }); }, { rootMargin: '60% 0px' }).observe(box);
@@ -169,13 +170,15 @@
     seen(box, function (vis) {
       if (vis && !on) {
         on = true;
-        if (!started) begin(); else play(vids[cur]);
+        if (!started) begin();
+        else if (birth) { var o = vids[1 - cur]; if (o) { o.pause(); o.style.opacity = 0; } vids[cur].style.opacity = 1; vids[cur].currentTime = start; play(vids[cur]); }
+        else play(vids[cur]);
         if (vids[1]) attach(vids[1]);
         raf = requestAnimationFrame(tick);
         setTimeout(function () { if (on && vids[cur].paused) play(vids[cur]); }, 1200);
       }
       else if (!vis && on) { on = false; cancelAnimationFrame(raf); vids.forEach(function (v) { v.pause(); }); }
-    }, birth ? 0.34 : 0.04);
+    }, birth ? 0.45 : 0.04);
   });
 
   /* ---------------- step 2: the Cymetica pipeline, an idea in and a product out ---------------- */
@@ -346,8 +349,9 @@
     var stage = svg.parentElement, promo = stage.querySelector('.promo3d img'), near = stage.querySelector('.near');
     var count = stage.querySelector('.users b'), pop = stage.querySelector('.plus');
     var NS = svg.namespaceURI, paths = [], dots = [], users = 0;
-    // the briefs' "See my offer" buttons in promo.webp (x, y in %), and where the farmer stands in its clip
-    var FROM = [[17, 93], [50, 93], [83, 93]], TO = [30, 48];
+    // the briefs' "See my offer" buttons in promo.webp (x, y in %), and the farmer's ring in its clip, its right side
+    // (fourteenth take: the farmer on its lane, record.py FARMER_LANES; the users come in to its ring, never across it)
+    var FROM = [[17, 93], [50, 93], [83, 93]], TO = [66, 76];
     FROM.forEach(function () { var p = document.createElementNS(NS, 'path'); p.setAttribute('class', 'fl'); svg.appendChild(p); paths.push(p); });
     // ("step 4 animace je moc rychla"): six users at a time, each 5.2 s from a brief to the product
     var PER = 5.2;
@@ -358,7 +362,7 @@
       var tx = b.left - s.left + b.width * TO[0] / 100, ty = b.top - s.top + b.height * TO[1] / 100;
       FROM.forEach(function (f, i) {
         var fx = a.left - s.left + a.width * f[0] / 100, fy = a.top - s.top + a.height * f[1] / 100;
-        paths[i].setAttribute('d', 'M' + fx + ' ' + fy + ' C' + fx + ' ' + (fy + 120) + ' ' + (tx - 60) + ' ' + (ty - 160) + ' ' + tx + ' ' + ty);
+        paths[i].setAttribute('d', 'M' + fx + ' ' + fy + ' C' + (fx - 30) + ' ' + (fy + 70) + ' ' + (tx + 180) + ' ' + (ty + 30) + ' ' + tx + ' ' + ty);
         paths[i].len = paths[i].getTotalLength();
       });
     }
