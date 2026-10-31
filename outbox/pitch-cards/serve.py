@@ -1,10 +1,10 @@
-"""Prove It on their own page: http://127.0.0.1:8802/prove-it
+"""Pitch Cards on their own page: http://127.0.0.1:8802/pitch-cards
 
-The page is THEIR live /themes/performance, read anonymously (GET, no cookies, no key) and cached for 60 seconds, with
-only its <main class="tp-wrap"> replaced by ours and pi.css / data.js / pi.js added. So the header, the product tray,
-the Nexus chat bar, the fonts and every inline style are theirs (the operator, 2026-10-31: my standalone page was "ten
-tvuj template defaultni claude vzhled"). Every other GET is passed to cymetica.com the same way. Every other method is
-refused here, before anything leaves this machine. Our own files are sent with Cache-Control: no-store.
+The page is THEIR live /agent-casino (our family's app on their site), read anonymously (GET, no cookies, no key) and
+cached for 60 seconds, with only the casino app (<div class="at-shell"> to the end of <main>) replaced by app.html and
+pc.css / data.js / pc.js added. So the header, the agent prompt card, the Nexus chat bar, the footer and the Agent
+Casino stylesheet (.at, .at-bar, .at-btn, .at-tag ...) are theirs; app.html is built on those classes. Every other GET
+is passed to cymetica.com the same way. Every other method is refused here, before anything leaves this machine.
 """
 from __future__ import annotations
 
@@ -18,9 +18,9 @@ import httpx
 HERE = Path(__file__).resolve().parent
 PORT = 8802
 UPSTREAM = "https://cymetica.com"
-SIBLING = "/themes/performance"   # the nearest live page: a ranked table of things to put money in
+SIBLING = "/agent-casino"
 TTL = 60.0
-OWN = {"pi.css": "text/css; charset=utf-8", "pi.js": "text/javascript; charset=utf-8", "data.js": "text/javascript; charset=utf-8"}
+OWN = {"pc.css": "text/css; charset=utf-8", "pc.js": "text/javascript; charset=utf-8", "data.js": "text/javascript; charset=utf-8"}
 DROP = {"content-security-policy", "content-security-policy-report-only", "content-encoding", "content-length",
         "transfer-encoding", "connection", "set-cookie", "strict-transport-security", "cross-origin-opener-policy",
         "cross-origin-resource-policy", "x-frame-options", "cache-control", "pragma", "etag", "last-modified"}
@@ -35,29 +35,30 @@ def fetch(path: str) -> tuple[int, str, bytes, dict]:
     if hit and time.time() - hit[0] < TTL:
         return hit[1]
     if _client is None:
-        _client = httpx.Client(timeout=60, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 (qa-cymetica prove-it mock)"})
+        _client = httpx.Client(timeout=60, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 (qa-cymetica pitch-cards mock)"})
     r = _client.get(UPSTREAM + path)
     out = (r.status_code, r.headers.get("content-type", "application/octet-stream"), r.content, dict(r.headers))
-    _cache[path] = (time.time(), out)
+    if r.status_code == 200:
+        _cache[path] = (time.time(), out)
     return out
 
 
 def page() -> bytes:
-    """Their sibling page with our <main> in place of theirs."""
+    """Their Agent Casino page with our app in place of theirs."""
     status, _, body, _ = fetch(SIBLING)
     if status != 200:
         raise RuntimeError(f"{SIBLING} -> HTTP {status}")
     html = body.decode("utf-8")
-    start = html.index('<main class="tp-wrap"')
-    end = html.index("</main>", start) + len("</main>")
-    ours = (HERE / "main.html").read_text(encoding="utf-8")
-    html = html[:start] + ours + html[end:]
+    start = html.index('<div class="at-shell"')
+    end = html.index("</main>", start)
+    html = html[:start] + (HERE / "app.html").read_text(encoding="utf-8") + "\n" + html[end:]
     t0 = html.index("<title>")
-    html = html[:t0] + "<title>Prove It | EventTrader</title>" + html[html.index("</title>", t0) + len("</title>"):]
+    html = html[:t0] + "<title>Pitch Cards: Nexus pitches, you invest | EventTrader</title>" + html[html.index("</title>", t0) + 8:]
+    html = html.replace("Agent Casino at cymetica.com/agent-casino", "Pitch Cards at cymetica.com/pitch-cards")
     v = str(int(time.time()))
-    html = html.replace("</head>", f'<link rel="stylesheet" href="/_pi/pi.css?v={v}">\n</head>', 1)
+    html = html.replace("</head>", f'<link rel="stylesheet" href="/_pc/pc.css?v={v}">\n</head>', 1)
     i = html.rindex("</body>")
-    html = html[:i] + f'<script src="/_pi/data.js?v={v}"></script>\n<script src="/_pi/pi.js?v={v}"></script>\n' + html[i:]
+    html = html[:i] + f'<script src="/_pc/data.js?v={v}"></script>\n<script src="/_pc/pc.js?v={v}"></script>\n' + html[i:]
     return html.encode("utf-8")
 
 
@@ -75,18 +76,17 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(body)
 
     def do_GET(self):
-        path = self.path.split("#")[0]
-        bare = path.split("?")[0]
-        if bare in ("/", "/prove-it", "/prove-it/"):
-            if bare == "/":
-                self.send_response(302)
-                self.send_header("Location", "/prove-it")
-                self.end_headers()
-                return
+        bare = self.path.split("#")[0].split("?")[0]
+        if bare == "/":
+            self.send_response(302)
+            self.send_header("Location", "/pitch-cards")
+            self.end_headers()
+            return
+        if bare.rstrip("/") == "/pitch-cards":
             return self.send(200, "text/html; charset=utf-8", page())
-        if bare.startswith("/_pi/") and bare[5:] in OWN:
+        if bare.startswith("/_pc/") and bare[5:] in OWN:
             return self.send(200, OWN[bare[5:]], (HERE / bare[5:]).read_bytes())
-        status, ctype, body, headers = fetch(path)
+        status, ctype, body, headers = fetch(self.path)
         return self.send(status, ctype, body, headers)
 
     do_HEAD = do_GET
@@ -102,5 +102,5 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print("Prove It mock on their page: http://127.0.0.1:%d/prove-it  (Ctrl+C stops it)" % PORT)
+    print("Pitch Cards mock on their page: http://127.0.0.1:%d/pitch-cards  (Ctrl+C stops it)" % PORT)
     ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

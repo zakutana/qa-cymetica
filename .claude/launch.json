@@ -62,9 +62,9 @@
       "port": 8801
     },
     {
-      "name": "prove-it",
+      "name": "pitch-cards",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["outbox/prove-it/serve.py", "--quiet"],
+      "runtimeArgs": ["outbox/pitch-cards/serve.py", "--quiet"],
       "port": 8802
     }
   ]
