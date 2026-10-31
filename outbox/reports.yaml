@@ -6982,6 +6982,54 @@ reports:
       exception class at its start, or a Python traceback; it passes for a null error or any sentence written for a
       person, and is inconclusive when no failed search is listed. GET requests only.
 
+  - key: quant-lab-winner-text-agrees-with-how-it-fits
+    findings: [CYM-quant-lab-winner-text-agrees-with-how-it-fits]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/company/app/experiments
+    title: >-
+      Quant Lab (ET-33142): its "can't" list says Blue and premium winners and a changed entry threshold start no
+      paper bot; /how-it-fits says they now start a blank paper bot
+    expected: >
+      The Quant Lab's own text, which the Experiments page shows behind "Can tune / can't" and the owner's API
+      serves, says what https://cymetica.com/how-it-fits says a winning search starts: a blank paper bot for every
+      long rule, Blue and paid models included, trading the rule that won with its winning entry threshold, and no
+      bot for the three short (Red) rules.
+    actual: >
+      Read on 2026-10-31 at about 22:30 UTC, after Cymetica told us on Telegram that ET-33142 is live. Section 2 of
+      /how-it-fits.txt says: "A winner is started as a blank paper bot that trades the rule that won: the model's own
+      buy and sell conditions (with the winning entry threshold) ... It needs no equipped model, so it holds for all
+      16 rules, paid models included (the lab never buys one)." Section 6 adds: "This holds for a free /adm model and
+      for each of the three long Blue rules." At the same time GET /api/v1/company/14/quant-lab/search (sent with
+      Cache-Control: no-store, so not a cached copy) still serves, in what_it_does_not_do: "A result that won with a
+      changed entry threshold is reported only, not started as a paper bot: a paper bot cannot run a changed entry
+      rule yet."; and in cannot_tune: "Starting a paper bot from a changed entry rule: Needs a medium build: a paper
+      bot cannot run a changed entry rule yet, so such a result is reported only.", "Premium models (prion, synapse,
+      telomere): Not possible: the platform sells these, so the lab never equips them for you." and "Cymetica bot
+      set-ups as paper bots (cryptobull_blue, cryptobull_red, hybrid2_blue, hybrid2_red, stockbear_red,
+      stockbull_blue): Not possible: they are backtest set-ups for Cymetica's own bots, not catalog models, so they
+      can be searched but not equipped." The Experiments page shows them: the "Can tune / can't" button's tooltip is
+      the what_it_does_not_do text, and the panel it opens lists under CAN'T YET "M Starting a paper bot from a
+      changed entry rule", "✗ Premium models" and "✗ Cymetica bot set-ups as paper bots" (seen signed in as the
+      owner of company 14 at about 22:40 UTC). what_changed lists nothing after 2026-10-28. We cannot tell which side is true: our company has had no winner
+      yet, so no bot was started.
+    steps:
+      - 'GET https://cymetica.com/how-it-fits.txt -> section 2: "A winner is started as a blank paper bot that trades the rule that won: the model''s own buy and sell conditions (with the winning entry threshold) ... so it holds for all 16 rules, paid models included"; section 6: "This holds for a free /adm model and for each of the three long Blue rules."'
+      - 'GET https://cymetica.com/api/v1/company/14/quant-lab/search as the owner -> what_it_does_not_do[3]: "A result that won with a changed entry threshold is reported only, not started as a paper bot: a paper bot cannot run a changed entry rule yet."'
+      - 'Same response -> cannot_tune: "Starting a paper bot from a changed entry rule" (build_medium), "Premium models (prion, synapse, telomere)" (not_possible, "the lab never equips them for you"), "Cymetica bot set-ups as paper bots (cryptobull_blue, ... stockbull_blue)" (not_possible, "they can be searched but not equipped")'
+      - 'Signed in as a company owner, open https://cymetica.com/company/app/experiments and click "Can tune / can''t" -> its tooltip carries the what_it_does_not_do sentence; the panel lists under CAN''T YET "Starting a paper bot from a changed entry rule", "Premium models" and "Cymetica bot set-ups as paper bots"'
+    body: >
+      An owner deciding whether to run a search reads the lab's own panel first, and it tells them a Blue, premium
+      or changed-threshold winner leads nowhere, which is the opposite of what /how-it-fits now promises. Updating
+      what_it_does_not_do and cannot_tune to the new behaviour (keeping a line that the Red rules are excluded),
+      and adding the change to what_changed, would fix it; if the bridge is not live for some rules, /how-it-fits
+      is the side to correct. Our check reads both and fails while how-it-fits promises a blank paper bot for every
+      long rule or with the winning entry threshold and a lab line denies it (a not_possible row naming a premium,
+      paid or Blue rule, or a line saying a changed entry rule or threshold is reported only or cannot be run); it
+      passes when they agree, whichever side changes, and a not_possible row about the Red rules alone passes; it is
+      inconclusive if either cannot be read or how-it-fits no longer says what a winner's bot carries. GET requests
+      only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
