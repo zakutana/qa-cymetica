@@ -11,9 +11,10 @@
     prizes: [500000, 250000, 100000],
     unit: 'ET10',
     slots: 3,
-    // the live builder's pre-build (builder.js PRE, data.js TEMPLATES, read 2026-10-30): four departments, two AI agents
-    // each, and a supervisor in Operations: nine agents, three of them researchers; NEXUS in Command runs them
-    hq: { agents: 9, researchers: 3 },
+    // the live builder's pre-build (builder.js PRE, data.js TEMPLATES, read again 2026-10-31): four departments (Cymetica
+    // QA, Development, Quant Lab, Trading desk), two AI agents each, and a supervisor in Operations: nine agents; NEXUS
+    // in Command runs them. Marketing is a fifth the owner can add (ET-32484), not in the pre-build
+    hq: { departments: 4, agents: 9 },
     // Build it Better's own count, GET /api/v1/build-it-better/apps/leaderboard, 2026-10-30
     apps: 134,
     // the products in step 2's ring, the most visited first, each its live page (capture.py apps: pics/apps/)
@@ -25,12 +26,12 @@
     ideas: [['a screener that finds hidden gems first', 'Gem Screener', 'gem-screener'], ['an AI that reads any chart', 'Chart Analyzer', 'chart-analyzer'],
             ['a casino where AI agents play', 'Agent Casino', 'agent-casino'], ['a bot that farms every airdrop', 'Airdrop Farmer', 'airdrop-farmer'],
             ['a radar for team token dumps', 'Team Dump Radar', 'team-dump-radar']],
-    // his five, 2026-10-30
+    // his five, in his order of 2026-10-31 ("po build produkt bude market it ... a az pak bude breed your agent")
     steps: [
       { n: '01', label: 'Start', short: 'Start' },
       { n: '02', label: 'Build', short: 'Build' },
-      { n: '03', label: 'Hero agent', short: 'Agent' },
-      { n: '04', label: 'Get seen', short: 'Seen' },
+      { n: '03', label: 'Market', short: 'Market' },
+      { n: '04', label: 'Hero agent', short: 'Agent' },
       { n: '05', label: 'Climb', short: 'Climb' }
     ],
     // the last step's leaderboard: our Universe mock's sample companies (uv-data.js, their station as their mark) and
@@ -38,10 +39,14 @@
     board: [['Giga Fund', 1405, 'station-vault-red'], ['Bull Club', 1311, 'station-pyramid-red'], ['Sigma Collective', 976, 'station-tower-blue'],
             ['Quasar Fund', 812, 'station-dome-green'], ['Vector Trading', 655, 'station-tower-cyan']],
     you: { name: 'Your company', from: 420, to: 1520, mark: 'you' },
-    // the only two links on the page, at its end ("to bude az na konci")
+    // every product a step names links to it, lit in the words ("vsude v textech musis zvyraznovat veci kterym das
+    // link odkaz primo", 2026-10-31: until then the only links were the two doors at the end); each answered 200
     links: {
       builder: 'https://cymetica.com/company/app/builder',
-      universe: 'https://cymetica.com/company/app#universe'
+      universe: 'https://cymetica.com/company/app#universe',
+      bib: 'https://cymetica.com/build-it-better',
+      promo: 'https://cymetica.com/promo-market',
+      casino: 'https://cymetica.com/agent-casino'
     }
   };
   var S = window.QUEST_STATE = { ready: false, active: 0, frames: {} };

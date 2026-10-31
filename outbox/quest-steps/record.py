@@ -3,12 +3,13 @@ each into pics/ (kept: what the page shows before a clip plays, or if it is miss
 
 Fifth take (the operator, 2026-10-30): "v kazdem kroku musi byt top animace".
 
-  clip            what moves                                              from
-  station.webm    the company's station (Rift Hold, gold) turning         LIVE builder, its first step
-  office.webm     the HQ coming in once, then its astronauts at work      LIVE builder, its Start, 1920 x 1080 laid out
-  workshop.webm   the arms take the idea and build the product, 10 s      scenes/tools.html, frame by frame: a true loop
-  farmer.webm     the Airdrop Farmer turning and blinking, the gem turning our Universe mock, a still camera (capture.py)
-  universe.webm   the whole Universe: every company on its orbit          LIVE cymetica.com/company/app#universe
+  clip              what moves                                              from
+  office.webm       the whole HQ, its astronauts at work (step 1, a door)   LIVE builder, its Start, 1920 x 1080 laid out
+  workshop.webm     the arms take the idea and build the product, 10 s      scenes/tools.html, frame by frame: a true loop
+  promo-cube.webm   the Promo Market's cube turning, 18 s                   their page through our mirror, frame by frame
+  farmer.webm       the Airdrop Farmer turning and blinking, the gem turning our Universe mock, a still camera (capture.py)
+  lab.webm          the Quant Lab's five stages at their own pace, 23.6 s   outbox/quant-lab-v2, the window filmed
+  universe.webm     the whole Universe: every company on its orbit          LIVE cymetica.com/company/app#universe (a door too)
 
     python outbox/quest-steps/record.py                  # every one
     python outbox/quest-steps/record.py office farmer    # some
@@ -83,10 +84,11 @@ def poster(page, sel, name):
     capture.save(img, f'{name}.webp', quality=82)
 
 
-def office(b, seconds=16):
-    """the live builder's Start in 3D at 1920 x 1080, drawn at 0.75 of it, its astronauts walking; ninth take: the camera
-    closer, so the HQ fills the picture as his own screenshot of it does ("zobrazil jen ty headquarters ... v takovem
-    zaberu jak posilam"), and the HQ's box in the frame printed, for the page's crop (quest.css #s1 .crop)"""
+def office(b, seconds=24, closer=1.0):
+    """the live builder's Start in 3D at 1920 x 1080, drawn at 0.75 of it, its astronauts walking; twelfth take: the
+    camera where the builder leaves it, the whole HQ in the picture with space round it ("proc ty headquarters mas
+    useknute nahore a dole?", his picture of it whole), and the HQ's box in the frame printed, for the page's crop
+    (quest.css #s1 .crop). `closer` < 1 moves the camera in (the ninth take's 0.72 cut the rooms off)"""
     page = b.new_page(viewport={'width': 1920, 'height': 1080}, device_scale_factor=0.75)
     page.goto('https://cymetica.com/company/app/builder', wait_until='domcontentloaded', timeout=60000)
     time.sleep(12)
@@ -102,12 +104,11 @@ def office(b, seconds=16):
       const f = (v, d) => +(v / d * 100).toFixed(2);
       return { left: f(c.left - s.left, s.width), top: f(c.top - s.top, s.height), width: f(c.width, s.width), height: f(c.height, s.height),
                card: [f(k.left - s.left, s.width), f(k.top - s.top, s.height), f(k.width, s.width)] }; }"""))
-    # the camera in to 0.72 of the way (at 0.8 its rooms touched the builder's stage; the canvas is wider than that
-    # stage, and the page crops to the HQ), then still, its astronauts at work; the page plays only the still part
-    # ("kasli na tu animaci zoomu"), from data-loop-from, so the poster is a frame of that part
-    page.evaluate("""() => { const o = CO.builder.office;
-      const p0 = o.camera.position.clone(), t0 = o.controls.target.clone();
-      o.tween(t0.clone().add(p0.clone().sub(t0).multiplyScalar(0.72)), t0, 3500); }""")
+    # the camera still (or in to `closer` of the way), its astronauts at work; the page plays from data-loop-from
+    if closer != 1.0:
+        page.evaluate("""(k) => { const o = CO.builder.office;
+          const p0 = o.camera.position.clone(), t0 = o.controls.target.clone();
+          o.tween(t0.clone().add(p0.clone().sub(t0).multiplyScalar(k)), t0, 3500); }""", closer)
     record(page, sel, seconds, 'office')
     page.close()
     frame_poster('office', 5.0)
@@ -131,28 +132,25 @@ def frame_poster(name, at):
     Path(tmp).unlink()
 
 
-# the Quant Lab's clock run faster: its first four stages (BUILD to THE BAR, 16.6 s of its time, ql.js BASE) in FAST
-# real seconds, then FOUND at its own pace ("nacasovat animaci ze uz po 5 sekundach se zrodi hero agent"). Its reactor
-# reads performance.now(), so that is what is bent, from the moment __warp is set
-LAB_FAST, LAB_FOUND = 5.0, 7.0
-LAB_WARP = """(() => { const real = performance.now.bind(performance), K = 16.6 / %f, A = %f * 1000;
-  window.__warp = null;
-  performance.now = () => { const r = real(); if (window.__warp == null) return r; const e = r - window.__warp; return window.__warp + (e < A ? e * K : A * K + (e - A)); }; })()""" % (LAB_FAST, LAB_FAST)
+# the Quant Lab at its own pace (ql.js BASE: BUILD 3.2, BLAST 4.4, BLIND 3.4, THE BAR 5.6, FOUND 7.0 s): twelfth take,
+# "tu animaci musis zpomalit at je videt co se tam deje". The agent is revealed from 0.16 of FOUND on, so at LAB_BIRTH
+# seconds into the clip; the page starts the clip that much before its reader is done reading (anim.js, data-birth)
+LAB_STAGES, LAB_FOUND = 16.6, 7.0
+LAB_BIRTH = round(LAB_STAGES + 0.16 * LAB_FOUND, 2)
 
 
 def lab(b):
-    """step 3: the Quant Lab's page in its Coming soon mode (outbox/quant-lab-v2, another session's page, served here
+    """step 4: the Quant Lab's page in its Coming soon mode (outbox/quant-lab-v2, another session's page, served here
     and read only), whole from its heading to its reactor ("zobrazit celkove tu stranku i s tim nadpisem quant lab"):
-    its stages BUILD to THE BAR in 5 s, then FOUND, the agent born, at its own 7 s; the clip then loops. It draws
-    CoinGecko's coin logos into its canvas, which taints it, and a tainted canvas's own stream stops: so the window is
-    filmed instead (Playwright's video) and cut by ffmpeg"""
+    its five stages at their own pace, BUILD to FOUND, the agent born at LAB_BIRTH. It draws CoinGecko's coin logos
+    into its canvas, which taints it, and a tainted canvas's own stream stops: so the window is filmed instead
+    (Playwright's video) and cut by ffmpeg"""
     import shutil
-    vw, vh, total = 1400, 1100, LAB_FAST + LAB_FOUND   # 1400 wide: its six score tiles stay one row
+    vw, vh, total = 1400, 1100, LAB_STAGES + LAB_FOUND   # 1400 wide: its six score tiles stay one row
     tmpdir = Path(tempfile.mkdtemp())
     ctx = b.new_context(viewport={'width': vw, 'height': vh}, device_scale_factor=1, record_video_dir=str(tmpdir), record_video_size={'width': vw, 'height': vh})
     t0 = time.time()
     page = ctx.new_page()
-    page.add_init_script(LAB_WARP)
     page.goto(capture.serve(capture.OUTBOX / 'quant-lab-v2') + '?mode=sim', wait_until='load', timeout=60000)
     page.wait_for_function("() => document.fonts.status === 'loaded' && document.querySelector('#rx').width > 0", timeout=60000)
     page.evaluate("() => document.querySelector('.q2-hero').scrollIntoView({ block: 'start' })")
@@ -160,8 +158,7 @@ def lab(b):
     time.sleep(3)
     r = page.evaluate("""() => { const a = document.querySelector('.q2-hero').getBoundingClientRect(), b = document.querySelector('.q2-reactor').getBoundingClientRect();
       return [Math.min(a.left, b.left) - 6, a.top - 10, Math.max(a.right, b.right) - Math.min(a.left, b.left) + 12, b.bottom - a.top + 12].map(Math.round); }""")
-    page.evaluate('() => { window.__warp = performance.now(); }')
-    page.click('#rail [data-st="0"]')           # from the top: BUILD, on the bent clock
+    page.click('#rail [data-st="0"]')           # from the top: BUILD
     start = time.time() - t0
     time.sleep(total + 0.6)
     video = page.video.path()
@@ -171,8 +168,9 @@ def lab(b):
     ffmpeg('-ss', f'{start:.2f}', '-i', str(video), '-t', str(total), '-vf', f'crop={w}:{h}:{x}:{y}', '-c:v', 'libvpx', '-b:v', '6M', '-crf', '8',
            '-qmin', '2', '-qmax', '30', '-auto-alt-ref', '0', '-pix_fmt', 'yuv420p', str(CLIPS / 'lab.webm'))
     shutil.rmtree(tmpdir, ignore_errors=True)
-    print('lab: the page', w, 'x', h, 'from', round(start, 2), 's,', total, 's,', (CLIPS / 'lab.webm').stat().st_size // 1024, 'KB')
-    frame_poster('lab', LAB_FAST + 3.2)        # the agent found
+    print('lab: the page', w, 'x', h, 'from', round(start, 2), 's,', total, 's, the agent born at', LAB_BIRTH, 's,',
+          (CLIPS / 'lab.webm').stat().st_size // 1024, 'KB')
+    frame_poster('lab', LAB_BIRTH + 2.0)        # the agent found
 
 
 def doors(b, seconds=12):
@@ -321,8 +319,9 @@ def promo_cube(b, loop=18.0, fps=30):
     print(f'{out.name} {len(frames)} frames {out.stat().st_size // 1024} KB')
 
 
-SHOTS = {'office': office, 'workshop': workshop, 'lab': lab, 'farmer': farmer, 'universe': universe, 'doors': doors, 'promo-cube': promo_cube}
-EXTRA = {'universe-mock': universe_mock}
+SHOTS = {'office': office, 'workshop': workshop, 'lab': lab, 'farmer': farmer, 'universe': universe, 'promo-cube': promo_cube}
+# (the twelfth take's doors show step 1's HQ and step 5's Universe, so the start tutorial's own two are no longer made)
+EXTRA = {'universe-mock': universe_mock, 'doors': doors}
 
 
 def main(names):

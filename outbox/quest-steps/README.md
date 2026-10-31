@@ -4,7 +4,7 @@ Asked for by the operator on 2026-10-29: a new page for the Cymetica Quest, expl
 quest, win up to 500,000 ET10 every month), then how. It stands beside `outbox/quest` (the scroll film, still on the 5 %
 revenue share), which is unchanged.
 
-## Eleven takes
+## Twelve takes
 
 1. **a1cb3cf5, 7/10**: real screenshots, each in a glass browser frame. "Nedavej to do panelu ... at to splyva."
 2. **60da77f5, 4/10**: everything full screen, a flight in to the sun, the orbit with its companies. "Predchozi verze
@@ -25,23 +25,36 @@ revenue share), which is unchanged.
    number under its words, the Quant Lab set into space, Cymetica's sun over the live Universe, and the clips loaded
    only near their step (in Firefox a playing clip stood still while the others loaded: step 2's "animace se
    nespusti").
-11. **This one** (2026-10-31), after the tenth:
-   - **Deep space behind the whole page**, still while the page moves over it, its stars twinkling (anim.js), as
-     Gemini's guide on 8802 has it ("koukni jak udelal gemini vsude vesmirne pozadi ... vypada to celkem huste").
-   - **The first screen**: the words big on the left as the start page's, "Cymetica Quest." first and green, every
-     line whole; the prize board on the right, turned the other way; the sun further right and off, whole and bright
-     (a glowing core under its strands: "ted v nem jsou diry").
-   - **The top has no panel**: the brand, the quest's track (a numbered hexagon a step, the lines filling as you read,
-     a spark at the front) and the prize stand on the sky over a dark that fades downwards.
-   - **Bullets under every heading**, each on a hexagon, strung on one line of light.
-   - **Every picture further from its number** (a wider gap, the page wider); step 1's HQ further right.
-   - **Step 2:** the arms beside the number; under them the pipeline, and out of it the ring of products already built,
-     which turns your new app to the front as it goes live, tagged yours.
-   - **Step 3:** "Quant Lab" is the green words; the Agent Casino is a point under them.
-   - **Step 4:** the Promo Market's cube turns as on their page (record.py promo_cube: their CSS animations set frame by
-     frame, a seamless 18 s loop, laid where the cube stands in the picture).
-   - **Step 5:** the live Universe with the leaderboard's companies on it too (record.py universe: fourteen, the eight
-     added in our recording browser only).
+11. **b7891eca** (2026-10-31): deep space behind the whole page with twinkling stars (as Gemini's guide has it), the
+   first screen's words big on the left, the top a quest track with no panel, hexagon bullets, the Promo Market's cube
+   turning, fourteen companies in the Universe. "To uz je husty 1 screen."
+12. **This one** (2026-10-31), after the eleventh:
+   - **His order**: start, build, market, the hero agent, climb ("po build produkt bude market it ... a az pak bude
+     breed your agent"); **every step's words on the left** ("vsechno ma byt nalevo"), wide ("proc je to v takovem
+     uzkem sloupci?"), the picture to the right and lower ("na preskacku").
+   - **Rays for bullets**, as the MADE BY plate in the Universe has its two, a glint running along each.
+   - **Each step names its department** ("na kazdem stepu ... spojitost s nejakym departmentem"): Development takes
+     your idea to Build it Better, Marketing writes your briefs for the Promo Market, the Quant Lab searches. **Every
+     product named links to it**, lit: Build it Better, the Promo Market, the Agent Casino, the Universe.
+   - **Points**: for your products' use and your agent's trades (his words, 2026-10-31).
+   - **Step 1:** the whole HQ with space round it ("proc ty headquarters mas useknute nahore a dole?"), "4 departments ·
+     9 AI agents, led by NEXUS", no roles named, no "You approve what goes out".
+   - **Step 2:** the arms higher, beside the words, apart from the pipeline; a new workshop (scenes/tools.html):
+     Build it Better's name in neon on an island of its hexagons, a drone bringing the idea down a beam, pistons,
+     cables and running lights on the arms, fingers that close on each panel, a seam welded white-hot and cooling,
+     sparks that fall and bounce, each panel drawing what it shows as it locks, a scan up the finished app. The
+     pipeline: numbered chambers, a ring filling round each icon, the working one lifted and swept by light, its own
+     line ("Writing the code · 52%", "Live · Gem Screener"), a comet on its rail, Build it Better's hexagons in its
+     glass. No "134 apps already built" anywhere.
+   - **Step 4:** the Quant Lab at its own pace (record.py lab: 23.6 s, the agent born at 17.72 s), started far enough
+     in that the agent is born two seconds after the step's words are read: anim.js counts the words (45 today), reads
+     them at five a second from when the picture is a third on screen, so it starts at 6.7 s and the agent comes 11 s
+     after you arrive.
+   - **Step 5:** the Universe bigger, the board in it on its right as the first screen's, yours passing over each
+     company it beats (they stood on top of each other mid-pass before).
+   - **The doors**: "Start a company and compete" over step 1's HQ, "Explore the Universe" over step 5's Universe,
+     each a big picture with its words under it and a round lit arrow. The brand says only CYMETICA QUEST; the first
+     screen's sun further right.
 
 ## Open it
 
@@ -72,21 +85,27 @@ goes to him.
 |---|---|---|
 | top | the sky | ours (capture.py sky) |
 | top | the sun | our Universe mock's sun, alone (capture.py sun); also over step 5's live Universe |
-| 01 | the HQ, astronauts at work | LIVE cymetica.com/company/app/builder, recorded; the nine agents and their roles are the live builder's pre-build (builder.js PRE) |
-| 02 | the workshop and the pipeline | our three.js scene and anim.js; the ideas map to real Build it Better products |
+| 01 | the HQ, astronauts at work | LIVE cymetica.com/company/app/builder, recorded; its four departments and nine agents are the live builder's pre-build (builder.js PRE, data.js TEMPLATES) |
+| 02 | the workshop and the pipeline | our three.js scene and anim.js; Build it Better's name and hexagons from its own picture (og/app/build-it-better.png); the ideas map to real Build it Better products |
 | 02 | the ring of products | LIVE: each product's own page, captured (capture.py apps) |
-| 03 | the Quant Lab's page | outbox/quant-lab-v2's Coming soon mode, filmed on a bent clock: a simulation, and it says so on screen |
-| 04 | the Promo Market and the Airdrop Farmer | their page through our read-only mirror with three sample briefs, its own cube turning (their CSS, filmed frame by frame); our Universe mock, composed |
+| 03 | the Promo Market and the Airdrop Farmer | their page through our read-only mirror with three sample briefs, its own cube turning (their CSS, filmed frame by frame); our Universe mock, composed |
+| 04 | the Quant Lab's page | outbox/quant-lab-v2's Coming soon mode, at its own pace: a simulation, and it says so on screen |
 | 05 | the Universe | LIVE cymetica.com/company/app#universe, recorded: its six companies and four products today, and the leaderboard's eight sample companies added to its answer in our browser |
 | 05 | the leaderboard | samples (QUEST.board), with our mock's stations as marks |
-| end | the two cards | LIVE cymetica.com/company/app/start, its room and its Universe, recorded; our sun over the Universe, as their poster shows none |
+| end | the two doors | step 1's HQ and step 5's Universe, the same clips |
 
 ## Decided here, the veto open
 
-- **Five steps again:** the rail has five. His "3 bring in users, 4 compete in the Universe and earn
-  points" are its 4th and 5th, now that the agent has its own step.
-- **The nine agents** are named by role (Developer, Lab scientist, Trader, QA tester, Auditor, Supervisor, three
-  Researchers), as the pre-build has them; NEXUS leads them and is said in the line above.
+- **Five steps, in his order of 2026-10-31**: start, build, market, the hero agent, climb.
+- **"Na preskacku"** is read as the picture standing lower than the words, to their right; the words stay on the
+  left in every step, as he said in the same message ("vsechno ma byt nalevo").
+- **Marketing** is not in the pre-build (Cymetica QA, Development, Quant Lab, Trading desk): it is a department the
+  owner adds (data.js, ET-32484). Step 3 still says "your Marketing department", as the step is the owner's next
+  move; step 1's "4 departments" is the pre-build's.
+- **The links**: every product a step names links to its live page (QUEST.links), each answering 200 on 2026-10-31.
+  Until the twelfth take the two doors at the end were the only links ("to bude az na konci"); he asked for them.
+- **The Quant Lab's timing**: five words a second (a skim) from when its picture is a third on screen, then two
+  seconds; with a longer text it starts earlier, never before its first frame.
 - **The first screen's words**: "Cymetica Quest." first and green, then "Join. Earn points. / Climb the leaderboard.
   / Earn up to 500,000 ET10 / every month." with the prize green; he left the opening to us ("CYMETICA QUEST zelene
   nebo join? ... musis to vymyslet").
@@ -97,8 +116,6 @@ goes to him.
   the names on the board stand in the map too; the live one has six today. Nothing is sent to Cymetica: the answer is
   changed as it arrives in our browser (record.py EXTRA_COMPANIES).
 - **The top bar** keeps its three parts (brand, track, prize) and drops the panel round them.
-- **The Quant Lab's clock** runs 3.3 times faster through its first four stages so the agent is found at the fifth
-  second, then at its own pace; nothing in the lab's page was changed.
 - **The clips** stay out of git. Their posters are kept.
 
 ## The contest
@@ -111,4 +128,7 @@ goes to him.
 - "Breed your hero agent" is the operator's wording. On 2026-10-28 Nexus said the lab-to-bot bridge was not built yet
   (ET-33133).
 - The prize, 500,000 / 250,000 / 100,000 ET10, is the operator's figure (uv-data.js `CO.SEASON`); Cymetica has not
-  confirmed it.
+  confirmed it. So are the points for your products' use and your agent's trades (2026-10-31).
+- What each department does is the live builder's own words: Development "drafts a Build it Better request" (it does
+  not build; the pipeline does), Marketing "write briefs for my own Build it Better apps", the Quant Lab "keeps
+  searching for a profitable agent", the Trading desk drafts "a seat at an Agent Casino table".

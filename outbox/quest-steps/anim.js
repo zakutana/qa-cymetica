@@ -6,8 +6,9 @@
      while the page's other clips are loading ("animace se nespusti", measured 2026-10-30); its poster stands behind it;
    - step 2's Cymetica pipeline, in step with the workshop clip: an idea typed in, through the pipeline's six
      chambers, a product out; and the ring of the products already built, as holograms, turned by dragging;
-   - step 4's users, walking from the Promo Market's briefs to the product;
-   - step 5's leaderboard, your company climbing it.
+   - step 3's users, walking from the Promo Market's briefs to the product;
+   - step 4's Quant Lab, started so its agent is born two seconds after its words are read (data-birth);
+   - step 5's leaderboard, your company climbing it, passing over the ones it beats.
 
    Each live one draws only while it is on screen and counts its frames in QUEST_STATE.frames. Figures from QUEST. */
 (function () {
@@ -21,9 +22,9 @@
   var ease = function (x) { x = clamp(x, 0, 1); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
   var fmt = function (v) { return Math.round(v).toLocaleString('en-US'); };
 
-  function seen(el, cb) {
+  function seen(el, cb, at) {
     if (!('IntersectionObserver' in window)) { cb(true); return; }
-    new IntersectionObserver(function (es) { es.forEach(function (e) { cb(e.isIntersecting); }); }, { threshold: 0.04 }).observe(el);
+    new IntersectionObserver(function (es) { es.forEach(function (e) { cb(e.isIntersecting); }); }, { threshold: at || 0.04 }).observe(el);
   }
   // draw(t) every frame while `el` is on screen, t in seconds since it first ran
   function run(name, el, draw) {
@@ -56,6 +57,16 @@
     vids.forEach(function (v) { v.muted = true; v.playsInline = true; v.addEventListener('error', function () { if (v.getAttribute('src')) box.classList.add('dead'); }); });
     // the poster behind the video too: a video that does not paint shows its poster, never a hole
     if (a.getAttribute('poster')) box.style.background = 'url(' + a.getAttribute('poster') + ') 50% 50% / cover no-repeat';
+    // data-birth (the Quant Lab: its agent is born that many seconds in): the clip starts far enough in that the agent
+    // is born two seconds after its reader is done with the step's words ("vypocitas jak dlouho bude cca cist ten text a
+    // pak az mrkne na animaci tak se treba za 2 sekundy uz objevi hero agent"), read at a skim, five words a second,
+    // from the moment the picture is a third on screen; it loops from there too
+    var birth = +box.dataset.birth || 0;
+    if (birth) {
+      var txt = box.closest('section').querySelector('.txt'), words = txt ? txt.textContent.trim().split(/\s+/).length : 0;
+      from = Math.max(0, birth - (words / 5 + 2));
+      S.birth = { words: words, from: +from.toFixed(2), born: +(birth - from).toFixed(2) };
+    }
     var cur = 0, on = false, raf = 0, started = false;
     function play(v) { if (!v.getAttribute('src')) attach(v); var p = v.play(); if (p && p.catch) p.catch(function () {}); }
     function attach(v) { if (v.getAttribute('src')) return; v.preload = 'auto'; v.src = url; }
@@ -90,7 +101,7 @@
         setTimeout(function () { if (on && vids[cur].paused) play(vids[cur]); }, 1200);
       }
       else if (!vis && on) { on = false; cancelAnimationFrame(raf); vids.forEach(function (v) { v.pause(); }); }
-    });
+    }, birth ? 0.34 : 0.04);
   });
 
   /* ---------------- step 2: the Cymetica pipeline, an idea in and a product out ---------------- */
@@ -105,19 +116,27 @@
       spec: '<i></i><i></i><i></i>', design: '<i></i><i></i><i></i><i></i>', build: '<b>&lt;/&gt;</b><i></i>',
       sec: '<i></i>', dep: '<i></i><i></i>', host: '<i></i><i></i><i></i>'
     };
+    // what each chamber says while it works (twelfth take: "ta cymetica pipeline mohla by este vypadat lip, ted je to
+    // jen 7/10"): its number, a ring that fills round its icon, the chamber lifted and swept by light while it works,
+    // and over them all the pipeline's own line: what it is doing now and how far it is
+    var DOING = ['Writing the spec', 'Designing every screen', 'Writing the code', 'Checking its security', 'Deploying it', 'Putting it online'];
     m.innerHTML =
       '<div class="inlet"><span class="cap">Your idea</span><p class="say">&ldquo;<span class="tx"></span><span class="caret"></span>&rdquo;</p></div>' +
-      '<div class="tube"><div class="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + HEX + '"/></svg>Cymetica pipeline</div>' +
+      '<div class="tube"><div class="hd"><span class="pn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + HEX + '"/></svg>Cymetica pipeline</span>' +
+          '<span class="st"><i></i><b class="sv"></b><span class="pc">0%</span></span></div>' +
         '<div class="track"><span class="lit"></span><span class="orb"></span></div>' +
-        '<div class="chs">' + CH.map(function (c) {
-          return '<div class="ch ' + c[2] + '"><span class="ci">' + window.QUEST_ICON_SVG(c[0]) + '</span><b>' + c[1] + '</b><span class="fx">' + FX[c[2]] + '</span><span class="ok">&check;</span></div>';
+        '<div class="chs">' + CH.map(function (c, j) {
+          return '<div class="ch ' + c[2] + '"><span class="no">0' + (j + 1) + '</span><span class="ci"><svg class="pr" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21"/></svg>' +
+            window.QUEST_ICON_SVG(c[0]) + '</span><b>' + c[1] + '</b><span class="fx">' + FX[c[2]] + '</span><span class="ok">&check;</span></div>';
         }).join('') + '</div></div>' +
       // out of the pipeline, the ring of the products already built ("to tocici dej spis jako vystup z te pipeline"):
-      // it turns yours to the front as it goes live (the ring's own code, below, reads S.out)
+      // it turns yours to the front as it goes live (the ring's own code, below, reads S.out); no count under it ("to
+      // 134 apps already built tam nepis")
       '<div class="outlet">' +
         '<div class="ring" data-anim="apps" aria-label="Products already built with Cymetica, their live pages"><div class="items"></div><span class="base"></span>' +
-        '<div class="plate"><b></b><span>' + fmt(Q.apps) + ' apps already built &middot; drag</span></div></div><span class="burst"></span></div>';
+        '<div class="plate"><b></b></div></div><span class="burst"></span></div>';
     var tx = m.querySelector('.tx'), orb = m.querySelector('.orb'), lit = m.querySelector('.lit'), chs = [].slice.call(m.querySelectorAll('.ch'));
+    var sv = m.querySelector('.sv'), pc = m.querySelector('.pc'), st = m.querySelector('.st'), says = '';
     var idea = -1, lastT = 99;
     function setIdea(i) { idea = i; }
     setIdea(0);
@@ -139,7 +158,14 @@
         var a = 2.0 + j * 0.7;
         c.classList.toggle('act', T >= a && T < a + 0.7);
         c.classList.toggle('done', T >= a + 0.7 && T < 8.8);
+        c.style.setProperty('--p', (T < 8.8 ? win(T, a, a + 0.7) : 0).toFixed(3));
       });
+      // the pipeline's own line
+      var now = T < 1.6 ? 'Waiting for your idea' : T < 2.0 ? 'Idea received' : T < 6.2 ? DOING[i] : T < 8.8 ? 'Live · ' + d[1] : 'Ready for the next idea';
+      if (now !== says) { says = now; sv.textContent = now; }
+      pc.textContent = Math.round((T >= 6.2 && T < 8.8 ? 1 : T < 8.8 ? x : 0) * 100) + '%';
+      st.classList.toggle('live', T >= 6.2 && T < 8.8);
+      st.classList.toggle('run', T >= 2.0 && T < 6.2);
       m.classList.toggle('out', T >= 6.3 && T < 9.2);
       m.classList.toggle('pop', T >= 6.3 && T < 7.1);
       S.out = { key: d[2], on: T >= 6.0 && T < 9.4 };
@@ -240,7 +266,7 @@
     (function tick(now) { if (now - last > 33) { last = now; draw(now / 1000); } requestAnimationFrame(tick); })(0);
   })();
 
-  /* ---------------- step 4: users walk from the briefs to the product ---------------- */
+  /* ---------------- step 3: users walk from the briefs to the product ---------------- */
   (function () {
     var svg = document.querySelector('[data-anim=flow]'); if (!svg) return;
     var stage = svg.parentElement, promo = stage.querySelector('.promo3d img'), near = stage.querySelector('.near');
@@ -290,13 +316,14 @@
         '<span class="nm">' + r.name + (r.me ? '<em>you</em>' : '') + '</span><span class="pp"><span class="bar"><i></i></span><b></b> pts</span><span class="pz"></span>';
       box.appendChild(r.el);
     });
-    var STEP = 2.2, P = Q.board.length * STEP + 4.5, last = -1, n = Q.board.length, others = rows.filter(function (r) { return !r.me; });
-    function place(order) {
+    var STEP = 2.2, P = Q.board.length * STEP + 4.5, last = -1, n = Q.board.length, others = rows.filter(function (r) { return !r.me; }), cur = null, pt = 0;
+    // yours, as it passes one, lifted towards you and a little aside, so the one it passes slides under it
+    function place(order, passing) {
       order.forEach(function (r, i) {
-        r.el.style.transform = 'translateY(' + (i * 100) + '%)';
+        r.el.style.transform = 'translateY(' + (i * 100) + '%)' + (r.me && passing ? ' translateX(-14px) scale(1.045)' : '');
         r.el.querySelector('.rk').textContent = i + 1;
         r.el.querySelector('.pz').textContent = i < Q.prizes.length ? Q.prizes[i].toLocaleString('en-US') + ' ' + Q.unit : '';
-        r.el.className = 'row' + (r.me ? ' me' : '') + (i < Q.prizes.length ? ' paid p' + (i + 1) : '');
+        r.el.className = 'row' + (r.me ? ' me' + (passing ? ' pass' : '') : '') + (i < Q.prizes.length ? ' paid p' + (i + 1) : '');
       });
     }
     // the points that pass the k-th company from the bottom, with a little to spare
@@ -311,7 +338,11 @@
       if (T > P - 0.6) { passed = 0; pts = Q.you.from; }
       me.pts = pts;
       var at = n - passed;
-      if (at !== last) { var order = others.slice(); order.splice(at, 0, me); place(order); last = at; }
+      if (at !== last) {
+        var up = last >= 0 && at < last;
+        cur = others.slice(); cur.splice(at, 0, me); place(cur, up); last = at;
+        clearTimeout(pt); if (up) pt = setTimeout(function () { place(cur, false); }, 760);
+      }
       rows.forEach(function (r) { r.el.querySelector('.pp b').textContent = fmt(r.pts); r.el.querySelector('.bar i').style.width = (r.pts / top * 100).toFixed(1) + '%'; });
       box.classList.toggle('won', at === 0);
     });

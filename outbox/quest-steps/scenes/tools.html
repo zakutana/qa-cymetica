@@ -2,11 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Ship products: the robot arms (scene for the Quest page)</title>
-<!-- Step 02, way A of the Quest page: "nejaky huste naradi vesmirne space roboticke" (the operator, 2026-10-29). Two robot
-     arms in a station's workshop assemble an app out of glass panels of light, deep space behind; the mood of the Hero
-     Agent picture beside it (dark navy, cyan and green light, a warm sun far off). Rendered once by capture.py
-     (?w=2560&h=1440), never loaded by the page. Subject in the right 55 %, the left dark for the words. No text. -->
+<title>Build it Better: the robot arms (scene for the Quest page)</title>
+<!-- Step 02 of the Quest page: the robot arms build your product (the operator, 2026-10-29: "nejaky huste naradi vesmirne
+     space roboticke"). Twelfth take (2026-10-31: "mnohem lepsi animace, musis dbat na detaily, ted je to takove ploche a
+     basic ta animace robotickych rukou", and "dat tam nejak do pozadi logo Build It Better napis neonovy"): a workshop in
+     space before a curved wall of hexagons (Build it Better's own, from its picture), its name in neon on it; a drone
+     brings the idea down a beam of light; two arms with pistons, cables and running lights, one gripping each glass
+     panel of the app and carrying it in, the other welding it on, the seam white-hot and cooling, sparks that fall and
+     bounce; then a scan of light up the finished app, which lights green and rises. Drawn frame by frame by record.py
+     workshop (render(t), a function of t alone over PERIOD, so it loops without a seam); never loaded by the page. -->
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
 <style>html, body { margin: 0; background: #05070c; overflow: hidden; } canvas { display: block; }</style>
 <script type="importmap">{ "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js",
@@ -27,13 +32,15 @@ import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 
 const Q = new URLSearchParams(location.search);
 const W = +(Q.get('w') || innerWidth), H = +(Q.get('h') || innerHeight);
-const PORTRAIT = H > W;
+// the sign's type: its stylesheet first, then the face itself
+await new Promise((r) => { const l = document.querySelector('link[href*="Archivo"]'); if (l.sheet) r(); else { l.onload = r; l.onerror = r; } });
+await document.fonts.load('400 160px "Archivo Black"');
 
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(1);
 renderer.setSize(W, H);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.92;
+renderer.toneMappingExposure = 0.95;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
@@ -41,35 +48,38 @@ document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-scene.environmentIntensity = 0.32;
+scene.environmentIntensity = 0.34;
+const camera = new THREE.PerspectiveCamera(30, W / H, 0.1, 400);
 
-const camera = new THREE.PerspectiveCamera(PORTRAIT ? 40 : 30, W / H, 0.1, 400);
+let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const TAU = Math.PI * 2;
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+const ease = (x) => { x = clamp01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+// eased with a little overshoot, as a heavy arm settles
+const settle = (x) => { x = clamp01(x); const c = 1.6; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const win = (t, a, b) => clamp01((t - a) / (b - a));
+const bump = (t, a, b) => Math.sin(Math.PI * win(t, a, b));
 
-// ---- deep space: a dark dome, stars, a warm sun far off through the dark
-const sky = new THREE.Mesh(new THREE.SphereGeometry(180, 48, 24), new THREE.ShaderMaterial({
+// ---- deep space: a dark dome, stars, a warm sun far off
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(180, 48, 24), new THREE.ShaderMaterial({
   side: THREE.BackSide, depthWrite: false,
-  uniforms: {},
   vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   fragmentShader: `varying vec3 vP;
     void main(){
       vec3 base = mix(vec3(0.006, 0.009, 0.016), vec3(0.010, 0.020, 0.036), smoothstep(-0.2, 0.6, vP.y));
-      float neb = smoothstep(0.6, 1.0, dot(vP, normalize(vec3(0.55, 0.3, -0.75))));
-      base += vec3(0.0, 0.07, 0.11) * neb * 0.45;
-      float neb2 = smoothstep(0.8, 1.0, dot(vP, normalize(vec3(0.9, -0.05, -0.4))));
-      base += vec3(0.0, 0.08, 0.05) * neb2 * 0.25;
+      base += vec3(0.0, 0.07, 0.11) * smoothstep(0.7, 1.0, dot(vP, normalize(vec3(0.85, 0.35, -0.4)))) * 0.3;
+      base += vec3(0.0, 0.08, 0.05) * smoothstep(0.8, 1.0, dot(vP, normalize(vec3(-0.9, 0.2, -0.4)))) * 0.2;
       gl_FragColor = vec4(base, 1.0);
     }`
-}));
-scene.add(sky);
+})));
 {
   const n = 2600, pos = new Float32Array(n * 3), col = new Float32Array(n * 3);
-  let s = 7;
-  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
   for (let i = 0; i < n; i++) {
-    const u = rnd() * 2 - 1, t = rnd() * Math.PI * 2, r = Math.sqrt(1 - u * u);
-    pos.set([Math.cos(t) * r * 150, u * 150, Math.sin(t) * r * 150], i * 3);
-    const b = 0.35 + rnd() * 0.65, c = rnd();
-    col.set(c < 0.12 ? [b * 0.7, b * 0.9, b] : [b, b, b], i * 3);
+    const u = rnd() * 2 - 1, a = rnd() * TAU, r = Math.sqrt(1 - u * u);
+    pos.set([Math.cos(a) * r * 150, u * 150, Math.sin(a) * r * 150], i * 3);
+    const b = 0.35 + rnd() * 0.65;
+    col.set(rnd() < 0.12 ? [b * 0.7, b * 0.9, b] : [b, b, b], i * 3);
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -83,82 +93,184 @@ function glowTex(inner, outer) {
   x.fillStyle = gr; x.fillRect(0, 0, 256, 256);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
-const sun = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('rgba(255,248,232,1)', 'rgba(255,214,160,0.35)'), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
-sun.position.set(46, 30, -130); sun.scale.set(10, 10, 1); scene.add(sun);
+const GLOW_C = glowTex('rgba(220,255,255,1)', 'rgba(0,207,255,0.5)'), GLOW_G = glowTex('rgba(210,255,235,1)', 'rgba(0,255,136,0.45)');
+const sprite = (map, s) => { const o = new THREE.Sprite(new THREE.SpriteMaterial({ map, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); o.scale.set(s, s, 1); return o; };
+const sun = sprite(glowTex('rgba(255,248,232,1)', 'rgba(255,214,160,0.35)'), 9); sun.position.set(-60, 34, -130); scene.add(sun);
 
 // ---- materials
 const M = {
-  shell: new THREE.MeshPhysicalMaterial({ color: 0xc9d2da, roughness: 0.34, metalness: 0.0, clearcoat: 0.8, clearcoatRoughness: 0.2 }),
-  joint: new THREE.MeshStandardMaterial({ color: 0x1b222b, roughness: 0.38, metalness: 0.85 }),
-  dark: new THREE.MeshStandardMaterial({ color: 0x0c1118, roughness: 0.5, metalness: 0.7 }),
-  steel: new THREE.MeshStandardMaterial({ color: 0x8a96a3, roughness: 0.28, metalness: 1.0 }),
+  shell: new THREE.MeshPhysicalMaterial({ color: 0xd2dae2, roughness: 0.3, metalness: 0.0, clearcoat: 0.9, clearcoatRoughness: 0.18 }),
+  joint: new THREE.MeshStandardMaterial({ color: 0x1b222b, roughness: 0.36, metalness: 0.85 }),
+  dark: new THREE.MeshStandardMaterial({ color: 0x0b1017, roughness: 0.45, metalness: 0.8 }),
+  steel: new THREE.MeshStandardMaterial({ color: 0x9aa6b3, roughness: 0.22, metalness: 1.0 }),
+  chrome: new THREE.MeshStandardMaterial({ color: 0xdfe8f0, roughness: 0.08, metalness: 1.0 }),
   cyan: new THREE.MeshStandardMaterial({ color: 0x00cfff, emissive: 0x00cfff, emissiveIntensity: 3.2, roughness: 0.4 }),
   green: new THREE.MeshStandardMaterial({ color: 0x00ff88, emissive: 0x00ff88, emissiveIntensity: 3.0, roughness: 0.4 }),
-  floor: new THREE.MeshStandardMaterial({ color: 0x0a0f16, roughness: 0.3, metalness: 0.65 }),
-  cable: new THREE.MeshStandardMaterial({ color: 0x10151c, roughness: 0.6, metalness: 0.3 })
+  floor: new THREE.MeshStandardMaterial({ color: 0x0a0f16, roughness: 0.24, metalness: 0.7 }),
+  cable: new THREE.MeshStandardMaterial({ color: 0x10151c, roughness: 0.55, metalness: 0.3 }),
+  hex: new THREE.MeshStandardMaterial({ color: 0x0d1622, roughness: 0.42, metalness: 0.75 })
 };
 
-// ---- the workshop floor: a dark disc, a lit rim, a faint grid of light
+// ---- the wall behind: Build it Better's hexagons (its picture: a honeycomb in the dark, a few cells lit blue), curved
+// round the workshop, and its name on it in neon
+const CENTER = new THREE.Vector3(0.15, 0, 0.2);
+const hexLit = [];
+{
+  // an island of cells behind the work, not a wall: an oval round the sign, its edge breaking up into the dark
+  const R = 6.8, r = 0.34, dx = r * Math.sqrt(3), dy = r * 1.5, cells = [];
+  for (let row = 0; row < 16; row++) for (let col = -16; col <= 16; col++) {
+    const s = col * dx + (row % 2 ? dx / 2 : 0), ang = s / R, y = 0.6 + row * dy;
+    const e = Math.pow(ang / 0.6, 2) + Math.pow((y - 3.7) / 3.0, 2), keep = rnd();
+    if (e > 1.15 || (e > 0.62 && keep < (e - 0.62) * 1.9)) continue;
+    cells.push([ang, y, (rnd() - 0.5) * 0.12, e]);
+  }
+  const geo = new THREE.CylinderGeometry(r * 0.94, r * 0.94, 0.16, 6);
+  geo.rotateX(Math.PI / 2);
+  const mesh = new THREE.InstancedMesh(geo, M.hex, cells.length); mesh.receiveShadow = true;
+  const face = new THREE.InstancedMesh(new THREE.CircleGeometry(r * 0.72, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending }), cells.length);
+  const edge = new THREE.InstancedMesh(new THREE.RingGeometry(r * 0.9, r * 0.94, 6, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x1f6fd6).multiplyScalar(0.7), transparent: true, opacity: 0.3, depthWrite: false }), cells.length);
+  const m = new THREE.Object3D(), c0 = new THREE.Color(0, 0, 0);
+  cells.forEach(([ang, y, dz, e], i) => {
+    m.position.set(CENTER.x + Math.sin(ang) * (R + dz), y, CENTER.z - Math.cos(ang) * (R + dz));
+    m.rotation.set(0, -ang, Math.PI / 6); m.updateMatrix();
+    mesh.setMatrixAt(i, m.matrix);
+    m.position.addScaledVector(new THREE.Vector3(-Math.sin(ang), 0, Math.cos(ang)), 0.085); m.updateMatrix();
+    face.setMatrixAt(i, m.matrix); edge.setMatrixAt(i, m.matrix);
+    face.setColorAt(i, c0);
+    // a few cells lit, as in its picture: blue, some cyan, one in eight; each breathes on a period dividing the loop
+    if (rnd() < 0.08) hexLit.push({ i, ph: rnd(), k: [1, 2, 5][Math.floor(rnd() * 3)], c: rnd() < 0.7 ? new THREE.Color(0x2a6ff0) : new THREE.Color(0x00cfff), a: (0.08 + rnd() * 0.16) * (1.2 - Math.min(1, e)) });
+  });
+  face.instanceColor.needsUpdate = true;
+  scene.add(mesh, face, edge);
+  scene.userData.face = face;
+}
+// the sign: its name in tubes of light, "Build it" cyan, "Better" green, on a dark plate held off the wall
+const sign = new THREE.Group(); sign.position.set(CENTER.x, 4.1, CENTER.z - 6.25); scene.add(sign);
+const neon = (() => {
+  const c = document.createElement('canvas'); c.width = 2400; c.height = 420;
+  const x = c.getContext('2d'); x.font = '400 230px "Archivo Black"'; x.textBaseline = 'middle'; x.lineJoin = 'round';
+  const a = 'Build it ', b = 'Better', wa = x.measureText(a).width, wb = x.measureText(b).width, x0 = (c.width - wa - wb) / 2, y = c.height / 2 + 6;
+  const tube = (s, px, col, core) => {
+    x.shadowColor = col;
+    for (const [w, blur, st, al] of [[16, 60, col, 0.35], [9, 26, col, 0.8], [5, 10, core, 1], [2.2, 0, '#ffffff', 1]]) {
+      x.globalAlpha = al; x.lineWidth = w; x.shadowBlur = blur; x.strokeStyle = st; x.strokeText(s, px, y);
+    }
+    x.globalAlpha = 1; x.shadowBlur = 0;
+  };
+  tube(a, x0, '#00cfff', '#b8f2ff'); tube(b, x0 + wa, '#00ff88', '#c4ffe4');
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+})();
+const signW = 6.4, signH = signW * 420 / 2400;
+const plate = new THREE.Mesh(new RoundedBoxGeometry(signW * 1.04, signH * 1.18, 0.08, 4, 0.08), M.dark); plate.position.z = -0.05; plate.receiveShadow = true; sign.add(plate);
+const neonMat = new THREE.MeshBasicMaterial({ map: neon, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: new THREE.Color(2.2, 2.2, 2.2) });
+const neonMesh = new THREE.Mesh(new THREE.PlaneGeometry(signW, signH), neonMat); neonMesh.position.z = 0.02; sign.add(neonMesh);
+for (const sx of [-1, 1]) for (const sy of [-1, 1]) { const b = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.14, 16), M.steel); b.rotation.x = Math.PI / 2; b.position.set(sx * signW * 0.5, sy * signH * 0.5, -0.02); sign.add(b); }
+const signLight = new THREE.PointLight(0x40ffd0, 5, 7, 1.6); signLight.position.set(0, -0.4, 1.0); sign.add(signLight);
+
+// ---- the workshop floor: a dark disc, a lit rim, traces of light running in to the pad
 const deck = new THREE.Group(); scene.add(deck);
 {
   const disc = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.35, 0.22, 96), M.floor);
   disc.position.y = -0.11; disc.receiveShadow = true; deck.add(disc);
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(4.22, 0.018, 8, 160), M.cyan);
-  rim.rotation.x = Math.PI / 2; rim.position.y = 0.004; deck.add(rim);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(4.22, 0.018, 8, 160), M.cyan); rim.rotation.x = Math.PI / 2; rim.position.y = 0.004; deck.add(rim);
   const rim2 = new THREE.Mesh(new THREE.TorusGeometry(2.1, 0.008, 8, 120), new THREE.MeshStandardMaterial({ color: 0x00cfff, emissive: 0x00cfff, emissiveIntensity: 1.2 }));
   rim2.rotation.x = Math.PI / 2; rim2.position.y = 0.004; deck.add(rim2);
-  const gmat = new THREE.LineBasicMaterial({ color: 0x0a4a66, transparent: true, opacity: 0.55 });
-  const pts = [];
-  for (let i = -8; i <= 8; i++) { const v = i * 0.5, L = Math.sqrt(Math.max(0, 4.1 * 4.1 - v * v)); pts.push(-L, 0.003, v, L, 0.003, v, v, 0.003, -L, v, 0.003, L); }
-  const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  deck.add(new THREE.LineSegments(gg, gmat));
+  // a skirt round the deck's edge: panels with lights
+  for (let i = 0; i < 48; i++) {
+    const a = i / 48 * TAU, l = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.03, 0.02), i % 4 ? M.dark : M.cyan);
+    l.position.set(Math.cos(a) * 4.3, -0.12, Math.sin(a) * 4.3); l.rotation.y = -a + Math.PI / 2; deck.add(l);
+  }
+}
+// the traces: lines from the rim to the pad, a pulse of light running in along each
+const traces = [];
+{
+  const mat = new THREE.MeshBasicMaterial({ color: 0x0b5f80, transparent: true, opacity: 0.6, depthWrite: false });
+  for (let i = 0; i < 14; i++) {
+    const a = i / 14 * TAU + 0.11, L = 2.8;
+    const ln = new THREE.Mesh(new THREE.PlaneGeometry(L, 0.012), mat);
+    ln.rotation.x = -Math.PI / 2; ln.rotation.z = -a;
+    const mid = 1.35 + L / 2; ln.position.set(CENTER.x + Math.cos(a) * mid, 0.004, CENTER.z + Math.sin(a) * mid); scene.add(ln);
+    const p = sprite(i % 3 ? GLOW_C : GLOW_G, 0.32); scene.add(p);
+    traces.push({ a, p, ph: rnd(), k: i % 2 ? 2 : 4 });   // 4 or 2 runs a loop
+  }
 }
 
-// ---- a robot arm: base, turret, shoulder, upper arm, elbow, forearm, wrist, tool
+// ---- a robot arm: base, turret, shoulder, upper arm, elbow, forearm, wrist, tool; pistons, cables, running lights
 function joint(r, len, ringMat) {
   const g = new THREE.Group();
   const c = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 48), M.joint); c.rotation.x = Math.PI / 2; c.castShadow = true; g.add(c);
   for (const s of [1, -1]) {
     const cap = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.72, r * 0.72, 0.012, 48), M.steel); cap.rotation.x = Math.PI / 2; cap.position.z = s * (len / 2 + 0.006); g.add(cap);
     const ring = new THREE.Mesh(new THREE.TorusGeometry(r * 0.84, r * 0.06, 10, 64), ringMat); ring.position.z = s * (len / 2 + 0.002); g.add(ring);
+    // bolts round the cap
+    for (let k = 0; k < 8; k++) { const b = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.06, r * 0.06, 0.02, 10), M.chrome); b.rotation.x = Math.PI / 2; b.position.set(Math.cos(k / 8 * TAU) * r * 0.55, Math.sin(k / 8 * TAU) * r * 0.55, s * (len / 2 + 0.012)); g.add(b); }
   }
   return g;
 }
-function link(w, len, d) {
+function link(w, len, d, ledMat) {
+  const g = new THREE.Group();
   const m = new THREE.Mesh(new RoundedBoxGeometry(w, len, d, 6, Math.min(w, d) * 0.42), M.shell);
-  m.position.y = len / 2; m.castShadow = true; m.receiveShadow = true;
-  return m;
+  m.position.y = len / 2; m.castShadow = true; m.receiveShadow = true; g.add(m);
+  // a seam of dark panel down each side, and a running light in it
+  for (const s of [1, -1]) {
+    const seam = new THREE.Mesh(new THREE.BoxGeometry(0.012, len * 0.7, d * 0.5), M.dark); seam.position.set(s * w / 2, len / 2, 0); g.add(seam);
+  }
+  const led = new THREE.Mesh(new THREE.BoxGeometry(0.016, len * 0.5, 0.03), ledMat); led.position.set(w / 2 + 0.004, len / 2, 0); g.add(led);
+  return { g, led };
 }
-// The links stand along +y in their own group and every joint turns about its group's z, so the arm works in the
-// turret's x-y plane: a positive angle leans a link towards the turret's -x, its "forward".
-const HS = 0.64, L1 = 1.15, L2 = 0.95;   // the shoulder's height over the floor, the upper arm, the forearm
-function arm(ledMat) {
+const HS = 0.64, L1 = 1.15, L2 = 0.95;
+function piston(parent) {
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1, 20), M.joint); body.castShadow = true;
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 1, 16), M.chrome); rod.castShadow = true;
+  const band = new THREE.Mesh(new THREE.TorusGeometry(0.047, 0.006, 6, 24), M.cyan);
+  scene.add(body, rod, band);
+  return { body, rod, band };
+}
+const up = new THREE.Vector3(0, 1, 0);
+function placePiston(p, a, b) {
+  const d = new THREE.Vector3().subVectors(b, a), L = d.length(), n = d.clone().normalize(), q = new THREE.Quaternion().setFromUnitVectors(up, n);
+  const bl = Math.min(L * 0.62, 0.62);
+  p.body.position.copy(a).addScaledVector(n, bl / 2); p.body.scale.set(1, bl, 1); p.body.quaternion.copy(q);
+  p.rod.position.copy(a).addScaledVector(n, (bl + L) / 2 - 0.02); p.rod.scale.set(1, L - bl + 0.04, 1); p.rod.quaternion.copy(q);
+  p.band.position.copy(a).addScaledVector(n, bl - 0.01); p.band.quaternion.copy(q).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2));
+}
+function arm(ledColor) {
+  const ledMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(ledColor).multiplyScalar(2.4) });
   const root = new THREE.Group();
-  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.5, 0.14, 64), M.joint); base.position.y = 0.07; base.castShadow = true; root.add(base);
-  const bring = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.012, 8, 96), M.cyan); bring.rotation.x = Math.PI / 2; bring.position.y = 0.145; root.add(bring);
-  const turret = new THREE.Group(); turret.position.y = 0.14; root.add(turret);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.52, 0.16, 64), M.joint); base.position.y = 0.08; base.castShadow = true; root.add(base);
+  // a band of stripes round the base: cyan and dark, as the deck's skirt
+  for (let k = 0; k < 24; k++) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.04, 0.02), k % 2 ? M.dark : M.cyan); const a = k / 24 * TAU; s.position.set(Math.cos(a) * 0.5, 0.09, Math.sin(a) * 0.5); s.rotation.y = -a + Math.PI / 2; root.add(s); }
+  const bring = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.012, 8, 96), M.cyan); bring.rotation.x = Math.PI / 2; bring.position.y = 0.165; root.add(bring);
+  const turret = new THREE.Group(); turret.position.y = 0.16; root.add(turret);
   const tbody = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.36, 0.36, 64), M.shell); tbody.position.y = 0.18; tbody.castShadow = true; turret.add(tbody);
+  const vent = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.16, 0.2), M.dark); vent.position.set(0.33, 0.2, 0); turret.add(vent);
   const led = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.16), ledMat); led.position.set(-0.335, 0.24, 0); turret.add(led);
-  const sh = new THREE.Group(); sh.position.y = HS - 0.14; turret.add(sh);
+  const sh = new THREE.Group(); sh.position.y = HS - 0.16; turret.add(sh);
   sh.add(joint(0.22, 0.46, M.cyan));
   const shoulder = new THREE.Group(); sh.add(shoulder);
-  shoulder.add(link(0.26, L1, 0.3));
+  const up1 = link(0.26, L1, 0.3, ledMat); shoulder.add(up1.g);
   const el = new THREE.Group(); el.position.y = L1; shoulder.add(el);
   el.add(joint(0.17, 0.38, M.cyan));
   const elbow = new THREE.Group(); el.add(elbow);
-  elbow.add(link(0.2, L2, 0.23));
+  const up2 = link(0.2, L2, 0.23, ledMat); elbow.add(up2.g);
   const wr = new THREE.Group(); wr.position.y = L2; elbow.add(wr);
   wr.add(joint(0.12, 0.26, M.cyan));
   const wrist = new THREE.Group(); wr.add(wrist);
   const flange = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.2, 40), M.joint); flange.position.y = 0.12; flange.castShadow = true; wrist.add(flange);
-  const tool = new THREE.Group(); tool.position.y = 0.22; wrist.add(tool);
-  // a cable along the upper arm
-  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(0.17, 0.05, 0.0), new THREE.Vector3(0.2, 0.6, 0.05), new THREE.Vector3(0.16, 1.12, 0.0)]);
-  shoulder.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 0.025, 10, false), M.cable));
-  return { root, turret, shoulder, elbow, wrist, tool };
+  const spin = new THREE.Group(); spin.position.y = 0.22; wrist.add(spin);
+  const tool = new THREE.Group(); spin.add(tool);
+  // cables: along the upper arm, and from the forearm round the wrist
+  const c1 = new THREE.CatmullRomCurve3([new THREE.Vector3(0.17, 0.05, 0.0), new THREE.Vector3(0.21, 0.6, 0.06), new THREE.Vector3(0.16, 1.12, 0.0)]);
+  shoulder.add(new THREE.Mesh(new THREE.TubeGeometry(c1, 40, 0.026, 10, false), M.cable));
+  const c2 = new THREE.CatmullRomCurve3([new THREE.Vector3(-0.13, 0.1, 0.05), new THREE.Vector3(-0.16, 0.55, 0.09), new THREE.Vector3(-0.12, 0.92, 0.06)]);
+  elbow.add(new THREE.Mesh(new THREE.TubeGeometry(c2, 30, 0.018, 8, false), M.cable));
+  // pistons: turret to upper arm, upper arm to forearm (placed each frame between these anchors)
+  const a1 = new THREE.Object3D(); a1.position.set(-0.24, 0.2, 0.2); turret.add(a1);
+  const b1 = new THREE.Object3D(); b1.position.set(-0.05, 0.62, 0.2); shoulder.add(b1);
+  const a2 = new THREE.Object3D(); a2.position.set(0.02, 0.78, -0.19); shoulder.add(a2);
+  const b2 = new THREE.Object3D(); b2.position.set(0.0, 0.32, -0.16); elbow.add(b2);
+  return { root, turret, shoulder, elbow, wrist, spin, tool, leds: [led, up1.led, up2.led], ledMat, pist: [[piston(), a1, b1], [piston(), a2, b2]] };
 }
-// Point the tool's tip, `reach` past the wrist joint, at `target`, coming in at `psi` (radians from straight up, towards
-// the target): the turret faces it, the upper arm and the forearm solve the two-link reach (elbow up), the wrist aims.
 function aim(a, target, reach, psi) {
   const b = a.root.position, dx = target.x - b.x, dz = target.z - b.z;
   a.turret.rotation.y = Math.atan2(dz, -dx);
@@ -171,47 +283,76 @@ function aim(a, target, reach, psi) {
   a.elbow.rotation.z = t2;
   a.wrist.rotation.z = psi - (g - al) - t2;
 }
+const _a = new THREE.Vector3(), _b = new THREE.Vector3();
+function pistons(a) { a.pist.forEach(([p, x, y]) => { x.getWorldPosition(_a); y.getWorldPosition(_b); placePiston(p, _a, _b); }); }
 function gripper(tool) {
-  const palm = new THREE.Mesh(new RoundedBoxGeometry(0.3, 0.1, 0.16, 4, 0.03), M.joint); palm.position.y = 0.05; palm.castShadow = true; tool.add(palm);
+  const palm = new THREE.Mesh(new RoundedBoxGeometry(0.32, 0.1, 0.17, 4, 0.03), M.joint); palm.position.y = 0.05; palm.castShadow = true; tool.add(palm);
+  const fingers = [];
   for (const s of [1, -1]) {
-    const f = new THREE.Mesh(new RoundedBoxGeometry(0.05, 0.24, 0.12, 4, 0.02), M.steel); f.position.set(s * 0.11, 0.2, 0); f.castShadow = true; tool.add(f);
-    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.052, 0.03, 0.124), M.green); tip.position.set(s * 0.11, 0.31, 0); tool.add(tip);
+    const f = new THREE.Group(); f.position.set(s * 0.12, 0.1, 0); tool.add(f);
+    const k1 = new THREE.Mesh(new RoundedBoxGeometry(0.05, 0.16, 0.12, 4, 0.02), M.steel); k1.position.y = 0.08; k1.castShadow = true; f.add(k1);
+    const k2 = new THREE.Mesh(new RoundedBoxGeometry(0.045, 0.12, 0.11, 4, 0.02), M.chrome); k2.position.set(-s * 0.02, 0.2, 0); k2.rotation.z = s * 0.25; f.add(k2);
+    const tip = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.03, 0.116), M.green); tip.position.set(-s * 0.04, 0.26, 0); f.add(tip);
+    fingers.push([f, s]);
   }
-  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.02, 16, 12), M.green); eye.position.set(0, 0.06, 0.085); tool.add(eye);
+  const eye = new THREE.Mesh(new THREE.SphereGeometry(0.022, 16, 12), M.green); eye.position.set(0, 0.06, 0.09); tool.add(eye);
+  return fingers;
 }
 function laser(tool) {
   const body = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.1, 0.26, 40), M.joint); body.position.y = 0.13; body.castShadow = true; tool.add(body);
-  const nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.18, 40), M.steel); nozzle.position.y = 0.35; tool.add(nozzle);
-  const r = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.01, 8, 48), M.cyan); r.rotation.x = Math.PI / 2; r.position.y = 0.2; tool.add(r);
-  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 12), new THREE.MeshBasicMaterial({ color: 0xbff6ff })); tip.position.y = 0.45; tool.add(tip);
-  return tip;
+  for (let k = 0; k < 3; k++) { const fin = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.008, 6, 40), M.steel); fin.rotation.x = Math.PI / 2; fin.position.y = 0.06 + k * 0.05; tool.add(fin); }
+  const nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.18, 40), M.chrome); nozzle.position.y = 0.35; tool.add(nozzle);
+  const r = new THREE.Mesh(new THREE.TorusGeometry(0.085, 0.012, 8, 48), M.cyan); r.rotation.x = Math.PI / 2; r.position.y = 0.27; tool.add(r);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(0.03, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xbff6ff).multiplyScalar(2) })); tip.position.y = 0.45; tool.add(tip);
+  const glow = sprite(GLOW_C, 0.3); glow.position.y = 0.45; tool.add(glow);
+  return { tip, glow, ring: r };
 }
 
-// ---- the app being built: glass panels of light, stacked in the air over a pad of light
+// ---- the app being built: glass panels of light, each with what it shows drawn in as it locks
 const app = new THREE.Group(); app.position.set(0.15, 1.35, 0.2); scene.add(app);
 const glass = (op) => new THREE.MeshPhysicalMaterial({ color: 0x0b2a3a, roughness: 0.08, metalness: 0.1, transparent: true, opacity: op, clearcoat: 1, side: THREE.DoubleSide, depthWrite: false });
+const scanTex = (() => { const c = document.createElement('canvas'); c.width = 4; c.height = 64; const x = c.getContext('2d'); for (let i = 0; i < 64; i += 4) { x.fillStyle = 'rgba(160,240,255,0.16)'; x.fillRect(0, i, 4, 1.5); } const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(1, 8); return t; })();
 function uiPanel(w, h, accent, kind) {
-  const g = new THREE.Group(); g.userData.w = w; g.userData.h = h;
-  const plate = new THREE.Mesh(new RoundedBoxGeometry(w, h, 0.02, 4, 0.05), glass(0.2)); g.add(plate);
-  const edge = new THREE.LineSegments(new THREE.EdgesGeometry(new RoundedBoxGeometry(w, h, 0.02, 4, 0.05), 30), new THREE.LineBasicMaterial({ color: new THREE.Color(accent).multiplyScalar(2.6), transparent: true, opacity: 0.95 }));
-  g.add(edge);
+  const g = new THREE.Group(); g.userData.w = w; g.userData.h = h; g.userData.draw = [];
+  const plateG = new RoundedBoxGeometry(w, h, 0.02, 4, 0.05);
+  g.add(new THREE.Mesh(plateG, glass(0.22)));
+  const lines = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.96, h * 0.94), new THREE.MeshBasicMaterial({ map: scanTex, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending })); lines.position.z = 0.012; g.add(lines);
+  g.add(new THREE.LineSegments(new THREE.EdgesGeometry(plateG, 30), new THREE.LineBasicMaterial({ color: new THREE.Color(accent).multiplyScalar(2.6), transparent: true, opacity: 0.95 })));
   const lit = (c, i) => new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(i), transparent: true, opacity: 0.95, depthWrite: false });
+  // a title bar on every panel: three dots and a line
+  for (let i = 0; i < 3; i++) { const d = new THREE.Mesh(new THREE.CircleGeometry(0.018, 12), lit(i ? 0x3a6a88 : accent, i ? 1 : 2)); d.position.set(-w / 2 + 0.07 + i * 0.05, h / 2 - 0.06, 0.016); g.add(d); }
   if (kind === 'chart') {
     const pts = []; let y = -h * 0.28;
-    for (let i = 0; i <= 18; i++) { const x = -w * 0.4 + (w * 0.8) * i / 18; y += (Math.sin(i * 1.7) * 0.03 + 0.022); pts.push(new THREE.Vector3(x, Math.min(y, h * 0.32), 0.016)); }
-    const line = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 80, 0.008, 6, false), lit(0x00ff88, 2.6)); g.add(line);
-    for (let i = 0; i < 7; i++) { const bh = 0.04 + ((i * 37) % 9) * 0.012; const b = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.06, bh), lit(0x00cfff, 1.2)); b.position.set(-w * 0.36 + i * w * 0.11, -h * 0.38 + bh / 2, 0.015); g.add(b); }
+    for (let i = 0; i <= 40; i++) { const x = -w * 0.42 + (w * 0.84) * i / 40; y += Math.sin(i * 0.83) * 0.016 + 0.011; pts.push(new THREE.Vector3(x, Math.min(y, h * 0.3), 0.016)); }
+    const tg = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 160, 0.008, 6, false);
+    const line = new THREE.Mesh(tg, lit(0x00ff88, 2.6)); g.add(line);
+    g.userData.draw.push((k) => tg.setDrawRange(0, Math.floor(tg.index.count * k / 3) * 3));
+    const head = sprite(GLOW_G, 0.12); g.add(head);
+    g.userData.draw.push((k) => { const p = pts[Math.min(40, Math.floor(k * 40))]; head.position.set(p.x, p.y, 0.03); head.visible = k > 0.01 && k < 0.99; });
+    for (let i = 0; i < 8; i++) {
+      const bh = 0.05 + ((i * 37) % 9) * 0.013, b = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.055, bh), lit(0x00cfff, 1.2));
+      b.position.set(-w * 0.38 + i * w * 0.105, -h * 0.4 + bh / 2, 0.015); g.add(b);
+      g.userData.draw.push((k) => { const s = clamp01(k * 1.6 - i * 0.08); b.scale.y = Math.max(0.001, s); b.position.y = -h * 0.4 + bh * s / 2; });
+    }
   } else if (kind === 'cards') {
     for (let i = 0; i < 3; i++) {
-      const c = new THREE.Mesh(new RoundedBoxGeometry(w * 0.27, h * 0.62, 0.006, 2, 0.02), lit(i === 1 ? 0x00ff88 : 0x00cfff, i === 1 ? 0.3 : 0.14)); c.position.set(-w * 0.31 + i * w * 0.31, 0, 0.015); g.add(c);
-      const ce = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(w * 0.27, h * 0.62)), new THREE.LineBasicMaterial({ color: new THREE.Color(i === 1 ? 0x00ff88 : 0x00cfff).multiplyScalar(1.8) })); ce.position.copy(c.position); ce.position.z += 0.004; g.add(ce);
+      const c = new THREE.Mesh(new RoundedBoxGeometry(w * 0.27, h * 0.6, 0.006, 2, 0.02), lit(i === 1 ? 0x00ff88 : 0x00cfff, i === 1 ? 0.3 : 0.14)); c.position.set(-w * 0.31 + i * w * 0.31, -0.03, 0.015); g.add(c);
+      const ce = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(w * 0.27, h * 0.6)), new THREE.LineBasicMaterial({ color: new THREE.Color(i === 1 ? 0x00ff88 : 0x00cfff).multiplyScalar(1.8) })); ce.position.copy(c.position); ce.position.z += 0.004; g.add(ce);
+      const val = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.16, 0.03), lit(0xffffff, 1.4)); val.position.set(c.position.x, 0.02, 0.022); g.add(val);
+      g.userData.draw.push((k) => { const s = clamp01(k * 2 - i * 0.3); c.scale.set(1, Math.max(0.001, s), 1); ce.scale.set(1, Math.max(0.001, s), 1); val.scale.x = Math.max(0.001, clamp01(k * 2 - 0.6 - i * 0.2)); });
     }
   } else if (kind === 'button') {
     const bt = new THREE.Mesh(new RoundedBoxGeometry(w * 0.46, h * 0.24, 0.01, 3, 0.04), lit(0x00ff88, 1.8)); bt.position.set(0, -h * 0.18, 0.016); g.add(bt);
-    for (let i = 0; i < 3; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(w * (0.7 - i * 0.18), 0.022), lit(0x9fe8ff, 0.9)); l.position.set(0, h * 0.26 - i * 0.07, 0.015); g.add(l); }
+    g.userData.draw.push((k) => { const s = 0.4 + 0.6 * settle(k); bt.scale.set(s, s, 1); });
+    for (let i = 0; i < 3; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(w * (0.7 - i * 0.18), 0.022), lit(0x9fe8ff, 0.9)); l.position.set(0, h * 0.22 - i * 0.07, 0.015); g.add(l);
+      g.userData.draw.push((k) => { l.scale.x = Math.max(0.001, clamp01(k * 2.2 - i * 0.3)); }); }
   } else {
-    for (let i = 0; i < 5; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(w * (0.75 - (i % 3) * 0.17), 0.02), lit(0x7fdcff, 0.8)); l.position.set(-w * 0.04, h * 0.3 - i * h * 0.14, 0.015); g.add(l); }
+    for (let i = 0; i < 5; i++) { const l = new THREE.Mesh(new THREE.PlaneGeometry(w * (0.75 - (i % 3) * 0.17), 0.02), lit(0x7fdcff, 0.8)); l.position.set(-w * 0.04, h * 0.26 - i * h * 0.13, 0.015); g.add(l);
+      g.userData.draw.push((k) => { l.scale.x = Math.max(0.001, clamp01(k * 2.4 - i * 0.25)); }); }
   }
+  // the seam the laser welds along its lower edge: white-hot as it is drawn, cooling to cyan
+  const seam = new THREE.Mesh(new THREE.BoxGeometry(w * 0.9, 0.014, 0.024), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false }));
+  seam.position.set(0, -h / 2, 0.012); g.add(seam); g.userData.seam = seam;
   return g;
 }
 const panels = [
@@ -221,95 +362,95 @@ const panels = [
   [uiPanel(0.9, 0.6, 0x00cfff, 'lines'), [-0.75, -0.42, 0.55], [-0.06, -0.4, 0.03]]
 ];
 for (const [p, pos, rot] of panels) { p.position.set(...pos); p.rotation.set(...rot); app.add(p); }
-{
-  const pad = new THREE.Mesh(new THREE.CircleGeometry(1.25, 96), new THREE.MeshBasicMaterial({ map: glowTex('rgba(0,255,170,0.45)', 'rgba(0,207,255,0.12)'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-  pad.rotation.x = -Math.PI / 2; pad.position.set(0.15, 0.012, 0.2); scene.add(pad);
-  const ringA = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.01, 8, 128), M.green); ringA.rotation.x = Math.PI / 2; ringA.position.set(0.15, 0.02, 0.2); scene.add(ringA);
-  // the beam of light up into the panels
-  const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.05, 2.2, 64, 1, true), new THREE.ShaderMaterial({
-    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
-    vertexShader: 'varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: 'varying vec2 vU; void main(){ float a = pow(1.0 - vU.y, 2.6) * 0.07; gl_FragColor = vec4(0.0, 0.85, 0.75, a); }'
-  }));
-  cone.position.set(0.15, 1.1, 0.2); scene.add(cone);
-  const appLight = new THREE.PointLight(0x00ffb0, 4, 6, 1.6); appLight.position.set(0.15, 1.2, 0.4); scene.add(appLight);
-}
-
-// ---- two arms at work: one brings each panel in, one welds it with a beam of light
-const A = arm(M.green); A.root.position.set(2.15, 0, 0.75); scene.add(A.root); gripper(A.tool);
-const B = arm(M.cyan); B.root.position.set(-1.35, 0, -1.55); scene.add(B.root); const tip = laser(B.tool);
-// the weld: the beam, a hot point of light where it meets the glass, sparks off it -- placed every frame
-const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.007, 0.007, 1, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x9ff4ff).multiplyScalar(5) }));
-scene.add(beam);
-const flare = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('rgba(220,255,255,1)', 'rgba(0,207,255,0.5)'), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
-flare.scale.set(0.7, 0.7, 1); scene.add(flare);
-const weldLight = new THREE.PointLight(0x7fe6ff, 6, 4, 1.8); scene.add(weldLight);
-const sparks = (() => {
-  const n = 420, pos = new Float32Array(n * 3); let s = 11;
-  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < n; i++) {
-    const t = Math.pow(rnd(), 1.6), th = rnd() * Math.PI * 2, ph = rnd() * 1.2;
-    const d = new THREE.Vector3(Math.cos(th) * Math.sin(ph), -Math.cos(ph) * 0.6 + 0.2, Math.sin(th) * Math.sin(ph)).multiplyScalar(t * 0.75);
-    d.y -= t * t * 0.5;
-    pos.set([d.x, d.y, d.z], i * 3);
-  }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const p = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xbdf5ff, size: 0.018, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
-  scene.add(p); return p;
-})();
-// the idea: a seed of light that drops into the beam and becomes the app
-const idea = new THREE.Group(); scene.add(idea);
-const ideaCore = new THREE.Mesh(new THREE.IcosahedronGeometry(0.16, 3), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xd8fff4).multiplyScalar(3) }));
-const ideaGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex('rgba(210,255,245,1)', 'rgba(0,255,170,0.45)'), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
-ideaGlow.scale.set(1.4, 1.4, 1); idea.add(ideaCore, ideaGlow);
-const ideaLight = new THREE.PointLight(0x7dffd8, 0, 5, 1.6); idea.add(ideaLight);
-// the burst on the pad when the product is done
+for (const [p] of panels) { p.userData.mats = []; p.traverse((o) => { if (o.material && o !== p.userData.seam) p.userData.mats.push([o.material, o.material.opacity, o.material.color.clone()]); }); }
+// the pad of light under the app, its beam up, and the burst when it is done
+const pad = new THREE.Mesh(new THREE.CircleGeometry(1.25, 96), new THREE.MeshBasicMaterial({ map: glowTex('rgba(0,255,170,0.45)', 'rgba(0,207,255,0.12)'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+pad.rotation.x = -Math.PI / 2; pad.position.set(0.15, 0.012, 0.2); scene.add(pad);
+const ringA = new THREE.Mesh(new THREE.TorusGeometry(0.95, 0.01, 8, 128), M.green); ringA.rotation.x = Math.PI / 2; ringA.position.set(0.15, 0.02, 0.2); scene.add(ringA);
+const ringB = new THREE.Mesh(new THREE.RingGeometry(1.02, 1.08, 64, 1, 0, Math.PI * 1.2), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00cfff).multiplyScalar(1.6), transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false }));
+ringB.rotation.x = -Math.PI / 2; ringB.position.set(0.15, 0.022, 0.2); scene.add(ringB);
+const cone = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.05, 2.2, 64, 1, true), new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, uniforms: { k: { value: 1 } },
+  vertexShader: 'varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'uniform float k; varying vec2 vU; void main(){ float a = pow(1.0 - vU.y, 2.6) * 0.07 * k; gl_FragColor = vec4(0.0, 0.85, 0.75, a); }'
+}));
+cone.position.set(0.15, 1.1, 0.2); scene.add(cone);
+const appLight = new THREE.PointLight(0x00ffb0, 4, 6, 1.6); appLight.position.set(0.15, 1.2, 0.4); scene.add(appLight);
 const burst = new THREE.Mesh(new THREE.TorusGeometry(1, 0.02, 8, 160), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00ff88).multiplyScalar(3), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
 burst.rotation.x = Math.PI / 2; burst.position.set(0.15, 0.03, 0.2); scene.add(burst);
-// dust in the light
-const dust = (() => {
-  const n = 900, pos = new Float32Array(n * 3); let s = 3;
-  const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < n; i++) pos.set([(rnd() - 0.5) * 7, rnd() * 3.4, (rnd() - 0.5) * 6], i * 3);
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const p = new THREE.Points(g, new THREE.PointsMaterial({ color: 0x8fe9ff, size: 0.012, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+// the scan up the finished app: a ring of green light and a sheet of light inside it
+const scan = new THREE.Group(); scan.position.set(0.15, 0, 0.35); scene.add(scan);
+const scanRing = new THREE.Mesh(new THREE.TorusGeometry(1.25, 0.012, 8, 160), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00ff88).multiplyScalar(3.2), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+scanRing.rotation.x = Math.PI / 2; scan.add(scanRing);
+const scanSheet = new THREE.Mesh(new THREE.CircleGeometry(1.25, 96), new THREE.MeshBasicMaterial({ map: GLOW_G, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }));
+scanSheet.rotation.x = -Math.PI / 2; scan.add(scanSheet);
+// what rises off it when it is live: motes of green light in a slow spiral
+const motes = (() => {
+  const n = 160, pos = new Float32Array(n * 3), g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const p = new THREE.Points(g, new THREE.PointsMaterial({ color: 0x9fffd0, size: 0.03, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+  p.userData.seed = Array.from({ length: n }, () => [rnd() * TAU, 0.3 + rnd() * 1.0, rnd() * 0.8, 0.6 + rnd() * 0.8]);
   scene.add(p); return p;
 })();
-// every panel's materials, with the opacity and colour they were made with, so the script can fade and turn them green
-for (const [p] of panels) {
-  p.userData.mats = [];
-  p.traverse((o) => { if (o.material) p.userData.mats.push([o.material, o.material.opacity, o.material.color.clone()]); });
-}
-// two small drones with their lights, hovering by the work
-const drones = [];
-for (const [x, y, z, ry, s] of [[-1.1, 2.55, 1.3, 0.6, 1], [1.55, 3.05, -1.2, -0.4, 0.8]]) {
-  const d = new THREE.Group(); d.position.set(x, y, z); d.rotation.set(0.12, ry, -0.08); d.scale.setScalar(s); scene.add(d);
-  d.userData.base = new THREE.Vector3(x, y, z); drones.push(d);
+
+// ---- the idea: a drone brings it in, down a beam of light, and lets it fall into the pad's beam
+const drone = (s) => {
+  const d = new THREE.Group(); d.scale.setScalar(s); scene.add(d);
   const body = new THREE.Mesh(new RoundedBoxGeometry(0.34, 0.09, 0.34, 4, 0.04), M.shell); body.castShadow = true; d.add(body);
   const eye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 16, 12), M.green); eye.position.set(0, -0.02, 0.17); d.add(eye);
+  const under = new THREE.Mesh(new THREE.CircleGeometry(0.08, 24), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00ffb0).multiplyScalar(2) })); under.rotation.x = Math.PI / 2; under.position.y = -0.047; d.add(under);
+  const rotors = [];
   for (const [x, z] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
     const armM = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.02, 0.2), M.joint); armM.position.set(x * 0.2, 0, z * 0.2); armM.rotation.y = Math.atan2(x, z); d.add(armM);
     const rotor = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.008, 6, 40), M.cyan); rotor.rotation.x = Math.PI / 2; rotor.position.set(x * 0.27, 0.03, z * 0.27); d.add(rotor);
-    const blur = new THREE.Mesh(new THREE.CircleGeometry(0.085, 32), new THREE.MeshBasicMaterial({ color: 0x9fdfff, transparent: true, opacity: 0.12, depthWrite: false })); blur.rotation.x = -Math.PI / 2; blur.position.set(x * 0.27, 0.035, z * 0.27); d.add(blur);
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.004, 0.018), M.steel); blade.position.set(x * 0.27, 0.035, z * 0.27); d.add(blade); rotors.push(blade);
+    const blur = new THREE.Mesh(new THREE.CircleGeometry(0.085, 32), new THREE.MeshBasicMaterial({ color: 0x9fdfff, transparent: true, opacity: 0.12, depthWrite: false })); blur.rotation.x = -Math.PI / 2; blur.position.set(x * 0.27, 0.037, z * 0.27); d.add(blur);
   }
-}
+  d.userData.rotors = rotors; return d;
+};
+const carrier = drone(1.15), watcher = drone(0.8);
+const idea = new THREE.Group(); scene.add(idea);
+const ideaCore = new THREE.Mesh(new THREE.IcosahedronGeometry(0.15, 3), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xd8fff4).multiplyScalar(3) }));
+const ideaShell = new THREE.Mesh(new THREE.IcosahedronGeometry(0.22, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00ff88).multiplyScalar(2), wireframe: true, transparent: true, opacity: 0.6 }));
+const ideaGlow = sprite(GLOW_G, 1.4); idea.add(ideaCore, ideaShell, ideaGlow);
+const ideaLight = new THREE.PointLight(0x7dffd8, 0, 5, 1.6); idea.add(ideaLight);
+const tractor = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.2, 1, 32, 1, true), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00ffb0).multiplyScalar(0.5), transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+scene.add(tractor);
 
-// ---- light: a cool key from above and behind the camera, cyan rims from behind, the sun's warmth faintly
+// ---- two arms at work: one carries each panel in, one welds it on
+const A = arm(0x00ff88); A.root.position.set(2.15, 0, 0.75); scene.add(A.root); const fingers = gripper(A.tool);
+const B = arm(0x00cfff); B.root.position.set(-1.35, 0, -1.55); scene.add(B.root); const torch = laser(B.tool);
+const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x9ff4ff).multiplyScalar(5) })); scene.add(beam);
+const beamHalo = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1, 12, 1, true), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00cfff).multiplyScalar(1.2), transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false })); scene.add(beamHalo);
+const flare = sprite(GLOW_C, 0.7); scene.add(flare);
+const weldLight = new THREE.PointLight(0x7fe6ff, 6, 4, 1.8); scene.add(weldLight);
+// sparks: each lives 0.55 s, born on its own beat; thrown off the weld, they fall, bounce once off the floor and fade.
+// Drawn as short streaks along the way they fly
+const SPARK_N = 220, SPARK_LIFE = 0.55;
+const sparks = (() => {
+  const pos = new Float32Array(SPARK_N * 6), col = new Float32Array(SPARK_N * 6), g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  l.frustumCulled = false; scene.add(l);
+  l.userData.s = Array.from({ length: SPARK_N }, () => { const a = rnd() * TAU, e = 0.2 + rnd() * 1.1, v = 1.2 + rnd() * 2.6; return { born: rnd() * SPARK_LIFE, v: new THREE.Vector3(Math.cos(a) * Math.cos(e) * v, Math.sin(e) * v * 0.9, Math.sin(a) * Math.cos(e) * v), warm: rnd() < 0.3 }; });
+  return l;
+})();
+const G = -9.0;
+
+// ---- light: a cool key from above and behind the camera, cyan rims from behind, the neon's green on the wall
 const key = new THREE.DirectionalLight(0xe6f2ff, 1.35); key.position.set(4, 7, 6); key.castShadow = true;
 key.shadow.mapSize.set(2048, 2048); Object.assign(key.shadow.camera, { left: -6, right: 6, top: 6, bottom: -6, near: 1, far: 30 }); key.shadow.bias = -0.0004; scene.add(key);
 const rim1 = new THREE.DirectionalLight(0x00cfff, 2.2); rim1.position.set(-6, 3, -7); scene.add(rim1);
 const rim2 = new THREE.DirectionalLight(0x00ff88, 0.9); rim2.position.set(7, 1.5, -5); scene.add(rim2);
-scene.add(new THREE.HemisphereLight(0x1a3550, 0x05070c, 0.2));
+scene.add(new THREE.HemisphereLight(0x1a3550, 0x05070c, 0.22));
 
-// ---- the camera: slight low angle, the work in the right 55 %, the left dark
-const FOCUS = new THREE.Vector3(0.3, 1.5, 0.2);
-if (PORTRAIT) { camera.position.set(0.7, 1.7, 8.2); camera.lookAt(0.35, 1.55, 0.0); camera.setViewOffset(W, H, 0, H * -0.1, W, H); }
-else { camera.position.set(-1.3, 1.45, 8.3); camera.lookAt(0.45, 1.45, 0.0); camera.setViewOffset(W, H, -W * 0.15, 0, W, H); }
-
+// ---- the camera: a little below the sign, the arms and the app in the middle, drifting slowly round and back
+const FOCUS = new THREE.Vector3(0.3, 1.6, 0.2);
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-composer.addPass(new BokehPass(scene, camera, { focus: camera.position.distanceTo(FOCUS), aperture: 0.00035, maxblur: 0.0022 }));
-composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.6, 0.42, 1.0));
+const bokeh = new BokehPass(scene, camera, { focus: 9, aperture: 0.00028, maxblur: 0.0026 });
+composer.addPass(bokeh);
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.55, 0.32, 1.0));
 composer.addPass(new OutputPass());
 composer.addPass(new ShaderPass({
   uniforms: { tDiffuse: { value: null }, uRes: { value: new THREE.Vector2(W, H) } },
@@ -319,95 +460,172 @@ composer.addPass(new ShaderPass({
     void main(){
       vec4 c = texture2D(tDiffuse, vU);
       vec2 q = vU - 0.5; q.x *= uRes.x / uRes.y;
-      float v = smoothstep(1.25, 0.35, length(q));
-      c.rgb *= mix(0.55, 1.0, v);
-      c.rgb += (h(vU * uRes) - 0.5) * 0.028;
+      c.rgb *= mix(0.55, 1.0, smoothstep(1.25, 0.35, length(q)));
+      c.rgb += (h(vU * uRes) - 0.5) * 0.026;
       gl_FragColor = c;
     }`
 }));
+
 // ---- the script, one loop of PERIOD seconds, everything a function of t alone (so frame 0 follows the last frame):
-//   0.0-1.5  the idea drops into the beam and flashes
-//   1.5-5.6  the gripper arm brings the four panels in one after another, the laser arm welds each as it locks
-//   6.2-8.6  the product is done: it glows green, lifts, a ring of light runs out over the pad
-//   8.6-9.8  it gives itself back to the pad, the arms go to rest, the next idea is on its way
+//   0.0-1.5  the drone brings the idea down its beam; it drops into the pad's beam and flashes
+//   1.5-5.6  the gripper carries the four panels in, one after another, the laser welds each as it locks; each panel
+//            draws what it shows as it locks
+//   6.2-7.3  the scan runs up the finished app; it lights green, lifts, a ring of light runs out over the pad
+//   8.6-9.8  it gives itself back to the pad, the arms go to rest, the drone goes for the next idea
 const PERIOD = 10;
-const clamp01 = (x) => Math.min(1, Math.max(0, x));
-const ease = (x) => { x = clamp01(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
-const win = (t, a, b) => clamp01((t - a) / (b - a));
 const START = (i) => 1.5 + i * 1.05, FLY = 0.8, WELD = 0.9;
-const GREEN = new THREE.Color(0x00ff88);
+const GREEN = new THREE.Color(0x00ff88), WHITE = new THREE.Color(4, 4, 4), CYANC = new THREE.Color(0x00cfff).multiplyScalar(1.4);
 const APP0 = app.position.clone();
 const A_REST = new THREE.Vector3(1.55, 0.95, 1.0), B_REST = new THREE.Vector3(-0.55, 1.15, -0.85);
 const lerpV = (a, b, k) => a.clone().lerp(b, k);
+const IDEA_FROM = new THREE.Vector3(-1.9, 4.2, 1.2), IDEA_OVER = new THREE.Vector3(0.0, 3.25, 0.25), IDEA_IN = new THREE.Vector3(0.15, 1.5, 0.2);
 function render(t) {
   t = ((t % PERIOD) + PERIOD) % PERIOD;
-  // the idea
-  const drop = ease(win(t, 0, 1.3));
-  idea.position.set(-0.7 + 0.85 * drop, 3.9 - 2.55 * drop, 0.2);
-  const flash = win(t, 1.25, 1.55), gone = win(t, 1.55, 2.2);
-  idea.visible = t < 2.2;
-  ideaCore.scale.setScalar((1 + 0.12 * Math.sin(t * Math.PI * 6)) * (1 - gone));
-  ideaGlow.scale.setScalar((1.4 + 2.6 * Math.sin(Math.PI * flash)) * (1 - gone * 0.8));
-  ideaGlow.material.opacity = 1 - gone;
+  const ph = t / PERIOD * TAU;
+  // the camera, drifting a few degrees round the work and back
+  const az = -0.12 + 0.05 * Math.sin(ph), el = 0.18 + 0.01 * Math.sin(ph * 2), dist = 8.6;
+  camera.position.set(FOCUS.x + Math.sin(az) * Math.cos(el) * dist, FOCUS.y + Math.sin(el) * dist, FOCUS.z + Math.cos(az) * Math.cos(el) * dist);
+  camera.lookAt(FOCUS.x, FOCUS.y + 0.5, FOCUS.z - 0.5);
+  bokeh.uniforms.focus.value = camera.position.distanceTo(FOCUS);
+
+  // the drone with the idea: in from the dark, over the pad, lowers it down its beam, goes
+  const inK = settle(win(t, 0, 0.9)), outK = ease(win(t, 1.6, 2.6)), backK = ease(win(t, 8.8, 10));
+  const cpos = lerpV(IDEA_FROM, IDEA_OVER, inK).lerp(new THREE.Vector3(2.4, 4.6, -1.4), outK);
+  if (t >= 8.8) cpos.copy(new THREE.Vector3(2.4, 4.6, -1.4)).lerp(IDEA_FROM, backK);
+  carrier.position.copy(cpos); carrier.position.y += 0.04 * Math.sin(t * TAU * 0.8);
+  carrier.rotation.set(0.1 - 0.12 * (inK - outK), 0.4, -0.06 + 0.1 * outK);
+  carrier.userData.rotors.forEach((r, i) => { r.rotation.y = t * 60 + i; });
+  const lower = ease(win(t, 0.75, 1.35)), flash = win(t, 1.25, 1.55), gone = win(t, 1.55, 2.1);
+  const ip = lerpV(IDEA_OVER.clone().add(new THREE.Vector3(0, -0.28, 0)), IDEA_IN, lower);
+  if (t < 0.75) ip.copy(carrier.position).add(new THREE.Vector3(0, -0.28, 0));
+  const appear = win(t, 0, 0.45);
+  idea.position.copy(ip); idea.visible = t < 2.1;
+  ideaCore.scale.setScalar((1 + 0.12 * Math.sin(t * TAU * 3)) * (1 - gone) * appear);
+  ideaShell.rotation.set(t * 1.3, t * 2.1, 0); ideaShell.scale.setScalar((1 + 0.4 * flash) * (1 - gone) * appear);
+  ideaGlow.scale.setScalar((1.2 + 2.6 * Math.sin(Math.PI * flash)) * (1 - gone * 0.8) * appear); ideaGlow.material.opacity = (1 - gone) * appear;
   ideaLight.intensity = 3 + 14 * Math.sin(Math.PI * flash);
-  // the product: done, lifted, then given back
-  const done = ease(win(t, 6.2, 7.0)), back = ease(win(t, 8.6, 9.6));
-  app.position.copy(APP0); app.position.y += 0.18 * done * (1 - back) - 0.25 * back;
-  app.rotation.y = -0.12 * done * (1 - back);
+  const tk = bump(t, 0.55, 1.5);
+  tractor.visible = tk > 0.01;
+  { const top = carrier.position.clone().add(new THREE.Vector3(0, -0.06, 0)), len = Math.max(0.01, top.y - ip.y + 0.1);
+    tractor.position.set(top.x, top.y - len / 2, top.z); tractor.scale.set(1, len, 1); tractor.material.opacity = 0.28 * tk; }
+  // the watcher drone, hovering by the work
+  watcher.position.set(-1.6 + 0.08 * Math.sin(ph), 2.75 + 0.07 * Math.sin(ph * 3), 1.35); watcher.rotation.set(0.12, 0.6 + 0.08 * Math.sin(ph), -0.08);
+  watcher.userData.rotors.forEach((r, i) => { r.rotation.y = t * 55 + i; });
+
+  // the product: done, scanned, lifted, then given back
+  const done = ease(win(t, 6.6, 7.4)), back = ease(win(t, 8.6, 9.6));
+  app.position.copy(APP0); app.position.y += 0.2 * done * (1 - back) - 0.25 * back;
+  app.rotation.y = -0.16 * done * (1 - back) + 0.03 * Math.sin(ph);
   panels.forEach(([p, pos, rot], i) => {
-    const k = ease(win(t, START(i), START(i) + FLY)), show = k * (1 - back);
-    p.position.set(pos[0] * k, -0.05 + (pos[1] + 0.05) * k, pos[2] * k);
-    p.rotation.set(rot[0] * k, rot[1] * k + (1 - k) * 1.2, rot[2] * k);
-    p.scale.setScalar(0.15 + 0.85 * k);
+    const fly = win(t, START(i), START(i) + FLY), k = settle(fly), show = (fly > 0 ? 1 : 0) * (1 - back);
+    p.position.set(pos[0] * k + 1.2 * (1 - k), -0.05 + (pos[1] + 0.05) * k, pos[2] * k + 0.6 * (1 - k));
+    p.rotation.set(rot[0] * k, rot[1] * k + (1 - k) * 1.3, rot[2] * k);
+    p.scale.setScalar(0.2 + 0.8 * Math.min(1, k));
     p.visible = show > 0.001;
-    const lock = Math.sin(Math.PI * win(t, START(i) + FLY - 0.05, START(i) + FLY + 0.35));
+    const lock = bump(t, START(i) + FLY - 0.05, START(i) + FLY + 0.35);
     p.userData.mats.forEach(([m, op, col]) => {
-      m.opacity = Math.min(1, op * show * (1 + 1.5 * lock) + 0.25 * done * (1 - back) * show);
+      m.opacity = Math.min(1, op * (0.6 + 0.4 * Math.min(1, fly * 2)) * (1 + 1.5 * lock) + 0.25 * done) * (1 - back);
       m.color.copy(col).lerp(GREEN.clone().multiplyScalar(col.r + col.g + col.b > 1.2 ? 2.4 : 0.5), done * (1 - back) * 0.85);
     });
+    // what it shows, drawn in as it locks
+    const drawK = ease(win(t, START(i) + FLY, START(i) + FLY + 1.1)) * (1 - back);
+    p.userData.draw.forEach((f) => f(drawK));
+    // its seam: drawn by the laser, white-hot, cooling to cyan, then a faint line
+    const a = START(i) + FLY, wk = win(t, a, a + WELD), cool = win(t, a + 0.1, a + WELD + 1.2), seam = p.userData.seam;
+    seam.visible = wk > 0 && back < 1;
+    seam.scale.x = Math.max(0.001, wk); seam.position.x = -p.userData.w * 0.45 * (1 - wk);
+    seam.material.color.copy(WHITE).lerp(CYANC, cool).lerp(GREEN.clone().multiplyScalar(2), done * (1 - back) * 0.8);
+    seam.material.opacity = (1 - 0.6 * cool) * (1 - back);
   });
-  burst.scale.setScalar(0.4 + 3.4 * ease(win(t, 6.5, 7.8)));
-  burst.material.opacity = 0.9 * Math.sin(Math.PI * win(t, 6.5, 7.8));
   scene.updateMatrixWorld(true);
   const onPanel = (i, x, y) => panels[i][0].localToWorld(new THREE.Vector3(x, y, 0));
-  // the gripper: to each panel as it flies, holding its right edge, then back to rest
-  let aT = A_REST.clone();
+  // the gripper: to each panel as it flies, holding its right edge, then back to rest; its fingers close on it
+  let aT = A_REST.clone(), grip = 0;
   for (let i = 0; i < panels.length; i++) {
     const w = panels[i][0].userData.w;
-    const go = ease(win(t, START(i) - 0.35, START(i) + 0.05)), leave = ease(win(t, START(i) + FLY, START(i) + FLY + 0.35));
-    if (t >= START(i) - 0.35 && t < START(i) + FLY + 0.35) aT = lerpV(lerpV(i ? onPanel(i - 1, panels[i - 1][0].userData.w * 0.38, 0) : A_REST, onPanel(i, w * 0.38, 0), go), i === panels.length - 1 ? A_REST : onPanel(i, w * 0.38, 0), leave);
-    else if (t >= START(i) + FLY + 0.35 && i < panels.length - 1 && t < START(i + 1) - 0.35) aT = onPanel(i, w * 0.38, 0);
+    const go = ease(win(t, START(i) - 0.4, START(i) + 0.02)), leave = ease(win(t, START(i) + FLY + 0.05, START(i) + FLY + 0.4));
+    if (t >= START(i) - 0.4 && t < START(i) + FLY + 0.4) aT = lerpV(lerpV(i ? onPanel(i - 1, panels[i - 1][0].userData.w * 0.38, 0) : A_REST, onPanel(i, w * 0.38, 0), go), i === panels.length - 1 ? A_REST : onPanel(i, w * 0.38, 0), leave);
+    else if (t >= START(i) + FLY + 0.4 && i < panels.length - 1 && t < START(i + 1) - 0.4) aT = onPanel(i, w * 0.38, 0);
+    grip = Math.max(grip, win(t, START(i) - 0.12, START(i) + 0.02) * (1 - win(t, START(i) + FLY - 0.02, START(i) + FLY + 0.12)));
   }
+  aT.y += 0.02 * Math.sin(ph * 4);
   aim(A, aT, 0.5, THREE.MathUtils.degToRad(98));
+  A.spin.rotation.y = 0.25 * Math.sin(ph * 2);
+  fingers.forEach(([f, s]) => { f.position.x = s * (0.135 - 0.05 * grip); f.rotation.z = s * 0.18 * (1 - grip); });
   // the laser: along each panel's lower edge, left to right, just after it locks
   let bT = B_REST.clone(), welding = false;
   for (let i = 0; i < panels.length; i++) {
     const w = panels[i][0].userData.w, h = panels[i][0].userData.h;
     const a = START(i) + FLY, k = win(t, a, a + WELD);
     if (t >= a - 0.3 && t < a + WELD + 0.3) {
-      const along = onPanel(i, w * (-0.45 + 0.9 * ease(k)), -h * 0.5);
+      const along = onPanel(i, w * (-0.45 + 0.9 * k), -h * 0.5);
       bT = lerpV(lerpV(B_REST, along, ease(win(t, a - 0.3, a))), B_REST, ease(win(t, a + WELD, a + WELD + 0.3)));
       if (t >= a && t < a + WELD) { welding = true; bT = along; }
     }
   }
+  bT.y += 0.015 * Math.sin(ph * 5);
   aim(B, bT, 0.67 + 0.32, THREE.MathUtils.degToRad(104));
+  B.spin.rotation.y = welding ? t * 9 : 0;
   scene.updateMatrixWorld(true);
-  const tipW = new THREE.Vector3(); tip.getWorldPosition(tipW);
-  beam.visible = flare.visible = sparks.visible = welding; weldLight.intensity = welding ? 6 : 0;
+  pistons(A); pistons(B);
+  // running lights: a pulse down each arm's lights; brighter while it works
+  [[A, grip], [B, welding ? 1 : 0]].forEach(([a, w], j) => { const v = 1.4 + 1.2 * (0.5 + 0.5 * Math.sin(ph * 6 + j)) + 1.6 * w; a.ledMat.color.setHSL(j ? 0.53 : 0.42, 1, 0.5).multiplyScalar(v); });
+  const tipW = new THREE.Vector3(); torch.tip.getWorldPosition(tipW);
+  beam.visible = beamHalo.visible = flare.visible = welding; weldLight.intensity = welding ? 6 + 2 * Math.sin(t * 90) : 0;
+  torch.glow.material.opacity = welding ? 1 : 0.35; torch.ring.material = welding ? M.green : M.cyan;
   if (welding) {
     const dir = new THREE.Vector3().subVectors(bT, tipW), len = Math.max(0.01, dir.length());
-    beam.scale.set(1, len, 1); beam.position.copy(tipW).addScaledVector(dir, 0.5); beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
-    flare.position.copy(bT); weldLight.position.copy(bT); sparks.position.copy(bT);
-    sparks.rotation.y = Math.PI * 2 * ((t * 3) % 1); flare.scale.setScalar(0.55 + 0.25 * Math.abs(Math.sin(t * Math.PI * 14)));
+    for (const b of [beam, beamHalo]) { b.scale.set(1, len, 1); b.position.copy(tipW).addScaledVector(dir, 0.5); b.quaternion.setFromUnitVectors(up, dir.clone().normalize()); }
+    flare.position.copy(bT); weldLight.position.copy(bT);
+    flare.scale.setScalar(0.5 + 0.28 * Math.abs(Math.sin(t * Math.PI * 14)));
   }
-  // the drones hover, the dust drifts: periods that divide the loop
-  drones.forEach((d, i) => { d.position.copy(d.userData.base); d.position.y += 0.06 * Math.sin(Math.PI * 2 * (t / PERIOD * 3 + i * 0.3)); });
-  dust.rotation.y = 0.05 * Math.sin(Math.PI * 2 * t / PERIOD);
+  // the sparks: alive only while a weld is on; each from where the weld was when it was born
+  {
+    const pos = sparks.geometry.attributes.position.array, col = sparks.geometry.attributes.color.array;
+    const weldAt = (tb) => { for (let i = 0; i < panels.length; i++) { const a = START(i) + FLY; if (tb >= a && tb < a + WELD) return [i, (tb - a) / WELD]; } return null; };
+    sparks.userData.s.forEach((s, j) => {
+      const age = ((t - s.born) % SPARK_LIFE + SPARK_LIFE) % SPARK_LIFE, tb = t - age, w = weldAt(tb);
+      let o = j * 6;
+      if (!w) { for (let k = 0; k < 6; k++) { pos[o + k] = 0; col[o + k] = 0; } return; }
+      const [i, k] = w, p0 = onPanel(i, panels[i][0].userData.w * (-0.45 + 0.9 * k), -panels[i][0].userData.h * 0.5);
+      const at = (u) => { const y = p0.y + s.v.y * u + 0.5 * G * u * u; return new THREE.Vector3(p0.x + s.v.x * u, y < 0.01 ? 0.01 + (0.01 - y) * 0.3 : y, p0.z + s.v.z * u); };
+      const a1 = at(age), a0 = at(Math.max(0, age - 0.035)), f = Math.pow(1 - age / SPARK_LIFE, 1.6);
+      pos[o] = a1.x; pos[o + 1] = a1.y; pos[o + 2] = a1.z; pos[o + 3] = a0.x; pos[o + 4] = a0.y; pos[o + 5] = a0.z;
+      const c = s.warm ? [3.0 * f, 1.8 * f, 0.9 * f] : [2.2 * f, 3.0 * f, 3.2 * f];
+      col[o] = c[0]; col[o + 1] = c[1]; col[o + 2] = c[2]; col[o + 3] = c[0] * 0.2; col[o + 4] = c[1] * 0.2; col[o + 5] = c[2] * 0.2;
+    });
+    sparks.geometry.attributes.position.needsUpdate = true; sparks.geometry.attributes.color.needsUpdate = true;
+  }
+  // the scan, the lift, the burst, the motes
+  const sk = win(t, 6.2, 7.2);
+  scan.visible = sk > 0 && sk < 1; scan.position.y = 0.15 + 2.6 * ease(sk);
+  scanRing.material.opacity = Math.sin(Math.PI * sk); scanSheet.material.opacity = 0.35 * Math.sin(Math.PI * sk);
+  burst.scale.setScalar(0.4 + 3.4 * ease(win(t, 7.0, 8.2)));
+  burst.material.opacity = 0.9 * Math.sin(Math.PI * win(t, 7.0, 8.2));
+  cone.material.uniforms.k.value = 1 + 1.6 * done * (1 - back);
+  ringB.rotation.z = -ph * 2;
+  appLight.intensity = 4 + 6 * done * (1 - back);
+  {
+    const live = win(t, 6.9, 7.3) * (1 - win(t, 8.4, 8.9)), pos = motes.geometry.attributes.position.array;
+    motes.visible = live > 0; motes.material.opacity = 0.9 * live;
+    motes.userData.seed.forEach(([a0, r, d0, sp], j) => {
+      const u = ((t - 6.9) * sp * 0.6 + d0) % 1.6, a = a0 + u * 2.4;
+      pos[j * 3] = 0.15 + Math.cos(a) * r * (1 - u * 0.25); pos[j * 3 + 1] = 0.4 + u * 2.2; pos[j * 3 + 2] = 0.2 + Math.sin(a) * r * (1 - u * 0.25);
+    });
+    motes.geometry.attributes.position.needsUpdate = true;
+  }
+  // the floor's traces: a pulse running in along each to the pad
+  traces.forEach((tr) => { const u = (t / PERIOD * tr.k + tr.ph) % 1, r = 4.1 - 2.75 * u; tr.p.position.set(CENTER.x + Math.cos(tr.a) * r, 0.02, CENTER.z + Math.sin(tr.a) * r); tr.p.material.opacity = Math.sin(Math.PI * u) * 0.9; });
+  // the wall's lit cells breathe; the neon steady, but for one stutter a loop
+  { const face = scene.userData.face, c = new THREE.Color();
+    hexLit.forEach((h) => { const v = h.a * (0.55 + 0.45 * Math.sin(ph * h.k + h.ph * TAU)); face.setColorAt(h.i, c.copy(h.c).multiplyScalar(v)); });
+    face.instanceColor.needsUpdate = true; }
+  const fl = (t > 3.62 && t < 3.7) || (t > 3.78 && t < 3.82) ? 0.35 : 1;
+  neonMat.color.setScalar(1.8 * fl); signLight.intensity = 4 * fl;
   composer.render();
 }
 window.PERIOD = PERIOD;
 window.render = render;
-// ?frames: drawn only when record.py asks (render(t) for each frame); else the loop runs on the clock
 if (Q.has('frames')) { render(0); render(0); window.READY = true; }
 else { let frames = 0; const t0 = performance.now(); (function loop() { render((performance.now() - t0) / 1000); if (++frames === 8) window.READY = true; requestAnimationFrame(loop); })(); }
 </script>
