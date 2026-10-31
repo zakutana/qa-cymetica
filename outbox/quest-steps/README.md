@@ -61,6 +61,16 @@ revenue share), which is unchanged.
        turned towards the map, 370 px ("vedle texty na opacnou stranu otoceny ten screen a to vetsi"), clear of every
        company.
      - **The first screen's sun** a ball's length (108 px) right and down; **the doors** a fifth smaller.
+   - **Its third round**:
+     - **The mark**: the Title logo, his pick of the five in `logos/` ("toto logo je v klidu"); the chip mark before
+       it was "ciste claude design template".
+     - **Step 3's cube is the Promo Market's own** ("CO TO JE ZA HNUSNOU KOSTKU? MA BYT JAK NA
+       https://cymetica.com/promo-market"): their markup (promo_market_v2.js holo()) and their stylesheet's whole cube
+       block copied, its .stage renamed .hstage; on a corner, swaying, floating, its faces' pages changing every 2.4 s as
+       theirs; only its size is ours (11.5vw a side). The cube drawn here before is gone.
+     - **Step 5 as the live map, the board on the other side** ("tak nejak jak je to live ale tu tabuli bych jen dal
+       napravo z druhe strany"): the Universe 1,300 px across, its board in the top right corner over its outer lane,
+       turned towards the map, as the live map has its own at the top left.
 13. **ad9510a3** (2026-10-31), after the twelfth:
    - **No hexagon** in the mark or the track ("nelibi se mi ten hexagon co pouzivas v logu a stepech"): the mark a
      green sun with a world going round it on its orbit, the track's steps round lights, the pipeline's mark a ring.
@@ -171,8 +181,8 @@ goes to him.
 - **Step 5 is the live Universe** with the leaderboard's eight sample companies added in our recording browser, so
   the names on the board stand in the map too; the live one has six today. Nothing is sent to Cymetica: the answer is
   changed as it arrives in our browser (record.py EXTRA_COMPANIES).
-- **The top bar** keeps its three parts (brand, track, prize) and drops the panel round them. **The mark** is drawn
-  to Agent Casino's level, not copied from it: their disc and ring, our own sign.
+- **The top bar** keeps its three parts (brand, track, prize) and drops the panel round them. **The mark** is the
+  Title logo he picked from five (logos/, 2026-10-31).
 - **The clips** stay out of git. Their posters are kept.
 - **Keyed clips** (the HQ, the Universe, the farmer, both doors): filmed on black and keyed in the page, alpha from
   each pixel's brightest channel: the HQ's from 0.025 to 0.12, so the darkest metal stays whole and the black goes;

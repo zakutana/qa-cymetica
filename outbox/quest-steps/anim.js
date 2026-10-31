@@ -346,13 +346,21 @@
   /* ---------------- step 3: users walk from the briefs to the product ---------------- */
   (function () {
     var svg = document.querySelector('[data-anim=flow]'); if (!svg) return;
-    var stage = svg.parentElement, promo = stage.querySelector('.cube3d'), near = stage.querySelector('.near');
+    var stage = svg.parentElement, promo = stage.querySelector('.holo-at'), near = stage.querySelector('.near');
     var count = stage.querySelector('.users b'), pop = stage.querySelector('.plus');
     var NS = svg.namespaceURI, paths = [], dots = [], users = 0;
-    // from the Promo Market's cube, its foot where its beam stands (x, y in % of its box), to the farmer's ring in its
+    // from the Promo Market's cube, the pool of light under it (x, y in % of its box), to the farmer's ring in its
     // clip, its right side (fourteenth take: the farmer on its lane, record.py FARMER_LANES; the users come in to its
     // ring, never across it)
-    var FROM = [[42, 70], [50, 76], [58, 70]], TO = [61, 69];
+    var FROM = [[40, 90], [50, 93], [60, 90]], TO = [61, 69];
+    // the cube's faces change their page every 2.4 s, two of three lit, as the Promo Market's own (promo_market_v2.js)
+    setInterval(function () {
+      document.querySelectorAll('.holo:not(.fast) .hstage').forEach(function (st) {
+        var imgs = st.querySelectorAll('.f img'); if (!imgs.length) return;
+        var k = (+st.dataset.k || 0); st.dataset.k = k + 1;
+        imgs.forEach(function (im, j) { im.classList.toggle('on', (j + k) % 3 !== 0); });
+      });
+    }, 2400);
     FROM.forEach(function () { var p = document.createElementNS(NS, 'path'); p.setAttribute('class', 'fl'); svg.appendChild(p); paths.push(p); });
     // ("step 4 animace je moc rychla"): six users at a time, each 5.2 s from a brief to the product
     var PER = 5.2;
