@@ -346,12 +346,13 @@
   /* ---------------- step 3: users walk from the briefs to the product ---------------- */
   (function () {
     var svg = document.querySelector('[data-anim=flow]'); if (!svg) return;
-    var stage = svg.parentElement, promo = stage.querySelector('.promo3d img'), near = stage.querySelector('.near');
+    var stage = svg.parentElement, promo = stage.querySelector('.cube3d'), near = stage.querySelector('.near');
     var count = stage.querySelector('.users b'), pop = stage.querySelector('.plus');
     var NS = svg.namespaceURI, paths = [], dots = [], users = 0;
-    // the briefs' "See my offer" buttons in promo.webp (x, y in %), and the farmer's ring in its clip, its right side
-    // (fourteenth take: the farmer on its lane, record.py FARMER_LANES; the users come in to its ring, never across it)
-    var FROM = [[17, 93], [50, 93], [83, 93]], TO = [66, 76];
+    // from the Promo Market's cube, its foot where its beam stands (x, y in % of its box), to the farmer's ring in its
+    // clip, its right side (fourteenth take: the farmer on its lane, record.py FARMER_LANES; the users come in to its
+    // ring, never across it)
+    var FROM = [[42, 70], [50, 76], [58, 70]], TO = [61, 69];
     FROM.forEach(function () { var p = document.createElementNS(NS, 'path'); p.setAttribute('class', 'fl'); svg.appendChild(p); paths.push(p); });
     // ("step 4 animace je moc rychla"): six users at a time, each 5.2 s from a brief to the product
     var PER = 5.2;

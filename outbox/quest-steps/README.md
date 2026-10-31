@@ -51,6 +51,16 @@ revenue share), which is unchanged.
      the whole live Universe, filmed with its sun in the middle and its outer lane whole, 1,250 px across; the board
      300 px, tilted, in its bottom-right corner over the outer lane, where no company stands, as the live map has its
      own.
+   - **Its second round**, the same evening:
+     - **Step 3**: the farmer and the gem filmed from further off ("je zas moc velke na orbite ty produkty"); the
+       Promo Market's page gone, its cube in its place, big ("misto screenu ... jen tu 3D krychli a na ni se budou
+       promitat ty produkty"): CSS 3D glass on its beam, turning in 32 s, four live product pages on its sides.
+     - **Step 4**: the Quant Lab drawn frame by frame on Playwright's clock, 30 frames a second, none repeated ("je
+       takova sekana, mela by byt top plynula"); the window's video before was 25 a second, as its screencast came.
+     - **Step 5**: the Universe 270 px lower ("dat cely universe dolu niz"), the board beside the words above it,
+       turned towards the map, 370 px ("vedle texty na opacnou stranu otoceny ten screen a to vetsi"), clear of every
+       company.
+     - **The first screen's sun** a ball's length (108 px) right and down; **the doors** a fifth smaller.
 13. **ad9510a3** (2026-10-31), after the twelfth:
    - **No hexagon** in the mark or the track ("nelibi se mi ten hexagon co pouzivas v logu a stepech"): the mark a
      green sun with a world going round it on its orbit, the track's steps round lights, the pipeline's mark a ring.
@@ -128,7 +138,7 @@ goes to him.
 | 01 | the HQ, astronauts at work | LIVE cymetica.com/company/app/builder, recorded without its sky and drifting rocks, keyed; its four departments and nine agents are the live builder's pre-build (builder.js PRE, data.js TEMPLATES) |
 | 02 | the workshop and the pipeline | our three.js scene and anim.js; Build it Better's name and hexagons from its own picture (og/app/build-it-better.png); the ideas map to real Build it Better products |
 | 02 | the ring of products | LIVE: each product's own page, captured (capture.py apps) |
-| 03 | the Promo Market and the Airdrop Farmer | their page through our read-only mirror with three sample briefs, its own cube turning (their CSS, filmed frame by frame); our Universe mock, composed |
+| 03 | the Promo Market's cube and the Airdrop Farmer | their cube's look (glass of light on a beam) drawn by us in CSS 3D, four live product pages (capture.py apps) projected on its sides; our Universe mock, composed |
 | 04 | the Quant Lab's page | outbox/quant-lab-v2's Coming soon mode, at its own pace: a simulation, and it says so on screen |
 | 05 | the Universe | LIVE cymetica.com/company/app#universe, recorded without its sky, keyed: its six companies and four products today, and the leaderboard's eight sample companies added to its answer in our browser |
 | 05 | the leaderboard | samples (QUEST.board), with our mock's stations as marks |
@@ -154,7 +164,8 @@ goes to him.
 - **The first screen's words**: "Cymetica Quest." first and green, then "Join. Earn points. / Climb the leaderboard.
   / Earn up to 500,000 ET10 / every month." with the prize green; he left the opening to us ("CYMETICA QUEST zelene
   nebo join? ... musis to vymyslet").
-- **The first screen's sun** is about 80 px across its ball at 2000 px wide, top right over the board.
+- **The first screen's sun** is about 108 px across its ball at 2000 px wide, top right over the board, a ball's length
+  right and down from where it stood (2026-10-31).
 - **The Quant Lab** carries the Promo Market's scan lines too, faintly; he once said not to make it holographic, and
   this round asked for it set into space as the Promo Market is.
 - **Step 5 is the live Universe** with the leaderboard's eight sample companies added in our recording browser, so

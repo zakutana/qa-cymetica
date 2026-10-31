@@ -173,18 +173,22 @@ LAB_STAGES, LAB_FOUND = 16.6, 7.0
 LAB_BIRTH = round(LAB_STAGES + 0.16 * LAB_FOUND, 2)
 
 
-def lab(b):
+# every CSS animation and transition held still and set to the clock's time, as it is first seen (the page's own clock
+# is Playwright's below; a CSS one would run on in real time while each frame is photographed)
+HOLD_CSS = """(vt) => { const seen = window.__seen || (window.__seen = new WeakMap());
+  document.getAnimations().forEach(a => { if (!seen.has(a)) { seen.set(a, vt); a.pause(); } a.currentTime = (vt - seen.get(a)) * 1000; }); }"""
+
+
+def lab(b, fps=30):
     """step 4: the Quant Lab's page in its Coming soon mode (outbox/quant-lab-v2, another session's page, served here
     and read only), whole from its heading to its reactor ("zobrazit celkove tu stranku i s tim nadpisem quant lab"):
-    its five stages at their own pace, BUILD to FOUND, the agent born at LAB_BIRTH. It draws CoinGecko's coin logos
-    into its canvas, which taints it, and a tainted canvas's own stream stops: so the window is filmed instead
-    (Playwright's video) and cut by ffmpeg"""
-    import shutil
+    its five stages at their own pace, BUILD to FOUND, the agent born at LAB_BIRTH. Fourteenth take ("animace v quant
+    labu se mi zda ze je takova sekana, mela by byt top plynula jak v nasi strance"): drawn frame by frame on
+    Playwright's clock, `fps` a second, every frame a step of the same length (the window's own video was 25 a second,
+    as its screencast delivered them); its canvas cannot be streamed (CoinGecko's logos taint it)"""
     vw, vh, total = 1400, 1100, LAB_STAGES + LAB_FOUND   # 1400 wide: its six score tiles stay one row
-    tmpdir = Path(tempfile.mkdtemp())
-    ctx = b.new_context(viewport={'width': vw, 'height': vh}, device_scale_factor=1, record_video_dir=str(tmpdir), record_video_size={'width': vw, 'height': vh})
-    t0 = time.time()
-    page = ctx.new_page()
+    page = b.new_page(viewport={'width': vw, 'height': vh}, device_scale_factor=1)
+    page.clock.install()
     page.goto(capture.serve(capture.OUTBOX / 'quant-lab-v2') + '?mode=sim', wait_until='load', timeout=60000)
     page.wait_for_function("() => document.fonts.status === 'loaded' && document.querySelector('#rx').width > 0", timeout=60000)
     page.evaluate("() => document.querySelector('.q2-hero').scrollIntoView({ block: 'start' })")
@@ -192,17 +196,25 @@ def lab(b):
     time.sleep(3)
     r = page.evaluate("""() => { const a = document.querySelector('.q2-hero').getBoundingClientRect(), b = document.querySelector('.q2-reactor').getBoundingClientRect();
       return [Math.min(a.left, b.left) - 6, a.top - 10, Math.max(a.right, b.right) - Math.min(a.left, b.left) + 12, b.bottom - a.top + 12].map(Math.round); }""")
-    page.click('#rail [data-st="0"]')           # from the top: BUILD
-    start = time.time() - t0
-    time.sleep(total + 0.6)
-    video = page.video.path()
-    ctx.close()
-    CLIPS.mkdir(exist_ok=True)
     x, y, w, h = r[0] // 2 * 2, r[1] // 2 * 2, r[2] // 2 * 2, r[3] // 2 * 2
-    ffmpeg('-ss', f'{start:.2f}', '-i', str(video), '-t', str(total), '-vf', f'crop={w}:{h}:{x}:{y}', '-c:v', 'libvpx', '-b:v', '6M', '-crf', '8',
-           '-qmin', '2', '-qmax', '30', '-auto-alt-ref', '0', '-pix_fmt', 'yuv420p', str(CLIPS / 'lab.webm'))
-    shutil.rmtree(tmpdir, ignore_errors=True)
-    print('lab: the page', w, 'x', h, 'from', round(start, 2), 's,', total, 's, the agent born at', LAB_BIRTH, 's,',
+    page.clock.pause_at(page.evaluate('Date.now()') + 200)
+    page.evaluate("""() => document.querySelector('#rail [data-st="0"]').click()""")   # from the top: BUILD, at the clock's time
+    frames, done = [], 0
+    for i in range(int(round(total * fps))):
+        page.evaluate(HOLD_CSS, i / fps)
+        frames.append(page.screenshot(clip={'x': x, 'y': y, 'width': w, 'height': h}, type='jpeg', quality=93))
+        step = round((i + 1) * 1000 / fps) - done
+        page.clock.run_for(step)
+        done += step
+    page.close()
+    CLIPS.mkdir(exist_ok=True)
+    fd, tmp = tempfile.mkstemp(suffix='.mjpeg')
+    os.close(fd)
+    Path(tmp).write_bytes(b''.join(frames))
+    ffmpeg('-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', str(fps), '-i', tmp, '-c:v', 'libvpx', '-b:v', '8M', '-crf', '6',
+           '-qmin', '2', '-qmax', '28', '-auto-alt-ref', '0', '-g', str(fps), '-pix_fmt', 'yuv420p', str(CLIPS / 'lab.webm'))
+    Path(tmp).unlink()
+    print('lab: the page', w, 'x', h, len(frames), 'frames at', fps, 'a second, the agent born at', LAB_BIRTH, 's,',
           (CLIPS / 'lab.webm').stat().st_size // 1024, 'KB')
     frame_poster('lab', LAB_BIRTH + 2.0)        # the agent found
 
@@ -223,7 +235,8 @@ def doors(b, seconds=12):
 
 # fourteenth take ("si nejak smazal ty obezne drahy na kterych jsou apky ve vesmiru ... jsou asi moc nahore"): the
 # farmer and the gem each set on a lane of the map (laneDefs: the farmer on the third out, the gem on the second, a
-# third of a radian on), the camera raised 0.55 rad over them and 7 farmer heights off, so the lanes run round and under
+# third of a radian on), the camera raised 0.55 rad over them and 9.5 farmer heights off (7 made them "moc velke na
+# orbite"), so the lanes run round and under
 # both instead of across the top of the picture; and the map's arcs off (u3d.js arc(): the streaks of work going in to
 # Cymetica, which crossed the farmer: "co je to jako za animace nejakeho pruhu pres ty apky")
 FARMER_LANES = """() => { const uv = CO.uv, V = uv.camera.position.constructor, up = new V(0, 1, 0);
@@ -232,7 +245,7 @@ FARMER_LANES = """() => { const uv = CO.uv, V = uv.camera.position.constructor, 
   uv.items.forEach(x => { if (x !== F && x !== G && x.plot) x.plot.root.visible = false; });
   F.orbit = null; G.orbit = null; uv.follow = null; uv.controls.autoRotate = false;
   const f0 = F.plot.root.position.clone(), h = (F.plot.top - F.plot.bot) * F.plot.k, a0 = Math.atan2(f0.x, f0.z);
-  const lanes = uv.laneDefs.map(l => l.r).sort((a, b) => a - b), el = 0.55, dist = 7, az = 1.25, ga = 0.32;
+  const lanes = uv.laneDefs.map(l => l.r).sort((a, b) => a - b), el = 0.55, dist = 9.5, az = 1.25, ga = 0.32;
   const f = new V(Math.sin(a0) * lanes[2], f0.y, Math.cos(a0) * lanes[2]), g = new V(Math.sin(a0 + ga) * lanes[1], f0.y, Math.cos(a0 + ga) * lanes[1]);
   F.plot.root.position.copy(f); G.plot.root.position.copy(g);
   const out = new V(f.x, 0, f.z).normalize(), along = up.clone().cross(out).normalize();
