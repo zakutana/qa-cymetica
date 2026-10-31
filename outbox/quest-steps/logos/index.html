@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quest Logos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Archivo+Black&family=Geist:wght@400..800&family=Inter:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:,">
+<style>
+:root { --bg: #05070c; --line: #1e3050; --text: #eef6fa; --dim: #a9bfcd; --mute: #7f93ad;
+  --green: #00ff88; --cyan: #00cfff; --blue: #3b82f6; --white: #f4f8fb; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: var(--bg); }
+body { color: var(--text); font-family: 'JetBrains Mono', monospace; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+svg { display: block; overflow: visible; }
+
+/* one logo: its number and name, then the page's top as it stands over the sky, the logo big under it */
+.lg { padding-top: 46px; }
+.hd { display: flex; align-items: center; gap: 18px; height: 56px; padding: 0 68px; }
+.hd b { font: 400 34px 'Archivo Black', sans-serif; color: var(--green); width: 30px; }
+.hd span { font: 600 18px Inter, sans-serif; color: var(--dim); }
+.hd .ic { margin-left: auto; display: flex; align-items: center; gap: 22px; }
+.hd .ic svg { width: 32px; height: 32px; }
+.panel { position: relative; height: 540px; overflow: hidden;
+  background: radial-gradient(1100px 650px at 80% 8%, rgba(0, 207, 255, .08), rgba(0, 207, 255, 0) 65%),
+    radial-gradient(1000px 600px at 15% 20%, rgba(0, 255, 136, .045), rgba(0, 255, 136, 0) 62%),
+    radial-gradient(140% 105% at 50% 50%, rgba(5, 7, 12, 0) 55%, rgba(5, 7, 12, .8) 100%),
+    linear-gradient(rgba(5, 7, 12, .16), rgba(5, 7, 12, .16)),
+    url(../pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
+.stage { position: absolute; left: 0; right: 0; top: 96px; bottom: 0; display: grid; place-items: center; padding-bottom: 30px; }
+
+/* the page's top bar, copied from quest.css as it stands at the top of the page */
+.bar { position: absolute; z-index: 2; left: 0; right: 0; top: 0; height: 96px; display: flex; align-items: center; gap: 28px; padding: 0 68px 8px;
+  background: linear-gradient(180deg, rgba(5, 7, 12, .92) 0%, rgba(5, 7, 12, .66) 48%, rgba(5, 7, 12, 0) 100%); }
+.brand { position: relative; display: flex; align-items: center; height: 44px; flex: none; }
+.rail { position: relative; margin: 0 auto; display: flex; align-items: center; }
+.rail a { position: relative; display: flex; align-items: center; gap: 11px; padding: 6px 2px; color: var(--mute); white-space: nowrap; }
+.rail .nd { position: relative; flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(6, 9, 15, .92); box-shadow: inset 0 0 0 1.3px rgba(127, 147, 173, .5); }
+.rail .nd em { font: 800 12px 'JetBrains Mono'; font-style: normal; color: var(--mute); }
+.rail .lab { font: 600 16px Inter, sans-serif; letter-spacing: .01em; }
+.rail i { position: relative; flex: none; width: 68px; height: 2px; margin: 0 14px; border-radius: 2px; background: rgba(30, 48, 80, .95); }
+.pill { position: relative; flex: none; display: flex; align-items: center; gap: 9px; padding: 9px 15px; border-radius: 99px; font: 700 13px 'JetBrains Mono'; letter-spacing: .18em; text-transform: uppercase; color: var(--cyan);
+  background: rgba(5, 7, 12, .35); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 0 0 1px rgba(0, 207, 255, .45), 0 0 22px rgba(0, 207, 255, .14); }
+.pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
+.pill b { font-weight: 800; color: var(--green); }
+
+/* 3: the labyrinth's name, 4: the tile's name, 5: the slash */
+.nm3 { font: 700 17px 'JetBrains Mono', monospace; color: var(--white); letter-spacing: -.01em; white-space: nowrap; }
+.nm4 { font-family: Archivo, sans-serif; font-stretch: 125%; font-weight: 800; text-transform: uppercase; color: var(--white); white-space: nowrap; letter-spacing: .01em; line-height: 1; }
+.w5 { display: flex; align-items: center; font-family: Geist, sans-serif; font-weight: 600; letter-spacing: -.035em; color: var(--white); white-space: nowrap; line-height: 1; }
+.w5 .sl { display: block; width: .1em; height: 1.08em; margin: 0 .17em 0 .2em; background: var(--green); transform: skewX(-21deg) translateY(.06em); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- 1 -->
+    <mask id="m1-gap" maskUnits="userSpaceOnUse" x="-100" y="-900" width="9000" height="1300">
+      <rect x="-100" y="-900" width="9000" height="1300" fill="#fff"/>
+      <path d="M5864 -344 L6190 -18" stroke="#000" stroke-width="270"/>
+    </mask>
+    <symbol id="s1" viewBox="0 -730 8690 980">
+      <g mask="url(#m1-gap)" font-family="Archivo Black" font-size="1000" fill="#f4f8fb">
+        <text x="0" y="0">Cymetica</text><text x="5447" y="0">O</text><text x="6310" y="0">uest</text>
+      </g>
+      <path d="M5864 -344 L6190 -18 Q6363 155 6536 155 L8667 155" fill="none" stroke="#00ff88" stroke-width="150"/>
+    </symbol>
+
+    <!-- 2 -->
+    <g id="q2">
+      <path fill-rule="evenodd" d="M15 0 L64 0 L64 74 L38 100 L0 100 L0 15 Z M25 21 L39 21 L39 79 L25 79 Z M79 15 L94 0 L104 0 L104 79 L118 79 L118 0 L143 0 L143 85 L128 100 L79 100 Z M149 15 L164 0 L199 0 L199 21 L174 21 L174 39.5 L191 39.5 L191 60.5 L174 60.5 L174 79 L199 79 L199 85 L184 100 L149 100 Z M205 15 L220 0 L263 0 L263 21 L230 21 L230 39.5 L263 39.5 L263 85 L248 100 L205 100 L205 79 L238 79 L238 60.5 L205 60.5 Z M269 15 L284 0 L327 0 L327 21 L310.5 21 L310.5 85 L295.5 100 L285.5 100 L285.5 21 L269 21 Z"/>
+      <path d="M25.99 78.01 L62.76 114.78 L74.78 102.76 L38.01 65.99 Z"/>
+    </g>
+    <g id="q2q">
+      <path fill-rule="evenodd" d="M15 0 L64 0 L64 74 L38 100 L0 100 L0 15 Z M25 21 L39 21 L39 79 L25 79 Z"/>
+      <path d="M25.99 78.01 L62.76 114.78 L74.78 102.76 L38.01 65.99 Z"/>
+    </g>
+    <symbol id="s2" viewBox="-27 -60 365 190">
+      <g transform="skewX(-10)">
+        <text x="0" y="-18" font-family="Archivo Black" font-size="54" fill="#f4f8fb">Cymetica</text>
+        <g fill="#00ff88">
+          <use href="#q2" x="0.6" y="1.1"/><use href="#q2" x="1.2" y="2.2"/><use href="#q2" x="1.8" y="3.3"/><use href="#q2" x="2.4" y="4.4"/>
+          <use href="#q2" x="3.0" y="5.5"/><use href="#q2" x="3.6" y="6.6"/><use href="#q2" x="4.2" y="7.7"/><use href="#q2" x="4.8" y="8.8"/>
+        </g>
+        <use href="#q2" fill="#05070c" stroke="#05070c" stroke-width="4.4" stroke-linejoin="miter"/>
+        <use href="#q2" fill="#f4f8fb"/>
+      </g>
+    </symbol>
+    <symbol id="s2i" viewBox="-45 -4 136 136">
+      <g transform="skewX(-10)">
+        <g fill="#00ff88">
+          <use href="#q2q" x="0.6" y="1.1"/><use href="#q2q" x="1.2" y="2.2"/><use href="#q2q" x="1.8" y="3.3"/><use href="#q2q" x="2.4" y="4.4"/>
+          <use href="#q2q" x="3.0" y="5.5"/><use href="#q2q" x="3.6" y="6.6"/><use href="#q2q" x="4.2" y="7.7"/><use href="#q2q" x="4.8" y="8.8"/>
+        </g>
+        <use href="#q2q" fill="#05070c" stroke="#05070c" stroke-width="4.4" stroke-linejoin="miter"/>
+        <use href="#q2q" fill="#f4f8fb"/>
+      </g>
+    </symbol>
+
+    <!-- 3 -->
+    <symbol id="s3" viewBox="0 0 90 90">
+      <path d="M5.5 90 V5.5 H84.5 V84.5 H25.25 V25.25 H64.75 V64.75 H50.5" fill="none" stroke="#f4f8fb" stroke-width="11" stroke-linejoin="miter"/>
+      <rect x="39.5" y="39.5" width="11" height="11" fill="#00ff88"/>
+    </symbol>
+
+    <!-- 4 -->
+    <clipPath id="c4"><rect width="100" height="100" rx="23"/></clipPath>
+    <mask id="m4-gap" maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+      <rect width="100" height="100" fill="#fff"/>
+      <path d="M45 45 L120 120" stroke="#000" stroke-width="27"/>
+    </mask>
+    <symbol id="s4" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="23" fill="#00ff88"/>
+      <g clip-path="url(#c4)" fill="none" stroke="#05070c" stroke-width="17">
+        <path mask="url(#m4-gap)" d="M65.225 30.305 A25 25 0 1 0 56.737 67.074"/>
+        <path d="M48.5 48.5 L120 120"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- 1 -->
+<section class="lg">
+  <div class="hd"><b>1</b><span>Road</span></div>
+  <div class="panel">
+    <div class="bar"><a class="brand"><svg width="257" height="29"><use href="#s1"/></svg></a><nav class="rail"></nav><span class="pill"><i></i>Up to <b>500,000</b> ET10 / month</span></div>
+    <div class="stage"><svg width="1300" height="147"><use href="#s1"/></svg></div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section class="lg">
+  <div class="hd"><b>2</b><span>Title</span><span class="ic"><svg viewBox="0 0 136 136"><use href="#s2i"/></svg></span></div>
+  <div class="panel">
+    <div class="bar"><a class="brand"><svg width="92" height="48"><use href="#s2"/></svg></a><nav class="rail"></nav><span class="pill"><i></i>Up to <b>500,000</b> ET10 / month</span></div>
+    <div class="stage"><svg width="692" height="360"><use href="#s2"/></svg></div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section class="lg">
+  <div class="hd"><b>3</b><span>Labyrinth</span><span class="ic"><svg viewBox="0 0 90 90"><use href="#s3"/></svg></span></div>
+  <div class="panel">
+    <div class="bar"><a class="brand" style="gap:14px"><svg width="40" height="40"><use href="#s3"/></svg><span class="nm3">Cymetica Quest</span></a><nav class="rail"></nav><span class="pill"><i></i>Up to <b>500,000</b> ET10 / month</span></div>
+    <div class="stage"><div style="display:flex;flex-direction:column;align-items:center;gap:36px"><svg width="260" height="260"><use href="#s3"/></svg><span class="nm3" style="font-size:36px">Cymetica Quest</span></div></div>
+  </div>
+</section>
+
+<!-- 4 -->
+<section class="lg">
+  <div class="hd"><b>4</b><span>Monogram</span><span class="ic"><svg viewBox="0 0 100 100"><use href="#s4"/></svg></span></div>
+  <div class="panel">
+    <div class="bar"><a class="brand" style="gap:14px"><svg width="40" height="40"><use href="#s4"/></svg><span class="nm4" style="font-size:17px">Cymetica Quest</span></a><nav class="rail"></nav><span class="pill"><i></i>Up to <b>500,000</b> ET10 / month</span></div>
+    <div class="stage"><div style="display:flex;align-items:center;gap:64px"><svg width="260" height="260"><use href="#s4"/></svg><span class="nm4" style="font-size:72px">Cymetica Quest</span></div></div>
+  </div>
+</section>
+
+<!-- 5 -->
+<section class="lg" style="padding-bottom:60px">
+  <div class="hd"><b>5</b><span>Slash</span></div>
+  <div class="panel">
+    <div class="bar"><a class="brand"><span class="w5" style="font-size:25px">Cymetica<i class="sl"></i>Quest</span></a><nav class="rail"></nav><span class="pill"><i></i>Up to <b>500,000</b> ET10 / month</span></div>
+    <div class="stage"><span class="w5" style="font-size:132px">Cymetica<i class="sl"></i>Quest</span></div>
+  </div>
+</section>
+
+<script>
+  // the five steps, as quest.js writes them into the page's rail
+  var steps = ['Start', 'Build', 'Market', 'Hero agent', 'Climb'];
+  var html = steps.map(function (s, i) { return '<a><span class="nd"><em>' + (i + 1) + '</em></span><span class="lab">' + s + '</span></a>'; }).join('<i></i>');
+  document.querySelectorAll('.rail').forEach(function (r) { r.innerHTML = html; });
+</script>
+</body>
+</html>
