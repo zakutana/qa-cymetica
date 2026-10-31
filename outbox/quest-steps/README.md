@@ -114,9 +114,13 @@ goes to him.
 ## Decided here, the veto open
 
 - **Five steps, in his order of 2026-10-31**: start, build, market, the hero agent, climb.
-- **Every picture level with its words**, on their right, as step 1's HQ stands ("proc je to vsude tak nizko dycky
-  vedle toho textu? jedine headquarters je v idealni pozici hned vedle napravo", 2026-10-31); the twelfth take had read
-  "na preskacku" as the picture lower than the words, and that reading was wrong.
+- **Every picture beside its words, in the middle of their band** (the kicker's top to the big number's foot, about
+  760 px at 2000 px wide), as step 1's HQ fills it ("proc je to vsude tak nizko dycky vedle toho textu? jedine
+  headquarters je v idealni pozici hned vedle napravo"; "nekde mas velkou mezeru nahore nekde dole, musis to budto dat
+  doprostred nebo vychytat tak at to zabira stejnou plochu jak headquarters", 2026-10-31). The HQ, the workshop and the
+  Quant Lab fill it; step 3's two pictures fill it between them, the Universe at its top and the Promo Market at its
+  foot; step 5's Universe and board stand in its middle, as tall as the board beside the Universe lets them be. The
+  twelfth take had read "na preskacku" as the picture lower than the words, and that reading was wrong.
 - **Marketing** is not in the pre-build (Cymetica QA, Development, Quant Lab, Trading desk): it is a department the
   owner adds (data.js, ET-32484). Step 3 still says "your Marketing department", as the step is the owner's next
   move; step 1's "4 departments" is the pre-build's.

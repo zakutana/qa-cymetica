@@ -161,13 +161,15 @@ h1 b { font-weight: 400; }
 
 /* ---- the steps: the words on the left in every one ("vsechno ma byt nalevo"), wide ("proc je to v takovem uzkem
    sloupci? tam je hodne mist napravo"), their number under them ("prvne STEP 02, pod tim text a pod tim az to velke
-   02"); the picture on the right, level with the words as step 1's HQ is ("proc je to vsude tak nizko dycky vedle
-   toho textu? jedine headquarters je v idealni pozici hned vedle napravo"), well away from the number */
+   02"); the picture on the right, beside the words as step 1's HQ is ("proc je to vsude tak nizko dycky vedle toho
+   textu? jedine headquarters je v idealni pozici hned vedle napravo"), in the middle of the band the words and the
+   number make, as big as its column lets it ("nekde mas velkou mezeru nahore nekde dole, musis to budto dat doprostred
+   nebo vychytat tak at to zabira stejnou plochu jak headquarters"), well away from the number */
 .step { position: relative; display: grid; grid-template-columns: minmax(0, 5.7fr) minmax(0, 6.3fr); grid-template-rows: auto auto; column-gap: 4vw;
   align-content: center; width: min(1920px, 100%); margin: 0 auto; padding: 130px 4.5vw 150px; min-height: 92vh; }
 .step .txt { position: relative; z-index: 3; grid-column: 1; grid-row: 1; align-self: start; }
 .step .num { grid-column: 1; grid-row: 2; align-self: start; }
-.step .stage { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
+.step .stage { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
 /* the step's number, huge and hollow, faint as the first take had it, under its words and never beside them */
 .num { position: relative; z-index: 0; margin: 40px 0 0 -.05em; pointer-events: none; white-space: nowrap;
   font: 400 clamp(220px, 21vw, 420px)/.8 'Archivo Black', sans-serif; color: transparent;
@@ -208,8 +210,8 @@ h1 b { font-weight: 400; }
 /* (twelfth take: the arms higher, beside the words and the number, apart from the pipeline: "ty roboticke ruce dat vys,
    nemusi uz byt u te pipeline dole") */
 .step.build { grid-template-rows: auto auto auto; min-height: 0; padding-top: 110px; padding-bottom: 100px; }
-.step.build .stage { grid-column: 2; grid-row: 1 / span 2; }
-.step.build .stage .pic { width: 112%; margin-left: -4%; }
+.step.build .stage { grid-column: 2; grid-row: 1 / span 2; top: -30px; }
+.step.build .stage .pic { width: 120%; margin-left: -7%; }
 .step.build .machine { grid-column: 1 / -1; grid-row: 3; margin-top: 40px; }
 /* the ring of products already built: their live pages as holograms over a projector of light */
 .ring { position: relative; height: 300px; cursor: grab; touch-action: pan-y; user-select: none; }
@@ -345,8 +347,9 @@ h1 b { font-weight: 400; }
 /* step 4: the Quant Lab's page (outbox/quant-lab-v2) beside its words, standing in space as the Promo Market does
    ("je moc proste, jen placka na tme ... jak je treba promo market lepe udelany"): turned towards its words, its
    edges melting into the dark, a light behind it and a pool of light under it */
-.stage.lab { perspective: 1400px; }
-.stage.lab .reactor { position: relative; transform: rotateY(-26deg) rotateX(6deg) rotateZ(1.2deg) scale(.94); transform-origin: 0% 50%; }
+/* (its picture's glow and the floor of light under it hang below the page, so it is raised to sit mid-band) */
+.stage.lab { perspective: 1400px; top: -45px; }
+.stage.lab .reactor { position: relative; width: 112%; margin-left: -7%; transform: rotateY(-26deg) rotateX(6deg) rotateZ(1.2deg) scale(.94); transform-origin: 0% 50%; }
 .stage.lab .reactor .clip { opacity: .95;
   -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .8) 2px 4px), linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent), linear-gradient(180deg, transparent, #000 4%, #000 90%, transparent);
   mask-image: repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .8) 2px 4px), linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent), linear-gradient(180deg, transparent, #000 4%, #000 90%, transparent);
@@ -359,10 +362,13 @@ h1 b { font-weight: 400; }
 /* step 3: the Universe with the Airdrop Farmer and the Gem Screener on the left, the Promo Market as a hologram on
    the right ("a proc je porad promo market na leve strane a ukazky vesmiru napravo? ma to byt naopak"; "taky to udelej
    vetsi at je to stejne jako na jinych krocich"): each its own half, apart, as big as the other steps' pictures allow
-   two to be; the Promo Market turned only a little, towards the words, so it reads */
-.stage.duo { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); column-gap: 1.5%; align-items: center; perspective: 1600px; width: 134%; margin-left: -24%; }
-.stage.duo .near { order: -1; }
-.promo3d { position: relative; z-index: 1; transform: rotateY(-14deg) rotateX(4deg) rotateZ(.8deg) scale(.92); transform-origin: 0% 50%; }
+   two to be; the Promo Market turned only a little, towards the words, so it reads. Together they fill the band the
+   HQ fills in step 1 ("at to zabira stejnou plochu jak headquarters"): the Universe at its top, the Promo Market at
+   its foot, the users walking down from one to the other */
+.stage.duo { display: grid; grid-template-columns: minmax(0, 1.07fr) minmax(0, 1fr); column-gap: 1.5%; perspective: 1600px; width: 134%; margin-left: -24%; height: 700px; }
+.stage.duo .near { order: -1; align-self: start; }
+.stage.duo .promo3d { align-self: end; }
+.promo3d { position: relative; z-index: 1; transform: rotateY(-14deg) rotateX(4deg) rotateZ(.8deg) scale(.96); transform-origin: 0% 50%; }
 /* their cube, turning as their page turns it (record.py promo_cube), laid where it stands in the picture; its box's
    edge melts into the picture round it */
 .promo3d .cube { position: absolute; z-index: 1; opacity: .9;
