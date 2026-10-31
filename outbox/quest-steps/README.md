@@ -4,7 +4,7 @@ Asked for by the operator on 2026-10-29: a new page for the Cymetica Quest, expl
 quest, win up to 500,000 ET10 every month), then how. It stands beside `outbox/quest` (the scroll film, still on the 5 %
 revenue share), which is unchanged.
 
-## Fifteen takes
+## Sixteen takes
 
 1. **a1cb3cf5, 7/10**: real screenshots, each in a glass browser frame. "Nedavej to do panelu ... at to splyva."
 2. **60da77f5, 4/10**: everything full screen, a flight in to the sun, the orbit with its companies. "Predchozi verze
@@ -28,7 +28,19 @@ revenue share), which is unchanged.
 11. **b7891eca** (2026-10-31): deep space behind the whole page with twinkling stars (as Gemini's guide has it), the
    first screen's words big on the left, the top a quest track with no panel, hexagon bullets, the Promo Market's cube
    turning, fourteen companies in the Universe. "To uz je husty 1 screen."
-15. **This one** (2026-10-31): **Gemini's fork of this page, adopted**. Antigravity copied this folder at 2201936a
+16. **This one** (2026-11-01), the words made to say what the quest is, his sentences nearly as he wrote them:
+   step 1 joins the Universe to battle other companies for points; step 2 turns your idea into real products with the
+   Cymetica Pipeline (the link to Build it Better) and earns points when real users use them; step 3 "Market it. Bring
+   in more users." with the Promo Market alone, nothing of departments or points; step 4 "Breed your own hero agent in
+   Quant Lab.", its researchers finding strategies, more points when those agents trade, tournaments in the Agent
+   Casino or trading alone; step 5 "Farm the points.", into the top 3 paid slots. What earns points ("vsude kde se
+   vysvetluje to co vydelava pointy musi byt nejak spesl zvyrazneno") is a lit green panel with a "+ pts" tag. The
+   leaderboard wider (660 px, a third of the screen below 2000), each company on one line, its points a column apart
+   from its name. The Quant Lab's BUILD no longer runs its setup into the grid (outbox/quant-lab-v2 ql.js: the chips
+   shrink to fit between 1300 and about 1480 px, the width the clip is filmed at). Step 5's Universe: every company
+   turned along its lane until no two ships stand near each other (record.py UV_SPREAD), yours held still on the
+   map's left with a YOUR COMPANY tag over it.
+15. **Gemini's fork of this page, adopted** (2026-10-31). Antigravity copied this folder at 2201936a
    (the fourteenth take's first round) to `Downloads\cymetica\outbox\quest-steps` and served it on 8765; the operator:
    "NAD TEBOU VYHRAVA ma vse lepsi, jen ten step s market it bych zmenil". Its index.html, quest.css, quest.js,
    anim.js and scenes/tools.html are here byte for byte (its last writes 19:06 to 20:53; read and written, then

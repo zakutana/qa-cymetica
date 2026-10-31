@@ -323,12 +323,17 @@
     if (M.mode === 'sim') {
       var f = M.candidates[0].setup, b = baseOf(f), pa = ease(seg(p, 0, 0.42)), cx = W * (narrow ? 0.04 : 0.07), cy = narrow ? 80 : H * 0.46;
       var parts3 = [b[0] + ' ' + b[1]].concat(f.skills.map(function (k) { return SKILLS[k][0] + ' ' + SKILLS[k][1]; }));
+      // the assembly never runs into the grid beside it (the operator, 2026-11-01: "se to tam prekryva"; a screen
+      // 1300 to about 1480 wide put the third chip over the grid's first column): its type shrinks to fit, 11 px at least
+      ctx.font = '700 16px ' + MONO;
+      var tw = parts3.reduce(function (a, s) { return a + ctx.measureText(s).width; }, 0), room = gx - 36 - cx - parts3.length * 46,
+        fs = narrow || tw <= room ? 16 : Math.max(11, Math.floor(16 * room / tw));
       var from = [[-320, cy], [W * 0.5, -40], [W * 0.5, H + 40]], xs = cx;
       parts3.forEach(function (s, i) {
         var tx = xs, ty = cy, fx = from[i][0], fy = from[i][1];
-        ctx.font = '700 16px ' + MONO; var w = ctx.measureText(s).width + 20;
+        ctx.font = '700 ' + fs + 'px ' + MONO; var w = ctx.measureText(s).width + 20;
         var x = fx + (tx - fx) * pa, y = fy + (ty - fy) * pa;
-        chip(s, x, y, i ? C.blue : C.green, 16); xs += w + (pa > 0.98 ? 6 : 26);
+        chip(s, x, y, i ? C.blue : C.green, fs); xs += w + (pa > 0.98 ? 6 : 26);
       });
       if (p > 0.42) {
         once('snap', function () { burst(cx + 260, cy, C.green, 60, 8); shake = 10; });

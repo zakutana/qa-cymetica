@@ -371,8 +371,45 @@ def market(b, seconds=12):
 # each on the map too ("v univerzu jeste pridej par firem navic"): QUEST.board's, with the stations its marks show, and
 # three more. Only our recording browser sees them (record.py universe): nothing is sent anywhere.
 EXTRA_COMPANIES = [('Giga Fund', 'vault', 'red'), ('Bull Club', 'pyramid', 'red'), ('Sigma Collective', 'tower', 'blue'),
-                   ('Quasar Fund', 'dome', 'green'), ('Vector Trading', 'tower', 'cyan'), ('Nova Works', 'orbital', 'gold'),
+                   ('Quasar Fund', 'dome', 'green'), ('Vector Trading', 'tower', 'cyan'), ('Your company', 'orbital', 'gold'),
                    ('Helix Partners', 'rift', 'purple'), ('Orbit Ventures', 'vortex', 'pink')]
+
+# sixteenth take ("zajisti aby na sobe nebyly 2 lode moc blizko nikde a nad nejakou lod dej tag YOUR COMPANY"): before
+# the recording every company is turned along its own lane, the least it takes, until each one is UV_SPACE times its
+# own and its neighbour's half-width from every other ship and product, now and through the clip (the products stay
+# where the live map has them). Yours is put first, held still (w 0) nearest UV_YOU_AT of the canvas, so the page's
+# tag (index.html .you-tag) stands over it the whole clip; its top is returned for that
+UV_SPACE, UV_YOU_AT = 2.4, (0.29, 0.64)   # the map's left, clear of the leaderboard down to a 1440 px screen
+UV_SPREAD = """([you, target, T, K]) => { const o = CO.uv, cam = o.camera, V = cam.position.constructor, el = o.renderer.domElement;
+  const W = el.clientWidth, H = el.clientHeight, right = new V().setFromMatrixColumn(cam.matrixWorld, 0);
+  const all = o.items.filter(it => (!it.kind || it.kind === 'product') && it.plot && it.plot.root.visible && it.orbit);
+  // where each one is now: its orbit's a is where it started, the clock has turned it on since (by w a second)
+  all.forEach(it => { const p = it.plot.root.position; it.__th = Math.atan2(p.x, p.z); });
+  const at = (it, th, h) => { const p = it.plot.root.parent.localToWorld(new V(it.orbit.r * Math.sin(th), it.size * (h || 0.45), it.orbit.r * Math.cos(th)));
+    const s = p.clone().project(cam), e = p.clone().addScaledVector(right, it.size * 0.5).project(cam);
+    return { x: (s.x + 1) / 2 * W, y: (1 - s.y) / 2 * H, rad: Math.hypot((e.x - s.x) / 2 * W, (e.y - s.y) / 2 * H) }; };
+  const ends = (it, th, w) => [at(it, th), at(it, th + w * T / 2), at(it, th + w * T)];
+  const placed = [], step = Math.PI * 2 / 180, log = [];
+  const room = (pts) => Math.min(Infinity, ...placed.flatMap(q => pts.map((p, k) => Math.hypot(p.x - q.pts[k].x, p.y - q.pts[k].y) / (p.rad + q.pts[k].rad))));
+  // stands at th now and turns on at w: its start moved by as much as it is moved now; w 0 holds it where it is put
+  const put = (it, th, w) => { it.orbit.a = w ? it.orbit.a + (th - it.__th) : th; it.orbit.w = w; placed.push({ it, th, pts: ends(it, th, w) }); };
+  const name = it => it.c.name || it.c.title, me = all.find(it => !it.kind && name(it) === you);
+  all.filter(it => it.kind === 'product').forEach(it => put(it, it.__th, it.orbit.w));
+  if (me) { let best = null;
+    for (let k = 0; k < 180; k++) { const th = k * step, p = at(me, th), d = Math.hypot(p.x / W - target[0], p.y / H - target[1]);
+      if (room([p, p, p]) >= K && (!best || d < best.d)) best = { th, d }; }
+    put(me, best ? best.th : me.__th, 0);
+    // the page's tag over it is in the way too: a ship as wide as the tag, where the tag stands
+    const tag = Object.assign(at(me, placed[placed.length - 1].th, 2.4), { rad: 70 }); placed.push({ it: me, pts: [tag, tag, tag] }); }
+  all.filter(it => !it.kind && it !== me).sort((a, b) => (a.c.id >= 90000) - (b.c.id >= 90000)).forEach(it => {
+    const th0 = it.__th, w = it.orbit.w; let best = null;
+    for (let k = 0; k < 180; k++) { const d = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * step, r = room(ends(it, th0 + d, w));
+      if (r >= K) { best = { th: th0 + d, r }; break; } if (!best || r > best.r) best = { th: th0 + d, r }; }
+    if (best.th !== th0) log.push(name(it) + ' ' + (best.th - th0).toFixed(2) + ' rad'); put(it, best.th, w); });
+  let worst = Infinity;
+  placed.forEach((q, i) => placed.forEach((u, j) => { if (j > i && q.it !== u.it) worst = Math.min(worst, ...q.pts.map((p, k) => Math.hypot(p.x - u.pts[k].x, p.y - u.pts[k].y) / (p.rad + u.pts[k].rad))); }));
+  const mine = me && placed.find(q => q.it === me), top = mine && at(me, mine.th, 1.2);
+  return { moved: log, closest: +worst.toFixed(2), you: mine && [top.x / W, top.y / H] }; }"""
 
 
 # fourteenth take ("si uplne znicil tu obeznou drahu ... ma byt vetsi mnohem ten vesmir a ta tabule v nem jakoby
@@ -414,14 +451,18 @@ def universe(b, seconds=20, dsf=1.5):
     page.evaluate("() => { const o = CO.uv; o.sky.visible = false; o.scene.background = new o.scene.background.constructor(0x000000); }")
     page.evaluate(UV_CENTER, [UV_BACK, UV_UP])
     time.sleep(2.5)
+    spread = page.evaluate(UV_SPREAD, ['Your company', list(UV_YOU_AT), seconds + 2, UV_SPACE])
+    print('universe: moved along their lanes', spread['moved'], 'the closest two', spread['closest'], 'half-widths apart')
+    time.sleep(1.5)
     sel = '#uv3d canvas'
     print('universe (live): companies', page.evaluate("() => CO.uv.items.filter(it => !it.kind).length"),
           'products', page.evaluate("() => CO.uv.items.filter(it => it.kind === 'product').length"))
     box, size = lit_box(page, sel, 0.035)
     sun = page.evaluate("""() => { const p = CO.uv.heartAt.clone().project(CO.uv.camera); return [(p.x + 1) / 2, (1 - p.y) / 2]; }""")
     x, y, w, h = box
-    print('universe: canvas', size, 'the map', box, 'aspect', f'{w} / {h}',
-          'the sun at (% of the clip)', round((sun[0] * size[0] - x) / w * 100, 2), round((sun[1] * size[1] - y) / h * 100, 2))
+    pct = lambda pt: (round((pt[0] * size[0] - x) / w * 100, 2), round((pt[1] * size[1] - y) / h * 100, 2))
+    print('universe: canvas', size, 'the map', box, 'aspect', f'{w} / {h}', 'the sun at (% of the clip)', pct(sun),
+          'over your company', spread['you'] and pct(spread['you']))
     record(page, sel, seconds, 'universe', bps=24_000_000, crop=box, width=1600)
     page.close()
     frame_poster('universe', 1.0)
