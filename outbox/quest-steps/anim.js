@@ -49,11 +49,13 @@
   // through WebGL with its black made see-through, so the page's space stands behind it, in every browser alike (a
   // video's own alpha plays in Chrome and Firefox, never in Safari). Its videos stay as the source, hidden; their
   // cross-fade is mixed here; until one has a frame, its poster is keyed the same way. Without WebGL: the clip on black
-  var KEY_FS = 'precision mediump float; uniform sampler2D A, B; uniform float wa, wb; uniform vec2 sc, of; varying vec2 uv;' +
+  var KEY_FS = 'precision mediump float; uniform sampler2D A, B; uniform float w; uniform vec2 sc, of; varying vec2 uv;' +
     // black to clear, the HQ's darkest metal already whole: alpha from the brightest channel, the colour kept (it was
     // filmed over black, so it is already the colour times its alpha)
     'vec4 key(vec3 c) { float m = max(c.r, max(c.g, c.b)); float a = smoothstep(0.025, 0.12, m); return vec4(min(c, vec3(a)), a); }' +
-    'void main() { vec2 t = uv * sc + of; vec4 x = key(texture2D(A, t).rgb) * wa, y = key(texture2D(B, t).rgb) * wb; gl_FragColor = y + x * (1.0 - y.a); }';
+    // the loop's cross-fade as a dissolve, one copy into the other: never the two half see-through (measured: one over
+    // the other dimmed the HQ by a sixth mid-fade)
+    'void main() { vec2 t = uv * sc + of; gl_FragColor = mix(key(texture2D(A, t).rgb), key(texture2D(B, t).rgb), w); }';
   var KEY_VS = 'attribute vec2 p; varying vec2 uv; void main() { uv = p * 0.5 + 0.5; gl_Position = vec4(p, 0.0, 1.0); }';
   function keyed(box, vids, posterUrl) {
     var cv = document.createElement('canvas'), gl = cv.getContext('webgl', { premultipliedAlpha: true, alpha: true, antialias: false });
@@ -67,7 +69,7 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     var lp = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 2, gl.FLOAT, false, 0, 0);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    var U = {}; ['A', 'B', 'wa', 'wb', 'sc', 'of'].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
+    var U = {}; ['A', 'B', 'w', 'sc', 'of'].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
     gl.uniform1i(U.A, 0); gl.uniform1i(U.B, 1);
     var tex = [0, 1].map(function (i) {
       var t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, t);
@@ -97,16 +99,15 @@
       var ca = w / h, va = sw / shh;
       if (ca > va) { gl.uniform2f(U.sc, 1, va / ca); gl.uniform2f(U.of, 0, (1 - va / ca) / 2); }
       else { gl.uniform2f(U.sc, ca / va, 1); gl.uniform2f(U.of, (1 - ca / va) / 2, 0); }
-      var wa = 1, wb = 0;
+      var w = 0;
       if (src === poster) up(0, poster);
       else {
-        // each video's weight is its opacity in the cross-fade (anim's own, below), the second one over the first
-        wa = live[0] ? +getComputedStyle(vids[0]).opacity : 0;
-        wb = live[1] ? +getComputedStyle(vids[1]).opacity : 0;
-        if (wa > 0.002) up(0, vids[0]);
-        if (wb > 0.002) up(1, vids[1]);
+        // how far the dissolve is into the second copy: its opacity in the cross-fade (the clip's own, below)
+        w = !live[0] ? 1 : live[1] ? +getComputedStyle(vids[1]).opacity : 0;
+        if (w < 0.998) up(0, vids[0]);
+        if (w > 0.002) up(1, vids[1]);
       }
-      gl.uniform1f(U.wa, wa); gl.uniform1f(U.wb, wb);
+      gl.uniform1f(U.w, w);
       gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
