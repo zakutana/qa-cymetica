@@ -1,0 +1,51 @@
+<main class="tp-wrap pi" id="prove-it">
+  <h1>Prove it</h1>
+  <p class="tp-intro">Tell Nexus when it may use your money. It proves it on paper first; your money moves only when the proof clears your bar.</p>
+
+  <table class="tp-table pi-wallet" id="wallet" aria-label="Your money"></table>
+
+  <section class="agent-paste-bar apb-card pi-say" aria-labelledby="piSayTitle">
+    <div class="apb-inner">
+      <div class="apb-title" id="piSayTitle">Your rule for Nexus</div>
+      <p class="apb-lead">In your own words, any language. Nexus turns it into the four lines below, and only they count.</p>
+      <div class="apb-box">
+        <code class="apb-text" id="sentence" contenteditable="true" spellcheck="false"></code>
+        <button type="button" class="apb-copy" id="send">Send</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="fp-rows pi-read" id="read"></div>
+
+  <div class="pi-modebar">
+    <div class="tp-tabs" role="tablist" aria-label="View">
+      <button type="button" class="tp-tab" role="tab" data-mode="today">Today</button>
+      <button type="button" class="tp-tab" role="tab" data-mode="sim">30 days · simulated</button>
+    </div>
+    <div class="pi-clock" id="clock" hidden>
+      <button type="button" class="tp-tab" id="play" title="Play or pause (space)">Pause</button>
+      <input id="day" type="range" min="0" max="30" value="0" aria-label="Day">
+      <b class="tp-num" id="dayl">Day 0</b>
+    </div>
+  </div>
+  <p class="tp-asof" id="asof"></p>
+
+  <table class="tp-table pi-board" aria-label="Every product, your rule and its proof">
+    <thead><tr>
+      <th>#</th>
+      <th>Product</th>
+      <th>Rule</th>
+      <th>Proof so far</th>
+      <th>Money</th>
+    </tr></thead>
+    <tbody id="grid"></tbody>
+  </table>
+
+  <h2 class="pi-h2">What Nexus did</h2>
+  <table class="tp-table pi-log" aria-label="What Nexus did">
+    <thead><tr><th>When</th><th>What</th><th>Money</th></tr></thead>
+    <tbody id="log"></tbody>
+  </table>
+
+  <p class="tp-caveat" id="foot"></p>
+</main>

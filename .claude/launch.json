@@ -60,6 +60,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/quant-lab-v2/serve.py", "--quiet"],
       "port": 8801
+    },
+    {
+      "name": "prove-it",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/prove-it/serve.py", "--quiet"],
+      "port": 8802
     }
   ]
 }
