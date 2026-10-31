@@ -4,7 +4,7 @@ Asked for by the operator on 2026-10-29: a new page for the Cymetica Quest, expl
 quest, win up to 500,000 ET10 every month), then how. It stands beside `outbox/quest` (the scroll film, still on the 5 %
 revenue share), which is unchanged.
 
-## Fourteen takes
+## Fifteen takes
 
 1. **a1cb3cf5, 7/10**: real screenshots, each in a glass browser frame. "Nedavej to do panelu ... at to splyva."
 2. **60da77f5, 4/10**: everything full screen, a flight in to the sun, the orbit with its companies. "Predchozi verze
@@ -28,7 +28,25 @@ revenue share), which is unchanged.
 11. **b7891eca** (2026-10-31): deep space behind the whole page with twinkling stars (as Gemini's guide has it), the
    first screen's words big on the left, the top a quest track with no panel, hexagon bullets, the Promo Market's cube
    turning, fourteen companies in the Universe. "To uz je husty 1 screen."
-14. **This one** (2026-10-31), after the thirteenth:
+15. **This one** (2026-10-31): **Gemini's fork of this page, adopted**. Antigravity copied this folder at 2201936a
+   (the fourteenth take's first round) to `Downloads\cymetica\outbox\quest-steps` and served it on 8765; the operator:
+   "NAD TEBOU VYHRAVA ma vse lepsi, jen ten step s market it bych zmenil". Its index.html, quest.css, quest.js,
+   anim.js and scenes/tools.html are here byte for byte (its last writes 19:06 to 20:53; read and written, then
+   compared with `cmp`), the workshop clip drawn again from its scene by record.py, and only one thing of ours kept
+   beside it: the Quant Lab clip of the second round (30 frames a second, none repeated; its fork had the 25 fps one he
+   had called "sekana"). So its mark, its hero buttons, its HQ panel, its workshop and its step 5 are the page now;
+   the second and third rounds below (the Title logo, the sun moved, step 5 mirrored) are not.
+   - **Step 3, the one he changed** ("vyhodil bych proste ten screen ze stranky a nechal bych jen orbitu, v popredi
+     bude velka budova Promo marketu co mame ve vesmiru a nad ni bude ta krychle co tam mas ted a v ni viditelne
+     produkty v universu co jsou a mensi, a pridat i dozadu nekde agent casino na orbitu"): no page screenshot; the
+     orbit across the stage, the farmer and the gem on their lanes, further off than before (read: "a mensi" is the
+     products on the orbit, as in the fourteenth take's second round), the Agent Casino behind on the outer lane; our
+     Universe's Promo Market (u3d.js adPromo) big in front on the right, its own magenta hologram, cards, searchlights
+     and airship hidden, its band without its figure; over its projector the Promo Market's live cube of the third
+     round, the Universe's three products on its faces (Gem Screener, Agent Casino, Airdrop Farmer, two faces each),
+     12.5 % of the clip a side. Two clips of one camera (record.py market): the orbit keyed as light, the building
+     keyed hard over it, so its dark metal does not let the sky through. Users walk from the building to the farmer.
+14. **c71c5ba3** (2026-10-31), after the thirteenth:
    - **The mark** ("logo je velmi trapne"): made as Cymetica's own product marks are (Agent Casino's, live): a dark
      disc in a ring of their cyan-to-green, a dotted ring inside, two chevrons climbing, cyan under green; the name
      stacked beside it, CYMETICA small over QUEST.
@@ -148,7 +166,7 @@ goes to him.
 | 01 | the HQ, astronauts at work | LIVE cymetica.com/company/app/builder, recorded without its sky and drifting rocks, keyed; its four departments and nine agents are the live builder's pre-build (builder.js PRE, data.js TEMPLATES) |
 | 02 | the workshop and the pipeline | our three.js scene and anim.js; Build it Better's name and hexagons from its own picture (og/app/build-it-better.png); the ideas map to real Build it Better products |
 | 02 | the ring of products | LIVE: each product's own page, captured (capture.py apps) |
-| 03 | the Promo Market's cube and the Airdrop Farmer | their cube's look (glass of light on a beam) drawn by us in CSS 3D, four live product pages (capture.py apps) projected on its sides; our Universe mock, composed |
+| 03 | the orbit, the Promo Market's building and its cube | our Universe mock, composed (record.py market): the farmer, the gem, the Agent Casino, the Promo Market building; the cube LIVE cymetica.com/promo-market's markup and CSS, copied, the products' live pages (capture.py apps) on its faces |
 | 04 | the Quant Lab's page | outbox/quant-lab-v2's Coming soon mode, at its own pace: a simulation, and it says so on screen |
 | 05 | the Universe | LIVE cymetica.com/company/app#universe, recorded without its sky, keyed: its six companies and four products today, and the leaderboard's eight sample companies added to its answer in our browser |
 | 05 | the leaderboard | samples (QUEST.board), with our mock's stations as marks |
@@ -181,8 +199,8 @@ goes to him.
 - **Step 5 is the live Universe** with the leaderboard's eight sample companies added in our recording browser, so
   the names on the board stand in the map too; the live one has six today. Nothing is sent to Cymetica: the answer is
   changed as it arrives in our browser (record.py EXTRA_COMPANIES).
-- **The top bar** keeps its three parts (brand, track, prize) and drops the panel round them. **The mark** is the
-  Title logo he picked from five (logos/, 2026-10-31).
+- **The top bar** keeps its three parts (brand, track, prize) and drops the panel round them. **The mark** is
+  Gemini's, as its whole page was picked; the Title logo he had picked from five the same evening stays in `logos/`.
 - **The clips** stay out of git. Their posters are kept.
 - **Keyed clips** (the HQ, the Universe, the farmer, both doors): filmed on black and keyed in the page, alpha from
   each pixel's brightest channel: the HQ's from 0.025 to 0.12, so the darkest metal stays whole and the black goes;
@@ -194,7 +212,9 @@ goes to him.
 ## The contest
 
 `outbox/quest-gemini/BRIEF.md` gives Gemini Antigravity the operator's requirements to build its own guide in
-`outbox/quest-gemini/`. It is fenced off from this page's code. The operator picks the better one.
+`outbox/quest-gemini/`. It is fenced off from this page's code. The operator picks the better one. On 2026-10-31 he
+picked Gemini's fork of this page (served from `Downloads\cymetica\outbox\quest-steps` on 8765), and it is this page
+now (the fifteenth take); that folder is Antigravity's and is not written to from here.
 
 ## Notes
 

@@ -15,7 +15,8 @@ Fifth take (the operator, 2026-10-30): "v kazdem kroku musi byt top animace".
   away (anim.js data-key), so they stand in its one space (thirteenth take). Fourteenth take: the office and the
   Universe drawn at 1.5 and cut to what the page shows (record(crop=), lit_box), then scaled to 1500 and 1600 wide; the
   Universe with its sun in the middle (UV_CENTER); the farmer and the gem on their lanes (FARMER_LANES), the map's arcs
-  off; the workshop at 1920 x 1080.
+  off; the workshop at 1920 x 1080. Fifteenth take: step 3 is market-orbit.webm and market-building.webm (market(),
+  one camera, two layers); the farmer and the Promo Market cube clips are no longer on the page (EXTRA).
 
     python outbox/quest-steps/record.py                  # every one
     python outbox/quest-steps/record.py office farmer    # some
@@ -272,6 +273,77 @@ def farmer(b, seconds=12):
     page.close()
 
 
+# fifteenth take, step 3 (the operator, on Gemini's fork of this page, 2026-10-31: "vyhodil bych proste ten screen ze
+# stranky a nechal bych jen orbitu, v popredi bude velka budova Promo marketu co mame ve vesmiru a nad ni bude ta krychle
+# ... a pridat i dozadu nekde agent casino na orbitu"): the farmer and the gem on their lanes as FARMER_LANES has them,
+# the camera further back so they read smaller, the Agent Casino further along the outer lane, and our Universe's Promo
+# Market (u3d.js adPromo) big in front on the right, its own hologram away (everything over the projector's lens: the
+# page sets the Promo Market's live cube there), its ticker band without its figure (that reads ../promo-market/data.js,
+# which this server does not serve, so it said 0 UP FOR GRABS)
+MARKET = dict(ga=0.32, cl=3, ca=0.75, az=1.25, el=0.55, dist=13.0, ty=0.3, pk=0.2, pr=3.0, ps=2.8)
+MARKET_SETUP = """(o) => { const uv = CO.uv, V = uv.camera.position.constructor, up = new V(0, 1, 0);
+  uv.arc = function () {}; (uv.arcs || []).forEach(a => { uv.scene.remove(a.head, a.streak); }); uv.arcs = [];
+  const by = id => uv.items.find(x => x.c.id === id);
+  const F = by('ad-farmer'), G = by('ad-gem'), C = by('ad-casino'), P = by('ad-promo');
+  uv.items.forEach(x => { if (![F, G, C, P].includes(x) && x.plot) x.plot.root.visible = false; });
+  [F, G, C, P].forEach(x => { x.orbit = null; });
+  uv.follow = null; uv.controls.autoRotate = false;
+  const f0 = F.plot.root.position.clone(), h = (F.plot.top - F.plot.bot) * F.plot.k, a0 = Math.atan2(f0.x, f0.z);
+  const lanes = uv.laneDefs.map(l => l.r).sort((a, b) => a - b);
+  const at = (lane, a) => new V(Math.sin(a) * lanes[lane], f0.y, Math.cos(a) * lanes[lane]);
+  const f = at(2, a0), g = at(1, a0 + o.ga);
+  F.plot.root.position.copy(f); G.plot.root.position.copy(g); C.plot.root.position.copy(at(o.cl, a0 + o.ca));
+  const out = new V(f.x, 0, f.z).normalize(), along = up.clone().cross(out).normalize();
+  const T = f.clone().lerp(g, 0.45); T.y += h * o.ty;
+  const dir = out.clone().multiplyScalar(Math.cos(o.az)).addScaledVector(along, -Math.sin(o.az)).multiplyScalar(Math.cos(o.el)).addScaledVector(up, Math.sin(o.el));
+  const cam = T.clone().addScaledVector(dir, h * o.dist), right = dir.clone().cross(up).normalize().negate();
+  const p = T.clone().lerp(cam, o.pk).addScaledVector(right, h * o.pr); p.y = f0.y;
+  P.plot.root.position.copy(p); P.plot.root.scale.multiplyScalar(o.ps);
+  P.plot.root.traverse(n => { if (n.isGroup && Math.abs(n.scale.x - 0.85) < 1e-3 && n.children.length > 20) window.__st = n; });
+  const st = window.__st; st.children.forEach(ch => { if (ch.isPoints || ch.isSprite || ch.position.y > 5.85) ch.visible = false; });
+  st.children.forEach(ch => { const gp = ch.geometry && ch.geometry.parameters; if (gp && gp.openEnded && Math.abs(gp.radiusTop - 1.6) < 1e-6) window.__band = ch; });
+  const tex = window.__band.material.map, cv = tex.image, g2 = cv.getContext('2d'), H = cv.height;
+  g2.clearRect(0, 0, cv.width, H); g2.font = '800 40px "JetBrains Mono", monospace'; g2.textBaseline = 'middle';
+  let x = 24; [['EARN USDC', '#00cfff'], ['PROMOTE YOUR PRODUCT', '#e6edf7'], ['GET USERS', '#00cfff'], ['PROMO MARKET', '#e6edf7']].forEach(([t, col]) => {
+    g2.fillStyle = col; g2.fillText(t, x, H / 2 + 2); x += g2.measureText(t).width + 30; g2.fillStyle = '#00cfff'; g2.fillRect(x - 20, H / 2 - 4, 8, 8); x += 14; });
+  g2.fillStyle = 'rgba(0,207,255,.6)'; g2.fillRect(0, 4, cv.width, 3); g2.fillRect(0, H - 7, cv.width, 3); tex.needsUpdate = true;
+  [F, G, C, P].forEach(x => { x.anchor.set(x.plot.root.position.x, x.plot.root.position.y + (x.plot.top + 0.5) * (x.plot.k || 1) * (x === P ? o.ps : 1), x.plot.root.position.z); });
+  uv.tween(cam, T, 0);
+  if (uv.sky) uv.sky.visible = false; uv.scene.background = new uv.scene.background.constructor(0x000000); }"""
+# where the projector's lens and the three products' names stand, in % of the canvas
+MARKET_WHERE = """() => { const uv = CO.uv, cam = uv.camera, V = cam.position.constructor, c = document.querySelector('#uv3d canvas');
+  const pr = (v) => { const p = v.clone().project(cam); return [(p.x + 1) / 2 * c.width, (1 - p.y) / 2 * c.height]; };
+  const lens = new V(0, 5.7, 0); window.__st.localToWorld(lens); const out = { lens: pr(lens) };
+  ['ad-farmer', 'ad-gem', 'ad-casino', 'ad-promo'].forEach(id => { out[id] = pr(uv.items.find(x => x.c.id === id).anchor); });
+  return out; }"""
+
+
+def market(b, seconds=12):
+    """step 3: two clips of one camera (MARKET), cut to the same box: the orbit (its lanes, the sun, the farmer, the gem
+    and the Agent Casino; keyed as light, data-key="glow", the lanes being 2 to 7 % bright) and the Promo Market alone
+    (keyed hard as the HQ is: under the glow key its dark metal would let the sky through)"""
+    page = capture.universe(b, viewport={'width': 1600, 'height': 1000}, dsf=1.25)
+    page.evaluate(MARKET_SETUP, MARKET)
+    time.sleep(3)
+    sel = '#uv3d canvas'
+    box, size = lit_box(page, sel, 0.03)
+    x, y, w, h = box
+    pct = lambda pt: (round((pt[0] - x) / w * 100, 1), round((pt[1] - y) / h * 100, 1))
+    print('market: canvas', size, 'box', box, 'aspect', f'{w} / {h}',
+          {k: pct(v) for k, v in page.evaluate(MARKET_WHERE).items()}, '(% of the clip)')
+    by = "(id) => CO.uv.items.find(x => x.c.id === id).plot.root"
+    page.evaluate(f"() => {{ ({by})('ad-promo').visible = false; }}")
+    time.sleep(1)
+    record(page, sel, seconds, 'market-orbit', bps=16_000_000, crop=box)
+    page.evaluate(f"() => {{ const r = {by}; ['ad-farmer', 'ad-gem', 'ad-casino'].forEach(id => {{ r(id).visible = false; }}); r('ad-promo').visible = true; }}")
+    page.evaluate(capture.HIDE_SKY)
+    time.sleep(1)
+    record(page, sel, seconds, 'market-building', bps=16_000_000, crop=box)
+    page.close()
+    frame_poster('market-orbit', 1.0)
+    frame_poster('market-building', 1.0)
+
+
 # step 5's Universe has six companies today; the leaderboard beside it names five more, so they are given a station
 # each on the map too ("v univerzu jeste pridej par firem navic"): QUEST.board's, with the stations its marks show, and
 # three more. Only our recording browser sees them (record.py universe): nothing is sent anywhere.
@@ -411,9 +483,9 @@ def promo_cube(b, loop=18.0, fps=30):
     print(f'{out.name} {len(frames)} frames {out.stat().st_size // 1024} KB')
 
 
-SHOTS = {'office': office, 'workshop': workshop, 'lab': lab, 'farmer': farmer, 'universe': universe, 'promo-cube': promo_cube}
+SHOTS = {'office': office, 'workshop': workshop, 'lab': lab, 'market': market, 'universe': universe}
 # (the twelfth take's doors show step 1's HQ and step 5's Universe, so the start tutorial's own two are no longer made)
-EXTRA = {'universe-mock': universe_mock, 'doors': doors}
+EXTRA = {'universe-mock': universe_mock, 'doors': doors, 'farmer': farmer, 'promo-cube': promo_cube}
 
 
 def main(names):

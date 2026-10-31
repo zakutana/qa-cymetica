@@ -89,13 +89,30 @@
       '<span class="lab">' + s.label + '</span><span class="sh">' + s.short + '</span></a>';
   }).join('<i><b></b></i>');
   var steps = [].slice.call(rail.querySelectorAll('a')), lines = [].slice.call(rail.querySelectorAll('i'));
-  document.querySelectorAll('#rail a').forEach(function (a) {
+  document.querySelectorAll('#rail a, .btn-how').forEach(function (a) {
     a.addEventListener('click', function (e) {
       e.preventDefault();
       var sec = document.getElementById(a.getAttribute('href').slice(1));
-      window.scrollTo({ top: sec.getBoundingClientRect().top + scrollY - innerHeight * 0.06, behavior: reduce ? 'auto' : 'smooth' });
+      if (!sec) return;
+      var off = sec.id === 's2' ? 0 : innerHeight * 0.04;
+      window.scrollTo({ top: sec.getBoundingClientRect().top + scrollY - off, behavior: reduce ? 'auto' : 'smooth' });
     });
   });
+
+  // ---- subtle 3D specular parallax on the hero prize board
+  var heroBoard = document.querySelector('#hero .board'), heroSec = document.getElementById('hero');
+  if (heroBoard && heroSec && !reduce) {
+    heroSec.addEventListener('pointermove', function (e) {
+      if (innerWidth <= 900) return;
+      var nx = (e.clientX / innerWidth - 0.5) * 2, ny = (e.clientY / innerHeight - 0.5) * 2;
+      heroBoard.style.setProperty('--ry', (-12 + nx * 2.8).toFixed(2) + 'deg');
+      heroBoard.style.setProperty('--rx', (2.6 - ny * 2.2).toFixed(2) + 'deg');
+    }, { passive: true });
+    heroSec.addEventListener('pointerleave', function () {
+      heroBoard.style.removeProperty('--ry');
+      heroBoard.style.removeProperty('--rx');
+    });
+  }
 
   // ---- a step rises in the first time it comes on screen
   var rv = [].slice.call(document.querySelectorAll('.rv'));
@@ -103,7 +120,7 @@
   else {
     var io = new IntersectionObserver(function (es) {
       es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-    }, { rootMargin: '0px 0px -12% 0px' });
+    }, { rootMargin: '0px 0px -5% 0px' });
     rv.forEach(function (e) { io.observe(e); });
   }
 

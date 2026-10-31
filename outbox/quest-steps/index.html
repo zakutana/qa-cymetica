@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="icon" href="data:,">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2300cfff'/%3E%3Cstop offset='1' stop-color='%2300ff88'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='32' cy='32' r='29' fill='%2307111d'/%3E%3Ccircle cx='32' cy='32' r='28' fill='none' stroke='url(%23g)' stroke-width='3.2' stroke-dasharray='86 24' stroke-linecap='round'/%3E%3Ccircle cx='51.8' cy='12.2' r='3.6' fill='%2300ff88'/%3E%3Cpath d='M32 37 21 48.5l4.8 1.3L32 43.2 38.2 49.8 43 48.5Z' fill='%2300cfff'/%3E%3Cpath d='M32 25.5 18 40l5.6 1.5L32 33 40.4 41.5 46 40Z' fill='%2300ff88'/%3E%3Cpath d='M32 11.8l1.6 4.2 4.2 1.6-4.2 1.6-1.6 4.2-1.6-4.2-4.2-1.6 4.2-1.6Z' fill='%23f2fff9'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="quest.css">
 <!-- The Cymetica Quest, step by step (the operator, 2026-10-29). Twelfth take (2026-10-31): the steps in his order
      (start, build, market, the hero agent, climb), every step's words on the left and wide, its picture to the right
@@ -27,18 +27,45 @@
 <div id="sky" aria-hidden="true"><canvas id="twinkle"></canvas></div>
 <header id="bar">
   <a class="brand" href="#hero" aria-label="The Cymetica Quest">
-    <!-- the Title logo (logos/, his pick of five, 2026-10-31: "toto logo je v klidu"): QUEST drawn as a slanted game
-         title with a green side, "Cymetica" over it in Archivo Black -->
-    <svg viewBox="-27 -60 365 190" aria-hidden="true"><defs><g id="q-title">
-      <path fill-rule="evenodd" d="M15 0 L64 0 L64 74 L38 100 L0 100 L0 15 Z M25 21 L39 21 L39 79 L25 79 Z M79 15 L94 0 L104 0 L104 79 L118 79 L118 0 L143 0 L143 85 L128 100 L79 100 Z M149 15 L164 0 L199 0 L199 21 L174 21 L174 39.5 L191 39.5 L191 60.5 L174 60.5 L174 79 L199 79 L199 85 L184 100 L149 100 Z M205 15 L220 0 L263 0 L263 21 L230 21 L230 39.5 L263 39.5 L263 85 L248 100 L205 100 L205 79 L238 79 L238 60.5 L205 60.5 Z M269 15 L284 0 L327 0 L327 21 L310.5 21 L310.5 85 L295.5 100 L285.5 100 L285.5 21 L269 21 Z"/>
-      <path d="M25.99 78.01 L62.76 114.78 L74.78 102.76 L38.01 65.99 Z"/></g></defs>
-      <g transform="skewX(-10)">
-        <text x="0" y="-18" font-family="Archivo Black" font-size="54" fill="#f4f8fb">Cymetica</text>
-        <g fill="#00ff88"><use href="#q-title" x="0.6" y="1.1"/><use href="#q-title" x="1.2" y="2.2"/><use href="#q-title" x="1.8" y="3.3"/><use href="#q-title" x="2.4" y="4.4"/>
-          <use href="#q-title" x="3.0" y="5.5"/><use href="#q-title" x="3.6" y="6.6"/><use href="#q-title" x="4.2" y="7.7"/><use href="#q-title" x="4.8" y="8.8"/></g>
-        <use href="#q-title" fill="#05070c" stroke="#05070c" stroke-width="4.4" stroke-linejoin="miter"/>
-        <use href="#q-title" fill="#f4f8fb"/>
-      </g></svg>
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <defs>
+        <radialGradient id="qb-core" cx="36%" cy="26%" r="74%">
+          <stop offset="0" stop-color="#142b44"/>
+          <stop offset=".55" stop-color="#08121e"/>
+          <stop offset="1" stop-color="#04080f"/>
+        </radialGradient>
+        <linearGradient id="q-brand" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#00cfff"/>
+          <stop offset="1" stop-color="#00ff88"/>
+        </linearGradient>
+        <linearGradient id="qb-wing-hi" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#d6ffed"/>
+          <stop offset=".45" stop-color="#00ff88"/>
+          <stop offset="1" stop-color="#00b86b"/>
+        </linearGradient>
+        <linearGradient id="qb-wing-lo" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#a8f3ff"/>
+          <stop offset=".5" stop-color="#00cfff"/>
+          <stop offset="1" stop-color="#007eb8"/>
+        </linearGradient>
+      </defs>
+      <circle cx="32" cy="32" r="27" fill="url(#qb-core)"/>
+      <path d="M13.5 20.5A22.5 22.5 0 0 1 50.5 20.5" fill="none" stroke="#ffffff" stroke-opacity=".2" stroke-width="1.1" stroke-linecap="round"/>
+      <circle cx="32" cy="32" r="27.2" fill="none" stroke="url(#q-brand)" stroke-width="1.35" opacity=".42"/>
+      <g class="qb-orbit">
+        <path d="M9.8 16.5A27.2 27.2 0 0 1 50.2 11.8" fill="none" stroke="url(#q-brand)" stroke-width="2.7" stroke-linecap="round"/>
+        <path d="M54.2 47.5A27.2 27.2 0 0 1 13.8 52.2" fill="none" stroke="url(#q-brand)" stroke-width="2.7" stroke-linecap="round" opacity=".88"/>
+        <circle cx="50.2" cy="11.8" r="4.2" fill="#00ff88" opacity=".32"/>
+        <circle cx="50.2" cy="11.8" r="2.1" fill="#effff7"/>
+      </g>
+      <circle cx="32" cy="32" r="21.5" fill="none" stroke="url(#q-brand)" stroke-width="1.2" stroke-dasharray="1.15 2.6025" opacity=".68"/>
+      <path d="M32 36.8 21.8 47.6l4.4 1.2L32 42.4Z" fill="#00a8e0"/>
+      <path d="M32 36.8 42.2 47.6 37.8 48.8 32 42.4Z" fill="url(#qb-wing-lo)"/>
+      <path d="M32 26.2 18.8 39.8l5.1 1.4L32 33.1Z" fill="#00d878"/>
+      <path d="M32 26.2 45.2 39.8l-5.1 1.4L32 33.1Z" fill="url(#qb-wing-hi)"/>
+      <path class="qb-star" d="M32 12.8l1.3 3.5 3.5 1.3-3.5 1.3-1.3 3.5-1.3-3.5-3.5-1.3 3.5-1.3Z" fill="#f2fff9"/>
+    </svg>
+    <span class="wm"><small>CYMETICA</small><b>QUEST</b></span>
   </a>
   <nav id="rail" data-active="0" aria-label="The five steps"></nav>
   <span class="pill"><i></i>Up to <b data-figure="prizes.0"></b> <span data-figure="unit"></span> / month</span>
@@ -50,12 +77,16 @@
     <div class="hero-in">
       <div class="words">
         <h1><span class="g">Cymetica Quest.</span><br>Join. Earn points.<br>Climb the leaderboard.<br>Earn up to <span class="g"><b data-figure="prizes.0"></b> <span data-figure="unit"></span></span><br>every month.</h1>
+        <div class="hero-cta">
+          <a class="btn-go" data-link="builder"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+          <a class="btn-how" href="#s1"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+        </div>
       </div>
       <div class="board-wrap">
         <div class="board crystal" aria-label="This month's prizes">
           <div class="gh"><span class="dot"></span><b>Monthly prizes</b><span class="tg">Top <span data-figure="slots"></span></span></div>
           <div class="seats" data-seats></div>
-          <p class="rule">The company with the most points this month wins.</p>
+          <p class="rule"><span>The company with the most points this month wins.</span><b>850,000 <span data-figure="unit"></span> pool</b></p>
         </div>
       </div>
     </div>
@@ -68,10 +99,19 @@
       <ul class="pts">
         <li><b>Your HQ</b> in the <a class="lk" data-link="universe">Universe</a>.</li>
       </ul>
-      <p class="crew"><b data-figure="hq.departments"></b><span>departments</span><i></i><b data-figure="hq.agents"></b><span>AI agents, led by NEXUS</span></p>
+      <div class="crew-box crystal">
+        <p class="crew"><b data-figure="hq.departments"></b><span>departments</span><i></i><b data-figure="hq.agents"></b><span>AI agents, led by <em>NEXUS</em></span></p>
+        <div class="depts" aria-label="Departments in your HQ">
+          <span class="dp cmd"><i></i>Command · NEXUS</span>
+          <span class="dp"><i></i>Development</span>
+          <span class="dp"><i></i>Quant Lab</span>
+          <span class="dp"><i></i>Trading desk</span>
+          <span class="dp"><i></i>Cymetica QA</span>
+        </div>
+      </div>
     </div>
     <div class="num" aria-hidden="true">01</div>
-    <div class="stage rv">
+    <div class="stage hq-stage rv">
       <figure class="pic office">
         <div class="crop"><div class="clip xf" data-anim="office" data-loop-from="1" data-key><video muted playsinline preload="none" poster="pics/office.webp" width="1500" height="1132"><source src="clips/office.webm" type="video/webm"></video></div></div>
       </figure>
@@ -90,7 +130,8 @@
     </div>
     <div class="num" aria-hidden="true">02</div>
     <div class="stage work rv">
-      <figure class="pic"><div class="clip" data-anim="workshop"><video muted playsinline loop preload="none" poster="pics/workshop.webp" width="1920" height="1080"><source src="clips/workshop.webm" type="video/webm"></video></div></figure>
+      <figure class="pic"><div class="clip" data-anim="workshop" data-key><video muted playsinline loop preload="none" poster="pics/workshop.webp" width="1920" height="1080"><source src="clips/workshop.webm" type="video/webm"></video></div></figure>
+      <span class="conduit" aria-hidden="true"><i></i></span>
     </div>
     <div class="machine rv" data-anim="pipeline" aria-label="The Cymetica pipeline: your idea in, your app out, live among the apps already built"></div>
   </section>
@@ -106,15 +147,21 @@
       </ul>
     </div>
     <div class="num" aria-hidden="true">03</div>
-    <div class="stage duo rv">
-      <figure class="holo-at" aria-label="The Promo Market's cube, your products on its faces">
-        <div class="holo"><div class="aura"></div><div class="pool"></div><div class="beam"></div><i class="sp" style="left:18%;bottom:18%;animation-delay:0.00s"></i><i class="sp" style="left:55%;bottom:31%;animation-delay:0.50s"></i><i class="sp" style="left:28%;bottom:26%;animation-delay:1.00s"></i><i class="sp" style="left:65%;bottom:21%;animation-delay:1.50s"></i><i class="sp" style="left:38%;bottom:34%;animation-delay:2.00s"></i><i class="sp" style="left:75%;bottom:29%;animation-delay:2.50s"></i><i class="sp" style="left:48%;bottom:24%;animation-delay:3.00s"></i><i class="sp" style="left:21%;bottom:19%;animation-delay:3.50s"></i><i class="sp" style="left:58%;bottom:32%;animation-delay:4.00s"></i><i class="sp" style="left:31%;bottom:27%;animation-delay:4.50s"></i>
-          <div class="cam"><div class="bob"><div class="hstage"><div class="f f1"><img alt="" class="" src="pics/apps/gem-screener.webp" width="560" height="315"></div><div class="f f2"><img alt="" class="on" src="pics/apps/chart-analyzer.webp" width="560" height="315"></div><div class="f f3"><img alt="" class="on" src="pics/apps/agent-casino.webp" width="560" height="315"></div><div class="f f4"><img alt="" class="" src="pics/apps/supply-analyzer.webp" width="560" height="315"></div><div class="f f5"><img alt="" class="on" src="pics/apps/team-dump-radar.webp" width="560" height="315"></div><div class="f f6"><img alt="" class="on" src="pics/apps/airdrop-farmer.webp" width="560" height="315"></div><div class="core"></div></div></div></div></div>
-      </figure>
+    <!-- fifteenth take (2026-10-31, on Gemini's fork of this page, which he picked: "vyhodil bych proste ten screen ze
+         stranky a nechal bych jen orbitu, v popredi bude velka budova Promo marketu co mame ve vesmiru a nad ni bude ta
+         krychle"): no page screenshot; the orbit with the farmer, the gem and, behind, the Agent Casino; our Universe's
+         Promo Market big in front (a clip of its own, keyed hard); over its projector the Promo Market's live cube
+         (cymetica.com/promo-market, copied), the products of the Universe on its faces. record.py market -->
+    <div class="stage duo market rv">
       <figure class="pic near">
-        <div class="clip xf" data-anim="farmer" data-key="glow"><video muted playsinline preload="none" poster="pics/farmer.webp" width="1947" height="1081"><source src="clips/farmer.webm" type="video/webm"></video></div>
-        <span class="nm" style="left: 57.2%; top: 42.7%"><i></i>Airdrop Farmer</span><span class="nm" style="left: 42.6%; top: 22.4%"><i></i>Gem Screener</span>
-        <span class="users"><b>0</b> new users</span><span class="plus">+1 user</span>
+        <div class="clip xf" data-anim="market-orbit" data-key="glow"><video muted playsinline preload="none" poster="pics/market-orbit.webp" width="1946" height="1044"><source src="clips/market-orbit.webm" type="video/webm"></video></div>
+        <div class="clip xf bld" data-anim="market-building" data-key><video muted playsinline preload="none" poster="pics/market-building.webp" width="1946" height="1044"><source src="clips/market-building.webm" type="video/webm"></video></div>
+        <div class="holo-at" style="left: 85.2%; top: 44.4%" aria-label="The Promo Market's cube, the Universe's products on its faces">
+          <div class="holo"><div class="aura"></div><div class="pool"></div><div class="beam"></div><i class="sp" style="left:18%;bottom:18%;animation-delay:0.00s"></i><i class="sp" style="left:55%;bottom:31%;animation-delay:0.50s"></i><i class="sp" style="left:28%;bottom:26%;animation-delay:1.00s"></i><i class="sp" style="left:65%;bottom:21%;animation-delay:1.50s"></i><i class="sp" style="left:38%;bottom:34%;animation-delay:2.00s"></i><i class="sp" style="left:75%;bottom:29%;animation-delay:2.50s"></i><i class="sp" style="left:48%;bottom:24%;animation-delay:3.00s"></i><i class="sp" style="left:21%;bottom:19%;animation-delay:3.50s"></i><i class="sp" style="left:58%;bottom:32%;animation-delay:4.00s"></i><i class="sp" style="left:31%;bottom:27%;animation-delay:4.50s"></i>
+            <div class="cam"><div class="bob"><div class="hstage"><div class="f f1"><img alt="" class="" src="pics/apps/gem-screener.webp" width="560" height="315"></div><div class="f f2"><img alt="" class="on" src="pics/apps/agent-casino.webp" width="560" height="315"></div><div class="f f3"><img alt="" class="on" src="pics/apps/airdrop-farmer.webp" width="560" height="315"></div><div class="f f4"><img alt="" class="" src="pics/apps/gem-screener.webp" width="560" height="315"></div><div class="f f5"><img alt="" class="on" src="pics/apps/agent-casino.webp" width="560" height="315"></div><div class="f f6"><img alt="" class="on" src="pics/apps/airdrop-farmer.webp" width="560" height="315"></div><div class="core"></div></div></div></div></div>
+        </div>
+        <span class="nm" style="left: 55.3%; top: 45.6%"><i></i>Airdrop Farmer</span><span class="nm" style="left: 44.4%; top: 29.9%"><i></i>Gem Screener</span><span class="nm" style="left: 58.1%; top: 8.7%"><i></i>Agent Casino</span>
+        <span class="users"><i></i><b>0</b> new users</span><span class="plus">+1 user</span>
       </figure>
       <svg class="flow" data-anim="flow" aria-hidden="true"></svg>
     </div>
@@ -132,7 +179,8 @@
     </div>
     <div class="num" aria-hidden="true">04</div>
     <div class="stage lab rv">
-      <figure class="reactor"><div class="clip xf" data-anim="lab" data-birth="17.72"><video muted playsinline preload="none" poster="pics/lab.webp" width="1356" height="774"><source src="clips/lab.webm" type="video/webm"></video></div></figure>
+      <figure class="reactor"><span class="holo-frame" aria-hidden="true"></span><div class="clip xf" data-anim="lab" data-birth="17.72"><video muted playsinline preload="none" poster="pics/lab.webp" width="1356" height="774"><source src="clips/lab.webm" type="video/webm"></video></div></figure>
+      <div class="lab-hud" data-lab-hud><span class="st-dot"></span><b class="st-lbl">Searching 7,776 strategies</b><span class="st-tag">Quant Lab</span></div>
     </div>
   </section>
 
@@ -157,13 +205,17 @@
   </section>
 
   <section id="go" data-step="5" class="final">
-    <div class="doors">
+    <div class="final-hd rv">
+      <div class="kick">Enter the Arena</div>
+      <h2>Ready to <span class="g">compete?</span></h2>
+    </div>
+    <div class="doors rv">
       <a class="door go" data-link="builder">
-        <span class="art"><span class="clip xf" data-anim="door-hq" data-loop-from="1" data-key><video muted playsinline preload="none" poster="pics/office.webp" width="1500" height="1132"><source src="clips/office.webm" type="video/webm"></video></span></span>
+        <span class="art"><span class="door-tag"><i></i>Company Builder</span><span class="clip xf" data-anim="door-hq" data-loop-from="1" data-key><video muted playsinline preload="none" poster="pics/office.webp" width="1500" height="1132"><source src="clips/office.webm" type="video/webm"></video></span></span>
         <span class="cta"><span class="t">Start a company<br><span>and compete</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
       </a>
       <a class="door uv" data-link="universe">
-        <span class="art"><span class="clip xf" data-anim="door-universe" data-key="glow"><video muted playsinline preload="none" poster="pics/universe.webp" width="1600" height="862"><source src="clips/universe.webm" type="video/webm"></video></span><span class="sun" aria-hidden="true"><img src="pics/sun.webp" alt=""></span></span>
+        <span class="art"><span class="door-tag"><i></i>Live Ecosystem</span><span class="clip xf" data-anim="door-universe" data-key="glow"><video muted playsinline preload="none" poster="pics/universe.webp" width="1600" height="862"><source src="clips/universe.webm" type="video/webm"></video></span><span class="sun" aria-hidden="true"><img src="pics/sun.webp" alt=""></span></span>
         <span class="cta"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
       </a>
     </div>

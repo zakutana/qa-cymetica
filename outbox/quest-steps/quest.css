@@ -11,9 +11,9 @@
   --fade: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 16%, #000 82%, transparent 100%);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { background: var(--bg); }
+html { background: var(--bg); overflow-x: clip; }
 body { min-height: 100vh; font-family: 'JetBrains Mono', monospace; color: var(--text); background: var(--bg);
-  -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+  -webkit-font-smoothing: antialiased; overflow-x: clip; }
 a { color: inherit; text-decoration: none; }
 img, video, canvas { display: block; max-width: 100%; height: auto; }
 figure { margin: 0; }
@@ -49,23 +49,37 @@ main { position: relative; z-index: 2; }
    on the sky itself, over a dark that fades out downwards so a heading scrolling under them never meets an edge. The
    track: a round light a step with its number in it, the lines between them filling green as you read down the page,
    a spark at the front of the fill */
-#bar { position: fixed; z-index: 10; left: 0; right: 0; top: 0; height: 96px; display: flex; align-items: center; gap: 28px; padding: 0 max(24px, 3.4vw) 8px;
-  background: linear-gradient(180deg, rgba(5, 7, 12, .92) 0%, rgba(5, 7, 12, .66) 48%, rgba(5, 7, 12, 0) 100%); pointer-events: none; }
+#bar { position: fixed; z-index: 10; left: 0; right: 0; top: 0; height: 98px; display: flex; align-items: center; gap: 28px; padding: 0 max(24px, 3.4vw) 10px;
+  background: linear-gradient(180deg, rgba(5, 7, 12, .94) 0%, rgba(5, 7, 12, .72) 50%, rgba(5, 7, 12, 0) 100%); pointer-events: none; }
+#bar::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .75) 52%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .75) 52%, transparent 100%); }
 #bar > * { pointer-events: auto; }
-.brand { position: relative; display: flex; align-items: center; gap: 13px; flex: none; }
-/* the mark: no hexagon ("nelibi se mi ten hexagon co pouzivas v logu a stepech"); a green sun with a world on its
-   orbit, the quest's Universe in small, the world going round once in nine seconds */
-/* the Title logo (his pick of the five in logos/, 2026-10-31: "toto logo je v klidu"; the chip mark before it was "ciste
-   claude design template"): one drawing, 52 px high, so "Cymetica" over QUEST still reads */
-.brand svg { width: 100px; height: 52px; flex: none; display: block; overflow: visible; }
+.brand { position: relative; display: flex; align-items: center; gap: 13px; flex: none; transition: transform .3s var(--ease); }
+.brand:hover { transform: translateY(-1px); }
+.brand svg { width: 46px; height: 46px; flex: none; display: block; overflow: visible;
+  filter: drop-shadow(0 0 12px rgba(0, 255, 136, .28)) drop-shadow(0 0 24px rgba(0, 207, 255, .16)); transition: filter .35s var(--ease); }
+.brand:hover svg { filter: drop-shadow(0 0 16px rgba(0, 255, 136, .5)) drop-shadow(0 0 30px rgba(0, 207, 255, .3)); }
+.brand .qb-orbit { transform-origin: 32px 32px; animation: qb-spin 20s linear infinite; }
+.brand .qb-star { transform-origin: 32px 17.6px; filter: drop-shadow(0 0 5px rgba(0, 255, 136, .95)); animation: qb-pulse 3.2s var(--ease) infinite; }
+@keyframes qb-spin { to { transform: rotate(360deg); } }
+@keyframes qb-pulse { 0%, 100% { transform: scale(1); opacity: .92; } 50% { transform: scale(1.16); opacity: 1; } }
+.brand .wm { display: flex; flex-direction: column; gap: 3px; line-height: 1; }
+.brand .wm small { font: 800 10px/1 'JetBrains Mono', monospace; letter-spacing: .355em; margin-right: -.355em; color: #7ee8ff;
+  text-shadow: 0 0 12px rgba(0, 207, 255, .45); }
+.brand .wm b { font: 400 22px/.94 'Archivo Black', sans-serif; letter-spacing: .04em; color: transparent;
+  background: linear-gradient(180deg, #ffffff 30%, #d2ffec 100%); -webkit-background-clip: text; background-clip: text;
+  filter: drop-shadow(0 0 14px rgba(0, 255, 136, .22)); }
 #rail { position: relative; margin: 0 auto; display: flex; align-items: center; }
-#rail a { position: relative; display: flex; align-items: center; gap: 11px; padding: 6px 2px; color: var(--mute); white-space: nowrap; cursor: pointer; transition: color .3s; }
+#rail a { position: relative; display: flex; align-items: center; gap: 11px; padding: 6px 2px; color: var(--mute); white-space: nowrap; cursor: pointer; transition: color .3s, transform .25s var(--ease); }
 #rail .nd { position: relative; flex: none; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
-  background: rgba(6, 9, 15, .92); box-shadow: inset 0 0 0 1.3px rgba(127, 147, 173, .5); transition: background .3s, box-shadow .3s; }
+  background: rgba(6, 9, 15, .92); box-shadow: inset 0 0 0 1.3px rgba(127, 147, 173, .5); transition: background .3s, box-shadow .3s, transform .25s var(--ease); }
 #rail .nd em { position: relative; font: 800 12px 'JetBrains Mono'; font-style: normal; color: var(--mute); transition: color .3s; }
 #rail a .lab { font: 600 16px Inter, sans-serif; letter-spacing: .01em; }
 #rail a .sh { display: none; }
 #rail a:hover { color: var(--text); }
+#rail a:hover .nd { box-shadow: inset 0 0 0 1.3px var(--cyan), 0 0 12px rgba(0, 207, 255, .35); transform: scale(1.06); }
 #rail a.done { color: var(--dim); }
 #rail a.done .nd { background: rgba(0, 255, 136, .12); box-shadow: inset 0 0 0 1.3px var(--green); }
 #rail a.done .nd em { color: var(--green); }
@@ -78,10 +92,11 @@ main { position: relative; z-index: 2; }
 #rail i { position: relative; flex: none; width: clamp(28px, 3.4vw, 70px); height: 2px; margin: 0 14px; border-radius: 2px; background: rgba(30, 48, 80, .95); }
 #rail i b { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 2px; background: linear-gradient(90deg, var(--green), var(--cyan)); box-shadow: 0 0 8px rgba(0, 255, 136, .6); }
 #rail i.run b::after { content: ''; position: absolute; right: -4px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: 50%; background: #eafff4; box-shadow: 0 0 12px 3px rgba(0, 255, 136, .85); }
-.pill { position: relative; flex: none; display: flex; align-items: center; gap: 9px; padding: 9px 15px; border-radius: 99px; font: 700 13px 'JetBrains Mono'; letter-spacing: .18em; text-transform: uppercase; color: var(--cyan);
-  background: rgba(5, 7, 12, .35); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 0 0 1px rgba(0, 207, 255, .45), 0 0 22px rgba(0, 207, 255, .14); }
-.pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: blink 1.6s steps(1) infinite; }
-.pill b { font-weight: 800; color: var(--green); }
+.pill { position: relative; flex: none; display: flex; align-items: center; gap: 9px; padding: 9px 16px; border-radius: 99px; font: 700 13px 'JetBrains Mono'; letter-spacing: .16em; text-transform: uppercase; color: var(--cyan);
+  background: rgba(5, 7, 12, .45); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(0, 207, 255, .48), 0 0 24px rgba(0, 207, 255, .16); }
+.pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: live-pulse 2s var(--ease) infinite; }
+@keyframes live-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .48; transform: scale(.86); } }
+.pill b { font-weight: 800; color: var(--green); text-shadow: 0 0 12px rgba(0, 255, 136, .45); }
 
 /* ---- type: the heading big (the start page's .lp-h1), everything under it small */
 .kick { font: 800 18px 'JetBrains Mono'; letter-spacing: .26em; text-transform: uppercase; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .6); }
@@ -117,29 +132,51 @@ h1 b { font-weight: 400; }
 /* ---- the first screen: the words big on the left as the start page has its own ("ten napis doleva tak velkym jak je
    to na .../start"), the quest's name first and green, each line whole ("climb the leaderboard muze byt na 1 radku");
    the prize board on the right, turned the other way; the sun far off over it */
-#hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 130px 0 70px; overflow-x: clip; }
+#hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: 126px 0 70px; overflow-x: clip; }
 .hero-in { position: relative; z-index: 2; width: min(1760px, calc(100% - 9vw)); margin: 0 auto; display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); column-gap: 5vw; align-items: center; }
 .hero-in h1 { font-size: clamp(42px, 3.25vw, 66px); line-height: 1.07; letter-spacing: -.012em; white-space: nowrap; }
+.hero-cta { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 38px; }
+.btn-go { position: relative; display: inline-flex; align-items: center; gap: 12px; padding: 15px 26px; border-radius: 99px;
+  font: 800 14px/1 'JetBrains Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: #02160d;
+  background: linear-gradient(135deg, #eafff5 0%, var(--green) 42%, #00d4aa 100%);
+  box-shadow: inset 0 1px 0 #ffffff, 0 0 28px rgba(0, 255, 136, .48), 0 10px 28px rgba(0, 0, 0, .45);
+  transition: transform .3s var(--ease), box-shadow .3s var(--ease); }
+.btn-go svg, .btn-how svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; transition: transform .3s var(--ease); }
+.btn-go:hover { transform: translateY(-2px) scale(1.015); box-shadow: inset 0 1px 0 #ffffff, 0 0 42px rgba(0, 255, 136, .75), 0 14px 34px rgba(0, 0, 0, .55); }
+.btn-go:hover svg { transform: translateX(4px); }
+.btn-how { position: relative; display: inline-flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 99px;
+  font: 700 13.5px/1 'JetBrains Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--text);
+  background: rgba(6, 12, 22, .45); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 0 0 1px rgba(0, 207, 255, .42), 0 0 24px rgba(0, 207, 255, .1);
+  transition: transform .3s var(--ease), box-shadow .3s var(--ease), color .25s; }
+.btn-how svg { color: var(--cyan); }
+.btn-how:hover { color: #ffffff; transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px var(--cyan), 0 0 30px rgba(0, 207, 255, .28); }
+.btn-how:hover svg { transform: translateY(3px); }
 .hero-in .board-wrap { justify-self: end; width: min(100%, 660px); }
 /* Cymetica's sun alone, further off and to the right ("vic doprava a vic do dalky ... vic zarivejsi, ted v nem jsou
    diry"): its light as alpha, over a whole glowing core, so the dark between its strands no longer shows the sky */
-#sun { position: absolute; z-index: 1; left: calc(50% + 918px); top: 268px; width: 340px; transform: translate(-50%, -50%); pointer-events: none; }
+#sun { position: absolute; z-index: 1; left: calc(50% + 800px); top: 192px; width: 330px; transform: translate(-50%, -50%); pointer-events: none; animation: sun-breathe 8s var(--ease) infinite; }
+@keyframes sun-breathe { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.045); } }
 #sun::before { content: ''; position: absolute; left: 49.3%; top: 48.3%; width: 25%; height: 25%; transform: translate(-50%, -50%); border-radius: 50%;
   background: radial-gradient(circle, #fffdf6 0 32%, rgba(255, 232, 186, .96) 52%, rgba(255, 196, 120, .55) 74%, rgba(255, 170, 80, 0) 100%);
-  box-shadow: 0 0 34px 12px rgba(255, 214, 150, .5), 0 0 110px 40px rgba(255, 176, 96, .2), 0 0 220px 80px rgba(0, 207, 255, .06); }
+  box-shadow: 0 0 36px 14px rgba(255, 214, 150, .52), 0 0 120px 44px rgba(255, 176, 96, .22), 0 0 240px 90px rgba(0, 207, 255, .08); }
 #sun img { position: relative; width: 100%; height: auto; filter: brightness(1.3) saturate(1.12); }
 /* the flyer's glass, now crystal, clear and glossy, on the right and turned the other way ("na druhou stranu a natocis
    ho naopak"): its far edge towards the words */
 .board-wrap { perspective: 1900px; perspective-origin: 100% 40%; }
-.board { padding: 36px 44px 26px; border-radius: 30px; transform: rotateY(-12deg) rotateX(2.6deg); transform-origin: 100% 50%; }
+.board { padding: 36px 44px 26px; border-radius: 30px; transform: rotateY(var(--ry, -12deg)) rotateX(var(--rx, 2.6deg)); transform-origin: 100% 50%;
+  background: radial-gradient(120% 90% at 80% 10%, rgba(0, 207, 255, .06), rgba(5, 9, 16, .22) 70%);
+  transition: transform .45s cubic-bezier(.16, .84, .3, 1), box-shadow .45s var(--ease); }
+.board:hover { box-shadow: inset 0 1px 0 #ffffff, inset 0 -1px 0 rgba(160, 240, 255, .5), inset 1px 0 0 rgba(255, 255, 255, .42), inset -1px 0 0 rgba(255, 255, 255, .2),
+  0 0 70px rgba(0, 255, 136, .14), 0 0 40px rgba(0, 207, 255, .14); }
 .gh { display: flex; align-items: center; gap: 14px; }
 .gh .dot { width: 13px; height: 13px; border-radius: 50%; background: var(--rs1); box-shadow: 0 0 16px var(--rs1); }
 .gh b { font: 400 32px 'Archivo Black', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: transparent; -webkit-background-clip: text; background-clip: text;
   background-image: linear-gradient(180deg, #effffb, #4dffcc 50%, #00dcb4); filter: drop-shadow(0 0 12px rgba(0, 240, 170, .45)); }
 .gh .tg { margin-left: auto; white-space: nowrap; font: 800 18px 'JetBrains Mono'; letter-spacing: .2em; text-transform: uppercase; color: var(--rs1); text-shadow: 0 0 12px rgba(0, 207, 255, .7); }
 .seats { margin-top: 10px; }
-.seat { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; align-items: center; gap: 20px; padding: 15px 0; }
+.seat { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; align-items: center; gap: 20px; padding: 15px 6px; border-radius: 14px; transition: background .3s; }
+.seat.p1 { background: linear-gradient(90deg, rgba(0, 255, 136, .07), rgba(0, 255, 136, 0) 75%); }
 .seat + .seat { border-top: 1px solid transparent; border-image: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .22) 30%, rgba(0, 207, 255, .3) 70%, rgba(255, 255, 255, 0)) 1; }
 .rk { font: 400 70px/1 'Archivo Black', sans-serif; text-align: center; color: transparent; -webkit-background-clip: text; background-clip: text; }
 .p1 .rk { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 14px rgba(0, 255, 136, .65)); }
@@ -153,7 +190,10 @@ h1 b { font-weight: 400; }
 .p1 .pay b { color: var(--rs1); text-shadow: 0 0 26px rgba(0, 255, 136, .6); }
 .p2 .pay b { color: var(--rs2); text-shadow: 0 0 20px rgba(0, 207, 255, .5); }
 .p3 .pay b { color: var(--rs3); text-shadow: 0 0 16px rgba(59, 130, 246, .45); }
-.board .rule { margin-top: 12px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .12); font: 600 15px 'JetBrains Mono'; color: var(--dim); }
+.board .rule { margin-top: 12px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .12); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  font: 600 14px 'JetBrains Mono'; color: var(--dim); }
+.board .rule > b { font: 800 12px 'JetBrains Mono'; letter-spacing: .12em; text-transform: uppercase; padding: 4px 10px; border-radius: 99px;
+  color: var(--green); background: rgba(0, 255, 136, .1); box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .38); white-space: nowrap; }
 
 /* ---- the steps: the words on the left in every one ("vsechno ma byt nalevo"), wide ("proc je to v takovem uzkem
    sloupci? tam je hodne mist napravo"), their number under them ("prvne STEP 02, pod tim text a pod tim az to velke
@@ -169,10 +209,10 @@ h1 b { font-weight: 400; }
 /* the step's number, huge and hollow, faint as the first take had it, under its words and never beside them */
 .num { position: relative; z-index: 0; margin: 40px 0 0 -.05em; pointer-events: none; white-space: nowrap;
   font: 400 clamp(220px, 21vw, 420px)/.8 'Archivo Black', sans-serif; color: transparent;
-  -webkit-text-stroke: 1.5px rgba(0, 207, 255, .17); background: linear-gradient(180deg, rgba(0, 255, 136, .07), rgba(0, 207, 255, 0) 72%);
+  -webkit-text-stroke: 1.5px rgba(0, 207, 255, .2); background: linear-gradient(180deg, rgba(0, 255, 136, .085), rgba(0, 207, 255, 0) 74%);
   -webkit-background-clip: text; background-clip: text; }
 .step::before { content: ''; position: absolute; inset: 10% 0; z-index: -1; pointer-events: none;
-  background: radial-gradient(40% 45% at 70% 58%, rgba(0, 207, 255, .07), rgba(0, 207, 255, 0) 70%); }
+  background: radial-gradient(40% 45% at 70% 58%, rgba(0, 207, 255, .075), rgba(0, 207, 255, 0) 70%); }
 
 /* every picture and clip: no frame, its edges melting into the dark */
 .stage { position: relative; z-index: 2; }
@@ -194,28 +234,54 @@ h1 b { font-weight: 400; }
    away where the frame ends */
 #s1 .pic { width: 118%; margin-left: -10%; }
 #s1 .crop { -webkit-mask-image: linear-gradient(180deg, #000 82%, transparent); mask-image: linear-gradient(180deg, #000 82%, transparent); }
-/* the company in two figures ("4 departments, 9 Agents led by NEXUS"; the roles named one by one are gone) */
-.crew { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px 12px; margin-top: 44px; }
-.crew b { font: 400 54px/1 'Archivo Black', sans-serif; color: var(--green); text-shadow: 0 0 22px rgba(0, 255, 136, .55); }
-.crew span { font: 700 18px 'JetBrains Mono'; letter-spacing: .06em; color: var(--text); }
-.crew i { width: 1px; height: 38px; margin: 0 14px; align-self: center; background: linear-gradient(180deg, rgba(0, 207, 255, 0), rgba(0, 207, 255, .7), rgba(0, 207, 255, 0)); }
+.hq-stage::before { content: ''; position: absolute; z-index: -1; left: 48%; top: 47%; width: 78%; aspect-ratio: 1.65 / 1; transform: translate(-50%, -50%) rotate(-8deg);
+  border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(0, 255, 136, .1), rgba(0, 207, 255, .05) 58%, transparent 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .14), 0 0 80px rgba(0, 207, 255, .08); }
+/* the company in two figures ("4 departments, 9 Agents led by NEXUS") framed in a clear crystal telemetry module */
+.crew-box { margin-top: 38px; padding: 20px 24px 18px; border-radius: 20px; max-width: 610px;
+  background: linear-gradient(180deg, rgba(6, 12, 22, .38), rgba(4, 9, 16, .2)); }
+.crew { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px 12px; }
+.crew b { font: 400 50px/1 'Archivo Black', sans-serif; color: var(--green); text-shadow: 0 0 22px rgba(0, 255, 136, .55); }
+.crew span { font: 700 17px 'JetBrains Mono'; letter-spacing: .04em; color: var(--text); }
+.crew span em { font-style: normal; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .55); }
+.crew i { width: 1px; height: 36px; margin: 0 12px; align-self: center; background: linear-gradient(180deg, rgba(0, 207, 255, 0), rgba(0, 207, 255, .75), rgba(0, 207, 255, 0)); }
+.depts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .1); }
+.dp { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 99px;
+  font: 700 11.5px/1 'JetBrains Mono', monospace; letter-spacing: .06em; color: var(--dim);
+  background: rgba(5, 10, 18, .55); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .24); }
+.dp i { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 7px var(--cyan); }
+.dp.cmd { color: #ffffff; box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .48), 0 0 14px rgba(0, 255, 136, .14); }
+.dp.cmd i { background: var(--green); box-shadow: 0 0 9px var(--green); animation: live-pulse 2s var(--ease) infinite; }
 .crop { position: relative; aspect-ratio: 1500 / 1132; overflow: hidden; }
 .crop .clip { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 .crop video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: fill; }
-/* step 2: the words; under them the number, and beside it the arms where the ring of products was ("misto nich dej ty
-   ramena roboticke"); under both, the Cymetica pipeline: the idea in, its six chambers, and out of it the ring of the
-   products already built, which turns to show yours as it goes live ("to tocici dej spis jako vystup z te pipeline") */
-/* (twelfth take: the arms higher, beside the words and the number, apart from the pipeline: "ty roboticke ruce dat vys,
-   nemusi uz byt u te pipeline dole") */
-.step.build { grid-template-rows: auto auto auto; min-height: 0; padding-top: 110px; padding-bottom: 100px; }
-.step.build .stage { grid-column: 2; grid-row: 1 / span 2; top: -30px; }
-.step.build .stage .pic { width: 120%; margin-left: -7%; }
-.step.build .machine { grid-column: 1 / -1; grid-row: 3; margin-top: 40px; }
+
+/* step 2: panoramic single-viewport layout so the words, the Orbital Cyber-Forge AND the Cymetica pipeline + holographic
+   ring all fit cleanly inside a 1080p window together */
+.step.build { grid-template-rows: auto auto auto; min-height: 100vh; padding-top: 92px; padding-bottom: 84px; align-content: center; }
+.step.build h2 { margin-top: 14px; font-size: clamp(36px, 2.75vw, 54px); }
+.step.build .pts { margin-top: 26px; gap: 18px; }
+.step.build .pts li { font-size: 16.5px; line-height: 1.58; }
+.step.build .num { margin-top: 18px; font-size: clamp(160px, 14vw, 250px); }
+.step.build .stage { grid-column: 2; grid-row: 1 / span 2; top: -8px; }
+.step.build .stage .pic { width: 116%; margin-left: -6%; }
+.step.build .stage .pic > .clip {
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 6%, #000 93%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%), linear-gradient(180deg, transparent 0%, #000 6%, #000 93%, transparent 100%);
+}
+/* vertical energy conduit piping the Cyber-Forge down into the Cymetica pipeline */
+.step.build .conduit { position: absolute; left: 52%; bottom: -26px; width: 2px; height: 42px; transform: translateX(-50%); pointer-events: none;
+  background: linear-gradient(180deg, rgba(0, 255, 136, .75), rgba(0, 207, 255, .35), rgba(0, 207, 255, 0)); box-shadow: 0 0 12px rgba(0, 255, 136, .5); }
+.step.build .conduit i { position: absolute; left: -3px; top: 0; width: 8px; height: 8px; border-radius: 50%; background: #eafff5;
+  box-shadow: 0 0 12px 3px rgba(0, 255, 136, .85); animation: conduit-drop 1.8s var(--ease) infinite; }
+@keyframes conduit-drop { 0% { top: -2px; opacity: 0; } 25% { opacity: 1; } 100% { top: 38px; opacity: 0; } }
+.step.build .machine { grid-column: 1 / -1; grid-row: 3; margin-top: 10px; }
 /* the ring of products already built: their live pages as holograms over a projector of light */
-.ring { position: relative; height: 300px; cursor: grab; touch-action: pan-y; user-select: none; }
+.ring { position: relative; height: 266px; cursor: grab; touch-action: pan-y; user-select: none; }
 .ring.grab { cursor: grabbing; }
-.ring .items { position: absolute; left: 0; right: 0; top: 0; height: 210px; perspective: 900px; }
-.ring .it { position: absolute; left: 50%; top: 50%; width: 200px; height: 112px; will-change: transform, opacity; }
+.ring .items { position: absolute; left: 0; right: 0; top: 0; height: 192px; perspective: 900px; }
+.ring .it { position: absolute; left: 50%; top: 50%; width: 192px; height: 108px; will-change: transform, opacity; }
 .ring .mk { display: block; width: 100%; height: 100%; border-radius: 10px; overflow: hidden;
   box-shadow: 0 0 0 1px rgba(0, 207, 255, .65), 0 0 26px rgba(0, 207, 255, .4);
   -webkit-box-reflect: below 6px linear-gradient(transparent 64%, rgba(255, 255, 255, .2)); }
@@ -228,36 +294,37 @@ h1 b { font-weight: 400; }
 .ring .it.mine::after { content: 'Yours \00b7 live'; position: absolute; left: 50%; top: -10px; transform: translate(-50%, -100%); padding: 3px 8px; border-radius: 6px; white-space: nowrap;
   font: 800 11px 'JetBrains Mono'; letter-spacing: .14em; text-transform: uppercase; color: #03140c; background: var(--green); box-shadow: 0 0 16px rgba(0, 255, 136, .6); }
 .ring.mine .plate b { color: var(--green); text-shadow: 0 0 18px rgba(0, 255, 136, .6); }
-.ring .base { position: absolute; left: 4%; right: 4%; top: 170px; height: 64px; border-radius: 50%; pointer-events: none;
-  background: radial-gradient(closest-side, rgba(0, 207, 255, .3), rgba(0, 255, 136, .08) 60%, rgba(0, 207, 255, 0));
-  box-shadow: 0 0 0 1px rgba(0, 207, 255, .25) inset; }
-.ring .base::after { content: ''; position: absolute; left: 38%; right: 38%; bottom: 40%; height: 120px; transform: translateY(0);
+.ring .base { position: absolute; left: 4%; right: 4%; top: 152px; height: 60px; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(0, 207, 255, .32), rgba(0, 255, 136, .09) 60%, rgba(0, 207, 255, 0));
+  box-shadow: 0 0 0 1px rgba(0, 207, 255, .28) inset; }
+.ring .base::after { content: ''; position: absolute; left: 38%; right: 38%; bottom: 40%; height: 112px; transform: translateY(0);
   background: linear-gradient(0deg, rgba(0, 207, 255, .18), rgba(0, 207, 255, 0)); clip-path: polygon(30% 100%, 70% 100%, 100% 0, 0 0); }
 .ring .plate { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; }
 .ring .plate b { display: block; font: 400 19px 'Archivo Black', sans-serif; color: #ffffff; text-shadow: 0 0 18px rgba(0, 255, 136, .45); transition: color .3s; }
 
 /* step 2's pipeline: the idea in, its six chambers, and out of it the ring of products */
-.machine { position: relative; z-index: 3; display: grid; grid-template-columns: 230px minmax(0, 1fr) 520px; align-items: center; gap: 22px; }
-.machine .cap { display: block; margin-bottom: 8px; font: 800 13px 'JetBrains Mono'; letter-spacing: .22em; text-transform: uppercase; color: var(--cyan); }
-.inlet .say { min-height: 92px; padding: 14px 16px; border-radius: 16px; font: 600 16px/1.4 'JetBrains Mono'; color: #ffffff;
-  background: linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .02)), rgba(6, 14, 24, .3);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(0, 207, 255, .4), 0 0 26px rgba(0, 207, 255, .14);
+.machine { position: relative; z-index: 3; display: grid; grid-template-columns: 236px minmax(0, 1fr) 500px; align-items: center; gap: 26px; }
+.machine .cap { display: block; margin-bottom: 8px; font: 800 13px 'JetBrains Mono'; letter-spacing: .22em; text-transform: uppercase; color: var(--cyan); text-shadow: 0 0 10px rgba(0, 207, 255, .45); }
+.inlet .say { min-height: 88px; padding: 14px 16px; border-radius: 16px; font: 600 15.5px/1.42 'JetBrains Mono'; color: #ffffff;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .1), rgba(255, 255, 255, .02)), rgba(6, 14, 24, .38);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(0, 207, 255, .45), 0 0 28px rgba(0, 207, 255, .15);
   transition: transform .4s var(--ease), box-shadow .4s, opacity .4s; }
-.inlet .caret { display: inline-block; width: 9px; height: 18px; margin-left: 2px; vertical-align: -3px; background: var(--green); box-shadow: 0 0 8px var(--green); opacity: 0; }
-.machine.typing .caret { opacity: 1; animation: blink .6s steps(1) infinite; }
+.inlet .caret { display: none; width: 8px; height: 17px; margin: 0 1px 0 2px; vertical-align: -3px; background: var(--green); box-shadow: 0 0 8px var(--green); }
+.machine.typing .caret { display: inline-block; animation: blink .6s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
-.machine.sent .inlet .say { transform: scale(.94); opacity: .55; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(0, 255, 136, .5), 0 0 40px rgba(0, 255, 136, .35); }
+.machine.sent .inlet .say { transform: scale(.96); opacity: .72; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(0, 255, 136, .6), 0 0 36px rgba(0, 255, 136, .28); }
 .inlet, .outlet { position: relative; }
-.inlet::after, .outlet::before { content: ''; position: absolute; top: calc(50% + 10px); width: 18px; height: 2px; background: linear-gradient(90deg, var(--cyan), var(--green)); box-shadow: 0 0 10px var(--cyan); }
-.inlet::after { right: -18px; } .outlet::before { left: -18px; }
-/* the pipeline itself ("mohla by este vypadat lip, ted je to jen 7/10"): a sheet of dark glass with a faint hexagon
-   weave in it (Build it Better's own hexagons), a sheen running over it; its own line at the top (what it is doing,
-   how far it is); six chambers, each numbered, a ring filling round its icon while it works, the working one lifted
-   and swept by light; the light that has passed them runs on a rail through their icons, a comet at its front */
-.tube { position: relative; padding: 16px 16px 16px; border-radius: 24px; isolation: isolate; overflow: hidden;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='48.5' viewBox='0 0 28 48.5'%3E%3Cpath d='M14 0 28 8.08v16.17L14 32.33 0 24.25V8.08z M14 32.33 28 40.41 M14 32.33 0 40.41 M14 32.33V48.5' fill='none' stroke='%2300cfff' stroke-opacity='.07' stroke-width='1'/%3E%3C/svg%3E") 0 0 / 28px 48.5px,
-    linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .02) 45%, rgba(0, 255, 136, .05)), rgba(4, 10, 18, .62);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 0 0 1px rgba(0, 207, 255, .35), inset 0 -1px 0 rgba(0, 255, 136, .5), 0 0 60px rgba(0, 207, 255, .16), 0 24px 50px rgba(0, 0, 0, .5); }
+.inlet::after, .outlet::before { content: ''; position: absolute; top: calc(50% + 10px); width: 26px; height: 3px; border-radius: 3px;
+  background: repeating-linear-gradient(90deg, #ffffff 0 5px, rgba(255, 255, 255, 0) 5px 12px), linear-gradient(90deg, var(--cyan), var(--green));
+  background-size: 12px 100%, 100% 100%; box-shadow: 0 0 12px var(--cyan); animation: bridge-flow .55s linear infinite; }
+@keyframes bridge-flow { to { background-position: 12px 0, 0 0; } }
+.inlet::after { right: -26px; top: calc(50% + 12px); }
+.outlet::before { left: -26px; top: 44%; }
+/* the pipeline itself: hexagon-free precision optical matrix + crystal glass rim */
+.tube { position: relative; padding: 15px 16px 15px; border-radius: 24px; isolation: isolate; overflow: hidden;
+  background: radial-gradient(circle at 1px 1px, rgba(0, 207, 255, .14) 1px, transparent 0) 0 0 / 18px 18px,
+    linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .015) 45%, rgba(0, 255, 136, .055)), rgba(4, 10, 18, .68);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .88), inset 0 0 0 1px rgba(0, 207, 255, .38), inset 0 -1px 0 rgba(0, 255, 136, .55), 0 0 60px rgba(0, 207, 255, .16), 0 24px 50px rgba(0, 0, 0, .5); }
 .tube::before { content: ''; position: absolute; top: 0; bottom: 0; left: -30%; width: 22%; z-index: -1; pointer-events: none; transform: skewX(-18deg);
   background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .07), rgba(255, 255, 255, 0)); animation: sheen 7s var(--ease) infinite; }
 @keyframes sheen { 0%, 60% { left: -30%; } 100% { left: 120%; } }
@@ -342,42 +409,67 @@ h1 b { font-weight: 400; }
 .machine.pop .outlet .burst { animation: burst .8s var(--ease) forwards; }
 @keyframes burst { 0% { transform: scale(.4); opacity: 1; } 100% { transform: scale(4.2); opacity: 0; } }
 
-/* step 4: the Quant Lab's page (outbox/quant-lab-v2) beside its words, standing in space as the Promo Market does
-   ("je moc proste, jen placka na tme ... jak je treba promo market lepe udelany"): turned towards its words, its
-   edges melting into the dark, a light behind it and a pool of light under it */
-/* (its picture's glow and the floor of light under it hang below the page, so it is raised to sit mid-band) */
-.stage.lab { perspective: 1400px; top: -45px; }
-.stage.lab .reactor { position: relative; width: 112%; margin-left: -7%; transform: rotateY(-26deg) rotateX(6deg) rotateZ(1.2deg) scale(.94); transform-origin: 0% 50%; }
-.stage.lab .reactor .clip { opacity: .95;
-  -webkit-mask-image: repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .8) 2px 4px), linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent), linear-gradient(180deg, transparent, #000 4%, #000 90%, transparent);
-  mask-image: repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .8) 2px 4px), linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent), linear-gradient(180deg, transparent, #000 4%, #000 90%, transparent);
-  -webkit-mask-composite: source-in, source-in; mask-composite: intersect; }
-.stage.lab .reactor::before { content: ''; position: absolute; z-index: -1; inset: 4% 2%; pointer-events: none;
-  background: radial-gradient(closest-side, rgba(0, 207, 255, .2), rgba(0, 255, 136, .07) 60%, rgba(0, 207, 255, 0)); filter: blur(28px); }
-.stage.lab .reactor::after { content: ''; position: absolute; left: 6%; right: 6%; bottom: -9%; height: 16%; pointer-events: none;
-  background: radial-gradient(closest-side, rgba(0, 207, 255, .3), rgba(0, 207, 255, 0)); filter: blur(8px); }
+/* step 4: the Quant Lab's page (outbox/quant-lab-v2) beside its words, standing in space as a crisp 3D hologram */
+.stage.lab { perspective: 1500px; top: -14px; }
+.stage.lab .reactor { position: relative; width: 108%; margin-left: -4%; transform: rotateY(-15deg) rotateX(4deg) rotateZ(.6deg) scale(.98); transform-origin: 0% 50%;
+  transition: transform .5s var(--ease); }
+.stage.lab .reactor:hover { transform: rotateY(-12deg) rotateX(3deg) rotateZ(.4deg) scale(.995); }
+.stage.lab .holo-frame { position: absolute; inset: -8px -6px; z-index: 3; pointer-events: none; border-radius: 18px;
+  background:
+    linear-gradient(90deg, var(--cyan), transparent) 0 0 / 28px 2px no-repeat,
+    linear-gradient(180deg, var(--cyan), transparent) 0 0 / 2px 28px no-repeat,
+    linear-gradient(270deg, var(--green), transparent) 100% 0 / 28px 2px no-repeat,
+    linear-gradient(180deg, var(--green), transparent) 100% 0 / 2px 28px no-repeat,
+    linear-gradient(90deg, var(--cyan), transparent) 0 100% / 28px 2px no-repeat,
+    linear-gradient(0deg, var(--cyan), transparent) 0 100% / 2px 28px no-repeat,
+    linear-gradient(270deg, var(--green), transparent) 100% 100% / 28px 2px no-repeat,
+    linear-gradient(0deg, var(--green), transparent) 100% 100% / 2px 28px no-repeat;
+  box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .14); opacity: .85; }
+.stage.lab .reactor .clip { opacity: .98; border-radius: 14px; overflow: hidden;
+  -webkit-mask-image:
+    radial-gradient(260px 80px at 90% 96%, transparent 0 42%, #000 88%),
+    repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .88) 2px 4px),
+    linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent),
+    linear-gradient(180deg, transparent, #000 3%, #000 92%, transparent);
+  mask-image:
+    radial-gradient(260px 80px at 90% 96%, transparent 0 42%, #000 88%),
+    repeating-linear-gradient(180deg, #000 0 2px, rgba(0, 0, 0, .88) 2px 4px),
+    linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent),
+    linear-gradient(180deg, transparent, #000 3%, #000 92%, transparent);
+  -webkit-mask-composite: source-in, source-in, source-in; mask-composite: intersect; }
+.stage.lab .reactor video { filter: saturate(1.12) contrast(1.06) brightness(1.05); }
+.stage.lab .reactor::before { content: ''; position: absolute; z-index: -1; inset: 2% 0; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(0, 207, 255, .24), rgba(0, 255, 136, .09) 60%, rgba(0, 207, 255, 0)); filter: blur(28px); }
+.stage.lab .reactor::after { content: ''; position: absolute; left: 6%; right: 6%; bottom: -8%; height: 16%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(0, 207, 255, .34), rgba(0, 207, 255, 0)); filter: blur(8px); }
+.lab-hud { position: relative; z-index: 4; display: flex; align-items: center; gap: 10px; width: fit-content; margin: 18px auto 0; padding: 8px 16px; border-radius: 99px;
+  font: 700 12.5px/1 'JetBrains Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--dim);
+  background: rgba(5, 10, 18, .72); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 0 0 1px rgba(0, 207, 255, .38), 0 0 24px rgba(0, 207, 255, .14);
+  transition: box-shadow .35s, background .35s; }
+.lab-hud .st-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); animation: live-pulse 1.5s var(--ease) infinite; }
+.lab-hud .st-lbl { font-weight: 800; color: #ffffff; transition: color .3s; }
+.lab-hud .st-tag { padding: 3px 8px; border-radius: 99px; font-size: 10.5px; font-weight: 800; color: var(--cyan); background: rgba(0, 207, 255, .12); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .3); }
+.lab-hud.born { background: rgba(4, 24, 16, .82); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px var(--green), 0 0 32px rgba(0, 255, 136, .35); }
+.lab-hud.born .st-dot { background: var(--green); box-shadow: 0 0 12px var(--green); animation: none; }
+.lab-hud.born .st-lbl { color: var(--green); text-shadow: 0 0 14px rgba(0, 255, 136, .55); }
+.lab-hud.born .st-tag { color: #03140c; background: var(--green); box-shadow: 0 0 12px rgba(0, 255, 136, .5); }
 
-/* step 3: the Universe with the Airdrop Farmer and the Gem Screener on the left, the Promo Market as a hologram on
-   the right ("a proc je porad promo market na leve strane a ukazky vesmiru napravo? ma to byt naopak"; "taky to udelej
-   vetsi at je to stejne jako na jinych krocich"): each its own half, apart, as big as the other steps' pictures allow
-   two to be; the Promo Market turned only a little, towards the words, so it reads. Fourteenth take ("ty obezne
-   drahy na kterych jsou apky ... jsou asi moc nahore"): the Universe in the middle of the band, big (its right quarter
-   is empty space, so the Promo Market's cube stands beside it), its edges melting into the page, the users walking
-   from the cube into the farmer's ring; the second round, the farmer and the gem filmed from further off ("je zas moc
-   velke na orbite ty produkty trochu je zmensi") */
-.stage.duo { position: relative; perspective: 1600px; width: 134%; margin-left: -24%; height: 700px; }
-.stage.duo .near { position: absolute; z-index: 1; left: 0; top: 50%; width: 80%; transform: translateY(-52%); }
-.stage.duo .near .clip { -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 88%, transparent), linear-gradient(180deg, transparent, #000 8%, #000 90%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 9%, #000 88%, transparent), linear-gradient(180deg, transparent, #000 8%, #000 90%, transparent);
+/* step 3 (fifteenth take, "vyhodil bych proste ten screen ze stranky a nechal bych jen orbitu, v popredi bude velka
+   budova Promo marketu co mame ve vesmiru a nad ni bude ta krychle"): the orbit across the whole stage, the farmer, the
+   gem and the Agent Casino on it, the Promo Market big in front on the right (its own clip, keyed hard, over the
+   orbit's), the Promo Market's live cube over its projector, users walking from it to the farmer */
+.stage.duo { position: relative; perspective: 1600px; width: 130%; margin-left: -22%; height: 690px; }
+.stage.duo .near { position: absolute; z-index: 1; left: 0; top: 50%; width: 100%; transform: translateY(-52%); container-type: inline-size; }
+.stage.duo .near .clip { -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 94%, transparent), linear-gradient(180deg, transparent, #000 8%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 9%, #000 94%, transparent), linear-gradient(180deg, transparent, #000 8%, #000 90%, transparent);
   -webkit-mask-composite: source-in; mask-composite: intersect; }
-/* the Promo Market's cube, big, in place of its page (fourteenth take's second round: "misto screenu z promo marketu
-   tam dej jen tu 3D krychli a na ni se budou promitat ty produkty"; the third round: "CO TO JE ZA HNUSNOU KOSTKU? MA
-   BYT JAK NA https://cymetica.com/promo-market"): their own cube, its markup and its stylesheet copied from their page
-   (static/css/promo_market_v2.css, read 2026-10-31), on a corner, swaying and floating, a product's live page on each
-   face changing every 2.4 s as theirs do (anim.js); only its size is ours */
-.stage.duo .holo-at { position: absolute; z-index: 2; right: 1%; top: 50%; transform: translateY(-50%); pointer-events: none; }
-.stage.duo .holo { --s: 11.5vw; }
-/* ---- theirs, from here to the end of their reduced-motion block ---- */
+.stage.duo .near .clip.bld { position: absolute; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; -webkit-mask-image: none; mask-image: none; }
+/* the cube's pool on the projector's lens (record.py market prints where it stands); about one and a half of the
+   projector's dish across, so the products on its faces read (at 7.4 % of the clip they did not) */
+.stage.duo .holo-at { position: absolute; z-index: 2; transform: translate(-50%, -96%); pointer-events: none; }
+.stage.duo .holo { --s: 12.5cqw; }
+/* ---- the Promo Market's, as it was in the fourteenth take (cymetica.com/promo-market, read 2026-10-31): from here to
+   the end of their reduced-motion block; .stage renamed .hstage, as the steps have one ---- */
 /* ---------------- the hologram cube: the Promo Market's mark (the Universe's building, in the page's colours) ---------------- */
 /* The cube stands on one corner, tilted (the operator, 2026-10-26: "moc rovne hrany ... toci se moc rychle a jen dokola"):
    glass faces with soft glowing edges instead of drawn lines, each face a screen showing a product's page, a smaller
@@ -417,12 +509,6 @@ h1 b { font-weight: 400; }
 .holo .core { position: absolute; left: 50%; top: 50%; width: calc(var(--s) * .55); height: calc(var(--s) * .55); margin: calc(var(--s) * -.275); border-radius: 50%;
   background: radial-gradient(circle, rgba(232,251,255,.5) 0%, rgba(0,207,255,.26) 30%, rgba(0,207,255,0) 70%); animation: holo-core 3.4s ease-in-out infinite; }
 @keyframes holo-core { 50% { transform: scale(1.18); opacity: .65; } }
-/* the mark: the same cube, small, in the header and over the loader */
-.holo.mini { width: 34px; height: 34px; perspective: 260px; flex: none; }
-.holo.mini .aura, .holo.mini .pool, .holo.mini .beam, .holo.mini .sp, .holo.mini .core, .holo.mini .f img, .holo.mini .f::before { display: none; }
-.holo.mini .f { border-radius: 1px; background: linear-gradient(140deg, rgba(0,207,255,.42), rgba(0,207,255,.08) 50%, rgba(0,255,136,.30));
-  box-shadow: inset 0 0 0 1px rgba(232,251,255,.45), inset 0 0 6px rgba(0,207,255,.5), 0 0 6px rgba(0,207,255,.45); }
-.holo.mini .cam { transform: rotateX(-12deg); }
 /* the light around it: a glow that breathes out from the heart, a pool under it and a beam rising from the pool */
 .holo .aura { position: absolute; left: 50%; top: 45%; width: calc(var(--s) * 1.5); height: calc(var(--s) * 1.5); margin: calc(var(--s) * -.75); border-radius: 50%;
   background: radial-gradient(circle, rgba(0,207,255,.22), rgba(0,255,136,.06) 42%, transparent 68%); animation: holo-aura 4.2s ease-out infinite; pointer-events: none; }
@@ -435,131 +521,122 @@ h1 b { font-weight: 400; }
 .holo .sp { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); opacity: 0; animation: holo-rise 5s linear infinite; }
 .holo .sp:nth-child(2n) { background: var(--green); box-shadow: 0 0 8px var(--green); }
 @keyframes holo-rise { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: .9; } 100% { transform: translateY(calc(var(--s) * -1)); opacity: 0; } }
-.holo:hover .f { box-shadow: inset 0 0 0 1px rgba(230,237,247,.32), inset 0 0 calc(var(--s) * .26) rgba(0,207,255,.42), 0 0 calc(var(--s) * .2) rgba(0,207,255,.3); }
 @media (prefers-reduced-motion: reduce) {
   .holo .bob, .holo .hstage, .holo .core, .holo .aura, .holo .pool, .holo .sp, .holo .f::after { animation: none; }
   .holo .hstage { transform: rotateY(-20deg) rotateX(-35.264deg) rotateZ(45deg); } }
 /* ---- ours again ---- */
-.nm { position: absolute; z-index: 3; display: inline-flex; align-items: center; gap: 8px; transform: translate(-50%, -100%); padding: 5px 12px; border-radius: 7px;
-  font: 800 16px 'JetBrains Mono'; letter-spacing: .1em; text-transform: uppercase; color: #ffffff; white-space: nowrap;
-  background: rgba(5, 7, 12, .78); border: 1px solid rgba(0, 255, 136, .5); box-shadow: 0 0 18px rgba(0, 255, 136, .18); }
+.nm { position: absolute; z-index: 3; display: inline-flex; align-items: center; gap: 8px; transform: translate(-50%, -100%); padding: 5px 12px; border-radius: 8px;
+  font: 800 15px 'JetBrains Mono'; letter-spacing: .1em; text-transform: uppercase; color: #ffffff; white-space: nowrap;
+  background: rgba(5, 9, 16, .84); border: 1px solid rgba(0, 255, 136, .55); box-shadow: 0 0 20px rgba(0, 255, 136, .22); }
 .nm i { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); }
-.users { position: absolute; z-index: 3; left: 50%; top: 82%; font: 700 18px 'JetBrains Mono'; color: var(--dim); text-shadow: 0 2px 12px rgba(0, 0, 0, .95); }
-.users b { font: 400 30px 'Archivo Black', sans-serif; color: var(--green); margin-right: 6px; text-shadow: 0 0 18px rgba(0, 255, 136, .6); }
-.plus { position: absolute; z-index: 4; left: 57%; top: 74%; font: 800 20px 'JetBrains Mono'; color: var(--green); opacity: 0; pointer-events: none;
-  text-shadow: 0 0 14px rgba(0, 255, 136, .9), 0 2px 10px rgba(0, 0, 0, .9); }
-.plus.go { animation: plus 1.6s var(--ease) forwards; }
-@keyframes plus { 0% { opacity: 0; transform: translate(-50%, 0) scale(.7); } 20% { opacity: 1; transform: translate(-50%, -14px) scale(1.05); } 100% { opacity: 0; transform: translate(-50%, -60px) scale(1); } }
+.users { position: absolute; z-index: 3; left: 55.3%; top: 71%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 15px; border-radius: 99px; white-space: nowrap;
+  font: 700 15px/1 'JetBrains Mono'; color: var(--text);
+  background: rgba(5, 10, 18, .82); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 0 0 1px rgba(0, 255, 136, .45), 0 0 24px rgba(0, 255, 136, .2); }
+.users i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 9px var(--green); }
+.users b { font: 400 24px/1 'Archivo Black', sans-serif; color: var(--green); text-shadow: 0 0 16px rgba(0, 255, 136, .65); }
+.plus { position: absolute; z-index: 4; left: 47%; top: 64%; padding: 4px 10px; border-radius: 99px; white-space: nowrap;
+  font: 800 14px/1 'JetBrains Mono'; letter-spacing: .04em; color: var(--green); opacity: 0; pointer-events: none;
+  background: rgba(3, 22, 14, .9); box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .75), 0 0 18px rgba(0, 255, 136, .55); }
+.plus.go { animation: plus 1.5s var(--ease) forwards; }
+@keyframes plus { 0% { opacity: 0; transform: translate(-50%, 6px) scale(.75); } 22% { opacity: 1; transform: translate(-50%, -10px) scale(1.04); } 100% { opacity: 0; transform: translate(-50%, -44px) scale(.96); } }
 .flow { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; overflow: visible; }
-.flow .fl { fill: none; stroke: rgba(0, 207, 255, .3); stroke-width: 1.6; stroke-dasharray: 4 9; }
-.flow .u { fill: var(--green); filter: drop-shadow(0 0 6px rgba(0, 255, 136, 1)); }
+.flow .fl-glow { fill: none; stroke: rgba(0, 207, 255, .14); stroke-width: 5; filter: blur(2px); }
+.flow .fl { fill: none; stroke: rgba(0, 235, 200, .48); stroke-width: 1.8; stroke-dasharray: 6 10; animation: dash-flow 1.2s linear infinite; }
+@keyframes dash-flow { to { stroke-dashoffset: -16; } }
+.flow .u-halo { fill: rgba(0, 255, 136, .24); }
+.flow .u { fill: #eafff5; stroke: var(--green); stroke-width: 2; filter: drop-shadow(0 0 8px rgba(0, 255, 136, 1)); }
+.flow .ping-ring { fill: none; stroke: var(--green); stroke-width: 1.8; opacity: 0; }
+.flow .ping-ring.pop { animation: ring-pop .9s var(--ease) forwards; }
+@keyframes ring-pop { 0% { r: 6px; opacity: .95; } 100% { r: 30px; opacity: 0; } }
 
-/* step 5: the LIVE Universe ("tam bych asi zvetsil to universe"), its sun, companies and products, filmed without its
-   own sky (record.py universe) and keyed (anim.js), so it stands in the page's space as the HQ does; the board like
-   the first screen's in that space. Fourteenth take ("si uplne znicil tu obeznou drahu top jak byla predtim a ma byt
-   vetsi mnohem ten vesmir a ta tabule v nem jakoby mensi, podobne jak to je v live aplikaci"): the whole map, never
-   cut (record.py films it with the sun in the middle and room round its outer lane), 1,250 px across at 2000, as far
-   left as the words allow (the lane's edge clears "Earn monthly rewards." by 50 px); the board as the live map has its
-   own: small, tilted, in the map's corner over its outer lane, where no company stands (bottom right). Its second
-   round ("krok 5 musis dat cely universe dolu niz a vedle texty na opacnou stranu otoceny ten screen a to vetsi"): the
-   Universe lowered, the board beside the words above it, turned the other way (towards the map, as the live map's own
-   board is turned), as big as the first screen's nearly */
-#s5 { padding-bottom: 300px; overflow-x: clip; }
-.stage.uni .pic { width: 142%; margin-left: -32.5%; transform: translateY(var(--uv-down, 230px)); }
-/* under each Universe, filmed on black and keyed, a dark as its own sky was ("tu obeznou drahu top jak byla
-   predtim"): its lanes are light of 2 to 7 %, which the page's nebula would wash out; melting away well inside the
-   picture, so it has no edge */
+/* step 5: the LIVE Universe with its climbing leaderboard cleanly anchored inside the viewport */
+#s5 { padding-bottom: 180px; }
+.stage.uni .pic { width: 137%; margin-left: -28%; }
 .stage.uni .pic::before, .stage.duo .near::before { content: ''; position: absolute; z-index: -1; inset: -4% -2%; pointer-events: none;
   background: radial-gradient(50% 50% at 50% 50%, rgba(2, 4, 8, .62), rgba(2, 4, 8, .42) 55%, rgba(2, 4, 8, 0) 100%); }
-.stage.duo .near::before { inset: 0 18% 0 -4%; }
-/* its sun: the live page draws it on its own canvases over the map, which the map's recording leaves out ("co to zas
-   ma byt to slunce?"), so Cymetica's sun is laid where theirs stands, its ball their ball's size (measured off the live
-   page, 2026-10-30: 6.2 % of the map wide; record.py universe prints where: 50.55 %, 38.78 % of the clip on
-   2026-10-31's fourteenth take) */
 .stage.uni .sun { position: absolute; z-index: 2; left: 50.55%; top: 38.78%; width: 30.5%; transform: translate(-50%, -50%); pointer-events: none; }
 .stage.uni .sun img { width: 100%; }
-.lb-wrap { position: absolute; z-index: 3; right: -6.6%; top: -12%; width: 370px; perspective: 1400px; perspective-origin: 100% 40%; }
-.lb { padding: 18px 13px 10px; border-radius: 22px; transform: rotateY(-14deg) rotateX(3deg); transform-origin: 100% 50%;
-  background: linear-gradient(180deg, rgba(5, 9, 15, .58), rgba(5, 9, 15, .4)); }
+.lb-wrap { position: absolute; z-index: 3; right: -4.5%; bottom: -11%; top: auto; width: 334px; perspective: 1400px; perspective-origin: 100% 40%; }
+.lb { padding: 15px 12px 10px; border-radius: 20px; transform: rotateY(-13deg) rotateX(3deg); transform-origin: 100% 50%;
+  background: linear-gradient(180deg, rgba(5, 10, 18, .72), rgba(4, 8, 15, .56)); transition: box-shadow .4s var(--ease); }
+.lb:has(.climb.won) { box-shadow: inset 0 1px 0 #ffffff, inset 0 -1px 0 rgba(0, 255, 136, .6), 0 0 65px rgba(0, 255, 136, .24); }
 .lb .gh { padding: 0 8px; }
-.lb .gh b { font-size: 19px; }
-.lb .gh .tg { font-size: 11.5px; color: var(--cyan); }
-.lb .gh .dot { width: 9px; height: 9px; animation: blink 1.6s steps(1) infinite; }
-/* a row as the first screen's seats: the place, the station, the name over its points, the prize */
-.climb { position: relative; margin-top: 10px; height: calc(6 * 50px); }
-.row { position: absolute; left: 0; right: 0; top: 0; height: 50px; display: grid; grid-template-columns: 28px 32px minmax(0, 1fr) auto; grid-template-rows: auto auto;
-  grid-template-areas: "rk bd nm pz" "rk bd pp pz"; align-content: center; align-items: center; column-gap: 9px; row-gap: 2px;
-  padding: 0 10px; border-radius: 11px; transition: transform .7s var(--ease), background .4s, box-shadow .4s; }
+.lb .gh b { font-size: 16px; }
+.lb .gh .tg { font-size: 10px; color: var(--cyan); }
+.lb .gh .dot { width: 8px; height: 8px; animation: live-pulse 2s var(--ease) infinite; }
+.climb { position: relative; margin-top: 9px; height: calc(6 * 42px); }
+.row { position: absolute; left: 0; right: 0; top: 0; height: 42px; display: grid; grid-template-columns: 24px 28px minmax(0, 1fr) auto; grid-template-rows: auto auto;
+  grid-template-areas: "rk bd nm pz" "rk bd pp pz"; align-content: center; align-items: center; column-gap: 8px; row-gap: 1px;
+  padding: 0 9px; border-radius: 10px; transition: transform .7s var(--ease), background .4s, box-shadow .4s; }
 .row .rk { grid-area: rk; } .row .badge { grid-area: bd; } .row .nm { grid-area: nm; } .row .pp { grid-area: pp; } .row .pz { grid-area: pz; }
 .row + .row::before { content: ''; position: absolute; left: 10px; right: 10px; top: 0; height: 1px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .14), rgba(255, 255, 255, 0)); }
-.row .rk { font: 400 20px 'Archivo Black', sans-serif; color: var(--mute); text-align: center; background: none; filter: none; -webkit-background-clip: initial; background-clip: initial; }
-/* the three paid places' numbers as the first screen's board has them, lit from inside */
-.row.p1 .rk, .row.p2 .rk, .row.p3 .rk { font-size: 25px; color: transparent; -webkit-background-clip: text; background-clip: text; }
+.row .rk { font: 400 16px 'Archivo Black', sans-serif; color: var(--mute); text-align: center; background: none; filter: none; -webkit-background-clip: initial; background-clip: initial; }
+.row.p1 .rk, .row.p2 .rk, .row.p3 .rk { font-size: 20px; color: transparent; -webkit-background-clip: text; background-clip: text; }
 .row.p1 .rk { background-image: linear-gradient(180deg, #eafff4, var(--rs1) 55%, #00a067); filter: drop-shadow(0 0 12px rgba(0, 255, 136, .65)); }
 .row.p2 .rk { background-image: linear-gradient(180deg, #e6fbff, var(--rs2) 55%, #0086b5); filter: drop-shadow(0 0 10px rgba(0, 207, 255, .55)); }
 .row.p3 .rk { background-image: linear-gradient(180deg, #e3edff, var(--rs3) 55%, #1d4ea8); filter: drop-shadow(0 0 9px rgba(59, 130, 246, .5)); }
-.row .badge { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; background: #07101c; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3), 0 0 0 2px rgba(30, 48, 80, .9); }
+.row .badge { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; background: #07101c; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .3), 0 0 0 2px rgba(30, 48, 80, .9); }
 .row.p1 .badge { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 0 0 2px var(--rs1), 0 0 16px rgba(0, 255, 136, .45); }
 .row.p2 .badge { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 0 0 2px var(--rs2), 0 0 14px rgba(0, 207, 255, .4); }
 .row.p3 .badge { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 0 0 2px var(--rs3), 0 0 12px rgba(59, 130, 246, .4); }
 .row .badge img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.55); }
 .row .nm { position: static; transform: none; padding: 0; border: 0; background: none; box-shadow: none; text-transform: none; letter-spacing: 0;
-  font: 700 13.5px Inter, sans-serif; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-.row .nm em { flex: none; font: 800 8.5px 'JetBrains Mono'; font-style: normal; letter-spacing: .12em; text-transform: uppercase; padding: 1px 4px; border-radius: 4px; color: #03140c; background: var(--green); }
-.row .pp { display: flex; align-items: center; gap: 6px; font: 600 11px 'JetBrains Mono'; color: var(--mute); white-space: nowrap; }
-.row .pp b { font: 800 13px 'JetBrains Mono'; color: var(--text); }
-.row .bar { position: relative; width: 38px; height: 4px; border-radius: 3px; background: rgba(30, 48, 80, .9); overflow: hidden; }
+  font: 700 12.5px Inter, sans-serif; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.row .nm em { flex: none; font: 800 8px 'JetBrains Mono'; font-style: normal; letter-spacing: .12em; text-transform: uppercase; padding: 1.5px 5px; border-radius: 4px; color: #03140c; background: var(--green); }
+.row .pp { display: flex; align-items: center; gap: 5px; font: 600 10px 'JetBrains Mono'; color: var(--mute); white-space: nowrap; }
+.row .pp b { font: 800 11.5px 'JetBrains Mono'; color: var(--text); }
+.row .bar { position: relative; width: 34px; height: 3px; border-radius: 3px; background: rgba(30, 48, 80, .9); overflow: hidden; }
 .row .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: linear-gradient(90deg, var(--cyan), var(--blue)); }
 .row.paid .bar i { background: linear-gradient(90deg, var(--cyan), var(--green)); }
-.row .pz { min-width: 0; font: 800 12.5px 'JetBrains Mono'; text-align: right; color: var(--mute); white-space: nowrap; }
+.row .pz { min-width: 0; font: 800 11px 'JetBrains Mono'; text-align: right; color: var(--mute); white-space: nowrap; }
 .row.p1 .pz { color: var(--rs1); text-shadow: 0 0 14px rgba(0, 255, 136, .5); } .row.p2 .pz { color: var(--rs2); } .row.p3 .pz { color: var(--rs3); }
-/* yours: its own dark glass, so the row it passes slides under it and never shows through ("Sigma Collective" and
-   "Your company" stood on top of each other mid-pass); lifted towards you while it passes */
-.row.me { z-index: 5; background: linear-gradient(90deg, rgb(4, 30, 20), rgb(5, 16, 17) 70%); box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .7), 0 0 30px rgba(0, 255, 136, .25), 0 10px 26px rgba(0, 0, 0, .6); }
-.row.me.pass { box-shadow: inset 0 0 0 1px var(--green), 0 0 46px rgba(0, 255, 136, .5), 0 16px 34px rgba(0, 0, 0, .7); }
+.row.me { z-index: 5; background: linear-gradient(90deg, rgb(4, 32, 21), rgb(5, 17, 19) 70%); box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .75), 0 0 30px rgba(0, 255, 136, .28), 0 10px 26px rgba(0, 0, 0, .6); }
+.row.me.pass { box-shadow: inset 0 0 0 1px var(--green), 0 0 46px rgba(0, 255, 136, .55), 0 16px 34px rgba(0, 0, 0, .72); }
 .row.me .nm, .row.me .pp b { color: var(--green); }
 .row.me .badge { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .5), 0 0 0 2px var(--green), 0 0 18px rgba(0, 255, 136, .6); }
-.climb.won .row.me { box-shadow: inset 0 0 0 1px var(--green), 0 0 50px rgba(0, 255, 136, .45); }
+.climb.won .row.me { background: linear-gradient(90deg, rgb(6, 44, 28), rgb(5, 20, 20) 75%); box-shadow: inset 0 0 0 1.5px var(--green), 0 0 54px rgba(0, 255, 136, .52); }
 
-/* ---- the end: the two doors ("ty tlacitka se mi moc nelibi"), each the picture of what it opens, alive: step 1's HQ
-   ("start a company by melo mit zas animaci toho headquarters") and step 5's Universe ("v tom explore the universe dej
-   stejnou animaci jak je na poslednim kroku"); big, and under the picture its words in the headings' type, a ray of
-   light out of them to a round lit arrow that runs on as you point at it. The whole door is the link */
-.final { position: relative; padding: 20px 4.5vw 200px; }
-.final::before { content: ''; position: absolute; left: 50%; top: 45%; width: 1500px; height: 620px; transform: translate(-50%, -50%); z-index: -1;
-  background: radial-gradient(closest-side, rgba(0, 255, 136, .1), rgba(0, 207, 255, .05) 55%, rgba(0, 207, 255, 0)); pointer-events: none; }
-.doors { display: grid; grid-template-columns: repeat(2, minmax(0, 608px)); justify-content: center; gap: 36px; }
-.door { --cr: 0, 255, 136; --c: var(--green); position: relative; display: flex; flex-direction: column; border-radius: 21px; overflow: hidden; isolation: isolate;
-  background: linear-gradient(180deg, rgba(8, 14, 24, .2), rgba(5, 9, 15, .8));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 0 0 1px rgba(var(--cr), .38), 0 0 60px rgba(var(--cr), .12), 0 30px 60px rgba(0, 0, 0, .45);
+/* ---- the end: grand finale header + the two live portal doors */
+.final { position: relative; padding: 96px 4.5vw 190px; }
+.final::before { content: ''; position: absolute; left: 50%; top: 52%; width: min(1500px, 100%); height: 640px; transform: translate(-50%, -50%); z-index: -1;
+  background: radial-gradient(closest-side, rgba(0, 255, 136, .11), rgba(0, 207, 255, .06) 55%, rgba(0, 207, 255, 0)); pointer-events: none; }
+.final-hd { text-align: center; margin-bottom: 48px; }
+.final-hd h2 { margin-top: 14px; font-size: clamp(38px, 3vw, 60px); }
+.doors { display: grid; grid-template-columns: repeat(2, minmax(0, 760px)); justify-content: center; gap: 44px; }
+.door { --cr: 0, 255, 136; --c: var(--green); position: relative; display: flex; flex-direction: column; border-radius: 28px; overflow: hidden; isolation: isolate;
+  background: linear-gradient(180deg, rgba(8, 14, 24, .25), rgba(5, 9, 15, .84));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(var(--cr), .42), 0 0 60px rgba(var(--cr), .13), 0 30px 60px rgba(0, 0, 0, .48);
   transition: transform .5s var(--ease), box-shadow .5s; }
+.door::after { content: ''; position: absolute; top: 0; bottom: 0; left: -45%; width: 32%; z-index: 5; pointer-events: none; transform: skewX(-20deg);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .1), rgba(255, 255, 255, 0)); transition: left .85s var(--ease); }
+.door:hover::after { left: 125%; }
 .door.uv { --cr: 0, 207, 255; --c: var(--cyan); }
-.door:hover { transform: translateY(-8px); box-shadow: inset 0 1px 0 #ffffff, inset 0 0 0 1px rgba(var(--cr), .85), 0 0 90px rgba(var(--cr), .32), 0 40px 70px rgba(0, 0, 0, .55); }
-.door .art { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: #05070c; }
+.door:hover { transform: translateY(-8px); box-shadow: inset 0 1px 0 #ffffff, inset 0 0 0 1px rgba(var(--cr), .9), 0 0 95px rgba(var(--cr), .34), 0 40px 70px rgba(0, 0, 0, .58); }
+.door .art { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: url(pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
+.door-tag { position: absolute; left: 22px; top: 20px; z-index: 4; display: inline-flex; align-items: center; gap: 8px; padding: 6px 13px; border-radius: 99px;
+  font: 800 11px/1 'JetBrains Mono', monospace; letter-spacing: .15em; text-transform: uppercase; color: #ffffff;
+  background: rgba(5, 9, 16, .68); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 0 0 1px rgba(var(--cr), .48); }
+.door-tag i { width: 7px; height: 7px; border-radius: 50%; background: var(--c); box-shadow: 0 0 9px var(--c); }
 .door .art .clip { position: absolute; inset: 0; background-size: cover !important; }
 .door .art video, .door .art .keyed { width: 100%; height: 100%; object-fit: cover; transition: transform 1.4s var(--ease); }
-.door:hover .art video, .door:hover .art .keyed { transform: scale(1.05); }
-/* both doors: the HQ and the Universe keyed into the page's own space, as in steps 1 and 5 */
-.door .art { background: url(pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
-/* the HQ's clip is the HQ alone (fourteenth take), taller than the door: stood whole in its middle, the door's own
-   space round it */
+.door:hover .art video, .door:hover .art .keyed { transform: scale(1.055); }
 .door .art .clip[data-anim=door-hq] { inset: 6% auto 2% 50%; aspect-ratio: 1500 / 1132; transform: translateX(-50%); }
 .door .art::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
-  background: linear-gradient(180deg, rgba(5, 9, 15, 0) 52%, rgba(5, 9, 15, .92) 100%); }
-/* the Universe's sun where the live one stands in the clip (step 5's, moved by the picture's crop to 16:9) */
+  background: linear-gradient(180deg, rgba(5, 9, 15, 0) 50%, rgba(5, 9, 15, .94) 100%); }
 .door .art .sun { position: absolute; z-index: 2; left: 50.6%; top: 38.8%; width: 31.9%; transform: translate(-50%, -50%); pointer-events: none; }
 .door .art .sun img { width: 100%; }
-.door .cta { position: relative; z-index: 4; display: flex; align-items: center; gap: 18px; margin-top: -51px; padding: 0 22px 22px 26px; }
-.door .cta .t { flex: none; font: 400 26px/1.04 'Archivo Black', sans-serif; color: #ffffff; text-transform: uppercase; letter-spacing: .01em; text-shadow: 0 3px 18px rgba(0, 0, 0, .9); }
+.door .cta { position: relative; z-index: 4; display: flex; align-items: center; gap: 22px; margin-top: -64px; padding: 0 28px 28px 32px; }
+.door .cta .t { flex: none; font: 400 32px/1.04 'Archivo Black', sans-serif; color: #ffffff; text-transform: uppercase; letter-spacing: .01em; text-shadow: 0 3px 18px rgba(0, 0, 0, .9); }
 .door .cta .t span { color: var(--c); text-shadow: 0 0 24px rgba(var(--cr), .55), 0 3px 18px rgba(0, 0, 0, .9); }
 .door .cta .ray { flex: 1; height: 2px; border-radius: 2px; background: linear-gradient(90deg, rgba(var(--cr), 0), rgba(var(--cr), .85) 80%, #ffffff); box-shadow: 0 0 10px rgba(var(--cr), .6); }
-.door .arr { position: relative; flex: none; width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; color: #03140c;
+.door .arr { position: relative; flex: none; width: 70px; height: 70px; border-radius: 50%; display: grid; place-items: center; color: #03140c;
   background: radial-gradient(circle at 50% 30%, #ffffff, rgba(var(--cr), 1) 48%, rgba(var(--cr), .78));
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .6), 0 0 26px rgba(var(--cr), .75), 0 0 70px rgba(var(--cr), .35); transition: transform .4s var(--ease), box-shadow .4s; }
 .door.uv .arr { color: #021219; }
-.door .arr::before { content: ''; position: absolute; inset: -7px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(var(--cr), .6); animation: ping 2.4s var(--ease) infinite; }
+.door .arr::before { content: ''; position: absolute; inset: -9px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(var(--cr), .6); animation: ping 2.4s var(--ease) infinite; }
 .door.uv .arr::before { animation-delay: 1.2s; }
-.door .arr svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .35s var(--ease); }
+.door .arr svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .35s var(--ease); }
 .door:hover .arr { transform: scale(1.08); box-shadow: inset 0 0 0 1px #ffffff, 0 0 36px rgba(var(--cr), .95), 0 0 100px rgba(var(--cr), .5); }
 .door:hover .arr svg { transform: translateX(5px); }
 
@@ -575,64 +652,82 @@ h1 b { font-weight: 400; }
   #rail i { width: clamp(18px, 2vw, 40px); margin: 0 10px; }
   .pill { letter-spacing: .12em; }
 }
-/* ---- a phone: the bar is the mark and the rail, the words above every picture */
+/* ---- a phone: the bar is the mark and the rail, the words above every picture, nothing clipped */
 @media (max-width: 900px) {
-  #bar { height: 64px; gap: 10px; padding: 0 10px; }
+  #bar { height: 64px; gap: 10px; padding: 0 12px; }
   #rail i { width: 10px; margin: 0 3px; }
-  .brand svg { width: 70px; height: 36px; }
-  .pill { display: none; }
+  #rail i.run b::after { width: 5px; height: 5px; right: -2.5px; margin-top: -2.5px; box-shadow: 0 0 6px 1px rgba(0, 255, 136, .8); }
+  .brand svg { width: 32px; height: 32px; }
+  .brand .wm, .pill { display: none; }
   #rail { gap: 2px; padding: 4px; margin-right: 0; }
   #rail a { padding: 7px 8px; gap: 0; }
   #rail .nd { width: 22px; height: 22px; }
   #rail a .sh { display: none; }
   #rail a.on .sh { display: inline; margin-left: 6px; font-size: 14px; }
-  #hero { min-height: 0; padding: 300px 0 50px; }
-  #sun { left: 50%; top: 150px; width: 300px; }
-  .hero-in { width: calc(100% - 32px); display: flex; flex-direction: column-reverse; gap: 34px; }
-  .hero-in h1 { font-size: 32px; }
+  #hero { min-height: 0; padding: 214px 0 52px; }
+  #sun { left: 50%; top: 116px; width: 224px; }
+  .hero-in { width: calc(100% - 32px); display: flex; flex-direction: column-reverse; gap: 22px; }
+  .hero-in h1 { font-size: clamp(29px, 8vw, 38px); line-height: 1.1; white-space: normal; }
+  .hero-cta { margin-top: 24px; gap: 10px; }
+  .btn-go, .btn-how { width: 100%; justify-content: center; padding: 14px 20px; font-size: 13px; }
   .board-wrap { perspective: none; width: 100%; }
   .board { transform: none; padding: 20px 16px 14px; border-radius: 20px; }
-  .gh { gap: 10px; } .gh b { font-size: 19px; letter-spacing: .04em; white-space: nowrap; } .gh .tg { font-size: 14px; letter-spacing: .12em; }
-  .seat { grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; padding: 10px 0; }
+  .gh { gap: 10px; } .gh b { font-size: 19px; letter-spacing: .04em; white-space: nowrap; } .gh .tg { font-size: 13px; letter-spacing: .12em; }
+  .seat { grid-template-columns: 36px minmax(0, 1fr) auto; gap: 10px; padding: 10px 4px; }
   .rk { font-size: 36px; }
   .who b { font-size: 18px; } .who span { font-size: 13px; }
   .pay b { font-size: 22px; } .pay span { font-size: 13px; letter-spacing: .08em; }
-  .board .rule { font-size: 13px; }
-  .step { display: block; min-height: 0; padding: 70px 16px 90px; }
-  .step .stage { margin-top: 36px; }
-  .num { position: absolute; font-size: 150px; top: 40px; left: 8px; margin: 0; }
+  .board .rule { font-size: 12.5px; gap: 8px; }
+  .step, #s5 { display: block; min-height: 0; padding: 70px 16px 86px; }
+  .step .stage { margin-top: 32px; }
+  .num, .step.build .num { position: absolute; font-size: 140px; top: 40px; left: 8px; margin: 0; }
   .kick { font-size: 14px; letter-spacing: .2em; }
-  h2 { font-size: 32px; margin-top: 10px; }
-  .pts { margin-top: 28px; gap: 18px; }
-  .pts li { font-size: 14px; padding-left: 50px; } .pts li::before { width: 34px; } .pts li::after { left: 31px; }
-  #s1 .pic, .stage.work .pic, .stage.uni .pic { width: 100%; margin-left: 0; }
+  h2, .step.build h2 { font-size: 31px; margin-top: 10px; }
+  .pts, .step.build .pts { margin-top: 24px; gap: 16px; }
+  .pts li, .step.build .pts li { font-size: 14px; padding-left: 48px; line-height: 1.6; }
+  .pts li::before { width: 32px; } .pts li::after { left: 29px; }
+  #s1 .pic, .step.build .stage .pic, .stage.uni .pic { width: 100%; margin-left: 0; }
+  .crew-box { margin-top: 26px; padding: 16px; }
   .crew b { font-size: 34px; } .crew span { font-size: 14px; }
-  .ring { height: 250px; margin-top: 20px; } .ring .items { height: 170px; } .ring .it { width: 150px; height: 85px; } .ring .base { top: 136px; height: 56px; }
-  .machine { grid-template-columns: 1fr; gap: 14px; margin-top: 0; }
+  .dp { font-size: 10.5px; padding: 4px 9px; }
+  .step.build .conduit { display: none; }
+  .ring { height: 240px; margin-top: 16px; } .ring .items { height: 166px; } .ring .it { width: 150px; height: 85px; } .ring .base { top: 134px; height: 54px; }
+  .machine { grid-template-columns: 1fr; gap: 14px; margin-top: 16px; }
   .inlet::after, .outlet::before { display: none; }
+  .tube .hd { flex-wrap: wrap; gap: 8px 10px; }
+  .tube .pn { font-size: 13px; letter-spacing: .1em; }
+  .tube .st { font-size: 11px; gap: 7px; margin-left: auto; }
   .chs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .tube .track { display: none; }
   .ch b { font-size: 12px; }
-  .stage.duo { display: grid; grid-template-columns: 1fr; height: auto; }
-  .stage.duo .near, .stage.duo .holo-at { position: relative; left: auto; right: auto; top: auto; bottom: auto; width: 100%; }
-  .stage.duo .near { transform: none; }
-  .stage.duo .holo-at { transform: none; justify-self: center; }
-  .stage.duo .holo { --s: 34vw; }
-  .stage.duo .near { width: 96%; margin: 4% 0 0 auto; }
-  .nm { font-size: 12px; padding: 3px 8px; }
-  .users { font-size: 14px; } .users b { font-size: 22px; }
-  .plus { font-size: 14px; }
-  .climb { width: 100%; margin-top: 4%; padding: 8px; height: calc(6 * 52px + 16px); }
-  .row { left: 8px; right: 8px; top: 8px; height: 52px; grid-template-columns: 24px 34px minmax(0, 1fr) auto; gap: 8px; padding: 0 8px; }
-  .row .pz, .row .bar { display: none; }
-  .row .rk { font-size: 18px; } .row .badge { width: 32px; height: 32px; } .row .nm { font-size: 14px; } .row .pp, .row .pp b { font-size: 13px; }
-  .row .nm em { display: none; }
-  .final { padding: 60px 16px 120px; }
+  .stage.duo { width: 100%; margin-left: 0; perspective: none; display: flex; flex-direction: column; gap: 20px; height: auto; }
+  .stage.duo .near { position: relative; left: auto; right: auto; top: auto; bottom: auto; width: 100%; transform: none; margin: 0; }
+  .flow { display: none; }
+  .nm { font-size: 9.5px; padding: 3px 7px; gap: 5px; letter-spacing: .07em; }
+  .nm i { width: 5px; height: 5px; }
+  .users { font-size: 11.5px; padding: 4px 10px; top: 85%; } .users b { font-size: 16px; }
+  .plus { font-size: 11px; left: 30%; top: 85%; }
+  .stage.lab { top: 0; perspective: none; }
+  .stage.lab .reactor, .stage.lab .reactor:hover { width: 100%; margin-left: 0; transform: none; }
+  .lab-hud { font-size: 10.5px; padding: 7px 12px; gap: 7px; border-radius: 14px; max-width: 100%; flex-wrap: wrap; justify-content: center; text-align: center; }
+  .lb-wrap { position: relative; right: auto; bottom: auto; top: auto; width: 100%; margin-top: 20px; perspective: none; }
+  .lb { transform: none; padding: 16px 12px 12px; }
+  .climb { width: 100%; margin-top: 8px; padding: 0; height: calc(6 * 48px); }
+  .row { left: 0; right: 0; top: 0; height: 48px; grid-template-columns: 24px 32px minmax(0, 1fr) auto; gap: 8px; padding: 0 8px; }
+  .row .bar { display: none; }
+  .row .rk { font-size: 17px; } .row .badge { width: 30px; height: 30px; } .row .nm { font-size: 13px; } .row .pp, .row .pp b { font-size: 11.5px; }
+  .row .pz { font-size: 10px; }
+  .final { padding: 56px 16px 120px; }
+  .final-hd { margin-bottom: 28px; }
   .doors { grid-template-columns: minmax(0, 1fr); gap: 22px; }
-  .door .cta .t { font-size: 22px; }
+  .door .cta { margin-top: -54px; padding: 0 18px 20px 20px; gap: 14px; }
+  .door .cta .t { font-size: 21px; }
+  .door .arr { width: 54px; height: 54px; }
+  .door .arr svg { width: 24px; height: 24px; }
+  .door-tag { left: 14px; top: 14px; font-size: 10px; padding: 5px 10px; }
   .final::before { width: 100vw; }
 }
 @media (prefers-reduced-motion: reduce) {
   .rv { opacity: 1; transform: none; transition: none; }
-  .pts li::before, .tube::before, .door .arr::before { animation: none; }
+  .pts li::before, .tube::before, .door .arr::before, .brand .qb-orbit, .brand .qb-star, #sun, .step.build .conduit i, .flow .fl, .pill i, .dp.cmd i, .lab-hud .st-dot, .lb .gh .dot { animation: none; }
 }

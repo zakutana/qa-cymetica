@@ -6,7 +6,7 @@
      while the page's other clips are loading ("animace se nespusti", measured 2026-10-30); its poster stands behind it;
    - step 2's Cymetica pipeline, in step with the workshop clip: an idea typed in, through the pipeline's six
      chambers, a product out; and the ring of the products already built, as holograms, turned by dragging;
-   - step 3's users, walking from the Promo Market's briefs to the product;
+   - step 3's users, walking from the Promo Market to the product, and the Promo Market cube's faces changing;
    - step 4's Quant Lab, started so its agent is born two seconds after the step comes on screen (data-birth);
    - step 5's leaderboard, your company climbing it, passing over the ones it beats.
 
@@ -343,16 +343,39 @@
     (function tick(now) { if (now - last > 33) { last = now; draw(now / 1000); } requestAnimationFrame(tick); })(0);
   })();
 
-  /* ---------------- step 3: users walk from the briefs to the product ---------------- */
+  /* ---------------- step 1: live HQ telemetry count-up & active department scan ---------------- */
+  (function () {
+    var box = document.querySelector('#s1 .crew-box'); if (!box || reduce) return;
+    var nums = [].slice.call(box.querySelectorAll('.crew [data-figure]')).map(function (el) {
+      return { el: el, to: parseInt(el.textContent.replace(/,/g, ''), 10) || 0 };
+    });
+    var dps = [].slice.call(box.querySelectorAll('.dp'));
+    var counted = false;
+    seen(box, function (v) {
+      if (!v || counted) return;
+      counted = true;
+      var t0 = performance.now();
+      (function step(now) {
+        var k = ease(clamp((now - t0) / 900, 0, 1));
+        nums.forEach(function (n) { n.el.textContent = Math.max(1, Math.round(n.to * k)); });
+        if (k < 1) requestAnimationFrame(step);
+      })(t0);
+    }, 0.25);
+    run('hqHud', box, function (t) {
+      var idx = Math.floor(t / 1.8) % dps.length;
+      dps.forEach(function (d, i) { d.style.borderColor = ''; d.classList.toggle('cmd', i === 0 || i === idx); });
+    });
+  })();
+
+  /* ---------------- step 3: users walk from the Promo Market to the product ---------------- */
   (function () {
     var svg = document.querySelector('[data-anim=flow]'); if (!svg) return;
-    var stage = svg.parentElement, promo = stage.querySelector('.holo-at'), near = stage.querySelector('.near');
+    var stage = svg.parentElement, near = stage.querySelector('.near'), promo = near;
     var count = stage.querySelector('.users b'), pop = stage.querySelector('.plus');
-    var NS = svg.namespaceURI, paths = [], dots = [], users = 0;
-    // from the Promo Market's cube, the pool of light under it (x, y in % of its box), to the farmer's ring in its
-    // clip, its right side (fourteenth take: the farmer on its lane, record.py FARMER_LANES; the users come in to its
-    // ring, never across it)
-    var FROM = [[40, 90], [50, 93], [60, 90]], TO = [61, 69];
+    var NS = svg.namespaceURI, glows = [], paths = [], dots = [], users = 0, lastW = 0;
+    // fifteenth take: from the Promo Market's platform, its left and front (x, y in % of the clip, record.py market),
+    // to the farmer's ring, its right side
+    var FROM = [[73, 77], [75, 85], [80, 90]], TO = [59.5, 62.5];
     // the cube's faces change their page every 2.4 s, two of three lit, as the Promo Market's own (promo_market_v2.js)
     setInterval(function () {
       document.querySelectorAll('.holo:not(.fast) .hstage').forEach(function (st) {
@@ -361,33 +384,67 @@
         imgs.forEach(function (im, j) { im.classList.toggle('on', (j + k) % 3 !== 0); });
       });
     }, 2400);
-    FROM.forEach(function () { var p = document.createElementNS(NS, 'path'); p.setAttribute('class', 'fl'); svg.appendChild(p); paths.push(p); });
-    // ("step 4 animace je moc rychla"): six users at a time, each 5.2 s from a brief to the product
-    var PER = 5.2;
-    for (var i = 0; i < 6; i++) { var c = document.createElementNS(NS, 'circle'); c.setAttribute('r', 6); c.setAttribute('class', 'u'); svg.appendChild(c); dots.push({ el: c, path: i % 3, off: i * PER / 6, arrived: -1 }); }
+    FROM.forEach(function () {
+      var g = document.createElementNS(NS, 'path'); g.setAttribute('class', 'fl-glow'); svg.appendChild(g); glows.push(g);
+      var p = document.createElementNS(NS, 'path'); p.setAttribute('class', 'fl'); svg.appendChild(p); paths.push(p);
+    });
+    var ring = document.createElementNS(NS, 'circle'); ring.setAttribute('r', 8); ring.setAttribute('class', 'ping-ring'); svg.appendChild(ring);
+    var PER = 5.0;
+    for (var i = 0; i < 6; i++) {
+      var h = document.createElementNS(NS, 'circle'); h.setAttribute('r', 12); h.setAttribute('class', 'u-halo'); svg.appendChild(h);
+      var c = document.createElementNS(NS, 'circle'); c.setAttribute('r', 5); c.setAttribute('class', 'u'); svg.appendChild(c);
+      dots.push({ el: c, halo: h, path: i % 3, off: i * PER / 6, arrived: -1 });
+    }
     function layout() {
       var s = stage.getBoundingClientRect(), a = promo.getBoundingClientRect(), b = near.getBoundingClientRect();
+      if (!s.width || !a.width || !b.width) return;
+      lastW = Math.round(s.width * 10 + a.left - s.left);
       svg.setAttribute('viewBox', '0 0 ' + s.width + ' ' + s.height);
       var tx = b.left - s.left + b.width * TO[0] / 100, ty = b.top - s.top + b.height * TO[1] / 100;
+      ring.setAttribute('cx', tx.toFixed(1)); ring.setAttribute('cy', ty.toFixed(1));
       FROM.forEach(function (f, i) {
         var fx = a.left - s.left + a.width * f[0] / 100, fy = a.top - s.top + a.height * f[1] / 100;
-        paths[i].setAttribute('d', 'M' + fx + ' ' + fy + ' C' + (fx - 30) + ' ' + (fy + 70) + ' ' + (tx + 180) + ' ' + (ty + 30) + ' ' + tx + ' ' + ty);
+        var d = 'M' + fx.toFixed(1) + ' ' + fy.toFixed(1) + ' C' + (fx - 34).toFixed(1) + ' ' + (fy + 64).toFixed(1) + ' ' + (tx + 170).toFixed(1) + ' ' + (ty + 28).toFixed(1) + ' ' + tx.toFixed(1) + ' ' + ty.toFixed(1);
+        glows[i].setAttribute('d', d);
+        paths[i].setAttribute('d', d);
         paths[i].len = paths[i].getTotalLength();
       });
     }
     layout(); window.addEventListener('resize', layout);
-    promo.addEventListener('load', layout);
     run('flow', svg, function (t) {
+      var s = stage.getBoundingClientRect(), a = promo.getBoundingClientRect();
+      if (s.width && a.width && Math.round(s.width * 10 + a.left - s.left) !== lastW) layout();
       dots.forEach(function (d) {
-        var cyc = (t + d.off) / PER, k = cyc % 1, n = Math.floor(cyc), p = paths[d.path];
+        var p = paths[d.path]; if (!p.len) return;
+        var cyc = (t + d.off) / PER, k = cyc % 1, n = Math.floor(cyc);
         var q = p.getPointAtLength(p.len * ease(k));
-        d.el.setAttribute('cx', q.x.toFixed(1)); d.el.setAttribute('cy', q.y.toFixed(1));
-        d.el.style.opacity = (Math.sin(Math.PI * k) * 0.9 + 0.1).toFixed(2);
+        var op = (Math.sin(Math.PI * k) * 0.92 + 0.08).toFixed(2);
+        d.el.setAttribute('cx', q.x.toFixed(1)); d.el.setAttribute('cy', q.y.toFixed(1)); d.el.style.opacity = op;
+        d.halo.setAttribute('cx', q.x.toFixed(1)); d.halo.setAttribute('cy', q.y.toFixed(1)); d.halo.style.opacity = op;
         if (k > 0.96 && d.arrived !== n) {
           d.arrived = n; users++; count.textContent = users.toLocaleString('en-US');
           pop.classList.remove('go'); void pop.offsetWidth; pop.classList.add('go');
+          ring.classList.remove('pop'); void ring.offsetWidth; ring.classList.add('pop');
         }
       });
+    });
+  })();
+
+  /* ---------------- step 4: Quant Lab stage telemetry synced to the clip ---------------- */
+  (function () {
+    var hud = document.querySelector('[data-lab-hud]'); if (!hud) return;
+    var vids = [].slice.call(document.querySelectorAll('#s4 video'));
+    var lbl = hud.querySelector('.st-lbl'), tag = hud.querySelector('.st-tag'), last = '';
+    run('labHud', hud, function () {
+      var v = vids.find(function (x) { return !x.paused && x.readyState >= 2 && +getComputedStyle(x).opacity > 0.4; }) || vids[0];
+      var T = v && v.readyState >= 1 ? v.currentTime : 17.8;
+      var born = T >= 16.6;
+      var s = T < 3.2 ? ['Stage 01 · Building strategy genome', 'Build']
+        : T < 7.6 ? ['Stage 02 · Blasting 7,776 variations', 'Blast']
+        : T < 11.0 ? ['Stage 03 · Out-of-sample blind test', 'Blind']
+        : T < 16.6 ? ['Stage 04 · Verifying against the bar', 'The Bar']
+        : ['Hero agent born · Ready for Agent Casino', 'Found ★'];
+      if (s[0] !== last) { last = s[0]; lbl.textContent = s[0]; tag.textContent = s[1]; hud.classList.toggle('born', born); }
     });
   })();
 
