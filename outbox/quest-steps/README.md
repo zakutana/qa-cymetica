@@ -38,8 +38,10 @@ revenue share), which is unchanged.
    - **Spacing** ("vsude jsou odrazky moc blizko sebe ... urcit idealni rozestupy delky"): lines 1.7 high, points 26
      px apart, the heading 40 px above them, a measure of about sixty characters, every ray 46 px; no word left alone
      on a line.
-   - **Step 3**: the Promo Market on the left, the Universe with its products on the right ("ten promo market screen
-     musi byt vlevo a vpravo ten universe s produkty"; it stood so before, so now they stand apart, turned less, bigger).
+   - **Every picture level with its words**, as step 1's HQ ("proc je to vsude tak nizko dycky vedle toho textu?").
+   - **Step 3**: the Universe with its products on the left, the Promo Market on the right ("a proc je porad promo
+     market na leve strane a ukazky vesmiru napravo? ma to byt naopak"), apart, the Promo Market turned towards the
+     words.
    - **Step 5**: the board beside the Universe in its space, clear of the orbits and the companies ("nema prekryvat
      ten vesmir ... at nestini universe").
    - The links' arrow drawn, not a character (WebKit drew another glyph).
@@ -112,8 +114,9 @@ goes to him.
 ## Decided here, the veto open
 
 - **Five steps, in his order of 2026-10-31**: start, build, market, the hero agent, climb.
-- **"Na preskacku"** is read as the picture standing lower than the words, to their right; the words stay on the
-  left in every step, as he said in the same message ("vsechno ma byt nalevo").
+- **Every picture level with its words**, on their right, as step 1's HQ stands ("proc je to vsude tak nizko dycky
+  vedle toho textu? jedine headquarters je v idealni pozici hned vedle napravo", 2026-10-31); the twelfth take had read
+  "na preskacku" as the picture lower than the words, and that reading was wrong.
 - **Marketing** is not in the pre-build (Cymetica QA, Development, Quant Lab, Trading desk): it is a department the
   owner adds (data.js, ET-32484). Step 3 still says "your Marketing department", as the step is the owner's next
   move; step 1's "4 departments" is the pre-build's.

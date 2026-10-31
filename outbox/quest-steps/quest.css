@@ -161,12 +161,13 @@ h1 b { font-weight: 400; }
 
 /* ---- the steps: the words on the left in every one ("vsechno ma byt nalevo"), wide ("proc je to v takovem uzkem
    sloupci? tam je hodne mist napravo"), their number under them ("prvne STEP 02, pod tim text a pod tim az to velke
-   02"); the picture on the right and lower than the words ("na preskacku"), well away from the number */
+   02"); the picture on the right, level with the words as step 1's HQ is ("proc je to vsude tak nizko dycky vedle
+   toho textu? jedine headquarters je v idealni pozici hned vedle napravo"), well away from the number */
 .step { position: relative; display: grid; grid-template-columns: minmax(0, 5.7fr) minmax(0, 6.3fr); grid-template-rows: auto auto; column-gap: 4vw;
   align-content: center; width: min(1920px, 100%); margin: 0 auto; padding: 130px 4.5vw 150px; min-height: 92vh; }
-.step .txt { position: relative; z-index: 3; grid-column: 1; grid-row: 1; align-self: end; }
+.step .txt { position: relative; z-index: 3; grid-column: 1; grid-row: 1; align-self: start; }
 .step .num { grid-column: 1; grid-row: 2; align-self: start; }
-.step .stage { grid-column: 2; grid-row: 1 / span 2; align-self: end; }
+.step .stage { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
 /* the step's number, huge and hollow, faint as the first take had it, under its words and never beside them */
 .num { position: relative; z-index: 0; margin: 40px 0 0 -.05em; pointer-events: none; white-space: nowrap;
   font: 400 clamp(220px, 21vw, 420px)/.8 'Archivo Black', sans-serif; color: transparent;
@@ -207,7 +208,7 @@ h1 b { font-weight: 400; }
 /* (twelfth take: the arms higher, beside the words and the number, apart from the pipeline: "ty roboticke ruce dat vys,
    nemusi uz byt u te pipeline dole") */
 .step.build { grid-template-rows: auto auto auto; min-height: 0; padding-top: 110px; padding-bottom: 100px; }
-.step.build .stage { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+.step.build .stage { grid-column: 2; grid-row: 1 / span 2; }
 .step.build .stage .pic { width: 112%; margin-left: -4%; }
 .step.build .machine { grid-column: 1 / -1; grid-row: 3; margin-top: 40px; }
 /* the ring of products already built: their live pages as holograms over a projector of light */
@@ -355,12 +356,13 @@ h1 b { font-weight: 400; }
 .stage.lab .reactor::after { content: ''; position: absolute; left: 6%; right: 6%; bottom: -9%; height: 16%; pointer-events: none;
   background: radial-gradient(closest-side, rgba(0, 207, 255, .3), rgba(0, 207, 255, 0)); filter: blur(8px); }
 
-/* step 3: the Promo Market as a hologram on the left, the Universe with the Airdrop Farmer and the Gem Screener on the
-   right ("ten promo market screen musi byt vlevo a vpravo ten universe s produkty, taky to udelej vetsi at je to stejne
-   jako na jinych krocich"): each its own half, apart, as big as the other steps' pictures allow two to be; the Promo
-   Market turned only a little, so it reads */
-.stage.duo { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); column-gap: 1.5%; align-items: center; perspective: 1600px; width: 142%; margin-left: -28%; top: 56px; }
-.promo3d { position: relative; z-index: 1; transform: rotateY(15deg) rotateX(4deg) rotateZ(-.8deg); transform-origin: 100% 50%; }
+/* step 3: the Universe with the Airdrop Farmer and the Gem Screener on the left, the Promo Market as a hologram on
+   the right ("a proc je porad promo market na leve strane a ukazky vesmiru napravo? ma to byt naopak"; "taky to udelej
+   vetsi at je to stejne jako na jinych krocich"): each its own half, apart, as big as the other steps' pictures allow
+   two to be; the Promo Market turned only a little, towards the words, so it reads */
+.stage.duo { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); column-gap: 1.5%; align-items: center; perspective: 1600px; width: 134%; margin-left: -24%; }
+.stage.duo .near { order: -1; }
+.promo3d { position: relative; z-index: 1; transform: rotateY(-14deg) rotateX(4deg) rotateZ(.8deg) scale(.92); transform-origin: 0% 50%; }
 /* their cube, turning as their page turns it (record.py promo_cube), laid where it stands in the picture; its box's
    edge melts into the picture round it */
 .promo3d .cube { position: absolute; z-index: 1; opacity: .9;
@@ -393,8 +395,7 @@ h1 b { font-weight: 400; }
    and the companies on them ("ten leaderboard nema prekryvat ten vesmir, musi byt v nem nejak dobre zasazeny at
    nestini universe"): measured off its picture, the orbits run from 18 % to 99 % of the frame across, so the frame is
    cut at 15 % and the board starts where they end */
-.stage.uni { align-self: center; }
-.stage.uni .pic { width: 96%; margin-left: -32%; }
+.stage.uni .pic { width: 85%; margin-left: -17%; }
 .crop.uv { aspect-ratio: 1596 / 1011; -webkit-mask-image: none; mask-image: none; }
 .crop.uv .clip { left: -17.65%; width: 117.65%; }
 /* its sun: the live page draws it on its own canvases over the map, which the map's recording leaves out ("co to zas
@@ -403,7 +404,7 @@ h1 b { font-weight: 400; }
    frame 51.3 %, 39.6 %) */
 .stage.uni .sun { position: absolute; z-index: 2; left: 51.29%; top: 39.6%; width: 31.76%; transform: translate(-50%, -50%); pointer-events: none; }
 .stage.uni .sun img { width: 100%; }
-.lb-wrap { position: absolute; z-index: 3; right: -7.5%; top: 52%; width: 420px; transform: translateY(-50%); perspective: 1900px; perspective-origin: 100% 40%; }
+.lb-wrap { position: absolute; z-index: 3; right: -9%; top: 50%; width: 400px; transform: translateY(-50%); perspective: 1900px; perspective-origin: 100% 40%; }
 .lb { padding: 22px 16px 12px; border-radius: 24px; transform: rotateY(-12deg) rotateX(2.6deg); transform-origin: 100% 50%;
   background: linear-gradient(180deg, rgba(5, 9, 15, .72), rgba(5, 9, 15, .55)); }
 .lb .gh { padding: 0 10px; }
@@ -429,14 +430,14 @@ h1 b { font-weight: 400; }
 .row.p3 .badge { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4), 0 0 0 2px var(--rs3), 0 0 12px rgba(59, 130, 246, .4); }
 .row .badge img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.55); }
 .row .nm { position: static; transform: none; padding: 0; border: 0; background: none; box-shadow: none; text-transform: none; letter-spacing: 0;
-  font: 700 15px Inter, sans-serif; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-.row .nm em { font: 800 10px 'JetBrains Mono'; font-style: normal; letter-spacing: .16em; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; color: #03140c; background: var(--green); }
+  font: 700 14px Inter, sans-serif; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.row .nm em { flex: none; font: 800 9px 'JetBrains Mono'; font-style: normal; letter-spacing: .12em; text-transform: uppercase; padding: 2px 5px; border-radius: 5px; color: #03140c; background: var(--green); }
 .row .pp { display: flex; align-items: center; gap: 8px; font: 600 12px 'JetBrains Mono'; color: var(--mute); white-space: nowrap; }
 .row .pp b { font: 800 14px 'JetBrains Mono'; color: var(--text); }
 .row .bar { position: relative; width: 46px; height: 4px; border-radius: 3px; background: rgba(30, 48, 80, .9); overflow: hidden; }
 .row .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: linear-gradient(90deg, var(--cyan), var(--blue)); }
 .row.paid .bar i { background: linear-gradient(90deg, var(--cyan), var(--green)); }
-.row .pz { min-width: 8.2em; font: 800 14px 'JetBrains Mono'; text-align: right; color: var(--mute); white-space: nowrap; }
+.row .pz { min-width: 7.4em; font: 800 14px 'JetBrains Mono'; text-align: right; color: var(--mute); white-space: nowrap; }
 .row.p1 .pz { color: var(--rs1); text-shadow: 0 0 14px rgba(0, 255, 136, .5); } .row.p2 .pz { color: var(--rs2); } .row.p3 .pz { color: var(--rs3); }
 /* yours: its own dark glass, so the row it passes slides under it and never shows through ("Sigma Collective" and
    "Your company" stood on top of each other mid-pass); lifted towards you while it passes */
