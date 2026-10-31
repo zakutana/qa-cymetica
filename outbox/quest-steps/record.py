@@ -333,7 +333,10 @@ def market(b, seconds=12):
           {k: pct(v) for k, v in page.evaluate(MARKET_WHERE).items()}, '(% of the clip)')
     by = "(id) => CO.uv.items.find(x => x.c.id === id).plot.root"
     page.evaluate(f"() => {{ ({by})('ad-promo').visible = false; }}")
+    # the page's first recording stands still for half a second a third of a second in (0.56, 0.56 and, after four
+    # seconds' rest, 0.46 s; the second recording never did): a second's recording first, thrown away
     time.sleep(1)
+    page.evaluate(RECORD, [sel, 1000, 4_000_000])
     record(page, sel, seconds, 'market-orbit', bps=16_000_000, crop=box)
     page.evaluate(f"() => {{ const r = {by}; ['ad-farmer', 'ad-gem', 'ad-casino'].forEach(id => {{ r(id).visible = false; }}); r('ad-promo').visible = true; }}")
     page.evaluate(capture.HIDE_SKY)
