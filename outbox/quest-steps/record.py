@@ -11,6 +11,9 @@ Fifth take (the operator, 2026-10-30): "v kazdem kroku musi byt top animace".
   lab.webm          the Quant Lab's five stages at their own pace, 23.6 s   outbox/quant-lab-v2, the window filmed
   universe.webm     the whole Universe: every company on its orbit          LIVE cymetica.com/company/app#universe (a door too)
 
+  The office, the farmer and the Universe are filmed with their own skies hidden, on black: the page keys the black
+  away (anim.js data-key), so they stand in its one space (thirteenth take).
+
     python outbox/quest-steps/record.py                  # every one
     python outbox/quest-steps/record.py office farmer    # some
 
@@ -104,6 +107,15 @@ def office(b, seconds=24, closer=1.0):
       const f = (v, d) => +(v / d * 100).toFixed(2);
       return { left: f(c.left - s.left, s.width), top: f(c.top - s.top, s.height), width: f(c.width, s.width), height: f(c.height, s.height),
                card: [f(k.left - s.left, s.width), f(k.top - s.top, s.height), f(k.width, s.width)] }; }"""))
+    # thirteenth take: the HQ alone on black, its own sky gone (its stars and nebulae, office.sky; the rocks drifting
+    # round it, office.drift), so the page keys the black away and the HQ stands in the page's own space ("pozadi za
+    # headquarters je divne, ma byt stejne jako vsude jinde v questu"; anim.js .clip.key). The rock under it stays
+    print('office: drift', page.evaluate("""() => { const o = CO.builder.office, sc = o.scene, hid = [];
+      o.sky.visible = false;
+      (o.drift || []).forEach((d) => { const m = d && d.isObject3D ? d : d && (d.m || d.mesh); if (m && m.isObject3D) { m.visible = false; hid.push(m.type); } });
+      sc.background = new sc.background.constructor(0x000000); if (sc.fog) sc.fog.color.setHex(0x000000);
+      return { hidden: hid.length, first: o.drift && o.drift[0] ? Object.keys(o.drift[0]).slice(0, 8) : null }; }"""))
+    time.sleep(1.5)
     # the camera still (or in to `closer` of the way), its astronauts at work; the page plays from data-loop-from
     if closer != 1.0:
         page.evaluate("""(k) => { const o = CO.builder.office;
@@ -112,12 +124,13 @@ def office(b, seconds=24, closer=1.0):
     record(page, sel, seconds, 'office')
     page.close()
     frame_poster('office', 5.0)
-    # the HQ's box in the frame: what is lit after the stars are smoothed away (its plate, rooms and the rock under it)
+    # the HQ's box in the frame: whatever is not black (its plate, rooms and the rock under it)
     import numpy as np
     from PIL import ImageFilter
-    im = Image.open(capture.OUT / 'office.webp').convert('L').filter(ImageFilter.MedianFilter(9))
+    im = Image.open(capture.OUT / 'office.webp').convert('L').filter(ImageFilter.MedianFilter(5))
     a = np.asarray(im, np.float32)
-    ys, xs = np.nonzero(a > 46)
+    print('office: the corners (should be black):', [int(a[:40, :40].max()), int(a[:40, -40:].max()), int(a[-40:, :40].max()), int(a[-40:, -40:].max())])
+    ys, xs = np.nonzero(a > 12)
     f = lambda v, d: round(float(v) / d * 100, 2)
     print('office: the HQ in the frame (left, top, width, height, % of the frame):',
           f(xs.min(), a.shape[1]), f(ys.min(), a.shape[0]), f(xs.max() - xs.min(), a.shape[1]), f(ys.max() - ys.min(), a.shape[0]))
@@ -192,6 +205,8 @@ def farmer(b, seconds=12):
     farmer turns and blinks and the gem turns; where the two names stand, for the page's own labels over the clip"""
     page = capture.universe(b, viewport={'width': 1600, 'height': 1000}, dsf=1)
     page.evaluate(capture.FARMER_SHOT)
+    # thirteenth take: its sky hidden, on black, keyed by the page (anim.js data-key) as the HQ and the Universe are
+    page.evaluate("() => { const o = CO.uv; if (o.sky) o.sky.visible = false; o.scene.background = new o.scene.background.constructor(0x000000); }")
     time.sleep(3)
     sel = '#uv3d canvas'
     print('farmer: names over the canvas (left, top %):', page.evaluate("""() => { const c = document.querySelector('#uv3d canvas').getBoundingClientRect();
@@ -229,6 +244,9 @@ def universe(b, seconds=20):
     page.wait_for_function("() => window.CO && CO.uv && CO.uv.camera && CO.uv.items && CO.uv.items.length", timeout=90000)
     time.sleep(8)
     page.evaluate("() => { setInterval(() => { CO.uv.lastInput = performance.now(); }, 800); }")
+    # thirteenth take: its own sky hidden (CO.uv.sky: its stars and nebulae), on black, so the page keys the black away
+    # and the Universe stands in the page's own space as the HQ does (anim.js data-key), its orbits' dust kept
+    page.evaluate("() => { const o = CO.uv; o.sky.visible = false; o.scene.background = new o.scene.background.constructor(0x000000); }")
     time.sleep(1)
     sel = '#uv3d canvas'
     print('universe (live): companies', page.evaluate("() => CO.uv.items.filter(it => !it.kind).length"),

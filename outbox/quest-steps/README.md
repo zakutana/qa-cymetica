@@ -4,7 +4,7 @@ Asked for by the operator on 2026-10-29: a new page for the Cymetica Quest, expl
 quest, win up to 500,000 ET10 every month), then how. It stands beside `outbox/quest` (the scroll film, still on the 5 %
 revenue share), which is unchanged.
 
-## Twelve takes
+## Thirteen takes
 
 1. **a1cb3cf5, 7/10**: real screenshots, each in a glass browser frame. "Nedavej to do panelu ... at to splyva."
 2. **60da77f5, 4/10**: everything full screen, a flight in to the sun, the orbit with its companies. "Predchozi verze
@@ -28,7 +28,22 @@ revenue share), which is unchanged.
 11. **b7891eca** (2026-10-31): deep space behind the whole page with twinkling stars (as Gemini's guide has it), the
    first screen's words big on the left, the top a quest track with no panel, hexagon bullets, the Promo Market's cube
    turning, fourteen companies in the Universe. "To uz je husty 1 screen."
-12. **This one** (2026-10-31), after the eleventh:
+13. **This one** (2026-10-31), after the twelfth:
+   - **No hexagon** in the mark or the track ("nelibi se mi ten hexagon co pouzivas v logu a stepech"): the mark a
+     green sun with a world going round it on its orbit, the track's steps round lights, the pipeline's mark a ring.
+   - **One space everywhere** ("pozadi za headquarters je divne, ma byt stejne jako vsude jinde v questu"; "musi to
+     ve vsech prohlizecich byt stejne"): the HQ, the Universe and the Airdrop Farmer filmed with their own skies hidden,
+     on black (record.py), and the black keyed away in the page through WebGL (anim.js keyed), so the page's own sky
+     stands behind them; the same in Firefox, Chrome and WebKit (a video's own alpha would not play in Safari).
+   - **Spacing** ("vsude jsou odrazky moc blizko sebe ... urcit idealni rozestupy delky"): lines 1.7 high, points 26
+     px apart, the heading 40 px above them, a measure of about sixty characters, every ray 46 px; no word left alone
+     on a line.
+   - **Step 3**: the Promo Market on the left, the Universe with its products on the right ("ten promo market screen
+     musi byt vlevo a vpravo ten universe s produkty"; it stood so before, so now they stand apart, turned less, bigger).
+   - **Step 5**: the board beside the Universe in its space, clear of the orbits and the companies ("nema prekryvat
+     ten vesmir ... at nestini universe").
+   - The links' arrow drawn, not a character (WebKit drew another glyph).
+12. **a43a4494** (2026-10-31), after the eleventh:
    - **His order**: start, build, market, the hero agent, climb ("po build produkt bude market it ... a az pak bude
      breed your agent"); **every step's words on the left** ("vsechno ma byt nalevo"), wide ("proc je to v takovem
      uzkem sloupci?"), the picture to the right and lower ("na preskacku").
@@ -85,12 +100,12 @@ goes to him.
 |---|---|---|
 | top | the sky | ours (capture.py sky) |
 | top | the sun | our Universe mock's sun, alone (capture.py sun); also over step 5's live Universe |
-| 01 | the HQ, astronauts at work | LIVE cymetica.com/company/app/builder, recorded; its four departments and nine agents are the live builder's pre-build (builder.js PRE, data.js TEMPLATES) |
+| 01 | the HQ, astronauts at work | LIVE cymetica.com/company/app/builder, recorded without its sky and drifting rocks, keyed; its four departments and nine agents are the live builder's pre-build (builder.js PRE, data.js TEMPLATES) |
 | 02 | the workshop and the pipeline | our three.js scene and anim.js; Build it Better's name and hexagons from its own picture (og/app/build-it-better.png); the ideas map to real Build it Better products |
 | 02 | the ring of products | LIVE: each product's own page, captured (capture.py apps) |
 | 03 | the Promo Market and the Airdrop Farmer | their page through our read-only mirror with three sample briefs, its own cube turning (their CSS, filmed frame by frame); our Universe mock, composed |
 | 04 | the Quant Lab's page | outbox/quant-lab-v2's Coming soon mode, at its own pace: a simulation, and it says so on screen |
-| 05 | the Universe | LIVE cymetica.com/company/app#universe, recorded: its six companies and four products today, and the leaderboard's eight sample companies added to its answer in our browser |
+| 05 | the Universe | LIVE cymetica.com/company/app#universe, recorded without its sky, keyed: its six companies and four products today, and the leaderboard's eight sample companies added to its answer in our browser |
 | 05 | the leaderboard | samples (QUEST.board), with our mock's stations as marks |
 | end | the two doors | step 1's HQ and step 5's Universe, the same clips |
 
@@ -117,6 +132,10 @@ goes to him.
   changed as it arrives in our browser (record.py EXTRA_COMPANIES).
 - **The top bar** keeps its three parts (brand, track, prize) and drops the panel round them.
 - **The clips** stay out of git. Their posters are kept.
+- **Keyed clips** (the HQ, the Universe, the farmer, both doors): filmed on black and keyed in the page, alpha from
+  each pixel's brightest channel (0.025 to 0.12), so the darkest metal stays whole and the black goes. A browser
+  without WebGL shows them on black. Playwright's WebKit on Windows never finishes loading a WebM (the twelfth take
+  hangs it the same way), so WebKit was looked at with the posters, which are keyed by the same shader.
 
 ## The contest
 

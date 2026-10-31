@@ -67,7 +67,6 @@
   function get(path) { return path.split('.').reduce(function (o, k) { return o == null ? o : o[k]; }, Q); }
   function fmt(v) { return typeof v === 'number' ? v.toLocaleString('en-US') : String(v); }
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var HEX = 'M12 1.6 21 6.8v10.4L12 22.4 3 17.2V6.8z';
 
   // ---- the board's open slots (the flyer's .seat): who wins each ("nepis could be yours, ale ze nejvice points vyhrava")
   var BY = ['most points', '2nd most points', '3rd most points'];
@@ -81,11 +80,12 @@
   document.querySelectorAll('[data-figure]').forEach(function (el) { el.textContent = fmt(get(el.dataset.figure)); });
   document.querySelectorAll('[data-link]').forEach(function (a) { a.href = Q.links[a.dataset.link]; a.target = '_blank'; a.rel = 'noopener'; });
 
-  // ---- the rail: the quest's track: a hexagon a step with its number in it, the lines between them filling as you
-  // read down the page (a spark at the fill's front), the step you are on lit
+  // ---- the rail: the quest's track: a round light a step with its number in it (no hexagon: "nelibi se mi ten
+  // hexagon co pouzivas v logu a stepech"), the lines between them filling as you read down the page (a spark at the
+  // fill's front), the step you are on lit
   var rail = document.getElementById('rail');
   rail.innerHTML = Q.steps.map(function (s, i) {
-    return '<a data-step="' + (i + 1) + '" href="#s' + (i + 1) + '"><span class="hx"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + HEX + '"/></svg><em>' + (i + 1) + '</em></span>' +
+    return '<a data-step="' + (i + 1) + '" href="#s' + (i + 1) + '"><span class="nd"><em>' + (i + 1) + '</em></span>' +
       '<span class="lab">' + s.label + '</span><span class="sh">' + s.short + '</span></a>';
   }).join('<i><b></b></i>');
   var steps = [].slice.call(rail.querySelectorAll('a')), lines = [].slice.call(rail.querySelectorAll('i'));

@@ -16,7 +16,6 @@
   var Q = window.QUEST, S = window.QUEST_STATE;
   function shot(key) { return '<img src="pics/apps/' + key + '.webp" alt="" width="560" height="315" loading="lazy" draggable="false">'; }
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var HEX = 'M12 1.6 21 6.8v10.4L12 22.4 3 17.2V6.8z';
   var clamp = function (x, a, b) { return x < a ? a : x > b ? b : x; };
   var win = function (t, a, b) { return clamp((t - a) / (b - a), 0, 1); };
   var ease = function (x) { x = clamp(x, 0, 1); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
@@ -44,6 +43,76 @@
     });
   }
 
+  /* ---------------- a clip filmed on black, keyed into the page's own space ---------------- */
+  // data-key (thirteenth take: "pozadi za headquarters je divne, ma byt stejne jako vsude jinde v questu", and "ne jen
+  // firefox, musi to ve vsech prohlizecich byt stejne"): the HQ is filmed on black (record.py office) and drawn here
+  // through WebGL with its black made see-through, so the page's space stands behind it, in every browser alike (a
+  // video's own alpha plays in Chrome and Firefox, never in Safari). Its videos stay as the source, hidden; their
+  // cross-fade is mixed here; until one has a frame, its poster is keyed the same way. Without WebGL: the clip on black
+  var KEY_FS = 'precision mediump float; uniform sampler2D A, B; uniform float wa, wb; uniform vec2 sc, of; varying vec2 uv;' +
+    // black to clear, the HQ's darkest metal already whole: alpha from the brightest channel, the colour kept (it was
+    // filmed over black, so it is already the colour times its alpha)
+    'vec4 key(vec3 c) { float m = max(c.r, max(c.g, c.b)); float a = smoothstep(0.025, 0.12, m); return vec4(min(c, vec3(a)), a); }' +
+    'void main() { vec2 t = uv * sc + of; vec4 x = key(texture2D(A, t).rgb) * wa, y = key(texture2D(B, t).rgb) * wb; gl_FragColor = y + x * (1.0 - y.a); }';
+  var KEY_VS = 'attribute vec2 p; varying vec2 uv; void main() { uv = p * 0.5 + 0.5; gl_Position = vec4(p, 0.0, 1.0); }';
+  function keyed(box, vids, posterUrl) {
+    var cv = document.createElement('canvas'), gl = cv.getContext('webgl', { premultipliedAlpha: true, alpha: true, antialias: false });
+    if (!gl) return null;
+    function sh(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; }
+    var pr = gl.createProgram();
+    gl.attachShader(pr, sh(gl.VERTEX_SHADER, KEY_VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, KEY_FS)); gl.linkProgram(pr);
+    if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return null;
+    gl.useProgram(pr);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    var lp = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 2, gl.FLOAT, false, 0, 0);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    var U = {}; ['A', 'B', 'wa', 'wb', 'sc', 'of'].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
+    gl.uniform1i(U.A, 0); gl.uniform1i(U.B, 1);
+    var tex = [0, 1].map(function (i) {
+      var t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+      return t;
+    });
+    var poster = new Image(), posterOk = false;
+    poster.onload = function () { posterOk = true; draw(); };
+    poster.src = posterUrl;
+    cv.className = 'keyed';
+    box.appendChild(cv);
+    box.classList.add('key');
+    function up(i, src) { gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, tex[i]); gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src); }
+    function draw() {
+      var r = window.devicePixelRatio || 1, w = Math.round(box.clientWidth * r), h = Math.round(box.clientHeight * r);
+      if (!w || !h) return;
+      var live = vids.map(function (v) { return v.readyState >= 2 && v.getAttribute('src'); });
+      var src = live[0] ? vids[0] : live[1] ? vids[1] : posterOk ? poster : null;
+      if (!src) return;
+      var sw = src.videoWidth || src.naturalWidth, shh = src.videoHeight || src.naturalHeight;
+      if (w > sw) { h = Math.round(h * sw / w); w = sw; }
+      if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+      gl.viewport(0, 0, w, h);
+      // as object-fit: cover
+      var ca = w / h, va = sw / shh;
+      if (ca > va) { gl.uniform2f(U.sc, 1, va / ca); gl.uniform2f(U.of, 0, (1 - va / ca) / 2); }
+      else { gl.uniform2f(U.sc, ca / va, 1); gl.uniform2f(U.of, (1 - ca / va) / 2, 0); }
+      var wa = 1, wb = 0;
+      if (src === poster) up(0, poster);
+      else {
+        // each video's weight is its opacity in the cross-fade (anim's own, below), the second one over the first
+        wa = live[0] ? +getComputedStyle(vids[0]).opacity : 0;
+        wb = live[1] ? +getComputedStyle(vids[1]).opacity : 0;
+        if (wa > 0.002) up(0, vids[0]);
+        if (wb > 0.002) up(1, vids[1]);
+      }
+      gl.uniform1f(U.wa, wa); gl.uniform1f(U.wb, wb);
+      gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+    return { draw: draw };
+  }
+
   /* ---------------- the clips ---------------- */
   // .clip.xf: a second copy of the video under the first; near the end the other one starts (from data-loop-from)
   // and fades in, so the loop has no seam
@@ -55,8 +124,11 @@
     var vids = [a];
     if (box.classList.contains('xf')) { var b = a.cloneNode(true); b.classList.add('b'); box.appendChild(b); vids.push(b); }
     vids.forEach(function (v) { v.muted = true; v.playsInline = true; v.addEventListener('error', function () { if (v.getAttribute('src')) box.classList.add('dead'); }); });
-    // the poster behind the video too: a video that does not paint shows its poster, never a hole
-    if (a.getAttribute('poster')) box.style.background = 'url(' + a.getAttribute('poster') + ') 50% 50% / cover no-repeat';
+    var key = 'key' in box.dataset ? keyed(box, vids, a.getAttribute('poster')) : null;
+    if (key) vids.forEach(function (v) { v.addEventListener('loadeddata', key.draw); v.addEventListener('seeked', key.draw); });
+    // the poster behind the video too: a video that does not paint shows its poster, never a hole (a keyed clip draws
+    // its own, keyed)
+    if (a.getAttribute('poster') && !key) box.style.background = 'url(' + a.getAttribute('poster') + ') 50% 50% / cover no-repeat';
     // data-birth (the Quant Lab: its agent is born that many seconds in): the clip starts far enough in that the agent
     // is born two seconds after its reader is done with the step's words ("vypocitas jak dlouho bude cca cist ten text a
     // pak az mrkne na animaci tak se treba za 2 sekundy uz objevi hero agent"), read at a skim, five words a second,
@@ -89,6 +161,7 @@
           cur = 1 - cur;
         }
       }
+      if (key) key.draw();
       raf = requestAnimationFrame(tick);
     }
     if (reduce) return;
@@ -122,7 +195,7 @@
     var DOING = ['Writing the spec', 'Designing every screen', 'Writing the code', 'Checking its security', 'Deploying it', 'Putting it online'];
     m.innerHTML =
       '<div class="inlet"><span class="cap">Your idea</span><p class="say">&ldquo;<span class="tx"></span><span class="caret"></span>&rdquo;</p></div>' +
-      '<div class="tube"><div class="hd"><span class="pn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + HEX + '"/></svg>Cymetica pipeline</span>' +
+      '<div class="tube"><div class="hd"><span class="pn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/></svg>Cymetica pipeline</span>' +
           '<span class="st"><i></i><b class="sv"></b><span class="pc">0%</span></span></div>' +
         '<div class="track"><span class="lit"></span><span class="orb"></span></div>' +
         '<div class="chs">' + CH.map(function (c, j) {
