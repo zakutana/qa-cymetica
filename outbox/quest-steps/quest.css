@@ -57,7 +57,6 @@ main { position: relative; z-index: 2; }
   mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, .75) 52%, transparent 100%); }
 #bar > * { pointer-events: auto; }
 .brand { position: relative; display: flex; align-items: center; gap: 13px; flex: none; transition: transform .3s var(--ease); }
-.brand:hover { transform: translateY(-1px); }
 .brand svg { width: 46px; height: 46px; flex: none; display: block; overflow: visible;
   filter: drop-shadow(0 0 12px rgba(0, 255, 136, .28)) drop-shadow(0 0 24px rgba(0, 207, 255, .16)); transition: filter .35s var(--ease); }
 .brand:hover svg { filter: drop-shadow(0 0 16px rgba(0, 255, 136, .5)) drop-shadow(0 0 30px rgba(0, 207, 255, .3)); }
@@ -79,7 +78,7 @@ main { position: relative; z-index: 2; }
 #rail a .lab { font: 600 16px Inter, sans-serif; letter-spacing: .01em; }
 #rail a .sh { display: none; }
 #rail a:hover { color: var(--text); }
-#rail a:hover .nd { box-shadow: inset 0 0 0 1.3px var(--cyan), 0 0 12px rgba(0, 207, 255, .35); transform: scale(1.06); }
+#rail a:hover .nd { box-shadow: inset 0 0 0 1.3px var(--cyan), 0 0 12px rgba(0, 207, 255, .35); }
 #rail a.done { color: var(--dim); }
 #rail a.done .nd { background: rgba(0, 255, 136, .12); box-shadow: inset 0 0 0 1.3px var(--green); }
 #rail a.done .nd em { color: var(--green); }
@@ -164,20 +163,19 @@ h1 b { font-weight: 400; }
     linear-gradient(180deg, #111926 0%, #05080e 56%, #060a11 100%);
   box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .72), inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 -1px 0 rgba(var(--cr), .34),
     0 0 0 1px rgba(0, 0, 0, .7), 0 18px 36px -16px rgba(var(--cr), var(--glow)), 0 12px 26px -10px rgba(0, 0, 0, .85);
-  transition: transform .32s var(--ease), box-shadow .32s var(--ease), color .22s; }
+  transition: box-shadow .32s var(--ease), color .22s; }
 .btn-go::before, .btn-how::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity .28s;
   background: linear-gradient(113deg, rgba(255, 255, 255, 0) 71%, rgba(255, 255, 255, .2) 71.6%, rgba(255, 255, 255, .03) 92%, rgba(255, 255, 255, 0) 100%),
     radial-gradient(130% 120% at 30% -30%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 62%),
     linear-gradient(180deg, rgb(var(--cr)), rgb(var(--cr))); }
 .btn-go svg, .btn-how svg { flex: none; width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round;
-  filter: drop-shadow(0 0 5px rgba(var(--cr), .8)); transition: transform .32s var(--ease), filter .22s; }
-.btn-go:hover, .btn-how:hover { color: #03140c; transform: translateY(-3px);
+  filter: drop-shadow(0 0 5px rgba(var(--cr), .8)); transition: filter .22s; }
+/* ("proc se ale tak debilne pohybuji ty tlacitka jak na ne najedu? to nechci"): nothing moves on hover or press, only the light changes */
+.btn-go:hover, .btn-how:hover { color: #03140c;
   box-shadow: inset 0 1.5px 0 #ffffff, inset 0 -1px 0 rgba(0, 0, 0, .28), 0 0 0 1px rgba(var(--cr), .4), 0 24px 44px -16px rgba(var(--cr), .95), 0 0 36px -8px rgba(var(--cr), .5); }
 .btn-go:hover::before, .btn-how:hover::before { opacity: 1; }
 .btn-go:hover svg, .btn-how:hover svg { filter: none; }
-.btn-go:hover svg { transform: translateX(4px); }
-.btn-how:hover svg { transform: translateY(3px); }
-.btn-go:active, .btn-how:active { color: #03140c; transform: translateY(1px) scale(.985); transition-duration: .07s;
+.btn-go:active, .btn-how:active { color: #03140c; transition-duration: .07s;
   box-shadow: inset 0 3px 8px rgba(0, 0, 0, .4), 0 0 0 1px rgba(var(--cr), .4), 0 8px 18px -10px rgba(var(--cr), .7); }
 .btn-go:active::before, .btn-how:active::before { opacity: .84; transition-duration: .07s; }
 .hero-in .board-wrap { justify-self: end; width: min(100%, 660px); }
@@ -716,18 +714,16 @@ h1 b { font-weight: 400; }
   transition: transform .5s var(--ease), box-shadow .5s; }
 .door::after { content: ''; position: absolute; top: 0; bottom: 0; left: -45%; width: 32%; z-index: 5; pointer-events: none; transform: skewX(-20deg);
   background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .1), rgba(255, 255, 255, 0)); transition: left .85s var(--ease); }
-.door:hover::after { left: 125%; }
 .door.uv { --cr: 0, 207, 255; --c: var(--cyan); }
 .door.uv .art { background-image: url(pics/space-calm.webp); background-size: 190%; }
-.door:hover { transform: translateY(-8px); box-shadow: inset 0 1px 0 #ffffff, inset 0 0 0 1px rgba(var(--cr), .9), 0 0 95px rgba(var(--cr), .34), 0 40px 70px rgba(0, 0, 0, .58); }
+.door:hover { box-shadow: inset 0 1px 0 #ffffff, inset 0 0 0 1px rgba(var(--cr), .9), 0 0 95px rgba(var(--cr), .34), 0 40px 70px rgba(0, 0, 0, .58); }
 .door .art { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: url(pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
 .door-tag { position: absolute; left: 22px; top: 20px; z-index: 4; display: inline-flex; align-items: center; gap: 8px; padding: 6px 13px; border-radius: 99px;
   font: 800 11px/1 'JetBrains Mono', monospace; letter-spacing: .15em; text-transform: uppercase; color: #ffffff;
   background: rgba(5, 9, 16, .68); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), inset 0 0 0 1px rgba(var(--cr), .48); }
 .door-tag i { width: 7px; height: 7px; border-radius: 50%; background: var(--c); box-shadow: 0 0 9px var(--c); }
 .door .art .clip { position: absolute; inset: 0; background-size: cover !important; }
-.door .art video, .door .art .keyed { width: 100%; height: 100%; object-fit: cover; transition: transform 1.4s var(--ease); }
-.door:hover .art video, .door:hover .art .keyed { transform: scale(1.055); }
+.door .art video, .door .art .keyed { width: 100%; height: 100%; object-fit: cover; }
 .door .art .clip[data-anim=door-hq] { inset: 6% auto 2% 50%; aspect-ratio: 1500 / 1132; transform: translateX(-50%); }
 .door .art::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
   background: linear-gradient(180deg, rgba(5, 9, 15, 0) 50%, rgba(5, 9, 15, .94) 100%); }
@@ -745,22 +741,22 @@ h1 b { font-weight: 400; }
     linear-gradient(180deg, #111926 0%, #05080e 56%, #060a11 100%);
   box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .72), inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 -1px 0 rgba(var(--cr), .34),
     0 0 0 1px rgba(0, 0, 0, .7), 0 22px 44px -18px rgba(var(--cr), .5), 0 12px 26px -10px rgba(0, 0, 0, .85);
-  transition: transform .32s var(--ease), box-shadow .32s var(--ease), color .22s; }
+  transition: box-shadow .32s var(--ease), color .22s; }
 .door .arr::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity .28s;
   background: linear-gradient(113deg, rgba(255, 255, 255, 0) 71%, rgba(255, 255, 255, .2) 71.6%, rgba(255, 255, 255, .03) 92%, rgba(255, 255, 255, 0) 100%),
     radial-gradient(130% 120% at 30% -30%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 62%),
     linear-gradient(180deg, rgb(var(--cr)), rgb(var(--cr))); }
 .door .arr svg { width: 46px; height: 46px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
-  filter: drop-shadow(0 0 7px rgba(var(--cr), .8)); transition: transform .32s var(--ease), filter .22s; }
-.door:hover .arr { color: #03140c; transform: translateY(-3px);
+  filter: drop-shadow(0 0 7px rgba(var(--cr), .8)); transition: filter .22s; }
+.door:hover .arr { color: #03140c;
   box-shadow: inset 0 1.5px 0 #ffffff, inset 0 -1px 0 rgba(0, 0, 0, .28), 0 0 0 1px rgba(var(--cr), .4), 0 30px 54px -16px rgba(var(--cr), .95), 0 0 42px -6px rgba(var(--cr), .5); }
 .door:hover .arr::before { opacity: 1; }
-.door:hover .arr svg { transform: translateX(5px); filter: none; }
+.door:hover .arr svg { filter: none; }
 .door:hover .cta .ray { box-shadow: 0 0 16px rgba(var(--cr), .95); }
-.door:active .arr { color: #03140c; transform: translateY(1px) scale(.975); transition-duration: .07s;
+.door:active .arr { color: #03140c; transition-duration: .07s;
   box-shadow: inset 0 3px 8px rgba(0, 0, 0, .4), 0 0 0 1px rgba(var(--cr), .4), 0 8px 18px -10px rgba(var(--cr), .7); }
 .door:active .arr::before { opacity: .84; transition-duration: .07s; }
-.door:active .arr svg { transform: translateX(2px); filter: none; }
+.door:active .arr svg { filter: none; }
 
 /* ---- rising in */
 .rv { opacity: 0; transform: translateY(40px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
