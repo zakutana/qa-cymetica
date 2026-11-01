@@ -3,17 +3,19 @@
   "permissions": {
     "allow": [
       "Bash(python -m pytest:*)",
-      "Bash(python scripts/prereg.py:*)",
-      "Bash(python scripts/ledger.py:*)",
-      "Bash(python scripts/render.py:*)",
-      "Bash(python scripts/bounty.py:*)",
-      "Bash(python scripts/open_checks.py:*)",
-      "Bash(python scripts/never_fired.py:*)",
-      "Bash(python scripts/inventory.py:*)",
-      "Bash(python scripts/withdraw.py:*)",
-      "Bash(python scripts/correspond.py:*)",
       "Bash(python scripts/submit.py:*)",
-      "Bash(python scripts/verify.py:*)",
+      "Bash(python scripts/sweep.py:*)",
+      "Bash(python scripts/bounty.py:*)",
+      "Bash(python scripts/correspond.py:*)",
+      "Bash(python scripts/a2a.py:*)",
+      "Bash(python scripts/channels.py:*)",
+      "Bash(python scripts/bb.py:*)",
+      "Bash(python scripts/casino.py:*)",
+      "Bash(python scripts/league.py:*)",
+      "Bash(python scripts/gem_audit.py:*)",
+      "Bash(python scripts/clone.py:*)",
+      "Bash(python scripts/company.py:*)",
+      "Bash(python scripts/memories.py:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
       "Bash(git log:*)",
@@ -25,31 +27,7 @@
       "Bash(git push:*)",
       "Bash(git revert:*)",
       "Bash(git ls-files:*)",
-      "Bash(git rev-parse:*)",
-      "Bash(python scripts/memories.py:*)",
-      "Bash(python scripts/prune_runs.py:*)",
-      "Bash(python scripts/deep_pass_process.py:*)",
-      "Bash(python scripts/rooms.py:*)",
-      "Bash(python scripts/sampler.py:*)",
-      "Bash(python scripts/processes.py:*)",
-      "Bash(python scripts/keep.py:*)",
-      "Bash(python scripts/lab.py:*)",
-      "Bash(python scripts/channels.py:*)",
-      "Bash(python scripts/nexus.py:*)",
-      "Bash(python scripts/fomo_watch.py:*)",
-      "Bash(python scripts/review.py:*)",
-      "Bash(python scripts/gem_audit.py:*)",
-      "Bash(python scripts/a2a.py:*)",
-      "Bash(python scripts/clone.py:*)",
-      "Bash(python scripts/wave.py:*)",
-      "Bash(python scripts/league.py:*)",
-      "Bash(python scripts/paper.py:*)",
-      "Bash(python scripts/hot_watch.py:*)",
-      "Bash(python scripts/outsider.py:*)",
-      "Bash(python scripts/bb.py:*)",
-      "Bash(python scripts/crew.py:*)",
-      "Bash(python scripts/commit.py:*)",
-      "Bash(python scripts/company.py:*)"
+      "Bash(git rev-parse:*)"
     ]
   },
   "hooks": {
@@ -65,28 +43,12 @@
               "session_start.py"
             ],
             "timeout": 10,
-            "statusMessage": "what is due, what is open, what is next"
+            "statusMessage": "what is next, what is open"
           }
         ]
       }
     ],
     "PreToolUse": [
-      {
-        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash|PowerShell",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python",
-            "args": [
-              "-c",
-              "import os,runpy,sys; p=os.path.join(os.environ.get('CLAUDE_PROJECT_DIR') or '.', '.claude', 'hooks', sys.argv[1]); sys.argv=[p]; runpy.run_path(p, run_name='__main__')",
-              "protect_state.py"
-            ],
-            "timeout": 15,
-            "statusMessage": "checking state/ guard"
-          }
-        ]
-      },
       {
         "matcher": "Bash|PowerShell",
         "hooks": [

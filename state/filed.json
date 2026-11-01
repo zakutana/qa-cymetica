@@ -1,0 +1,5031 @@
+{
+ "rows": [
+  {
+   "key": "CYM-a-clone-trades-only-live-epoch-markets",
+   "nodeids": [
+    "tests/rest/test_a_clone_trades_only_live_epoch_markets.py::test_a_clones_perpetual_markets_are_live_five_minute_markets"
+   ],
+   "report_ids": [
+    204
+   ],
+   "title": "12 of 12 paper clones switch on perpetual markets with no 5-minute market: CYM42, ET10, ETLP, TBIG, TBIGS; /api/v1/perpetual/markets/batch-status lists AAPL, BTC, ETH, GOOG, NVDA, SBIO, VAIX. E.g. 862f0418 perpetual_markets 'BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS', trades_summary 'This bot trades: BTC/ETH/VAIX/SBIO +5 5-min epochs (paper)'",
+   "filed_at": "2026-10-13T07:09:37+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 204,
+     "verdict": "pass",
+     "at": "2026-10-16T20:31:30+00:00"
+    },
+    {
+     "report_id": 204,
+     "verdict": "pass",
+     "at": "2026-10-18T02:25:18+00:00"
+    }
+   ],
+   "their_status": {
+    "204": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a2a-first-pass-contract",
+   "nodeids": [
+    "tests/rest/test_qa_agent_channel.py::test_the_automated_first_pass_is_tagged_as_they_documented"
+   ],
+   "report_ids": [
+    67
+   ],
+   "title": "4 automated repl(ies) in the inbox; 0 carry the documented metadata.is_answer field. 4 are filterable by metadata.auto/kind instead, so the capability exists under different names",
+   "filed_at": "2026-09-06T06:14:08+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 67,
+     "verdict": "pass",
+     "at": "2026-09-07T13:33:34+00:00"
+    },
+    {
+     "report_id": 67,
+     "verdict": "fail",
+     "at": "2026-09-07T13:54:06+00:00"
+    },
+    {
+     "report_id": 67,
+     "verdict": "pass",
+     "at": "2026-09-07T14:27:11+00:00"
+    }
+   ],
+   "their_status": {
+    "67": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a2a-first-pass-not-grounded",
+   "nodeids": [
+    "tests/rest/test_qa_agent_channel.py::test_the_async_first_pass_is_grounded_like_the_sync_channel"
+   ],
+   "report_ids": [
+    67,
+    69
+   ],
+   "title": "0 of 4 automated first-pass replies cite a source or clear their own confidence floor of 0.7",
+   "filed_at": "2026-09-06T06:14:08+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 67,
+     "verdict": "pass",
+     "at": "2026-09-07T13:33:40+00:00"
+    },
+    {
+     "report_id": 69,
+     "verdict": "pass",
+     "at": "2026-09-07T13:33:44+00:00"
+    }
+   ],
+   "their_status": {
+    "67": "paid",
+    "69": "fixed"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_backtest_says_the_window_it_actually_covered",
+   "nodeids": [
+    "tests/mcp/test_backtest_window_is_real.py::test_a_backtest_says_the_window_it_actually_covered"
+   ],
+   "report_ids": [
+    99
+   ],
+   "title": "asked for 365 days and given 120 points -- the same reading as 180 days, to the decimal -- while the answer reports period_days 365 and nothing that names the window actually covered. The same two requests on a basket whose legs have the history differ (177 vs 362 points), so the truncation is the data, not the tool ignoring the argument. An agent ranking by Sharpe, which your guidance asks for, compares a real 365-day figure with a 120-day one wearing the same label",
+   "filed_at": "2026-09-12T12:02:52+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 99,
+     "verdict": "pass",
+     "at": "2026-09-12T21:02:34+00:00"
+    },
+    {
+     "report_id": 99,
+     "verdict": "pass",
+     "at": "2026-09-13T18:47:51+00:00"
+    }
+   ],
+   "their_status": {
+    "99": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_bot_counts_the_stakes_it_has_open",
+   "nodeids": [
+    "tests/rest/test_clone_books_its_open_positions.py::test_a_bot_counts_the_stakes_it_has_open"
+   ],
+   "report_ids": [
+    94,
+    96
+   ],
+   "title": "bot d778102d has 4 open position(s) staking 400.00 USDC per /api/v1/cloned-bots/{id}/activity, while /api/v1/cloned-bots/{id}/balance reports locked_in_trades 0.00 and bot_balance 950.0. The open stakes are counted nowhere, so every limit computed off the balance -- stop-loss budget, max position -- sees money the bot has already committed",
+   "filed_at": "2026-09-11T05:34:06+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 94,
+     "verdict": "fail",
+     "at": "2026-09-11T15:07:29+00:00"
+    },
+    {
+     "report_id": 94,
+     "verdict": "pass",
+     "at": "2026-09-11T17:58:39+00:00"
+    },
+    {
+     "report_id": 96,
+     "verdict": "pass",
+     "at": "2026-09-11T17:58:43+00:00"
+    }
+   ],
+   "their_status": {
+    "94": "paid",
+    "96": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-a_bot_paused_by_its_stop_loss_lost_no_more_than_the_stop",
+   "nodeids": [
+    "tests/rest/test_a_bot_stop_loss_holds_its_budget.py::test_a_bot_paused_by_its_stop_loss_lost_no_more_than_the_stop"
+   ],
+   "report_ids": [
+    134
+   ],
+   "title": "4 of 4 paper bot(s) paused by their stop-loss lost more than the stop: lab h2h Corr Catcher lost 10.0% against a 5% stop, its own pause event recording -5.0%; lab h2h Sent Surfer lost 10.0% against a 5% stop, its own pause event recording -5.0%; lab h2h Delta Hunter lost 10.0% against a 5% stop, its own pause event recording -5.0%; lab h2h Divergence Dragon lost 9.72% against a 6% stop, its own pause event recording -10.48%",
+   "filed_at": "2026-09-28T09:23:33+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 134,
+     "verdict": "pass",
+     "at": "2026-10-04T01:24:57+00:00"
+    }
+   ],
+   "their_status": {
+    "134": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-a_build_ships_inside_the_24_hours_it_publishes",
+   "nodeids": [
+    "tests/rest/test_build_it_better_board.py::test_a_build_ships_inside_the_24_hours_it_publishes"
+   ],
+   "report_ids": [
+    112,
+    136
+   ],
+   "title": "ET-26036 passed its own deadline 2026-09-20T20:25:59 0.2h ago and has shipped nothing (stage funded)",
+   "filed_at": "2026-09-20T20:51:12+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 112,
+     "verdict": "pass",
+     "at": "2026-10-11T22:18:17+00:00"
+    },
+    {
+     "report_id": 112,
+     "verdict": "fail",
+     "at": "2026-10-21T09:07:33+00:00"
+    },
+    {
+     "report_id": 136,
+     "verdict": "fail",
+     "at": "2026-10-21T09:07:39+00:00"
+    },
+    {
+     "report_id": 136,
+     "verdict": "pass",
+     "at": "2026-10-11T22:18:21+00:00"
+    }
+   ],
+   "their_status": {
+    "112": "paid",
+    "136": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-a_card_index_moves_no_further_than_its_basket_can",
+   "nodeids": [
+    "tests/rest/test_a_card_index_moves_with_its_basket.py::test_a_card_index_moves_no_further_than_its_basket_can"
+   ],
+   "report_ids": [
+    128
+   ],
+   "title": "97b827ad 'CME Group to Expand Crypto Derivatives Suite with Bitcoin Ca' (BCH 97%, UNI 3%, DUSK 0%) moved -85.2% in one step, 13:12:57 100.519 -> 13:29:25 14.925; pw_index/pw_base 17.089533/114.6434; d23b4cf2 'Alchemy Expands into APAC, PARTNERS with DSRV to Bring Trust' (TRX 49%, XTZ 47%, ENJ 4%) moved +142.3% in one step, 10:27:07 100.437 -> 10:30:21 243.393; pw_index/pw_base 0.551148/0.231505. NOT in the verdict -- not a large-cap basket, not judged: 30408a4b (4% large-cap), 5e25b255 (0% large-cap), 7d72a8e4 (0% large-cap), 9c7b0e8c (24% large-cap)",
+   "filed_at": "2026-09-25T14:57:03+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 128,
+     "verdict": "pass",
+     "at": "2026-09-25T18:44:34+00:00"
+    },
+    {
+     "report_id": 128,
+     "verdict": "pass",
+     "at": "2026-09-25T23:29:09+00:00"
+    }
+   ],
+   "their_status": {
+    "128": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-a_card_is_tradeable_on_every_surface_or_on_none",
+   "nodeids": [
+    "tests/mcp/test_card_tradeability_agrees_across_surfaces.py::test_a_card_is_tradeable_on_every_surface_or_on_none"
+   ],
+   "report_ids": [
+    122
+   ],
+   "title": "8 of 16 card(s) read on both surfaces disagree on tradeable_now: card 74516b57-dd97-4ad9-8dca-da3b2c1ba165 reads False on /api/v1/event-cards/{id} ('US equity markets are closed — this card holds stocks and trades during US market hours (Mon–Fri, 9:30am–4:00pm ET). Crypto-only cards trade 24/7.') and True through get_event_card_info, at 2026-09-22T23:35:25+00:00 (listing us_market_open False); an agent or Nexus reading the tool is told a card can be traded that the trade gate refuses",
+   "filed_at": "2026-09-22T23:55:35+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 122,
+     "verdict": "pass",
+     "at": "2026-09-24T22:40:26+00:00"
+    },
+    {
+     "report_id": 122,
+     "verdict": "pass",
+     "at": "2026-10-21T09:08:04+00:00"
+    },
+    {
+     "report_id": 122,
+     "verdict": "fail",
+     "at": "2026-10-15T17:38:20+00:00"
+    }
+   ],
+   "their_status": {
+    "122": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_card_keeps_what_its_company_spun_off",
+   "nodeids": [
+    "tests/rest/test_a_card_keeps_what_its_company_spun_off.py::test_a_card_keeps_what_its_company_spun_off"
+   ],
+   "report_ids": [
+    243
+   ],
+   "title": "basket ['CTVA'], current_index 14.17 on base 100, pw_index/pw_base 11.7/82.54; 2026-10-01T10:22 94.34 -> 2026-10-01T14:08 16.32. Corteva distributed one VYLR per share on 2026-10-01; the card neither holds it nor carried its value over",
+   "filed_at": "2026-11-01T17:18:23+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "243": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-a_card_past_its_close_is_not_live",
+   "nodeids": [
+    "tests/rest/test_a_card_past_its_close_is_not_live.py::test_a_card_past_its_close_is_not_live"
+   ],
+   "report_ids": [
+    229
+   ],
+   "title": "6 of 647 live cards closed more than 24 h ago and still read status live, the oldest closed 2026-08-15 (72.1 days): 17ffc5da closed 2026-08-15; 95a368ab closed 2026-08-16; ecffc892 closed 2026-08-22; 8395df1f closed 2026-09-02; 65bd2864 closed 2026-09-07; e1de450c closed 2026-09-15. llms.txt says a card is tradeable when status=live; these are past the close their own contract names and still sit in the list /events deals its deck from",
+   "filed_at": "2026-10-26T13:42:38+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "229": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-a_card_that_reads_tradeable_now_can_be_priced",
+   "nodeids": [
+    "tests/rest/test_a_tradeable_card_can_be_priced.py::test_a_card_that_reads_tradeable_now_can_be_priced"
+   ],
+   "report_ids": [
+    200
+   ],
+   "title": "card 8ffd61fa-f469-45be-a717-a4dcfe9f9508 reads status live, tradeable_now true, trading_blocked_reason None -- at the buy as well -- and our paper buy of it was refused HTTP 400 {\"detail\": \"Basket is not fully priceable right now — try again shortly\"} (2 time(s): TRD-0113 16:25:40, TRD-0115 16:48:33, newest TRD-0115)",
+   "filed_at": "2026-10-12T17:04:27+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "200": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-a_card_that_reads_tradeable_now_takes_a_paper_buy",
+   "nodeids": [
+    "tests/rest/test_a_tradeable_card_takes_a_paper_buy.py::test_a_card_that_reads_tradeable_now_takes_a_paper_buy"
+   ],
+   "report_ids": [
+    117
+   ],
+   "title": "card a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 reads status live, tradeable_now true, trading_blocked_reason None, and our paper buy of it answered HTTP 500 {\"detail\": \"Buy failed\"} (2 time(s): TRD-0010 17:01:28, TRD-0011 17:04:10)",
+   "filed_at": "2026-09-21T17:17:49+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 117,
+     "verdict": "pass",
+     "at": "2026-09-25T08:28:30+00:00"
+    }
+   ],
+   "their_status": {
+    "117": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_coins_supply_figures_can_all_be_true",
+   "nodeids": [
+    "tests/rest/test_a_coins_supply_figures_can_all_be_true.py::test_a_coins_supply_figures_can_all_be_true"
+   ],
+   "report_ids": [
+    185
+   ],
+   "title": "4 of 140 dashboards (the 140 largest coins by market cap) publish supply figures that cannot all be true, with flags empty on both reads: HBAR (rank 38, source updated 2026-10-11T02:59:13Z): circulating 44.00B against a max of 1.00B (43.998x), total 50.00B against a max of 1.00B (50.0x), FDV 92.27M under a market cap of 4.06B (0.023x); ICP (rank 58, source updated 2026-10-11T02:59:13Z): circulating 557.36M against a max of 469.21M (1.188x), total 555.12M against a max of 469.21M (1.183x), FDV 1.45B under a market cap of 1.72B (0.842x); IOTA (rank 178, source updated 2026-10-11T02:59:13Z): circulating 4.31B against a max of 2.78B (1.551x), total 4.83B against a max of 2.78B (1.738x), FDV 142.72M under a market cap of 221.40M (0.645x); TAG (rank 327, source updated 2026-10-11T02:59:13Z): total 405.38B against a max of 400.00B (1.013x)",
+   "filed_at": "2026-10-11T03:07:53+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 185,
+     "verdict": "pass",
+     "at": "2026-10-16T20:31:35+00:00"
+    }
+   ],
+   "their_status": {
+    "185": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_community_fund_is_paper_or_live_not_both",
+   "nodeids": [
+    "tests/mcp/test_community_funds_are_paper_or_live_not_both.py::test_a_community_fund_is_paper_or_live_not_both"
+   ],
+   "report_ids": [
+    129
+   ],
+   "title": "https://cymetica.com/fund-launcher says community funds are \"Paper trading only ... Buying in is simulated\", while 11 of 11 Community AIB funds read status live on list_funds and their profiles offer live investment: AIB-8830DFE9 'Privacy' \"Invest in 8830Dfe9 now — it's LIVE\" (invest_url https://cymetica.com/fund/apply?invest=AIB-8830DFE9); AIB-C4B13E1B 'Decentralized Compute' \"Invest in C4B13E1B now — it's LIVE\" (invest_url https://cymetica.com/fund/apply?invest=AIB-C4B13E1B); AIB-3DBEA91C 'Project Omega – The Singularity Fund' \"Invest in 3Dbea91C now — it's LIVE\" (invest_url https://cymetica.com/fund/apply?invest=AIB-3DBEA91C)",
+   "filed_at": "2026-09-25T17:51:22+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 129,
+     "verdict": "pass",
+     "at": "2026-09-25T23:29:16+00:00"
+    }
+   ],
+   "their_status": {
+    "129": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_deep_answer_arrives_whole",
+   "nodeids": [
+    "tests/mcp/test_a_deep_answer_arrives_whole.py::test_a_deep_answer_arrives_whole"
+   ],
+   "report_ids": [
+    114
+   ],
+   "title": "1 of 6 deep answers asked in the last 72 h are served by get_deep_answer with their start cut off: NEX-0054 (job bfb44eb7-1d12-4e78-abdb-67ddcc4d52d3, 1665 chars) opens '...ols with the hot basket is the predicted outcome; the \"ne'",
+   "filed_at": "2026-09-21T08:39:43+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 114,
+     "verdict": "pass",
+     "at": "2026-09-24T22:40:55+00:00"
+    }
+   ],
+   "their_status": {
+    "114": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-a_deep_answer_does_not_hand_out_internal_source_locations",
+   "nodeids": [
+    "tests/mcp/test_nexus_does_not_quote_source.py::test_a_deep_answer_does_not_hand_out_internal_source_locations"
+   ],
+   "report_ids": [
+    92
+   ],
+   "title": "2 of 8 recorded deep answers cite internal source locations, 16 of them, to an external bug-bounty caller holding an ordinary API key: NEX-0011 names src/api/websocket/exchange_websocket.py:112, src/api/websocket/fta_fund_websocket.py:64, src/api/websocket/ma_fund_websocket.py:122, src/api/dependencies.py:933; NEX-0015 names src/services/wta_payout_service.py:272, src/api/websocket/bot_activity_websocket.py:525, src/services/offchain_perpetual_orchestrator.py:2604, src/services/perpetual_agent_claims.py:816. A few questions assemble a map of the private tree, which is a different surface from the API they document",
+   "filed_at": "2026-09-10T22:02:04+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 92,
+     "verdict": "pass",
+     "at": "2026-09-11T06:01:13+00:00"
+    }
+   ],
+   "their_status": {
+    "92": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_deep_investigation_answers_inside_the_window_it_publishes",
+   "nodeids": [
+    "tests/mcp/test_nexus_channel.py::test_a_deep_investigation_answers_inside_the_window_it_publishes"
+   ],
+   "report_ids": [
+    86
+   ],
+   "title": "1 of 2 did not answer at all (NEX-0001: failed)",
+   "filed_at": "2026-09-10T11:09:27+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 86,
+     "verdict": "fail",
+     "at": "2026-09-10T13:51:15+00:00"
+    },
+    {
+     "report_id": 86,
+     "verdict": "fail",
+     "at": "2026-09-10T16:52:42+00:00"
+    },
+    {
+     "report_id": 86,
+     "verdict": "pass",
+     "at": "2026-09-11T05:45:26+00:00"
+    },
+    {
+     "report_id": 86,
+     "verdict": "fail",
+     "at": "2026-09-11T15:21:32+00:00"
+    },
+    {
+     "report_id": 86,
+     "verdict": "fail",
+     "at": "2026-09-11T17:58:48+00:00"
+    },
+    {
+     "report_id": 86,
+     "verdict": "fail",
+     "at": "2026-09-12T21:02:39+00:00"
+    },
+    {
+     "report_id": 86,
+     "verdict": "fail",
+     "at": "2026-09-22T16:01:53+00:00"
+    },
+    {
+     "report_id": 86,
+     "verdict": "pass",
+     "at": "2026-09-21T13:59:19+00:00"
+    }
+   ],
+   "their_status": {
+    "86": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-a_degen_pick_is_not_red_on_the_dilution_its_own_row_shows",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_a_degen_pick_is_not_red_on_the_dilution_its_own_row_shows"
+   ],
+   "report_ids": [
+    206
+   ],
+   "title": "1 of 10 Degen picks pass the Dilution gate and read red on the same page's 'Dilution, 12 months' (red at 25% or more): SOLV(parent#solv-protocol) 32.06% over 12 months, gate 0.7114% a week",
+   "filed_at": "2026-10-15T08:16:45+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 206,
+     "verdict": "pass",
+     "at": "2026-10-16T20:31:41+00:00"
+    }
+   ],
+   "their_status": {
+    "206": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_degen_pick_opens_the_coin_it_names",
+   "nodeids": [
+    "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_a_degen_pick_opens_the_coin_it_names"
+   ],
+   "report_ids": [
+    140
+   ],
+   "title": "1 of 10 Degen picks open another coin: EDGE is 'Definitive' (market cap 30,286,794) but its symbol opens 'edgeX' (182,306,237)",
+   "filed_at": "2026-09-30T19:29:14+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 140,
+     "verdict": "pass",
+     "at": "2026-10-01T08:14:38+00:00"
+    }
+   ],
+   "their_status": {
+    "140": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_gem_screener_link_preview_has_an_image_that_answers",
+   "nodeids": [
+    "tests/rest/test_gem_screener_link_preview_has_an_image.py::test_a_gem_screener_link_preview_has_an_image_that_answers"
+   ],
+   "report_ids": [
+    147
+   ],
+   "title": "/gem-screener/app og:image https://cymetica.com/static/images/og-default.png answers HTTP 404; /gem-screener/app twitter:image https://cymetica.com/static/images/og-default.png answers HTTP 404",
+   "filed_at": "2026-10-02T12:38:30+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 147,
+     "verdict": "pass",
+     "at": "2026-10-04T01:25:11+00:00"
+    }
+   ],
+   "their_status": {
+    "147": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_hot_signal_clears_the_tradeability_floor_they_shipped",
+   "nodeids": [
+    "tests/rest/test_fomo_radar_hot_clears_its_tradeability_floor.py::test_a_hot_signal_clears_the_tradeability_floor_they_shipped"
+   ],
+   "report_ids": [
+    102
+   ],
+   "title": "the gate is served on one chain and not the other: 14 of 14 robinhood rows carry max_buy_5pct_usd and every one of their 4 hot rows clears the $500 floor, while NO solana row carries the field and 5 hot solana token(s) in this window sit under it -- thinnest HMnicoffGH4y... at $3.94 of 5%-slippage max buy",
+   "filed_at": "2026-09-14T09:30:35+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 102,
+     "verdict": "pass",
+     "at": "2026-09-14T10:16:36+00:00"
+    },
+    {
+     "report_id": 102,
+     "verdict": "pass",
+     "at": "2026-09-21T20:37:01+00:00"
+    }
+   ],
+   "their_status": {
+    "102": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-a_matchup_past_its_window_does_not_read_running",
+   "nodeids": [
+    "tests/rest/test_a_finished_matchup_reads_finished.py::test_a_matchup_past_its_window_does_not_read_running"
+   ],
+   "report_ids": [
+    135
+   ],
+   "title": "10 of 10 matchup(s) past their window end still read running/live, their scoreboard as of their creation: Ichimoku Empress vs ATR Alpha (ended 2026-09-27T19:10, as_of 2026-09-24T19:10:26); Stochastic Striker vs ATR Alpha (ended 2026-09-27T19:10, as_of 2026-09-24T19:10:25); Stochastic Striker vs Ichimoku Empress (ended 2026-09-27T19:10, as_of 2026-09-24T19:10:23); Volume Viper vs ATR Alpha (ended 2026-09-27T19:10, as_of 2026-09-24T19:10:19) (+6 more)",
+   "filed_at": "2026-09-28T09:52:19+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 135,
+     "verdict": "pass",
+     "at": "2026-10-01T00:16:06+00:00"
+    }
+   ],
+   "their_status": {
+    "135": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_next_cliff_lies_inside_the_window_its_own_unlock_record_counts",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_a_next_cliff_lies_inside_the_window_its_own_unlock_record_counts"
+   ],
+   "report_ids": [
+    208
+   ],
+   "title": "1 of 17 rows put their next cliff inside a window their own record counts as 0 tokens: KNTQ(parent#kinetiq) 12,916,667 tokens 19.5 days after as_of, next30_tokens 0",
+   "filed_at": "2026-10-15T08:16:57+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 208,
+     "verdict": "pass",
+     "at": "2026-10-16T20:31:46+00:00"
+    }
+   ],
+   "their_status": {
+    "208": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_paper_buy_debits_the_paper_balance",
+   "nodeids": [
+    "tests/rest/test_paper_balance_moves.py::test_a_paper_buy_debits_the_paper_balance"
+   ],
+   "report_ids": [
+    87
+   ],
+   "title": "1 accepted paper buy(s) opened 1.00 USDC of notional and the paper balance moved 0.00 (100000.00 -> 100000.00); sim_balance.total_trades reads 0 after 1 accepted trade(s): an agent running a paper campaign has no published number to score itself against, so it cannot size its next order or tell a winning run from a losing one",
+   "filed_at": "2026-09-10T12:32:31+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 87,
+     "verdict": "fail",
+     "at": "2026-09-10T16:52:47+00:00"
+    },
+    {
+     "report_id": 87,
+     "verdict": "pass",
+     "at": "2026-09-10T20:08:24+00:00"
+    },
+    {
+     "report_id": 87,
+     "verdict": "pass",
+     "at": "2026-09-11T17:58:54+00:00"
+    }
+   ],
+   "their_status": {
+    "87": "fixed"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-a_paper_buy_is_not_refused_for_money_the_paper_book_holds",
+   "nodeids": [
+    "tests/rest/test_a_paper_buy_is_judged_against_the_paper_book.py::test_a_paper_buy_is_not_refused_for_money_the_paper_book_holds"
+   ],
+   "report_ids": [
+    126
+   ],
+   "title": "card 5d91bf43-a597-47b0-9abe-5c7f52618bbd read tradeable_now true at the buy, the account was in simulation_mode with a paper book of 88598.91 USDC, and a paper buy of 480.36 USDC sent with paper: true answered HTTP 409 {\"detail\": \"Insufficient USDC balance: you have 7.650006.\"} (2 time(s): TRD-0039 05:59:12, TRD-0040 06:00:23)",
+   "filed_at": "2026-09-25T02:58:50+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 126,
+     "verdict": "pass",
+     "at": "2026-09-25T08:28:33+00:00"
+    }
+   ],
+   "their_status": {
+    "126": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_published_sharpe_says_what_period_it_covers",
+   "nodeids": [
+    "tests/rest/test_backtest_metrics_agree.py::test_a_published_sharpe_says_what_period_it_covers"
+   ],
+   "report_ids": [
+    97
+   ],
+   "title": "2 of 2 strategies come back from get_strategy_returns with a Sharpe and no period, while the same strategy on /api/v1/backtest/leaderboard carries one -- so ranking them together, which your own guide asks an agent to do, compares windows nothing names. The leaderboard alone spans 120h / 352 markets, 24h / 355 markets, 30 days, 48h / 354 markets, 6 months, 72h / 354 markets",
+   "filed_at": "2026-09-12T07:22:55+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 97,
+     "verdict": "pass",
+     "at": "2026-09-12T21:02:44+00:00"
+    }
+   ],
+   "their_status": {
+    "97": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_refused_paper_clone_says_why",
+   "nodeids": [
+    "tests/rest/test_a_refused_clone_says_why.py::test_a_refused_paper_clone_says_why"
+   ],
+   "report_ids": [
+    119
+   ],
+   "title": "a paper clone of wta source 23441934-8475-4aa0-bbff-75c03ecd3284 was refused HTTP 400 'Invalid clone request. Please try again.' 2 times (CLN-0017 2026-09-22 13:39:02, CLN-0020 2026-09-22 17:47:13 UTC): the refusal asks for a retry and the retry is refused the same way; /openapi-public.json documents POST /api/v1/cloned-bots/clone as answering 200, 422",
+   "filed_at": "2026-09-22T18:26:12+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 119,
+     "verdict": "pass",
+     "at": "2026-09-25T13:28:08+00:00"
+    }
+   ],
+   "their_status": {
+    "119": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_report_the_server_creates_is_answered_as_created",
+   "nodeids": [
+    "tests/rest/test_a_filed_report_is_answered_as_filed.py::test_a_report_the_server_creates_is_answered_as_created"
+   ],
+   "report_ids": [
+    123
+   ],
+   "title": "3 of our newest 12 submission(s) to POST /api/v1/bounty/reports answered HTTP 500 and the report was created anyway: #110 (build-stats-window, 2026-09-20T17:40 UTC), #113 (bb-building-tile, 2026-09-20T21:00 UTC), #122 (card-tradeable-now-disagrees-mcp-rest, 2026-09-22T23:55 UTC) -- a client told the filing failed retries it",
+   "filed_at": "2026-09-23T00:27:57+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 123,
+     "verdict": "pass",
+     "at": "2026-10-04T01:25:16+00:00"
+    },
+    {
+     "report_id": 123,
+     "verdict": "fail",
+     "at": "2026-10-25T03:47:14+00:00"
+    }
+   ],
+   "their_status": {
+    "123": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-a_round_open_after_its_anchor_says_when_entries_close",
+   "nodeids": [
+    "tests/rest/test_movers_round_prices_a_late_entry.py::test_a_round_open_after_its_anchor_says_when_entries_close"
+   ],
+   "report_ids": [
+    101
+   ],
+   "title": "the round anchored 2026-09-11 is still open -- it does not score until 2026-09-18 and nothing in its payload names a cutoff for entries -- while their own rules price every pick at 'the stored close on the round day'. An entry made today is therefore scored over a window of which 2 of its 7 days have already happened, at a price that cannot move. We entered this round on 2026-09-13 and were given the 2026-09-11 closes, which is how this was found. The leaderboard ranks by avg_pct and carries nothing to tell a pick committed on the anchor day from one committed the day before scoring -- including the NEXUS screen row, whose own /movers/potential is stamped as_of the anchor",
+   "filed_at": "2026-09-13T11:53:45+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 101,
+     "verdict": "pass",
+     "at": "2026-09-13T18:47:55+00:00"
+    }
+   ],
+   "their_status": {
+    "101": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_run_on_a_theme_is_listed_with_that_theme",
+   "nodeids": [
+    "tests/rest/test_research_backtest_runs_match_their_documentation.py::test_a_run_on_a_theme_is_listed_with_that_theme"
+   ],
+   "report_ids": [
+    149
+   ],
+   "title": "1 of 2 runs on a named theme are listed with no theme: best-params-macd-gated-20260624T200425 (parameters.theme 'defi tokens', listed themes [])",
+   "filed_at": "2026-10-02T23:36:41+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 149,
+     "verdict": "pass",
+     "at": "2026-10-04T01:25:21+00:00"
+    }
+   ],
+   "their_status": {
+    "149": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_runrate_states_only_the_days_its_revenue_has",
+   "nodeids": [
+    "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_a_runrate_states_only_the_days_its_revenue_has"
+   ],
+   "report_ids": [
+    179
+   ],
+   "title": "4 of 233 rows state more days of revenue in the last 30 than their own daily series holds, and count the absent days as zero: FUL(parent#fulcrom) cov30 30 with 24 days present (run-rate basis 30d, sparse False); DRV(parent#lyra) cov30 30 with 29 days present (run-rate basis 90d, sparse False); KNC(parent#kyberswap) cov30 30 with 19 days present (run-rate basis 30d, sparse False); DEEP(parent#deepbook) cov30 30 with 19 days present (run-rate basis med3, sparse False)",
+   "filed_at": "2026-10-10T09:22:14+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 179,
+     "verdict": "pass",
+     "at": "2026-10-11T22:18:26+00:00"
+    }
+   ],
+   "their_status": {
+    "179": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_settled_card_shows_its_index_at_resolution",
+   "nodeids": [
+    "tests/rest/test_a_settled_card_stops_at_its_resolution.py::test_a_settled_card_shows_its_index_at_resolution"
+   ],
+   "report_ids": [
+    180
+   ],
+   "title": "4 of 7 cards settled in the last 72 h show an index more than 0.5% from the one they had at resolution_at_utc, their history running on after trading closed: ee01fadb 100.28 at 2026-10-08T13:48 UTC, shown 202.98 (+102.4%, 59 points after, the last 2026-10-09T12:29); 6fb50de3 100.42 at 2026-10-08T09:06 UTC, shown 203.16 (+102.3%, 63 points after, the last 2026-10-09T16:11); f4bd9964 100.29 at 2026-10-08T10:38 UTC, shown 104.76 (+4.4%, 27 points after, the last 2026-10-08T23:40); 29aa15ca 103.39 at 2026-10-08T12:25 UTC, shown 107.25 (+3.7%, 64 points after, the last 2026-10-09T13:32)",
+   "filed_at": "2026-10-10T10:54:05+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 180,
+     "verdict": "pass",
+     "at": "2026-10-10T19:35:26+00:00"
+    }
+   ],
+   "their_status": {
+    "180": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-a_socket_a_page_advertises_is_named_where_a_machine_reads",
+   "nodeids": [
+    "tests/rest/test_socket_is_discoverable.py::test_a_socket_a_page_advertises_is_named_where_a_machine_reads"
+   ],
+   "report_ids": [
+    109
+   ],
+   "title": "1 live channel(s) are advertised to a reader and named in none of /llms.txt, /.well-known/mcp.json, /openapi-public.json: wss://cymetica.com/ws/build-it-better (on /build-it-better/api)",
+   "filed_at": "2026-09-20T12:37:52+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 109,
+     "verdict": "pass",
+     "at": "2026-09-20T13:57:11+00:00"
+    },
+    {
+     "report_id": 109,
+     "verdict": "pass",
+     "at": "2026-09-20T16:47:41+00:00"
+    },
+    {
+     "report_id": 109,
+     "verdict": "pass",
+     "at": "2026-09-21T20:37:04+00:00"
+    }
+   ],
+   "their_status": {
+    "109": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_stored_run_carries_the_fields_its_schema_lists",
+   "nodeids": [
+    "tests/rest/test_research_backtest_runs_match_their_documentation.py::test_a_stored_run_carries_the_fields_its_schema_lists"
+   ],
+   "report_ids": [
+    149
+   ],
+   "title": "/api/v1/research-backtest/runs/{run_id} for defaults-theme-all-20260624T204140 lacks 8 of the 11 properties its schema lists: algo_model, themes, n_baskets, hold_days, mean_basket_gain_pct, mean_vs_btc_pct, hit_rate_pct, baskets; it answers created_at, label, parameters, rows, run_id, summary",
+   "filed_at": "2026-10-02T23:36:41+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 149,
+     "verdict": "pass",
+     "at": "2026-10-04T01:25:25+00:00"
+    }
+   ],
+   "their_status": {
+    "149": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_theme_is_priced_on_one_date",
+   "nodeids": [
+    "tests/rest/test_gem_screener_panels_say_what_their_data_says.py::test_a_theme_is_priced_on_one_date"
+   ],
+   "report_ids": [
+    143
+   ],
+   "title": "4 of 12 themes are priced on two dates (l2 1 of 15 members live; depin 1 of 15 members live; rwa 1 of 12 members live; privacy 6 of 15 members live); 11 of 320 coins have a live point; fetch_warnings: [{'source': 'api.coingecko.com', 'http_status': 403}, {'source': 'api.coingecko.com', 'http_status': 429}]",
+   "filed_at": "2026-10-02T11:48:59+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 143,
+     "verdict": "pass",
+     "at": "2026-10-02T15:38:27+00:00"
+    }
+   ],
+   "their_status": {
+    "143": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-a_twelve_month_dilution_names_where_its_new_tokens_come_from",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_a_twelve_month_dilution_names_where_its_new_tokens_come_from"
+   ],
+   "report_ids": [
+    215
+   ],
+   "title": "5 of 115 rows with new tokens in their next 12 months read 'N new X a month · ' with no source after the dot (kinds []), batch as_of 2026-10-18T08:48:04.967009+00:00: RNBW(rainbow) +64.35% from 115.8M new tokens, next 69.5M to Investors, Team; KNTQ(kinetiq) +45.11% from 142.1M new tokens, next 12.9M to Core Contributors, Investors; WET(humidifi) +167.39% from 385.0M new tokens, next 192.5M to Ecosystem, Foundation, Labs; LIT(lighter) +53.3% from 133.2M new tokens, next 8.2M to Investors, Team; EDGE(edgex) +4.17% from 14.6M new tokens, next 2.1M to Ecosystem & Community",
+   "filed_at": "2026-10-18T08:49:23+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "215": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "CHECK_CHANGED"
+  },
+  {
+   "key": "CYM-a_user_submitted_card_is_visible_only_to_its_author",
+   "nodeids": [
+    "tests/rest/test_user_submissions_stay_private.py::test_a_user_submitted_card_is_visible_only_to_its_author"
+   ],
+   "report_ids": [
+    95
+   ],
+   "title": "user 99's submitted card a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 answers 200 to account 113, status live, tradeable_now True. Their stated rule is that a user-submitted card is visible only to its author and 404 for everyone else; either the card is private and readable by others, or it is public and missing from the listing",
+   "filed_at": "2026-09-11T06:01:19+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 95,
+     "verdict": "pass",
+     "at": "2026-09-11T15:07:35+00:00"
+    },
+    {
+     "report_id": 95,
+     "verdict": "pass",
+     "at": "2026-09-11T17:58:59+00:00"
+    }
+   ],
+   "their_status": {
+    "95": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-account-me-rejects-its-documented-credential",
+   "nodeids": [
+    "tests/rest/test_account_auth.py::test_the_documented_credential_opens_the_documented_route"
+   ],
+   "report_ids": [
+    65
+   ],
+   "title": "/api/v1/account/me answers HTTP 401 to the same X-API-Key that opens /api/v1/account/me/portfolio (HTTP 200) in the same run. agent-skills.json sends the et10-revenue-share skill to the first of those, so an agent following the catalogue to check its own eligibility is refused",
+   "filed_at": "2026-09-05T21:12:37+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 65,
+     "verdict": "pass",
+     "at": "2026-09-07T13:33:48+00:00"
+    }
+   ],
+   "their_status": {
+    "65": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-agent-tournaments-always-has-a-free-table",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_always_has_a_free_table.py::test_agent_tournaments_always_has_a_free_table"
+   ],
+   "report_ids": [
+    196
+   ],
+   "title": "1 of the 2 buy-ins have no open paper table with a free seat, while /api/v1/agent-tournaments/rules says 'there is always a free table at each buy-in'. pro: table 2 running seats_free 0 (10 seated, 0 pending, next_open_url None), table 5 open seats_free 0 (9 seated, 1 pending, next_open_url None)",
+   "filed_at": "2026-10-12T08:45:43+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 196,
+     "verdict": "pass",
+     "at": "2026-10-13T00:37:25+00:00"
+    }
+   ],
+   "their_status": {
+    "196": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-agent-tournaments-board-counts-what-was-paid",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_board_counts_what_was_paid.py::test_agent_tournaments_board_counts_what_was_paid"
+   ],
+   "report_ids": [
+    238
+   ],
+   "title": "board says {'tables_done': 15, 'paid_usdc': 645.0, 'paid_et10': 1566.0}, its tables add up to {'tables_done': 15, 'paid_usdc': 645.0, 'paid_et10': 366.0} (1200 ET10 capped, not paid)",
+   "filed_at": "2026-11-01T10:29:27+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "238": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent-tournaments-coach-runs-as-llms-txt-says",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_coach_runs_as_llms_txt_says.py::test_agent_tournaments_coach_runs_as_llms_txt_says"
+   ],
+   "report_ids": [
+    236
+   ],
+   "title": "llms.txt says 'lock ET10 on your seat (`POST /api/v1/agent-tournaments/seats/{id}/nexus-lock` {\"amount_et10\"}; MCP agent_tournament_nexus_lock) and NEXUS tunes' but NEXUS tuned seats of ours with no ET10 locked: table 42 seat 154 ('casino RSI Sniper'): 3 NEXUS tunes, my_nexus_lock null, e.g. 'stop loss 8 → 7 % · rank 1 → 2'; table 41 seat 157 ('casino Trend Titan'): 2 NEXUS tunes, my_nexus_lock null, e.g. 'CLOB ETH/USDC on · no trade for 14 min (none yet)'; table 40 seat 143 ('casino Trend Titan'): 1 NEXUS tunes, my_nexus_lock null, e.g. 'PERP BTC off · 2 losses in a row on BTC: -15.25 USDC'; table 33 seat 134 ('tournament Perceptron Oracle'): 1 NEXUS tunes, my_nexus_lock null, e.g. 'take profit 15 → 10 % · no trade for 35 min (none yet)'",
+   "filed_at": "2026-11-01T09:43:19+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "236": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent-tournaments-coach-tunes-as-it-says",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_coach_tunes_as_it_says.py::test_agent_tournaments_coach_tunes_as_it_says"
+   ],
+   "report_ids": [
+    241
+   ],
+   "title": "table 51 says the coach tunes once the bot has 5 closed trades, and 9 of our 14 newest seats were tuned before that: table 45: tuned at 2026-11-01T10:26:17.150012+00:00 with 0 closed trade(s): 'stop loss 3 → 2.5 % · rank 1 → 2'; table 42: tuned at 2026-11-01T08:15:48.806763+00:00 with 0 closed trade(s): 'stop loss 8 → 7 % · rank 1 → 2'; table 41: tuned at 2026-11-01T08:26:14.952499+00:00 with 0 closed trade(s): 'CLOB ETH/USDC on · no trade for 14 min (none yet)'; table 40: tuned at 2026-10-31T23:11:35.750531+00:00 with 3 closed trade(s): 'PERP BTC off · 2 losses in a row on BTC: -15.25 USDC'; table 35: tuned at 2026-11-01T10:22:14.302727+00:00 with 0 closed trade(s): 'stop loss 5 → 4 % · rank 1 → 6'",
+   "filed_at": "2026-11-01T10:36:47+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "241": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent-tournaments-how-page-matches-the-tables",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_how_page_matches_the_tables.py::test_agent_tournaments_how_page_matches_the_tables"
+   ],
+   "report_ids": [
+    235
+   ],
+   "title": "/agent-casino/how says ['Every table runs one day', 'Flash tables run 1 day', 'TRADES 1 DAY', 'every table runs 1 day'] while the lobby offers Flash tables that do not run a day: [('fmicro1h', 1), ('fmicro5h', 5), ('fpro1h', 1), ('fpro5h', 5)] (tier, hours)",
+   "filed_at": "2026-11-01T08:35:52+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "235": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent-tournaments-offers-only-bots-that-exist",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_offers_only_bots_that_exist.py::test_agent_tournaments_offers_only_bots_that_exist"
+   ],
+   "report_ids": [
+    195
+   ],
+   "title": "12 of the 53 bots /api/v1/agent-tournaments/my-bots offers for a seat no longer exist: their profile answers 404 'Bot not found.', and our clone lists (paper and live) hold 41. 'Multi-Indicator Ensemble Clone' (0f43b952, trading False); 'RED TEAM StockBot Elite' (96e86c2b, trading False); 'lab Bollinger Bandit' (36642175, trading False); 'QA Perceptron paper' (d778102d, trading False); 'lab Fibonacci Phoenix' (eae9b830, trading False); 'lab RSI Sniper' (c9d638ab, trading False); 'lab MACD Hunter' (996cd23e, trading True); 'lab Trend Titan bracket' (6fdb8288, trading False); 'lab Dread Gauge' (2e0de483, trading False); 'lab Fade the Rally' (79909469, trading False); 'lab Sync Master' (cb08b7e3, trading False); 'lab Vortex Drain' (b93008d0, trading False)",
+   "filed_at": "2026-10-11T18:48:52+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 195,
+     "verdict": "pass",
+     "at": "2026-10-13T00:37:29+00:00"
+    }
+   ],
+   "their_status": {
+    "195": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-agent-tournaments-pick-window-ends-with-the-table",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_pick_window_ends_with_the_table.py::test_agent_tournaments_pick_window_ends_with_the_table"
+   ],
+   "report_ids": [
+    239
+   ],
+   "title": "10 of 12 tables say a pick closes later than it does: table 46: closes in 86046 s, the table ends in 3247 s; table 45: closes in 85940 s, the table ends in 3140 s; table 44: closes in 85155 s, the table ends in 2355 s; table 43: closes in 85937 s, the table ends in 17537 s; table 42: closed, and closes_in_s still counts 78265",
+   "filed_at": "2026-11-01T10:29:34+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "239": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent-tournaments-risk-line-carries-its-level",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_risk_line_carries_its_level.py::test_agent_tournaments_risk_line_carries_its_level"
+   ],
+   "report_ids": [
+    240
+   ],
+   "title": "6 of 7 running seats of ours claim a Risk level their numbers are not on: table 46: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0); table 45: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0); table 44: 'Risk reads 8: size 8 %, stop loss 4 %, take profit 32 %, as you set it.'; Risk 8 means (8.0, 8.0, 32.0); table 43: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 10 %.'; Risk 5 means (5.0, 5.0, 20.0); table 35: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 4 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0)",
+   "filed_at": "2026-11-01T10:29:59+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "240": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent-tournaments-round-ended-inside-the-table-counts",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_round_ended_inside_the_table_counts.py::test_agent_tournaments_round_ended_inside_the_table_counts"
+   ],
+   "report_ids": [
+    242
+   ],
+   "title": "1 round(s) that ended inside the table are left out of its standings because they settled after it: table 51 seat 209 ('casino Divergence Dragon'): round ended 2026-11-01T11:35:00+00:00, table ended 2026-11-01T11:35:14.689482+00:00, settled 2026-11-01T11:36:04.494225+00:00, 16.405443 USDC left out of 78.1",
+   "filed_at": "2026-11-01T13:04:03+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "242": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent-tournaments-routes-are-in-the-openapi",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_routes_are_in_the_openapi.py::test_every_agent_tournaments_route_llms_txt_names_is_in_the_openapi"
+   ],
+   "report_ids": [
+    191
+   ],
+   "title": "/llms.txt names 7 route(s) under /api/v1/agent-tournaments; /openapi-public.json (345 paths) describes 0 of them. Missing: /api/v1/agent-tournaments/lobby, /api/v1/agent-tournaments/my-bots, /api/v1/agent-tournaments/rules, /api/v1/agent-tournaments/seats/{}/leave, /api/v1/agent-tournaments/tables/{}, /api/v1/agent-tournaments/tables/{}/prompt, /api/v1/agent-tournaments/tables/{}/seat. /openapi.json (27 paths) describes 0",
+   "filed_at": "2026-10-11T12:21:27+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 191,
+     "verdict": "pass",
+     "at": "2026-10-13T00:37:33+00:00"
+    }
+   ],
+   "their_status": {
+    "191": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-agent-tournaments-running-table-keeps-trading",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_running_table_keeps_trading.py::test_agent_tournaments_running_table_keeps_trading"
+   ],
+   "report_ids": [
+    201
+   ],
+   "title": "1 of 1 running paper table(s) went at least 12 h with no seat trading, while /api/v1/agent-tournaments/rules says a table runs 7 days and names no limit on a seat's trades. table 2 (pro, 27.9 h in): no seat's ROI moved for 13.94 h, volume_usdc 5604.4, trades by seat {'24 house': 40, '27 house': 40, '25 house': 31, '1': 0, '2': 0, '23 house': 40, '20 house': 30, '26 house': 40, '21 house': 31, '22 house': 40}",
+   "filed_at": "2026-10-12T20:44:21+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 201,
+     "verdict": "fail",
+     "at": "2026-10-25T03:47:19+00:00"
+    },
+    {
+     "report_id": 201,
+     "verdict": "pass",
+     "at": "2026-10-16T20:31:51+00:00"
+    }
+   ],
+   "their_status": {
+    "201": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent-tournaments-spent-bot-does-not-read-as-trading",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_spent_bot_does_not_read_as_trading.py::test_agent_tournaments_spent_bot_does_not_read_as_trading"
+   ],
+   "report_ids": [
+    237
+   ],
+   "title": "1 of 1 seats of ours with no new trade left today read as trading: table 46: 20/20 today and the state reads 'Trading'",
+   "filed_at": "2026-11-01T10:29:18+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "237": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent-tournaments-stake-stays-inside-the-tables-capital",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_stake_stays_inside_the_tables_capital.py::test_agent_tournaments_stake_stays_inside_the_tables_capital"
+   ],
+   "report_ids": [
+    249
+   ],
+   "title": "4 of 136 rounds were staked above 10 % of the table's capital: table 40: BTC round of 3.37851 on a capital of 25 (13.5 %); table 40: BTC round of 11.86989 on a capital of 25 (47.5 %); table 40: BTC round of 7.6242 on a capital of 25 (30.5 %); table 62: BTC round of 21.389063 on a capital of 25 (85.6 %)",
+   "filed_at": "2026-11-01T19:34:57+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "249": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent-tournaments-standings-agree-with-the-trade-list",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_standings_agree_with_the_trade_list.py::test_agent_tournaments_standings_agree_with_the_trade_list"
+   ],
+   "report_ids": [
+    234
+   ],
+   "title": "2 of 8 finished tables show a seat of ours with one set of numbers in the standings and another in its own trade list: table 15 seat 87 ('lab Wave 2 Perceptron Oracle'): standings {'trades': 17, 'volume_usdc': 29.58, 'pnl_usdc': -5.06}, trade list {'trades': 18, 'volume_usdc': 30.58, 'pnl_usdc': -5.07}; table 40 seat 143 ('casino Trend Titan'): standings {'trades': 4, 'volume_usdc': 24.85, 'pnl_usdc': -5.64}, trade list {'trades': 3, 'volume_usdc': 22.87, 'pnl_usdc': -7.62}",
+   "filed_at": "2026-11-01T08:35:43+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "234": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent-tournaments-table-knows-its-owner",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_table_knows_its_owner.py::test_agent_tournaments_table_knows_its_owner"
+   ],
+   "report_ids": [
+    210
+   ],
+   "title": "3 of the 3 seats our key owns (their bot-settings answer it 200, 'Owner only') are not ours in their table's own answer to the same key: table 13 seat 57 ('lab Wave 2 Fibonacci Phoenix'): mine False, my_seat None; table 5 seat 29 ('tournament Perceptron Oracle'): mine False, my_seat None; table 2 seat 1 ('lab MACD Hunter'): mine False, my_seat None",
+   "filed_at": "2026-10-15T19:58:33+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 210,
+     "verdict": "pass",
+     "at": "2026-10-16T03:58:04+00:00"
+    },
+    {
+     "report_id": 210,
+     "verdict": "fail",
+     "at": "2026-11-01T08:36:49+00:00"
+    }
+   ],
+   "their_status": {
+    "210": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-agent_count",
+   "nodeids": [
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_count::live_species-vs-llms_txt]"
+   ],
+   "report_ids": [
+    52
+   ],
+   "title": "How many AI trading agents exist?",
+   "filed_at": "2026-09-04T12:04:15+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 52,
+     "verdict": "pass",
+     "at": "2026-09-07T13:33:53+00:00"
+    }
+   ],
+   "their_status": {
+    "52": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-agent_names",
+   "nodeids": [
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[agent_names::live_species-vs-llms_txt]"
+   ],
+   "report_ids": [
+    48
+   ],
+   "title": "Which AI trading agents exist, by symbol?",
+   "filed_at": "2026-09-04T12:03:52+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 48,
+     "verdict": "pass",
+     "at": "2026-09-07T13:33:57+00:00"
+    },
+    {
+     "report_id": 48,
+     "verdict": "pass",
+     "at": "2026-09-10T05:08:33+00:00"
+    }
+   ],
+   "their_status": {
+    "48": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-airdrop_farmer_lists_no_farm_whose_token_trades",
+   "nodeids": [
+    "tests/rest/test_airdrop_farmer_lists_no_farm_whose_token_trades.py::test_airdrop_farmer_lists_no_farm_whose_token_trades"
+   ],
+   "report_ids": [
+    222
+   ],
+   "title": "6 farm(s) listed under 'No token live yet' have a token that trades: Fables (FABLES, $252,971 traded in 24 h), Zircuit Staking (ZRC, $397,455 traded in 24 h), Travala.com (AVA, $37,891,401 traded in 24 h), Sonic SVM (SONIC, $2,122,401 traded in 24 h), INFINIT (IN, $206,169,848 traded in 24 h), Rivalz Network (RIZ, $11,348 traded in 24 h)",
+   "filed_at": "2026-10-24T08:43:54+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 222,
+     "verdict": "pass",
+     "at": "2026-10-25T03:47:25+00:00"
+    }
+   ],
+   "their_status": {
+    "222": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-an_explicit_paper_request_is_honoured_on_every_surface",
+   "nodeids": [
+    "tests/rest/test_paper_or_real.py::test_an_explicit_paper_request_is_honoured_on_every_surface"
+   ],
+   "report_ids": [
+    82
+   ],
+   "title": "event-cards short take `paper` and then say it is not always honoured, so a caller that explicitly asks for paper can be given a real-ledger position — Per-trade paper override — honoured only on the spot-bear fallback (cards without an EVCDX token); perps are always real-ledger",
+   "filed_at": "2026-09-08T13:27:09+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 82,
+     "verdict": "pass",
+     "at": "2026-09-08T15:15:32+00:00"
+    }
+   ],
+   "their_status": {
+    "82": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-an_unlock_countdown_counts_from_the_moment_it_is_served",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_an_unlock_countdown_counts_from_the_moment_it_is_served"
+   ],
+   "report_ids": [
+    209
+   ],
+   "title": "56 of 57 next unlocks state a countdown more than 0.5 days off the time to their own date at the batch's as_of 2026-10-15T08:15:08.281010+00:00: OSMO(osmosis-dex) 29.5 stated, 28.66 true; SD(stader) 21.5 stated, 20.66 true; RHEA(rhea-finance) 29.5 stated, 28.66 true; DBR(debridge) 3.5 stated, 2.66 true; LISTA(lista-dao) 29.5 stated, 28.66 true",
+   "filed_at": "2026-10-15T08:17:03+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 209,
+     "verdict": "pass",
+     "at": "2026-10-16T20:31:56+00:00"
+    }
+   ],
+   "their_status": {
+    "209": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-anon-tool-surface",
+   "nodeids": [
+    "tests/mcp/test_trust_ladder.py::test_anonymous_receives_only_public_tools"
+   ],
+   "report_ids": [
+    46
+   ],
+   "title": "An unauthenticated caller is served all 46 MCP tools, including 21 above the tier declared for them",
+   "filed_at": "2026-09-04T12:03:33+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 46,
+     "verdict": "pass",
+     "at": "2026-09-07T13:32:26+00:00"
+    },
+    {
+     "report_id": 46,
+     "verdict": "fail",
+     "at": "2026-10-21T09:07:20+00:00"
+    }
+   ],
+   "their_status": {
+    "46": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-async-a2a-investigation-arrives",
+   "nodeids": [
+    "tests/rest/test_async_a2a_investigation.py::test_an_async_message_gets_the_investigation_its_card_promises"
+   ],
+   "report_ids": [
+    132,
+    137
+   ],
+   "title": "async-a2a-investigation-arrives",
+   "filed_at": "2026-09-26T12:25:24+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 132,
+     "verdict": "fail",
+     "at": "2026-09-27T07:28:43+00:00"
+    },
+    {
+     "report_id": 132,
+     "verdict": "pass",
+     "at": "2026-09-30T16:08:49+00:00"
+    },
+    {
+     "report_id": 137,
+     "verdict": "pass",
+     "at": "2026-09-30T16:08:54+00:00"
+    },
+    {
+     "report_id": 132,
+     "verdict": "fail",
+     "at": "2026-10-01T00:16:11+00:00"
+    },
+    {
+     "report_id": 137,
+     "verdict": "fail",
+     "at": "2026-10-01T00:16:17+00:00"
+    },
+    {
+     "report_id": 132,
+     "verdict": "pass",
+     "at": "2026-10-02T12:26:58+00:00"
+    },
+    {
+     "report_id": 137,
+     "verdict": "pass",
+     "at": "2026-10-02T12:27:02+00:00"
+    },
+    {
+     "report_id": 132,
+     "verdict": "pass",
+     "at": "2026-10-25T03:47:33+00:00"
+    },
+    {
+     "report_id": 137,
+     "verdict": "pass",
+     "at": "2026-10-25T03:47:39+00:00"
+    },
+    {
+     "report_id": 132,
+     "verdict": "fail",
+     "at": "2026-10-21T09:07:46+00:00"
+    },
+    {
+     "report_id": 137,
+     "verdict": "fail",
+     "at": "2026-10-21T09:07:55+00:00"
+    }
+   ],
+   "their_status": {
+    "132": "paid",
+    "137": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-award-contradicts-its-own-tier",
+   "nodeids": [
+    "tests/rest/test_award_matches_its_tier.py::test_a_recorded_award_agrees_with_the_tier_on_the_same_row"
+   ],
+   "report_ids": [
+    68,
+    70
+   ],
+   "title": "20 row(s) record an award in one currency and publish an entitlement in another (e.g. #67: paid in ET10, entitled in CYM); 20 row(s) record an award below the minimum they publish for their own confirmed severity (e.g. #67 at low: 1000 recorded against 5000-25000)",
+   "filed_at": "2026-09-06T11:08:13+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 68,
+     "verdict": "pass",
+     "at": "2026-09-07T13:34:02+00:00"
+    },
+    {
+     "report_id": 70,
+     "verdict": "pass",
+     "at": "2026-09-07T13:34:06+00:00"
+    },
+    {
+     "report_id": 68,
+     "verdict": "pass",
+     "at": "2026-09-07T17:42:25+00:00"
+    },
+    {
+     "report_id": 70,
+     "verdict": "pass",
+     "at": "2026-09-07T17:42:30+00:00"
+    },
+    {
+     "report_id": 68,
+     "verdict": "pass",
+     "at": "2026-09-07T21:46:17+00:00"
+    },
+    {
+     "report_id": 70,
+     "verdict": "pass",
+     "at": "2026-09-07T21:46:22+00:00"
+    },
+    {
+     "report_id": 68,
+     "verdict": "pass",
+     "at": "2026-09-08T15:15:37+00:00"
+    },
+    {
+     "report_id": 70,
+     "verdict": "pass",
+     "at": "2026-09-08T15:15:46+00:00"
+    }
+   ],
+   "their_status": {
+    "68": "paid",
+    "70": "fixed"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-backtest-leaderboard-ranks-historical-trades",
+   "nodeids": [
+    "tests/rest/test_backtest_leaderboard_ranks_backtests_on_historical_data.py::test_the_leaderboard_ranks_no_bot_on_synthetic_trades"
+   ],
+   "report_ids": [
+    175
+   ],
+   "title": "10 of 16 leaderboard bots are ranked on trades their own trade list marks is_synthetic (1521 of their 1521 trades), while /backtest says \"against historical data\" and no leaderboard row says synthetic: bot-multi-indicator-ensemble 61.2% over 6 months, 145/145 synthetic, entry prices 90.02-109.96, BTC entered at 103.92; bot-hybrid-rsi-ml 52.8% over 6 months, 178/178 synthetic, entry prices 90.32-109.86, BTC entered at 95.76; bot-gradient-boost-classifier 47.3% over 6 months, 156/156 synthetic, entry prices 90.02-109.98; bot-bollinger-breakout 41.5% over 6 months, 98/98 synthetic, entry prices 90.32-109.48, BTC entered at 97.36",
+   "filed_at": "2026-10-04T18:50:37+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 175,
+     "verdict": "fail",
+     "at": "2026-10-08T07:38:38+00:00"
+    },
+    {
+     "report_id": 175,
+     "verdict": "pass",
+     "at": "2026-10-10T19:35:47+00:00"
+    }
+   ],
+   "their_status": {
+    "175": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-bounty-filing-unauthenticated",
+   "nodeids": [
+    "tests/rest/test_bounty_tracker.py::test_attribution_to_a_wallet_is_provable"
+   ],
+   "report_ids": [
+    47
+   ],
+   "title": "Filing a bug report passes authorization with no credential: hunter attribution rests on an unauthenticated form field",
+   "filed_at": "2026-09-04T12:03:44+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 47,
+     "verdict": "pass",
+     "at": "2026-09-07T13:34:11+00:00"
+    },
+    {
+     "report_id": 47,
+     "verdict": "pass",
+     "at": "2026-09-07T17:42:35+00:00"
+    },
+    {
+     "report_id": 47,
+     "verdict": "pass",
+     "at": "2026-09-07T21:46:26+00:00"
+    }
+   ],
+   "their_status": {
+    "47": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-bounty-pipeline-deadend",
+   "nodeids": [
+    "tests/rest/test_bounty_pipeline.py::test_filed_reports_reach_the_work_tracker"
+   ],
+   "report_ids": [
+    61
+   ],
+   "title": "Reports filed through the bounty API do not reach the tracker where work happens",
+   "filed_at": "2026-09-05T19:21:04+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 61,
+     "verdict": "pass",
+     "at": "2026-09-07T13:34:15+00:00"
+    }
+   ],
+   "their_status": {
+    "61": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-bounty-rewards-undocumented",
+   "nodeids": [
+    "tests/rest/test_bounty_rewards.py::test_the_reward_programme_is_discoverable_by_an_agent"
+   ],
+   "report_ids": [
+    64
+   ],
+   "title": "the bug-report reward programme appears in none of the machine-readable discovery surfaces, so an agent reading them cannot learn that filing a bug earns anything",
+   "filed_at": "2026-09-05T21:03:39+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 64,
+     "verdict": "pass",
+     "at": "2026-09-07T13:34:19+00:00"
+    },
+    {
+     "report_id": 64,
+     "verdict": "pass",
+     "at": "2026-09-07T21:46:31+00:00"
+    }
+   ],
+   "their_status": {
+    "64": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-bounty-rewards-unrecorded",
+   "nodeids": [
+    "tests/rest/test_bounty_rewards.py::test_verified_reports_record_what_they_earned"
+   ],
+   "report_ids": [
+    63,
+    71
+   ],
+   "title": "20 of the 20 reports on the public tracker are closed as fixed, and 0 of those record any reward_amount; the platform's own stats report bugs_fixed=30 and total_paid=0.0",
+   "filed_at": "2026-09-05T21:05:36+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 63,
+     "verdict": "pass",
+     "at": "2026-09-07T13:34:24+00:00"
+    },
+    {
+     "report_id": 71,
+     "verdict": "pass",
+     "at": "2026-09-07T13:54:10+00:00"
+    },
+    {
+     "report_id": 63,
+     "verdict": "pass",
+     "at": "2026-09-07T17:42:39+00:00"
+    },
+    {
+     "report_id": 71,
+     "verdict": "pass",
+     "at": "2026-09-07T17:42:44+00:00"
+    },
+    {
+     "report_id": 63,
+     "verdict": "pass",
+     "at": "2026-09-07T21:46:36+00:00"
+    },
+    {
+     "report_id": 71,
+     "verdict": "pass",
+     "at": "2026-09-07T21:46:41+00:00"
+    },
+    {
+     "report_id": 63,
+     "verdict": "pass",
+     "at": "2026-09-08T15:15:51+00:00"
+    },
+    {
+     "report_id": 71,
+     "verdict": "pass",
+     "at": "2026-09-08T15:15:56+00:00"
+    }
+   ],
+   "their_status": {
+    "63": "paid",
+    "71": "fixed"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-build-it-better-idea-keeps-the-new-app-spec-after-a-change",
+   "nodeids": [
+    "tests/rest/test_build_it_better_spec_keeps_the_request.py::test_an_idea_keeps_its_new_app_spec_after_a_change"
+   ],
+   "report_ids": [
+    192
+   ],
+   "title": "the newest idea with a BB-CHANGE, ET-30773 (Agent Tournaments, first BB-CHANGE 2026-10-10T21:34 UTC): before it ['new'], after it ['rebuild', 'rebuild'], forbidding \"Agent Tournaments's logos\": its spec after the change builds \"a page on EventTrader that does the job you use Agent Tournaments for\" instead of a new page. 4 of 4 ideas with a BB-CHANGE switched the same way: ET-26776 (EIDOLON, first BB-CHANGE 2026-09-23T19:08 UTC): before it ['new'], after it ['rebuild', 'rebuild', 'rebuild', 'rebuild'], forbidding \"EIDOLON's logos\"; ET-26924 (Agent League, first BB-CHANGE 2026-09-24T10:46 UTC): before it ['new', 'new'], after it ['rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild', 'rebuild'], forbidding \"Agent League's logos\"; ET-28203 (Team Dump Radar, first BB-CHANGE 2026-09-28T18:38 UTC): before it ['new'], after it ['rebuild'], forbidding \"Team Dump Radar's logos\"",
+   "filed_at": "2026-10-11T12:21:37+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 192,
+     "verdict": "pass",
+     "at": "2026-10-16T20:32:00+00:00"
+    }
+   ],
+   "their_status": {
+    "192": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-build-it-better-request-token-place-is-documented-one-way",
+   "nodeids": [
+    "tests/rest/test_build_it_better_token_place_is_documented_one_way.py::test_llms_txt_and_the_openapi_name_the_same_place_for_the_request_token"
+   ],
+   "report_ids": [
+    194
+   ],
+   "title": "/llms.txt says the request token goes in the body ('request token in the body') for accept, change, verdict, withdraw; /openapi-public.json declares accept: header; change: header; verdict: header and nothing in the body. /build-it-better/api also names X-BB-Token",
+   "filed_at": "2026-10-11T14:44:38+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 194,
+     "verdict": "pass",
+     "at": "2026-10-13T00:37:37+00:00"
+    }
+   ],
+   "their_status": {
+    "194": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-build-it-better-rest-routes-are-in-the-openapi",
+   "nodeids": [
+    "tests/rest/test_build_it_better_routes_are_in_the_openapi.py::test_every_build_it_better_route_llms_txt_names_is_in_the_openapi"
+   ],
+   "report_ids": [
+    193
+   ],
+   "title": "/llms.txt names 15 route(s) under /api/v1/build-it-better; /openapi-public.json (345 paths) describes 14 of them. Missing: POST /api/v1/build-it-better/requests/{}/withdraw. /openapi.json (27 paths) describes 0",
+   "filed_at": "2026-10-11T14:44:17+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 193,
+     "verdict": "pass",
+     "at": "2026-10-13T00:37:42+00:00"
+    }
+   ],
+   "their_status": {
+    "193": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-build-recipe-names-a-browser-route",
+   "nodeids": [
+    "tests/discovery/test_build_onboarding.py::test_every_route_a_recipe_names_is_reachable_as_an_api"
+   ],
+   "report_ids": [
+    76
+   ],
+   "title": "a /build recipe sends an agent to a route that is not in the curated schema and does not answer JSON: /events/universe (HTTP 200 text/html)",
+   "filed_at": "2026-09-07T20:19:56+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 76,
+     "verdict": "fail",
+     "at": "2026-09-07T21:46:45+00:00"
+    },
+    {
+     "report_id": 76,
+     "verdict": "pass",
+     "at": "2026-09-08T07:27:26+00:00"
+    },
+    {
+     "report_id": 76,
+     "verdict": "pass",
+     "at": "2026-09-08T15:16:00+00:00"
+    }
+   ],
+   "their_status": {
+    "76": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-chain_count",
+   "nodeids": [
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
+   ],
+   "report_ids": [
+    52
+   ],
+   "title": "How many blockchains does the platform settle on or support?",
+   "filed_at": "2026-09-04T12:04:15+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "52": "paid"
+   },
+   "withdrawn": true,
+   "last_check": "UNVERIFIABLE"
+  },
+  {
+   "key": "CYM-chart-analyzer-calls-are-on-closed-candles",
+   "nodeids": [
+    "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_every_recorded_call_is_on_a_closed_candle"
+   ],
+   "report_ids": [
+    153
+   ],
+   "title": "1 of 19 open or scored calls in the public ledger were recorded before the candle they name had closed: sym:BTC/USDT|1h|1792972800 (READY TO POP, close 229.263278) was made 2026-10-04T06:21:46+00:00 on a candle that opens 2026-10-26T00:00:00+00:00 and closes 2026-10-26T01:00:00+00:00; the same API's BTC/USDT monthly candles since 2017-08-01 range 2817 to 126200",
+   "filed_at": "2026-10-04T08:39:42+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 153,
+     "verdict": "pass",
+     "at": "2026-10-04T17:45:33+00:00"
+    }
+   ],
+   "their_status": {
+    "153": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-chart-analyzer-dex-pool-coin-gets-no-verdict-as-documented",
+   "nodeids": [
+    "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_a_dex_pool_coin_gets_no_verdict_while_llms_txt_says_so"
+   ],
+   "report_ids": [
+    155
+   ],
+   "title": "LDO (0xc3c7d422809852031b44ab29eec9f1eff2a58756 on polygon), read from its DEX pool on 1h: verdict READY TO DUMP at 0.435 against a base rate of 0.3833 on 172454 cases, with coverage_note \"This asset's candles were not in the study (it measured exchange candles; these come from a DEX pool or your file). The same table is applied; the probability is the study's, not this asset's own.\"; llms.txt says: \"a DEX-pool coin gets the drawings and setups but no verdict (`coverage_note`).\". The public ledger holds 4 call(s) on DEX-pool coins (`contract:` rows)",
+   "filed_at": "2026-10-04T08:40:00+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 155,
+     "verdict": "pass",
+     "at": "2026-10-04T17:45:37+00:00"
+    },
+    {
+     "report_id": 155,
+     "verdict": "pass",
+     "at": "2026-10-05T09:06:04+00:00"
+    }
+   ],
+   "their_status": {
+    "155": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-chart-analyzer-probability-lies-inside-its-range",
+   "nodeids": [
+    "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_a_probability_lies_inside_the_range_shown_with_it"
+   ],
+   "report_ids": [
+    154
+   ],
+   "title": "25 of 105 usable calibration bins in /study/expert give a calibrated probability outside their own 95% range (by timeframe: 1d 5, 1w 8, 4h 1, 5d 11); widest: 5d up bin 9 (477 cases): calibrated 0.4307, ci95 0.5954-0.6812; 5d down bin 10 (477 cases): calibrated 0.5575, ci95 0.3188-0.4046; 5d up bin 10 (855 cases): calibrated 0.4307, ci95 0.4928-0.5596. Live 5d answers, 6 of 6 sides: SOL up 0.4307 with range 0.5954-0.6812; SOL down 0.5575 with range 0.3188-0.4046; BTC up 0.4307 with range 0.3711-0.4272",
+   "filed_at": "2026-10-04T08:39:50+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 154,
+     "verdict": "pass",
+     "at": "2026-10-04T17:45:41+00:00"
+    },
+    {
+     "report_id": 154,
+     "verdict": "pass",
+     "at": "2026-10-05T09:06:10+00:00"
+    },
+    {
+     "report_id": 154,
+     "verdict": "pass",
+     "at": "2026-10-16T20:32:05+00:00"
+    }
+   ],
+   "their_status": {
+    "154": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-chart-analyzer-score-averages-what-it-counts",
+   "nodeids": [
+    "tests/rest/test_chart_analyzer_score_averages_what_it_counts.py::test_a_score_averages_the_patterns_its_answer_marks_counted"
+   ],
+   "report_ids": [
+    142
+   ],
+   "title": "6 of 6 sampled answers state a chart_rate that is not the average success_rate of the patterns the same answer marks counted_in_score, while its rule says the score averages the patterns confirmed in the last 10 candles: 0xc3c7d422 on polygon: chart_rate 0.4737 against 0.473 over the 6 patterns marked counted_in_score (bearish_engulfing 3 bars ago, higher_highs_lows 4 bars ago, breakout_volume 6 bars ago, bullish_engulfing 7 bars ago, bearish_engulfing 8 bars ago, bos_up 9 bars ago); 0xc00e94cb on ethereum: chart_rate 0.4765 against 0.4729 over the 4 patterns marked counted_in_score (bearish_engulfing 3 bars ago, bearish_engulfing 5 bars ago, breakout_volume 7 bars ago, bearish_engulfing 8 bars ago); 0x63a72806 on avalanche: chart_rate 0.4765 against 0.4741 over the 3 patterns marked counted_in_score (breakout_volume 2 bars ago, bearish_engulfing 4 bars ago, bearish_engulfing 8 bars ago); 0xcf6bb538 on bsc: chart_rate 0.5037 against 0.4946 over the 6 patterns marked counted_in_score (breakout_volume 1 bars ago, bearish_engulfing 3 bars ago, bos_up 4 bars ago, breakout_volume 4 bars ago, bull_flag 4 bars ago, bearish_engulfing 8 bars ago); 0xb3ed0a42 on bsc: chart_rate 0.4497 against 0.4506 over the 4 patterns marked counted_in_score (bullish_engulfing 1 bars ago, bos_down 2 bars ago, bearish_engulfing 3 bars ago, bullish_engulfing 7 bars ago); 0x43dfc415 on ethereum: chart_rate 0.4589 against 0.4615 over the 4 patterns marked counted_in_score (higher_highs_lows 4 bars ago, bearish_engulfing 5 bars ago, bullish_engulfing 7 bars ago, bearish_engulfing 9 bars ago)",
+   "filed_at": "2026-10-01T07:00:58+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 142,
+     "verdict": "pass",
+     "at": "2026-10-02T15:38:33+00:00"
+    }
+   ],
+   "their_status": {
+    "142": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-chart-analyzer-verdict-fields-are-in-its-openapi-schema",
+   "nodeids": [
+    "tests/rest/test_chart_analyzer_verdict_layer_keeps_its_word.py::test_the_verdict_fields_are_listed_in_the_openapi_schema"
+   ],
+   "report_ids": [
+    152
+   ],
+   "title": "GET /api/v1/chart-analyzer/analyze answers 8 top-level key(s) its 200 schema does not list: calls_url, expert_study_url, indicators, setups, structures, swings, verdict, weekly_signal (the schema lists 27 and says additionalProperties: false); GET /api/v1/chart-analyzer/calls answers 5 top-level key(s) its 200 schema does not list: as_of, calls, not_advice, rule, summary (the schema is empty); GET /api/v1/chart-analyzer/study/expert answers 16 top-level key(s) its 200 schema does not list: block, combinations_searched, data, generated_at, limits, method, runtime_s, script, setup_count, setups, split, targets, timeframe, verdict_rule, version, weekly_signal_source (the schema is empty)",
+   "filed_at": "2026-10-04T08:39:29+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 152,
+     "verdict": "pass",
+     "at": "2026-10-16T20:32:10+00:00"
+    },
+    {
+     "report_id": 152,
+     "verdict": "fail",
+     "at": "2026-10-15T17:38:11+00:00"
+    }
+   ],
+   "their_status": {
+    "152": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-clob_pair_count",
+   "nodeids": [
+    "tests/mcp/test_clob_pairs.py::test_clob_pair_count_matches_the_catalogue"
+   ],
+   "report_ids": [
+    52,
+    62
+   ],
+   "title": "How many CLOB trading pairs exist?",
+   "filed_at": "2026-09-04T12:04:15+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 52,
+     "verdict": "pass",
+     "at": "2026-09-07T13:54:15+00:00"
+    },
+    {
+     "report_id": 62,
+     "verdict": "pass",
+     "at": "2026-09-07T13:54:19+00:00"
+    },
+    {
+     "report_id": 52,
+     "verdict": "fail",
+     "at": "2026-10-11T22:18:30+00:00"
+    },
+    {
+     "report_id": 62,
+     "verdict": "fail",
+     "at": "2026-10-11T22:18:35+00:00"
+    }
+   ],
+   "their_status": {
+    "52": "paid",
+    "62": "invalid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-clone-summary-names-every-market-it-trades",
+   "nodeids": [
+    "tests/rest/test_a_clone_summary_names_what_it_trades.py::test_a_clone_summary_names_every_market_it_trades_and_no_other"
+   ],
+   "report_ids": [
+    190
+   ],
+   "title": "31 of 41 paper clones state a trades_summary that misstates their own settings: 30 leave switched-on markets out with no \"+N\", 1 print a list set to 'NONE' as a market. 3453bac2 \"This bot trades: BTC/ETH/VAIX/SBIO 5-min epochs · Arena headline assets (paper)\" with perpetual_markets 'BTC,ETH,VAIX,SBIO,ET10,ETLP,CYM42,TBIG,TBIGS', custom_markets None: 4 of 9 perpetual markets named, ET10, ETLP, CYM42, TBIG, TBIGS left out with no count | f6af3fd1 \"This bot trades: CLOB NONE · Arena headline assets (paper)\" with perpetual_markets 'NONE', custom_markets 'NONE': custom_markets and perpetual_markets set to 'NONE' (off) printed as a market called NONE",
+   "filed_at": "2026-10-11T12:21:16+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 190,
+     "verdict": "pass",
+     "at": "2026-10-13T00:37:46+00:00"
+    }
+   ],
+   "their_status": {
+    "190": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-cloned-species-trades-its-described-strategy",
+   "nodeids": [
+    "tests/rest/test_a_paper_bot_trade_says_what_happened.py::test_a_clone_decides_on_the_strategy_its_species_is_described_by"
+   ],
+   "report_ids": [
+    174
+   ],
+   "title": "9 species' clones decide on another rule than the indicators their description names (live_decision_source.differs_from_display true): RSI Sniper (\"Snipes oversold and overbought conditions. Patient hunter waiting for \") decides on DELTA \"Prior-epoch price swing — reverts big moves (>0.5%), follows small ones\"; Fibonacci Phoenix (\"Rises from pullbacks at golden ratio levels. Master of Fibonacci retra\") decides on DELTA \"Prior-epoch price swing — reverts big moves (>0.5%), follows small ones\"; Trend Titan (\"Multi-timeframe trend follower using EMA ribbons and ADX. Holds winner\") decides on SYNC \"Deterministic epoch-parity alternation (even epoch=YES, odd=NO)\"; Bollinger Bandit (\"Exploits volatility expansions and contractions using Bollinger Bands.\") decides on STAT \"Epoch-number parity heuristic (streak continuation or reversion)\"; MACD Hunter (\"Hunts for momentum shifts using MACD crossovers. Excels at catching tr\") decides on CORR \"Prior-epoch direction (cross-market correlation)\"; llms.txt says \"Cloned bot species are price-series indicator strategies\"",
+   "filed_at": "2026-10-04T18:27:45+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 174,
+     "verdict": "fail",
+     "at": "2026-10-08T07:38:45+00:00"
+    },
+    {
+     "report_id": 174,
+     "verdict": "fail",
+     "at": "2026-10-10T19:35:52+00:00"
+    },
+    {
+     "report_id": 174,
+     "verdict": "fail",
+     "at": "2026-10-11T22:18:40+00:00"
+    }
+   ],
+   "their_status": {
+    "174": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-closing_a_paper_position_returns_its_money",
+   "nodeids": [
+    "tests/rest/test_paper_close_returns_the_money.py::test_closing_a_paper_position_returns_its_money"
+   ],
+   "report_ids": [
+    127
+   ],
+   "title": "the newest close TRD-0057 (2026-09-25T08:09:53+00:00) returned 0.00 where 20.00 was due on a 20.00 position. A book that debits on the way in and does not credit on the way out reads every strategy as losing money",
+   "filed_at": "2026-09-25T08:27:51+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 127,
+     "verdict": "pass",
+     "at": "2026-09-25T12:16:19+00:00"
+    }
+   ],
+   "their_status": {
+    "127": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-coin-outlook-answers-for-its-own-roster",
+   "nodeids": [
+    "tests/rest/test_coin_outlook_answers_for_every_coin_it_lists.py::test_every_coin_on_the_roster_answers_on_the_text_view"
+   ],
+   "report_ids": [
+    106
+   ],
+   "title": "2 of 12 coins on their own roster answer 404 on the text outlook their schema says is always 200 for a known coin, twice 15s apart: BTC (txt 404, json 404), RAIN (txt 404, json 404)",
+   "filed_at": "2026-09-20T00:40:26+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 106,
+     "verdict": "pass",
+     "at": "2026-09-20T16:47:46+00:00"
+    },
+    {
+     "report_id": 106,
+     "verdict": "pass",
+     "at": "2026-09-21T20:37:08+00:00"
+    }
+   ],
+   "their_status": {
+    "106": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-commit_count",
+   "nodeids": [
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[commit_count::build_stats-vs-llms_txt]"
+   ],
+   "report_ids": [
+    52
+   ],
+   "title": "How many commits are in the production codebase?",
+   "filed_at": "2026-09-04T12:04:15+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 52,
+     "verdict": "pass",
+     "at": "2026-09-07T13:54:24+00:00"
+    },
+    {
+     "report_id": 52,
+     "verdict": "pass",
+     "at": "2026-09-07T21:46:50+00:00"
+    },
+    {
+     "report_id": 52,
+     "verdict": "pass",
+     "at": "2026-09-10T05:08:39+00:00"
+    },
+    {
+     "report_id": 52,
+     "verdict": "fail",
+     "at": "2026-09-19T17:35:32+00:00"
+    }
+   ],
+   "their_status": {
+    "52": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-company-charter-cap-agrees-with-its-docs",
+   "nodeids": [
+    "tests/rest/test_company_charter_cap_agrees_with_its_docs.py::test_company_charter_cap_agrees_with_its_docs"
+   ],
+   "report_ids": [
+    211
+   ],
+   "title": "the page caps a charter below the documented 2,000 characters: /static/js/build-company.js maxlength [1500]",
+   "filed_at": "2026-10-15T20:23:14+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 211,
+     "verdict": "pass",
+     "at": "2026-10-16T03:58:08+00:00"
+    },
+    {
+     "report_id": 211,
+     "verdict": "pass",
+     "at": "2026-10-18T02:25:29+00:00"
+    }
+   ],
+   "their_status": {
+    "211": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "CHECK_CHANGED"
+  },
+  {
+   "key": "CYM-company-heartbeat-keeps-its-promise",
+   "nodeids": [
+    "tests/rest/test_company_heartbeat_keeps_its_promise.py::test_company_heartbeat_keeps_its_promise"
+   ],
+   "report_ids": [
+    212
+   ],
+   "title": "the heartbeat promised a pass at 2026-10-15T20:22:01.754593Z; read 20 s after it, the last pass is still 2026-10-15T19:41:17.902544Z and the next is now promised for 2026-10-15T20:22:52.703005Z (pass_every_s 120, run_state 'paused')",
+   "filed_at": "2026-10-15T20:23:26+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 212,
+     "verdict": "pass",
+     "at": "2026-10-16T03:58:12+00:00"
+    }
+   ],
+   "their_status": {
+    "212": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-company-routes-are-in-the-openapi",
+   "nodeids": [
+    "tests/rest/test_company_routes_are_in_the_openapi.py::test_every_company_route_llms_txt_names_is_in_the_openapi"
+   ],
+   "report_ids": [
+    198
+   ],
+   "title": "/llms.txt names 9 route(s) under /api/v1/company; /openapi-public.json (370 paths) describes 0 of them. Missing: GET /api/v1/company/mine, GET /api/v1/company/templates, GET /api/v1/company/{}/audits, GET /api/v1/company/{}/messages, POST /api/v1/company, POST /api/v1/company/{}/approvals/{}, POST /api/v1/company/{}/message, POST /api/v1/company/{}/pause, POST /api/v1/company/{}/resume. /openapi.json (27 paths) describes 0",
+   "filed_at": "2026-10-12T14:40:37+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 198,
+     "verdict": "fail",
+     "at": "2026-10-13T00:39:32+00:00"
+    },
+    {
+     "report_id": 198,
+     "verdict": "pass",
+     "at": "2026-10-16T20:32:15+00:00"
+    },
+    {
+     "report_id": 198,
+     "verdict": "fail",
+     "at": "2026-10-25T03:47:45+00:00"
+    }
+   ],
+   "their_status": {
+    "198": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-creator-reddit-leads-tool-filter-honours-unknown-values",
+   "nodeids": [
+    "tests/rest/test_creator_leads_tool_filter.py::test_reddit_leads_tool_filter_empties_on_an_unrecognised_value"
+   ],
+   "report_ids": [
+    124
+   ],
+   "title": "?tool='/qa-fixture-does-not-exist-1234' on reddit-leads returned 200 lead(s) spanning 55 other tool_path value(s) ('', '/', '/aci-challenge', '/apex-trader-funding', '/atas', '/blueshift', '/build', '/bybit-classic', ...) -- a value matching no real site tool fell through to the unfiltered queue instead of the empty result the contract's 'keeps only threads whose best-matching page is that tool' promises for any non-empty value",
+   "filed_at": "2026-09-24T10:17:59+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 124,
+     "verdict": "pass",
+     "at": "2026-09-24T22:41:17+00:00"
+    }
+   ],
+   "their_status": {
+    "124": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-creator-twitter-leads-tool-filter-honours-unknown-values",
+   "nodeids": [
+    "tests/rest/test_creator_leads_tool_filter.py::test_twitter_leads_tool_filter_empties_on_an_unrecognised_value"
+   ],
+   "report_ids": [
+    124
+   ],
+   "title": "?tool='/qa-fixture-does-not-exist-1234' on twitter-leads returned 139 lead(s) spanning 45 other tool_path value(s) ('', '/', '/alpaca', '/barchart', '/benzinga-pro', '/build', '/chartink', '/chartlog', ...) -- a value matching no real site tool fell through to the unfiltered queue instead of the empty result the contract's 'keeps only threads whose best-matching page is that tool' promises for any non-empty value",
+   "filed_at": "2026-09-24T10:17:59+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 124,
+     "verdict": "pass",
+     "at": "2026-09-24T22:41:23+00:00"
+    }
+   ],
+   "their_status": {
+    "124": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-deleted-bot-asset-analytics-answers-404",
+   "nodeids": [
+    "tests/rest/test_a_paper_bot_trade_says_what_happened.py::test_a_deleted_bot_answers_asset_analytics_like_its_activity"
+   ],
+   "report_ids": [
+    172
+   ],
+   "title": "12 of 12 deleted paper clones answer GET /api/v1/cloned-bots/{id}/asset-analytics with HTTP [500] while their /activity answers [404]: 2e0de483, cb08b7e3, b93008d0, 79909469, 6fdb8288, 36642175",
+   "filed_at": "2026-10-04T18:27:33+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 172,
+     "verdict": "pass",
+     "at": "2026-10-08T07:38:52+00:00"
+    }
+   ],
+   "their_status": {
+    "172": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-documented-404",
+   "nodeids": [
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/account]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/agentbook/post]",
+    "tests/pinned/test_documented_404.py::test_documented_path_is_served[/api/v1/clob/order]"
+   ],
+   "report_ids": [
+    49,
+    59
+   ],
+   "title": "26 endpoints the platform documents return 404",
+   "filed_at": "2026-09-04T12:03:58+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 49,
+     "verdict": "pass",
+     "at": "2026-09-07T13:54:29+00:00"
+    },
+    {
+     "report_id": 59,
+     "verdict": "pass",
+     "at": "2026-09-07T13:54:33+00:00"
+    },
+    {
+     "report_id": 49,
+     "verdict": "pass",
+     "at": "2026-09-07T21:46:54+00:00"
+    },
+    {
+     "report_id": 59,
+     "verdict": "pass",
+     "at": "2026-09-07T21:46:59+00:00"
+    }
+   ],
+   "their_status": {
+    "49": "paid",
+    "59": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-event_cards_swipe_stamp_names_what_the_swipe_does",
+   "nodeids": [
+    "tests/rest/test_event_cards_swipe_stamp_names_what_the_swipe_does.py::test_event_cards_swipe_stamp_names_what_the_swipe_does"
+   ],
+   "report_ids": [
+    228
+   ],
+   "title": "dragging a card left shows the stamp 'SELL', but letting go runs animateSwipe 'skip' and opens no sheet: the card is skipped, nothing is sold. On /events a visitor who drags a card left reads 'SELL' on it and, letting go, has skipped the card instead",
+   "filed_at": "2026-10-26T09:54:08+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "228": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-every_card_nexus_tells_an_agent_to_trade_exists",
+   "nodeids": [
+    "tests/rest/test_nexus_cards_exist.py::test_every_card_nexus_tells_an_agent_to_trade_exists"
+   ],
+   "report_ids": [
+    91
+   ],
+   "title": "Nexus answer NEX-0012 tells an agent to trade 5bd86126-90eb-4ad8-8e55-909397dab402, and /api/v1/event-cards/{id} answers 404 for it while answering 200 for 2 other card(s) in the same recommendation. An agent following the platform's own guidance cannot act on it, and cannot tell the leg that does not exist from the ones that do -- they carry the same format, the same precision and the same sourcing",
+   "filed_at": "2026-09-10T21:47:05+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 91,
+     "verdict": "pass",
+     "at": "2026-09-11T06:01:10+00:00"
+    },
+    {
+     "report_id": 91,
+     "verdict": "pass",
+     "at": "2026-09-11T17:59:06+00:00"
+    },
+    {
+     "report_id": 91,
+     "verdict": "pass",
+     "at": "2026-09-13T18:48:00+00:00"
+    }
+   ],
+   "their_status": {
+    "91": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-every_cloned_bot_route_they_serve_is_one_they_document",
+   "nodeids": [
+    "tests/rest/test_cloned_bots_surface.py::test_every_cloned_bot_route_they_serve_is_one_they_document"
+   ],
+   "report_ids": [
+    88
+   ],
+   "title": "their server routes DELETE /api/v1/cloned-bots/{instance_id}, PATCH /api/v1/cloned-bots/{instance_id}/settings, and none of those paths is in /openapi-public.json. A clone is created paused -- their own description says the user must enable trading -- so an agent that clones a bot through the documented endpoint cannot start it through any documented endpoint, while the one that would do it answers 405 to anything but the method it does not publish",
+   "filed_at": "2026-09-10T20:39:51+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 88,
+     "verdict": "pass",
+     "at": "2026-09-10T21:46:02+00:00"
+    },
+    {
+     "report_id": 88,
+     "verdict": "pass",
+     "at": "2026-09-11T17:59:16+00:00"
+    },
+    {
+     "report_id": 88,
+     "verdict": "pass",
+     "at": "2026-09-19T17:35:29+00:00"
+    },
+    {
+     "report_id": 88,
+     "verdict": "pass",
+     "at": "2026-09-21T20:37:10+00:00"
+    }
+   ],
+   "their_status": {
+    "88": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-every_derived_figure_follows_its_published_definition",
+   "nodeids": [
+    "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_every_derived_figure_follows_its_published_definition"
+   ],
+   "report_ids": [
+    166
+   ],
+   "title": "themes: 4 row(s) disagree with their own inputs (depin, gaming, infra, defi)",
+   "filed_at": "2026-10-04T12:02:28+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 166,
+     "verdict": "pass",
+     "at": "2026-10-08T07:38:57+00:00"
+    }
+   ],
+   "their_status": {
+    "166": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-every_documented_get_accepts_the_key_its_own_document_issues",
+   "nodeids": [
+    "tests/rest/test_documented_gets_accept_the_agent_key.py::test_every_documented_get_accepts_the_key_its_own_document_issues"
+   ],
+   "report_ids": [
+    93
+   ],
+   "title": "3 of 48 GET paths llms.txt documents answer 401 Not authenticated to the TRUSTED key their own onboarding issues, while 44 answer 200 to the same key in the same session: /api/v1/swap/history, /api/v1/rewards/summary, /api/v1/robinhood/wallet. 401 says the request carried no credential, so an agent cannot tell 'you may not' from 'who are you' -- there is no scope to request and no tier to reach",
+   "filed_at": "2026-09-10T22:24:47+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 93,
+     "verdict": "pass",
+     "at": "2026-09-11T05:45:30+00:00"
+    },
+    {
+     "report_id": 93,
+     "verdict": "fail",
+     "at": "2026-10-21T09:07:25+00:00"
+    }
+   ],
+   "their_status": {
+    "93": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-every_gem_screener_route_llms_txt_names_is_in_the_openapi",
+   "nodeids": [
+    "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_every_gem_screener_route_llms_txt_names_is_in_the_openapi"
+   ],
+   "report_ids": [
+    183
+   ],
+   "title": "/llms.txt names 1 Gem Screener route(s) that /openapi-public.json does not describe: /api/v1/gem-screener/report-access",
+   "filed_at": "2026-10-10T16:44:06+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 183,
+     "verdict": "pass",
+     "at": "2026-10-11T22:18:44+00:00"
+    }
+   ],
+   "their_status": {
+    "183": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-every_order_endpoint_decides_the_book_the_same_way",
+   "nodeids": [
+    "tests/rest/test_paper_or_real.py::test_every_order_endpoint_decides_the_book_the_same_way"
+   ],
+   "report_ids": [
+    80
+   ],
+   "title": "the order endpoints name the paper/live control 4 different ways (None, is_paper, mode, paper) and disagree on what omitting it means (None, live); clob order offers no control at all",
+   "filed_at": "2026-09-08T10:54:27+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 80,
+     "verdict": "fail",
+     "at": "2026-09-08T11:34:53+00:00"
+    },
+    {
+     "report_id": 80,
+     "verdict": "pass",
+     "at": "2026-09-08T13:25:44+00:00"
+    }
+   ],
+   "their_status": {
+    "80": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-every_request_example_on_api_docs_carries_what_its_route_requires",
+   "nodeids": [
+    "tests/discovery/test_api_docs_examples_carry_what_their_routes_require.py::test_every_request_example_on_api_docs_carries_what_its_route_requires"
+   ],
+   "report_ids": [
+    120
+   ],
+   "title": "1 of 6 request example(s) on /api-docs leave out a field /openapi-public.json requires: POST /api/v1/cloned-bots/clone sends ['bot_id', 'is_paper'] and its schema requires ['source_type', 'source_id'] (['bot_id'] are not in the schema at all)",
+   "filed_at": "2026-09-22T19:39:02+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 120,
+     "verdict": "pass",
+     "at": "2026-09-22T22:39:40+00:00"
+    }
+   ],
+   "their_status": {
+    "120": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-every_route_a_feature_page_names_is_in_the_public_openapi",
+   "nodeids": [
+    "tests/rest/test_feature_pages_name_documented_routes.py::test_every_route_a_feature_page_names_is_in_the_public_openapi"
+   ],
+   "report_ids": [
+    138
+   ],
+   "title": "12 route(s) that /backtest/api, /expire76, /h2h name are not in /openapi-public.json (251 paths): GET /api/v1/backtest/bots/{slug}; GET /api/v1/backtest/bots/{slug}/equity; GET /api/v1/backtest/bots/{slug}/paper-status; GET /api/v1/backtest/bots/{slug}/paper-trades; POST /api/v1/backtest/bots/{slug}/run-backtest; PATCH /api/v1/backtest/bots/{slug}/settings; GET /api/v1/backtest/bots/{slug}/trades; POST /api/v1/backtest/clone; GET /api/v1/backtest/clone/deposit-info/{species_slug}; POST /api/v1/creator/channel-posts; PATCH /api/v1/creator/links/{slug}; POST /api/v1/creator/radar-channel-posts",
+   "filed_at": "2026-09-30T16:10:38+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 138,
+     "verdict": "pass",
+     "at": "2026-10-01T07:37:15+00:00"
+    },
+    {
+     "report_id": 138,
+     "verdict": "fail",
+     "at": "2026-10-11T22:18:49+00:00"
+    }
+   ],
+   "their_status": {
+    "138": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-every_route_nexus_tells_an_agent_to_call_is_published",
+   "nodeids": [
+    "tests/rest/test_nexus_routes_exist.py::test_every_route_nexus_tells_an_agent_to_call_is_published"
+   ],
+   "report_ids": [
+    121
+   ],
+   "title": "NEX-0060 sends an agent to /api/v1/event-cards/9ef04dc6-dc11-447a-a360-b6395f618648/trade, which /openapi-public.json does not publish",
+   "filed_at": "2026-09-22T19:44:44+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 121,
+     "verdict": "pass",
+     "at": "2026-10-02T12:27:07+00:00"
+    },
+    {
+     "report_id": 121,
+     "verdict": "fail",
+     "at": "2026-10-01T07:01:50+00:00"
+    }
+   ],
+   "their_status": {
+    "121": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-every_tool_nexus_tells_an_agent_to_call_exists",
+   "nodeids": [
+    "tests/mcp/test_nexus_channel.py::test_every_tool_nexus_tells_an_agent_to_call_exists"
+   ],
+   "report_ids": [
+    85
+   ],
+   "title": "Nexus told an agent to call backtest_event_card_idea, get_event_card_info, trade_event_card, and the server serves 62 tools, none of them by that name: an agent following the platform's own guidance cannot act on it",
+   "filed_at": "2026-09-10T11:09:22+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 85,
+     "verdict": "pass",
+     "at": "2026-09-10T13:51:20+00:00"
+    },
+    {
+     "report_id": 85,
+     "verdict": "fail",
+     "at": "2026-09-10T16:52:51+00:00"
+    },
+    {
+     "report_id": 85,
+     "verdict": "pass",
+     "at": "2026-09-20T08:34:53+00:00"
+    },
+    {
+     "report_id": 85,
+     "verdict": "fail",
+     "at": "2026-09-10T21:46:08+00:00"
+    },
+    {
+     "report_id": 85,
+     "verdict": "pass",
+     "at": "2026-09-20T13:04:21+00:00"
+    },
+    {
+     "report_id": 85,
+     "verdict": "pass",
+     "at": "2026-09-25T13:46:07+00:00"
+    }
+   ],
+   "their_status": {
+    "85": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-fund-history-starts-at-inception",
+   "nodeids": [
+    "tests/mcp/test_fund_history_starts_at_inception.py::test_a_fund_history_fetched_as_their_skill_says_starts_at_inception"
+   ],
+   "report_ids": [
+    103
+   ],
+   "title": "8 of 19 fund histories, fetched as their advisor skill says (symbol only), start more than 2% away from the fund's own inception level -- worst AIB-C71BAD8B: first point 5.5754 at 2026-08-20T01:19 against inception 4.833164 (+15.36%), while it reports -68.03% since inception",
+   "filed_at": "2026-09-19T21:19:38+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 103,
+     "verdict": "fail",
+     "at": "2026-09-20T16:47:51+00:00"
+    },
+    {
+     "report_id": 103,
+     "verdict": "fail",
+     "at": "2026-10-08T07:39:02+00:00"
+    },
+    {
+     "report_id": 103,
+     "verdict": "pass",
+     "at": "2026-10-15T17:38:15+00:00"
+    }
+   ],
+   "their_status": {
+    "103": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-fund-profile-link-where-the-skill-says",
+   "nodeids": [
+    "tests/mcp/test_fund_profile_link_is_where_the_skill_says.py::test_every_listed_fund_carries_the_profile_link_the_skill_names"
+   ],
+   "report_ids": [
+    104
+   ],
+   "title": "4 of 24 funds carry no profile_url, the field their advisor skill tells an assistant to cite for one fund: MA-RIPPLE (carries url https://cymetica.com/ma-fund), FTA-STOCKS (carries url https://cymetica.com/fund-performance), FTA-CRYPTOS (carries url https://cymetica.com/fta-fund), EVENT-CARD (carries url https://cymetica.com/events/e1de450c-ee85-410f-a3a9-3afb419867f4)",
+   "filed_at": "2026-09-19T22:22:17+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 104,
+     "verdict": "pass",
+     "at": "2026-09-20T16:47:56+00:00"
+    },
+    {
+     "report_id": 104,
+     "verdict": "pass",
+     "at": "2026-09-21T20:37:13+00:00"
+    }
+   ],
+   "their_status": {
+    "104": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-gem-dilution-reason-names-the-rule-it-broke",
+   "nodeids": [
+    "tests/rest/test_gem_screener_dilution_reason_names_the_rule_it_broke.py::test_gem_screener_dilution_reason_names_the_rule_it_broke"
+   ],
+   "report_ids": [
+    245
+   ],
+   "title": "The reason says \"over the line of 1.0%\" for every coin failing the gate, and 14 of 33 are at or under that line: HYPE 0.95% a week, 49.71% in 12 months; KNTQ 0.93% a week, 48.49% in 12 months; BLUE 0.92% a week, 43.72% in 12 months; MOR 0.91% a week, 47.69% in 12 months; IR 0.90% a week, 140.68% in 12 months. They fail the 12-month rule, which it does not name",
+   "filed_at": "2026-11-01T19:06:51+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "245": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-gem-screener-chain-adoption-is-one-measure",
+   "nodeids": [
+    "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_adoption_names_one_measure_on_the_chains_tab"
+   ],
+   "report_ids": [
+    169
+   ],
+   "title": "the Adoption column and Upside use four inputs, which the page says have no monthly history; the page also calls 'Adoption (stablecoins and DEX volume)', 'Adoption growth 6M' adoption, readings of stablecoins and DEX volume; 9 of 33 chains are not vetted on them (hidden in 'Vetted only'): Sui (far_below_peak), Hedera (far_below_peak), Mantle (far_below_peak/declining_trend), Algorand (far_below_peak/declining_trend), Filecoin (far_below_peak/declining_trend), Stable (far_below_peak), Plasma (far_below_peak), Starknet (declining_trend), Gnosis (far_below_peak)",
+   "filed_at": "2026-10-04T15:17:13+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 169,
+     "verdict": "pass",
+     "at": "2026-10-10T08:52:35+00:00"
+    }
+   ],
+   "their_status": {
+    "169": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-gem-screener-chain-left-out-for-a-true-reason",
+   "nodeids": [
+    "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_a_chain_left_out_for_no_market_data_has_none"
+   ],
+   "report_ids": [
+    170
+   ],
+   "title": "2 of 27 tokens left out are said to have no market data while CoinGecko answers a market cap: BCH $6.39bn (stated missing inputs []; DeFiLlama lacks ['stablecoins']); ETC $1.41bn (stated missing inputs []; DeFiLlama lacks ['dex_volume_30d'])",
+   "filed_at": "2026-10-04T15:17:52+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 170,
+     "verdict": "pass",
+     "at": "2026-10-08T07:39:09+00:00"
+    }
+   ],
+   "their_status": {
+    "170": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-gem-screener-chain-price-tag-described-as-computed",
+   "nodeids": [
+    "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_the_chain_price_tag_is_described_as_the_snapshot_computes_it"
+   ],
+   "report_ids": [
+    168
+   ],
+   "title": "the snapshot prices a chain on market cap / adoption against the median of 19 large chains (127.927x); 6 descriptions say otherwise: llms.txt: \"a chain's is market cap / yearly activity fees\"; llms.txt: \"compared with a named leader chain\"; llms.txt: \"chains: market cap / yearly activity fees\"; llms.txt: \"`benchmark` names the leader chain\"; agent prompt: \"adoption (daily users and fees)\"; agent prompt: \"the benchmark chain\"",
+   "filed_at": "2026-10-04T15:16:55+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 168,
+     "verdict": "pass",
+     "at": "2026-10-10T08:52:39+00:00"
+    }
+   ],
+   "their_status": {
+    "168": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-gem-screener-chain-stablecoins-are-dollars",
+   "nodeids": [
+    "tests/rest/test_gem_screener_chains_say_what_their_sources_say.py::test_a_chains_stablecoins_are_the_dollars_defillama_counts"
+   ],
+   "report_ids": [
+    167
+   ],
+   "title": "2 of 33 chains show stablecoins more than 3% from DeFiLlama's dollar value of their USD-pegged coins for the same day: Sei $273.1M against $305.7M (-10.7%); Stellar $840.9M against $909.7M (-7.6%); 2 of them equal DeFiLlama's token count (totalCirculating) instead; the other 31 are within 2.455%",
+   "filed_at": "2026-10-04T15:16:38+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 167,
+     "verdict": "pass",
+     "at": "2026-10-10T09:20:23+00:00"
+    },
+    {
+     "report_id": 167,
+     "verdict": "pass",
+     "at": "2026-10-10T19:35:56+00:00"
+    }
+   ],
+   "their_status": {
+    "167": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-gem-screener-degen-meter-has-levels",
+   "nodeids": [
+    "tests/rest/test_gem_screener_degen_meter_has_levels.py::test_the_degen_meter_has_a_level_for_the_coins_it_lists"
+   ],
+   "report_ids": [
+    176
+   ],
+   "title": "0 of 232 apps carry a Degen meter level (1 to 10) in the snapshot generated 2026-10-07T02:52:20Z (7.1 h old); chains 0 of 33; dlevel_meta null; gates ran: degen.n_ok=8 of 232; fetch warnings 7",
+   "filed_at": "2026-10-07T10:01:37+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 176,
+     "verdict": "pass",
+     "at": "2026-10-08T07:39:15+00:00"
+    }
+   ],
+   "their_status": {
+    "176": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-gem-screener-one-dilution-flag-per-coin",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_coin_carries_one_dilution_flag"
+   ],
+   "report_ids": [
+    161
+   ],
+   "title": "10 of 101 apps get two different dilution flags (lines 0.5% and 1.0% a week): the snapshot's figure, which the detail's Checks row reads, and the Supply Analyzer's, which the Supply card reads: QUICK 0.0% (ok) vs 0.6755% (caution); VELO 0.4821% (ok) vs 0.7776% (caution); FLUID 0.0% (ok) vs 0.533% (caution); MOR 1.123% (red) vs 0.746% (caution); HYPE 0.0% (ok) vs 1.0252% (red); ATH 0.9488% (caution) vs 1.0196% (red)",
+   "filed_at": "2026-10-04T10:13:53+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 161,
+     "verdict": "pass",
+     "at": "2026-10-08T07:39:21+00:00"
+    }
+   ],
+   "their_status": {
+    "161": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-gem-screener-refresh-stuck-past-its-cadence",
+   "nodeids": [
+    "tests/rest/test_gem_screener_refresh_keeps_its_own_cadence.py::test_the_refresh_is_late_and_the_newest_attempt_failed_twice_running"
+   ],
+   "report_ids": [
+    133
+   ],
+   "title": "/api/v1/gem-screener/status shows the refresh stuck on two reads 30.0s apart, same unpublished snapshot (generated_at 1790369344): age 154453s is 7.2x the 21600s cadence, and the newest attempt failed at 'audit:audit_sectors.py'; second read: age 154489s is 7.2x the 21600s cadence, and the newest attempt failed at 'audit:audit_sectors.py'",
+   "filed_at": "2026-09-27T15:50:18+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 133,
+     "verdict": "pass",
+     "at": "2026-10-08T07:39:26+00:00"
+    },
+    {
+     "report_id": 133,
+     "verdict": "fail",
+     "at": "2026-10-05T09:06:15+00:00"
+    }
+   ],
+   "their_status": {
+    "133": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-gem-screener-tokens-out-counts-the-max-supply",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_tokens_out_counts_the_max_supply_of_a_coin_still_issuing"
+   ],
+   "report_ids": [
+    162
+   ],
+   "title": "3 apps with new tokens on record are shown as ~100% of tokens out, FDV equal to market cap, while under 90% of their max supply circulates (9 apps in all are shown ~100% out under that line): GMX 100.0% out, circulating 10,460,789 of max 13,250,000 (78.9%), FDV 85,955,565 vs market cap 85,955,565, new tokens 0.0035% a week ($12,714 in 30 days); STG 100.0% out, circulating 120,799,106 of max 1,000,000,000 (12.1%), FDV 20,856,277 vs market cap 20,856,277, new tokens 0.0007% a week ($582 in 30 days); ORE 100.0% out, circulating 500,630 of max 3,000,000 (16.7%), FDV 65,400,201 vs market cap 65,397,326, new tokens 1.0707% a week ($3,000,944 in 30 days)",
+   "filed_at": "2026-10-04T10:13:58+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 162,
+     "verdict": "pass",
+     "at": "2026-10-08T07:39:31+00:00"
+    }
+   ],
+   "their_status": {
+    "162": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-head-to-head-surface-is-documented",
+   "nodeids": [
+    "tests/rest/test_head_to_head_surface_is_undocumented.py::test_the_head_to_head_routes_they_serve_are_named_in_no_document"
+   ],
+   "report_ids": [
+    125
+   ],
+   "title": "none of the 3 live head-to-head route(s) (/api/v1/head-to-head -> 405, Allow: POST, /api/v1/head-to-head/sides -> 200 (GET), /api/v1/head-to-head/mine -> 200 (GET)) appears in /openapi.json (13 paths), /openapi-public.json (173 paths), or /llms.txt (71888 chars, no match for head-to-head, head to head, h2h, matchup, duel) -- the whole feature is undiscoverable to an agent that reads only what either document tells it to",
+   "filed_at": "2026-09-24T10:18:09+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 125,
+     "verdict": "pass",
+     "at": "2026-09-24T22:41:27+00:00"
+    },
+    {
+     "report_id": 125,
+     "verdict": "pass",
+     "at": "2026-09-25T23:29:19+00:00"
+    }
+   ],
+   "their_status": {
+    "125": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-hot_means_one_thing_on_the_sectors_tab",
+   "nodeids": [
+    "tests/rest/test_gem_screener_panels_say_what_their_data_says.py::test_hot_means_one_thing_on_the_sectors_tab"
+   ],
+   "report_ids": [
+    144
+   ],
+   "title": "the table calls 4 themes hot (l2, dex, depin, rwa) and the theme panel 8 (l2, ai, dex, depin, rwa, defi, infra, privacy); they differ on ai, defi, infra, privacy",
+   "filed_at": "2026-10-02T11:49:14+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 144,
+     "verdict": "pass",
+     "at": "2026-10-02T15:38:37+00:00"
+    }
+   ],
+   "their_status": {
+    "144": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-how_sure_follows_its_own_tooltip",
+   "nodeids": [
+    "tests/rest/test_gem_screener_panels_say_what_their_data_says.py::test_how_sure_follows_its_own_tooltip"
+   ],
+   "report_ids": [
+    146
+   ],
+   "title": "the tooltip rule (sure = 5+ rows within 30 points, fairly sure = 3+ within 50) gives 'sure' for the scores [4.0, 4.4, 6.1, 11.6, 14.1, 88.1]; the panel says 'unsure'",
+   "filed_at": "2026-10-02T11:49:25+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 146,
+     "verdict": "pass",
+     "at": "2026-10-04T01:25:30+00:00"
+    }
+   ],
+   "their_status": {
+    "146": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-launchpad-discovery-feed-lists-no-internal-launch",
+   "nodeids": [
+    "tests/rest/test_launchpad_discovery_tool_hides_what_rest_keeps_internal.py::test_the_discovery_tool_does_not_list_what_the_rest_list_keeps_internal"
+   ],
+   "report_ids": [
+    187
+   ],
+   "title": "the discovery tool lists launches that GET /api/v1/launchpad/onchain/tokens marks admin/debug, on both reads, 20 seconds apart: chain_id=4663: REST lists 1 (default) or 6 (include_internal=true), launchpad_list_tokens returns 6 including 5 the REST list keeps internal (NXTEST, CYMG, NXSOC, CYMHS, GTEST)",
+   "filed_at": "2026-10-11T05:49:24+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "187": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-launchpad-screener-honours-its-limit",
+   "nodeids": [
+    "tests/rest/test_launchpad_screener_honours_its_limit.py::test_the_screener_returns_no_more_rows_than_the_limit_asked_for"
+   ],
+   "report_ids": [
+    107
+   ],
+   "title": "the screener returned more rows than its own limit on 2 of 2 reads -- worst limit=5 answered 10 rows (2.0x), of which 5 carry the external row shape; their schema declares limit with default 200 and maximum 500",
+   "filed_at": "2026-09-20T03:21:50+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 107,
+     "verdict": "pass",
+     "at": "2026-09-20T16:48:00+00:00"
+    }
+   ],
+   "their_status": {
+    "107": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-launchpad-tokens-without-a-chain-lists-launches",
+   "nodeids": [
+    "tests/rest/test_launchpad_tokens_list_without_a_chain_is_not_empty.py::test_the_token_list_without_a_chain_is_not_empty_while_a_chain_lists_launches"
+   ],
+   "report_ids": [
+    186
+   ],
+   "title": "GET /api/v1/launchpad/onchain/tokens with no chain_id answered 200 with [] on both reads, 20 seconds apart, while the same endpoint chain_id=4663 lists 1, chain_id=5042 lists 5+ (limit=5); the unfiltered screener lists 500 rows over chains [4663, 5042] and launchpad_list_tokens with no arguments returns 25 rows",
+   "filed_at": "2026-10-11T05:49:08+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "186": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-live-crypto-card-index-history-has-no-multi-day-hole",
+   "nodeids": [
+    "tests/rest/test_a_live_crypto_card_index_history_has_no_multi_day_hole.py::test_live_crypto_card_index_history_has_no_multi_day_hole"
+   ],
+   "report_ids": [
+    202
+   ],
+   "title": "1 of 19 open crypto card(s) have a hole of more than 12 h in their 30-day index history while the card reads live and tradeable. a4a5b71e-de11-4805-b8a3-ed9c3f8f8161 ('SpaceX IPO: Top 10 Crypto Plays'): 51.6 h with no point, 2026-09-23T14:16:52.413185+00:00 to 2026-09-25T17:54:33.881116+00:00; 14 of 14 other open crypto cards that already had history recorded a point inside it",
+   "filed_at": "2026-10-12T22:08:28+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 202,
+     "verdict": "fail",
+     "at": "2026-10-13T16:58:19+00:00"
+    },
+    {
+     "report_id": 202,
+     "verdict": "pass",
+     "at": "2026-10-16T20:32:19+00:00"
+    },
+    {
+     "report_id": 202,
+     "verdict": "pass",
+     "at": "2026-10-18T02:25:14+00:00"
+    }
+   ],
+   "their_status": {
+    "202": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "CHECK_CHANGED"
+  },
+  {
+   "key": "CYM-llms_agent_count_self_consistent",
+   "nodeids": [
+    "tests/rest/test_llms_counts.py::test_every_agent_count_in_llms_matches_the_live_species_list"
+   ],
+   "report_ids": [
+    55
+   ],
+   "title": "Does llms.txt quote the same agent count in all of its own sentences?",
+   "filed_at": "2026-09-04T13:20:58.089377+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 55,
+     "verdict": "pass",
+     "at": "2026-09-07T13:54:37+00:00"
+    }
+   ],
+   "their_status": {
+    "55": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-mcp_resource_count",
+   "nodeids": [
+    "tests/rest/test_llms_counts.py::test_llms_states_no_fixed_size_for_a_tier_scoped_catalogue"
+   ],
+   "report_ids": [
+    50
+   ],
+   "title": "How many MCP resources are exposed?",
+   "filed_at": "2026-09-04T12:04:04+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 50,
+     "verdict": "pass",
+     "at": "2026-09-07T13:54:43+00:00"
+    },
+    {
+     "report_id": 50,
+     "verdict": "pass",
+     "at": "2026-09-07T17:42:51+00:00"
+    }
+   ],
+   "their_status": {
+    "50": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-mcp_tool_count",
+   "nodeids": [
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_trusted]"
+   ],
+   "report_ids": [
+    50
+   ],
+   "title": "How many MCP tools does the server expose?",
+   "filed_at": "2026-09-04T12:04:04+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "50": "paid"
+   },
+   "withdrawn": true,
+   "last_check": "UNVERIFIABLE"
+  },
+  {
+   "key": "CYM-mcp_tool_names_declared_vs_served",
+   "nodeids": [
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_names_documented_exist::llms_txt-vs-mcp_json]"
+   ],
+   "report_ids": [
+    50
+   ],
+   "title": "Do the tool names the platform documents actually exist?",
+   "filed_at": "2026-09-04T12:04:04+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 50,
+     "verdict": "pass",
+     "at": "2026-09-07T13:54:48+00:00"
+    },
+    {
+     "report_id": 50,
+     "verdict": "pass",
+     "at": "2026-09-10T05:08:47+00:00"
+    }
+   ],
+   "their_status": {
+    "50": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-movers-page-ranks-every-event-card",
+   "nodeids": [
+    "tests/rest/test_movers_page_ranks_every_card.py::test_the_movers_boards_rank_every_card_of_the_listing"
+   ],
+   "report_ids": [
+    189
+   ],
+   "title": "/movers ranks the 100 cards its script reads (/api/v1/event-cards/?limit=100) of the 641 the listing totals: 10 of the 10 biggest losers and 7 of the 10 biggest gainers are cards the page never reads. Biggest loser over every card: SAIB: CTVA — Corteva -83.92%; the page's: SAIB: TTD — Trade Desk (The) -19.17%. Biggest gainer over every card: Launch HN: Discovered Materials (YC P26) – AI agents to disc +101.96%; the page's: Launch HN: Discovered Materials (YC P26) – AI agents to disc +101.96%. /api/v1/event-cards/?limit=500 answers HTTP 422",
+   "filed_at": "2026-10-11T12:20:59+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "189": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "CHECK_CHANGED"
+  },
+  {
+   "key": "CYM-nexus-answer-markers-are-true",
+   "nodeids": [
+    "tests/rest/test_nexus_answer_markers_are_true.py::test_nexus_answer_markers_are_true_and_leave_the_answer_usable"
+   ],
+   "report_ids": [
+    205
+   ],
+   "title": "NEX-0142 (job 190f1a94-fdfb-4365-a55c-62c9caa42641), re-read live, carries 9 resolver marker(s) and 4 kind(s) of them are wrong: 1 bot instance id(s) marked as a card that does not resolve (692c35b3-29a7-4cda-8c73-7802cd28e4a8) | a served route marked not served: PATCH /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings; GET /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance | a marker written inside a path an agent would copy: /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings; /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance | the same marker written twice in a row: /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/settings; /api/v1/cloned-bots/692c35b3-29a7-4cda-8c73-7802cd28e4a8/balance",
+   "filed_at": "2026-10-13T17:16:26+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 205,
+     "verdict": "pass",
+     "at": "2026-10-16T20:32:24+00:00"
+    },
+    {
+     "report_id": 205,
+     "verdict": "pass",
+     "at": "2026-10-18T02:25:23+00:00"
+    }
+   ],
+   "their_status": {
+    "205": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-one_click_on_a_sectors_bubble_does_what_the_caption_says",
+   "nodeids": [
+    "tests/rest/test_gem_screener_sectors_chart_does_what_its_caption_says.py::test_one_click_on_a_sectors_bubble_does_what_the_caption_says"
+   ],
+   "report_ids": [
+    151
+   ],
+   "title": "the Sectors chart caption says \"Click a bubble for the sector.\", and a capture-phase click listener (ET-28990 #3) pins the hover card on the first click on a bubble and stops the event on every device, so with a mouse the panel opens on the second click",
+   "filed_at": "2026-10-04T07:42:00+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 151,
+     "verdict": "pass",
+     "at": "2026-10-04T17:45:50+00:00"
+    }
+   ],
+   "their_status": {
+    "151": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-one_credential_carries_a_clone_from_creation_to_funding",
+   "nodeids": [
+    "tests/rest/test_cloned_bots_surface.py::test_one_credential_carries_a_clone_from_creation_to_funding"
+   ],
+   "report_ids": [
+    98
+   ],
+   "title": "2 cloned-bots route(s) accept the agent's x-api-key and 2 do not: POST /api/v1/cloned-bots/{instance_id}/fund, POST /api/v1/cloned-bots/{instance_id}/go-live. A clone is created with a practice balance of 0.00, so an agent that authenticates the documented way can create a bot and cannot put money in it; funding it with that key returns 401 with an empty body",
+   "filed_at": "2026-09-12T10:35:38+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 98,
+     "verdict": "fail",
+     "at": "2026-09-12T21:02:53+00:00"
+    },
+    {
+     "report_id": 98,
+     "verdict": "fail",
+     "at": "2026-09-22T08:00:26+00:00"
+    }
+   ],
+   "their_status": {
+    "98": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-one_credential_funds_and_starts_a_clone",
+   "nodeids": [
+    "tests/rest/test_cloned_bots_surface.py::test_one_credential_funds_and_starts_a_clone"
+   ],
+   "report_ids": [
+    89
+   ],
+   "title": "2 cloned-bots route(s) accept the agent's x-api-key and 2 do not: POST /api/v1/cloned-bots/{instance_id}/fund, POST /api/v1/cloned-bots/{instance_id}/go-live. A clone is created with a practice balance of 0.00, so an agent that authenticates the documented way can create a bot and cannot put money in it; funding it with that key returns 401 with an empty body -- #89",
+   "filed_at": "2026-09-10T20:52:59+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 89,
+     "verdict": "pass",
+     "at": "2026-09-10T21:46:14+00:00"
+    },
+    {
+     "report_id": 89,
+     "verdict": "pass",
+     "at": "2026-09-11T17:59:23+00:00"
+    },
+    {
+     "report_id": 89,
+     "verdict": "fail",
+     "at": "2026-09-12T21:02:48+00:00"
+    },
+    {
+     "report_id": 89,
+     "verdict": "pass",
+     "at": "2026-09-22T08:00:31+00:00"
+    },
+    {
+     "report_id": 89,
+     "verdict": "pass",
+     "at": "2026-09-22T16:02:02+00:00"
+    }
+   ],
+   "their_status": {
+    "89": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-only_btc_runs_is_not_said_over_a_week_most_alts_beat_btc",
+   "nodeids": [
+    "tests/rest/test_gem_screener_panels_say_what_their_data_says.py::test_only_btc_runs_is_not_said_over_a_week_most_alts_beat_btc"
+   ],
+   "report_ids": [
+    145
+   ],
+   "title": "17 of 154 weeks worded 'Only BTC runs' have a breadth of 60 % or more (highest 74 %, latest week 2025-09-08)",
+   "filed_at": "2026-10-02T11:49:19+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 145,
+     "verdict": "pass",
+     "at": "2026-10-02T15:38:41+00:00"
+    },
+    {
+     "report_id": 145,
+     "verdict": "pass",
+     "at": "2026-10-04T01:25:35+00:00"
+    }
+   ],
+   "their_status": {
+    "145": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-own-reports-unverified",
+   "nodeids": [
+    "tests/rest/test_bounty_tracker.py::test_reports_they_closed_have_been_rechecked_by_us"
+   ],
+   "report_ids": [
+    53
+   ],
+   "title": "11 reports filed under our hunter name were closed by the platform and have never been re-verified by us",
+   "filed_at": "2026-09-04T12:04:20+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "53": "paid"
+   },
+   "withdrawn": true,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-paper-bot-bet-exit-reason-is-how-it-ended",
+   "nodeids": [
+    "tests/rest/test_a_paper_bot_trade_says_what_happened.py::test_a_bet_held_to_its_epoch_end_is_not_labelled_as_stopped"
+   ],
+   "report_ids": [
+    173
+   ],
+   "title": "15 of 92 settled bets closed at or after their epoch's end carry exit_reason take_profit/stop_loss; 12 of them have the same exit price as a bet of the same epoch labelled epoch_resolved: Vortex Drain BTC epoch 5970202 take_profit, closed 20:55:01 after end 20:55:00; Crash Detector BTC epoch 5970199 stop_loss, closed 20:40:02 after end 20:40:00; Fade the Rally BTC epoch 5970204 take_profit, closed 21:05:01 after end 21:05:00; Sync Master ETH epoch 5970199 take_profit, closed 20:40:32 after end 20:40:00",
+   "filed_at": "2026-10-04T18:27:38+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 173,
+     "verdict": "fail",
+     "at": "2026-10-08T07:39:38+00:00"
+    }
+   ],
+   "their_status": {
+    "173": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-paper-bot-bet-settles-at-epoch-end",
+   "nodeids": [
+    "tests/rest/test_a_paper_bot_trade_says_what_happened.py::test_a_settled_bet_is_paid_on_the_price_at_its_epoch_end"
+   ],
+   "report_ids": [
+    171
+   ],
+   "title": "25 of 92 settled bets (9 epoch/asset pairs) were paid on an exit price more than 0.01% from Binance at their epoch's end; 12 of them equal Binance at the second the bet was closed (closed_at, 13-54 s after epoch_end). ETH epoch 5967592: exit 2697.01 against 2694.62 at 19:25:00, closed 19:25:53; ETH epoch 5967593: exit 2695.81 against 2697.3 at 19:30:00, closed 19:30:30; ETH epoch 5970201: exit 2688.14 against 2687.21 at 20:50:00, closed 20:50:18; ETH epoch 5968602: exit 2645.77 against 2645.27 at 07:35:00, closed 07:35:13. With each bet's own entry and the epoch-end price, 9 bets on 3 epoch/asset pairs pay the opposite result (BTC 5967591, ETH 5967593, ETH 5970201)",
+   "filed_at": "2026-10-04T18:27:26+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 171,
+     "verdict": "fail",
+     "at": "2026-10-08T07:39:43+00:00"
+    }
+   ],
+   "their_status": {
+    "171": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-prices-status-codes-undeclared",
+   "nodeids": [
+    "tests/rest/test_prices_status_codes_match_its_own_description.py::test_an_unknown_asset_returns_a_status_the_schema_never_declares"
+   ],
+   "report_ids": [
+    131
+   ],
+   "title": "GET /api/v1/prices/{asset} answers HTTP 404 to an unknown asset (body: '{\"detail\":{\"error\":{\"code\":\"PRICE_NOT_FOUND\",\"message\":\"Price for asset NOTAREALASSETXYZ not found\"}}}'), but /openapi-public.json's responses object for this path declares only [200, 422] -- even though the path's own description says 'Current real price for an asset. 404 unknown asset, 503 no real price available.'",
+   "filed_at": "2026-09-26T04:02:02+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 131,
+     "verdict": "pass",
+     "at": "2026-09-26T06:26:25+00:00"
+    },
+    {
+     "report_id": 131,
+     "verdict": "pass",
+     "at": "2026-10-04T01:25:40+00:00"
+    }
+   ],
+   "their_status": {
+    "131": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-products-people-not-below-app-usage",
+   "nodeids": [
+    "tests/rest/test_products_people_not_below_app_usage.py::test_products_people_not_below_app_usage"
+   ],
+   "report_ids": [
+    247
+   ],
+   "title": "Agent Casino: 94 on the Products tab, a sum of days, against 148 distinct people on /app-usage; Build a Company: 40 on the Products tab, a sum of days, against 126 distinct people on /app-usage",
+   "filed_at": "2026-11-01T19:13:20+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "247": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-products-tile-and-its-chart-agree",
+   "nodeids": [
+    "tests/rest/test_products_tile_and_its_chart_agree.py::test_products_tile_and_its_chart_agree"
+   ],
+   "report_ids": [
+    248
+   ],
+   "title": "Agent Casino: the tile reads 94 and its chart's days add up to 22",
+   "filed_at": "2026-11-01T19:13:27+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "248": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-products-tile-people-are-people",
+   "nodeids": [
+    "tests/rest/test_products_tile_people_are_people.py::test_products_tile_people_are_people"
+   ],
+   "report_ids": [
+    244
+   ],
+   "title": "The Products tab labels a.visitors \"people\", but /api/v1/build-it-better/apps/leaderboard defines the figure: \"Distinct daily visitors. A range is the sum of its days, so one person on three days counts three times.\" 8 of 9 products read visitors == sum(daily), e.g. Gem Screener: 247, so one person on three days is three \"people\"",
+   "filed_at": "2026-11-01T18:54:36+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "244": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-published-openapi-documents-agree",
+   "nodeids": [
+    "tests/discovery/test_the_two_openapi_documents_agree.py::test_a_public_get_in_openapi_json_is_in_the_curated_schema_too"
+   ],
+   "report_ids": [
+    105
+   ],
+   "title": "3 path(s) answer an anonymous GET and are declared in /openapi.json but not in /openapi-public.json, the schema llms.txt tells agent builders to import: /api/v1/arena/market, /api/v1/clob/book/hybrid, /api/v1/prices",
+   "filed_at": "2026-09-19T23:18:39+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 105,
+     "verdict": "pass",
+     "at": "2026-09-20T16:48:05+00:00"
+    },
+    {
+     "report_id": 105,
+     "verdict": "pass",
+     "at": "2026-09-21T20:37:15+00:00"
+    }
+   ],
+   "their_status": {
+    "105": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-qa-agent-cannot-report-its-own-data",
+   "nodeids": [
+    "tests/rest/test_qa_agent_channel.py::test_the_agent_can_report_a_value_it_publishes"
+   ],
+   "report_ids": [
+    66
+   ],
+   "title": "asked for two values it serves at /api/v1/bounty/reward-tiers, the channel's answer contains neither the currency it publishes (CYM) nor either bound of the critical range (400000-1000000)",
+   "filed_at": "2026-09-05T21:48:43+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 66,
+     "verdict": "pass",
+     "at": "2026-09-07T13:54:52+00:00"
+    },
+    {
+     "report_id": 66,
+     "verdict": "pass",
+     "at": "2026-09-07T17:42:57+00:00"
+    }
+   ],
+   "their_status": {
+    "66": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-quant-lab-daily-search-completes",
+   "nodeids": [
+    "tests/rest/test_quant_lab_daily_search_completes.py::test_quant_lab_daily_search_completes"
+   ],
+   "report_ids": [
+    231
+   ],
+   "title": "the last 3 searches of company 14 all failed before any job ran (#9 daily 2026-10-30, 0 jobs, never started, #7 daily 2026-10-29, 0 jobs, never started, #5 owner 2026-10-28, 0 jobs, never started), with the same error 'OperationalError: (psycopg2.OperationalError) server closed the connection unexpectedly'; the last search that completed is #3, finished 2026-10-27T14:01:08.817493Z, 72.4 h before this read (allowed 48 h, two daily passes)",
+   "filed_at": "2026-10-30T14:25:45+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "231": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-quant-lab-search-error-names-no-internals",
+   "nodeids": [
+    "tests/rest/test_quant_lab_search_error_names_no_internals.py::test_quant_lab_search_error_names_no_internals"
+   ],
+   "report_ids": [
+    232
+   ],
+   "title": "3 of 3 failed searches of company 14 (#9, #7, #5) answer the owner with an error naming a SQL statement, a database driver, an exception class (table company_quant_combos), 400 characters, starting 'OperationalError: (psycopg2.OperationalError) server closed the connection unexpectedly\\n\\tT'; the page prints it after 'The last search stopped: '",
+   "filed_at": "2026-10-30T14:25:52+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "232": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-quant-lab-winner-text-agrees-with-how-it-fits",
+   "nodeids": [
+    "tests/rest/test_quant_lab_winner_text_agrees_with_how_it_fits.py::test_quant_lab_winner_text_agrees_with_how_it_fits"
+   ],
+   "report_ids": [
+    233
+   ],
+   "title": "/how-it-fits.txt promises a winner's blank paper bot with the winning entry threshold and for every long rule, Blue and paid included, while company 14's Quant Lab says the opposite in 4 lines: A result that won with a changed entry threshold is reported only, not started as a paper bot: a paper bot cannot run a changed entry rule yet. | Cymetica bot set-ups as paper bots (cryptobull_blue, cryptobull_red, hybrid2_blue, hybrid2_red, stockbear_red, stockbull_blue): Not possible: they are backtest set-ups for Cymetica's own bots, not catalog models, so they can be searched but not equipped. | Premium models (prion, synapse, telomere): Not possible: the platform sells these, so the lab never equips them for you. | Starting a paper bot from a changed entry rule: Needs a medium build: a paper bot cannot run a changed entry rule yet, so such a result is reported only.",
+   "filed_at": "2026-10-31T22:47:15+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "233": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-quant-search-rows-fit-the-list-grid",
+   "nodeids": [
+    "tests/rest/test_quant_search_rows_fit_the_list_grid.py::test_quant_search_rows_fit_the_list_grid"
+   ],
+   "report_ids": [
+    230
+   ],
+   "title": "the stylesheet's `.qrow` grid starts with a 22px track (the rank cell, `.rk`), and /static/company/quantsearch.js draws 1 row template(s) whose first cell is ['qn'] not `.rk`, so the name cell falls in that 22px track",
+   "filed_at": "2026-10-27T14:39:48+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "230": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-register-response-undocumented",
+   "nodeids": [
+    "tests/discovery/test_build_onboarding.py::test_register_response_documents_the_field_the_page_says_to_save"
+   ],
+   "report_ids": [
+    77
+   ],
+   "title": "the field /build tells an agent to save is absent from the published schema for the call that returns it: 'api_key' is in no 2xx response of POST /mcp/v1/register, which describes 0 field(s)",
+   "filed_at": "2026-09-07T20:20:15+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 77,
+     "verdict": "pass",
+     "at": "2026-09-07T21:47:03+00:00"
+    }
+   ],
+   "their_status": {
+    "77": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-reward-totals-disagree",
+   "nodeids": [
+    "tests/rest/test_reward_totals_agree.py::test_the_reward_totals_agree_with_each_other"
+   ],
+   "report_ids": [
+    73
+   ],
+   "title": "stats records 36000.0 awarded and 2000.0 paid, and every one of the 2 hunter(s) on the leaderboard shows total_earned 0.0; the leaderboard lists all 2 hunter(s) and accounts for 21 valid report(s), while stats calls 40 valid",
+   "filed_at": "2026-09-07T08:03:09+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 73,
+     "verdict": "pass",
+     "at": "2026-09-07T13:54:57+00:00"
+    },
+    {
+     "report_id": 73,
+     "verdict": "pass",
+     "at": "2026-09-07T17:43:07+00:00"
+    },
+    {
+     "report_id": 73,
+     "verdict": "pass",
+     "at": "2026-09-07T21:47:08+00:00"
+    },
+    {
+     "report_id": 73,
+     "verdict": "pass",
+     "at": "2026-09-08T15:16:05+00:00"
+    }
+   ],
+   "their_status": {
+    "73": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-season-points-are-counted-hourly",
+   "nodeids": [
+    "tests/rest/test_season_points_are_counted_hourly.py::test_season_points_are_counted_hourly"
+   ],
+   "report_ids": [
+    246
+   ],
+   "title": "/api/v1/company/14/season-breakdown says recomputed_hourly: true, and its count is from 2026-11-01T07:55:30Z, 11.3 hours before the response's Date header",
+   "filed_at": "2026-11-01T19:13:11+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "246": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-skill_count",
+   "nodeids": [
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
+   ],
+   "report_ids": [
+    51
+   ],
+   "title": "How many agent skills are advertised?",
+   "filed_at": "2026-09-04T12:04:09+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 51,
+     "verdict": "pass",
+     "at": "2026-09-07T13:55:12+00:00"
+    },
+    {
+     "report_id": 51,
+     "verdict": "pass",
+     "at": "2026-10-01T07:37:18+00:00"
+    },
+    {
+     "report_id": 51,
+     "verdict": "fail",
+     "at": "2026-10-01T00:16:23+00:00"
+    }
+   ],
+   "their_status": {
+    "51": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-skill_ids",
+   "nodeids": [
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
+   ],
+   "report_ids": [
+    51
+   ],
+   "title": "Which agent skills does the platform advertise?",
+   "filed_at": "2026-09-04T12:04:09+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 51,
+     "verdict": "pass",
+     "at": "2026-09-07T13:55:17+00:00"
+    },
+    {
+     "report_id": 51,
+     "verdict": "pass",
+     "at": "2026-10-01T07:37:21+00:00"
+    },
+    {
+     "report_id": 51,
+     "verdict": "fail",
+     "at": "2026-10-01T07:01:46+00:00"
+    }
+   ],
+   "their_status": {
+    "51": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-skills_subset",
+   "nodeids": [
+    "tests/reconciliation/test_reconcile.py::test_sources_agree[skills_subset::agent_card-vs-agent_skills]"
+   ],
+   "report_ids": [
+    56
+   ],
+   "title": "Is agent-skills.json the actionable subset of agent-card.json, as stated?",
+   "filed_at": "2026-09-04T13:25:11+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 56,
+     "verdict": "pass",
+     "at": "2026-09-07T13:55:22+00:00"
+    },
+    {
+     "report_id": 56,
+     "verdict": "pass",
+     "at": "2026-10-01T07:37:24+00:00"
+    },
+    {
+     "report_id": 56,
+     "verdict": "fail",
+     "at": "2026-10-01T00:16:27+00:00"
+    }
+   ],
+   "their_status": {
+    "56": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-supply-analyzer-a-pile-cannot-grow-past-its-max-supply",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_pile_cannot_grow_past_its_max_supply"
+   ],
+   "report_ids": [
+    178
+   ],
+   "title": "32 of 190 records state a yearly change that takes the sellable pile past its max supply (/definitions: \"The yearly change = (in - out) x 12 / the pile, in %. It is the hero number. It never reads below -100%: a pile the curve empties within the year has lost all of itself, not more. A month takes out at most what the pile holds plus what comes in that month, and what comes in (emissions, or the typical token's inflow standing in for an unknown one) is at most what the reserve outside the pile still holds, so no curve buys back or burns more tokens than exist.\"): PEAS up to +0.06% a year with 0.01% (507 tokens) left to its max of 9,937,721; LIQD up to +1.08% a year with 0.09% (1,080,949 tokens) left to its max of 1,200,000,000; SKY up to +1.98% a year with 0.16% (38,576,602 tokens) left to its max of 23,462,665,147; ALPHA up to +3.57% a year with 0.30% (29,638 tokens) left to its max of 10,000,000; FOX up to +4.85% a year with 0.40% (41,704 tokens) left to its max of 10,362,686",
+   "filed_at": "2026-10-10T09:22:07+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 178,
+     "verdict": "fail",
+     "at": "2026-10-10T23:13:47+00:00"
+    },
+    {
+     "report_id": 178,
+     "verdict": "pass",
+     "at": "2026-10-11T22:18:54+00:00"
+    }
+   ],
+   "their_status": {
+    "178": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-supply-analyzer-a-pile-cannot-shrink-more-than-all-of-it",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_pile_cannot_shrink_by_more_than_all_of_it"
+   ],
+   "report_ids": [
+    177
+   ],
+   "title": "1 of 245 records state a yearly change of the sellable pile below -100% (/definitions: \"The yearly change = (in - out) x 12 / the pile, in %. It is the hero number.\"), and 1 of 1 records whose curve empties the pile take out more than it holds: STONK (stonkfun): \"-129.65% to -114.31% a year\" ((10,199,876 in - 86,217,494 out) x 12 / 797,998,322); its curve takes out 86,217,494 in Aug 2027 with 37,822,138 in the pile and 10,199,876 coming in (14 such months), the pile reads 0 from Sep 2027, and it books 1,034,609,929 bought back by Oct 2027, more than its max supply of 1,000,000,000",
+   "filed_at": "2026-10-08T05:54:59+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 177,
+     "verdict": "fail",
+     "at": "2026-10-08T07:40:15+00:00"
+    },
+    {
+     "report_id": 177,
+     "verdict": "pass",
+     "at": "2026-10-10T08:52:43+00:00"
+    }
+   ],
+   "their_status": {
+    "177": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-supply-analyzer-an-unknown-schedule-is-not-none-scheduled",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_an_unknown_schedule_is_not_served_as_none_scheduled"
+   ],
+   "report_ids": [
+    164
+   ],
+   "title": "174 of 174 records that name their vesting schedule unknown serve next_unlock {\"kind\": \"none_scheduled\"}, which the Gem Screener's Supply card prints as \"none\" with \"The schedule on file has no tranche ahead\". Among the 19 chains of them, DeFiLlama's unlock file lists dated unlocks for 2: ARB (arbitrum): 10 unlock events ahead in https://defillama-datasets.llama.fi/emissions/arbitrum, the first 2026-10-15 56,125,000 (Team, Contributors & Advisors); 2026-10-15 36,520,833 (Investors) | STRK (starknet): 2 unlock events ahead in https://defillama-datasets.llama.fi/emissions/starknet, the first 2026-10-30 53,309,113 (Early Contributors); 2026-10-30 53,309,113 (Investors)",
+   "filed_at": "2026-10-04T10:46:41+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 164,
+     "verdict": "pass",
+     "at": "2026-10-04T17:45:56+00:00"
+    }
+   ],
+   "their_status": {
+    "164": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-supply-analyzer-burned-slice-is-a-measured-burn",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_burned_slice_comes_from_a_burn"
+   ],
+   "report_ids": [
+    156
+   ],
+   "title": "12 of 12 sampled records (the largest burned shares; 81 rows of the batch show a burned slice) take the burned amount only from max supply minus total supply, with no date, while 12 of them name burns as unknown, counted as 0; 5 also count under 90% of their own emission input: RUSH (sat-rush): 2,056,917 burned (98.43% of the pie) from \"max supply minus total supply (CoinGecko figures)\"; PHAR (pharaoh-exchange): 469,371,969 burned (93.34% of the pie) from \"max supply minus total supply (CoinGecko figures)\"; BEAN (pea): 2,861,934 burned (92.95% of the pie) from \"max supply minus total supply (CoinGecko figures)\", own emission input 42,825 a month of which month 0 counts 0.00, shown -190.89% a year, Squeezing; RAM (ramsesx): 756,287,109 burned (90.05% of the pie) from \"max supply minus total supply (CoinGecko figures)\"",
+   "filed_at": "2026-10-04T10:13:27+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "156": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-supply-analyzer-buyback-is-a-purchase-of-the-token",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_buyback_is_a_purchase_of_the_token"
+   ],
+   "report_ids": [
+    157
+   ],
+   "title": "9 of 23 records shown Squeezing or draining their pile (a sample: 23 such rows that day) book holders' revenue as a buyback of the token while DeFiLlama's methodology for every protocol named describes a payout: BEND (benddao) Squeezing -102.81% a year, buyback 418,956,196 tokens a month ($17,308 in 30 days); DeFiLlama: \"Protocol's share of borrow interest, 100% distributed to veBEND holders proportionally.\"; MET (metronome) Squeezing -6.89% a year, buyback 85,212 tokens a month ($46,832 in 30 days); DeFiLlama: \"MET distributed to holders.\"; BLACK (blackhole) Squeezing -61.45% a year, buyback 17,033,151 tokens a month ($109,294 in 30 days); DeFiLlama: \"Portion of swap fees attributed to staked LPs, which are routed through the Gauge and distributed to veBLACK voters as bribes.\"; KITTEN (kittenswap-finance) Squeezing -78.91% a year, buyback 22,451,032 tokens a month ($30,893 in 30 days); DeFiLlama: \"100% of swap fees are distributed weekly to veKITTEN voters/holders.\"",
+   "filed_at": "2026-10-04T10:13:33+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 157,
+     "verdict": "pass",
+     "at": "2026-10-04T17:46:01+00:00"
+    },
+    {
+     "report_id": 157,
+     "verdict": "pass",
+     "at": "2026-10-05T09:06:19+00:00"
+    }
+   ],
+   "their_status": {
+    "157": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-supply-analyzer-cited-sources-say-what-they-are-credited-with",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_cited_source_says_what_it_is_credited_with"
+   ],
+   "report_ids": [
+    159
+   ],
+   "title": "HYPE's record: the vesting_schedule url https://hyperliquid.gitbook.io/hyperliquid-docs/hyperliquid-l1/hype-and-staking (cited as \"Hyperliquid Foundation: HYPE genesis distribution and vesting (hyperfoundation.org / hyperliquid docs)\") answers 404; the record says buybacks are \"kept\" and credits \"Hyperliquid docs: Fees (Assistance Fund) and HYPE burn\" (https://hyperliquid.gitbook.io/hyperliquid-docs/trading/fees); that page says the assistance fund's HYPE \"is burned\"",
+   "filed_at": "2026-10-04T10:13:43+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 159,
+     "verdict": "pass",
+     "at": "2026-10-04T17:46:06+00:00"
+    },
+    {
+     "report_id": 159,
+     "verdict": "pass",
+     "at": "2026-10-05T09:06:24+00:00"
+    }
+   ],
+   "their_status": {
+    "159": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-supply-analyzer-gem-screener-link-opens-its-coin",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_the_gem_screener_link_opens_its_coin"
+   ],
+   "report_ids": [
+    159
+   ],
+   "title": "/supply-analyzer?symbol=hyperliquid, the link of HYPE (hyperliquid), HYPE (hyperliquid-l1), answers HTTP 404: {'error': {'code': 'UNKNOWN_SYMBOL', 'message': 'No token called HYPERLIQUID is in the Gem Screener. Paste its contract address and chain: a contract is read from its chain and public feeds.'}}; OpenAPI says symbol takes a \"Ticker (Gem Screener coins), slug or CoinGecko id\"",
+   "filed_at": "2026-10-04T10:13:43+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 159,
+     "verdict": "pass",
+     "at": "2026-10-04T17:46:10+00:00"
+    },
+    {
+     "report_id": 159,
+     "verdict": "pass",
+     "at": "2026-10-05T09:06:28+00:00"
+    }
+   ],
+   "their_status": {
+    "159": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-supply-analyzer-max-supply-is-a-cap-not-a-schedule-end",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_max_supply_is_not_the_end_of_an_issuance_schedule"
+   ],
+   "report_ids": [
+    165
+   ],
+   "title": "30 of 48 sampled records state a max supply whose source is a DeFiLlama unlock schedule, the end total of its issuance horizon; 13 of them then show max minus total as \"Bought back, burned\": ETH (ethereum) max 127,869,954 from \"DeFiLlama unlock schedule (ethereum)\" (total 122,101,617, burned 5,768,336); SOL (solana) max 722,609,018 from \"DeFiLlama unlock schedule (solana)\" (total 635,149,992, burned 87,459,026); TRX (tron) max 126,770,094,880 from \"DeFiLlama unlock schedule (tron)\" (total 94,980,615,708, burned 31,789,479,172); AERO (aerodrome) max 1,994,552,554 from \"DeFiLlama unlock schedule (aerodrome)\" (total 1,992,844,978); CFG (centrifuge) max 816,465,627 from \"DeFiLlama unlock schedule (centrifuge)\" (total 680,000,000, burned 136,465,627)",
+   "filed_at": "2026-10-04T11:07:50+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 165,
+     "verdict": "pass",
+     "at": "2026-10-08T07:40:20+00:00"
+    }
+   ],
+   "their_status": {
+    "165": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-supply-analyzer-next-unlock-states-its-whole-day",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_a_next_unlock_states_what_its_day_releases"
+   ],
+   "report_ids": [
+    188
+   ],
+   "title": "12 of 20 records (the 20 dated rows of the Gem Screener batch with the largest market cap) serve a next unlock smaller than what their own tranches release on that day: PUMP (pump) next_unlock 4,166,666,667 (Team) on 2026-10-13 while its tranches release 6,875,000,000 that day (Team 4,166,666,667, Existing Investors 2,708,333,333); MON (monad) next_unlock 4,925,000,000 (Investors) on 2026-11-25 while its tranches release 5,912,500,000 that day (Investors 4,925,000,000, Category Labs Treasury 987,500,000); STABLE (stable) next_unlock 694,444,444 (Team) on 2027-01-08 while its tranches release 1,388,888,889 that day (Team 694,444,444, Investors & Advisors 694,444,444); XPL (plasma) next_unlock 69,444,444 (Team) on 2026-10-26 while its tranches release 227,777,778 that day (Team 69,444,444, Investors 69,444,444, Ecosystem & Growth 88,888,889)",
+   "filed_at": "2026-10-11T12:20:47+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 188,
+     "verdict": "pass",
+     "at": "2026-10-13T00:37:52+00:00"
+    }
+   ],
+   "their_status": {
+    "188": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-supply-analyzer-sellable-pile-fits-inside-the-supply",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_the_sellable_pile_fits_inside_the_supply"
+   ],
+   "report_ids": [
+    158
+   ],
+   "title": "17 records state a sellable pile larger than the total_supply they state themselves: FOX (foxify) pile 29,882,588 against total_supply 10,321,540 (circulating 10,321,540 plus staked 19,561,048); RAIL (railgun) pile 142,343,727 against total_supply 60,000,000 (circulating 60,000,000 plus staked 82,343,727); THOR (thorswap) pile 599,595,886 against total_supply 253,198,973 (circulating 253,198,973 plus staked 346,396,913); INV (inverse-finance) pile 1,711,341 against total_supply 727,000 (circulating 712,165 plus staked 999,176)",
+   "filed_at": "2026-10-04T10:13:38+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 158,
+     "verdict": "pass",
+     "at": "2026-10-04T17:46:15+00:00"
+    },
+    {
+     "report_id": 158,
+     "verdict": "pass",
+     "at": "2026-10-05T09:06:33+00:00"
+    }
+   ],
+   "their_status": {
+    "158": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-supply-analyzer-tokens-locked-by-holders-are-not-a-reserve",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_tokens_locked_by_holders_are_not_shown_as_a_reserve"
+   ],
+   "report_ids": [
+    163
+   ],
+   "title": "PHAR on Avalanche: the xPHAR contract (0xE8164Ea89665DAb7a553e667F81F30CfDA736B9A) holds 497,139,188 PHAR of a total supply of 530,627,320, and 992,673,877 of 994,278,376 xPHAR are staked in the VoteModule. The record shows \"Reserve, outside the pie\" 497,134,710 (the same tokens), described on the page as \"Max supply minus every token in play, plus the project's own stake. It enters the pile only on a decision\", and \"Staked, free to unlock\" 11,351,535 (2.3% of the locked PHAR)",
+   "filed_at": "2026-10-04T10:46:35+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 163,
+     "verdict": "pass",
+     "at": "2026-10-04T17:46:19+00:00"
+    },
+    {
+     "report_id": 163,
+     "verdict": "pass",
+     "at": "2026-10-05T09:06:38+00:00"
+    }
+   ],
+   "their_status": {
+    "163": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-supply-analyzer-typical-inflow-is-the-stated-one",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_every_range_uses_the_stated_typical_inflow"
+   ],
+   "report_ids": [
+    159
+   ],
+   "title": "/definitions states a typical inflow of 12.34% a year (batch: 12.34290441022498); 174 of 185 ranges add a different figure to their top: 5.0% on 57, 10.68% on 31, 15.08% on 28, 12.88% on 24, 10.67% on 15, 15.09% on 9, 9.71% on 5, 14.55% on 3, 12.87% on 2; HYPE's range is 24.73% to 29.73% (5.0%)",
+   "filed_at": "2026-10-04T10:13:43+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 159,
+     "verdict": "pass",
+     "at": "2026-10-10T09:20:27+00:00"
+    },
+    {
+     "report_id": 159,
+     "verdict": "fail",
+     "at": "2026-10-11T22:18:59+00:00"
+    }
+   ],
+   "their_status": {
+    "159": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-supply-analyzer-unsupported-chain-gets-a-documented-answer",
+   "nodeids": [
+    "tests/rest/test_supply_analyzer_states_what_its_sources_say.py::test_an_unsupported_chain_gets_a_documented_answer"
+   ],
+   "report_ids": [
+    160
+   ],
+   "title": "3 of 3 reads of UNI's contract (0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984) with an unsupported chain answer chain=dogechain: HTTP 500 INTERNAL_SERVER_ERROR, chain=tron: HTTP 500 INTERNAL_SERVER_ERROR, chain=foo: HTTP 500 INTERNAL_SERVER_ERROR; /openapi-public.json documents 400 \"MISSING_INPUT, INVALID_SYMBOL, INVALID_CONTRACT, CHAIN_NEEDED, UNSUPPORTED_CHAIN, NO_PRICE\" for this route",
+   "filed_at": "2026-10-04T10:13:48+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 160,
+     "verdict": "pass",
+     "at": "2026-10-08T07:40:25+00:00"
+    }
+   ],
+   "their_status": {
+    "160": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_account_has_one_plan_on_every_nexus_endpoint",
+   "nodeids": [
+    "tests/rest/test_the_account_has_one_plan_on_every_nexus_endpoint.py::test_the_account_has_one_plan_on_every_nexus_endpoint"
+   ],
+   "report_ids": [
+    150
+   ],
+   "title": "one account, two plans: /api/v1/nexus/usage says 'pro', /api/v1/nexus/subscription says 'free' (tier 'free', subscription None)",
+   "filed_at": "2026-10-03T19:09:34+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 150,
+     "verdict": "pass",
+     "at": "2026-10-04T01:25:45+00:00"
+    }
+   ],
+   "their_status": {
+    "150": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_account_history_pages_forward",
+   "nodeids": [
+    "tests/rest/test_account_history_pages_forward.py::test_the_account_history_pages_forward"
+   ],
+   "report_ids": [
+    184
+   ],
+   "title": "3 of 6 page turns of the history answer the same page again while it says has_more: no filter (total_count 4710) offset 100 -> 200: ids 1613303830..371000858 both times; USDC (total_count 1000) offset 0 -> 100: ids 1613303830..371000858 both times; USDC (total_count 1000) offset 100 -> 200: ids 1613303830..371000858 both times",
+   "filed_at": "2026-10-10T19:49:32+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 184,
+     "verdict": "pass",
+     "at": "2026-10-11T22:19:04+00:00"
+    }
+   ],
+   "their_status": {
+    "184": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_agent_tournaments_link_preview_draws_the_title_its_page_passes",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_link_preview_draws_its_title.py::test_the_agent_tournaments_link_preview_draws_the_title_its_page_passes"
+   ],
+   "report_ids": [
+    217
+   ],
+   "title": "https://cymetica.com/og/app/agent-tournaments.png?t=Agent%20Tournaments%3A%2010%20agents.%201%20table.%20Best%20ROI%20wins.&v=4 draws the same picture (76226 bytes) whatever t= says: with t='Agent Tournaments: 10 agents. 1 table. Best ROI wins.' and with t='QA sentinel title 7f3c' the bytes are identical, so the title the page passes is not the title shown",
+   "filed_at": "2026-10-22T08:40:47+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "217": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "CHECK_CHANGED"
+  },
+  {
+   "key": "CYM-the_altseason_panel_names_one_retail_figure",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_one_thing_per_name.py::test_the_altseason_panel_names_one_retail_figure"
+   ],
+   "report_ids": [
+    207
+   ],
+   "title": "the altseason panel shows Retail 19.7/100 (asleep, retail-v4) on its tile and 'retail by dollar volume 47.7/100' under euphoria, 28.0 points apart; the index's euphoria uses the second",
+   "filed_at": "2026-10-15T08:16:51+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 207,
+     "verdict": "pass",
+     "at": "2026-10-16T20:32:29+00:00"
+    }
+   ],
+   "their_status": {
+    "207": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_board_is_ranked_by_the_key_its_own_document_publishes",
+   "nodeids": [
+    "tests/rest/test_agent_board_ranks_what_it_says_it_ranks.py::test_the_board_is_ranked_by_the_key_its_own_document_publishes"
+   ],
+   "report_ids": [
+    111
+   ],
+   "title": "llms.txt says agent-board/search is ranked by verified return x replications. Not one of the 3 playbook(s) on the board carries a confirmed replication, verified evidence or a pnl_usdc, so that key is nil for every row; `rank` is the same value for a row under q='' and q='agent', so it is not relevance; and the order is exactly newest-first. An agent reading the first row as the best-proven playbook is reading the most recent one",
+   "filed_at": "2026-09-20T19:23:54+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 111,
+     "verdict": "pass",
+     "at": "2026-09-21T01:57:19+00:00"
+    },
+    {
+     "report_id": 111,
+     "verdict": "pass",
+     "at": "2026-09-21T20:37:18+00:00"
+    },
+    {
+     "report_id": 111,
+     "verdict": "pass",
+     "at": "2026-09-22T16:02:11+00:00"
+    },
+    {
+     "report_id": 111,
+     "verdict": "pass",
+     "at": "2026-09-22T22:39:49+00:00"
+    }
+   ],
+   "their_status": {
+    "111": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_boards_building_tile_counts_only_what_is_building",
+   "nodeids": [
+    "tests/rest/test_the_build_board_counts_building_as_building.py::test_the_boards_building_tile_counts_only_what_is_building"
+   ],
+   "report_ids": [
+    113
+   ],
+   "title": "the board's Building now tile is computed as '(s.funded || 0) + (s.building || 0)', so a request that is only funded is displayed as building. The column under it filters stage == 'building' and does not, and the API agrees with the column: stats building 0, funded 2",
+   "filed_at": "2026-09-20T21:01:16+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 113,
+     "verdict": "pass",
+     "at": "2026-09-20T22:07:59+00:00"
+    },
+    {
+     "report_id": 113,
+     "verdict": "pass",
+     "at": "2026-09-21T20:37:20+00:00"
+    },
+    {
+     "report_id": 113,
+     "verdict": "pass",
+     "at": "2026-09-22T16:02:16+00:00"
+    },
+    {
+     "report_id": 113,
+     "verdict": "pass",
+     "at": "2026-09-24T22:41:30+00:00"
+    },
+    {
+     "report_id": 113,
+     "verdict": "pass",
+     "at": "2026-09-25T23:29:28+00:00"
+    }
+   ],
+   "their_status": {
+    "113": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_build_totals_reach_back_to_the_date_they_are_published_under",
+   "nodeids": [
+    "tests/rest/test_build_stats_covers_the_period_it_claims.py::test_the_build_totals_reach_back_to_the_date_they_are_published_under"
+   ],
+   "report_ids": [
+    110
+   ],
+   "title": "sessions, messages, tool_calls are exactly the sum of the 17 day(s) from 2026-01-31 to 2026-02-16, and so hold nothing outside that window -- while the same response dates the first session to 2025-11-23, before it. The page publishes those totals under SINCE 2025-11-23",
+   "filed_at": "2026-09-20T17:41:01+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 110,
+     "verdict": "pass",
+     "at": "2026-09-20T22:07:55+00:00"
+    },
+    {
+     "report_id": 110,
+     "verdict": "pass",
+     "at": "2026-09-21T20:37:23+00:00"
+    }
+   ],
+   "their_status": {
+    "110": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_claim_form_opens_when_nothing_is_pending",
+   "nodeids": [
+    "tests/rest/test_account_claim_deposit_reachable.py::test_the_claim_form_opens_when_nothing_is_pending"
+   ],
+   "report_ids": [
+    214
+   ],
+   "title": "all 1 control(s) that open Claim Missing Deposit sit inside #accountPendingDeposits, which the page script hides when the pending list is empty: an undetected deposit leaves nothing pending, so the form cannot be opened",
+   "filed_at": "2026-10-17T15:28:13+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 214,
+     "verdict": "pass",
+     "at": "2026-10-18T02:25:10+00:00"
+    }
+   ],
+   "their_status": {
+    "214": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "CHECK_CHANGED"
+  },
+  {
+   "key": "CYM-the_dilution_caution_band_lies_below_the_red_band",
+   "nodeids": [
+    "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_dilution_caution_band_lies_below_the_red_band"
+   ],
+   "report_ids": [
+    182
+   ],
+   "title": "dilution_meta puts the caution line at 1.5253% a week and the red line at 1%: a coin over 1% is red before it can be caution, so 0 apps read caution and 19 read red",
+   "filed_at": "2026-10-10T16:43:57+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 182,
+     "verdict": "pass",
+     "at": "2026-10-11T22:19:09+00:00"
+    }
+   ],
+   "their_status": {
+    "182": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_dynamic_plan_card_takes_a_cookie_session_as_signed_in",
+   "nodeids": [
+    "tests/rest/test_usage_dynamic_card_takes_a_cookie_session.py::test_the_dynamic_plan_card_takes_a_cookie_session_as_signed_in"
+   ],
+   "report_ids": [
+    220
+   ],
+   "title": "the Dynamic plan card decides signed-out from a bearer token alone: if (!tok()) leaves without asking /api/v1/nexus/dynamic or the session. On /usage the card's inline script 24 of 24 runs if (!tok()) { ...'Log in to see your forecast and switch.'...; return; } before it requests /api/v1/nexus/dynamic; the token is window.getAuthToken(), stored bearer tokens, which a cookie session does not have, so a signed-in visitor is told to log in while GET /api/v1/nexus/dynamic answers this account HTTP 200 with forecast with_fee_usd '171.87'",
+   "filed_at": "2026-10-22T19:17:33+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 220,
+     "verdict": "pass",
+     "at": "2026-10-25T03:47:52+00:00"
+    }
+   ],
+   "their_status": {
+    "220": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_forming_candle_of_a_gem_screener_coin_is_current_or_agrees_with_its_pool",
+   "nodeids": [
+    "tests/rest/test_chart_analyzer_live_candle_is_current.py::test_the_forming_candle_of_a_gem_screener_coin_is_current_or_agrees_with_its_pool"
+   ],
+   "report_ids": [
+    148
+   ],
+   "title": "SKY: candles fetched 2026-10-02T09:58:06+00:00 (294 min old), forming close 0.0887001 against the pool's 0.0924481 (4.1% off), candles_stale False",
+   "filed_at": "2026-10-02T14:53:59+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 148,
+     "verdict": "pass",
+     "at": "2026-10-04T01:25:51+00:00"
+    }
+   ],
+   "their_status": {
+    "148": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-the_fta_crypto_return_starts_where_its_own_record_does",
+   "nodeids": [
+    "tests/mcp/test_fta_crypto_return_starts_where_its_record_does.py::test_the_fta_crypto_return_starts_where_its_own_record_does"
+   ],
+   "report_ids": [
+    116
+   ],
+   "title": "get_fund publishes FTA-CRYPTOS's return (-19.52 %) since 2026-07-26, while the fund's own history says its inception is 2026-08-09 (first point 2026-08-21): the published return starts 14 days before the record does, with the composition last changed 2026-08-17T01:53:28+00:00; the methodology still says 'nothing backfilled'",
+   "filed_at": "2026-09-21T14:50:01+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 116,
+     "verdict": "pass",
+     "at": "2026-09-21T20:37:25+00:00"
+    }
+   ],
+   "their_status": {
+    "116": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_house_row_says_whether_it_ever_traded_forward",
+   "nodeids": [
+    "tests/rest/test_movers_leaderboard_separates_backtest_from_live.py::test_the_house_row_says_whether_it_ever_traded_forward"
+   ],
+   "report_ids": [
+    100
+   ],
+   "title": "the house row ranked 1 against live entrants matches their published BACKTEST record on all 6 shared quantities (avg_pct, doublers, hit50, median_pct, picks, rounds), while the live half of the same record reports scored=0. Its anchors run 2026-06-19 to 2026-09-04, measured over stored closes after the fact. The leaderboard payload carries no field saying so -- is_house names the owner, not the kind of measurement -- so a human entering a round is ranked against a record that never traded forward, and cannot tell from this endpoint. The distinction exists on /api/v1/universe/movers/potential and is dropped where the comparison is made",
+   "filed_at": "2026-09-13T11:39:18+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 100,
+     "verdict": "pass",
+     "at": "2026-09-13T18:48:04+00:00"
+    }
+   ],
+   "their_status": {
+    "100": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_leaderboard_can_answer_the_ranking_the_recipe_asks_for",
+   "nodeids": [
+    "tests/rest/test_build_recipes.py::test_the_leaderboard_can_answer_the_ranking_the_recipe_asks_for"
+   ],
+   "report_ids": [
+    79
+   ],
+   "title": "a /build recipe says to clone \"the best 30-day performer\", but the 16 leaderboard rows carry 6 different headline_period values and ?period=30d does not narrow them, so headline_return_pct is not comparable across rows: the top row by return is 'Multi-Indicator Ensemble' at 61.2% over '6 months', not over thirty days",
+   "filed_at": "2026-09-08T09:45:23+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 79,
+     "verdict": "pass",
+     "at": "2026-09-08T11:34:58+00:00"
+    },
+    {
+     "report_id": 79,
+     "verdict": "pass",
+     "at": "2026-09-08T15:16:09+00:00"
+    }
+   ],
+   "their_status": {
+    "79": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_listing_returns_every_card_it_says_is_tradeable",
+   "nodeids": [
+    "tests/rest/test_event_card_listing_reaches_them.py::test_the_listing_returns_every_card_it_says_is_tradeable"
+   ],
+   "report_ids": [
+    90
+   ],
+   "title": "1 card(s) answer status live and tradeable_now true on /api/v1/event-cards/{id} and appear in no response from /api/v1/event-cards: a4a5b71e-de11-4805-b8a3-ed9c3f8f8161. The listing caps at 200 rows and its offset, skip, page, search and status parameters are accepted and ignored, so an agent enumerating the market cannot reach them and nothing in the response says the window is truncated",
+   "filed_at": "2026-09-10T21:47:00+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 90,
+     "verdict": "pass",
+     "at": "2026-09-11T06:03:06+00:00"
+    },
+    {
+     "report_id": 90,
+     "verdict": "pass",
+     "at": "2026-09-11T18:00:18+00:00"
+    }
+   ],
+   "their_status": {
+    "90": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-the_market_caps_rest_on_the_supply_and_price_coingecko_reports",
+   "nodeids": [
+    "tests/rest/test_gem_screener_numbers_match_their_sources.py::test_the_market_caps_rest_on_the_supply_and_price_coingecko_reports"
+   ],
+   "report_ids": [
+    166
+   ],
+   "title": "market cap = price x supply: 1 of 213 rows are not their own price x supply within 2 %: QI; supply: median 0.0%, p90 0.0%, 0 of 213 rows off by more than 25%; price: median 0.4%, p90 1.7%, 0 of 213 rows off by more than 30%; benchmark market cap: 0.1% from CoinGecko",
+   "filed_at": "2026-10-04T12:02:28+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 166,
+     "verdict": "pass",
+     "at": "2026-10-08T07:40:29+00:00"
+    }
+   ],
+   "their_status": {
+    "166": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_message_log_carries_each_message_whole",
+   "nodeids": [
+    "tests/rest/test_build_it_better_log_keeps_whole_bodies.py::test_the_message_log_carries_each_message_whole"
+   ],
+   "report_ids": [
+    139
+   ],
+   "title": "1 logged message(s) on 1 request(s) are cut copies of a longer text the same record holds: ET-27671 BB-SPEC logged 8000 of 9392 characters of spec_text. NOT in the verdict -- bodies at exactly 8000 characters: ET-27671 (2); ET-26924 (2)",
+   "filed_at": "2026-09-30T16:26:12+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 139,
+     "verdict": "pass",
+     "at": "2026-10-01T08:14:43+00:00"
+    }
+   ],
+   "their_status": {
+    "139": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_prize_log_reaches_every_prize_it_recorded",
+   "nodeids": [
+    "tests/rest/test_agent_league_prize_log.py::test_the_prize_log_reaches_every_prize_it_recorded"
+   ],
+   "report_ids": [
+    213
+   ],
+   "title": "the log answers its newest 200 records (ids 47-246) and no more: 46 older records cannot be read, and none of before, before_id, cursor, offset, page reaches one",
+   "filed_at": "2026-10-17T06:55:39+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 213,
+     "verdict": "pass",
+     "at": "2026-10-18T02:25:06+00:00"
+    }
+   ],
+   "their_status": {
+    "213": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "CHECK_CHANGED"
+  },
+  {
+   "key": "CYM-the_product_radar_lists_each_product_once",
+   "nodeids": [
+    "tests/rest/test_product_radar_lists_each_product_once.py::test_the_product_radar_lists_each_product_once"
+   ],
+   "report_ids": [
+    115
+   ],
+   "title": "the leaderboard lists the same product on more than one row in 3 of 3 windows: 7-day: Hylo Protocol on 2 rows (ids 3048, 50379, ranks 24, 90), Gains Network on 2 rows (ids 3056, 3019, ranks 42, 67); 14-day: Hylo Protocol on 2 rows (ids 3048, 50379, ranks 34, 99), Gains Network on 2 rows (ids 3056, 3019, ranks 52, 77); 30-day: EventTrader on 2 rows (ids 9513, 28370, ranks 1, 6), Hylo Protocol on 2 rows (ids 3048, 50379, ranks 44, 112), Gains Network on 2 rows (ids 3056, 3019, ranks 62, 90)",
+   "filed_at": "2026-09-21T11:50:37+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 115,
+     "verdict": "pass",
+     "at": "2026-09-21T13:59:15+00:00"
+    }
+   ],
+   "their_status": {
+    "115": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "INCONCLUSIVE"
+  },
+  {
+   "key": "CYM-the_runrate_uses_the_multipliers_its_page_states",
+   "nodeids": [
+    "tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py::test_the_runrate_uses_the_multipliers_its_page_states"
+   ],
+   "report_ids": [
+    141
+   ],
+   "title": "the page states the 30-day run-rate as last 30 days x 12; 45 of 45 rows apply x 12.1667 (NXM(leaf#122): applied 12.1667)",
+   "filed_at": "2026-09-30T20:12:34+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 141,
+     "verdict": "pass",
+     "at": "2026-10-01T08:14:48+00:00"
+    }
+   ],
+   "their_status": {
+    "141": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_setting_that_decides_whether_real_money_moves_is_readable",
+   "nodeids": [
+    "tests/rest/test_paper_or_real.py::test_the_setting_that_decides_whether_real_money_moves_is_readable"
+   ],
+   "report_ids": [
+    80
+   ],
+   "title": "user.simulation_mode decides whether an order spends real USDC when the per-trade flag is omitted, and no documented response publishes it: all three occurrences in the schema are prose inside request bodies, so an agent cannot read the setting it is about to inherit",
+   "filed_at": "2026-09-08T10:54:27+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 80,
+     "verdict": "pass",
+     "at": "2026-09-08T11:35:04+00:00"
+    },
+    {
+     "report_id": 80,
+     "verdict": "pass",
+     "at": "2026-09-08T15:16:14+00:00"
+    }
+   ],
+   "their_status": {
+    "80": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on",
+   "nodeids": [
+    "tests/rest/test_build_it_better_board.py::test_the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on"
+   ],
+   "report_ids": [
+    108
+   ],
+   "title": "1 of 1 request(s) have the 24-hour clock running while the gate their own spec says it waits for is unfilled: ET-26036 clock from 2026-09-19T20:25:59, 0.0 of 100.0 USD raised, stage funded, ready_to_build True. Their MCP tool descriptions say the opposite of the spec (bb_accept_spec: \"there is nothing to fund\"), so the spec is the document that is wrong",
+   "filed_at": "2026-09-20T10:21:03+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "108": "paid"
+   },
+   "withdrawn": true,
+   "last_check": "CHECK_CHANGED"
+  },
+  {
+   "key": "CYM-the_station_opens_every_default_tab_for_its_default_symbol",
+   "nodeids": [
+    "tests/rest/test_the_station_opens_its_default_tabs.py::test_the_station_opens_every_default_tab_for_its_default_symbol"
+   ],
+   "report_ids": [
+    181
+   ],
+   "title": "1 of 5 default tabs of /station (default symbol BTC) do not open: clob /exchange/btc-pro -> HTTP 404; /api/v1/station/apps says \"A tab is any app already live on the platform; nothing gets a tab before it ships.\"",
+   "filed_at": "2026-10-10T14:49:52+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 181,
+     "verdict": "pass",
+     "at": "2026-10-13T00:38:00+00:00"
+    }
+   ],
+   "their_status": {
+    "181": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-the_summary_does_not_report_a_history_the_positions_contradict",
+   "nodeids": [
+    "tests/rest/test_portfolio_summary.py::test_the_summary_does_not_report_a_history_the_positions_contradict"
+   ],
+   "report_ids": [
+    83
+   ],
+   "title": "the summary reports total_predictions, total_volume as zero while 39 position(s) worth 2901.00 USDC of notional are listed on the same account: an agent reading its own summary would conclude it had never traded",
+   "filed_at": "2026-09-08T13:27:15+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 83,
+     "verdict": "fail",
+     "at": "2026-09-08T15:16:18+00:00"
+    }
+   ],
+   "their_status": {
+    "83": "paid"
+   },
+   "withdrawn": true,
+   "last_check": "UNVERIFIABLE"
+  },
+  {
+   "key": "CYM-tracker-closure-rate",
+   "nodeids": [
+    "tests/rest/test_bounty_tracker.py::test_closures_in_the_public_tracker_carry_evidence"
+   ],
+   "report_ids": [
+    53,
+    60,
+    72,
+    74
+   ],
+   "title": "All 15 reports in the public bounty tracker read 'fixed', and validated_at is null on every one",
+   "filed_at": "2026-09-04T12:04:20+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 53,
+     "verdict": "pass",
+     "at": "2026-09-07T13:55:28+00:00"
+    },
+    {
+     "report_id": 60,
+     "verdict": "pass",
+     "at": "2026-09-07T13:55:34+00:00"
+    },
+    {
+     "report_id": 72,
+     "verdict": "pass",
+     "at": "2026-09-07T13:55:39+00:00"
+    },
+    {
+     "report_id": 74,
+     "verdict": "pass",
+     "at": "2026-09-07T13:55:45+00:00"
+    },
+    {
+     "report_id": 53,
+     "verdict": "pass",
+     "at": "2026-09-07T17:43:12+00:00"
+    },
+    {
+     "report_id": 60,
+     "verdict": "pass",
+     "at": "2026-09-07T17:43:20+00:00"
+    },
+    {
+     "report_id": 72,
+     "verdict": "pass",
+     "at": "2026-09-07T17:43:26+00:00"
+    },
+    {
+     "report_id": 74,
+     "verdict": "pass",
+     "at": "2026-09-07T17:43:30+00:00"
+    }
+   ],
+   "their_status": {
+    "53": "paid",
+    "60": "paid",
+    "72": "fixed",
+    "74": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-trade_history_is_not_empty_for_an_account_that_has_traded",
+   "nodeids": [
+    "tests/rest/test_trade_history.py::test_trade_history_is_not_empty_for_an_account_that_has_traded"
+   ],
+   "report_ids": [
+    81
+   ],
+   "title": "\"Trade history\" reports 0 trades while the same platform reports 142 predictions, 3582.15 USDC of volume and 39 open-or-closed event-card position(s) on this account: an agent cannot read back what it did",
+   "filed_at": "2026-09-08T11:26:12+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 81,
+     "verdict": "pass",
+     "at": "2026-09-08T13:25:49+00:00"
+    },
+    {
+     "report_id": 81,
+     "verdict": "pass",
+     "at": "2026-09-08T15:16:24+00:00"
+    }
+   ],
+   "their_status": {
+    "81": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-traffic-agent-visits-are-the-agents-requests",
+   "nodeids": [
+    "tests/rest/test_traffic_agent_visits_are_the_agents_requests.py::test_traffic_agent_visits_are_the_agents_requests"
+   ],
+   "report_ids": [
+    226
+   ],
+   "title": "/traffic defines AI-agent visits as \"every request an agent makes (one crawler reading 300 pages is 300 visits).\" and the AI agents requests list as \"Every request, landings AND the pages and API calls after them, grouped by product area. These counts are larger than the landing counts above. Humans and AI agents are counted separately.\", but over the same 14 days (since 2026-10-11T07:00:00+00:00) the tile reads 115,550 and the list, 11 rows ending in \"Everything else\", adds up to 89,910: 25,640 requests (22%) are in one figure and not in the other",
+   "filed_at": "2026-10-25T23:52:23+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "226": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-traffic-mine-accepts-the-key-its-page-names",
+   "nodeids": [
+    "tests/rest/test_traffic_mine_accepts_the_key_its_page_names.py::test_traffic_mine_accepts_the_key_its_page_names"
+   ],
+   "report_ids": [
+    216
+   ],
+   "title": "/traffic/mine tells agents: \"Traffic for every public page you created (features, Build it Better apps, companies, event cards, creator perps, Agent League pages): GET https://cymetica.com/api/v1/traffic/mine?days=14 with your api_key as X-API-Key.\" but GET /api/v1/traffic/mine?days=14 with that X-API-Key answers HTTP 401 'Sign in to see traffic for what you created.', while the same key in the same header answers HTTP 200 on /api/v1/company/mine. The endpoint accepts only a signed-in browser session although its own page sends agents to it with the key",
+   "filed_at": "2026-10-18T11:57:49+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 216,
+     "verdict": "pass",
+     "at": "2026-10-21T09:07:59+00:00"
+    }
+   ],
+   "their_status": {
+    "216": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-trust-ladder-vocabulary",
+   "nodeids": [
+    "tests/discovery/test_build_onboarding.py::test_trust_ladder_rungs_agree_across_surfaces"
+   ],
+   "report_ids": [
+    78
+   ],
+   "title": "the same trust ladder is named differently on each surface an agent reads, so an agent cannot tell which rung it holds: /build says ['allied', 'public', 'recognized', 'trusted']; llms.txt says ['allied', 'authenticated', 'federated', 'public']; mcp.json says ['allied', 'recognized', 'trusted', 'unknown']",
+   "filed_at": "2026-09-07T20:20:25+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 78,
+     "verdict": "pass",
+     "at": "2026-09-07T21:47:46+00:00"
+    }
+   ],
+   "their_status": {
+    "78": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-trusted-receives-nothing-above-its-tier",
+   "nodeids": [
+    "tests/mcp/test_trust_ladder.py::test_credentialed_caller_receives_nothing_above_its_own_tier"
+   ],
+   "report_ids": [
+    54
+   ],
+   "title": "Trust tier over-served: EXCESS     5 tools above the tier declared for them",
+   "filed_at": "2026-09-04T13:20:49+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "54": "invalid"
+   },
+   "withdrawn": true,
+   "last_check": "CHECK_CHANGED"
+  },
+  {
+   "key": "CYM-usage_dates_and_zone_names_follow_the_pages_language",
+   "nodeids": [
+    "tests/rest/test_usage_dates_follow_the_pages_language.py::test_usage_dates_and_zone_names_follow_the_pages_language"
+   ],
+   "report_ids": [
+    223
+   ],
+   "title": "2 of 2 date or time formatting calls use the browser's language: line 46 toLocaleString([]) in loc(). On /usage (<html lang='en'>) the script that draws the page formats dates with an empty locale list or none, which means the browser's language, so a visitor whose browser is not English reads weekday names, zone names and day-month order in that language on an English page",
+   "filed_at": "2026-10-25T08:00:51+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "223": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  },
+  {
+   "key": "CYM-vaix-orderbook-arbitrage-does-not-use-an-excluded-venue",
+   "nodeids": [
+    "tests/rest/test_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue.py::test_the_vaix_orderbook_arbitrage_does_not_use_an_excluded_venue"
+   ],
+   "report_ids": [
+    203
+   ],
+   "title": "the VAIX orderbook's arbitrage uses a venue its own excluded_venues withheld, on both reads (2026-10-12T22:39:04.838379+00:00, 2026-10-12T22:39:37.322447+00:00): buy_chain: base at 0.00031079 while excluded_venues says mid 0.00031079, -83.75 % from the reference (price_divergence); potential_profit_pct 514.44",
+   "filed_at": "2026-10-12T22:41:11+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 203,
+     "verdict": "pass",
+     "at": "2026-10-13T16:58:11+00:00"
+    }
+   ],
+   "their_status": {
+    "203": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "PASSING"
+  },
+  {
+   "key": "CYM-what_a_public_page_reads_without_a_key_is_documented",
+   "nodeids": [
+    "tests/discovery/test_public_page_reads_are_documented.py::test_what_a_public_page_reads_without_a_key_is_documented"
+   ],
+   "report_ids": [
+    130
+   ],
+   "title": "50 path(s) that 70 public pages call answer an anonymous GET with 200 JSON and are not in /openapi-public.json: /api/v1/agentbook/channels (/agentbook), /api/v1/agentbook/feed (/agentbook), /api/v1/agentbook/posts (/agentbook), /api/v1/agentbook/reputation/leaderboard (/agentbook), /api/v1/agents/species (/links), /api/v1/ai-apps/leaderboard (/apps), /api/v1/ai-due-diligence (/ai-due-diligence), /api/v1/ai-due-diligence/history (/ai-due-diligence), /api/v1/ai-due-diligence/pivot/history (/ai-due-diligence), /api/v1/arena/chart (/arena-v2), /api/v1/arena/featured-events (/arena-v2), /api/v1/arena/headlines (/arena-v2) (+38 more)",
+   "filed_at": "2026-09-25T20:15:55+00:00",
+   "verdicts_sent": [
+    {
+     "report_id": 130,
+     "verdict": "fail",
+     "at": "2026-09-28T08:04:27+00:00"
+    },
+    {
+     "report_id": 130,
+     "verdict": "fail",
+     "at": "2026-10-01T00:16:32+00:00"
+    }
+   ],
+   "their_status": {
+    "130": "paid"
+   },
+   "withdrawn": false,
+   "last_check": "REPRODUCING"
+  }
+ ]
+}
