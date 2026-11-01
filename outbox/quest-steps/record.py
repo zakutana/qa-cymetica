@@ -422,14 +422,17 @@ def market(b, seconds=12):
 # by brightness its dark disc let the line in through the gaps of its ring, and the turning words and collars shook it. So
 # it is read as a white silhouette, the rest of the scene off, and its turning parts' gaps closed
 # name: its item, the part of the clip it stays in (x, y, w, h), its points, seconds of outlines, whether they repeat, the
-# radius its notches are closed to, whether it is read as a silhouette
-OUTLINED = {'gem': ('ad-gem', (400, 210, 260, 290), 110, 12, False, 7, False), 'farmer': ('ad-farmer', (740, 430, 300, 330), 120, 12, False, 7, False), 'promo': ('ad-promo', (1110, 370, 560, 660), 170, 15, True, 16, True)}
+# radius its notches are closed to, how far it stands off, how much its corners are rounded, whether it is read as a silhouette
+# (the Promo Market's three chosen by a loop over its 150 moments, nothing of it outside the line, 2026-11-01:
+# "furt to mas zdeformovane testuj to tak dlouho ve smycce dokud to nevyladis na top"; below 40 its notches at the lamp posts
+# showed, above about 70 the closing outgrew the part of the clip)
+OUTLINED = {'gem': ('ad-gem', (400, 210, 260, 290), 110, 12, False, 7, 2, 2, False), 'farmer': ('ad-farmer', (740, 430, 300, 330), 120, 12, False, 7, 2, 2, False), 'promo': ('ad-promo', (1110, 370, 560, 660), 170, 15, True, 64, 3, 7, True)}
 SILHOUETTE = """(me) => { const uv = CO.uv, root = uv.items.find(x => x.c.id === me).plot.root, keep = new Set(); for (let n = root; n; n = n.parent) keep.add(n);
   uv.scene.children.forEach(ch => { if (!keep.has(ch)) ch.visible = false; });
   root.traverse(n => { if (n.isMesh && n.geometry.type === 'PlaneGeometry' && n.material.blending === 2) n.visible = false; });   // its pool of light, far wider than it
   // the collars held still: their gaps going round would shake the line, which is to change only as the building bobs
   window.__st.children.filter(ch => ch.isGroup && [3.05, 4.1].some(y => Math.abs(ch.position.y - y) < 0.01)).forEach(ch => { Object.defineProperty(ch.rotation, 'y', { get() { return 0; }, set() {} }); });
-  uv.scene.overrideMaterial = new CO.U3.THREE.MeshBasicMaterial({ color: 0xffffff }); }"""
+  uv.scene.overrideMaterial = new CO.U3.THREE.MeshBasicMaterial({ color: 0xffffff, side: CO.U3.THREE.DoubleSide }); }"""
 MATTE = """(ids) => { const uv = CO.uv; uv.post = null;
   ids.forEach(id => { uv.items.find(x => x.c.id === id).plot.root.traverse(n => { if (n.isPoints || n.isSprite) n.visible = false; }); });
   window.__slots.forEach(s => { s.visible = false; });
@@ -487,7 +490,8 @@ def outline_of(lit, close=7, off=2, blur=2):
     import numpy as np
     from PIL import ImageDraw, ImageFilter
     ys, xs = np.nonzero(lit)
-    lit = lit.copy()
+    lit = np.pad(lit, close + off + 4)   # (grown() wraps round: a closing wider than the margin came back in at the far edge)
+    ys, xs = ys + close + off + 4, xs + close + off + 4
     cx, top, bot = int(np.median(xs)), int(ys.min() + 0.35 * (ys.max() - ys.min())), int(ys.min() + 0.85 * (ys.max() - ys.min()))
     lit[top:bot, cx - 2:cx + 3] = True
     a = grown(~grown(~grown(lit, close), close), off)
@@ -496,7 +500,8 @@ def outline_of(lit, close=7, off=2, blur=2):
     pad.paste(im, (1, 1))
     ImageDraw.floodfill(pad, (0, 0), 128)
     solid = np.asarray(pad)[1:-1, 1:-1] != 128
-    return np.asarray(Image.fromarray((solid * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(blur)), np.float32) / 255 > 0.5
+    m = close + off + 4
+    return (np.asarray(Image.fromarray((solid * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(blur)), np.float32) / 255 > 0.5)[m:-m, m:-m]
 
 
 def round_of(solid, n):
@@ -557,15 +562,17 @@ def outlines(b, look=None, fps=10):
     by = "(id) => CO.uv.items.find(x => x.c.id === id).plot.root"
     old = json.loads(re.search(r'QUEST_OUTLINES = (\{.*\});', (capture.HERE / 'outlines.js').read_text(encoding='utf-8'), re.S).group(1))
     data = {'w': w, 'h': h, 'casino': old['casino'], 'track': {}}
-    for name, (item, (bx, by0, bw, bh), n, secs, loop, close, silhouette) in OUTLINED.items():
+    for name, (item, (bx, by0, bw, bh), n, secs, loop, close, off, blur, silhouette) in OUTLINED.items():
         page.evaluate(f"(me) => {{ const r = {by}; {items}.forEach(id => {{ r(id).visible = id === me; }}); }}", item)
-        if silhouette:
-            page.evaluate(SILHOUETTE, item)
         poses, box = [], [1e9, 1e9, 0, 0]
+        read = lambda i: Image.open(io.BytesIO(base64.b64decode(page.evaluate(AT_T, [i / fps, sel, x + bx, y + by0, bw, bh, 'image/png']).split(',', 1)[1]))).convert('RGB')
+        lit = [np.asarray(read(i), np.uint8).max(axis=2) > (40 if silhouette else 24) for i in range(secs * fps)]
+        if silhouette:      # what the eye sees (its turning collars and words) and the white shape (its dark parts), together
+            page.evaluate(SILHOUETTE, item)
+            lit = [m | (np.asarray(read(i), np.uint8).max(axis=2) > 128) for i, m in enumerate(lit)]
         for i in range(secs * fps):
-            shot = page.evaluate(AT_T, [i / fps, sel, x + bx, y + by0, bw, bh, 'image/png'])
-            im = Image.open(io.BytesIO(base64.b64decode(shot.split(',', 1)[1]))).convert('RGB')
-            solid = outline_of(np.asarray(im, np.uint8).max(axis=2) > (128 if silhouette else 24), close=close, blur=3 if silhouette else 2)
+            im = read(i) if look and i % 30 == 0 else None
+            solid = outline_of(lit[i], close=close, off=off, blur=blur)
             ys, xs = np.nonzero(solid)
             box = [min(box[0], xs.min() + bx), min(box[1], ys.min() + by0), max(box[2], xs.max() + bx), max(box[3], ys.max() + by0)]
             poses.append(round_of(solid, n) + (bx, by0))
