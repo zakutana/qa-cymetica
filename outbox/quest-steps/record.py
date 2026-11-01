@@ -418,8 +418,18 @@ def market(b, seconds=12):
 # line tight on it, and it stands still. So: tight, and it moves. The outline of every tenth of a second of the clip
 # (STEP_CLOCK), each resampled to the same number of points from the same place, kept in outlines.js; the page goes
 # through them by the clip's own time. The casino's one path stays as it was filmed
-# name: its item, the part of the clip it stays in (x, y, w, h), its points, seconds of outlines, whether they repeat
-OUTLINED = {'gem': ('ad-gem', (400, 210, 260, 290), 110, 12, False), 'farmer': ('ad-farmer', (740, 430, 300, 330), 120, 12, False), 'promo': ('ad-promo', (1110, 370, 560, 660), 170, 15, True)}
+# The Promo Market's next ("velky promo market ma dobre obramovani ale jak na nem jedou animace tak ho to rusi a deformuje"):
+# by brightness its dark disc let the line in through the gaps of its ring, and the turning words and collars shook it. So
+# it is read as a white silhouette, the rest of the scene off, and its turning parts' gaps closed
+# name: its item, the part of the clip it stays in (x, y, w, h), its points, seconds of outlines, whether they repeat, the
+# radius its notches are closed to, whether it is read as a silhouette
+OUTLINED = {'gem': ('ad-gem', (400, 210, 260, 290), 110, 12, False, 7, False), 'farmer': ('ad-farmer', (740, 430, 300, 330), 120, 12, False, 7, False), 'promo': ('ad-promo', (1110, 370, 560, 660), 170, 15, True, 16, True)}
+SILHOUETTE = """(me) => { const uv = CO.uv, root = uv.items.find(x => x.c.id === me).plot.root, keep = new Set(); for (let n = root; n; n = n.parent) keep.add(n);
+  uv.scene.children.forEach(ch => { if (!keep.has(ch)) ch.visible = false; });
+  root.traverse(n => { if (n.isMesh && n.geometry.type === 'PlaneGeometry' && n.material.blending === 2) n.visible = false; });   // its pool of light, far wider than it
+  // the collars held still: their gaps going round would shake the line, which is to change only as the building bobs
+  window.__st.children.filter(ch => ch.isGroup && [3.05, 4.1].some(y => Math.abs(ch.position.y - y) < 0.01)).forEach(ch => { Object.defineProperty(ch.rotation, 'y', { get() { return 0; }, set() {} }); });
+  uv.scene.overrideMaterial = new CO.U3.THREE.MeshBasicMaterial({ color: 0xffffff }); }"""
 MATTE = """(ids) => { const uv = CO.uv; uv.post = null;
   ids.forEach(id => { uv.items.find(x => x.c.id === id).plot.root.traverse(n => { if (n.isPoints || n.isSprite) n.visible = false; }); });
   window.__slots.forEach(s => { s.visible = false; });
@@ -547,20 +557,23 @@ def outlines(b, look=None, fps=10):
     by = "(id) => CO.uv.items.find(x => x.c.id === id).plot.root"
     old = json.loads(re.search(r'QUEST_OUTLINES = (\{.*\});', (capture.HERE / 'outlines.js').read_text(encoding='utf-8'), re.S).group(1))
     data = {'w': w, 'h': h, 'casino': old['casino'], 'track': {}}
-    for name, (item, (bx, by0, bw, bh), n, secs, loop) in OUTLINED.items():
+    for name, (item, (bx, by0, bw, bh), n, secs, loop, close, silhouette) in OUTLINED.items():
         page.evaluate(f"(me) => {{ const r = {by}; {items}.forEach(id => {{ r(id).visible = id === me; }}); }}", item)
+        if silhouette:
+            page.evaluate(SILHOUETTE, item)
         poses, box = [], [1e9, 1e9, 0, 0]
         for i in range(secs * fps):
             shot = page.evaluate(AT_T, [i / fps, sel, x + bx, y + by0, bw, bh, 'image/png'])
             im = Image.open(io.BytesIO(base64.b64decode(shot.split(',', 1)[1]))).convert('RGB')
-            solid = outline_of(np.asarray(im, np.uint8).max(axis=2) > 24)
+            solid = outline_of(np.asarray(im, np.uint8).max(axis=2) > (128 if silhouette else 24), close=close, blur=3 if silhouette else 2)
             ys, xs = np.nonzero(solid)
             box = [min(box[0], xs.min() + bx), min(box[1], ys.min() + by0), max(box[2], xs.max() + bx), max(box[3], ys.max() + by0)]
             poses.append(round_of(solid, n) + (bx, by0))
             if look and i % 30 == 0:
                 im.save(Path(look) / f'matte-{name}-{i}.png')
         poses = np.array(poses)
-        poses = (np.roll(poses, 1, axis=0) + 2 * poses + np.roll(poses, -1, axis=0)) / 4 if loop else np.r_[poses[:1], (poses[:-2] + 2 * poses[1:-1] + poses[2:]) / 4, poses[-1:]]
+        # (a repeating one over seven moments: where the closing takes a lamp post in or lets it go it moved 6 px in one)
+        poses = sum(w * np.roll(poses, k, axis=0) for k, w in zip(range(-3, 4), (1, 2, 3, 4, 3, 2, 1))) / 16 if loop else np.r_[poses[:1], (poses[:-2] + 2 * poses[1:-1] + poses[2:]) / 4, poses[-1:]]
         raw = np.round(poses * 10).astype('<i2').tobytes()
         data['track'][name] = {'n': n, 'fps': fps, 'loop': loop, 'b64': base64.b64encode(raw).decode()}
         p = lambda v, d: round(v / d * 100, 2)
@@ -635,7 +648,7 @@ UV_CENTER = """([k, dy]) => { const o = CO.uv, cam = o.camera, t = o.controls.ta
 # object of the scene: the same glass, the same three pages on its faces, turned to the camera as the page's is to the
 # reader (its transforms with y flipped) and standing on a corner, swaying and bobbing at the same pace (holo-sway 18 s,
 # holo-bob 6.5 s), over the Universe's own cone of light. Only our recording browser sees it
-UV_CUBE_SIDE, UV_CUBE_Y = 3.4, 9.25
+UV_CUBE_SIDE, UV_CUBE_Y = 2.9, 8.8   # ("to nema mit hrany ta krychle, ma byt trosicku mensi a bez hran")
 UV_CUBE = """async ([faces, side, cy]) => { const T = CO.U3.THREE, it = CO.uv.items.find(x => x.kind === 'product' && x.product.c.name === 'Promo Market'); let st = null;
   it.plot.root.traverse(n => { if (n.isGroup && Math.abs(n.scale.x - 0.85) < 1e-3 && n.children.length > 20) st = n; });
   const airship = st.children.find(ch => ch.isGroup && Math.abs(ch.position.y - 7.65) < 0.02);
@@ -643,11 +656,11 @@ UV_CUBE = """async ([faces, side, cy]) => { const T = CO.U3.THREE, it = CO.uv.it
   st.children.forEach(ch => { if (ch !== airship && ch !== cone && (ch.isPoints || ch.isSprite || ch.position.y > 5.85)) ch.visible = false; });
   it.plot.halo.visible = false;
   const tex = async (url) => { const im = new Image(); im.src = url; await im.decode(); const S = 640, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d');
-    const g = x.createLinearGradient(0, 0, S, S); g.addColorStop(0, 'rgba(0,207,255,.30)'); g.addColorStop(.46, 'rgba(0,207,255,.09)'); g.addColorStop(1, 'rgba(0,255,136,.17)');
+    const g = x.createLinearGradient(0, 0, S, S); g.addColorStop(0, 'rgba(0,207,255,.20)'); g.addColorStop(.46, 'rgba(0,207,255,.06)'); g.addColorStop(1, 'rgba(0,207,255,.12)');
     x.fillStyle = g; x.fillRect(0, 0, S, S);
-    x.globalAlpha = .88; const m = S * .13, w = S - 2 * m; x.drawImage(im, 0, 0, Math.min(im.naturalWidth, im.naturalHeight), Math.min(im.naturalWidth, im.naturalHeight), m, m, w, w); x.globalAlpha = 1;
+    x.globalAlpha = .62; const m = S * .13, w = S - 2 * m; x.drawImage(im, 0, 0, Math.min(im.naturalWidth, im.naturalHeight), Math.min(im.naturalWidth, im.naturalHeight), m, m, w, w); x.globalAlpha = 1;
     for (let y = 0; y < S; y += 6) { x.fillStyle = 'rgba(0,207,255,.05)'; x.fillRect(0, y, S, 2); }
-    x.strokeStyle = 'rgba(0,207,255,.3)'; x.lineWidth = 48; x.strokeRect(0, 0, S, S); x.strokeStyle = 'rgba(0,207,255,.75)'; x.lineWidth = 12; x.strokeRect(0, 0, S, S);
+    x.save(); x.beginPath(); x.rect(0, 0, S, S); x.clip(); [[S * .22, 'rgba(0,207,255,.16)']].forEach(([bl, col]) => { x.shadowBlur = bl; x.shadowColor = col; x.strokeStyle = '#000'; x.lineWidth = 60; x.strokeRect(-30, -30, S + 60, S + 60); }); x.restore();
     const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 8; return t; };
   const ts = []; for (const f of faces) ts.push(await tex(f));
   const mats = [0, 1, 2, 0, 1, 2].map(i => new T.MeshBasicMaterial({ map: ts[i], transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.FrontSide }));

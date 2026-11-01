@@ -439,7 +439,6 @@ h1 b { font-weight: 400; }
 .stage.lab { perspective: 1500px; top: -14px; }
 .stage.lab .reactor { position: relative; width: 108%; margin-left: -4%; transform: rotateY(-15deg) rotateX(4deg) rotateZ(.6deg) scale(.98); transform-origin: 0% 50%;
   transition: transform .5s var(--ease); }
-.stage.lab .reactor:hover { transform: rotateY(-12deg) rotateX(3deg) rotateZ(.4deg) scale(.995); }
 .stage.lab .holo-frame { position: absolute; inset: -8px -6px; z-index: 3; pointer-events: none; border-radius: 18px;
   background:
     linear-gradient(90deg, var(--cyan), transparent) 0 0 / 28px 2px no-repeat,
@@ -790,7 +789,7 @@ h1 b { font-weight: 400; }
   .users { font-size: 11.5px; padding: 4px 10px; top: 85%; } .users b { font-size: 16px; }
   .plus { font-size: 11px; left: 30%; top: 85%; }
   .stage.lab { top: 0; perspective: none; }
-  .stage.lab .reactor, .stage.lab .reactor:hover { width: 100%; margin-left: 0; transform: none; }
+  .stage.lab .reactor { width: 100%; margin-left: 0; transform: none; }
   .lab-hud { font-size: 10.5px; padding: 7px 12px; gap: 7px; border-radius: 14px; max-width: 100%; flex-wrap: wrap; justify-content: center; text-align: center; }
   .lb-wrap { position: relative; right: auto; bottom: auto; top: auto; width: 100%; margin-top: 20px; perspective: none; }
   .lb { transform: none; padding: 16px 12px 12px; }
