@@ -1,13 +1,18 @@
 """Refresh data.js: Nexus's pitch cards and the pitchboard, from Cymetica's live data (GET only, nothing is sent).
 
-    python outbox/pitch-cards/refresh.py
+    python outbox/pitch-cards/refresh.py          writes data.js from live reads and what --read has saved
+    python outbox/pitch-cards/refresh.py --read   the long pass (their API is slow): every card ever made and each live
+                                                  card's history, into .cache/, resumable; a failed read is left for next time
 
 Nexus pitches only what clears its bar (the operator, 2026-10-31: "musi byt high confidence rady podlozene vysledky,
 ne jak nove event karty"):
   a fund     live with real money for 8 weeks or more, +5% or more since it went live, and up over the last 30 days;
   a big deal a deal of $10B or more announced in the last 7 days that has a live ripple card.
-The pitchboard is every pick Cymetica's AI has made so far, scored since the day it was made: each fund since it went
-live (its page's own index history) and each deal-ripple card since it was minted (its index against its base).
+The Profit Board is everything on Cymetica that could be bought from its first day and has a price to score it by, all of
+it, losers and closed ones too: each LIVE fund since it went live (PAPER and STANDING funds take no money) and every event
+card since it was minted, the 72-hour cards from their close. A mover in /events/universe/movers has no start and is no
+instrument here; it counts through the card that holds it. /fund-optimizations is a log of runs; its one live node is the
+M&A Ripple Fund, which is on the list.
 A failed read stops the script and leaves the old data.js.
 """
 from __future__ import annotations
@@ -16,6 +21,7 @@ import json
 import re
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from html import unescape
 from pathlib import Path
@@ -30,6 +36,11 @@ from qa.config import identities, load_dotenv  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 
 FUND_WEEKS, FUND_RET, DEAL_USD, DEAL_DAYS = 8, 5.0, 10e9, 7
+H72 = ("settled", "trading_closed")
+CACHE = HERE / ".cache"
+EVERY_CARD, HISTORIES = CACHE / "every-card.json", CACHE / "histories.json"
+H72_SHOWN = 300     # the rows of 72-hour cards that travel to the page; the tiles count all of them
+JUMP = 40.0         # one step between two readings this big is not a market: flagged on the row, never counted as Best
 
 
 def get(client, path, what=None):
@@ -59,8 +70,9 @@ def ranked_funds(html: str) -> list[dict]:
         href = re.search(r'href="([^"]+)"', cell.group(1))
         status = re.search(r'<span class="st (\w+)">', tr)
         ret = re.search(r'<span class="(?:pos|neg)">([+\-−]?[\d.]+)%</span>\s*</td>\s*$', tr, re.S)
+        side = re.search(r'<span class="dir">(\w+)</span>', tr)
         out.append({"name": unescape(re.sub(r"<[^>]+>", "", cell.group(1))).strip(), "href": href.group(1) if href else None,
-                    "status": status.group(1) if status else None,
+                    "status": status.group(1) if status else None, "side": side.group(1) if side else "long",
                     "ret": float(ret.group(1).replace("−", "-")) if ret else None})
     return out
 
@@ -122,6 +134,162 @@ def deal_size(title: str) -> float | None:
     return float(m.group(1)) * (1e9 if m.group(2) == "B" else 1e6) if m else None
 
 
+def weekly(pts: list) -> list:
+    """The last reading of each week, oldest first, as [YYYY-MM-DD, value]: enough for the board's one line."""
+    out = {}
+    for t, v in pts:
+        y, w, _ = datetime.fromisoformat(t[:10]).isocalendar()
+        out[(y, w)] = [t[:10], round(v, 4)]
+    return [out[k] for k in sorted(out)]
+
+
+def read_long(client) -> None:
+    """Every card ever made, then the history of each live card, the ones people pick from first. Saves as it goes."""
+    CACHE.mkdir(exist_ok=True)
+    (HERE / ".cache" / ".gitignore").write_text("*\n", encoding="utf-8")
+    every = json.loads(EVERY_CARD.read_text(encoding="utf-8")) if EVERY_CARD.exists() else {}
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    total = client.get("/api/v1/event-cards?limit=1&status=all").json()["total"]
+    def page(off):
+        CURRENT_TIER.set(SafetyTier.SAFE)
+        try:
+            return client.get(f"/api/v1/event-cards?limit=200&status=all&offset={off}").json()["cards"]
+        except Exception:
+            return None
+    todo = list(range(0, total, 200))
+    for attempt in range(4):
+        missed = []
+        with ThreadPoolExecutor(3) as ex:
+            for off, cards in zip(todo, ex.map(page, todo)):
+                if cards is None:
+                    missed.append(off)
+                    continue
+                for c in cards:
+                    every[c["id"]] = {k: c.get(k) for k in ("title", "status", "card_url", "created_at", "trading_closes_at", "index_base", "current_index", "bull_notional_usdc", "bear_notional_usdc")}
+                print(f"cards {off}/{total} kept {len(every)}", flush=True)
+                EVERY_CARD.write_text(json.dumps(every, ensure_ascii=False), encoding="utf-8")
+        todo = missed
+        if not todo:
+            break
+    done = json.loads(HISTORIES.read_text(encoding="utf-8")) if HISTORIES.exists() else {}
+    def one(i):
+        CURRENT_TIER.set(SafetyTier.SAFE)
+        try:
+            r = client.get(f"/api/v1/event-cards/{i}/index-history?interval=all")
+            if r.status_code != 200:
+                return i, None
+            pts = r.json().get("points") or []
+        except Exception:
+            return i, None
+        if not pts:
+            return i, {"n": 0}
+        hi = max(pts, key=lambda p: p["index"])
+        step = max(zip(pts, pts[1:]), key=lambda s: abs(s[1]["index"] / s[0]["index"] - 1), default=None)
+        size = 100 * (step[1]["index"] / step[0]["index"] - 1) if step else 0
+        return i, {"n": len(pts), "first_t": pts[0]["t"], "peak_t": hi["t"], "peak": hi["index"], "week": weekly([(p["t"], p["index"]) for p in pts]),
+                   "jump": [round(size, 1), step[1]["t"][:10]] if abs(size) >= JUMP else None}
+    closed = [i for i, c in every.items() if c["status"] in H72 and c.get("index_base") and c.get("current_index") is not None]
+    closed.sort(key=lambda i: every[i]["index_base"] / every[i]["current_index"])
+    live = [i for i, c in every.items() if c["status"] == "live"]
+    live.sort(key=lambda i: (every[i]["title"] or "").startswith("SAIB:"))
+    live = closed[:H72_SHOWN] + live   # what the list shows first
+    for attempt in range(4):
+        todo = [i for i in live if "jump" not in done.get(i, {}) and done.get(i) != {"n": 0}]
+        if not todo:
+            break
+        with ThreadPoolExecutor(3) as ex:
+            for k, (i, row) in enumerate(ex.map(one, todo)):
+                if row is not None:
+                    done[i] = row
+                if k % 10 == 0:
+                    HISTORIES.write_text(json.dumps(done), encoding="utf-8")
+                    print(f"histories {len(done)}/{len(live)}", flush=True)
+        HISTORIES.write_text(json.dumps(done), encoding="utf-8")
+    CURRENT_TIER.reset(token)
+    print("read: cards", len(every), "histories", len(done), "of", len(live))
+
+
+def days_since(iso: str, now: datetime) -> int:
+    return (now - datetime.fromisoformat(iso[:10]).replace(tzinfo=timezone.utc)).days
+
+
+def profit_board(funds: list, fund_week: dict, pitches: list, now: datetime) -> dict:
+    """One list. Each row: what it is, % since it could first be bought, the best it reached, days, money in it."""
+    every = json.loads(EVERY_CARD.read_text(encoding="utf-8")) if EVERY_CARD.exists() else {}
+    hist = json.loads(HISTORIES.read_text(encoding="utf-8")) if HISTORIES.exists() else {}
+    pitched = {p.get("id") or p["name"] for p in pitches}
+    rows, hidden = [], {"unpriced": 0, "other": {}}
+    for f in funds:
+        rows.append({"k": "fund", "n": f["name"], "s": "Fund · " + f["side"], "u": f["href"], "d": f["since"], "days": days_since(f["since"], now),
+                     "r": f["ret"], "p": f["peak"], "pd": f["peak_d"], "m": None, "late": False, "pitch": f["name"] in pitched, "_w": fund_week.get(f["name"], [])})
+    h72 = []
+    for i, c in every.items():
+        title = c["title"] or ""
+        if not c.get("index_base") or c.get("current_index") is None:
+            hidden["unpriced"] += 1
+            continue
+        if title.startswith(("AIB-", "AMF-")):   # the shell of a fund: the fund's own row is the record
+            continue
+        ret = round(100 * (c["current_index"] / c["index_base"] - 1), 2)
+        money = (c.get("bull_notional_usdc") or 0) + (c.get("bear_notional_usdc") or 0)
+        h = hist.get(i) or {}
+        if c["status"] in H72:
+            peak = max(ret, 100 * (h["peak"] / c["index_base"] - 1)) if h.get("peak") else None
+            h72.append({"k": "h72", "n": title, "s": "72h card", "u": c["card_url"], "d": c["created_at"][:10], "days": 3, "r": ret, "p": round(peak, 2) if peak is not None else None,
+                        "pd": h["peak_t"][:10] if h.get("peak_t") else None, "m": money, "late": False, "pitch": False, "j": h.get("jump")})
+            continue
+        if c["status"] != "live":
+            hidden["other"][c["status"]] = hidden["other"].get(c["status"], 0) + 1
+            continue
+        deal = re.match(r"^(\S+) — SAIB: (.+)$", title)
+        company = re.match(r"^SAIB: (\S+) — (.+)$", title)
+        peak = max(ret, 100 * (h["peak"] / c["index_base"] - 1)) if h.get("peak") else None
+        lag = (datetime.fromisoformat(h["first_t"][:10]) - datetime.fromisoformat(c["created_at"][:10])).days if h.get("first_t") else 0
+        rows.append({"k": "company" if company else "card", "n": (company.group(1) + " " + company.group(2)) if company else (deal.group(1) + " · " + re.sub(r"\s*\(\$[\d.]+[BM]\)\s*$", "", deal.group(2)).replace(" to acquire ", " buys ")) if deal else title,
+                     "s": "Company card" if company else "Deal card" if deal else "Card", "u": c["card_url"], "d": c["created_at"][:10], "days": days_since(c["created_at"], now),
+                     "r": ret, "p": round(peak, 2) if peak is not None else None, "pd": h["peak_t"][:10] if h.get("peak_t") else None, "m": money, "late": lag > 3, "pitch": i in pitched, "j": h.get("jump"),
+                     "_w": [[d, 100 * (v / c["index_base"] - 1)] for d, v in h.get("week", [])]})
+    def tile(rs):
+        n = len(rs)
+        peaks = [r for r in rs if r["p"] is not None]
+        clean = [r for r in rs if not r.get("j")]
+        best = max(clean, key=lambda r: r["r"]) if clean else None
+        return {"n": n, "up": sum(1 for r in rs if r["r"] > 0), "avg": round(sum(r["r"] for r in rs) / n, 2) if n else 0, "best": best["r"] if best else None, "best_n": best["n"] if best else None,
+                "peaks": len(peaks), "hit20": sum(1 for r in peaks if r["p"] >= 20), "money_n": sum(1 for r in rs if r["m"]), "money": round(sum(r["m"] or 0 for r in rs), 2), "jumps": sum(1 for r in rs if r.get("j"))}
+    def line_of(rs):
+        """The average of everything that had started by each week: a 72-hour card counts at its final result from its first week."""
+        starts = sorted({r["d"] for r in rs})
+        if not starts:
+            return []
+        out, week, end = [], datetime.fromisoformat(starts[0]).replace(tzinfo=timezone.utc), now
+        while week < end:
+            day = week.strftime("%Y-%m-%d")
+            vals = []
+            for r in rs:
+                if r["k"] == "h72":
+                    if r["d"] <= day:
+                        vals.append(r["r"])
+                else:
+                    last = None
+                    for d, v in r.get("_w", []):
+                        if d > day:
+                            break
+                        last = v
+                    if last is not None:
+                        vals.append(last)
+            if len(vals) >= (20 if len(rs) > 100 else 3):   # a start of two or three things says nothing
+                out.append([day, round(sum(vals) / len(vals), 2), len(vals)])
+            week += timedelta(days=7)
+        out.append([now.strftime("%Y-%m-%d"), round(sum(r["r"] for r in rs) / len(rs), 2), len(rs)])
+        return out
+    groups = {"all": rows + h72, "pitch": [r for r in rows if r["pitch"]], "fund": [r for r in rows if r["k"] == "fund"], "card": [r for r in rows if r["k"] == "card"],
+              "company": [r for r in rows if r["k"] == "company"], "h72": h72}
+    stats = {k: tile(v) | {"line": line_of(v)} for k, v in groups.items()}
+    h72.sort(key=lambda r: -r["r"])
+    shown = [{k: v for k, v in r.items() if not k.startswith("_")} for r in rows + h72[:H72_SHOWN]]
+    return {"rows": shown, "stats": stats, "hidden": hidden, "cards_read": len(every), "histories_read": len(hist)}
+
+
 def main() -> dict:
     load_dotenv(REPO / ".env")
     install_client_guard()
@@ -130,12 +298,19 @@ def main() -> dict:
     now = datetime.now(timezone.utc)
     try:
         funds = ranked_funds(get(client, "/fund-performance").text)
-        board, pitches, fund_lines = [], [], {}
+        board, pitches, fund_lines, live_funds, fund_week = [], [], {}, [], {}
         for f in funds:
             series, since = fund_history(client, f)
             if len(series) < 2 or not since:
                 continue
             fund_lines[f["name"]] = rel(series)
+            if f["status"] == "live":   # "LIVE funds take real USDC; PAPER funds ... take no investment yet"
+                v0 = series[0][1]
+                won = [(t, 100 * (1 - v / v0) if f["side"] == "short" else 100 * (v / v0 - 1)) for t, v in series]   # a short fund wins when its index falls
+                top = max(won, key=lambda q: q[1])
+                ret = f["ret"] if f["ret"] is not None else won[-1][1]
+                live_funds.append(f | {"since": since[:10], "ret": ret, "peak": round(max(top[1], ret), 2), "peak_d": top[0][:10]})
+                fund_week[f["name"]] = weekly(won)
             s = stats(series, now)
             weeks = (now - datetime.fromisoformat(since[:10]).replace(tzinfo=timezone.utc)).days // 7
             row = {"kind": "fund", "name": f["name"], "href": f["href"], "status": f["status"], "since": since[:10],
@@ -188,13 +363,19 @@ def main() -> dict:
             "ripple_fund": {"ret": ripple["ret"], "since": ripple["since"]} if ripple else None,
             "big_deals": {"n": len(big), "up": sum(1 for d in big if d["ret"] > 0),
                           "avg": round(sum(d["ret"] for d in big) / len(big), 2) if big else None},
-            "pitches": pitches, "board": board}
+            "pitches": pitches, "board": profit_board(live_funds, fund_week, pitches, now)}
 
 
 if __name__ == "__main__":
+    if "--read" in sys.argv:
+        load_dotenv(REPO / ".env")
+        install_client_guard()
+        read_long(build_client(identities()["trusted"], EndpointRegistry.load(), timeout=120.0))
+        raise SystemExit(0)
     d = main()
     (HERE / "data.js").write_text(
         "/* Live data for the Pitch Cards mock, read by refresh.py (GET only). Real, not simulated. */\n"
         f"window.PC_DATA = {json.dumps(d, ensure_ascii=False, indent=1)};\n", encoding="utf-8")
     print(json.dumps({"as_of": d["as_of"], "pitches": [(p["kind"], p["name"], p["ret"]) for p in d["pitches"]],
-                      "board": len(d["board"]), "ripple": d["ripple_fund"]}, ensure_ascii=False))
+                      "board": {k: (v["n"], v["up"], v["avg"], v["hit20"], v["money_n"]) for k, v in d["board"]["stats"].items()}, "hidden": d["board"]["hidden"],
+                      "read": (d["board"]["cards_read"], d["board"]["histories_read"]), "ripple": d["ripple_fund"]}, ensure_ascii=False))

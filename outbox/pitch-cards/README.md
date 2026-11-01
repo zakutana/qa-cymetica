@@ -3,8 +3,7 @@
 Asked for by the operator on 2026-10-31 (replacing Prove It, which was thrown out): a room like a TV investors' show where
 Nexus brings its pitches and the user, with credit loaded on the platform ($100 in the operator's example), swipes left to
 pass or right to give it an amount; then follows how the deal does. A pitch is short and backed by data shown first; a
-notification on Cymetica says when Nexus has one; every pitch Nexus ever made goes on a public pitchboard with its
-result since. Nexus pitches only high-confidence ideas with results behind them, or truly big news (a mega deal or
+notification on Cymetica says when Nexus has one. Nexus pitches only high-confidence ideas with results behind them, or truly big news (a mega deal or
 IPO), never a fresh untested event card.
 
 **Open:** `python outbox/pitch-cards/serve.py` (the `pitch-cards` entry in `.claude/launch.json`), then
@@ -16,11 +15,14 @@ The third take, after "jezisi kriste co to je za tragicky design" on the first (
 jeste hnusnejsi" on the second (Inter on glass, gradient numerals, aurora blobs). The Den is the render of Nexus at a
 holographic chart (`outbox/quest-gemini/pics/agent.webp`, an untracked folder, the source for `build_scene.py`):
 
-* `scene.webp`: the room with the baked pane and chart painted out.
+* `scene.webp`: the room alone, the baked pane painted out and Nexus gone (right of x=1300 it is its left side mirrored).
 * `nexus.webp`: Nexus cut out along a hand-traced outline, standing in front of the card, so the live card sits under the
   finger and slides behind Nexus when it is swiped right. On a phone the card covers the body and the face looks over it.
-* `layout()` in `pc.js` places everything in the render's own pixels (2560 x 1440), so the finger stays on the card at any
-  screen size from 1280 x 720 up, and `drawChart()` ends the line under the fingertip where the data allows (within 3 px on
+* The sizes do not follow the window, as their own pages' do not: at the operator's 2560 x 1267 /agent-casino has a 58px
+  headline and a 1208px column, so here the headline is 58px, the card 400 x 530, Nexus 72% of the render, the group
+  centred, and only the room fills the screen ("vse moc obrovske", 2026-11-01, when it all grew with the window).
+* `layout()` in `pc.js` places Nexus and the card in the render's own pixels (2560 x 1440), so the finger stays on the card at
+  any screen size from 1280 x 720 up, and `drawChart()` ends the line under the fingertip where the data allows (within 3 px on
   the fund card; the deal's own peak above its last point keeps that dot lower). Under 1100 px wide it is the phone layout,
   tabs at the bottom.
 * A card holds five things: a label line, the result as the big number, what it is, the chart, one or two sentences. The
@@ -54,8 +56,26 @@ the green line is the pitch, the faint lines are its real peers from each one's 
 mega deals. Lines are thinned to about 36 evenly spaced means, the last point exact, and drawn straight. A fund page gives its
 first day and then nothing for weeks: that stretch is not drawn, so Molecular's line starts at its first real run.
 
-The pitchboard is Cymetica AI's picks so far, 38: 16 funds since they went live and 22 deal-ripple cards since they were
-minted (21 up, -1.3% on average on 2026-11-01). That is why the headline says "Every result public." and not "Only proven
-ideas.": the second is refuted one tab away. The 557 one-per-company "SAIB: ZTS — Zoetis" cards are not picks and stay off.
 The $100 balance is the operator's example; investing moves only the page's own counters, and a new deal reads 0.0% until the
 real product tracks it.
+
+## The Profit Board
+
+Asked for on 2026-11-01: "chci videt jeden seznam a jen veci do kterych se dalo realne zavcasu na zacatku investovat", the one
+place to watch for the day Cymetica turns profitable. Headline: **What would have made you money on Cymetica.** It replaces the
+pitchboard; a pitch is a tagged row (and a tab).
+
+**On the list:** every LIVE fund (their page: "LIVE funds take real USDC; PAPER funds ... take no investment yet") since it went
+live; every event card with a price since it was minted, live and closed, because `status=live`, the API's default, is 647 of
+35,580 and would show survivors only. **Not on it:** Top Movers (30,235 vehicles with trailing returns: no start, nothing to buy
+here; a stock counts through the card that holds it), /fund-optimizations (a log of runs; its one live node is the M&A Ripple
+Fund, which is on the list), /leaderboard's 72h tab (the same cards). Not yet: exchange tokens (only a 24h change is public),
+launchpad tokens (none listed), CyMetica-42 (a trade log, no price), bots.
+
+**Columns:** Up since start, Peak (what selling at the top would have paid; "≥" when recording began more than 3 days late),
+Days, Money in. **The one number:** $100 in each on its first day, equal weight, and its line by week against break-even.
+**JUMP:** one step of 40% or more between two readings is flagged on the row and never counted as Best: DCA Manufacturing went
+97.1 to 197.7 in one step before its close, Corteva 94.1 to 16.3 in one. A 72h card's history is read only for the 300 the list shows.
+
+`python outbox/pitch-cards/refresh.py --read` is the long pass (every card, then the histories, into `.cache/`, not in git,
+resumable); `refresh.py` then writes `data.js`.

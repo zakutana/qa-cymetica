@@ -181,7 +181,7 @@
       h += '<article class="pc-card k-' + P[k].kind + ' ' + (k === S.i ? 'top' : k === S.i + 1 ? 'back1' : 'back2') + '" data-k="' + k + '">' + frontHtml(P[k]) + '</article>';
     if (S.i >= P.length) h = '<div class="pc-empty"><b>That’s all<br><span>for now.</span></b><small title="A fund: live ' + D.bar.fund_weeks + '+ weeks, +' + D.bar.fund_ret + '% or more since it went live, up over the last 30 days. A deal: $' +
       (D.bar.deal_usd / 1e9) + 'B or more, in the last ' + D.bar.deal_days + ' days, with a live ripple card.">Nexus pitches only when the data is strong. You get a notification when there’s a new one.</small>' +
-      '<button type="button" data-tab="board">SEE EVERY PITCH →</button></div>';
+      '<button type="button" data-tab="board">SEE THE PROFIT BOARD →</button></div>';
     $('deck').innerHTML = h;
     pc.classList.toggle('done', S.i >= P.length);
     $('acts').classList.toggle('off', S.i >= P.length);
@@ -274,7 +274,7 @@
   function drawBal() { $('bal').textContent = usd(S.bal); var b = $('addc'); b.classList.remove('tick'); void b.offsetWidth; b.classList.add('tick'); }
 
   /* ------------------------------------------------------------------ my deals */
-  function stat(k, v, cls, small) { return '<div class="pc-stat"><span>' + k + '</span><b class="' + (cls || '') + '">' + v + '</b>' + (small ? '<small>' + small + '</small>' : '') + '</div>'; }
+  function stat(k, v, cls, small, tip) { return '<div class="pc-stat"' + (tip ? ' title="' + esc(tip) + '"' : '') + '><span>' + k + '</span><b class="' + (cls || '') + '">' + v + '</b>' + (small ? '<small>' + small + '</small>' : '') + '</div>'; }
   function spark(p) {   // what you bought into: its line so far
     var pts = calm(dense(p.line).rest, 18), W = 150, H = 40, lo = Infinity, hi = -Infinity, end = pts[pts.length - 1][0], t0 = pts[0][0];
     pts.forEach(function (q) { lo = Math.min(lo, q[1]); hi = Math.max(hi, q[1]); });
@@ -290,25 +290,52 @@
     }).join('') : '<div class="pc-none"><img src="/_pc/nexus-face.webp" alt="">No deals yet. Swipe right on a pitch you like.</div>';
   }
 
-  /* ------------------------------------------------------------------ the pitchboard: every pick, since it was made */
-  var BK = 'all', SHOWN = 40;
+  /* ------------------------------------------------------------------ the Profit Board: one list of everything that could be bought from its first day */
+  var B = D.board, BK = 'all', SHOWN = 40, SORT = 'r';
+  var TABS = [['all', 'All'], ['pitch', 'Pitches'], ['fund', 'Funds'], ['card', 'Cards'], ['company', 'Company cards'], ['h72', '72h cards']];
+  var COLS = [['r', 'Up since start', 'From the day it could first be bought. A 72h card: its result at the close.'], ['p', 'Peak', 'The best it ever reached since that day: what selling at the top would have paid. "≥": recording began more than 3 days after it started, so the top may have been higher.'], ['days', 'Days', 'Since it started.'], ['m', 'Money in', 'Bull and bear money in the card right now (their bull_notional_usdc + bear_notional_usdc). A fund does not publish it.']];
+  var big = function (n) { return n.toLocaleString('en-US'); };
+  function drawBoardLine(line) {
+    var box = $('pbLine'), W = box.clientWidth, H = box.clientHeight;
+    if (!W || !H || !line || line.length < 2) { box.innerHTML = ''; return; }
+    var lo = 0, hi = 0, t = function (d) { return Date.parse(d + 'T00:00:00Z'); }, t0 = t(line[0][0]), t1 = t(line[line.length - 1][0]);
+    line.forEach(function (q) { lo = Math.min(lo, q[1]); hi = Math.max(hi, q[1]); });
+    var pad = (hi - lo || 1) * .14, X = function (d) { return 6 + (W - 16) * (t(d) - t0) / ((t1 - t0) || 1); }, Y = function (v) { return 10 + (H - 34) * (1 - (v - lo + pad) / (hi - lo + 2 * pad)); };
+    var d = line.map(function (q, i) { return (i ? 'L' : 'M') + X(q[0]).toFixed(1) + ' ' + Y(q[1]).toFixed(1); }).join(''), z = Y(0), e = line[line.length - 1];
+    box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true"><defs>' +
+      '<clipPath id="pbUp"><rect x="0" y="-20" width="' + W + '" height="' + (z + 20).toFixed(1) + '"/></clipPath><clipPath id="pbDn"><rect x="0" y="' + z.toFixed(1) + '" width="' + W + '" height="' + (H + 20) + '"/></clipPath></defs>' +
+      '<line class="zero" x1="0" x2="' + W + '" y1="' + z.toFixed(1) + '" y2="' + z.toFixed(1) + '"/><text class="ztx" x="0" y="' + (z - 7).toFixed(1) + '">$100 = break even</text>' +
+      '<g clip-path="url(#pbUp)"><path class="g up" d="' + d + '"/><path class="l up" d="' + d + '"/></g><g clip-path="url(#pbDn)"><path class="g dn" d="' + d + '"/><path class="l dn" d="' + d + '"/></g>' +
+      '<circle cx="' + X(e[0]).toFixed(1) + '" cy="' + Y(e[1]).toFixed(1) + '" r="3.8" fill="#eafff4"/>' +
+      '<text class="axs" x="6" y="' + (H - 4) + '">' + day(line[0][0]) + '</text><text class="axs" text-anchor="end" x="' + (W - 2) + '" y="' + (H - 4) + '">today</text></svg>';
+  }
   function drawBoard() {
-    var rows = D.board.filter(function (r) { return BK === 'all' || r.kind === BK; });
-    var up = rows.filter(function (r) { return r.ret > 0; }).length, avg = rows.reduce(function (s, r) { return s + r.ret; }, 0) / (rows.length || 1);
-    var best = rows.reduce(function (b, r) { return !b || r.ret > b.ret ? r : b; }, null);
-    $('boardTiles').innerHTML = stat('Up', up + '/' + rows.length) + stat('Average', pct(avg, 1), avg >= 0 ? 'pos' : 'neg') + (best ? stat('Best', pct(best.ret), 'pos') : '');
-    var cap = Math.max.apply(null, rows.map(function (r) { return Math.abs(r.ret); }).concat([1]));
-    $('strip').innerHTML = rows.slice().reverse().map(function (r) {
-      var h = Math.max(3, 50 * Math.abs(r.ret) / cap);   // half the strip each way from the zero line
-      return '<i title="' + esc(r.kind === 'fund' ? r.name : r.ticker) + ' ' + pct(r.ret) + '"><b class="' + (r.ret >= 0 ? 'up' : 'dn') + '" style="height:' + h.toFixed(1) + '%"></b></i>';
-    }).join('');
-    $('boardSrc').textContent = 'Cymetica AI’s picks so far · ' + D.as_of;
-    $('boardSrc').title = 'Every fund since it went live (its own index history) and every deal-ripple card since it was minted (its index against its base).';
-    $('board').innerHTML = rows.slice(0, SHOWN).map(function (r) {
-      var nm = r.kind === 'fund' ? r.name : r.ticker, sub = r.kind === 'fund' ? 'Fund' : r.name.replace(/\s*\(\$[\d.]+[BM]\)\s*$/, '').replace(' to acquire ', ' buys ');
-      return '<div class="pc-row"><span class="pc-n"><b>' + esc(nm) + '</b><span title="' + esc(sub) + '">' + esc(sub) + '</span></span>' +
-        '<span class="pc-r ' + (r.ret > 0 ? 'pos' : r.ret < 0 ? 'neg' : 'zero') + '">' + pct(r.ret) + '<small>' + day(r.since) + '</small></span></div>';
-    }).join('');
+    var st = B.stats[BK], rows = B.rows.filter(function (r) { return BK === 'all' || (BK === 'pitch' ? r.pitch : r.k === BK); });
+    var val = 100 * (1 + st.avg / 100), pos = st.avg >= 0;
+    $('pbK').textContent = '$100 in each, on its first day';
+    $('pbV').textContent = usd(val, 2); $('pbV').className = pos ? 'pos' : 'neg';
+    $('pbS').textContent = 'today · ' + big(st.n) + ' things you could have bought';
+    drawBoardLine(st.line);
+    $('boardTiles').innerHTML = stat('Up', big(st.up) + '<em>/' + big(st.n) + '</em>') +
+      stat('Best', st.best == null ? '–' : pct(st.best, 1), st.best > 0 ? 'pos' : 'neg', null, st.best_n) +
+      stat('Hit +20% at its peak', big(st.hit20) + '<em>/' + big(st.peaks) + '</em>', st.hit20 ? 'pos' : 'zero') +
+      stat('Real money in', usd(st.money), st.money ? 'pos' : 'zero', big(st.money_n) + (st.money_n === 1 ? ' card' : ' cards'));
+    $('boardSeg').innerHTML = TABS.map(function (t) { return '<button type="button" data-k="' + t[0] + '"' + (t[0] === BK ? ' class="on"' : '') + '>' + t[1] + '<small>' + big(B.stats[t[0]].n) + '</small></button>'; }).join('');
+    var shortList = BK === 'h72' || BK === 'all';
+    $('boardSrc').textContent = D.as_of;
+    $('boardSrc').title = 'Read from cymetica.com. Every LIVE fund and every event card with a price, losers and closed ones too.' + (shortList ? ' The numbers count all ' + big(B.stats.h72.n) + ' 72h cards; the list shows the best 300.' : '');
+    $('boardHead').innerHTML = '<span class="n">#</span><span>What</span>' + COLS.map(function (c) { return '<button type="button" data-sort="' + c[0] + '" title="' + esc(c[2]) + '"' + (c[0] === SORT ? ' class="on"' : '') + '>' + c[1] + (c[0] === SORT ? ' ↓' : '') + '</button>'; }).join('');
+    var nul = function (v) { return v == null ? -Infinity : v; };
+    rows = rows.slice().sort(function (a, b) { return nul(b[SORT]) - nul(a[SORT]) || b.r - a.r; });
+    $('board').innerHTML = rows.slice(0, SHOWN).map(function (r, i) {
+      var cls = r.r > 0 ? 'pos' : r.r < 0 ? 'neg' : 'zero';
+      return '<a class="pc-tr" role="row" href="https://cymetica.com' + esc(r.u || '') + '" target="_blank" rel="noopener"><span class="n">' + (i + 1) + '</span>' +
+        '<span class="w"><b title="' + esc(r.n) + '">' + esc(r.n) + '</b><small>' + (r.pitch ? '<i>Pitch</i>' : '') + esc(r.s) + ' · ' + day(r.d) + '</small></span>' +
+        '<span class="v ' + cls + '">' + (r.j ? '<i class="jmp" title="One step of ' + pct(r.j[0], 0) + ' between two readings on ' + day(r.j[1]) + ': a jump in the index, not a market. Never counted as Best.">JUMP</i>' : '') + pct(r.r, 1) + '</span>' +
+        '<span class="v pk"' + (r.pd ? ' title="on ' + day(r.pd) + '"' : '') + '>' + (r.p == null ? '–' : (r.late ? '≥' : '') + pct(r.p, 1)) + '</span>' +
+        '<span class="v dd">' + r.days + '</span>' +
+        '<span class="v mo' + (r.m ? ' has' : '') + '">' + (r.m == null ? '–' : usd(r.m)) + '</span></a>';
+    }).join('') || '<div class="pc-none">Nothing here yet.</div>';
     $('more').hidden = rows.length <= SHOWN;
   }
 
@@ -326,7 +353,8 @@
   document.addEventListener('click', function (e) {
     var a = e.target.closest('.pc [data-tab]'); if (a) { e.preventDefault(); view(a.dataset.tab); return; }
     var k = e.target.closest('#boardSeg button');
-    if (k) { BK = k.dataset.k; SHOWN = 40; [].forEach.call($('boardSeg').children, function (b) { b.classList.toggle('on', b === k); }); drawBoard(); return; }
+    if (k) { BK = k.dataset.k; SHOWN = 40; drawBoard(); return; }
+    var so = e.target.closest('#boardHead button'); if (so) { SORT = so.dataset.sort; SHOWN = 40; drawBoard(); return; }
     var c = e.target.closest('#chips button'); if (c) { setAmt(+c.dataset.a); return; }
     var id = (e.target.closest('button, a') || {}).id, t = top(), turned = t && t.classList.contains('flipped');
     if (id === 'no') { if (turned) { S.pending = null; flip(t, false); } else no(); }
@@ -341,7 +369,7 @@
     if (pc.dataset.view !== 'deck' || /INPUT|TEXTAREA/.test(e.target.tagName) || e.target.isContentEditable) return;
     if (e.key === 'ArrowLeft') no(); if (e.key === 'ArrowRight') yes();
   });
-  var rz; addEventListener('resize', function () { layout(); clearTimeout(rz); rz = setTimeout(redraw, 120); });
+  var rz; addEventListener('resize', function () { layout(); clearTimeout(rz); rz = setTimeout(function () { redraw(); if (pc.dataset.view === 'board') drawBoard(); }, 120); });
   if (!CALM && window.matchMedia && matchMedia('(hover: hover)').matches) addEventListener('pointermove', function (e) {   // the light in the glass follows the pointer
     var c = top(); if (!c) return;
     var r = c.getBoundingClientRect();
