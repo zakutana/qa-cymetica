@@ -13,9 +13,8 @@ this is the procedure that reads everything and says what moved:
     python scripts/gem_audit.py brief     one screen: how old the last tick is, what moved
     python scripts/gem_audit.py report    the last tick's tables (markdown)
 
-A department in the repository's sense: a skill (`.claude/skills/gem-audit`), this
-script, its diary `state/gem_audit.jsonl` and its report `state/gem_audit/
-report.json`, which /lab lists without a line added anywhere else.
+A skill (`.claude/skills/gem-audit`), this script, its diary `state/gem_audit.jsonl`
+and its report `state/gem_audit/report.json`.
 
 Read-only. Cymetica is read through a guarded anonymous client, the three sources
 through `build_source_client`, which carries the same guard and none of their
@@ -68,8 +67,7 @@ def diary_path() -> Path:
 
 
 def _write_text(target: Path, text: str) -> None:
-    """Whole or not at all, whoever else is reading it (the /lab page reads
-    report.json while a tick may be writing it)."""
+    """Whole or not at all, whoever else is reading it."""
     target.parent.mkdir(parents=True, exist_ok=True)
     tmp = target.with_name(f"{target.name}.{os.getpid()}.{threading.get_ident()}.tmp")
     tmp.write_text(text, encoding="utf-8")

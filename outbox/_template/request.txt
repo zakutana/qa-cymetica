@@ -1,0 +1,10 @@
+TITLE: <the app, and what gets better in one line>
+
+1. <Goal, as the user sees it. What is true when it is done, not how to build it.>
+2. <Goal.>
+3. <Goal. Keep what stays true on the neighbouring screen.>
+
+PICTURES
+<raw.githubusercontent.com URL> : <what this picture shows>
+
+Done when: [ ] 1-3

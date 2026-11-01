@@ -126,12 +126,10 @@ class _NeverSends(httpx.BaseTransport):
 def assert_client_guard_blocks() -> None:
     """Prove the guard refuses, before anything is allowed to ask it to.
 
-    `tests/conftest.py` sorts `tests/meta` first and aborts the session when
-    one of them fails, so a broken guard stops every live request -- but only
-    when the meta tests are IN the selector. A bare `pytest
+    A guard test only runs when it is in the selector: a bare `pytest
     tests/rest/test_x.py` collects none of them, and that has happened: live
-    requests went out with the guard unproven. Policing the selector would
-    treat the symptom. The guard is installed in `pytest_configure`, so this
+    requests went out with the guard unproven. The guard is installed in
+    `pytest_configure`, so this
     is where it should also be made to demonstrate itself.
 
     Four claims, each one an enforcement layer, none of them touching the

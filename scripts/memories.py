@@ -1,12 +1,8 @@
 """The memories that apply to the work in front of you, printed.
 
-`MEMORY.md` is auto-loaded into every session: 27 one-line hooks. The bodies
-are not, and until 2026-09-10 nothing told a session to open one -- so the
-directory was write-only by construction, which is the same defect as a
-mechanism nobody runs. The operator found it by asking whether the memories
-load themselves. They do not.
+`MEMORY.md` is auto-loaded into every session, one line each. The bodies are not.
 
-    python scripts/memories.py --for sweep
+    python scripts/memories.py --for bug
     python scripts/memories.py --list
     python scripts/memories.py --check
 
@@ -32,8 +28,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from qa.console import printable  # noqa: E402
 
-CLASSES = ("sweep", "fold", "console", "correspondence", "deep-pass",
-           "plan", "lab")
+CLASSES = ("spec", "mock", "bug", "vendor")
 
 FRONT = re.compile(r"^---\n(.*?)\n---\n", re.S)
 
@@ -113,9 +108,7 @@ INDEX_MAX_CHARS = 22000
 # Retired lines live here, marker and all. Nothing appends to this file, so
 # the positional failure below cannot come back through it.
 RETIRED_FILE = "MEMORY-retired.md"
-# What one `--for` prints of whole bodies. `--for lab` was 28 KB and
-# `--for deep-pass` up to 69, above what a Bash result carries, and only 9 of
-# 50 reads in the transcripts took a body whole (E2).
+# What one `--for` prints of whole bodies: more is above what a Bash result carries.
 BUDGET_BYTES = 8192
 DATE = re.compile(r"\b(20\d\d-\d\d-\d\d)\b")
 

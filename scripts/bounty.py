@@ -7,6 +7,7 @@ Their status is a CLAIM. Only our own re-run of the failing check can say a fix 
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -200,8 +201,9 @@ def record_inbox(messages: list[dict], klass: str = "ok", at: str | None = None)
     return {"klass": klass, "rows_returned": len(messages), "new": new, "at": at}
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     printable()
+    argparse.ArgumentParser(prog="bounty.py", description=__doc__).parse_args(argv)
     install_client_guard()
     ours = refresh_our_reports()
     print(f"tracker: {ours.get('klass')}, {ours.get('total')} report(s), {ours.get('statuses')}")

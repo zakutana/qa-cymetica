@@ -1999,7 +1999,7 @@ def build_report(snap: dict, *, sources: dict | None = None, picks_api: list | N
 
 
 def report_lines(report: dict) -> list[str]:
-    """The few lines /lab shows. English, numbers first."""
+    """A few lines. English, numbers first."""
     lines = []
     src = report.get("sources") or {}
     for name, col in src.items():

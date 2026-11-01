@@ -342,7 +342,7 @@ def summary() -> dict:
 
 def summary_lines(sent: int, theirs: dict | None, mine: list | None,
                   cut: list | None = None) -> list[str]:
-    """The three /lab lines. `theirs` None: their player record did not answer; `mine` None: the
+    """The three lines. `theirs` None: their player record did not answer; `mine` None: the
     prize list did not answer. Rule 8: an unread figure is said, never printed as 0 (R03).
     `cut`: the list came back as long as a window it stops at, so these are only ours among it."""
     # Theirs counts SCORED answers; an answer is scored when its puzzle resolves.

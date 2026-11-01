@@ -16,11 +16,11 @@ all hit the same wall. Four independent layers guard the network:
     4. executable parameters are declared per endpoint in components.yaml,
        never inferred, and a probe_only endpoint may never be executed
 
-Defeating one still leaves three. tests/meta/ proves all four block, runs
-first, and aborts the session on failure -- so if the guard is broken, zero
-live requests are issued. The configure-time self-check in
+Defeating one still leaves three. The configure-time self-check in
 qa/client.py::assert_client_guard_blocks feels each of the four coming off
-before a single test is collected, and names them by these numbers.
+before a single test is collected, and names them by these numbers; if the
+guard is broken, zero live requests are issued. tests/self/test_guard_is_real.py
+proves them one by one.
 
 (This said "Three" and listed three until 2026-09-07, while client.py had
 tested four since the self-check was added. The missing one is layer 2, which

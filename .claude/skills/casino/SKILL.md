@@ -10,7 +10,7 @@ effort: high
 
 [operator 2026-11-01] *"pak to sam v browseru klikni na approve bo mas muj pristup, jse o paper money nic se nemuze stat"*
 
-It runs when they type it: `/loop 30m jdi do casina`. It is not a department of the company (`crew`), because approving a seat needs the owner's signed-in browser: their OpenAPI makes every approve route BearerJWT, so no key can do it. It ends when `/rules` stops saying `live: not_open`: say so the same turn.
+It runs when they type it: `/loop 30m jdi do casina`. Approving a seat needs the owner's signed-in browser: their OpenAPI makes every approve route BearerJWT, so no key can do it. It ends when `/rules` stops saying `live: not_open`: say so the same turn.
 
 ## A tick
 
@@ -20,10 +20,9 @@ It runs when they type it: `/loop 30m jdi do casina`. It is not a department of 
    - `start T...` -- `fill-house` was refused: open the table in the pane and click "Fill N seats with house bots".
    - `file KEY` -- step 2.
    - `look T` -- a table ended, or a bot went idle: step 3.
-2. **A contradiction is a bug until read otherwise.** Print the whole object first: of the first dozen, two were our own arithmetic. If it is theirs: a check in `tests/rest/` built on `qa/casino.py`, a report in `outbox/reports.yaml` and its Czech line, commit, one run of the check, `ledger.py --run`, `submit.py --confirm --only`, fold, render. Filed without asking. Then `python scripts/casino.py handled KEY --how "#N"`. If it is ours, fix `qa/casino.py` test-first and say `--how ours`. If it is a matter of design, not of truth, `--how spec` and a line in the notes below. A key handled once is evidence afterwards, not news.
+2. **A contradiction is a bug until read otherwise.** Print the whole object first: of the first dozen, two were our own arithmetic. If it is theirs: a check in `tests/rest/` built on `qa/casino.py`, a report in `outbox/reports.yaml` with `check:`, then `python scripts/submit.py <key>`. Filed without asking. Then `python scripts/casino.py handled KEY --how "#N"`. If it is ours, fix `qa/casino.py` test-first and say `--how ours`. If it is a matter of design, not of truth, `--how spec` and a line in the notes below. A key handled once is evidence afterwards, not news.
 3. **Look with their eyes.** Open the finished table in the pane, read the whole page and compare: the result card, "What it did", the Nexus log, the trades, the prizes. What the API cannot show (a label, a stale panel, a sentence no one could follow) goes in `outbox/tournaments-v6/next-spec-notes.md`: the same shape as v5, goals not methods, with a picture.
-4. `python scripts/casino.py report` is done by the tick; /lab lists it.
-5. Two or three Czech lines: the number, what was filed, and **a hole with what we would improve, whenever there is one**. They want it said the moment it is seen; a Telegram message only when they ask for one in that turn.
+4. Two or three Czech lines: the number, what was filed, and **a hole with what we would improve, whenever there is one**. They want it said the moment it is seen; a Telegram message only when they ask for one in that turn.
 
 ## What a tick runs
 
@@ -41,7 +40,7 @@ A new species is cloned each round until every one they offer has sat, wta speci
 
 ## Brakes
 
-Paper USDC Flash tables only: `qa/outsider.py::seat_refusal` and `qa/casino.py::write_refusal` before every write. **Never an ET10 table**: their page says "The ET10 prizes are real", and the balance is the operator's. One bot of ours to a table: their request in MSG-0293, and the only way to see each bot's coach and trades, since the page shows the first seat only (#210). Six tables at once at most. Only bots named `casino ...` or `tournament ...` are seated or changed: a `lab ...` clone belongs to a running room. A clone is never deleted here: at their cap we rotate what we have. No `leave`, no `nexus-lock`, no real money, no message to Cymetica outside the report channel unless they say so in that turn. A failed read is said and judged on nothing.
+Paper USDC Flash tables only: `qa/casino.py::seat_refusal` and `qa/casino.py::write_refusal` before every write. **Never an ET10 table**: their page says "The ET10 prizes are real", and the balance is the operator's. One bot of ours to a table: their request in MSG-0293, and the only way to see each bot's coach and trades, since the page shows the first seat only (#210). Six tables at once at most. Only bots named `casino ...` or `tournament ...` are seated or changed. A clone is never deleted here: at their cap we rotate what we have. No `leave`, no `nexus-lock`, no real money, no message to Cymetica outside the report channel unless they say so in that turn. A failed read is said and judged on nothing.
 
 ## Who is who here
 

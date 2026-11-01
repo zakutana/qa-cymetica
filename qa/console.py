@@ -12,9 +12,6 @@ in `scripts/memories.py`, at step 0 -- on the command the pass's own spine runs
 to read what earlier passes learned. Four copies of a fix is not a fix; it is a
 defect nobody can finish, because the sixth script has no way to know.
 
-`tests/meta/test_pipeline_console.py` names the class and fails when a member
-of it does not call this.
-
 Replacing is deliberate. The alternative -- dropping the character, or refusing
 to print -- hides that the terminal cannot show it. `errors="replace"` puts a
 visible `?` where the arrow was, so a reader sees a mangled character rather

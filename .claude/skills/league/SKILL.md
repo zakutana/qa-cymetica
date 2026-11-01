@@ -15,7 +15,6 @@ So two writes are open and nothing else is: enrol one player (`agent_league.enro
 
 1. `python scripts/league.py puzzles` -- what is open and what we would answer. Read only.
 2. `python scripts/league.py tick --confirm` -- answers every open puzzle `qa/league.py` lets through, oldest closing first. One answer per player per puzzle. An answer that is not `accepted` with `explained: true` ends the tick and is said in the answer.
-3. `python scripts/league.py report` -- `state/league/report.json`, which /lab lists. In English, numbers first.
 
 ## What is answered
 
@@ -29,4 +28,4 @@ A resolved deterministic puzzle scores on exactness against a frozen snapshot; t
 
 ## Nothing starts by itself
 
-It runs when the operator says so (`/loop`, or "jdi do ligy"); no timer, no scheduler. The patrol counts it like any other part.
+It runs when the operator says so (`/loop`, or "jdi do ligy"); no timer, no scheduler.

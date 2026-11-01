@@ -48,15 +48,13 @@ operator the moment it is seen.
    revenue factor, the trajectory quarters' normalisation) is a documentation gap to
    tell the operator, not a defect to file.
 
-2. **The core checks**, under a preregistration like any other run:
+2. **The core checks.**
    ```
-   python scripts/prereg.py new --selector "tests/meta tests/rest/test_gem_screener_numbers_match_their_sources.py tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py" --window 30 --tag
-   python -m pytest <the nodeids prereg echoes> --prereg PRE-NNNN -q --no-header --tb=no
-   python scripts/ledger.py --run <run_id>
+   python -m pytest tests/rest/test_gem_screener_numbers_match_their_sources.py tests/rest/test_gem_screener_picks_and_formulas_are_self_consistent.py -q --tb=short
    ```
    A red row is a finding: **check whose bug it is first** (CoinGecko re-estimated a
    supply, a snapshot was stale, a third party was down -- none of those is theirs),
-   then file it by the sweep's rules, without asking.
+   then file it with `scripts/submit.py`, without asking.
 
 3. **The browser pass.** Open `https://cymetica.com/gem-screener/app` (the app, not
    the wrapper page). What only a page can tell, and what to read:

@@ -230,7 +230,7 @@ components:
     # A Build it Better app (ET-30773, shipped 2026-10-10): 10-seat, 7-day paper tables for
     # cloned bots (/api/v1/agent-tournaments/*). First check 2026-10-11: none of the seven
     # routes llms.txt names is in the OpenAPI. One write since the laboratory's section 6
-    # (2026-10-11): the outsider may ASK for a seat at a paper table (`agent_tournaments.seat`
+    # (2026-10-11): the casino may ASK for a seat at a paper table (`agent_tournaments.seat`
     # below); the owner approves it at their approve_url. Five more since 2026-11-01 for the casino
     # department, on paper seats of ours (declared below); nothing else here is written.
     title: Agent Tournaments (lobby, tables, seat prompts)
@@ -416,7 +416,7 @@ endpoints:
   # Event-card trading. Declared 2026-09-08 so the floor names what it is
   # standing on: until now these were stopped only by the undeclared-keys
   # catch-all, and a floor that does not name what it holds is one edit from
-  # not holding it (tests/meta/test_guard_is_real.py).
+  # not holding it (tests/self/test_guard_is_real.py).
   #
   # NOT probe_only, because the operator has asked for paper trading through
   # the API. amount_usdc is executable, so SAFE and PROBE both refuse a body
@@ -755,12 +755,12 @@ endpoints:
     closed_body: true
 
   # Agent Tournaments, the one write of the laboratory's section 6 (the outsider,
-  # scripts/outsider.py seat). llms.txt: `POST /tables/{id}/seat` {"instance_id"} with
+  # scripts/casino.py seat). llms.txt: `POST /tables/{id}/seat` {"instance_id"} with
   # X-API-Key, "the seat waits until the owner approves at the returned approve_url"; the
   # table's own clone prompt says the same body (read 2026-10-11). The request carries no
   # paper flag and no amount -- the buy-in is taken when the OWNER approves -- so there is
   # nothing for required_flags to read. Two floors instead: `closed_body` holds the body to
-  # `instance_id`, whoever builds it; scripts/outsider.py asks only where THEIR table reads
+  # `instance_id`, whoever builds it; scripts/casino.py asks only where THEIR table reads
   # mode "paper", open, at its tier's published buy-in, under rules whose paper mode is open
   # and whose paper_note says the buy-in is paper USDC, and only for a paper clone of ours.
   # `/seats/{id}/leave` is deliberately not declared and stays default-denied.
