@@ -1,77 +1,66 @@
-<div class="at pc" id="pc" data-view="deck">
-<svg class="at-sprite" aria-hidden="true" focusable="false"><defs>
+<div class="pc" id="pc" data-view="deck">
+<svg class="pc-defs" aria-hidden="true" focusable="false"><defs>
   <linearGradient id="pc-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
-  <linearGradient id="pc-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00ff88" stop-opacity=".34"/><stop offset="1" stop-color="#00ff88" stop-opacity="0"/></linearGradient>
-  <linearGradient id="pc-area-c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00cfff" stop-opacity=".32"/><stop offset="1" stop-color="#00cfff" stop-opacity="0"/></linearGradient>
-  <filter id="pc-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  <!-- Nexus, a robot: a screen head with two LED eyes in bezels and an antenna, never a face in a skin tone -->
-  <symbol id="pc-nexus" viewBox="0 0 40 40"><path d="M20 11V6.6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="20" cy="5.4" r="2.4" fill="#00ff88"/>
-    <rect x="7.5" y="11" width="25" height="21" rx="7" fill="#0d1520" stroke="currentColor" stroke-width="2.4"/>
-    <circle cx="15" cy="21.5" r="3.6" fill="#070b12" stroke="currentColor" stroke-width="1.4"/><circle cx="25" cy="21.5" r="3.6" fill="#070b12" stroke="currentColor" stroke-width="1.4"/>
-    <circle cx="15" cy="21.5" r="1.7" fill="#00ff88"/><circle cx="25" cy="21.5" r="1.7" fill="#00ff88"/>
-    <path d="M16 28h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="4.2" y="18" width="3.3" height="7" rx="1.4" fill="currentColor"/><rect x="32.5" y="18" width="3.3" height="7" rx="1.4" fill="currentColor"/></symbol>
 </defs></svg>
 
-<header class="at-bar">
-  <a class="at-logo" href="#" aria-label="Pitch Cards">
-    <!-- the mark: a pitch card thrown onto the pile, its line going up -->
-    <svg viewBox="0 0 48 48" aria-hidden="true">
-      <rect x="9" y="9" width="24" height="31" rx="5" transform="rotate(-14 21 24.5)" fill="#0d1520" stroke="#00cfff" stroke-opacity=".45" stroke-width="2"/>
-      <g class="pc-mark-front"><rect x="16" y="7" width="24" height="33" rx="5.5" transform="rotate(9 28 23.5)" fill="#0d1520" stroke="url(#pc-g)" stroke-width="3.2"/>
-      <path d="M20 31.5l5-5.2 3.4 3 6.4-9" transform="rotate(9 28 23.5)" fill="none" stroke="#00ff88" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" filter="url(#pc-glow)"/>
-      <circle cx="34.8" cy="20.3" r="2.3" transform="rotate(9 28 23.5)" fill="#00ff88" filter="url(#pc-glow)"/></g>
-    </svg>
-    <span class="at-wm"><small>NEXUS</small><b>PITCH CARDS</b></span>
-  </a>
-  <nav class="at-nav" aria-label="Pitch Cards">
-    <a href="#" data-tab="deck" class="on">Pitches <i class="pc-badge" id="nNew"></i></a>
-    <a href="#" data-tab="deals">My deals</a>
-    <a href="#" data-tab="board">Pitchboard</a>
+<!-- the room's light: two slow glows, and a green / red wash on the side a card is dragged towards -->
+<div class="pc-aura" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="sd l"></i><i class="sd r"></i></div>
+
+<header class="pc-bar">
+  <div class="pc-brand" data-tab="deck">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="6" width="15" height="21" rx="4" transform="rotate(-12 12.5 16.5)" fill="none" stroke="#00cfff" stroke-opacity=".5" stroke-width="1.6"/>
+      <rect x="11" y="4.5" width="15.5" height="22" rx="4.2" transform="rotate(8 18.7 15.5)" fill="#0b1422" stroke="url(#pc-g)" stroke-width="2"/>
+      <path d="M14.6 20.4l3.2-3.4 2.2 1.9 3.9-5.6" transform="rotate(8 18.7 15.5)" fill="none" stroke="#00ff88" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <b>Pitch Cards</b>
+  </div>
+  <nav class="pc-tabs" aria-label="Pitch Cards">
+    <button type="button" data-tab="deck" class="on">Pitches<i id="nNew"></i></button>
+    <button type="button" data-tab="deals">My deals<i id="nDeals"></i></button>
+    <button type="button" data-tab="board">Pitchboard</button>
   </nav>
-  <span class="at-fill"></span>
-  <span class="pc-bal" title="Your credit on the platform. Nexus invests only what you give a pitch."><span class="at-lbl">Balance</span><b id="bal">$100</b></span>
-  <button type="button" class="at-btn ghost sm" id="addc">+ Add</button>
+  <button type="button" class="pc-bal" id="addc" title="Your credit on Cymetica. Nexus invests only what you give a pitch. + adds more."><b id="bal">$100</b><i aria-hidden="true">+</i></button>
 </header>
 
 <section class="pc-view pc-deckview" data-v="deck">
-  <div class="pc-stage">
-    <div class="pc-deck" id="deck"></div>
-    <div class="pc-acts" id="acts">
-      <button type="button" class="pc-no" id="no" aria-label="Pass" title="Pass (←)"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg></button>
-      <button type="button" class="pc-yes" id="yes" aria-label="Invest" title="Invest (→)"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.6 4.6L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    </div>
+  <div class="pc-deck" id="deck"></div>
+  <div class="pc-acts" id="acts">
+    <button type="button" class="pc-pass" id="no" title="Pass (←)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>Pass</button>
+    <button type="button" class="pc-go" id="yes" title="Invest (→)">Invest<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
 </section>
 
-<section class="pc-view" data-v="deals">
-  <div class="pc-tiles" id="dealTiles"></div>
-  <div id="dealList"></div>
+<section class="pc-view pc-page" data-v="deals">
+  <div class="pc-stats" id="dealTiles"></div>
+  <div class="pc-list" id="dealList"></div>
 </section>
 
-<section class="pc-view" data-v="board">
-  <div class="pc-tiles" id="boardTiles"></div>
+<section class="pc-view pc-page" data-v="board">
+  <div class="pc-stats" id="boardTiles"></div>
+  <div class="pc-strip" id="strip" title="Every pick, oldest to newest: up green, down red"></div>
   <div class="pc-boardbar">
-    <div class="at-seg" id="boardSeg"><button type="button" class="on" data-k="all">All</button><button type="button" data-k="fund">Funds</button><button type="button" data-k="deal">Deals</button></div>
+    <div class="pc-seg" id="boardSeg"><button type="button" class="on" data-k="all">All</button><button type="button" data-k="fund">Funds</button><button type="button" data-k="deal">Deals</button></div>
     <span class="pc-src" id="boardSrc"></span>
   </div>
-  <div class="pc-board" id="board"></div>
-  <button type="button" class="at-btn no wide" id="more">Show more</button>
+  <div class="pc-list" id="board"></div>
+  <button type="button" class="pc-more" id="more">Show more</button>
 </section>
 
 <div class="pc-sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetT" hidden><!-- the role sits on the overlay: their mobile-responsive.css makes any [role=dialog] fill the screen -->
   <div class="pc-sheet-in">
-    <div class="at-lbl" id="sheetT"></div>
+    <i class="pc-grab" aria-hidden="true"></i>
+    <div class="pc-sheet-h"><i class="pc-orb"></i><span id="sheetT"></span></div>
     <div class="pc-amt" id="amt">$25</div>
+    <div class="pc-amt-sub" id="amtSub"></div>
     <input type="range" id="amtR" min="1" max="100" value="25" aria-label="Amount">
     <div class="pc-chips" id="chips"></div>
-    <button type="button" class="at-btn go xl wide" id="invest">Invest $25</button>
-    <button type="button" class="at-btn no wide" id="cancel">Cancel</button>
+    <button type="button" class="pc-cta" id="invest">Invest $25</button>
+    <button type="button" class="pc-ghost" id="cancel">Not now</button>
   </div>
 </div>
 
 <a class="pc-push" id="push" href="#" hidden>
-  <span class="pc-push-ic"><svg viewBox="0 0 40 40"><use href="#pc-nexus"/></svg></span>
-  <span class="pc-push-t"><b id="pushT"></b><span id="pushS"></span></span>
+  <i class="pc-orb"></i>
+  <span class="pc-push-t"><em>Nexus · now</em><b id="pushT"></b><span id="pushS"></span></span>
 </a>
 <div class="pc-toast" id="toast" hidden></div>
 </div>

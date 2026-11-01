@@ -2,9 +2,9 @@
 
 The page is THEIR live /agent-casino (our family's app on their site), read anonymously (GET, no cookies, no key) and
 cached for 60 seconds, with only the casino app (<div class="at-shell"> to the end of <main>) replaced by app.html and
-pc.css / data.js / pc.js added. So the header, the agent prompt card, the Nexus chat bar, the footer and the Agent
-Casino stylesheet (.at, .at-bar, .at-btn, .at-tag ...) are theirs; app.html is built on those classes. Every other GET
-is passed to cymetica.com the same way. Every other method is refused here, before anything leaves this machine.
+pc.css / data.js / pc.js added. So the header, the agent prompt card (moved under the app), the Nexus chat bar and the
+footer are theirs. Every other GET is passed to cymetica.com the same way. Every other method is refused here, before
+anything leaves this machine.
 """
 from __future__ import annotations
 
@@ -52,6 +52,13 @@ def page() -> bytes:
     start = html.index('<div class="at-shell"')
     end = html.index("</main>", start)
     html = html[:start] + (HERE / "app.html").read_text(encoding="utf-8") + "\n" + html[end:]
+    # Their "Give this to your AI agent" card goes under the app: a swipe deck is the first screen or it is not a deck
+    # (on a phone the card pushed the deck below their chat bar).
+    a = html.find('<section class="agent-paste-bar')
+    if a >= 0:
+        b = html.index("</section>", a) + len("</section>")
+        bar, html = html[a:b], html[:a] + html[b:]
+        html = html.replace("</main>", bar + "\n</main>", 1)
     t0 = html.index("<title>")
     html = html[:t0] + "<title>Pitch Cards: Nexus pitches, you invest | EventTrader</title>" + html[html.index("</title>", t0) + 8:]
     html = html.replace("Agent Casino at cymetica.com/agent-casino", "Pitch Cards at cymetica.com/pitch-cards")

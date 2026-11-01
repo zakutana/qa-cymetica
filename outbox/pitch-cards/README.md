@@ -13,10 +13,15 @@ http://127.0.0.1:8802/pitch-cards. `?view=board` or `?view=deals` opens those ta
 ## How it is built
 
 Their live `/agent-casino` page (our family's app on their site), read anonymously and cached 60 s, with only the casino
-app replaced by `app.html`; their header, agent prompt card, Nexus chat bar, footer and the Agent Casino stylesheet
-(`.at`, `.at-bar`, `.at-btn`, `.at-tag`, `.at-ktag`, `.at-seg`) stay and `app.html` is built on them. `pc.css` holds the
-deck, card, amount sheet, deals and board only. Every method except GET is refused by `serve.py`. Their mobile CSS
-makes any `[role=dialog]` fill the screen, so the role sits on the sheet's overlay.
+app replaced by `app.html`; their header, Nexus chat bar and footer stay. Their "Give this to your AI agent" card moves
+under the app, so the first screen is the deck: on a 390 x 844 phone one whole card and both buttons sit between their
+header and their chat bar (`fit()` in `pc.js` measures both). Every method except GET is refused by `serve.py`.
+
+The look is the second take, after the operator's "jezisi kriste co to je za tragicky design" on the first (their
+`.at` tags and chips, mono type, a stepped glowing line, the buttons under the chat bar): one card of frosted glass
+in Inter (their page loads it), Nexus as a living orb, a gradient number, a smooth line under it, one caption and one or
+two sentences that Nexus types out. Their mobile CSS makes any `[role=dialog]` fill the screen, so the role sits on
+the sheet's overlay. The line is a three-point mean of the index, drawn monotone; its last point is exact.
 
 ## Nexus's bar (refresh.py)
 
