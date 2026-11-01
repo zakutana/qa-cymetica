@@ -7408,6 +7408,85 @@ reports:
       unconditionally, or when no coin failing the gate is under the weekly line, and is inconclusive if the reason
       is gone or no coin fails the gate. GET requests only.
 
+  - key: season-points-say-counted-hourly-and-the-count-stopped
+    findings: [CYM-season-points-are-counted-hourly]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/company
+    title: >-
+      Season points say "Counted hourly", but the count has stood at 2026-11-01 07:55:30 UTC for over 11 hours
+    expected: >
+      The Products tab writes "Counted hourly" under a product's points, and GET /api/v1/company/14/season-breakdown
+      says recomputed_hourly: true. So computed_at is about an hour old at most, the more so on the first day of
+      the season whose prizes are paid on these points.
+    actual: >
+      Read on 2026-11-01 at about 18:45 and 19:07 UTC, computed_at was 2026-11-01T07:55:30Z both times, and our check
+      read it 11.2 hours behind the response's own Date header. The same computed_at is in GET
+      /api/v1/company/products under season. That is 00:55 Pacific, the first hour of the season, so the count may
+      have run once and stopped. Every product on our company reads 0 active users and 0 returning visitors in it.
+      We cannot tell whether that 0 is right until the count runs again.
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/14/season-breakdown -> recomputed_hourly true, computed_at "2026-11-01T07:55:30Z"; the response''s Date header 11.2 hours later'
+      - 'GET https://cymetica.com/static/company/app.js -> the panel text "Counted hourly"'
+    body: >
+      An owner reading 0 points cannot tell a season with no users yet from a count that is not running. Our check
+      passes when computed_at is within 3 hours of the response's Date header, a margin so that one late run is not
+      the claim, and is inconclusive if the endpoint stops saying hourly. GET requests only.
+
+  - key: products-tab-counts-fewer-than-the-distinct-people-on-app-usage
+    findings: [CYM-products-people-not-below-app-usage]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/company
+    title: >-
+      The Products tab shows Build a Company 40 and Agent Casino 94 over 30 days; /app-usage counts 126 and 148 distinct
+      people for the same products
+    expected: >
+      The Products figure is, by your definition, distinct daily visitors summed over the days, so one person on
+      three days counts three. A sum of days can only be at or above the number of distinct people over those days.
+      So over the same 30 days it is not below what /app-usage counts for the same product.
+    actual: >
+      Read on 2026-11-01. GET /api/v1/company/products (days 30) against GET /api/v1/app-usage (window.days 30,
+      humans[].users), same path and same name: Build a Company 40 against 126, Agent Casino 94 against 148. The
+      arithmetic holds where the count works: Gem Screener 248 against 206, Chart Analyzer 182 against 121. In a
+      signed-in session /traffic/mine says the same over 30 days: /company 94 unique visitors and 462 page views
+      against 40 and 73 on the Products tab, and Promo Market (/creator-dashboard), which /app-usage does not list,
+      30 unique visitors and 113 page views against 4 and 7.
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/products with an API key -> Build a Company visitors 40; Agent Casino visitors 94'
+      - 'GET https://cymetica.com/api/v1/app-usage -> humans: Build a Company users 126; Agent Casino users 148'
+      - 'Signed in, GET https://cymetica.com/api/v1/traffic/mine?days=30 -> /company visits 462, unique_visitors 94; /creator-dashboard visits 113, unique_visitors 30'
+    body: >
+      An owner choosing where to spend reads Promo Market as 4 people when 30 came, and Build a Company as a small
+      product when it is not. We cannot see why the counters differ. Our check compares only products listed under
+      the same path and name, with a margin of 1.25 because /app-usage calls its figures estimates; it passes when
+      none is under that floor. It does not say which count is right. GET requests only.
+
+  - key: agent-casino-tile-reads-94-and-its-chart-adds-up-to-22
+    findings: [CYM-products-tile-and-its-chart-agree]
+    severity: low
+    category: logic
+    url: https://cymetica.com/company
+    title: >-
+      Products tab, Agent Casino: the tile reads 94 people over 30 days and the "People per day" chart under it adds
+      up to 22, with nothing before 2026-10-26
+    expected: >
+      The tile and the chart read one object of GET /api/v1/company/products, and visitors is the sum of its days by
+      your definition, so visitors equals the sum of daily, as it does for the other 8 products.
+    actual: >
+      Read on 2026-11-01: Agent Casino visitors 94, daily adding up to 22, its first non-zero day 2026-10-26. The 72
+      missing look like the days before the page moved from /agent-tournaments to /agent-casino, kept in the total
+      and left out of the list, though nothing we can read names the cause. In a signed-in session /traffic/mine
+      shows the same split: that row reads 76 page views and 19 unique visitors over both 14 and 30 days, while its
+      own "App page" line reads 338 views over 30 days. The row is still named "Agent Tournaments".
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/products with an API key -> Agent Casino: visitors 94, sum(daily) 22'
+      - 'Open the Products tab, click Agent Casino -> the tile against the "People per day" bars'
+    body: >
+      Low: the product's total is not wrong because of this, but its chart shows a product that started on 26 October.
+      Carrying the old path's days into daily would fix it. Our check passes when every product's visitors is within
+      2 of the sum of its daily. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
