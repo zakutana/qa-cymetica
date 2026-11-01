@@ -6,7 +6,7 @@
 @keyframes bzin { from { opacity: 0; } }
 /* --cw: the card's width and its margin. The 3D canvases are that much wider than the stage, starting at its left
    edge, so what they centre stands in the middle of the space the card leaves free. The tour has no card (bz-wide). */
-.bz-stage { flex: 1; min-height: 0; --cw: 492px; background: #16232f; }
+.bz-stage { flex: 1; min-height: 0; --cw: 492px; background: #030a11; }
 .bz-stage.bz-wide { --cw: 0px; }
 .bz-stage.bz-wide .bz-card { display: none; }
 .bz-stage .office3d, .bz-stage .o3layer, .bz-pv { left: 0; right: auto; top: 0; bottom: 0; width: calc(100% + var(--cw)); }
@@ -151,7 +151,7 @@
    loading screens' core (boot.css) keeps turning through it (transforms run off the page's thread) so it reads as
    building, not as stuck. No number here: the bar only shimmers. */
 .bz-veil { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; padding-left: var(--cw); overflow: hidden;
-  background: radial-gradient(ellipse at 60% 50%, rgba(28, 46, 62, .94), rgba(12, 20, 30, .98) 70%); opacity: 0; pointer-events: none; transition: opacity .18s; }
+  background: var(--ld-sky); opacity: 0; pointer-events: none; transition: opacity .18s; }
 .bz-veil.on { opacity: 1; pointer-events: auto; }
 .bz-veil .ldr { transform: scale(.8); margin-top: -40px; }
 .bz-veil .ld-what { top: 372px; }

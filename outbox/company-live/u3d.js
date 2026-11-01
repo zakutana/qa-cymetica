@@ -2002,6 +2002,10 @@ function uvSky(AZ) {
 function officeSky() {
   return deepSky({ polar: CAM.polar, az: CAM.az, fov: CAM.fov, aspect: 1.3, px: 700 }, 380, 1.0);
 }
+// the entry pages' (entry3d.js): the builder's camera, a whole page high
+function entrySky() {
+  return deepSky({ polar: 1.16, az: Math.PI / 4, fov: 30, aspect: 1.8, px: 900 }, 380, UVLOOK.exposure);
+}
 class Universe3D {
   constructor(el, stage, h) {
     this.el = el; this.stage = stage; this.h = h || {};
@@ -9317,7 +9321,7 @@ class Office3D {
   CO.U3 = (gl2 || navigator.gpu) ? { ok: true, gpu: !!navigator.gpu, universe: (el, stage, h) => new Universe3D(el, stage, h), office: (el, stage, tipFor) => new Office3D(el, stage, tipFor), preview, thumbs,
     roomPreview: (el) => new RoomPreview(el), dialogPreview: () => RoomPreview.dialog(), shotOf: (key) => SHOTS[key] || null, THREE, geo, makeStation, SKIN, amat, nebTex, TX, OM,
     // for the entry page's own scene (start.js): the map's sun, sky, glows and bloom, the pacer and the release
-    Post, starField, glowSprite, glowTex, colliderTex, flareTex, uvSky, spaceSky, LOOK, idleFlush, pacer, release, UVSUN,
+    Post, starField, glowSprite, glowTex, colliderTex, flareTex, uvSky, spaceSky, entrySky, look, LOOK, idleFlush, pacer, release, UVSUN,
     // the map's orbits as lanes of light-dust (dustLane, dustMesh), for the entry page's scene too
     dustLane, dustMesh }
     : { failed: true, why: 'no WebGPU and no WebGL2' };

@@ -309,7 +309,7 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 .lb-rule { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; margin: 4px 0 16px; padding: 16px; border: 1px solid rgba(0, 207, 255, .3);
   border-radius: 12px; background: linear-gradient(135deg, rgba(0, 255, 136, .06), rgba(0, 207, 255, .05)); }
 .lb-seats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.lb-seat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 12px 8px; border-radius: 10px; background: rgba(10, 14, 23, .7);
+.lb-seat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 12px 8px; border-radius: 10px; background: rgba(3, 10, 17, .7);
   border: 1px solid color-mix(in srgb, var(--sc) 55%, transparent); box-shadow: 0 0 18px color-mix(in srgb, var(--sc) 18%, transparent); text-align: center; }
 .lb-seat.pl1 { --sc: var(--rs1); } .lb-seat.pl2 { --sc: var(--rs2); } .lb-seat.pl3 { --sc: var(--rs3); }
 .lb-seat i { font: 400 13px 'Archivo Black', sans-serif; font-style: normal; color: var(--dim); }
@@ -345,7 +345,7 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
     0 0 0 1px rgba(0, 207, 255, .32), 0 0 80px rgba(0, 207, 255, .16), 0 30px 70px rgba(0, 0, 0, .65); }
 .modal-card.lbg > :not(.uvb-sh) { position: relative; }
 /* the galaxy shows through the glass: the shade behind the dialog lighter than for the others */
-.modal:has(.modal-card.lbg) { background: rgba(6, 9, 15, .5); }
+.modal:has(.modal-card.lbg) { background: rgba(2, 7, 12, .5); }
 /* the head, as the board's */
 .lbh { gap: 12px; margin-bottom: 18px; }
 .lbh h3 { flex: none; font: 400 22px 'Archivo Black', sans-serif; letter-spacing: .08em; color: transparent; -webkit-background-clip: text; background-clip: text;

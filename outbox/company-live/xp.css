@@ -1,7 +1,7 @@
 /* The Trading desk's experiments page. Same palette as the company page: navy, cyan, green, red, blue;
    numbers first, one big number per experiment, the bots as a ranked list. */
 body.xp { height: auto; min-height: 100vh; overflow: auto; display: block; }
-body.xp .site { position: sticky; top: 0; z-index: 20; background: rgba(10, 14, 23, .92); backdrop-filter: blur(6px); }
+body.xp .site { position: sticky; top: 0; z-index: 20; background: rgba(3, 10, 17, .92); backdrop-filter: blur(6px); }
 .xpage { max-width: 1720px; margin: 0 auto; padding: 18px 28px 48px; }
 .xcrumb { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--dim2); }
 .xcrumb a { color: var(--cyan); } .xcrumb b { color: var(--text); }
@@ -49,7 +49,7 @@ body.xp .site { position: sticky; top: 0; z-index: 20; background: rgba(10, 14, 
 .xc.add:hover { border-color: var(--green); box-shadow: 0 0 22px rgba(0, 255, 136, .18); }
 
 /* one experiment, opened from the right */
-.xshade { position: fixed; inset: 48px 0 0 0; background: rgba(6, 9, 15, .55); z-index: 30; }
+.xshade { position: fixed; inset: 48px 0 0 0; background: rgba(2, 7, 12, .55); z-index: 30; }
 .xdrawer { position: fixed; top: 48px; right: 0; bottom: 0; width: min(620px, 100vw); z-index: 31; overflow: auto; padding: 18px 20px 30px;
   background: var(--navy); border-left: 1px solid var(--line3); box-shadow: -20px 0 40px rgba(0, 0, 0, .4);
   transform: translateX(30px); opacity: 0; transition: transform .25s cubic-bezier(.2, .8, .2, 1), opacity .25s; display: flex; flex-direction: column; gap: 10px; }

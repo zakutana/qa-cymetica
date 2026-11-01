@@ -2,7 +2,7 @@
    set as cymetica.com/agent-tournaments sets its own (.at-h1, read off the live page 2026-10-20): Archivo Black,
    clamp(32px, 4.6vw, 58px), line-height 1.04, letter-spacing -0.01em, white, the last line #00ff88, left-aligned with
    its picture beside it; its CTA's green for the main door. */
-body.lp { background: #16232f; }
+body.lp { background: #030a11; }
 /* leaving through a door: the page fades out, then the next one comes in (start.js stops the scenes first) */
 body.lp .lp-main { transition: opacity .2s ease-in; }
 body.lp-leave .lp-main { opacity: 0; }
@@ -10,7 +10,7 @@ body.lp-leave .lp-main { opacity: 0; }
 
 /* the 3D canvas: wider than the page by --sh and starting at its left edge, so the sun it centres stands right of
    the text; its own sky (stars, the far glows) is the page's background */
-.lp-space { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% + var(--sh)); --sh: 44vw; background: #16232f; overflow: hidden; }
+.lp-space { position: absolute; left: 0; top: 0; bottom: 0; width: calc(100% + var(--sh)); --sh: 44vw; background: #030a11; overflow: hidden; }
 .lp-space > canvas { display: block; width: 100% !important; height: 100% !important; }
 /* Cymetica's ball: the Universe's painting (colliderTex) at the ball's place, two turning against each other over a
    blurred copy -- uv.css's .uvcol, with the light added to what is under it rather than laid over it */

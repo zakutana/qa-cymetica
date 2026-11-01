@@ -3,19 +3,25 @@
    the work done: over the whole page until the office (or, opened on it, the Universe) has drawn its first frame,
    and over the Universe's stage while its map is still being made. Everything moves by transform and opacity
    alone, so it keeps turning on the compositor while the main thread builds the 3D. The site's colours. */
+/* its sky is the map's and the office's (2026-11-01, u3d.js deepSky): the flyer's dark, soft clouds of navy and teal, a few bright stars,
+   and the dust of faint ones from one tile (bootsky.py) sliding sideways, a whole tile a loop so it never jumps */
+:root { --ld-sky:
+  radial-gradient(1.6px 1.6px at 12% 76%, rgba(255, 255, 255, .95), transparent), radial-gradient(1.3px 1.3px at 33% 14%, rgba(235, 248, 255, .85), transparent),
+  radial-gradient(1.5px 1.5px at 71% 62%, rgba(255, 255, 255, .9), transparent), radial-gradient(1.2px 1.2px at 88% 33%, rgba(225, 245, 255, .8), transparent),
+  radial-gradient(1.4px 1.4px at 58% 91%, rgba(255, 246, 235, .8), transparent),
+  radial-gradient(ellipse 55% 45% at 80% 20%, rgba(18, 58, 88, .34), transparent 72%), radial-gradient(ellipse 60% 45% at 12% 88%, rgba(10, 34, 54, .3), transparent 72%),
+  radial-gradient(ellipse 70% 62% at 50% 44%, #04101a 0%, #030a11 58%, #01050a 100%); }
 .boot { position: fixed; inset: 0; z-index: 300; display: grid; place-items: center; overflow: hidden;
-  background: radial-gradient(ellipse 70% 62% at 50% 44%, #0f1c2e 0%, #0a0e17 58%, #05070c 100%);
+  background: var(--ld-sky);
   transition: opacity .7s ease, visibility .7s; }
 .boot.gone { opacity: 0; visibility: hidden; pointer-events: none; }
-.boot::before, .uvload::before, .boot::after { content: ''; position: absolute; inset: -400px; pointer-events: none;
-  background-image: radial-gradient(1.3px 1.3px at 22px 34px, #d9f4ff, transparent), radial-gradient(1px 1px at 131px 83px, #9fe8ff, transparent),
-    radial-gradient(1.1px 1.1px at 201px 171px, #ffffff, transparent), radial-gradient(1px 1px at 63px 211px, #7fffd0, transparent),
-    radial-gradient(1.4px 1.4px at 239px 22px, #cfefff, transparent), radial-gradient(.9px .9px at 91px 140px, #9fb6c9, transparent),
-    radial-gradient(1px 1px at 170px 240px, #9fe8ff, transparent), radial-gradient(.8px .8px at 12px 160px, #ffffff, transparent);
-  background-size: 260px 260px; opacity: .55; animation: ld-drift 60s linear infinite; }
-/* a second, sparser and nearer layer at another size, so no grid shows, drifting faster */
-.boot::after { background-size: 397px 397px; opacity: .35; animation-duration: 34s; }
-@keyframes ld-drift { to { transform: translate(260px, 130px); } }
+.boot::before, .uvload::before, .bz-veil::before, .boot::after, .uvload::after, .bz-veil::after { content: ''; position: absolute; inset: 0 0 0 -740px; pointer-events: none;
+  background: url(boot-sky.webp) 0 0 / 512px 512px; will-change: transform; animation: ld-drift 150s linear infinite; }
+/* a second layer of the same tile at another size, so no grid shows, drifting faster */
+.boot::after, .uvload::after, .bz-veil::after { background-size: 731px 731px; opacity: .5; animation: ld-drift2 110s linear infinite; }
+@keyframes ld-drift { to { transform: translateX(512px); } }
+@keyframes ld-drift2 { to { transform: translateX(731px); } }
+.boot .ldr, .uvload .ldr, .bz-veil .ldr { z-index: 1; }
 
 .ldr { position: relative; width: 420px; height: 460px; }
 .boot .ldr { transform: scale(1.32); }
@@ -88,12 +94,13 @@
 
 /* the same over the Universe's stage, while its map is being made */
 .uvload { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; overflow: hidden; border-radius: inherit;
-  background: radial-gradient(ellipse 70% 62% at 50% 44%, #0b1828 0%, #01080d 70%); transition: opacity .6s ease, visibility .6s; }
+  background: var(--ld-sky); transition: opacity .6s ease, visibility .6s; }
 .uvload[hidden] { display: grid; opacity: 0; visibility: hidden; pointer-events: none; }
 .uvload .ldr { transform: scale(.82); }
 
 @media (prefers-reduced-motion: reduce) {
-  .ldr > i, .ldr > .ld-orbit, .boot::before, .uvload::before { animation-duration: 12s !important; }
+  .ldr > i, .ldr > .ld-orbit { animation-duration: 12s !important; }
+  .boot::before, .boot::after, .uvload::before, .uvload::after, .bz-veil::before, .bz-veil::after { animation: none; }
 }
 /* the entry pages hide their body until their own styles are in (html.ld): the loading screen shows regardless */
 .boot { visibility: visible; }
