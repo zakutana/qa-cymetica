@@ -21,18 +21,24 @@
   /* ------------------------------------------------------------------ where things stand: the render's own pixels (2560 x 1440) */
   var FINGER = { x: 1664, y: 590 };
   function layout() {
-    var W = innerWidth, H = innerHeight, narrow = W < 1100, s, x0, y0, cw, ch, cx, cy;
+    var W = innerWidth, H = innerHeight, narrow = W < 1100, s, x0, y0, cw, ch, cx, cy, rs, rx, ry;
     pc.classList.toggle('narrow', narrow);
     if (!narrow) {
-      s = Math.max(W / 2560, H / 1440); y0 = Math.min(0, (H - 1440 * s) * .25);
-      x0 = Math.min(0, W - 2560 * s + 143 * s);               // the far arm may leave the screen, for room on the left
-      ch = Math.max(470, Math.min(H - 186, 650)); cw = Math.max(380, Math.min(ch * .76, 500));
-      cx = (FINGER.x + 88) * s + x0 - cw;                     // his finger and first knuckles lie on the card's right edge
-      cy = Math.max(78, Math.min((FINGER.y + 90) * s + y0 - ch * .47, H - ch - 96));
-      var cl = Math.max(40, W * .055), cww = cx - cl - 36;
-      pc.style.setProperty('--copyl', cl + 'px'); pc.style.setProperty('--copyw', cww + 'px');
-      pc.style.setProperty('--fs', Math.min(76, cww / 12.4).toFixed(1) + 'px');
-      $('copy').style.display = cww < 300 ? 'none' : '';
+      /* The sizes do not follow the window, as their own pages' do not: at 2560 x 1267 /agent-casino has a 58px headline and
+         a 1208px column. Only the room fills the screen. */
+      rs = Math.max(W / 2560, H / 1440); rx = (W - 2560 * rs) / 2; ry = (H - 1440 * rs) * .25;
+      s = Math.max(.5, Math.min(.72, .5 + (H - 720) * .000402));
+      ch = Math.max(430, Math.min(H - 64 - 66 - 32, 530)); cw = Math.round(ch * .755);
+      var gap = 64, reach = (2470 - FINGER.x - 88) * s;        // how far he stands to the right of the card's edge
+      var fs = Math.min(58, (W - 80 - gap - cw - reach + 150 * s) / 10.45), copy = fs >= 34;   // his far arm may leave the screen before the words shrink
+      var hw = copy ? fs * 10.45 + gap : 0, stack = ch + 66;
+      cx = Math.max(40, (W - hw - cw - reach) / 2) + hw;
+      cy = Math.max(72, H * .52 - stack / 2);
+      x0 = cx + cw - (FINGER.x + 88) * s;                      // his finger and first knuckles lie on the card's right edge
+      y0 = cy + ch * .47 - (FINGER.y + 90) * s;
+      pc.style.setProperty('--copyl', (cx - hw) + 'px'); pc.style.setProperty('--copyw', (hw - gap + 4) + 'px'); pc.style.setProperty('--copyy', (cy + stack / 2) + 'px');
+      pc.style.setProperty('--fs', fs.toFixed(1) + 'px');
+      $('copy').style.display = copy ? '' : 'none';
     } else {
       cw = Math.min(W - 24, 470); cx = (W - cw) / 2;
       s = Math.max(.34, Math.min(.56, cw / 960));
@@ -40,8 +46,9 @@
       var chin = 12 + 405 * s;                                // his whole face above the card when the screen has the room
       cy = Math.max(100, Math.min(chin - 6, H - 132 - 430)); ch = H - cy - 54 - 16 - 50 - 12;   // then the card, buttons, tabs
       y0 = cy >= chin - 6 ? cy + 6 - 705 * s : cy - 24 - 490 * s;   // his chin on the card's top edge; on a short screen, his eyes just over it
+      rs = s; rx = x0; ry = y0;
     }
-    var v = { '--s': s.toFixed(4), '--x0': x0.toFixed(1) + 'px', '--y0': y0.toFixed(1) + 'px', '--cx': Math.round(cx) + 'px', '--cy': Math.round(cy) + 'px', '--cw': Math.round(cw) + 'px', '--ch': Math.round(ch) + 'px' };   // whole pixels keep the type sharp
+    var v = { '--rs': rs.toFixed(4), '--rx': rx.toFixed(1) + 'px', '--ry': ry.toFixed(1) + 'px', '--s': s.toFixed(4), '--x0': x0.toFixed(1) + 'px', '--y0': y0.toFixed(1) + 'px', '--cx': Math.round(cx) + 'px', '--cy': Math.round(cy) + 'px', '--cw': Math.round(cw) + 'px', '--ch': Math.round(ch) + 'px' };   // whole pixels keep the type sharp
     Object.keys(v).forEach(function (k) { pc.style.setProperty(k, v[k]); });
   }
 
@@ -125,7 +132,7 @@
     box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true">' +
       field.map(function (q) { return '<path class="peer" d="' + path(q) + '"/>'; }).join('') +
       '<path class="ln glow" pathLength="1" d="' + d + '"/><path class="ln core" pathLength="1" d="' + d + '"/>' +
-      '<g class="tipd"><circle cx="' + tx.toFixed(1) + '" cy="' + ty.toFixed(1) + '" r="11" fill="#00ff88" opacity=".22"/><circle cx="' + tx.toFixed(1) + '" cy="' + ty.toFixed(1) + '" r="4.5" fill="#eafff4"/></g></svg>' +
+      '<g class="tipd"><circle cx="' + tx.toFixed(1) + '" cy="' + ty.toFixed(1) + '" r="9" fill="#00ff88" opacity=".22"/><circle cx="' + tx.toFixed(1) + '" cy="' + ty.toFixed(1) + '" r="3.8" fill="#eafff4"/></g></svg>' +
       '<span class="pc-cmp">' + esc(pitch(p).cmp) + '</span>';
   }
 

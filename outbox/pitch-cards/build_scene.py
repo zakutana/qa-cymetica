@@ -2,7 +2,7 @@
 
     python outbox/pitch-cards/build_scene.py
 
-scene.webp   the room with the baked glass pane and its chart painted out, so a live card can stand in its place
+scene.webp   the room alone: the baked glass pane painted out, Nexus gone, so it can fill any screen behind him
 nexus.webp   Nexus cut out by hand-traced outline (2560 x 1440 coordinates below), to stand in FRONT of the card: the card
              sits under his finger and slides behind him when it is swiped to him. Left edge x=NX, top y=NY in the render.
 """
@@ -30,9 +30,13 @@ OUTLINE = [
     (1787, 815), (1800, 823), (1820, 840), (1840, 860), (1853, 865), (1858, 873), (1867, 887), (1867, 925), (1865, 935),
     (1862, 1050), (1855, 1120), (1852, 1160), (1855, 1180), (1842, 1200), (1835, 1225), (1805, 1280), (1780, 1340),
     (1765, 1400), (1760, 1440),
-    (2470, 1440), (2470, 900), (2455, 870), (2406, 815), (2300, 755), (2245, 719), (2205, 720), (2205, 600), (2222, 570),
+    (2305, 1440), (2302, 1420), (2285, 1360), (2278, 1320), (2280, 1285), (2298, 1250), (2302, 1210), (2310, 1170),
+    (2328, 1130), (2352, 1090), (2378, 1045), (2400, 1000), (2416, 955), (2420, 938), (2445, 915), (2456, 890), (2450, 850),
+    (2430, 815), (2400, 795), (2360, 783), (2330, 775), (2300, 757), (2245, 719), (2205, 720), (2205, 600), (2222, 570),
     (2227, 540), (2245, 460), (2242, 415), (2220, 360), (2185, 325), (2140, 310),
 ]
+SEAM = 1300                          # right of this column the room is its own left side mirrored: Nexus stood there
+MOON = (1122, 619, 125)              # x, y, radius with its halo
 
 
 def plate(a: np.ndarray) -> np.ndarray:
@@ -64,6 +68,23 @@ def plate(a: np.ndarray) -> np.ndarray:
     return np.clip(out, 0, 255).astype(np.uint8)
 
 
+def room(a: np.ndarray) -> np.ndarray:
+    """The room with nobody in it, so it can fill any screen while Nexus and the card keep their own size. Everything right
+    of SEAM is the left side mirrored, moon taken out of the copy: an octagonal window that closes, and a second desk."""
+    p = plate(a).astype(np.float32)
+    clean = p.copy()
+    mx, my, r = MOON
+    x0, x1, y0, y1 = mx - r, mx + r, my - r, my + r
+    ramp = np.linspace(0, 1, x1 - x0)[:, None]
+    for y in range(y0, y1):
+        clean[y, x0:x1] = clean[y, x0 - 6:x0].mean(axis=0) * (1 - ramp) + clean[y, x1:x1 + 6].mean(axis=0) * ramp
+    yy, xx = np.mgrid[y0:y1, x0:x1]
+    m = np.clip((r - np.hypot(xx - mx, yy - my)) / 40, 0, 1)[..., None]
+    clean[y0:y1, x0:x1] = p[y0:y1, x0:x1] * (1 - m) + clean[y0:y1, x0:x1] * m
+    p[:, SEAM:] = clean[:, SEAM - 1:SEAM - 1 - (2560 - SEAM):-1]
+    return np.clip(p, 0, 255).astype(np.uint8)
+
+
 def nexus(a: np.ndarray) -> Image.Image:
     """Nexus alone: the outline feathered a little, and the baked pane's rim taken off his hand."""
     b = a.astype(np.float32).copy()
@@ -81,7 +102,7 @@ def nexus(a: np.ndarray) -> Image.Image:
 
 if __name__ == "__main__":
     src = np.asarray(Image.open(SRC).convert("RGB"))
-    Image.fromarray(plate(src)).save(HERE / "scene.webp", quality=82, method=6)
+    Image.fromarray(room(src)).save(HERE / "scene.webp", quality=82, method=6)
     nexus(src).save(HERE / "nexus.webp", quality=88, method=6)
     Image.fromarray(src[310:690, 1880:2260]).resize((192, 192), Image.LANCZOS).save(HERE / "nexus-face.webp", quality=86, method=6)
     for f in ("scene.webp", "nexus.webp", "nexus-face.webp"):
