@@ -100,6 +100,23 @@ def thin(series: list, n: int = 60) -> list:
     return [round(series[round(i * step)][1], 4) for i in range(n)]
 
 
+def rel(series: list) -> list:
+    """[(days since the first point, % since the first point)]: lines that started on different days, side by side."""
+    def when(t):
+        return datetime.fromisoformat(t.replace("Z", "+00:00")).replace(tzinfo=timezone.utc)
+    t0, v0 = when(series[0][0]), series[0][1]
+    return [((when(t) - t0).total_seconds() / 86400, 100 * (v / v0 - 1)) for t, v in series]
+
+
+def line(points: list, upto: float | None = None, n: int = 90) -> list:
+    """At most n [day, %] points, first and last kept, cut at day `upto`."""
+    pts = [p for p in points if upto is None or p[0] <= upto]
+    if len(pts) > n:
+        step = (len(pts) - 1) / (n - 1)
+        pts = [pts[round(i * step)] for i in range(n)]
+    return [[round(d, 3), round(v, 3)] for d, v in pts]
+
+
 def deal_size(title: str) -> float | None:
     m = re.search(r"\(\$([\d.]+)([BM])\)", title)
     return float(m.group(1)) * (1e9 if m.group(2) == "B" else 1e6) if m else None
@@ -113,11 +130,12 @@ def main() -> dict:
     now = datetime.now(timezone.utc)
     try:
         funds = ranked_funds(get(client, "/fund-performance").text)
-        board, pitches = [], []
+        board, pitches, fund_lines = [], [], {}
         for f in funds:
             series, since = fund_history(client, f)
             if len(series) < 2 or not since:
                 continue
+            fund_lines[f["name"]] = rel(series)
             s = stats(series, now)
             weeks = (now - datetime.fromisoformat(since[:10]).replace(tzinfo=timezone.utc)).days // 7
             row = {"kind": "fund", "name": f["name"], "href": f["href"], "status": f["status"], "since": since[:10],
@@ -145,14 +163,24 @@ def main() -> dict:
             deals.append(row)
         board += deals
         fresh = [d for d in deals if (d["size"] or 0) >= DEAL_USD and d["since"] >= (now - timedelta(days=DEAL_DAYS)).strftime("%Y-%m-%d")]
-        for d in sorted(fresh, key=lambda d: d["since"], reverse=True)[:1]:
+        def card_line(d):
             hist = get(client, f"/api/v1/event-cards/{d['id']}/index-history?interval=all").json()["points"]
-            pitches.append(d | {"spark": thin([(p["t"], p["index"]) for p in hist])})
+            return rel([(p["t"], p["index"]) for p in hist]) if len(hist) >= 2 else []
+        for d in sorted(fresh, key=lambda d: d["since"], reverse=True)[:1]:
+            own = card_line(d)
+            others = [card_line(o) for o in deals if (o["size"] or 0) >= DEAL_USD and o["id"] != d["id"]]
+            pitches.append(d | {"line": line(own), "peers": [line(o, own[-1][0], 40) for o in others if len(o) >= 2]})
+        for p in pitches:
+            if p["kind"] == "fund":   # the one line lit, every other fund faint behind it, each from its own first day
+                own = fund_lines[p["name"]]
+                p |= {"line": line(own), "peers": [line(o, own[-1][0], 40) for n, o in fund_lines.items() if n != p["name"]],
+                      "rank": 1 + sum(1 for r in board if r["kind"] == "fund" and r["ret"] > p["ret"]), "of": sum(1 for r in board if r["kind"] == "fund")}
+                p.pop("spark", None)
         ripple = next((r for r in board if r["href"] == "/ma-fund"), None)
     finally:
         CURRENT_TIER.reset(token)
         client.close()
-    pitches.sort(key=lambda p: (p["kind"] != "deal", -(p["ret"] or 0)))
+    pitches.sort(key=lambda p: -(p["ret"] or 0))   # strongest first; pc.js sorts the same way
     board.sort(key=lambda r: r["since"], reverse=True)
     big = [d for d in deals if (d["size"] or 0) >= DEAL_USD]
     return {"as_of": now.strftime("%Y-%m-%d %H:%M UTC"),

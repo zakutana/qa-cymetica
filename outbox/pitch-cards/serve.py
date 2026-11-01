@@ -2,9 +2,8 @@
 
 The page is THEIR live /agent-casino (our family's app on their site), read anonymously (GET, no cookies, no key) and
 cached for 60 seconds, with only the casino app (<div class="at-shell"> to the end of <main>) replaced by app.html and
-pc.css / data.js / pc.js added. So the header, the agent prompt card (moved under the app), the Nexus chat bar and the
-footer are theirs. Every other GET is passed to cymetica.com the same way. Every other method is refused here, before
-anything leaves this machine.
+pc.css / data.js / pc.js added and their chrome off, as on /promo-market. Their stylesheets and fonts stay. Every other
+GET is passed to cymetica.com the same way. Every other method is refused here, before anything leaves this machine.
 """
 from __future__ import annotations
 
@@ -20,7 +19,8 @@ PORT = 8802
 UPSTREAM = "https://cymetica.com"
 SIBLING = "/agent-casino"
 TTL = 60.0
-OWN = {"pc.css": "text/css; charset=utf-8", "pc.js": "text/javascript; charset=utf-8", "data.js": "text/javascript; charset=utf-8"}
+OWN = {"pc.css": "text/css; charset=utf-8", "pc.js": "text/javascript; charset=utf-8", "data.js": "text/javascript; charset=utf-8",
+       "scene.webp": "image/webp", "nexus.webp": "image/webp", "nexus-face.webp": "image/webp"}
 DROP = {"content-security-policy", "content-security-policy-report-only", "content-encoding", "content-length",
         "transfer-encoding", "connection", "set-cookie", "strict-transport-security", "cross-origin-opener-policy",
         "cross-origin-resource-policy", "x-frame-options", "cache-control", "pragma", "etag", "last-modified"}
@@ -52,13 +52,9 @@ def page() -> bytes:
     start = html.index('<div class="at-shell"')
     end = html.index("</main>", start)
     html = html[:start] + (HERE / "app.html").read_text(encoding="utf-8") + "\n" + html[end:]
-    # Their "Give this to your AI agent" card goes under the app: a swipe deck is the first screen or it is not a deck
-    # (on a phone the card pushed the deck below their chat bar).
-    a = html.find('<section class="agent-paste-bar')
-    if a >= 0:
-        b = html.index("</section>", a) + len("</section>")
-        bar, html = html[a:b], html[:a] + html[b:]
-        html = html.replace("</main>", bar + "\n</main>", 1)
+    # A full-screen app shell of its own, as their /promo-market has: their own embed switch takes the header, the prompt
+    # card, the chat bar and the footer off the page.
+    html = html.replace('<html lang="en">', '<html lang="en" class="st-embed">', 1)
     t0 = html.index("<title>")
     html = html[:t0] + "<title>Pitch Cards: Nexus pitches, you invest | EventTrader</title>" + html[html.index("</title>", t0) + 8:]
     html = html.replace("Agent Casino at cymetica.com/agent-casino", "Pitch Cards at cymetica.com/pitch-cards")
