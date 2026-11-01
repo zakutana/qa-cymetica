@@ -17,38 +17,46 @@
   var CALM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   D.pitches.sort(function (a, b) { return b.ret - a.ret; });   // the strongest result opens the deck
   var S = { bal: 100, deals: [], i: 0, pending: null };
+  /* example deals, so My deals has something to show: real lines from data.js, the amounts and days are the example */
+  [[D.pitches[0], 40, 21], [D.pitches[1], 20, 3]].concat((D.examples || []).map(function (p, i) { return [p, [15, 10, 15][i], [30, 14, 9][i]]; }))
+    .forEach(function (e) { if (e[0]) S.deals.push({ p: e[0], amt: e[1], days: e[2] }); });
 
   /* ------------------------------------------------------------------ where things stand: the render's own pixels (2560 x 1440) */
   var FINGER = { x: 1664, y: 590 };
   function layout() {
-    var W = innerWidth, H = innerHeight, narrow = W < 1100, s, x0, y0, cw, ch, cx, cy, rs, rx, ry;
+    /* Between their header and their chat bar, in the column of /airdrop-farmer (1240 wide): everything here is in .pc's own pixels. */
+    var W = pc.clientWidth, narrow = innerWidth < 1100, s, x0, y0, cw, ch, cx, cy, rs, rx, ry, pch;
     pc.classList.toggle('narrow', narrow);
+    var bar = $('bar').offsetHeight, top0 = pc.getBoundingClientRect().top + pageYOffset, area = innerHeight - top0 - (narrow ? 65 : 61);
     if (!narrow) {
-      /* The sizes do not follow the window, as their own pages' do not: at 2560 x 1267 /agent-casino has a 58px headline and
-         a 1208px column. Only the room fills the screen. */
-      rs = Math.max(W / 2560, H / 1440); rx = (W - 2560 * rs) / 2; ry = (H - 1440 * rs) * .25;
-      s = Math.max(.5, Math.min(.72, .5 + (H - 720) * .000402));
-      ch = Math.max(430, Math.min(H - 64 - 66 - 32, 530)); cw = Math.round(ch * .755);
-      var gap = 64, reach = (2470 - FINGER.x - 88) * s;        // how far he stands to the right of the card's edge
-      var fs = Math.min(58, (W - 80 - gap - cw - reach + 150 * s) / 10.45), copy = fs >= 34;   // his far arm may leave the screen before the words shrink
+      /* The sizes do not follow the window, as their own pages' do not. Only the room fills the width. */
+      s = Math.max(.5, Math.min(.72, .5 + (innerHeight - 720) * .000402));
+      var room = Math.max(area - bar, 430 + 66 + 56);
+      ch = Math.max(430, Math.min(room - 66 - 32, 530)); cw = Math.round(ch * .755);
+      var col = Math.max(16, (W - 1240) / 2), gap = 56, reach = (2470 - FINGER.x - 88) * s;   // how far he stands to the right of the card's edge
+      var fs = Math.min(58, (W - col - 16 - gap - cw - reach + 150 * s) / 10.45), copy = fs >= 34;   // his far arm may leave the screen before the words shrink
       var hw = copy ? fs * 10.45 + gap : 0, stack = ch + 66;
-      cx = Math.max(40, (W - hw - cw - reach) / 2) + hw;
-      cy = Math.max(72, H * .52 - stack / 2);
+      cx = copy ? col + hw : Math.max(16, (W - cw - reach) / 2);
+      cy = bar + Math.max(28, (room - stack) * .36);
       x0 = cx + cw - (FINGER.x + 88) * s;                      // his finger and first knuckles lie on the card's right edge
       y0 = cy + ch * .47 - (FINGER.y + 90) * s;
-      pc.style.setProperty('--copyl', (cx - hw) + 'px'); pc.style.setProperty('--copyw', (hw - gap + 4) + 'px'); pc.style.setProperty('--copyy', (cy + stack / 2) + 'px');
+      pch = bar + room;
+      rs = Math.max(W / 2560, pch / 1440); rx = (W - 2560 * rs) / 2; ry = (pch - 1440 * rs) * .25;
+      pc.style.setProperty('--copyl', col + 'px'); pc.style.setProperty('--copyw', (hw - gap + 4) + 'px'); pc.style.setProperty('--copyy', (cy + stack / 2) + 'px');
       pc.style.setProperty('--fs', fs.toFixed(1) + 'px');
       $('copy').style.display = copy ? '' : 'none';
     } else {
       cw = Math.min(W - 24, 470); cx = (W - cw) / 2;
       s = Math.max(.34, Math.min(.56, cw / 960));
-      x0 = W / 2 + 22 - 2080 * s;                             // his face over the card, between the name and the balance
-      var chin = 12 + 405 * s;                                // his whole face above the card when the screen has the room
-      cy = Math.max(100, Math.min(chin - 6, H - 132 - 430)); ch = H - cy - 54 - 16 - 50 - 12;   // then the card, buttons, tabs
-      y0 = cy >= chin - 6 ? cy + 6 - 705 * s : cy - 24 - 490 * s;   // his chin on the card's top edge; on a short screen, his eyes just over it
+      x0 = W / 2 + 22 - 2080 * s;                             // his face over the card
+      var chin = 12 + 405 * s, free = area - bar;             // his whole face above the card when the screen has the room
+      var over = Math.max(64, Math.min(chin - 6, free - 66 - 430));
+      cy = bar + over; ch = Math.max(430, Math.min(620, free - over - 66 - 8));
+      y0 = over >= chin - 6 ? cy + 6 - 705 * s : cy - 24 - 490 * s;   // his chin on the card's top edge; on a short screen, his eyes just over it
       rs = s; rx = x0; ry = y0;
+      pch = cy + ch + 66 + 8;
     }
-    var v = { '--rs': rs.toFixed(4), '--rx': rx.toFixed(1) + 'px', '--ry': ry.toFixed(1) + 'px', '--s': s.toFixed(4), '--x0': x0.toFixed(1) + 'px', '--y0': y0.toFixed(1) + 'px', '--cx': Math.round(cx) + 'px', '--cy': Math.round(cy) + 'px', '--cw': Math.round(cw) + 'px', '--ch': Math.round(ch) + 'px' };   // whole pixels keep the type sharp
+    var v = { '--pch': Math.round(pch) + 'px', '--rs': rs.toFixed(4), '--rx': rx.toFixed(1) + 'px', '--ry': ry.toFixed(1) + 'px', '--s': s.toFixed(4), '--x0': x0.toFixed(1) + 'px', '--y0': y0.toFixed(1) + 'px', '--cx': Math.round(cx) + 'px', '--cy': Math.round(cy) + 'px', '--cw': Math.round(cw) + 'px', '--ch': Math.round(ch) + 'px' };   // whole pixels keep the type sharp
     Object.keys(v).forEach(function (k) { pc.style.setProperty(k, v[k]); });
   }
 
@@ -263,7 +271,7 @@
   function invest() {
     var el = top(), p = S.pending;
     if (AMT < 1) { toast('Enter an amount first.'); return; }
-    S.deals.unshift({ p: p, amt: AMT, at: new Date() }); S.bal -= AMT;
+    S.deals.unshift({ p: p, amt: AMT, days: 0 }); S.bal -= AMT;
     $('nDeals').textContent = S.deals.length;
     el.classList.add('gone-r'); look();             // the card goes to him, and behind him
     toast('Invested ' + usd(AMT) + ' in ' + nameOf(p));
@@ -274,27 +282,42 @@
 
   /* ------------------------------------------------------------------ my deals */
   function stat(k, v, cls, small) { return '<div class="pc-stat"><span>' + k + '</span><b class="' + (cls || '') + '">' + v + '</b>' + (small ? '<small>' + small + '</small>' : '') + '</div>'; }
-  function spark(p) {   // what you bought into: its line so far
+  function spark(p, neg) {   // what you bought into: its line so far
     var pts = calm(dense(p.line).rest, 18), W = 150, H = 40, lo = Infinity, hi = -Infinity, end = pts[pts.length - 1][0], t0 = pts[0][0];
     pts.forEach(function (q) { lo = Math.min(lo, q[1]); hi = Math.max(hi, q[1]); });
-    return '<svg class="pc-spark" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true"><path d="' + curve(pts.map(function (q) { return [W * (q[0] - t0) / ((end - t0) || 1), 3 + (H - 6) * (1 - (q[1] - lo) / ((hi - lo) || 1))]; })) + '"/></svg>';
+    return '<svg class="pc-spark' + (neg ? ' neg' : '') + '" viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true"><path d="' + curve(pts.map(function (q) { return [W * (q[0] - t0) / ((end - t0) || 1), 3 + (H - 6) * (1 - (q[1] - lo) / ((hi - lo) || 1))]; })) + '"/></svg>';
+  }
+  function sinceIn(d) {   // % since the day this deal went in, from the pitch's own line
+    if (!d.days) return 0;
+    var L = d.p.line, e = L[L.length - 1], at = L[0];
+    L.forEach(function (q) { if (q[0] <= e[0] - d.days) at = q; });
+    return 100 * ((1 + e[1] / 100) / (1 + at[1] / 100) - 1);
   }
   function drawDeals() {
-    var inv = S.deals.reduce(function (s, d) { return s + d.amt; }, 0);
-    $('dealTiles').innerHTML = stat('Invested', usd(inv)) + stat('Worth now', usd(inv)) + stat('Result', pct(0), 'zero');
-    $('dealList').innerHTML = S.deals.length ? S.deals.map(function (d) {
-      var p = d.p, dp = p.kind === 'deal' && dealParts(p.name);
-      return '<div class="pc-row"><span class="pc-n"><b>' + esc(nameOf(p)) + '</b><span>' + (dp ? esc(dp.buyer + ' buys ' + dp.target) : 'Fund') + '</span></span>' + spark(p) +
-        '<span class="pc-r zero" title="Moves with ' + esc(p.kind === 'fund' ? 'the fund\'s index' : 'the card\'s index') + ' from the moment you invested">' + usd(d.amt) + '<small>just in</small></span></div>';
-    }).join('') : '<div class="pc-none"><img src="/_pc/nexus-face.webp" alt="">No deals yet. Swipe right on a pitch you like.</div>';
+    var inv = 0, now = 0, rows = S.deals.map(function (d) {
+      var p = d.p, dp = p.kind === 'deal' && dealParts(p.name), r = sinceIn(d), worth = d.amt * (1 + r / 100), cls = r > 0 ? 'pos' : r < 0 ? 'neg' : 'zero';
+      inv += d.amt; now += worth;
+      return '<div class="pc-row"><span class="pc-ty"><span class="pb-tag ' + (p.kind === 'fund' ? 't-fund">Fund' : 't-card">Event Card') + '</span></span>' +
+        '<span class="pc-n"><b>' + esc(nameOf(p)) + '</b><span>' + (dp ? esc(dp.buyer + ' buys ' + dp.target) + ' · ' : '') + (d.days ? 'in for ' + d.days + ' days' : 'just in') + '</span></span>' + spark(p, r < 0) +
+        '<span class="pc-r"><em>' + usd(d.amt) + '</em><small>invested</small></span>' +
+        '<span class="pc-r ' + cls + '">' + usd(worth, 2) + '<small>' + pct(r) + '</small></span></div>';
+    });
+    var res = inv ? 100 * (now / inv - 1) : 0;
+    $('dealTiles').innerHTML = stat('Invested', usd(inv)) + stat('Worth now', usd(now, 2)) + stat('Result', pct(res), res > 0 ? 'pos' : res < 0 ? 'neg' : 'zero');
+    $('dealList').innerHTML = rows.join('') || '<div class="pc-none"><img src="/_pc/nexus-face.webp" alt="">No deals yet. Swipe right on a pitch you like.</div>';
   }
 
   /* ------------------------------------------------------------------ the Profit Board: one list, nothing in it at a loss */
   var B = D.board, BK = 'all', SHOWN = 40, SORT = 'r';
   var TABS = [['all', 'All'], ['pitch', 'Pitches'], ['fund', 'Funds'], ['card', 'Event cards'], ['company', 'Company cards'], ['h72', '72h cards']];
   var TAGS = { fund: 'Fund', card: 'Event Card', company: 'Company Card', h72: '72h Card' };
-  var COLS = [['r', 'Up since start'], ['p', 'Peak'], ['dp', 'Days since peak']];
+  var COLS = [['r', 'Up since start'], ['p', 'Peak'], ['dp', 'Days since start / peak']];
   function tags(r) { return '<span class="pb-tag t-' + r.k + '">' + TAGS[r.k] + '</span>' + (r.pitch ? '<span class="pb-tag t-pitch">Pitch</span>' : ''); }
+  function daysCell(r) {   // its whole life as a line, the peak marked on it
+    var at = r.days ? Math.min(100, Math.max(0, 100 * (r.days - r.dp) / r.days)) : 100;
+    return '<span class="pb-dn" title="' + r.days + ' days since it started, peak ' + r.dp + ' days ago"><b>' + r.days + '</b><i>/</i><em>' + r.dp + '</em></span>' +
+      '<span class="pb-life"><u style="width:' + at.toFixed(1) + '%"></u><s style="left:' + at.toFixed(1) + '%"></s></span>';
+  }
   function drawBoard() {
     var rows = B.rows.filter(function (r) { return BK === 'all' || (BK === 'pitch' ? r.pitch : r.k === BK); });
     $('boardSeg').innerHTML = TABS.map(function (t) { return '<button type="button" data-k="' + t[0] + '" class="t-' + t[0] + (t[0] === BK ? ' on' : '') + '">' + t[1] + '</button>'; }).join('');
@@ -304,14 +327,14 @@
     $('board').innerHTML = rows.slice(0, SHOWN).map(function (r, i) {
       return '<tr><td class="pb-rank">' + (i + 1) + '</td><td class="pb-ty">' + tags(r) + '</td>' +
         '<td class="pb-name"><a href="https://cymetica.com' + esc(r.u || '') + '" target="_blank" rel="noopener" title="' + esc(r.n) + '">' + esc(r.n) + '</a><span class="pb-tym">' + tags(r) + '</span></td>' +
-        '<td class="pb-c pb-pos">' + pct(r.r, 2) + '</td><td class="pb-c pb-pos">' + pct(r.p, 2) + '</td><td class="pb-c">' + r.dp + '</td></tr>';
+        '<td class="pb-c pb-pos">' + pct(r.r, 2) + '</td><td class="pb-c pb-pos">' + pct(r.p, 2) + '</td><td class="pb-c pb-d">' + daysCell(r) + '</td></tr>';
     }).join('') || '<tr><td colspan="6" class="pc-none">Nothing here yet.</td></tr>';
     $('more').hidden = rows.length <= SHOWN;
   }
 
   /* ------------------------------------------------------------------ wiring */
   function view(v) {
-    pc.dataset.view = v; pc.scrollTop = 0;
+    pc.dataset.view = v; scrollTo(0, 0);
     $('deck').style.display = $('acts').style.display = v === 'deck' ? '' : 'none';
     [].forEach.call(document.querySelectorAll('.pc-tabs button'), function (a) { a.classList.toggle('on', a.dataset.tab === v); });
     if (v === 'deals') { drawDeals(); $('nDeals').textContent = ''; }

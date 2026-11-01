@@ -2,7 +2,7 @@
 
 The page is THEIR live /agent-casino (our family's app on their site), read anonymously (GET, no cookies, no key) and
 cached for 60 seconds, with only the casino app (<div class="at-shell"> to the end of <main>) replaced by app.html and
-pc.css / data.js / pc.js added and their chrome off, as on /promo-market. Their stylesheets and fonts stay. Every other
+pc.css / data.js / pc.js added: their header, chat bar, footer, stylesheets and fonts stay. Every other
 GET is passed to cymetica.com the same way. Every other method is refused here, before anything leaves this machine.
 """
 from __future__ import annotations
@@ -52,9 +52,6 @@ def page() -> bytes:
     start = html.index('<div class="at-shell"')
     end = html.index("</main>", start)
     html = html[:start] + (HERE / "app.html").read_text(encoding="utf-8") + "\n" + html[end:]
-    # A full-screen app shell of its own, as their /promo-market has: their own embed switch takes the header, the prompt
-    # card, the chat bar and the footer off the page.
-    html = html.replace('<html lang="en">', '<html lang="en" class="st-embed">', 1)
     t0 = html.index("<title>")
     html = html[:t0] + "<title>Pitch Cards: Nexus pitches, you invest | EventTrader</title>" + html[html.index("</title>", t0) + 8:]
     html = html.replace("Agent Casino at cymetica.com/agent-casino", "Pitch Cards at cymetica.com/pitch-cards")

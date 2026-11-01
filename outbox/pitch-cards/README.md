@@ -18,9 +18,8 @@ holographic chart (`outbox/quest/gen/lab-16x9.png` and its Real-ESRGAN enlargeme
 * `scene.webp`: the room alone, the baked pane painted out and Nexus gone (right of x=1300 it is its left side mirrored).
 * `nexus.webp`: Nexus cut out along a hand-traced outline, standing in front of the card, so the live card sits under the
   finger and slides behind Nexus when it is swiped right. On a phone the card covers the body and the face looks over it.
-* The sizes do not follow the window, as their own pages' do not: at the operator's 2560 x 1267 /agent-casino has a 58px
-  headline and a 1208px column, so here the headline is 58px, the card 400 x 530, Nexus 72% of the render, the group
-  centred, and only the room fills the screen ("vse moc obrovske", 2026-11-01, when it all grew with the window).
+* It lives inside their site: their header, Back and chat bar stay, and the app bar and 1240 column are read off /airdrop-farmer ("ono to bude pak zasazeno do teto stranky", 2026-11-01). The headline starts on the column's left edge, Nexus stands out past its right edge, and the room fades into their page's ground on every side.
+* The sizes do not follow the window, as their own pages' do not: at the operator's 2560 x 1267 the headline is 58px, the card 400 x 530, Nexus 72% of the render ("vse moc obrovske", 2026-11-01, when it all grew with the window).
 * `layout()` in `pc.js` places Nexus and the card in the render's own pixels (2560 x 1440), so the finger stays on the card at
   any screen size from 1280 x 720 up, and `drawChart()` ends the line under the fingertip where the data allows (within 3 px on
   the fund card; the deal's own peak above its last point keeps that dot lower). Under 1100 px wide it is the phone layout,
@@ -32,10 +31,7 @@ holographic chart (`outbox/quest/gen/lab-16x9.png` and its Real-ESRGAN enlargeme
   first, the result as the hero, a flat card (a tilt softened the type), one amount control, no chart labels, no stamps
   over the number. Not taken: replacing the field of peer lines with a band, deleting the arm, renaming the Pitchboard.
 
-The page is their live `/agent-casino`, read anonymously and cached 60 s, with the casino app replaced by `app.html` and
-their own embed switch (`html.st-embed`) taking off the header, prompt card, chat bar and footer: a full-screen shell, as
-/promo-market has. Their type: Archivo Black, JetBrains Mono, Inter. Every method except GET is refused by `serve.py`, so
-their scripts' visit and telemetry POSTs stop here.
+The page is their live `/agent-casino`, read anonymously and cached 60 s, with the casino app replaced by `app.html`; their prompt card and that page's stats are hidden, as /airdrop-farmer has neither. Their type: Archivo Black, JetBrains Mono, Inter. Every method except GET is refused by `serve.py`, so their scripts' visit and telemetry POSTs stop here.
 
 The motion is part of it: a new pitch is wiped on from the finger by a line of light, the number runs up, the line draws,
 the sentence types out; swiping right turns the card over for the amount, and investing sends it behind Nexus, whose eyes flare.
@@ -57,7 +53,7 @@ mega deals. Lines are thinned to about 36 evenly spaced means, the last point ex
 first day and then nothing for weeks: that stretch is not drawn, so Molecular's line starts at its first real run.
 
 The $100 balance is the operator's example; investing moves only the page's own counters, and a new deal reads 0.0% until the
-real product tracks it.
+real product tracks it. My deals opens with five example deals: their lines and results are real, the amounts and days are the example.
 
 ## The Profit Board
 
@@ -68,7 +64,7 @@ pitchboard; a pitch is a tagged row (and a tab).
 A graphic design for Cymetica to finish, so the numbers are read as they stand and nothing on it is checked (2026-11-01: "to nemas
 overovat zadne data, ma to byt ciste graficky navrh, oni to pak cele dodelaji"). **The look** is their /themes/performance: its
 tabs and its table, CSS read off the live page. **The list:** LIVE funds and event cards, only what is up right now and has a peak
-to show. **Columns:** Up since start, Peak, Days since peak. **Tags, in their palette:** Fund green, Event Card white, Company Card
+to show. **Columns:** Up since start, Peak, and one Days column: days since start / since peak, with a line of its whole life and the peak marked on it. **Tags, in their palette:** Fund green, Event Card white, Company Card
 blue, 72h Card cyan, Pitch solid green beside its own kind.
 
 `python outbox/pitch-cards/refresh.py --read` is the long pass (every card, then the histories, into `.cache/`, not in git,

@@ -201,11 +201,11 @@ def days_since(iso: str, now: datetime) -> int:
 
 
 def profit_board(funds: list, pitches: list, now: datetime) -> dict:
-    """One list, nothing in it at a loss. Each row: what kind it is, % since it could first be bought, its peak, days since that peak."""
+    """One list, nothing in it at a loss. Each row: what kind it is, % since it could first be bought, its peak, days since it started and since that peak."""
     every = json.loads(EVERY_CARD.read_text(encoding="utf-8")) if EVERY_CARD.exists() else {}
     hist = json.loads(HISTORIES.read_text(encoding="utf-8")) if HISTORIES.exists() else {}
     pitched = {p.get("id") or p["name"] for p in pitches}
-    rows = [{"k": "fund", "n": f["name"], "u": f["href"], "r": f["ret"], "p": f["peak"], "pd": f["peak_d"], "pitch": f["name"] in pitched} for f in funds]
+    rows = [{"k": "fund", "n": f["name"], "u": f["href"], "r": f["ret"], "p": f["peak"], "pd": f["peak_d"], "d": f["since"], "pitch": f["name"] in pitched} for f in funds]
     for i, c in every.items():
         title = c["title"] or ""
         h = hist.get(i) or {}
@@ -218,8 +218,14 @@ def profit_board(funds: list, pitches: list, now: datetime) -> dict:
         company = re.match(r"^SAIB: (\S+) — (.+)$", title)
         name = (company.group(1) + " " + company.group(2)) if company else (deal.group(1) + " · " + re.sub(r"\s*\(\$[\d.]+[BM]\)\s*$", "", deal.group(2)).replace(" to acquire ", " buys ")) if deal else title
         rows.append({"k": "h72" if c["status"] in H72 else "company" if company else "card", "n": name, "u": c["card_url"], "r": ret,
-                     "p": round(max(ret, 100 * (h["peak"] / c["index_base"] - 1)), 2), "pd": h["peak_t"][:10], "pitch": i in pitched})
-    return {"rows": [{k: v for k, v in r.items() if k != "pd"} | {"dp": days_since(r["pd"], now)} for r in rows if r["r"] > 0]}
+                     "p": round(max(ret, 100 * (h["peak"] / c["index_base"] - 1)), 2), "pd": h["peak_t"][:10], "d": c["created_at"][:10], "pitch": i in pitched})
+    return {"rows": [{k: v for k, v in r.items() if k not in ("pd", "d")} | {"dp": days_since(r["pd"], now), "days": max(days_since(r["d"], now), days_since(r["pd"], now))} for r in rows if r["r"] > 0]}
+
+
+def example_funds(funds: list, pitches: list) -> list:
+    """The funds My deals shows beside the two pitches: two that are up and the one nearest the line below it."""
+    rest = sorted((f for f in funds if f["name"] not in {p["name"] for p in pitches}), key=lambda f: -f["ret"])
+    return rest[:2] + [f for f in rest if f["ret"] < 0][:1]
 
 
 def main() -> dict:
@@ -294,7 +300,8 @@ def main() -> dict:
             "ripple_fund": {"ret": ripple["ret"], "since": ripple["since"]} if ripple else None,
             "big_deals": {"n": len(big), "up": sum(1 for d in big if d["ret"] > 0),
                           "avg": round(sum(d["ret"] for d in big) / len(big), 2) if big else None},
-            "pitches": pitches, "board": profit_board(live_funds, pitches, now)}
+            "pitches": pitches, "board": profit_board(live_funds, pitches, now),
+            "examples": [{"kind": "fund", "name": f["name"], "line": line(fund_lines[f["name"]])} for f in example_funds(live_funds, pitches)]}
 
 
 if __name__ == "__main__":
