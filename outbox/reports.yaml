@@ -6769,6 +6769,58 @@ reports:
       and is inconclusive if the list or a market cannot be read or the gate no longer promises tokenless farms. GET
       requests only.
 
+  - key: usage-dates-follow-the-browsers-language-not-the-pages
+    findings: [CYM-usage_dates_and_zone_names_follow_the_pages_language]
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/usage
+    title: >-
+      /usage: dates and zone names follow the browser's language, so an English page shows Czech day names and zone
+      abbreviations ("refills so 17:00 SEČ", "po 19.", "this period ends 26. 10.")
+    expected: >
+      Dates and zone names on /usage are in the page's language. The page is <html lang="en">, the footer language
+      is "English" and no other language was chosen, so the tank caption reads like the drawing the redesign was
+      built from ("refills Sat 4:00 PM UTC"): English weekday and month names ("Sat", "Fri, Oct 23", "Oct 26") and
+      English zone names.
+    actual: >
+      Seen on 2026-10-25 in a signed-in session in a browser whose language (navigator.language) is Czech, on
+      https://cymetica.com/usage with <html lang="en">, the footer language "English" and no stored language choice.
+      The tank caption read "refills so 17:00 SEČ" (so = Saturday, SEČ = Central European Time), the daily columns
+      under "where it went" read "po 19.", "út 20.", "st 21.", "čt 22.", "pá 23.", "so 24.", the day header read "PÁ
+      23. 10.", item times read "23:12 SELČ" (SELČ = Central European Summer Time), and the plan cards read "this
+      period ends 26. 10." and "until 26. 10." (day, dot, month, where English reads "Oct 26"). Everything else on
+      the page was English. Cause, read from the script the page loads (https://cymetica.com/static/js/usage-page.js
+      ?v=20261025-2, the same for everyone): its helper loc() formats with new Date(iso).toLocaleString([], opts) and
+      hm(), dayHm(), dayName() and mdShort() call it (lines 46-50; hm and dayHm add timeZoneName: 'short'), and the
+      daily columns call d.toLocaleDateString([], { weekday: 'short', day: 'numeric', timeZone: 'UTC' }) (line 347).
+      An empty locale list means "the browser's language", not the page's (document.documentElement.lang is "en";
+      the site also has window.EventTraderI18n). Other calls in the same file already pass 'en-US' (usd0 and the
+      ET10 amount). With the same options, Node answers "so 17:00 SEČ", "23:12 SELČ", "pá 23. 10." and "26. 10."
+      for cs-CZ and "Sat, 5:00 PM GMT+1", "11:12 PM GMT+2", "Fri, Oct 23" and "Oct 26" for en-US. So only visitors
+      whose browser language is not English see it. The old page did the same ("Resets so 18:00" on 2026-10-22);
+      the redesign shows many more dates. The same calls with an empty list, undefined or no locale at all are
+      in five more scripts the page loads: nexus-usage.js (toLocaleDateString([], ...), toLocaleTimeString([], ...)),
+      nexus-subscription.js and nexus-chat.js (new Date(period_end).toLocaleDateString(), "Access continues
+      until ..."), whats-new.js (toLocaleDateString(undefined, ...)) and notification-center.js
+      (toLocaleDateString() for older notifications); we did not see any of them draw on /usage, so we do not claim
+      them here, but a fix wants them too.
+    steps:
+      - 'Open https://cymetica.com/usage in a browser set to Czech (navigator.language "cs-CZ"), in a time zone such as Europe/Prague: the tank caption reads "refills so 17:00 SEČ", the plan cards "this period ends 26. 10." while the rest of the page is English'
+      - 'GET https://cymetica.com/usage -> <html lang="en">, and the footer language selector set to "English"'
+      - 'GET https://cymetica.com/static/js/usage-page.js?v=20261025-2 -> line 46: function loc(opts, iso) { try { return new Date(iso).toLocaleString([], opts); } ... }; lines 47-50: hm() and dayHm() add timeZoneName: ''short'', mdShort() is { month: ''short'', day: ''numeric'' }; line 347: d.toLocaleDateString([], { weekday: ''short'', day: ''numeric'', timeZone: ''UTC'' })'
+      - 'In any console: new Date("2026-10-31T16:00:00Z").toLocaleString([], {weekday: "short", hour: "numeric", minute: "2-digit", timeZoneName: "short"}) -> "so 17:00 SEČ" with the browser set to Czech, "Sat, 5:00 PM GMT+1" with the browser set to English (zone Europe/Prague); the same with "en-US" as the first argument gives the English text in both'
+    body: >
+      This is wrong-language text on a page that is otherwise English, not a matter of look: "refills so 17:00 SEČ"
+      mixes English words with Czech ones in one sentence, and "26. 10." is a different date order from "Oct 26".
+      Passing the page's language to the formatting calls (a locale such as 'en-US', the page's lang attribute or the
+      language window.EventTraderI18n holds) would fix it, in loc() and in the daily columns; if the
+      site later shows the page in other languages, the same value makes the dates follow them. Our check reads
+      the script that draws the page and fails while a date or time is formatted with an empty locale list, none,
+      undefined or navigator.language; it passes however that is changed (a literal English locale, the page's
+      lang, the i18n language, a variable or a helper parameter that holds one), and is inconclusive if the page or
+      the script cannot be read, if something rewrites Date.prototype, or if no formatting call is left to read.
+      GET requests only.
+
   - key: traffic-agent-visits-are-not-the-agents-requests-by-area
     findings: [CYM-traffic-agent-visits-are-the-agents-requests]
     severity: low
@@ -6806,7 +6858,6 @@ reports:
       it leaves out or stops claiming every request; it is inconclusive if a read fails, the two ranges differ,
       the snapshots were generated more than 30 minutes apart or the list has no remainder row. GET requests
       only.
-
 
   - key: event-cards-left-swipe-stamp-says-sell-but-skips
     findings: [CYM-event_cards_swipe_stamp_names_what_the_swipe_does]

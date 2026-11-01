@@ -1,5 +1,5 @@
 {
- "agreed_at": "2026-10-25T07:09:04+00:00",
+ "agreed_at": "2026-10-25T07:11:52+00:00",
  "calls": {
   "GET https://api.coingecko.com/api/v3/coins/markets?ids,page,per_page,price_change_percentage,sparkline,vs_currency": {
    "always": [
