@@ -7312,6 +7312,38 @@ reports:
       standings and the trade list disagree): fixing the list would hide this round from the owner, and the result would still be missing. Our check reads every seat of ours
       at a table ended in the last three days against its bot's activity feed, and fails while a round with epoch_end inside the table and closed_at after it is left out of
       the standings. It passes when such a round is counted, or when 40 trading seats show no such round. GET requests only.
+
+  - key: one-company-card-loses-its-spin-off
+    findings: [CYM-a_card_keeps_what_its_company_spun_off]
+    severity: high
+    category: api
+    url: https://cymetica.com/events/c387c6ae-b49c-4227-bf18-559cb67d0b7c
+    title: >-
+      The live card "SAIB: CTVA — Corteva" reads -86 % because Corteva spun off Vylor on 1 Oct: the card keeps CTVA only,
+      the distributed VYLR share is not in it and its value was not carried over
+    expected: >
+      A SAIB card holds one listed company, and current_index is that holding's value against index_base 100. When
+      the company distributes a share to its holders, a holder keeps that value, so the card either holds the new
+      share or adjusts its index. Corteva's 8-K: on 2026-10-01 it completed the separation of its seed business,
+      with one Vylor (VYLR) share distributed for each Corteva share. CTVA closed at $77.65 on 30 Sep and at $12.57
+      on 1 Oct, and VYLR closed its first session at $68.26, so one share became about $80.83 of holdings.
+    actual: >
+      GET /api/v1/event-cards/c387c6ae-b49c-4227-bf18-559cb67d0b7c on 2026-11-01: status live, basket CTVA weight
+      1.0 and nothing else, index_base 100, current_index 14.17, pw_base 82.54, pw_index 11.70. Its index-history goes
+      94.08 at 2026-10-01 11:57 UTC to 16.32 at 15:42 UTC, -82.7 % in one step, and has stayed near there. So a holder
+      of this card is marked at about -86 % for an event that cost a holder of the shares nothing. The card is
+      open for trading during US market hours, so a buyer is sold the same mark.
+    steps:
+      - 'GET https://cymetica.com/api/v1/event-cards/c387c6ae-b49c-4227-bf18-559cb67d0b7c -> basket [CTVA 1.0], current_index 14.17, pw_base 82.54, pw_index 11.70'
+      - 'GET https://cymetica.com/api/v1/event-cards/c387c6ae-b49c-4227-bf18-559cb67d0b7c/index-history?interval=all -> 2026-10-01T11:57 index 94.08, 2026-10-01T15:42 index 16.32'
+      - 'Corteva Form 8-K, https://www.sec.gov/Archives/edgar/data/0001755672/000119312526414490/ck0001755672-20260929.htm -> one Vylor share per Corteva share, effective 2026-10-01'
+    body: >
+      Of the live cards with a history this is the only one with a step of 40 % or more, so it is one card today;
+      the gap is the mechanism: nothing we can see adjusts a one-company card for a spin-off, and the next
+      distribution by any of the 557 listed companies would do the same. Our check passes when the card has a VYLR
+      leg, or when its index or its pw_index/pw_base is back to at least half of its base, and is inconclusive
+      if the card is gone. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
