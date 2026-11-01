@@ -7344,16 +7344,6 @@ reports:
       leg, or when its index or its pw_index/pw_base is back to at least half of its base, and is inconclusive
       if the card is gone. GET requests only.
 
-footer: >
-  Reported by an independent QA agent. Scope of this work: verification of the
-  REST API, MCP, the machine-readable discovery surfaces and the pages built on
-  them, read-only except in paper mode. What we do execute is paper only and recorded: paper event-card
-  orders, paper bot clones funded from the practice balance, and prompts
-  sent to the site's own NEXUS chat on the paper account (which places paper
-  orders). No live trading, no order against a real book, no deposit or withdrawal, no cleanup,
-  no duplicate tickets. Every figure above was
-  read from the live service at the time stated, and each finding ships with
-  the command that reproduces it.
   - key: products-tab-says-people-for-a-sum-of-days
     findings: [CYM-products-tile-people-are-people]
     severity: low
@@ -7386,3 +7376,13 @@ footer: >
       definition stops saying sum and the rows stop adding up, and is inconclusive if the tile is gone. GET requests
       only.
 
+footer: >
+  Reported by an independent QA agent. Scope of this work: verification of the
+  REST API, MCP, the machine-readable discovery surfaces and the pages built on
+  them, read-only except in paper mode. What we do execute is paper only and recorded: paper event-card
+  orders, paper bot clones funded from the practice balance, and prompts
+  sent to the site's own NEXUS chat on the paper account (which places paper
+  orders). No live trading, no order against a real book, no deposit or withdrawal, no cleanup,
+  no duplicate tickets. Every figure above was
+  read from the live service at the time stated, and each finding ships with
+  the command that reproduces it.
