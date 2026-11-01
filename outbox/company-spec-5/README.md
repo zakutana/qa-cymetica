@@ -6,5 +6,6 @@
 2026-10-29: the operator filed it; their BB-SPEC repeated all 33 lines word for word (diffed; the "1." numbering of B and of the pictures is dropped).
 The five pictures came back as "Design references (match this look)" in the order webp, png, webp, webp, png; ours is webp, webp, png, webp, png, so
 pictures 2 and 3 of the text may be swapped there. The three evidence pictures (3 to 5) are listed as looks to match: the verdict checks the build
-does not copy the wrong product list. ET number and BB-ACCEPT time: not yet written here. The verdict is ours, item by item against `SPEC.md`.
+does not copy the wrong product list. Filed and accepted as **ET-33342** on 2026-10-29 18:12 UTC, shipped 2026-10-31 23:07 (a day late). 2026-11-01 08:05 UTC: **verdict Fail sent**
+(`verdict-note-et-33342.txt`, read in `verdict.md`: the board unchanged is the main defect); the ticket went back to "funded, ready to build".
 Round 4 (ET-32803) is in `../company-spec-4`.

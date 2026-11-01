@@ -1,0 +1,11 @@
+FAIL. ET-33342 (Build a Company, round 5), checked 1 Nov 2026 about 08:00 UTC on company 14, signed in, 1600 px, and through the public API.
+
+Shipped as asked: the points rules in GET /api/v1/company/14/season-breakdown (2 active days = 10, +1 from the 3rd day up to 20 per user per product; agents 1 point per 100 USDC with no cap; every product counts separately; a returning visitor 1 point, +0.25 from the 3rd day, at most 25 % of the signed-in points; the account's agents are the company's); land 5 per account (GET /api/v1/company/land, max_per_account 5); the Products tab lists the 10 Build it Better products, without Build Usage and Build it Better, Agent Casino once, with season points per product and, in the side panel, active users, returning visitors, points from users and visitors and agent volume.
+
+Not shipped:
+1. The board was not changed. This is the main defect. The Universe board and its Full leaderboard (/company/app#universe) still say REVENUE SHARE, 5% / 3% / 1%, and "Revenue brought is not measured yet, so nobody is ranked and nothing is paid", while GET /api/v1/company/season returns season 2026-11 with prizes and a ranking. The page and the API contradict each other. Pictures 1 and 2 of the request are the board that was asked for.
+2. The prizes in the API are 50,000 / 30,000 / 10,000 ET10; the request asked for 500,000 / 250,000 / 100,000 (item 6).
+3. Creating a company is not free: /company still says "Creating a company takes the Pro plan or higher and a one-time ET10 fee" (section C).
+4. GET /api/v1/company/season sets prize_et10 on companies with 1.011, 0.0202 and 0.0001 points, although 100 points is the line to be placed.
+
+Not checked: A (the company is paused), the anti-farming item (needs a new run), the count back before the season (every product shows 0 points eight hours in).

@@ -1,8 +1,8 @@
 # Build a Company, round 5: what is live (read 2026-11-01 07:55 to 08:20 UTC)
 
 Read in the operator's signed-in browser pane on company 14 (Ironstar Capital), nothing changed, nothing created (the Create company wizard was opened
-and left at its first step). The build is most likely ET-33496 (the Products API names it as Build a Company's latest build, submitted 2026-10-30 20:16 UTC);
-the ET number of the round-5 request itself is not written down yet.
+and left at its first step). The ticket is **ET-33342** (filed and accepted 2026-10-29 18:12 UTC, deadline 2026-10-30 18:12, shipped 2026-10-31 23:07, late;
+no verdict yet). ET-33496 is the Quant Lab redesign, not this round: an earlier line here took it for this build, wrongly.
 
 | Item | Asked | Live |
 |---|---|---|
