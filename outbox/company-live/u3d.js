@@ -1765,6 +1765,21 @@ const UVLOOK = { exposure: 1.15, sat: 0.9 };
 // ?sky=flyer (the operator, 2026-11-01): the flyer's deep space, a plate behind the canvas that is screened over it
 // (skyflyer.css), so the scene's own sky goes near-black and leaves the plate its darkness and its stars
 const SKYF = /[?&]sky=flyer\b/.test(location.search);
+// The plate is a quad a long way in front of the camera that fills the view and is drawn first, behind everything (no depth
+// test, no depth write), cropped to the view like `background-size: cover`. A first try screened the whole canvas over a CSS
+// plate and the stars shone through the rooms and the rock ("jsou na povrchu ... jen naplacnul"); here the geometry covers them.
+function flyerPlate(scene, camera, file) {
+  const tex = new THREE.TextureLoader().load(file); tex.colorSpace = THREE.SRGBColorSpace;
+  const d = camera.far * 0.45, PA = 2560 / 1440;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: tex, depthTest: false, depthWrite: false, fog: false, toneMapped: false }));
+  m.renderOrder = -1000; m.frustumCulled = false; m.position.set(0, 0, -d);
+  m.onBeforeRender = (r, s, cam) => {
+    const h = 2 * d * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)), a = cam.aspect;
+    m.scale.set(h * a, h, 1);
+    if (a > PA) { tex.repeat.set(1, PA / a); tex.offset.set(0, (1 - PA / a) / 2); } else { tex.repeat.set(a / PA, 1); tex.offset.set((1 - a / PA) / 2, 0); }
+  };
+  camera.add(m); scene.add(camera);
+}
 const ACES_IN = new THREE.Matrix3().set(0.59719, 0.35458, 0.04823, 0.07600, 0.90834, 0.01566, 0.02840, 0.13383, 0.83777);
 const ACES_OUT = new THREE.Matrix3().set(1.60475, -0.53108, -0.07367, -0.10208, 1.10813, -0.00605, -0.00327, -0.07276, 1.07602);
 const ACES_IN_INV = ACES_IN.clone().invert(), ACES_OUT_INV = ACES_OUT.clone().invert();
@@ -1927,7 +1942,7 @@ function uvSky(AZ) {
     c.putImageData(img, 0, 0);
   });
   const sph = new THREE.Mesh(new THREE.SphereGeometry(D, 64, 32), new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, depthWrite: false, fog: false }));
-  sph.renderOrder = -20; sph.frustumCulled = false; g.add(sph);
+  sph.renderOrder = -20; sph.frustumCulled = false; if (!SKYF) g.add(sph);   // ?sky=flyer: the plate is the sky
   // a faint teal wisp or two inside the haze, his nebula's filaments
   [[-0.62, 0.62, 0.55, 7, 0.07], [-0.25, 0.85, 0.4, 13, 0.05], [-0.85, 0.2, 0.35, 29, 0.04]].forEach(([x, y, s, seed, op]) => {
     const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: filamentTex(seed), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
@@ -1935,12 +1950,12 @@ function uvSky(AZ) {
   });
   // stars: about one to every 2,500 px of his sky, mostly faint, sharp; points are a pixel each
   const rnd = () => { const u = R() * 2 - 1, t = R() * Math.PI * 2, s = Math.sqrt(1 - u * u); return new THREE.Vector3(Math.cos(t) * s, u, Math.sin(t) * s); };
-  const N = 26000, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
+  const N = SKYF ? 18200 : 26000, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
   for (let i = 0; i < N; i++) { pos.set(rnd().multiplyScalar(D * 0.95).toArray(), i * 3); cc.set(R() < 0.15 ? 0xbfe9ff : 0xeef6ff).multiplyScalar(0.18 + R() * R() * 1.1); col.set([cc.r, cc.g, cc.b], i * 3); }
   const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pg.setAttribute('color', new THREE.BufferAttribute(col, 3));
   const pts = new THREE.Points(pg, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, fog: false, depthWrite: false })); pts.frustumCulled = false; pts.renderOrder = -18; g.add(pts);
   // the brighter ones, two to three pixels with a soft edge
-  const B = 1400, px = D * 0.93 * 2 * tv / 1116, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
+  const B = SKYF ? 980 : 1400, px = D * 0.93 * 2 * tv / 1116, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
   for (let i = 0; i < B; i++) {
     o.position.copy(rnd().multiplyScalar(D * 0.93)); o.lookAt(0, 0, 0); o.scale.setScalar(px * (3 + R() * R() * 5)); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
     im.setColorAt(i, cc.set(R() < 0.2 ? 0xc8eeff : 0xffffff).multiplyScalar(0.5 + R() * 0.9));
@@ -1958,6 +1973,7 @@ class Universe3D {
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(SKYF ? 0x000206 : 0x01080d);
     this.camera = new THREE.PerspectiveCamera(UVCAM.fov, 2, 0.5, 9000);
+    if (SKYF) flyerPlate(this.scene, this.camera, 'sky-flyer-uv.webp?v=2');
     // no antialias on the renderer itself: three.js resolves it through ONE quad shared by every renderer on the
     // page, so a second renderer (a preview) would take this canvas over. The pass multisamples instead.
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
@@ -3514,7 +3530,7 @@ function spaceSky(office) {
   });
   const rnd = () => { const u = R() * 2 - 1, th = R() * Math.PI * 2, s = Math.sqrt(1 - u * u); return new THREE.Vector3(Math.cos(th) * s, u, Math.sin(th) * s); };
   // his sky is full of small white stars (about one per 2,400 pixels of sky), a few of them bright
-  const N = office ? 22000 : 4600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
+  const N = office ? (SKYF ? 15400 : 22000) : 4600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
   for (let i = 0; i < N; i++) {
     pos.set(rnd().multiplyScalar(360).toArray(), i * 3);
     if (office) cc.set(R() < 0.18 ? 0xb8e8ff : 0xf2f8ff).multiplyScalar(0.8 + R() * R() * 2.2);
@@ -3524,7 +3540,7 @@ function spaceSky(office) {
   const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pg.setAttribute('color', new THREE.BufferAttribute(col, 3));
   pg.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(N * 3).map((v, i) => (i % 3 === 1 ? 1 : 0)), 3));
   const pts = new THREE.Points(pg, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, fog: false, depthWrite: false })); pts.frustumCulled = false; g.add(pts);
-  const B = office ? 2600 : 360, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
+  const B = office ? (SKYF ? 1820 : 2600) : 360, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
   for (let i = 0; i < B; i++) {
     // at the office's home distance a sky unit is about 0.7 px: his stars are 1 to 3 px points with a soft halo
     o.position.copy(rnd().multiplyScalar(350)); o.lookAt(0, 0, 0); o.scale.setScalar(office ? 0.7 + R() * R() * 1.1 : 1.0 + R() * R() * 3.1); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
@@ -4575,6 +4591,7 @@ class Office3D {
     this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster();
     this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(SKYF ? 0x010308 : LOOK.sky); this.scene.fog = new THREE.Fog(SKYF ? 0x010308 : LOOK.sky, 180, 460);
     this.camera = new THREE.PerspectiveCamera(CAM.fov, 2, 0.5, 900);
+    if (SKYF) flyerPlate(this.scene, this.camera, 'sky-flyer-hq.webp?v=2');
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.0;
