@@ -7376,6 +7376,38 @@ reports:
       definition stops saying sum and the rows stop adding up, and is inconclusive if the tile is gone. GET requests
       only.
 
+  - key: gem-dilution-reason-says-over-the-line-when-under-it
+    findings: [CYM-gem-dilution-reason-names-the-rule-it-broke]
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app
+    title: >-
+      Gem Screener: a near miss held back by dilution is described as "0.7% of the market cap a week, over the line of
+      1%"; 14 of the 33 coins failing that gate are under that line and fail its 12-month rule instead
+    expected: >
+      A coin's reason states the rule it broke. A coin under the weekly line that fails on new tokens in 12 months is
+      described by its 12-month figure and the 25% limit.
+    actual: >
+      Read on 2026-11-01. The Dilution gate has two rules (degen_gates, rule_long): "1% of market cap a week at most in
+      new tokens" and "under 25% of circulating in 12 months". The page has one sentence for both: its 'heavy dilution'
+      reason returns 'New tokens are worth ' + dilPct(dilOf(e).week_pct) + ' of the market cap a week, over the line of
+      ' + the 1% limit. So the Near misses line labels Solv Protocol "New tokens are worth 0.7% of the market cap a
+      week, over the line of 1%" (week_pct 0.71, 12 months 31.5%) and fx Protocol "0.9% ... over the line of 1%"
+      (week_pct 0.85, 12 months 44.58%). In the snapshot, 14 of the 33 rows with heavy_dilution have a week_pct at or
+      under 1, among them HYPE 0.95, KNTQ 0.93, BLUE 0.92, MOR 0.91 and IR 0.90. The sentence is true for coins really
+      over the line, such as nest (5.6%).
+    steps:
+      - 'GET https://cymetica.com/gem-screener/app -> inline script, ''heavy dilution'': why() returns the one sentence, with no branch for the 12-month rule; the Near misses cube of Solv Protocol has aria-label "... Held back: heavy dilution — New tokens are worth 0.7% of the market cap a week, over the line of 1%. ..."'
+      - 'GET https://cymetica.com/api/v1/gem-screener -> apps[symbol=SOLV]: degen_fail ["heavy_dilution"], dilution.week_pct 0.7116, sa_dilution_12m_pct 31.5; dilution_meta: gate_pct 1, gate_12m_red_pct 25'
+      - 'Same snapshot: 33 rows have heavy_dilution in degen_fail, 14 of them with dilution.week_pct <= 1'
+    body: >
+      The gate itself is applied as published and Solv's side panel is right ("DILUTION, 12 MONTHS +31.5%"): only the
+      reason is wrong. Low: since ET-32480 the cube has no hover tooltip, so the sentence reaches readers through its
+      aria-label, which is what a screen reader or an AI agent reading the page gets. The funnel chip above it has the
+      same gap, "1% a week or less" with no 12-month rule. Our check passes when the sentence stops being returned
+      unconditionally, or when no coin failing the gate is under the weekly line, and is inconclusive if the reason
+      is gone or no coin fails the gate. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
