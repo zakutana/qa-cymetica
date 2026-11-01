@@ -7354,3 +7354,35 @@ footer: >
   no duplicate tickets. Every figure above was
   read from the live service at the time stated, and each finding ships with
   the command that reproduces it.
+  - key: products-tab-says-people-for-a-sum-of-days
+    findings: [CYM-products-tile-people-are-people]
+    severity: low
+    category: logic
+    url: https://cymetica.com/company
+    title: >-
+      The Products tab of /company says "247 people" for Gem Screener, but that figure is a sum of daily visitors:
+      one person on three days counts three times
+    expected: >
+      A tile labelled "people" counts people. Either the label says what the figure is ("visitors", "visits"), or
+      the figure is a distinct count of people over the 30 days.
+    actual: >
+      Read on 2026-11-01. static/company/app.js draws each product's tile as (+a.visitors || 0) followed by
+      <span>people</span>, and the figure comes from GET /api/v1/company/products. Gem Screener reads visitors 247,
+      and its 30-day daily list adds up to exactly 247; 8 of the 9 products with visitors add up the same way. The
+      same 247 is "Visitors" on /build-it-better, and GET /api/v1/build-it-better/apps/leaderboard defines that
+      figure as "Distinct daily visitors. A range is the sum of its days, so one person on three days counts three
+      times." In a signed-in session, /traffic/mine read 162 unique visitors for the same app over 30 days, and
+      /app-usage reads 206 people. So an owner comparing the pages sees three different counts of people, and the
+      tile's is the one that is not a count of people.
+    steps:
+      - 'GET https://cymetica.com/static/company/app.js -> (+a.visitors || 0).toLocaleString(''en-US'') + ''</b><span>people</span></div>'''
+      - 'GET https://cymetica.com/api/v1/company/products with an API key -> Gem Screener: visitors 247, sum(daily) 247'
+      - 'GET https://cymetica.com/api/v1/build-it-better/apps/leaderboard -> definitions.visitors "Distinct daily visitors. A range is the sum of its days, so one person on three days counts three times."'
+      - 'Signed in, GET https://cymetica.com/api/v1/traffic/mine?days=30 -> Gem Screener unique_visitors 162'
+    body: >
+      The per-day bars under the tile are right, one day's distinct visitors each; it is the 30-day total that
+      takes the word "people". Low: the arithmetic is right and only the word is wrong, but this is the tab an owner
+      reads to see how many people a product has. Our check passes when the label stops saying people, or when their
+      definition stops saying sum and the rows stop adding up, and is inconclusive if the tile is gone. GET requests
+      only.
+
