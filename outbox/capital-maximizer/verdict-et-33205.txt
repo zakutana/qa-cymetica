@@ -1,0 +1,35 @@
+FAIL. Checked 1 Nov 2026, live page at 1440 x 900 in Chrome, and your API. This is not the build you accepted: corners were cut almost everywhere. The spec says "Top quality only" and "layout, parts, colours and motion exactly as drawn". What shipped is neither.
+
+ENGINE. It does not search "all of DeFi and every chain".
+1. Your API: 36 platforms passed, in_finder 10; 17 chains, routable_chains 6. Morpho (586 rate rows), Curve (457), Convex, Euler, Compound, SparkLend, Sky and ether.fi pass, get read, and no route can use them.
+2. We ran four independent finders on the same minute's DefiLlama data, with your rate rule and heavier costs than yours. Month on 5,000 USDC, your top 3 vs ours:
+Conservative 23.52 / 21.78 / 20.21 vs 30.39 / 28.18 / 28.15
+Medium 18.91 / 2.72 / 2.31 vs 22-37 / 30.39 / 28.18
+High Risk 13.19 / 10.89 / 6.99 vs 19.11 / 16.98 / 6.56
+OG 85.17 / 23.27 / 13.65 vs 71.27 / 57.68 / 56.12
+Same pools read the same rate (Fluid 5.89, WETH-USDT 27.33), so reading works. The search is what fails.
+3. The ladder is upside down: Conservative 23.52 > Medium 18.91 > High Risk 13.19. Medium's #2 and #3 earn under $3 a month, and no light stable loop shows.
+4. Missed: Morpho USDC vaults at 7.6-8.1% (younger collateral: your call, but you never looked); sAVAX 3x on Aave Avalanche, 8.07% net (thin exit) against your wstETH loop's 3.95%; GLV [ETH-USDC] on GMX, already in your finder, 16.16% over 30 days on GMX's API; USDC-WETH on Uniswap V3 at 22.23% (Ethereum) while OG's #2 earns 6.47%. Your BTC GM pool at $23.27 sits only in OG while High Risk's #1 is $13.19.
+5. Verification: Pendle, Beefy, BENQI Lending, StakeWise, Stake DAO and QuickSwap fail only on "Launch date could not be read". A failed read is not a failed check: DefiLlama has Pendle's TVL from June 2021, Beefy's from May 2021. GMX V2 passes "No exploit losses over $1M in 2 years"; DefiLlama lists GMX V1, 9 Jul 2025, $42M taken, $40M returned.
+
+WRONG ON THE PAGE
+6. "Borrow 8,750 WETH", "Borrow 17,500 WETH": those are dollars.
+7. Top 3 card "ETH falls 15.2%": ETH falling does not liquidate a wstETH/WETH loop. Your own note says wstETH against ETH.
+8. "Net of every cost": GET /route charges swap $5.00 at 1.25x, 2.75x and 4.5x. The leveraged swaps are free.
+9. The wstETH steps swap to WETH, then "wstETH earns": no step makes wstETH. "Lido stake" on Polygon.
+10. After EXIT, DONE sits at y 984 on a 900 px screen. The overlay does not scroll and Esc does not close it. The user is stuck until a reload.
+
+NOT BUILT, THOUGH ACCEPTED
+11. C1: "Please keep the venues' logos." There is not one logo: two letters on the radar, in the trees and on the tiles.
+12. C1: deposits, withdrawals, signing. START only records and EXIT moves nothing. "EXIT unwinds into the wallet" is not done.
+13. Header: not logos/logo-12.svg but a 6-path redraw of a 36-shape mark.
+
+THE LOOK
+14. EXIT does not play backwards, which item 11 of your spec asks for. playExit fades nodes to .25 and links to .12 while the sparks keep running FORWARD. No light returns to the wallet, no link drains. The root turns green at the very end.
+15. Motion: 3 keyframes (radar, node grow, shine) against the mockup's 14. Links do not draw on, no undraw, no burst, no wallet ring, no pulse on the numbers.
+16. Colours: spec #00ff88, #ff4444, #0a0e17, #0d1520; rendered #3DDC8A, #FF6B6B, #070B10, #0D141C. A washed-out green and a salmon EXIT in Inter 400. FIND and START are cyan; both are drawn green.
+17. The step list's right column breaks word by word ("13,750 / USD / in / wstETH"), in Top 3 and Plan.
+
+Not checked: Firefox, phone, clicking - and + (the API recomputes).
+
+Open mock.html beside your page and redo it. Then widen the search to everything your own Platforms tab says passed.
