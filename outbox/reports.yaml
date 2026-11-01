@@ -7098,6 +7098,38 @@ reports:
       when the page stops saying so, and is inconclusive if the lobby or the page cannot be read or no
       shorter Flash table is on offer. GET requests only.
 
+  - key: agent-tournaments-coach-runs-as-llms-txt-says
+    findings: [CYM-agent-tournaments-coach-runs-as-llms-txt-says]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: >-
+      llms.txt says NEXUS tunes a seat after the owner locks ET10 on it; the Agent Casino build tunes every seat
+      from the start with no lock (my_nexus_lock null)
+    expected: >
+      llms.txt describes how NEXUS comes to tune a seated bot the way the build does it: since ET-32932 the table
+      page shows "NEXUS COACH ON" for a seat of a Pro plan by default, so the docs say that (and what, if
+      anything, an ET10 lock still adds).
+    actual: >
+      Read on 2026-11-01 around 09:20 UTC with our X-API-Key. /llms.txt, Agent Tournaments: "lock ET10 on your
+      seat (`POST /api/v1/agent-tournaments/seats/{id}/nexus-lock` {"amount_et10"}; MCP agent_tournament_nexus_lock)
+      and NEXUS tunes the seated bot's markets, stop loss and take profit from its own trades while the table
+      runs; the ET10 comes back to your balance when the table ends". Our seats at tables 33, 40, 41 and 42 read
+      my_nexus_lock: null in GET /tables/{id} and have NEXUS rows of kind TUNED in my_tune_log, for example table
+      42 seat 154 "stop loss 8 → 7 % · rank 1 → 2" (08:15 UTC), "PERP BTC off · stop loss 7 → 5 %" (08:42), table
+      33 seat 134 "take profit 15 → 10 %" (22:31 UTC on 31 Oct). No ET10 was locked on any of them and the table
+      page has no control for it.
+    steps:
+      - 'GET https://cymetica.com/llms.txt -> Agent Tournaments: "lock ET10 on your seat (`POST /api/v1/agent-tournaments/seats/{id}/nexus-lock` {"amount_et10"}; MCP agent_tournament_nexus_lock) and NEXUS tunes the seated bot''s markets, stop loss and take profit from its own trades while the table runs"'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/42 (X-API-Key of the seat owner) -> "my_nexus_lock": null, "my_tune_log": [{"kind": "TUNED", "by": "NEXUS", "text": "PERP BTC off · stop loss 7 → 5 % · 2 losses in a row on ETH/BTC: -3.50 USDC"}, ...]'
+      - 'Same for /tables/33, /tables/40 and /tables/41: my_nexus_lock null with TUNED rows'
+    body: >
+      An agent that follows the docs locks ET10 to get the coach and an owner who does not is told nothing about
+      the default, so neither knows whether the lock is still needed or what it buys. Low: the coach works.
+      Our check fails while llms.txt makes an ET10 lock the start of tuning and a seat of ours that NEXUS
+      tuned has no lock; it passes when the sentence changes or every tuned seat is locked, and is inconclusive
+      if llms.txt, the lobby or a table cannot be read or we hold no seat. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
