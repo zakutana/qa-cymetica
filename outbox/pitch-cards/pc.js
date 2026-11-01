@@ -50,8 +50,8 @@
       s = Math.max(.34, Math.min(.56, cw / 960));
       x0 = W / 2 + 22 - 2080 * s;                             // his face over the card
       var chin = 12 + 405 * s, free = area - bar;             // his whole face above the card when the screen has the room
-      var over = Math.max(64, Math.min(chin - 6, free - 66 - 430));
-      cy = bar + over; ch = Math.max(430, Math.min(620, free - over - 66 - 8));
+      var over = Math.max(70, Math.min(chin - 6, free - 66 - 430));
+      cy = bar + over; ch = Math.max(400, Math.min(620, free - over - 66 - 8));
       y0 = over >= chin - 6 ? cy + 6 - 705 * s : cy - 24 - 490 * s;   // his chin on the card's top edge; on a short screen, his eyes just over it
       rs = s; rx = x0; ry = y0;
       pch = cy + ch + 66 + 8;
