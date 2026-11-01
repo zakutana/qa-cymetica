@@ -53,11 +53,11 @@
   // fourteenth take: "si nejak smazal ty obezne drahy ... jsou skoro neviditelne"): its lanes are a haze of 2 to 7 %
   // brightness, which the HQ's key cut away, so here the dim light is laid onto the page's sky as light (alpha below its
   // brightness) and only what is bright is whole; either way alpha from the brightest channel, the colour kept (it was
-  // filmed over black, so it is already the colour times its alpha)
+  // filmed over black, so it is already the colour times its alpha), less the codec's faint noise in the black ("zrnity")
   // While the pointer is on something in the clip (step 3, below) everything outside hr (x0, y0, x1, y1 of the clip)
   // steps back, softly, so the lanes running out of hr carry no edge
   var KEY_FS = 'precision mediump float; uniform sampler2D A, B; uniform float w, lo, hi, kg, hs; uniform vec2 sc, of; uniform vec4 hr; varying vec2 uv;' +
-    'vec4 key(vec3 c) { float m = max(c.r, max(c.g, c.b)); float a = smoothstep(lo, hi, m); return vec4(mix(min(c, vec3(a)), c, kg), a); }' +
+    'vec4 key(vec3 c) { float m = max(c.r, max(c.g, c.b)); float a = smoothstep(lo, hi, m); c *= mix(1.0, smoothstep(0.006, 0.024, m), kg); return vec4(mix(min(c, vec3(a)), c, kg), a); }' +
     // the loop's cross-fade as a dissolve, one copy into the other: never the two half see-through (measured: one over
     // the other dimmed the HQ by a sixth mid-fade)
     'void main() { vec2 t = uv * sc + of; vec4 o = mix(key(texture2D(A, t).rgb), key(texture2D(B, t).rgb), w);' +

@@ -70,7 +70,8 @@ revenue share), which is unchanged.
    green, only the panel's icons coloured; orbit and building clips filmed frame by frame on the page's clock, each
    outline read at the same moments and played by the clip's time, tight and moving with the thing. Then step 3's cube
    over the Universe's Promo Market too, as an object of the scene in our recording browser (record.py UV_CUBE; step 5's
-   clip and the door's).
+   clip and the door's). The Universe's clip no longer grainy ("takovy zrnity"): filmed frame by frame at 1778 wide, the
+   width it is drawn on his screen, 24 Mbit/s, and the key drops the codec's noise in the black. All four outlines move.
 15. **Gemini's fork of this page, adopted** (2026-10-31). Antigravity copied this folder at 2201936a
    (the fourteenth take's first round) to `Downloads\cymetica\outbox\quest-steps` and served it on 8765; the operator:
    "NAD TEBOU VYHRAVA ma vse lepsi, jen ten step s market it bych zmenil". Its index.html, quest.css, quest.js,

@@ -364,7 +364,7 @@ AT_T = """([T, sel, x, y, w, h, mime]) => new Promise((ok) => { window.__T = T;
     c.getContext('2d').drawImage(document.querySelector(sel), x, y, w, h, 0, 0, w, h); ok(c.toDataURL(mime, 0.95)); })); })"""
 
 
-def stepped(page, sel, seconds, name, box, fps=30):
+def stepped(page, sel, seconds, name, box, fps=30, bps='16M', crf='5'):
     """the canvas `sel` cut to `box`, frame by frame on the page's own clock, as clips/<name>.webm"""
     x, y, w, h = box
     fd, tmp = tempfile.mkstemp(suffix='.mjpeg')
@@ -372,7 +372,7 @@ def stepped(page, sel, seconds, name, box, fps=30):
         for i in range(int(seconds * fps)):
             f.write(base64.b64decode(page.evaluate(AT_T, [i / fps, sel, x, y, w, h, 'image/jpeg']).split(',', 1)[1]))
     out = CLIPS / f'{name}.webm'
-    ffmpeg('-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', str(fps), '-i', tmp, '-c:v', 'libvpx', '-b:v', '16M', '-crf', '5',
+    ffmpeg('-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', str(fps), '-i', tmp, '-c:v', 'libvpx', '-b:v', bps, '-crf', crf,
            '-qmin', '2', '-qmax', '30', '-auto-alt-ref', '0', '-g', str(fps), '-pix_fmt', 'yuv420p', str(out))
     Path(tmp).unlink()
     print(f'{out.name} {w}x{h} {int(seconds * fps)} frames {out.stat().st_size // 1024} KB')
@@ -417,7 +417,8 @@ def market(b, seconds=12):
 # Its sixth stood a sticker's edge off a union of the motion ("obramovani porad stejne jeste horsi"). What the casino has is a
 # line tight on it, and it stands still. So: tight, and it moves. The outline of every tenth of a second of the clip
 # (STEP_CLOCK), each resampled to the same number of points from the same place, kept in outlines.js; the page goes
-# through them by the clip's own time. The casino's one path stays as it was filmed
+# through them by the clip's own time. The casino too since "agent casino jeste nema top vyladene obramovani jak farmer a
+# gem screener"
 # The Promo Market's next ("velky promo market ma dobre obramovani ale jak na nem jedou animace tak ho to rusi a deformuje"):
 # by brightness its dark disc let the line in through the gaps of its ring, and the turning words and collars shook it. So
 # it is read as a white silhouette, the rest of the scene off, and its turning parts' gaps closed
@@ -426,7 +427,7 @@ def market(b, seconds=12):
 # (the Promo Market's three chosen by a loop over its 150 moments, nothing of it outside the line, 2026-11-01:
 # "furt to mas zdeformovane testuj to tak dlouho ve smycce dokud to nevyladis na top"; below 40 its notches at the lamp posts
 # showed, above about 70 the closing outgrew the part of the clip)
-OUTLINED = {'gem': ('ad-gem', (400, 210, 260, 290), 110, 12, False, 7, 2, 2, False), 'farmer': ('ad-farmer', (740, 430, 300, 330), 120, 12, False, 7, 2, 2, False), 'promo': ('ad-promo', (1110, 370, 560, 660), 170, 15, True, 64, 3, 7, True)}
+OUTLINED = {'casino': ('ad-casino', (860, 60, 250, 280), 110, 12, False, 7, 2, 2, False), 'gem': ('ad-gem', (400, 210, 260, 290), 110, 12, False, 7, 2, 2, False), 'farmer': ('ad-farmer', (740, 430, 300, 330), 120, 12, False, 7, 2, 2, False), 'promo': ('ad-promo', (1110, 370, 560, 660), 170, 15, True, 64, 3, 7, True)}
 SILHOUETTE = """(me) => { const uv = CO.uv, root = uv.items.find(x => x.c.id === me).plot.root, keep = new Set(); for (let n = root; n; n = n.parent) keep.add(n);
   uv.scene.children.forEach(ch => { if (!keep.has(ch)) ch.visible = false; });
   root.traverse(n => { if (n.isMesh && n.geometry.type === 'PlaneGeometry' && n.material.blending === 2) n.visible = false; });   // its pool of light, far wider than it
@@ -546,9 +547,8 @@ def round_of(solid, n):
 
 def outlines(b, look=None, fps=10):
     """outlines.js: for each of OUTLINED the outline of every moment, as 0.1 pixels of the clip in little-endian Int16 and
-    base64; each shape's box (its .hot in index.html), in % of the clip. The casino's path stays as outlines.js has it"""
+    base64; each shape's box (its .hot in index.html), in % of the clip"""
     import json
-    import re
     import numpy as np
     page = capture.universe(b, viewport={'width': 1600, 'height': 1000}, dsf=1.25)
     page.evaluate(MARKET_SETUP, MARKET)
@@ -557,11 +557,10 @@ def outlines(b, look=None, fps=10):
     (x, y, w, h), _ = market_box(page, sel)
     page.evaluate(capture.HIDE_SKY)
     page.evaluate(STEP_CLOCK)
-    items = [v[0] for v in OUTLINED.values()] + ['ad-casino']
+    items = [v[0] for v in OUTLINED.values()]
     page.evaluate(MATTE, items)
     by = "(id) => CO.uv.items.find(x => x.c.id === id).plot.root"
-    old = json.loads(re.search(r'QUEST_OUTLINES = (\{.*\});', (capture.HERE / 'outlines.js').read_text(encoding='utf-8'), re.S).group(1))
-    data = {'w': w, 'h': h, 'casino': old['casino'], 'track': {}}
+    data = {'w': w, 'h': h, 'track': {}}
     for name, (item, (bx, by0, bw, bh), n, secs, loop, close, off, blur, silhouette) in OUTLINED.items():
         page.evaluate(f"(me) => {{ const r = {by}; {items}.forEach(id => {{ r(id).visible = id === me; }}); }}", item)
         poses, box = [], [1e9, 1e9, 0, 0]
@@ -586,7 +585,7 @@ def outlines(b, look=None, fps=10):
         p = lambda v, d: round(v / d * 100, 2)
         print(f'{name}: {len(poses)} moments, {len(raw) // 1024} KB', f'| hot left: {p(box[0], w)}%; top: {p(box[1], h)}%; width: {p(box[2] - box[0], w)}%; height: {p(box[3] - box[1], h)}%')
     page.close()
-    (capture.HERE / 'outlines.js').write_text('/* record.py outlines: the line round each of step 3\'s products, in the clip\'s pixels: the casino\'s one path, the others\' every moment */\nwindow.QUEST_OUTLINES = ' + json.dumps(data) + ';\n', encoding='utf-8')
+    (capture.HERE / 'outlines.js').write_text('/* record.py outlines: the line round each of step 3\'s products, in the clip\'s pixels: each one\'s every moment */\nwindow.QUEST_OUTLINES = ' + json.dumps(data) + ';\n', encoding='utf-8')
 
 
 # step 5's Universe has six companies today; the leaderboard beside it names five more, so they are given a station
@@ -724,7 +723,10 @@ def universe(b, seconds=20, dsf=1.5):
     pct = lambda pt: (round((pt[0] * size[0] - x) / w * 100, 2), round((pt[1] * size[1] - y) / h * 100, 2))
     print('universe: canvas', size, 'the map', box, 'aspect', f'{w} / {h}', 'the sun at (% of the clip)', pct(sun),
           'over your company', spread['you'] and pct(spread['you']))
-    record(page, sel, seconds, 'universe', bps=24_000_000, crop=box, width=1600)
+    # ("to neni ono ten universe, on je takovy zrnity": it went through 10 Mbit/s at 1600 wide and was then stretched to his
+    # 1791: filmed frame by frame on its clock, from where it stands, at the size it is drawn)
+    page.evaluate("() => { const uv = CO.uv, t0 = uv.clock.getElapsedTime(); window.__T = 0; uv.clock.getElapsedTime = () => t0 + window.__T; uv.pace = () => true; }")
+    stepped(page, sel, seconds, 'universe', box, bps='24M', crf='4')
     page.close()
     frame_poster('universe', 1.0)
 
