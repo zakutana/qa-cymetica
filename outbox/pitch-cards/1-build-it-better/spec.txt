@@ -1,9 +1,9 @@
-New app, working name Pitch Cards, with one Profit Board for all of Cymetica. We supply the look and a few examples; the rest is yours to build your own way. Everything is at https://github.com/zakutana/qa-cymetica/tree/c1dd04cdcfa6069907b19ebbcbab758ca6bba69a/outbox/pitch-cards: the working code (run python serve.py, open http://127.0.0.1:8802/pitch-cards), and in 1-build-it-better/ the pictures (1-entry, 2-swipe, 3-amount, 4-profit-board, 5-tags, 6-phone; "picture N" below) and motion.webm, the animation to match.
+New app, working name Pitch Cards, with one Profit Board for all of Cymetica. It sits in your normal page, under your header and above your chat bar. We supply the look and a few examples; the rest is yours to build your own way. Everything is at https://github.com/zakutana/qa-cymetica/tree/bf0f6c9ae87e7ce855109c13146e367650b706b6/outbox/pitch-cards: the working code (run python serve.py, open http://127.0.0.1:8802/pitch-cards), and in 1-build-it-better/ the pictures (1-entry, 2-swipe, 3-amount, 4-profit-board, 5-tags, 6-phone; "picture N" below) and motion.webm, the animation to match.
 The idea: pitches come to every user on the web. Nexus plays the investor walking into a TV show like Dragons' Den: it brings an idea and wants our money. The user swipes left to pass or right to put money in, then follows how the deal does.
 Why the Profit Board: today what makes money on Cymetica is shown in scattered places, each with its own format and measure: /events/universe/movers, /fund-optimizations, /leaderboard#cards_72h, /fund-performance, /themes/performance and more. Everyone is waiting for the day Cymetica is profitable, and users ask on Telegram whether anyone is making money here yet, but no single page answers that. The Profit Board is that page: whoever wonders if money can be made on Cymetica yet comes and looks. It shows absolutely every profitable thing from all of Cymetica, always up to date, and nothing at a loss.
 MUST STAY AS DRAWN: the look of the entry screen and the swipe, with all the animation. Please build these from our pc.css, pc.js and images, not a redraw of your own.
-1. Entry screen (picture 1): full screen with the site chrome off, as on /promo-market. The room, Nexus standing in front, the live card under his fingertip, the headline "Nexus pitches. / You swipe. / Every result public." in Archivo Black with the last line green, PASS and INVEST under the card.
-2. Sizes do not grow with the window: headline 58 px, card 400 x 530, Nexus at 72% of the render, the group centred, only the room fills the screen. His finger stays on the card at every desktop size. layout() in pc.js does this.
+1. Entry screen (picture 1): your header, Back and chat bar stay. Below them the app bar of /airdrop-farmer: logo, PITCH over CARDS, tabs as one segmented control, a hairline under it, in its 1240 px column. Then the headline "Nexus pitches. / You swipe. / Every result public." in Archivo Black with the last line green, on the column's left edge; the live card under Nexus's fingertip, PASS and INVEST under the card; Nexus in front, standing out past the column's right edge; the room behind, fading into your page background on every side.
+2. Sizes do not grow with the window: headline 58 px, card 400 x 530, Nexus at 72% of the render. His finger stays on the card at every desktop size. layout() in pc.js does this.
 3. Use scene.webp (5120 x 2880) and nexus.webp (1840 x 2320) at that resolution. Nexus is a separate cut-out in front of the card.
 4. A new pitch arrives: a line of light wipes the card on from his fingertip, the big number runs up, the green line draws while the faint peer lines fade in behind it, the sentence types out word by word, his eyes flare. His eyes pulse the whole time.
 5. A card holds five things: a label line, the result as the big number, what it is, the chart, one or two sentences in Nexus's voice.
@@ -12,21 +12,21 @@ MUST STAY AS DRAWN: the look of the entry screen and the swipe, with all the ani
 8. Right (picture 3): the card turns over to the same face with the big number now the amount, the chart still in view, chips $10 $25 $50 All, buttons Not now and Invest $25, under the same thumb.
 9. Invest: the card slides right and behind Nexus, his eyes flare, the next pitch arrives.
 10. The notification (top right in picture 1): Nexus's face, "2 new pitches for you", one line on them; it drops in and lifts away after 6 s.
-11. Phone (picture 6): his face looks over the card, tabs at the bottom, the same motion.
-12. Profit Board look (pictures 4, 5): built from the table and tabs of your own /themes/performance, under "What would have made you money on Cymetica." Every kind of investment has its own coloured tag, in your palette. Three columns: Up since start, Peak, Days since peak. Numbers green; nothing red, because nothing at a loss is on it.
-13. The same dark background on every tab.
+11. Phone (picture 6): your header and chat bar stay, his face looks over the card, the same motion.
+12. Profit Board look (pictures 4, 5): built from the table and tabs of your own /themes/performance, under "What would have made you money on Cymetica." Every kind of investment has its own coloured tag, in your palette. Columns: Up since start, Peak, and one Days column with two numbers, days since start / days since peak, over a line of its whole life with the peak marked on it. Numbers green; nothing red, because nothing at a loss is on it.
+13. Your page background on every tab; only Pitches adds the room.
 YOURS TO DECIDE: everything else. The mock only shows examples.
 14. What Nexus presents: which ideas, when, how often, in what words. The two pitches in the mock are examples.
 15. Profit Board categories and filters: you decide which come in. The tabs and tags in the mock (Pitches, Funds, Event cards, Company cards, 72h cards) are examples; add a tag and a colour for every further kind you list.
 16. What counts as profitable, how a row is measured, how it stays up to date.
 17. Credit, amounts, real money, fees and anything else behind the Invest button; the $100 in the mock is an example and investing there only moves counters on the page.
-18. My deals, and everything the drawings leave open. Build it your way, in the same look.
+18. My deals: the five deals in the mock are examples, their amounts and days made up. Build it and everything else the drawings leave open your way, in the same look.
 19. The numbers in the mock were read from your API on 2026-11-01 and not checked by us. They are there to fill the design, not as a claim about any product.
 Done when:
-[ ] 1-3 The entry screen looks like picture 1 at 1440 and 1920 px, sharp, with his finger on the card.
+[ ] 1-3 The entry screen looks like picture 1 at 1440 and 1920 px, inside your header and chat bar, sharp, with his finger on the card.
 [ ] 4-10 The animation and swipe match motion.webm and pictures 2 and 3: light wipe, number, line, typed sentence, eyes, tilt, flip, card going behind him, notification.
 [ ] 11 The phone looks like picture 6.
 [ ] Pitches reach every user on the web, with the notification.
-[ ] 12 The Profit Board looks like pictures 4 and 5, every kind with its own coloured tag.
+[ ] 12 The Profit Board looks like pictures 4 and 5, every kind with its own coloured tag, the Days column with its line.
 [ ] One page holds every profitable thing from all of Cymetica, always up to date, nothing at a loss.
-[ ] 13 All tabs share one background; nothing overlaps.
+[ ] 13 Nothing overlaps.
