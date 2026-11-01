@@ -13,7 +13,7 @@ http://127.0.0.1:8802/pitch-cards. `?view=board` or `?view=deals` opens those ta
 
 The third take, after "jezisi kriste co to je za tragicky design" on the first (their `.at` chips and tags) and "to je snad
 jeste hnusnejsi" on the second (Inter on glass, gradient numerals, aurora blobs). The Den is the render of Nexus at a
-holographic chart (`outbox/quest-gemini/pics/agent.webp`, an untracked folder, the source for `build_scene.py`):
+holographic chart (`outbox/quest/gen/lab-16x9.png`, the original, git-ignored, the source for `build_scene.py`):
 
 * `scene.webp`: the room alone, the baked pane painted out and Nexus gone (right of x=1300 it is its left side mirrored).
 * `nexus.webp`: Nexus cut out along a hand-traced outline, standing in front of the card, so the live card sits under the
