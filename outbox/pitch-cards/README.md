@@ -63,7 +63,7 @@ pitchboard; a pitch is a tagged row (and a tab).
 A graphic design for Cymetica to finish, so the numbers are read as they stand and nothing on it is checked (2026-11-01: "to nemas
 overovat zadne data, ma to byt ciste graficky navrh, oni to pak cele dodelaji"). **The look** is their /themes/performance: its
 tabs and its table, CSS read off the live page. **The list:** LIVE funds and event cards, only what is up right now and has a peak
-to show. **Columns:** Up since start, Peak, and one Days column: days since start / since peak, with a line of its whole life and the peak marked on it. **Tags, in their palette:** Fund green, Event Card white, Company Card
+to show. **Columns:** Up since start, Peak, and one Days column: days old / the day of its life the peak came, with a line of its whole life and the peak marked on it. **Tags, in their palette:** Fund green, Event Card white, Company Card
 blue, 72h Card cyan, Pitch solid green beside its own kind.
 
 `python outbox/pitch-cards/refresh.py --read` is the long pass (every card, then the histories, into `.cache/`, not in git,

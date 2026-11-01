@@ -311,11 +311,11 @@
   var B = D.board, BK = 'all', SHOWN = 40, SORT = 'r';
   var TABS = [['all', 'All'], ['pitch', 'Pitches'], ['fund', 'Funds'], ['card', 'Event cards'], ['company', 'Company cards'], ['h72', '72h cards']];
   var TAGS = { fund: 'Fund', card: 'Event Card', company: 'Company Card', h72: '72h Card' };
-  var COLS = [['r', 'Up since start'], ['p', 'Peak'], ['dp', 'Days since start / peak']];
+  var COLS = [['r', 'Up since start'], ['p', 'Peak'], ['dp', 'Days old / peak day']];
   function tags(r) { return '<span class="pb-tag t-' + r.k + '">' + TAGS[r.k] + '</span>' + (r.pitch ? '<span class="pb-tag t-pitch">Pitch</span>' : ''); }
   function daysCell(r) {   // its whole life as a line, the peak marked on it
-    var at = r.days ? Math.min(100, Math.max(0, 100 * (r.days - r.dp) / r.days)) : 100;
-    return '<span class="pb-dn" title="' + r.days + ' days since it started, peak ' + r.dp + ' days ago"><b>' + r.days + 'd</b><i>/</i><em>' + (r.dp ? r.dp + 'd ago' : 'today') + '</em></span>' +
+    var at = r.days ? Math.min(100, Math.max(0, 100 * (r.days - r.dp) / r.days)) : 100, peak = Math.max(1, r.days - r.dp);
+    return '<span class="pb-dn" title="' + r.days + ' days old, its peak on day ' + peak + '"><b>' + r.days + '</b><i>/</i><em>' + peak + '</em></span>' +
       '<span class="pb-life"><u style="width:' + at.toFixed(1) + '%"></u><s style="left:' + at.toFixed(1) + '%"></s></span>';
   }
   function drawBoard() {
