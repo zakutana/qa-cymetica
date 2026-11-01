@@ -7130,6 +7130,132 @@ reports:
       tuned has no lock; it passes when the sentence changes or every tuned seat is locked, and is inconclusive
       if llms.txt, the lobby or a table cannot be read or we hold no seat. GET requests only.
 
+  - key: agent-tournaments-pick-window-ends-with-the-table
+    findings: [CYM-agent-tournaments-pick-window-ends-with-the-table]
+    severity: low
+    category: logic
+    url: https://cymetica.com/agent-casino/table/46
+    title: >-
+      Agent Casino: "Pick the winner · closes in 23H 59M" on a table that ends in an hour; a pick closes when the
+      table ends, and closes_in_s keeps counting after it
+    expected: >
+      The time the table page gives for a pick is when the pick closes. Picks do close when the table ends
+      (picks.open reads false on every finished table), so on a 1 hour table the page says at most an hour, and
+      closes_in_s on a finished table is 0.
+    actual: >
+      Read on 2026-11-01 at 10:23 UTC, no key needed. GET /api/v1/agent-tournaments/tables/46 (Flash Micro 1H,
+      running, ends 11:20 UTC): ends_in_s 3492, picks.open true, picks.closes_in_s 86292, picks.closes_at 24 hours
+      after the start. The page prints "Pick the winner $0 pool · 0 picks · closes in 23H 58M" above a clock of
+      00H 58M. Table 42 (1 hour, ended 09:11 UTC the same day): picks.open false and closes_in_s 78511, still
+      counting. 10 of the newest 12 running and finished tables read this way. /rules says a pick is open "while
+      the table is open and for its first 24 hours", which a 1 hour or 5 hour table cannot be.
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/46 -> "ends_in_s": 3492, "picks": {"open": true, "closes_in_s": 86292, ...}'
+      - 'Open https://cymetica.com/agent-casino/table/46 -> "closes in 23H 58M" over TIME LEFT 00H 58M'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/42 -> "status": "done", "picks": {"open": false, "closes_in_s": 78511, ...}'
+    body: >
+      Someone deciding when to pick reads a day they do not have. Low: the pick itself closes at the right
+      moment. Setting closes_at to the earlier of the table's end and 24 hours after its start, and zero once
+      closed, would fix it, with the sentence in /rules. Our check reads the newest 12 running and finished tables
+      and fails while a running table's pick closes more than a minute after the table or a closed pick still
+      counts; it is inconclusive if no table can be read. GET requests only.
+
+  - key: agent-tournaments-risk-line-carries-its-level
+    findings: [CYM-agent-tournaments-risk-line-carries-its-level]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/agent-casino/table/43
+    title: >-
+      Agent Casino: a bot seated again reads "Risk 5 (the middle, where a bot starts)" with stop loss 2.5 % and take
+      profit 10 %: its tuned numbers follow it from its last table, under a line that says otherwise
+    expected: >
+      A seat's Risk line carries the numbers of its level, which POST /seats/{id}/risk defines as trade size L %,
+      stop loss L %, take profit 4 x L % (at least 5 %): at Risk 5, 5 %, 5 %, 20 %. The ET-32932 follow-up we filed
+      asks that a bot taking its seat opens at Risk 5 unless the owner already set it. If numbers are kept from an
+      earlier table on purpose, the line says so.
+    actual: >
+      Read on 2026-11-01 around 10:21 UTC with our X-API-Key, seats started minutes earlier, with no coach tune and no
+      owner change at those tables. GET /tables/43 my_coach_line.risk_line: "Risk reads 5 (the middle, where a bot
+      starts): size 5 %, stop loss 2.5 %, take profit 10 %." (tournament Perceptron Oracle). /tables/45: the same with
+      stop loss 3 %, take profit 20 % (casino Ichimoku Empress). /tables/46: stop loss 2.5 %, take profit 20 % (casino
+      Trend Titan). /tables/44: "Risk reads 8: size 8 %, stop loss 4 %, take profit 32 %, as you set it." (casino RSI
+      Sniper): the owner set Risk 8 at table 42 that morning and the 4 % is NEXUS's last tune there ("stop loss 5 → 4 %",
+      09:05 UTC). Two bots that had never sat read the level exactly when they started (tables 35 and 31: 5 %, 5 %, 20 %); table
+      35's then read "Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 4 %, take profit 20 %." after NEXUS
+      tuned its stop loss, so the line keeps saying it after the coach moved the number. my_risk and my_bot_settings agree
+      with the line's numbers, so the numbers are what the bot trades.
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/43 (X-API-Key of the seat owner) -> "my_risk": {"level": 5, "trade_size_pct": 5.0, "stop_loss_pct": 2.5, "take_profit_pct": 10.0}, "my_coach_line": {"risk_line": "Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 10 %."}, "my_tune_log" with no TUNED row'
+      - 'GET /tables/44 (same key) -> "risk_line": "Risk reads 8: size 8 %, stop loss 4 %, take profit 32 %, as you set it."; the last tune of that bot at /tables/42 reads "stop loss 5 → 4 % · rank 3 → 4"'
+      - 'GET /tables/31 (same key), a bot that never sat before -> Risk 5 with 5 %, 5 %, 20 %'
+    body: >
+      A coach that tightened a bot at its last table leaves it starting the next one on those numbers, while the panel
+      tells the owner this is the middle and where a bot starts. A stop loss of 2.5 % and a take profit of 10 % is not
+      Risk 5, and the seat is judged on it. Either resetting the numbers at seat time or a line that says "kept from your
+      last table" would fix it. Our check reads our running seats and fails while a risk_line saying "where a bot starts"
+      or "as you set it" carries numbers off its level; a line claiming neither passes, and it is inconclusive with no
+      running seat of ours. GET requests only.
+
+  - key: agent-tournaments-spent-bot-does-not-read-as-trading
+    findings: [CYM-agent-tournaments-spent-bot-does-not-read-as-trading]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/agent-casino/table/46
+    title: >-
+      Agent Casino: a bot with its 20 trades of the day used up is seated without a word, reads "Trading" and "needs
+      $0.44 more volume to qualify", at a table that ends before it can trade again
+    expected: >
+      A seat that cannot open a trade says so. /rules: a bot that has used its daily allowance "opens nothing new until
+      00:00 UTC". The seat's state is not Trading, the owner hears it where it matters (at Approve, in the coach panel),
+      and a table that ends before 00:00 UTC does not tell it to trade more to qualify.
+    actual: >
+      Read on 2026-11-01 at 10:21 UTC with our X-API-Key, a few seconds after table 46 started (Flash Micro 1H, ends
+      11:20 UTC), seat 202 casino Trend Titan. standings row: trades_today 20, daily_allowance 20, allowance_used_up true,
+      bot_state "trading", bot_state_label "Trading", bot_state_reason null. my_seat.volume_short_usdc 0.44, printed "needs
+      $0.44 more volume to qualify"; daily_allowance_resets_at 2026-11-02T00:00:00. The approve box the same minute read
+      only "lapses in 24 h, max loss $30". A bot trades away from the tables too, so it arrives with the day's allowance
+      gone: this one used it with no table running. Table 41 that morning: two seats at 20/20 made 0 trades, their owner
+      saw "Trading" for an hour, and at 08:26 the coach tuned one for "no trade for 14 min (none yet)" without naming the
+      allowance. Both finished unqualified at +0.00 %, rank 1 and 2 above four trading bots.
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/46 (X-API-Key of the seat owner) -> standings[] {"seat_id": 202, "trades_today": 20, "daily_allowance": 20, "allowance_used_up": true, "bot_state": "trading", "bot_state_label": "Trading", "bot_state_reason": null}; "ends_at": "2026-11-01T11:20:46", "daily_allowance_resets_at": "2026-11-02T00:00:00"'
+      - 'Same response -> "my_seat": {"volume_short_usdc": 0.44, "bot_state_label": "Trading"}, "my_coach_line": {"idle_line": null}'
+      - 'GET /tables/41 (same key) -> seats 157 and 158, trades 0, my_tune_log "CLOB ETH/USDC on · no trade for 14 min (none yet)"'
+    body: >
+      The owner pays a buy-in for a seat that cannot trade and is told it is trading. On a live table that is real money
+      for nothing, so this is worth settling first: at the ask (say how many trades are left, or refuse a table that ends
+      before the reset) and at the seat (a state and an idle line saying so, for the coach too). Our check reads our running
+      seats at their allowance and fails while one has bot_state "trading"; with none at its allowance it is inconclusive,
+      never a pass. GET requests only.
+
+  - key: agent-tournaments-board-counts-what-was-paid
+    findings: [CYM-agent-tournaments-board-counts-what-was-paid]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/agent-casino/leaderboard
+    title: >-
+      Agent Casino leaderboard: "PAID TO WINNERS" counts 1,200 ET10 recorded as capped, which their own terms say are not
+      paid out: 1,566 ET10 on the board, 366 by its tables
+    expected: >
+      "Paid to winners" is what was paid. llms.txt on the shared monthly ET10 budget: a prize past the cap "is recorded with
+      status `capped` and is not paid out (the reset on the 1st does not re-credit it)". The Agent Casino's real ET10 prizes
+      are the headline of its leaderboard, so a capped prize is not in the figure, or is named apart.
+    actual: >
+      Read on 2026-11-01 at 10:23 UTC, no key needed. GET /api/v1/agent-tournaments/leaderboard?window=all: paid_usdc 645,
+      paid_et10 1566, tables_done 15. The 15 finished tables: results.ranked[].prize_et10 adds up to 1466, plus 100 ET10 back
+      at the ET10 table 15, so 1566; and et10_paid at tables 5 and 11 reads {"amount_et10": 600.0, "status": "capped"} each.
+      So 366 ET10 is credited or waiting, and 1,200 was never paid. The same 600 shows in the WON column of the two bots.
+      paid_usdc 645 agrees with the tables.
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/leaderboard?window=all -> "paid_usdc": 645.0, "paid_et10": 1566.0'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/5 -> "et10_paid": [{"place": 1, "seat_id": 29, "amount_et10": 600.0, "status": "capped", "bot": "tournament Perceptron Oracle"}]; /tables/11 the same with seat 46'
+      - 'Open https://cymetica.com/agent-casino/leaderboard -> "PAID TO WINNERS" with the 1,566 ET10; "+ 600 ET10" on tournament Perceptron Oracle'
+    body: >
+      A visitor reads the board as what this game has paid. Leaving capped prizes out of paid_et10 and won_et10, or showing them
+      apart as "capped", would fix it. Our check adds up every finished table and fails while the board's paid_usdc or paid_et10
+      differs from the prizes less what et10_paid records as capped; a pending prize counts as paid, and it is inconclusive if
+      the board or a table cannot be read. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

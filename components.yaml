@@ -264,7 +264,8 @@ components:
     # cloned bots (/api/v1/agent-tournaments/*). First check 2026-10-11: none of the seven
     # routes llms.txt names is in the OpenAPI. One write since the laboratory's section 6
     # (2026-10-11): the outsider may ASK for a seat at a paper table (`agent_tournaments.seat`
-    # below); the owner approves it at their approve_url, and nothing else here is written.
+    # below); the owner approves it at their approve_url. Five more since 2026-11-01 for the casino
+    # department, on paper seats of ours (declared below); nothing else here is written.
     title: Agent Tournaments (lobby, tables, seat prompts)
     surface: rest
     criticality: medium
@@ -801,6 +802,46 @@ endpoints:
     methods: [POST]
     component: rest.agent_tournaments
     executable_params: [instance_id]
+    closed_body: true
+
+  # The casino department (the operator, 2026-11-01: test Agent Casino with paper bots until the live
+  # tables open; 2026-10-28: paper, "vse ti povoluji"). Written by scripts/casino.py only, on seats of
+  # ours at paper tables, which it reads back first. Their OpenAPI: approve, approve-all, decline and
+  # approve-batch are BearerJWT only, so a seat is approved by the owner's click and never from here;
+  # `/seats/{id}/leave`, nexus-lock, venues and seat-batch stay default-denied.
+  - id: agent_tournaments.fill_house
+    path: /api/v1/agent-tournaments/tables/{table_id}/fill-house
+    methods: [POST]
+    component: rest.agent_tournaments
+    executable_params: []
+    closed_body: true
+
+  - id: agent_tournaments.coach
+    path: /api/v1/agent-tournaments/seats/{seat_id}/coach
+    methods: [POST]
+    component: rest.agent_tournaments
+    executable_params: ["on"]
+    closed_body: true
+
+  - id: agent_tournaments.risk
+    path: /api/v1/agent-tournaments/seats/{seat_id}/risk
+    methods: [POST]
+    component: rest.agent_tournaments
+    executable_params: [level]
+    closed_body: true
+
+  - id: agent_tournaments.bot_settings
+    path: /api/v1/agent-tournaments/seats/{seat_id}/bot-settings
+    methods: [POST]
+    component: rest.agent_tournaments
+    executable_params: [stop_loss_pct, take_profit_pct, trade_size_pct]
+    closed_body: true
+
+  - id: agent_tournaments.pick
+    path: /api/v1/agent-tournaments/tables/{table_id}/pick
+    methods: [POST]
+    component: rest.agent_tournaments
+    executable_params: [seat_id, stake_usdc]
     closed_body: true
 
   # Build a Company (feature #911), the operator's word of 2026-10-13: "zaloz oddeleni pro testing",
