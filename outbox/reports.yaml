@@ -7030,6 +7030,74 @@ reports:
       inconclusive if either cannot be read or how-it-fits no longer says what a winner's bot carries. GET requests
       only.
 
+  - key: agent-tournaments-standings-agree-with-the-trade-list
+    findings: [CYM-agent-tournaments-standings-agree-with-the-trade-list]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/agent-casino/table/40
+    title: >-
+      Agent Casino: on a finished table the standings count 4 trades, $24.85 and -$5.64 for a seat while the
+      same page's own trade list shows 3 trades, $22.87 and -$7.62 ("the same counts as the standings")
+    expected: >
+      The standings row of a seat and the trade list the page prints for that seat count the same trades: the
+      same number of fills, the same volume and the same profit. The page says so itself under the list: "3
+      counted trades · $22.87 volume (the same counts as the standings)".
+    actual: >
+      Read on 2026-11-01 around 08:40 UTC with our X-API-Key, table 40 (Flash Micro 1H, ended 2026-10-31 23:36
+      UTC), seat 143 "casino Trend Titan". GET /api/v1/agent-tournaments/tables/40: results.ranked[] for seat
+      143 says trades 4, volume_usdc 24.85, pnl_usdc -5.64, roi_pct -22.5816, and the page prints "4 trades"
+      and "✓ $24.85" in the standings and pays rank, prize and capital back ($19.36 = 25 - 5.64) from it. The
+      same response's your_trades lists three closed trades, amount_usdc 3.37851 + 11.86989 + 7.6242 =
+      22.8726 and pnl_usdc -3.37851 - 11.86989 + 7.6242 = -7.6242. The page's "Your trades" block, built from
+      that list, prints "3 counted trades · $22.87 volume", closed trades "-$7.62", and "AT THE END $17.38
+      -30.50% ROI" next to "Capital back $19.36" and "-22.58%". The gap is one fill of about $1.98 that the
+      standings count and the list does not show. Table 15 (an ET10 table, seat 87 "lab Wave 2
+      Perceptron Oracle") disagrees the other way: standings trades 17, volume 29.58, pnl -5.06; your_trades 18, 30.58,
+      -5.07.
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/40 (X-API-Key of the seat owner) -> results.ranked[] {"seat_id": 143, "bot": "casino Trend Titan", "trades": 4, "volume_usdc": 24.85, "pnl_usdc": -5.64, "roi_pct": -22.5816}'
+      - 'Same response -> your_trades: 3 closed trades (BTC sell 3.37851 pnl -3.37851; BTC buy 11.86989 pnl -11.86989; BTC buy 7.6242 pnl 7.6242)'
+      - 'Open https://cymetica.com/agent-casino/table/40 signed in as the owner -> standings row "4 trades · ... ✓ $24.85 ... -22.58%", then "Your trades": "3 counted trades · $22.87 volume (the same counts as the standings)", "AT THE END $17.38 -30.50% ROI"'
+    body: >
+      Rank and prize are paid from the standings row, and an owner checks them against the trade list. Here
+      the two give different results for the same seat (-22.58% against -30.50%), so the owner cannot tell
+      which is right, and a fill is counted that the list does not show. Our check reads every finished table
+      our key sat at and fails while the trade count, volume or profit of your_trades differs from the same
+      seat's results.ranked row in the number of trades, or in volume or profit by more than two cents; it is inconclusive if no finished table
+      lists a trade of ours. GET requests only.
+
+  - key: agent-tournaments-how-page-matches-the-tables
+    findings: [CYM-agent-tournaments-how-page-matches-the-tables]
+    severity: low
+    category: documentation
+    url: https://cymetica.com/agent-casino/how
+    title: >-
+      Agent Casino "How it works" still says every table runs one day and "Flash tables run 1 day", while the
+      lobby offers 1H and 5H Flash tables
+    expected: >
+      The page describes the tables that are on offer: Flash tables of 1 hour, 5 hours and 1 day (the lobby
+      cards read 1H, 5H, 1D, and /api/v1/agent-tournaments/rules lists flash_tiers fmicro1h, fpro1h, fmicro5h,
+      fpro5h).
+    actual: >
+      Read on 2026-11-01 around 08:30 UTC, no key. /agent-casino/how says "Flash tables run 1 day; ET10
+      tables take 100 or 1,000 ET10.", the step "TRADES 1 DAY: Every table runs one day. Verified fills only.",
+      and the stakes block "min volume $75" and "$750" under the $5 and $50 tables. GET /lobby lists open
+      tables 41 (fpro1h), 42 (fmicro1h), 43 (fmicro5h) and 35 (fpro5h), running tables 41 and 42 with a
+      clock of one hour, and the table page of a running 1 hour table reads "LEFT · DAY 1/1" over 00H 59M;
+      its minimum volume is $0.44 ($5 table) and $4.46 ($50 table). The same stakes block prints "ET10 600 /
+      300 / 100" under both Flash tables, whose lobby cards pay "+ 141 ET10" (85 / 42 / 14) on the 1 day
+      tables and +4 / +27 on the 1 hour / 5 hour ones; 600 / 300 / 100 is the 1,000 ET10 table's pot.
+    steps:
+      - 'GET https://cymetica.com/agent-casino/how -> "Flash tables run 1 day; ET10 tables take 100 or 1,000 ET10." and "TRADES 1 DAY" and "Every table runs one day."'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/lobby -> tables[] with tier fmicro1h / fpro1h / fmicro5h / fpro5h and hours 1 and 5, status open or running'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/rules -> flash_tiers: ["fmicro", "fpro", "fmicro1h", "fpro1h", "fmicro5h", "fpro5h"]; start and ranking still say "every table runs 1 day"'
+    body: >
+      A new member reads that a table takes a day and then sees a clock of one hour, or reads a minimum volume of
+      $75 and is asked for $0.44. Low: the lobby and the tables are right. Our check fails while the page fixes
+      every table at one day and the lobby lists an open or running Flash table of another length; it passes
+      when the page stops saying so, and is inconclusive if the lobby or the page cannot be read or no
+      shorter Flash table is on offer. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
