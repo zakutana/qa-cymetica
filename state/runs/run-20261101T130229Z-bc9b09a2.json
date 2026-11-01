@@ -1,0 +1,190 @@
+{
+  "schema": 2,
+  "run_id": "run-20261101T130229Z-bc9b09a2",
+  "started_at": "2026-11-01T13:02:38+00:00",
+  "finished_at": "2026-11-01T13:03:30+00:00",
+  "git_head": "bc9b09a20b5ed404316824d024fea61fcf08160f",
+  "git_short": "bc9b09a2",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:cc62b69e35eb799e6ac1486988053c4b268846e8cfd03c2b561b902fc9e4263a",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "dda3670339ba528254ed3bca84c629e4cb36a60a45ff7930a30453114937987c",
+    "/.well-known/agent-card.json": "5e0d977f916d6293f18b6e7e495ec5159068f6a2a1015c0782fcb9d6b2907923",
+    "/.well-known/agent-skills.json": "4028cc7c59a597e36944ed18e7b47ecc5348fdb40f22ca67d7d3bf3795d4ebbd",
+    "/.well-known/ai-plugin.json": "b7f63bb3434f28dc867492918640fc4c8fb80a27f4c4155589e389f703a3fc3a",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "1e1b7e2efeaff813451d647f88f52353e50627b882e63a65842dd1238b8e108c",
+    "/openapi-public.json": "726c3439c21150f843033c9d6306a141fa86ea52e321eedb7fe8dad031200623",
+    "/llms.txt": "913ad233784e6f29b5431749316ea2b0f887260e0fb3d38b8f8fd072590b48a9",
+    "mcp:tools/list:none": "4beb3863f1df20256e597baae317ec4d17011466136c906b9b58c675b974a1ce"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_agent_tournaments_round_ended_inside_the_table_counts.py -q -p no:cacheprovider",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_agent_tournaments_round_ended_inside_the_table_counts.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_agent_tournaments_round_ended_inside_the_table_counts.py::test_agent_tournaments_round_ended_inside_the_table_counts"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_agent_tournaments_round_ended_inside_the_table_counts.py::test_agent_tournaments_round_ended_inside_the_table_counts",
+      "component": "rest.agent_tournaments",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "agent-tournaments-round-ended-inside-the-table-counts",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 39823,
+      "evidence_ids": [
+        "a26dcb21de4cf3b1fda026dea3ea4d9759020a7187e29e3f6faa6126fb466cef",
+        "ac7008b080e5441c1fefd4e05059139915860251a52fc404b665f25ccd113f60",
+        "ae25a3a8479b9c50c484599bb3dc89461edad0944e3d33beb8bfd9083ac41282",
+        "8837ce288c241d2ce7226cc996c48c258f1a53e2cd397eb105c64ca731a978b5",
+        "f93028bef481e8e033b71408f6724ca64c437b1f0e9bfa0e931b1f04e087dfcb",
+        "3c68386e8efbc8f8739ea61237e4577be1f0a8c802b95dc69f95c67f6fbcebe8",
+        "337482ba3bc4032ce44ff2c7d9e255c3ab77ea8a9bf025415ae2732ed348f0ab",
+        "713c74a337aa93b796c1dec1b23e5ef9fc59a985b5507b8423466e85f659d0b3",
+        "130b9692b06c72315deafd3e01ff904e2dbb0410ebd52c42c8607be1a241cb3a",
+        "1ff4dc31f2af4b1c96ee72f77cf9e1e180da78fe99b2d019c368ee772a5f5719",
+        "de7984f7752958cd0f4bc050e144241a3aa975b22231498f6bf33b004090ce36",
+        "1269fc9b334e2f2d3c19e80dcf0e09fdd9769e74ad5e8e63bae33828912251b4",
+        "840841fba04a4203bf8f1a0bd78ec7755407a73d3e73cc2f3aa644025e1a90d6",
+        "cd80b440f11e22e9114ca77714fd995aca839924e1ab42a0dca5f8f41e06279b",
+        "7c82437e4b1a8f4df8e32350bfed4b4a4b59df3fc8c435666fb302e866b28617",
+        "57b193db211af98841a93d1d02cd0b3852bb868f871f614bb5ff1ad14585fd15",
+        "7a4d3359948cf1a0742dd2ed25cc0af6df66e27a5c8a36adbb60267a321e5f15",
+        "f9ae1198946bdcb97338c3dc4bf664a39bb279c408e8a3496268867a1244eeb2",
+        "6c1fbbf3a1108d0ecec67f930831a1447637bbe7fcc2f82416fb34f49c667759",
+        "bb566419c87354c6463bfb614fe6b9fadbb10e22931491447d286e41c9cb4627",
+        "45bee851f2a2a4ac5bca81c0cb43f511db93d69dc8ba2633fd0c3a1958bcf755",
+        "df271e4ca473317617aaa4a4d5c4fabaf9b014a3b3a99a29bcee8c0a371c52d1",
+        "21b976d73e931dc3eaa364ab065f5c747d8ccd0c6297372dacfacf54910c5ab7",
+        "4e892fb749c4e8f17f0ce0981dedc6857831e086e4fe0f19d318c0d7efa9a0ad",
+        "99401baf1ba5e723b8b95c1324c032ac8cddbc0eaa1555208b8e83a110cbdac7",
+        "624ca1eef0fdd0f8eee34f5a87e781a7ea44604571902df40079343aeccaf860",
+        "6efa1aa362ee05b4122644a5261f1ed6dcf04ea92dda91adde2c5ba00698adfa",
+        "03e0479c9d3dbfde5b038fe114085f949b2e568c5c2017d0fe29cef310cf5d0a",
+        "9146edc6b25788e635b2cf98afa532531f57bd5df69fbade38900c3384b81e52"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "1 round(s) that ended inside the table are left out of its standings because they settled after it: table 51 seat 209 ('casino Divergence Dragon'): round ended 2026-11-01T11:35:00+00:00, table ended 2026-11-01T11:35:14.689482+00:00, settled 2026-11-01T11:36:04.494225+00:00, 16.405443 USDC left out of 78.1",
+        "left": {
+          "rounds_left_out": 1
+        },
+        "right": {
+          "rounds_left_out": 0
+        },
+        "sources": {
+          "table": "/api/v1/agent-tournaments/tables/{id} (starts_at, ends_at, results.ranked[], my_seats)",
+          "feed": "/api/v1/cloned-bots/{id}/activity (epoch_end, closed_at, profit_usdc)",
+          "claim": "a round's result belongs to the table it ended in"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "agent-tournaments-round-ended-inside-the-table-counts",
+        "role": "verdict",
+        "population": {
+          "seats_read": [
+            {
+              "table_id": 51,
+              "seat_id": 209,
+              "ends_at": "2026-11-01T11:35:14.689482+00:00"
+            },
+            {
+              "table_id": 45,
+              "seat_id": 167,
+              "ends_at": "2026-11-01T11:19:01.168657+00:00"
+            },
+            {
+              "table_id": 42,
+              "seat_id": 154,
+              "ends_at": "2026-11-01T09:11:08.710832+00:00"
+            },
+            {
+              "table_id": 42,
+              "seat_id": 155,
+              "ends_at": "2026-11-01T09:11:08.710832+00:00"
+            },
+            {
+              "table_id": 40,
+              "seat_id": 143,
+              "ends_at": "2026-10-31T23:36:40.938544+00:00"
+            },
+            {
+              "table_id": 33,
+              "seat_id": 135,
+              "ends_at": "2026-10-31T22:55:55.812417+00:00"
+            },
+            {
+              "table_id": 33,
+              "seat_id": 136,
+              "ends_at": "2026-10-31T22:55:55.812417+00:00"
+            },
+            {
+              "table_id": 23,
+              "seat_id": 110,
+              "ends_at": "2026-10-29T16:48:36.953842+00:00"
+            }
+          ],
+          "left_out": [
+            {
+              "table_id": 51,
+              "seat_id": 209,
+              "bot": "casino Divergence Dragon",
+              "ends_at": "2026-11-01T11:35:14.689482+00:00",
+              "epoch_end": "2026-11-01T11:35:00+00:00",
+              "closed_at": "2026-11-01T11:36:04.494225+00:00",
+              "profit_usdc": "16.405443",
+              "standings_pnl_usdc": 78.1
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "5cbd4390806e5c2d7e614b1e8d299906f8a6338056560656b2485074afa6f41f",
+      "helpers_fingerprint": "a63f852d02388ef5f2d13eb2c524b91dc61a8ffd21e249e29236c4c8884c6603",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "tests\\rest\\test_agent_tournaments_round_ended_inside_the_table_counts.py:102: in test_agent_tournaments_round_ended_inside_the_table_counts\n    conclude(Measurement(\nqa\\measure.py:165: in conclude\n    raise AssertionError(explain(m))\nE   AssertionError: 1 round(s) that ended inside the table are left out of its standings because they settled after it: table 51 seat 209 ('casino Divergence Dragon'): round ended 2026-11-01T11:35:00+00:00, table ended 2026-11-01T11:35:14.689482+00:00, settled 2026-11-01T11:36:04.494225+00:00, 16.405443 USDC left out of 78.1\nE     left  = {'rounds_left_out': 1}\nE     right = {'rounds_left_out': 0}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 29,
+    "limit": 2000,
+    "remaining": 1974,
+    "fraction_used": 0.013,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:cc62b69e35eb799e6ac1486988053c4b268846e8cfd03c2b561b902fc9e4263a",
+  "exit_status": 1
+}
