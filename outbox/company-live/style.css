@@ -7,11 +7,10 @@
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { background: var(--bg); color: var(--text); font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 13px; }
-body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; isolation: isolate;
+/* the navies above are the sky's dark, not the site's #0a0e17, so the panels sit in the map's and the office's space ("musi se
+   prizpusobit i okolni panely", 2026-11-01); no stars on the page itself ("nemaji na nich byt hvezdy") */
+body { display: flex; flex-direction: column; height: 100vh; overflow: hidden;
   background: radial-gradient(1200px 600px at 50% -10%, rgba(0, 207, 255, .03), transparent 70%), var(--bg); }
-/* the page stands in the map's and the office's own space, stars behind its panels ("musi se prizpusobit i okolni panely", 2026-11-01):
-   the navies above are the sky's dark, not the site's #0a0e17 */
-body::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none; background: url(boot-sky.webp) 0 0 / 512px 512px; opacity: .55; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; background: none; border: 0; }
 a { color: var(--cyan); text-decoration: none; cursor: pointer; }

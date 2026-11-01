@@ -4,7 +4,8 @@
    and over the Universe's stage while its map is still being made. Everything moves by transform and opacity
    alone, so it keeps turning on the compositor while the main thread builds the 3D. The site's colours. */
 /* its sky is the map's and the office's (2026-11-01, u3d.js deepSky): the flyer's dark, soft clouds of navy and teal, a few bright stars,
-   and the dust of faint ones from one tile (bootsky.py) sliding sideways, a whole tile a loop so it never jumps */
+   and the rest from one large tile (bootsky.py). It stands still: a slow drift of fine stars shimmered ("cele se to tak cuka"), and the
+   density is what the builder's own sky shows on his screen, not more ("strasne velka density hvezd") */
 :root { --ld-sky:
   radial-gradient(1.6px 1.6px at 12% 76%, rgba(255, 255, 255, .95), transparent), radial-gradient(1.3px 1.3px at 33% 14%, rgba(235, 248, 255, .85), transparent),
   radial-gradient(1.5px 1.5px at 71% 62%, rgba(255, 255, 255, .9), transparent), radial-gradient(1.2px 1.2px at 88% 33%, rgba(225, 245, 255, .8), transparent),
@@ -15,13 +16,8 @@
   background: var(--ld-sky);
   transition: opacity .7s ease, visibility .7s; }
 .boot.gone { opacity: 0; visibility: hidden; pointer-events: none; }
-.boot::before, .uvload::before, .bz-veil::before, .boot::after, .uvload::after, .bz-veil::after { content: ''; position: absolute; inset: 0 0 0 -740px; pointer-events: none;
-  background: url(boot-sky.webp) 0 0 / 512px 512px; will-change: transform; animation: ld-drift 150s linear infinite; }
-/* a second layer of the same tile at another size, so no grid shows, drifting faster */
-.boot::after, .uvload::after, .bz-veil::after { background-size: 731px 731px; opacity: .5; animation: ld-drift2 110s linear infinite; }
-@keyframes ld-drift { to { transform: translateX(512px); } }
-@keyframes ld-drift2 { to { transform: translateX(731px); } }
-.boot .ldr, .uvload .ldr, .bz-veil .ldr { z-index: 1; }
+.boot::before, .uvload::before, .bz-veil::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: url(boot-sky.webp) 0 0 / 1024px 1024px; background-image: image-set(url(boot-sky.webp) 1x, url(boot-sky-2x.webp) 2x); }
 
 .ldr { position: relative; width: 420px; height: 460px; }
 .boot .ldr { transform: scale(1.32); }
@@ -100,7 +96,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ldr > i, .ldr > .ld-orbit { animation-duration: 12s !important; }
-  .boot::before, .boot::after, .uvload::before, .uvload::after, .bz-veil::before, .bz-veil::after { animation: none; }
 }
 /* the entry pages hide their body until their own styles are in (html.ld): the loading screen shows regardless */
 .boot { visibility: visible; }

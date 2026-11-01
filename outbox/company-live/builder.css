@@ -153,7 +153,7 @@
 .bz-veil { position: absolute; inset: 0; z-index: 7; display: flex; align-items: center; justify-content: center; padding-left: var(--cw); overflow: hidden;
   background: var(--ld-sky); opacity: 0; pointer-events: none; transition: opacity .18s; }
 .bz-veil.on { opacity: 1; pointer-events: auto; }
-.bz-veil .ldr { transform: scale(.8); margin-top: -40px; }
+.bz-veil .ldr { transform: scale(1.15); margin-top: -40px; }
 .bz-veil .ld-what { top: 372px; }
 .bz-veil .ld-bar { top: 398px; }
 .bz-veil:not(.on) .ldr *, .bz-veil:not(.on) .ldr *::before, .bz-veil:not(.on) .ldr *::after { animation-play-state: paused; }

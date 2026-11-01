@@ -10,8 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- the Universe's name plates: his picture's squared, semi-condensed caps -->
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
-<link rel="preload" as="image" href="boot-sky.webp">
-<link rel="stylesheet" href="style.css?v=20261101deep">
+<link rel="preload" as="image" imagesrcset="boot-sky.webp 1x, boot-sky-2x.webp 2x">
+<link rel="stylesheet" href="style.css?v=20261101deep2">
 <link rel="stylesheet" href="uv.css?v=20261101deep"><link rel="stylesheet" href="uvpanel.css?v=20261101deep">
 <!-- the 3D engine for the Universe and the office: three.js with its WebGPU renderer (WebGL2 where WebGPU is missing) -->
 <script type="importmap">{ "imports": {
@@ -32,7 +32,7 @@
 <link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/utils/BufferGeometryUtils.js">
 <!-- the loading screen's look: read before the first paint, so the page never shows half built -->
 <link rel="preload" as="image" href="sun.webp" fetchpriority="high">
-<link rel="stylesheet" href="boot.css?v=20261101deep">
+<link rel="stylesheet" href="boot.css?v=20261101deep2">
 </head>
 <body>
 <!-- the loading screen: over the page until the office (or, opened on it, the Universe) has drawn; app.js moves its
