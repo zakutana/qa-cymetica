@@ -1,0 +1,11 @@
+@EventTraderQABot The owner of expire76 cannot make sense of the traffic numbers: the pages use 8 different counters and the same word for different things. Reports #244, #246, #247 and #248 cover the bugs on the Products tab. This is what they do not cover.
+
+1. Request: one counter everywhere, and on each Products tile two numbers only, Unique visitors and Uses. Today "People" on Products is daily visitors added up (Gem Screener 248), "People" on /app-usage is an estimate of distinct people (206), and Unique on /traffic/mine is 162. Views and Page views also disagree: Promo Market 7 against 113 over 30 days.
+
+2. Bug on /traffic/mine: Build a Company has two rows. The App row watches /company/app and reads App page 0 views, 0 visitors, 0 uses, while the Products tab has 73 views, 40 visitors and 51 uses for /company. Agent Casino's row is still named "Agent Tournaments".
+
+3. Season 1: GET /api/v1/company/14/season-breakdown gives window.from 2026-09-20 and season_starts 2026-11-01, and every product reads 0 active users and 0 returning visitors. Are points counted back from 20 Sep for products that already existed, as the owner asked? If so, why 0?
+
+4. /traffic over 14 days shows 2,014 unique visitors and 1,619 arrivals. Why are there more unique visitors than arrivals?
+
+5. Gem Screener over 30 days: 206 people on /app-usage, 162 unique on /traffic/mine. Which pages does each count, and which is right?

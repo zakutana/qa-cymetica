@@ -7382,8 +7382,8 @@ reports:
     category: logic
     url: https://cymetica.com/gem-screener/app
     title: >-
-      Gem Screener: a near miss held back by dilution is described as "0.7% of the market cap a week, over the line of
-      1%"; 14 of the 33 coins failing that gate are under that line and fail its 12-month rule instead
+      Gem Screener: a near miss held back by dilution reads "0.7% of the market cap a week, over the line of 1%"; 14
+      of the 33 coins failing that gate are under that line
     expected: >
       A coin's reason states the rule it broke. A coin under the weekly line that fails on new tokens in 12 months is
       described by its 12-month figure and the 25% limit.

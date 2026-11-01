@@ -119,6 +119,7 @@ reports:
   242: "Agent Casino: kolo skončilo uvnitř stolu, zúčtovalo se po jeho konci a výsledek ho vynechá (+$16,41)"
   243: "Event karty: Corteva ukazuje −86 %, protože po spin-offu Vyloru drží jen CTVA; držitel přitom nic neztratil"
   244: "Firma, záložka Products: „247 people“ je součet po dnech, kdo přišel tři dny, počítá se třikrát"
+  245: "Gem Screener: 14 z 33 coinů má text „nad limitem 1 % týdně“, ač jsou pod ním; padají na limitu za 12 měsíců"
   246: "Firma: body sezóny píšou „Counted hourly“, ale počítadlo stojí přes 11 hodin od první hodiny sezóny"
   247: "Firma, Products: Build a Company 40 a Agent Casino 94, /app-usage u nich počítá 126 a 148 různých lidí"
   248: "Firma, Products: u Agent Casina číslo říká 94, graf pod ním se sečte na 22 a před 26. 10. je prázdný"
