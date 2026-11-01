@@ -274,7 +274,7 @@
   function drawBal() { $('bal').textContent = usd(S.bal); var b = $('addc'); b.classList.remove('tick'); void b.offsetWidth; b.classList.add('tick'); }
 
   /* ------------------------------------------------------------------ my deals */
-  function stat(k, v, cls, small, tip) { return '<div class="pc-stat"' + (tip ? ' title="' + esc(tip) + '"' : '') + '><span>' + k + '</span><b class="' + (cls || '') + '">' + v + '</b>' + (small ? '<small>' + small + '</small>' : '') + '</div>'; }
+  function stat(k, v, cls, small) { return '<div class="pc-stat"><span>' + k + '</span><b class="' + (cls || '') + '">' + v + '</b>' + (small ? '<small>' + small + '</small>' : '') + '</div>'; }
   function spark(p) {   // what you bought into: its line so far
     var pts = calm(dense(p.line).rest, 18), W = 150, H = 40, lo = Infinity, hi = -Infinity, end = pts[pts.length - 1][0], t0 = pts[0][0];
     pts.forEach(function (q) { lo = Math.min(lo, q[1]); hi = Math.max(hi, q[1]); });
@@ -290,52 +290,23 @@
     }).join('') : '<div class="pc-none"><img src="/_pc/nexus-face.webp" alt="">No deals yet. Swipe right on a pitch you like.</div>';
   }
 
-  /* ------------------------------------------------------------------ the Profit Board: one list of everything that could be bought from its first day */
+  /* ------------------------------------------------------------------ the Profit Board: one list, nothing in it at a loss */
   var B = D.board, BK = 'all', SHOWN = 40, SORT = 'r';
-  var TABS = [['all', 'All'], ['pitch', 'Pitches'], ['fund', 'Funds'], ['card', 'Cards'], ['company', 'Company cards'], ['h72', '72h cards']];
-  var COLS = [['r', 'Up since start', 'From the day it could first be bought. A 72h card: its result at the close.'], ['p', 'Peak', 'The best it ever reached since that day: what selling at the top would have paid. "≥": recording began more than 3 days after it started, so the top may have been higher.'], ['days', 'Days', 'Since it started.'], ['m', 'Money in', 'Bull and bear money in the card right now (their bull_notional_usdc + bear_notional_usdc). A fund does not publish it.']];
-  var big = function (n) { return n.toLocaleString('en-US'); };
-  function drawBoardLine(line) {
-    var box = $('pbLine'), W = box.clientWidth, H = box.clientHeight;
-    if (!W || !H || !line || line.length < 2) { box.innerHTML = ''; return; }
-    var lo = 0, hi = 0, t = function (d) { return Date.parse(d + 'T00:00:00Z'); }, t0 = t(line[0][0]), t1 = t(line[line.length - 1][0]);
-    line.forEach(function (q) { lo = Math.min(lo, q[1]); hi = Math.max(hi, q[1]); });
-    var pad = (hi - lo || 1) * .14, X = function (d) { return 6 + (W - 16) * (t(d) - t0) / ((t1 - t0) || 1); }, Y = function (v) { return 10 + (H - 34) * (1 - (v - lo + pad) / (hi - lo + 2 * pad)); };
-    var d = line.map(function (q, i) { return (i ? 'L' : 'M') + X(q[0]).toFixed(1) + ' ' + Y(q[1]).toFixed(1); }).join(''), z = Y(0), e = line[line.length - 1];
-    box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true"><defs>' +
-      '<clipPath id="pbUp"><rect x="0" y="-20" width="' + W + '" height="' + (z + 20).toFixed(1) + '"/></clipPath><clipPath id="pbDn"><rect x="0" y="' + z.toFixed(1) + '" width="' + W + '" height="' + (H + 20) + '"/></clipPath></defs>' +
-      '<line class="zero" x1="0" x2="' + W + '" y1="' + z.toFixed(1) + '" y2="' + z.toFixed(1) + '"/><text class="ztx" text-anchor="end" x="' + (W - 2) + '" y="' + (z + 18).toFixed(1) + '">$100 = break even</text>' +
-      '<g clip-path="url(#pbUp)"><path class="g up" d="' + d + '"/><path class="l up" d="' + d + '"/></g><g clip-path="url(#pbDn)"><path class="g dn" d="' + d + '"/><path class="l dn" d="' + d + '"/></g>' +
-      '<circle cx="' + X(e[0]).toFixed(1) + '" cy="' + Y(e[1]).toFixed(1) + '" r="3.8" fill="#eafff4"/>' +
-      '<text class="axs" x="6" y="' + (H - 4) + '">' + day(line[0][0]) + '</text><text class="axs" text-anchor="end" x="' + (W - 2) + '" y="' + (H - 4) + '">today</text></svg>';
-  }
+  var TABS = [['all', 'All'], ['pitch', 'Pitches'], ['fund', 'Funds'], ['card', 'Event cards'], ['company', 'Company cards'], ['h72', '72h cards']];
+  var TAGS = { fund: 'Fund', card: 'Event Card', company: 'Company Card', h72: '72h Card' };
+  var COLS = [['r', 'Up since start'], ['p', 'Peak'], ['dp', 'Days since peak']];
+  function tags(r) { return '<span class="pb-tag t-' + r.k + '">' + TAGS[r.k] + '</span>' + (r.pitch ? '<span class="pb-tag t-pitch">Pitch</span>' : ''); }
   function drawBoard() {
-    var st = B.stats[BK], rows = B.rows.filter(function (r) { return BK === 'all' || (BK === 'pitch' ? r.pitch : r.k === BK); });
-    var val = 100 * (1 + st.avg / 100), pos = st.avg >= 0;
-    $('pbK').textContent = '$100 in each, on its first day';
-    $('pbV').textContent = usd(val, 2); $('pbV').className = pos ? 'pos' : 'neg';
-    $('pbS').textContent = 'today · ' + big(st.n) + ' things you could have bought' + (st.suspect ? ' · ' + big(st.suspect) + ' suspect left out' : '');
-    drawBoardLine(st.line);
-    $('boardTiles').innerHTML = stat('Up', big(st.up) + '<em>/' + big(st.n) + '</em>') +
-      stat('Best', st.best == null ? '–' : pct(st.best, 1), st.best > 0 ? 'pos' : 'neg', null, st.best_n) +
-      stat('Hit +20% at its peak', big(st.hit20) + '<em>/' + big(st.peaks) + '</em>', st.hit20 ? 'pos' : 'zero') +
-      stat('Real money in', usd(st.money), st.money ? 'pos' : 'zero', big(st.money_n) + (st.money_n === 1 ? ' card' : ' cards'));
-    $('boardSeg').innerHTML = TABS.map(function (t) { return '<button type="button" data-k="' + t[0] + '"' + (t[0] === BK ? ' class="on"' : '') + '>' + t[1] + '<small>' + big(B.stats[t[0]].n) + '</small></button>'; }).join('');
-    var shortList = BK === 'h72' || BK === 'all';
-    $('boardSrc').textContent = D.as_of;
-    $('boardSrc').title = 'Read from cymetica.com. Every LIVE fund and every event card with a price, losers and closed ones too.' + (shortList ? ' The numbers count all ' + big(B.stats.h72.n) + ' 72h cards; the list shows the best 300.' : '');
-    $('boardHead').innerHTML = '<span class="n">#</span><span>What</span>' + COLS.map(function (c) { return '<button type="button" data-sort="' + c[0] + '" title="' + esc(c[2]) + '"' + (c[0] === SORT ? ' class="on"' : '') + '>' + c[1] + (c[0] === SORT ? ' ↓' : '') + '</button>'; }).join('');
-    var nul = function (v) { return v == null ? -Infinity : v; };
-    rows = rows.slice().sort(function (a, b) { return nul(b[SORT]) - nul(a[SORT]) || b.r - a.r; });
+    var rows = B.rows.filter(function (r) { return BK === 'all' || (BK === 'pitch' ? r.pitch : r.k === BK); });
+    $('boardSeg').innerHTML = TABS.map(function (t) { return '<button type="button" data-k="' + t[0] + '" class="t-' + t[0] + (t[0] === BK ? ' on' : '') + '">' + t[1] + '</button>'; }).join('');
+    $('boardSrc').textContent = 'Updated ' + D.as_of;
+    $('boardHead').innerHTML = '<tr><th class="pb-rank">#</th><th class="pb-ty">Type</th><th>Name</th>' + COLS.map(function (c) { return '<th class="pb-c"><button type="button" data-sort="' + c[0] + '"' + (c[0] === SORT ? ' class="on"' : '') + '>' + c[1] + (c[0] === SORT ? (SORT === 'dp' ? ' ↑' : ' ↓') : '') + '</button></th>'; }).join('') + '</tr>';
+    rows = rows.slice().sort(function (a, b) { return (SORT === 'dp' ? a.dp - b.dp : b[SORT] - a[SORT]) || b.r - a.r; });
     $('board').innerHTML = rows.slice(0, SHOWN).map(function (r, i) {
-      var cls = r.r > 0 ? 'pos' : r.r < 0 ? 'neg' : 'zero';
-      return '<a class="pc-tr" role="row" href="https://cymetica.com' + esc(r.u || '') + '" target="_blank" rel="noopener"><span class="n">' + (i + 1) + '</span>' +
-        '<span class="w"><b title="' + esc(r.n) + '">' + esc(r.n) + '</b><small>' + (r.pitch ? '<i>Pitch</i>' : '') + esc(r.s) + ' · ' + day(r.d) + '</small></span>' +
-        '<span class="v ' + cls + '">' + (r.j ? '<i class="jmp" title="' + esc(r.j) + ' Left out of the figures above.">SUSPECT</i>' : '') + pct(r.r, 1) + '</span>' +
-        '<span class="v pk"' + (r.pd ? ' title="on ' + day(r.pd) + '"' : '') + '>' + (r.p == null ? '–' : (r.late ? '≥' : '') + pct(r.p, 1)) + '</span>' +
-        '<span class="v dd">' + r.days + '</span>' +
-        '<span class="v mo' + (r.m ? ' has' : '') + '">' + (r.m == null ? '–' : usd(r.m)) + '</span></a>';
-    }).join('') || '<div class="pc-none">Nothing here yet.</div>';
+      return '<tr><td class="pb-rank">' + (i + 1) + '</td><td class="pb-ty">' + tags(r) + '</td>' +
+        '<td class="pb-name"><a href="https://cymetica.com' + esc(r.u || '') + '" target="_blank" rel="noopener" title="' + esc(r.n) + '">' + esc(r.n) + '</a><span class="pb-tym">' + tags(r) + '</span></td>' +
+        '<td class="pb-c pb-pos">' + pct(r.r, 2) + '</td><td class="pb-c pb-pos">' + pct(r.p, 2) + '</td><td class="pb-c">' + r.dp + '</td></tr>';
+    }).join('') || '<tr><td colspan="6" class="pc-none">Nothing here yet.</td></tr>';
     $('more').hidden = rows.length <= SHOWN;
   }
 

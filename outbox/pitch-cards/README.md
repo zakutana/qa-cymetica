@@ -65,19 +65,11 @@ Asked for on 2026-11-01: "chci videt jeden seznam a jen veci do kterych se dalo 
 place to watch for the day Cymetica turns profitable. Headline: **What would have made you money on Cymetica.** It replaces the
 pitchboard; a pitch is a tagged row (and a tab).
 
-**On the list:** every LIVE fund (their page: "LIVE funds take real USDC; PAPER funds ... take no investment yet") since it went
-live; every event card with a price since it was minted, live and closed, because `status=live`, the API's default, is 647 of
-35,580 and would show survivors only. **Not on it:** Top Movers (30,235 vehicles with trailing returns: no start, nothing to buy
-here; a stock counts through the card that holds it), /fund-optimizations (a log of runs; its one live node is the M&A Ripple
-Fund, which is on the list), /leaderboard's 72h tab (the same cards). Not yet: exchange tokens (only a 24h change is public),
-launchpad tokens (none listed), CyMetica-42 (a trade log, no price), bots.
-
-**Columns:** Up since start, Peak (what selling at the top would have paid; "≥" when recording began more than 3 days late),
-Days, Money in. **The one number:** $100 in each on its first day, equal weight, and its line by week against break-even.
-**SUSPECT:** a number nobody could have had stays on the list, marked, and leaves the figures. A step of 40% or more between two
-readings: Corteva, 94 to 16.32 on the day it spun off Vylor (reported as #243), and DCA Manufacturing and S&C, 97 to 198 on 9 Oct.
-A DASH coin leg beside stock legs that needs that leg up 150% or more in 3 days: four cards of 13-15 Sep, about +260%, with the coin at $50-56.
-A 72h card's history is read only for the 300 the list shows; 302 of the 947 read came back empty.
+A graphic design for Cymetica to finish, so the numbers are read as they stand and nothing on it is checked (2026-11-01: "to nemas
+overovat zadne data, ma to byt ciste graficky navrh, oni to pak cele dodelaji"). **The look** is their /themes/performance: its
+tabs and its table, CSS read off the live page. **The list:** LIVE funds and event cards, only what is up right now and has a peak
+to show. **Columns:** Up since start, Peak, Days since peak. **Tags, in their palette:** Fund green, Event Card white, Company Card
+blue, 72h Card cyan, Pitch solid green beside its own kind.
 
 `python outbox/pitch-cards/refresh.py --read` is the long pass (every card, then the histories, into `.cache/`, not in git,
 resumable); `refresh.py` then writes `data.js`.

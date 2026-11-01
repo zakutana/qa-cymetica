@@ -1,0 +1,119 @@
+{
+  "schema": 2,
+  "run_id": "run-20261101T185157Z-36afcfea",
+  "started_at": "2026-11-01T18:52:06+00:00",
+  "finished_at": "2026-11-01T18:52:19+00:00",
+  "git_head": "36afcfea123c4823cf909336c8f0ea7731e18d75",
+  "git_short": "36afcfea",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:cc62b69e35eb799e6ac1486988053c4b268846e8cfd03c2b561b902fc9e4263a",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "dda3670339ba528254ed3bca84c629e4cb36a60a45ff7930a30453114937987c",
+    "/.well-known/agent-card.json": "5e0d977f916d6293f18b6e7e495ec5159068f6a2a1015c0782fcb9d6b2907923",
+    "/.well-known/agent-skills.json": "4028cc7c59a597e36944ed18e7b47ecc5348fdb40f22ca67d7d3bf3795d4ebbd",
+    "/.well-known/ai-plugin.json": "b7f63bb3434f28dc867492918640fc4c8fb80a27f4c4155589e389f703a3fc3a",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "1e1b7e2efeaff813451d647f88f52353e50627b882e63a65842dd1238b8e108c",
+    "/openapi-public.json": "726c3439c21150f843033c9d6306a141fa86ea52e321eedb7fe8dad031200623",
+    "/llms.txt": "913ad233784e6f29b5431749316ea2b0f887260e0fb3d38b8f8fd072590b48a9",
+    "mcp:tools/list:none": "4beb3863f1df20256e597baae317ec4d17011466136c906b9b58c675b974a1ce"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_products_tile_people_are_people.py -q --no-header --tb=no",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_products_tile_people_are_people.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_products_tile_people_are_people.py::test_products_tile_people_are_people"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_products_tile_people_are_people.py::test_products_tile_people_are_people",
+      "component": "rest.company",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "products-tile-people-are-people",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 4078,
+      "evidence_ids": [
+        "582c2e5364382a5bd07354614aa912c2639724b7fb8b503abcafe76bc6091f0e",
+        "fe0a96c9b06d06697e8be2683aaa61e7d44d4c0536794e2f17260d0f13c6c167",
+        "1daf06743f2be9de494afcc851b65a7a0c38acf73c125b106371d1e3999dc5dd"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "The Products tab labels a.visitors \"people\", but /api/v1/build-it-better/apps/leaderboard defines the figure: \"Distinct daily visitors. A range is the sum of its days, so one person on three days counts three times.\" 8 of 9 products read visitors == sum(daily), e.g. Gem Screener: 247, so one person on three days is three \"people\"",
+        "left": {
+          "label": "people",
+          "says_sum_of_days": true,
+          "rows_adding_up": 8
+        },
+        "right": {
+          "label": "not people, or a distinct count"
+        },
+        "sources": {
+          "tile": "/static/company/app.js (the number and the <span> after it)",
+          "definition": "/api/v1/build-it-better/apps/leaderboard definitions.visitors",
+          "rows": "/api/v1/company/products products[].visitors, .daily",
+          "credential": "X-API-Key, trusted tier (value never recorded)"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "products-tile-people-are-people",
+        "role": "verdict",
+        "population": {
+          "products_with_visitors": 9,
+          "largest": {
+            "name": "Gem Screener",
+            "visitors": 247,
+            "days": 30
+          }
+        }
+      },
+      "check_fingerprint": "5cb6e670f97674851b9d9bcf62ff07bea164ed4c464d4a9ea067ef96bc9b83cb",
+      "helpers_fingerprint": "f431bd832efa15b42d8a4f29f4f21aad4c37ce98a522955abd882d9ec2d4762c",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "E   AssertionError: The Products tab labels a.visitors \"people\", but /api/v1/build-it-better/apps/leaderboard defines the figure: \"Distinct daily visitors. A range is the sum of its days, so one person on three days counts three times.\" 8 of 9 products read visitors == sum(daily), e.g. Gem Screener: 247, so one person on three days is three \"people\"\n      left  = {'label': 'people', 'says_sum_of_days': True, 'rows_adding_up': 8}\n      right = {'label': 'not people, or a distinct count'}"
+    }
+  ],
+  "totals": {
+    "failed": 1
+  },
+  "ratelimit": {
+    "requests": 3,
+    "limit": 2000,
+    "remaining": 1998,
+    "fraction_used": 0.001,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:cc62b69e35eb799e6ac1486988053c4b268846e8cfd03c2b561b902fc9e4263a",
+  "exit_status": 1
+}

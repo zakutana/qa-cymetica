@@ -1,4 +1,4 @@
-"""The Den, from the render of Nexus at his holographic chart (outbox/quest-gemini/pics/agent.webp, 2560 x 1440):
+"""The Den, from the render of Nexus at his holographic chart (outbox/quest/gen/lab-16x9.png, the original, 2560 x 1440):
 
     python outbox/pitch-cards/build_scene.py
 
@@ -14,7 +14,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 HERE = Path(__file__).resolve().parent
-SRC = HERE.parent / "quest-gemini" / "pics" / "agent.webp"
+SRC = HERE.parent / "quest" / "gen" / "lab-16x9.png"
 NX, NY = 1640, 280
 
 # Nexus's outline in the render's pixels, down his face, over the collar and shoulder, along the arm to the fingertip,
@@ -92,7 +92,8 @@ def nexus(a: np.ndarray) -> Image.Image:
         l, r = 1783, 1801
         t = np.linspace(0, 1, r - l)[:, None]
         b[y, l:r] = b[y, l] * (1 - t) + b[y, r] * t
-    im = Image.fromarray(np.clip(b, 0, 255).astype(np.uint8)).convert("RGBA")
+    # the render was enlarged to 2560 and is soft at this size: the edges of his shell are brought back, finest first
+    im = Image.fromarray(np.clip(b, 0, 255).astype(np.uint8)).filter(ImageFilter.UnsharpMask(1.5, 110, 2)).filter(ImageFilter.UnsharpMask(4, 35, 3)).convert("RGBA")
     mask = Image.new("L", im.size, 0)
     ImageDraw.Draw(mask).polygon(OUTLINE, fill=255)
     mask = mask.filter(ImageFilter.GaussianBlur(1.1))
@@ -102,8 +103,8 @@ def nexus(a: np.ndarray) -> Image.Image:
 
 if __name__ == "__main__":
     src = np.asarray(Image.open(SRC).convert("RGB"))
-    Image.fromarray(room(src)).save(HERE / "scene.webp", quality=82, method=6)
-    nexus(src).save(HERE / "nexus.webp", quality=88, method=6)
-    Image.fromarray(src[310:690, 1880:2260]).resize((192, 192), Image.LANCZOS).save(HERE / "nexus-face.webp", quality=86, method=6)
+    Image.fromarray(room(src)).save(HERE / "scene.webp", quality=92, method=6)
+    nexus(src).save(HERE / "nexus.webp", quality=96, method=6)
+    Image.fromarray(src[310:690, 1880:2260]).resize((192, 192), Image.LANCZOS).save(HERE / "nexus-face.webp", quality=92, method=6)
     for f in ("scene.webp", "nexus.webp", "nexus-face.webp"):
         print(f, (HERE / f).stat().st_size // 1024, "KB")
