@@ -10,7 +10,7 @@ from PIL import Image, ImageFilter
 W, H = 2160, 2700
 
 
-def make(seed=7, strength=1.0, stars=1.0):
+def make(seed=7, strength=1.0):
     """The nebula as an RGB float array (0..255), H x W. `strength` scales the cloud's density: below 1 the space is
     darker and the purple only a trace ("vic ten deep vesmir tmavsi jen s minimem te fialove", 2026-10-23)."""
     rng = np.random.default_rng(seed)
@@ -77,8 +77,8 @@ def make(seed=7, strength=1.0, stars=1.0):
             out[..., ch] = np.asarray(im, np.float32) / 255
         return out
 
-    faint = scatter(int(26000 * stars), 0.06, 0.55, 3.0)     # `stars` scales how many (1.0 is the flyer's)
-    clear = scatter(int(1100 * stars), 0.5, 1.0, 1.5)
+    faint = scatter(26000, 0.06, 0.55, 3.0)
+    clear = scatter(1100, 0.5, 1.0, 1.5)
     light = blur(faint, 0.75) * 3.0 + blur(clear, 1.1) * 4.5 + blur(clear, 5) * 5.0
     spikes = np.zeros((H, W), np.float32)
     for _ in range(12):

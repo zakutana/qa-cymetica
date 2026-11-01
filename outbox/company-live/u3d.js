@@ -1762,24 +1762,6 @@ function dustMesh(P, peak) {
 // colour written as measured comes out wrong. Undone here in reverse: ACES's output matrix, its curve, its input
 // matrix, then the saturation. Good to a few levels, bloom aside.
 const UVLOOK = { exposure: 1.15, sat: 0.9 };
-// ?sky=flyer (the operator, 2026-11-01): the flyer's deep space, a plate behind the canvas that is screened over it
-// (skyflyer.css), so the scene's own sky goes near-black and leaves the plate its darkness and its stars
-const SKYF = /[?&]sky=flyer\b/.test(location.search);
-// The plate is a quad a long way in front of the camera that fills the view and is drawn first, behind everything (no depth
-// test, no depth write), cropped to the view like `background-size: cover`. A first try screened the whole canvas over a CSS
-// plate and the stars shone through the rooms and the rock ("jsou na povrchu ... jen naplacnul"); here the geometry covers them.
-function flyerPlate(scene, camera, file) {
-  const tex = new THREE.TextureLoader().load(file); tex.colorSpace = THREE.SRGBColorSpace;
-  const d = camera.far * 0.45, PA = 2560 / 1440;
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: tex, depthTest: false, depthWrite: false, fog: false, toneMapped: false }));
-  m.renderOrder = -1000; m.frustumCulled = false; m.position.set(0, 0, -d);
-  m.onBeforeRender = (r, s, cam) => {
-    const h = 2 * d * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2)), a = cam.aspect;
-    m.scale.set(h * a, h, 1);
-    if (a > PA) { tex.repeat.set(1, PA / a); tex.offset.set(0, (1 - PA / a) / 2); } else { tex.repeat.set(a / PA, 1); tex.offset.set((1 - a / PA) / 2, 0); }
-  };
-  camera.add(m); scene.add(camera);
-}
 const ACES_IN = new THREE.Matrix3().set(0.59719, 0.35458, 0.04823, 0.07600, 0.90834, 0.01566, 0.02840, 0.13383, 0.83777);
 const ACES_OUT = new THREE.Matrix3().set(1.60475, -0.53108, -0.07367, -0.10208, 1.10813, -0.00605, -0.00327, -0.07276, 1.07602);
 const ACES_IN_INV = ACES_IN.clone().invert(), ACES_OUT_INV = ACES_OUT.clone().invert();
@@ -1912,56 +1894,113 @@ function jetTex() {
   // (rising over its first few percent: eight jets share one root, and at full strength there they add up to a blot)
   return TX.jet || (TX.jet = ctex(32, 256, (g, W, H) => { const gr = g.createLinearGradient(0, H, 0, 0); gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.12, 'rgba(255,255,255,.25)'); gr.addColorStop(0.24, 'rgba(255,255,255,1)'); gr.addColorStop(0.5, 'rgba(255,255,255,.55)'); gr.addColorStop(0.85, 'rgba(255,255,255,.1)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, W, H); }));
 }
-// The sky of his picture: near-black navy, a teal haze over the top left of the first look fading to the bottom
-// right, and many small sharp white stars, a few brighter. Drawn round the camera as far as a sky is.
-function uvSky(AZ) {
-  const g = new THREE.Group(), R = rng(58), D = 4200;
-  // the haze, painted on the inside of a sphere: lon/lat of every texel, lit by how close it is to the direction the
-  // top left of the first look shows
-  const cam = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, UVCAM.polar, AZ)).negate();   // where the camera looks
+// The deep sky of the revenue-share flyer, in the engine (the operator, 2026-11-01: "mas to v samotnem enginu zmenit, pridat
+// vic hvez, ztmavit pozadi vesmiru ... dokud to nebude vypadat jak na letaku"). One sphere round the camera, for the Universe
+// and the Headquarters. Its clouds are outbox/revenue-share-flyer/nebula.py's recipe painted once in idle time: a band of cloud
+// across the first look from lower left to upper right, thickest upper right, dark lanes of dust, a soft shoulder, the same
+// ramp of navy and teal. Its stars are drawn by the sphere's own shader, cell by cell on a warped cube round the camera, so
+// the dust of faint ones costs no geometry and stays sharp and steady while the camera turns. Against the flyer at 1x the old
+// skies had a third of its stars at low contrast and 25 to 70 times its bright ones, which is what "tecky" were.
+// view: the first look's camera and the height in px of its stage at his screen, which the star sizes are read against.
+const SKY = { clouds: 0.42, dustGap: 10.5, dustShare: 0.66, dustPow: 2.6, dustLo: 0.007, dustHi: 0.07, dustSize: 0.74, clearGap: 36, clearLo: 0.055, clearHi: 0.14, clearSize: 0.82, spikeGap: 350, spikeArm: 0.16, spikeCore: 0.7 };
+function deepSky(view, D, expo) {
+  const g = new THREE.Group(), T = TSL, fovR = THREE.MathUtils.degToRad(view.fov), radPx = fovR / view.px, zoom = 25 / view.fov;
+  const cam = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, view.polar, view.az)).negate();
   const right = new THREE.Vector3().crossVectors(cam, new THREE.Vector3(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(right, cam).normalize();
-  const tv = Math.tan(THREE.MathUtils.degToRad(UVCAM.fov) / 2), th = tv * UVCAM.aspect;
+  const tv = Math.tan(fovR / 2), th = tv * view.aspect;
   const toward = (x, y) => cam.clone().addScaledVector(right, x * th).addScaledVector(up, y * tv).normalize();
-  const hot = toward(-0.55, 0.75), warm = toward(-0.1, 0.95), cold = toward(0.9, -0.9), f = vnoise(19);
-  // his sky, measured: #01080d over most of it, #051d28 at the top left, #01060a at the bottom right
-  const rgb = (hex) => { const h = look(hex).getHex(THREE.SRGBColorSpace); return [h >> 16 & 255, h >> 8 & 255, h & 255]; };
-  const B0 = rgb(SKYF ? '#000206' : '#01090e'), B1 = rgb(SKYF ? '#010a14' : '#062030'), B2 = rgb(SKYF ? '#000104' : '#01050a');
-  // (63 ms of noise: drawn in idle time, before the map's first frame or its warm())
-  const tex = ctexIdle(1024, 512, (c, W, H) => {
-    const img = c.createImageData(W, H), d = img.data, v = new THREE.Vector3();
-    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
-      const lon = (i + 0.5) / W * Math.PI * 2, lat = Math.PI / 2 - (j + 0.5) / H * Math.PI;
-      // three.js's sphere: u = 0 at -x, going round through +z
-      v.set(-Math.cos(lon) * Math.cos(lat), Math.sin(lat), Math.sin(lon) * Math.cos(lat));
-      const n = f(i / W * 9, j / H * 5, 4);
-      const h = Math.max(0, v.dot(hot)) ** 22 * 0.9 + Math.max(0, v.dot(warm)) ** 30 * 0.5, k = (j * W + i) * 4;
-      const haze = Math.min(1, h * (0.75 + 0.5 * n)), dark = Math.min(1, Math.max(0, v.dot(cold)) ** 10 * 1.2);
-      for (let ch = 0; ch < 3; ch++) d[k + ch] = B0[ch] + (B1[ch] - B0[ch]) * haze + (B2[ch] - B0[ch]) * dark * (1 - haze);
-      d[k + 3] = 255;
-    }
-    c.putImageData(img, 0, 0);
-  });
-  const sph = new THREE.Mesh(new THREE.SphereGeometry(D, 64, 32), new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, depthWrite: false, fog: false }));
-  sph.renderOrder = -20; sph.frustumCulled = false; if (!SKYF) g.add(sph);   // ?sky=flyer: the plate is the sky
-  // a faint teal wisp or two inside the haze, his nebula's filaments
-  [[-0.62, 0.62, 0.55, 7, 0.07], [-0.25, 0.85, 0.4, 13, 0.05], [-0.85, 0.2, 0.35, 29, 0.04]].forEach(([x, y, s, seed, op]) => {
-    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: filamentTex(seed), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
-    const at = toward(x, y), sz = D * s * th * 2; m.scale.set(sz, sz, 1); m.position.copy(at).multiplyScalar(D * 0.98); m.lookAt(0, 0, 0); m.rotateZ(R() * 6.28); m.renderOrder = -19; m.frustumCulled = false; g.add(m);
-  });
-  // stars: about one to every 2,500 px of his sky, mostly faint, sharp; points are a pixel each
-  const rnd = () => { const u = R() * 2 - 1, t = R() * Math.PI * 2, s = Math.sqrt(1 - u * u); return new THREE.Vector3(Math.cos(t) * s, u, Math.sin(t) * s); };
-  const N = SKYF ? 18200 : 26000, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
-  for (let i = 0; i < N; i++) { pos.set(rnd().multiplyScalar(D * 0.95).toArray(), i * 3); cc.set(R() < 0.15 ? 0xbfe9ff : 0xeef6ff).multiplyScalar(0.18 + R() * R() * 1.1); col.set([cc.r, cc.g, cc.b], i * 3); }
-  const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pg.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  const pts = new THREE.Points(pg, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, fog: false, depthWrite: false })); pts.frustumCulled = false; pts.renderOrder = -18; g.add(pts);
-  // the brighter ones, two to three pixels with a soft edge
-  const B = SKYF ? 980 : 1400, px = D * 0.93 * 2 * tv / 1116, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
-  for (let i = 0; i < B; i++) {
-    o.position.copy(rnd().multiplyScalar(D * 0.93)); o.lookAt(0, 0, 0); o.scale.setScalar(px * (3 + R() * R() * 5)); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
-    im.setColorAt(i, cc.set(R() < 0.2 ? 0xc8eeff : 0xffffff).multiplyScalar(0.5 + R() * 0.9));
+  const n = toward(-1, -0.9).cross(toward(1, 0.9)).normalize(), hot = toward(0.62, 0.6), hole = toward(-0.6, 0.72);
+  const sb = 2 * (0.32 * fovR) ** 2, sg = 2 * (0.55 * fovR) ** 2, sh = 2 * (0.45 * fovR) ** 2;
+  // nebula.py's ramp as the screen should show it, taken back through the frame's ACES (look) once, into a table
+  const STOPS = [0, 0.18, 0.36, 0.55, 0.72, 0.86, 1], COLS = [[1, 3, 7], [3, 9, 17], [5, 18, 31], [10, 32, 52], [22, 50, 84], [56, 70, 128], [150, 165, 220]];
+  const K = UVLOOK.exposure / expo, RN = 256, ramp = new Float32Array(RN * 3), hex = (c) => '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+  for (let i = 0; i < RN; i++) {
+    const d = i / (RN - 1); let s = 0; while (s < STOPS.length - 2 && d > STOPS[s + 1]) s++;
+    const f = (d - STOPS[s]) / (STOPS[s + 1] - STOPS[s]), c = look(hex(COLS[s].map((v, ch) => v + (COLS[s + 1][ch] - v) * f)));
+    ramp[i * 3] = c.r * K; ramp[i * 3 + 1] = c.g * K; ramp[i * 3 + 2] = c.b * K;
   }
-  im.frustumCulled = false; im.renderOrder = -18; g.add(im);
+  const t0 = look(hex([5, 10, 22])), t1 = look(hex([13, 50, 80])), teal = [(t1.r - t0.r) * K, (t1.g - t0.g) * K, (t1.b - t0.b) * K];
+  const enc = (c) => Math.round(255 * (c <= 0.0031308 ? c * 12.92 : 1.055 * Math.pow(Math.min(1, c), 1 / 2.4) - 0.055));
+  // value noise in three dimensions: a direction has no seam and no pole
+  const vn3 = (seed) => {
+    const h = (x, y, z) => { let m = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ Math.imul(z, 1440662683) ^ Math.imul(seed + 1, 982451653); m = Math.imul(m ^ (m >>> 13), 1274126177); return ((m ^ (m >>> 16)) >>> 0) / 4294967296; };
+    const s3 = (t) => t * t * (3 - 2 * t), lerp = (a, b, t) => a + (b - a) * t;
+    const n3 = (x, y, z) => {
+      const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z), u = s3(x - xi), v = s3(y - yi), w = s3(z - zi);
+      return lerp(lerp(lerp(h(xi, yi, zi), h(xi + 1, yi, zi), u), lerp(h(xi, yi + 1, zi), h(xi + 1, yi + 1, zi), u), v),
+        lerp(lerp(h(xi, yi, zi + 1), h(xi + 1, yi, zi + 1), u), lerp(h(xi, yi + 1, zi + 1), h(xi + 1, yi + 1, zi + 1), u), v), w);
+    };
+    return (x, y, z, oct) => { let s = 0, a = 0.5, f = 1, t = 0; for (let i = 0; i < oct; i++) { s += a * n3(x * f, y * f, z * f); t += a; a *= 0.55; f *= 2.03; } return s / t; };
+  };
+  const nBig = vn3(71), nMid = vn3(72), nRidge = vn3(73), nDust = vn3(74), nTeal = vn3(75), nPatch = vn3(76);
+  const W = 512, H = 256, data = new Uint8Array(W * H * 4), tex = new THREE.DataTexture(data, W, H, THREE.RGBAFormat);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.minFilter = tex.magFilter = THREE.LinearFilter; tex.wrapS = THREE.RepeatWrapping; tex.generateMipmaps = false;
+  const paint = (j0, j1) => {
+    for (let j = j0; j < j1; j++) {
+      const lat = -Math.PI / 2 + (j + 0.5) / H * Math.PI, cl = Math.cos(lat), y = Math.sin(lat);
+      for (let i = 0; i < W; i++) {
+        const lon = (i + 0.5) / W * Math.PI * 2, x = -Math.cos(lon) * cl, z = Math.sin(lon) * cl, k = (j * W + i) * 4;
+        const off = Math.asin(Math.max(-1, Math.min(1, x * n.x + y * n.y + z * n.z))), ag = Math.acos(Math.max(-1, Math.min(1, x * hot.x + y * hot.y + z * hot.z))), ah = Math.acos(Math.max(-1, Math.min(1, x * hole.x + y * hole.y + z * hole.z)));
+        const patch = sstep(0.5, 0.68, nPatch(x * 2.4 + 5, y * 2.4 + 9, z * 2.4 + 3, 3)) * 0.55;
+        let mask = Math.min(1, Math.max(patch, 0.75 * Math.exp(-off * off / sb) + 0.65 * Math.exp(-ag * ag / sg)));
+        mask *= 1 - 0.75 * Math.exp(-ah * ah / sh);
+        let d = 0, t = 0;
+        if (mask > 0.015) {
+          const big = nBig(x * 6 * zoom + 1, y * 6 * zoom + 2, z * 6 * zoom + 3, 4), mid = nMid(x * 16 * zoom, y * 16 * zoom, z * 16 * zoom, 3);
+          const ridge = 1 - Math.abs(2 * nRidge(x * 11 * zoom, y * 11 * zoom, z * 11 * zoom, 4) - 1), dust = nDust(x * 20 * zoom, y * 20 * zoom, z * 20 * zoom, 3);
+          d = mask * Math.pow(0.6 * big + 0.4 * mid, 1.8) * 1.95 + mask * 0.32 * Math.pow(ridge, 7);
+          d *= 0.35 + 0.8 * Math.max(0, Math.min(1, (dust - 0.3) * 2));
+          d = 1 - Math.exp(-1.9 * d * SKY.clouds);
+          const q = nTeal(x * 8 * zoom, y * 8 * zoom, z * 8 * zoom, 3);
+          t = Math.max(0, Math.min(1, mask * q * q * 1.5 * SKY.clouds - d * 0.35));
+        }
+        const r = Math.min(RN - 1, Math.round(d * (RN - 1))) * 3;
+        data[k] = enc(ramp[r] + teal[0] * t); data[k + 1] = enc(ramp[r + 1] + teal[1] * t); data[k + 2] = enc(ramp[r + 2] + teal[2] * t); data[k + 3] = mask * 255;
+      }
+    }
+  };
+  for (let j = 0; j < H; j += 48) idleJob(() => paint(j, Math.min(H, j + 48)));
+  idleJob(() => { tex.needsUpdate = true; });
+  // the stars: the direction onto its face of a cube, the face warped so its cells are near enough the same angle everywhere
+  const dir = T.positionLocal.normalize(), a = T.abs(dir), px = T.length(T.fwidth(dir)).div(1.4);
+  const mx = T.step(a.y, a.x).mul(T.step(a.z, a.x)), my = mx.oneMinus().mul(T.step(a.z, a.y)), mz = mx.oneMinus().mul(my.oneMinus());
+  const face = mx.mul(T.sign(dir.x).add(2)).add(my.mul(T.sign(dir.y).add(6))).add(mz.mul(T.sign(dir.z).add(10)));
+  const fuv = dir.yz.div(T.max(a.x, 0.0001)).mul(mx).add(dir.xz.div(T.max(a.y, 0.0001)).mul(my)).add(dir.xy.div(T.max(a.z, 0.0001)).mul(mz));
+  const warp = T.atan(fuv).mul(4 / Math.PI);
+  // four random numbers for a cell (Hoskins' hash, no sine: the same on every card)
+  const hash = (p) => { const v = vec4(p.x, p.y, p.x, p.y).mul(vec4(0.1031, 0.103, 0.0973, 0.1099)).fract(), w = v.add(dot(v, v.wzxy.add(33.33))); return w.xxyz.add(w.yzzw).mul(w.zywx).fract(); };
+  // a layer of stars spaced `gap` px at his screen: the distance to this cell's star in px, its offset, its random numbers
+  const layer = (gap, salt, jitter) => {
+    const N = Math.PI / (4 * gap * radPx), q = warp.add(1).mul(N), c = T.floor(q), h = hash(c.add(face.mul(419)).add(salt));
+    const o = T.fract(q).sub(0.5).sub(h.xy.sub(0.5).mul(jitter)).mul(Math.PI / (4 * N)).div(px);
+    return { h, o, d: T.length(o) };
+  };
+  const clouds = T.texture(tex, T.uv()), thick = clouds.a.mul(0.45).add(0.55);
+  const tint = (t) => { const w = T.step(0.45, t), b = T.step(0.75, t), c = T.step(0.9, t); return mix(mix(mix(vec3(1, 1, 1), vec3(0.82, 0.9, 1), w), vec3(0.78, 0.95, 1), b), vec3(1, 0.92, 0.82), c); };
+  const S = SKY;
+  const dustOf = (l) => T.step(l.h.w, thick.mul(S.dustShare)).mul(T.pow(l.h.z, S.dustPow).mul(S.dustHi - S.dustLo).add(S.dustLo)).mul(T.exp(l.d.div(S.dustSize).pow2().negate()));
+  const d1 = layer(S.dustGap, 3.7, 0.72), d2 = layer(S.dustGap * 1.13, 17.3, 0.72), c1 = layer(S.clearGap, 41.9, 0.7), s1 = layer(S.spikeGap, 83.1, 0.6);
+  const dust = dustOf(d1).add(dustOf(d2));
+  const clear = T.step(c1.h.w, thick).mul(T.pow(c1.h.z, 1.5).mul(S.clearHi - S.clearLo).add(S.clearLo)).mul(T.exp(c1.d.div(S.clearSize).pow2().negate()).add(T.exp(c1.d.div(S.clearSize * 3.6).pow2().negate()).mul(0.06)));
+  // (squares written out: pow2 is pow, pow of a negative is not a number, and bloom spreads one such pixel over the whole frame)
+  const arm = (u, v, L) => { const t = T.max(u.abs().div(L).oneMinus(), 0), t2 = t.mul(t), q = v.div(1.1); return t2.mul(t2).mul(T.exp(q.mul(q).negate())); };
+  const L = s1.h.z.mul(10).add(8);
+  const spike = T.step(s1.h.w, 0.8).mul(s1.h.z.mul(0.5).add(0.5)).mul(arm(s1.o.x, s1.o.y, L).add(arm(s1.o.y, s1.o.x, L)).mul(S.spikeArm).add(T.exp(s1.d.div(1.3).pow2().negate()).mul(S.spikeCore)).add(T.exp(s1.d.div(6).pow2().negate()).mul(S.spikeCore * 0.05)));
+  const stars = tint(d1.h.y).mul(dust).add(tint(c1.h.y).mul(clear)).add(vec3(0.92, 0.97, 1).mul(spike));
+  const mat = new THREE.MeshBasicNodeMaterial({ side: THREE.BackSide, depthWrite: false, fog: false });
+  mat.colorNode = clouds.rgb.add(stars);
+  const sph = new THREE.Mesh(new THREE.SphereGeometry(D, 64, 32), mat);
+  sph.renderOrder = -20; sph.frustumCulled = false; g.add(sph);
   return g;
+}
+// the sky's numbers, tuned against the flyer at 1x with the mock at his screen (2000 x 943). Sky median and stars per Mpx above a contrast
+// of 6 / 12 / 25 / 50 / 100 levels: flyer (2,10,17) 9920 / 6676 / 3598 / 903 / 19; old Universe (2,21,31) 3173 / 2131 / 1521 / 741 / 509;
+// old Headquarters (6,17,27) 2262 / 1596 / 1410 / 1379 / 1348.
+function uvSky(AZ) {
+  return deepSky({ polar: UVCAM.polar, az: AZ, fov: UVCAM.fov, aspect: UVCAM.aspect, px: 838 }, 4200, UVLOOK.exposure);
+}
+function officeSky() {
+  return deepSky({ polar: CAM.polar, az: CAM.az, fov: CAM.fov, aspect: 1.3, px: 700 }, 380, 1.0);
 }
 class Universe3D {
   constructor(el, stage, h) {
@@ -1971,9 +2010,8 @@ class Universe3D {
     this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster(); this.hover = null; this.mouseIn = false; this.lastUse = 0;
     geo();
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(SKYF ? 0x000206 : 0x01080d);
+    this.scene.background = new THREE.Color(0x01040a);
     this.camera = new THREE.PerspectiveCamera(UVCAM.fov, 2, 0.5, 9000);
-    if (SKYF) flyerPlate(this.scene, this.camera, 'sky-flyer-uv.webp?v=2');
     // no antialias on the renderer itself: three.js resolves it through ONE quad shared by every renderer on the
     // page, so a second renderer (a preview) would take this canvas over. The pass multisamples instead.
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
@@ -2143,6 +2181,8 @@ class Universe3D {
     // the heart: white-hot, a warm and a magenta glow round it, a white-gold one that fills the ball so it reads as
     // a sun and not a tangle, a wide soft gold one, a cool one wider still
     const heart = new THREE.Group(); sun.add(heart); this.heart = heart;
+    // the flyer's light in the space round the sun (revenue-share-flyer/render.py GLOW_WIDE): a wide faint cyan haze, far past the glows
+    sun.add(glowSprite(0x2896be, 0.06, 112));
     heart.add(new THREE.Mesh(G.sphere, new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.97, 0.9).multiplyScalar(2.6) })));
     heart.children[0].scale.setScalar(this.heartR = 0.9);
     // Cymetica as the operator's picture of a collision (2026-10-19, images/12: "ma vypadat takto presne"; before it,
@@ -3524,13 +3564,13 @@ function spaceSky(office) {
   const UV_NEB = [[-32, 8, 72, 8, 0.72, 'teal'], [-54, -8, 62, 3, 0.62, 'cyan'], [-12, 14, 56, 19, 0.38, 'teal'],
     [32, -22, 64, 13, 0.45, 'cyan'], [52, -32, 56, 37, 0.35, 'teal'], [150, -15, 80, 17, 0.55, 'teal'], [95, -35, 60, 23, 0.35, 'green'], [-130, -30, 70, 29, 0.45, 'blue']];
   (office ? OFFICE_NEB : UV_NEB).forEach(([az, el, size, seed, op, tone]) => {
-    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: office ? filamentTex(seed) : nebTex(seed, ...PAL[tone]), transparent: true, opacity: SKYF && office ? op * 0.3 : op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: office ? filamentTex(seed) : nebTex(seed, ...PAL[tone]), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     const s = 2 * D * Math.tan(size * Math.PI / 360);
     m.scale.set(s, s, 1); m.position.copy(skyDir(az, el).multiplyScalar(D)); m.lookAt(0, 0, 0); m.rotateZ(R() * 6.28); m.renderOrder = -10; m.frustumCulled = false; g.add(m);
   });
   const rnd = () => { const u = R() * 2 - 1, th = R() * Math.PI * 2, s = Math.sqrt(1 - u * u); return new THREE.Vector3(Math.cos(th) * s, u, Math.sin(th) * s); };
   // his sky is full of small white stars (about one per 2,400 pixels of sky), a few of them bright
-  const N = office ? (SKYF ? 15400 : 22000) : 4600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
+  const N = office ? 22000 : 4600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3), cc = new THREE.Color();
   for (let i = 0; i < N; i++) {
     pos.set(rnd().multiplyScalar(360).toArray(), i * 3);
     if (office) cc.set(R() < 0.18 ? 0xb8e8ff : 0xf2f8ff).multiplyScalar(0.8 + R() * R() * 2.2);
@@ -3540,7 +3580,7 @@ function spaceSky(office) {
   const pg = new THREE.BufferGeometry(); pg.setAttribute('position', new THREE.BufferAttribute(pos, 3)); pg.setAttribute('color', new THREE.BufferAttribute(col, 3));
   pg.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(N * 3).map((v, i) => (i % 3 === 1 ? 1 : 0)), 3));
   const pts = new THREE.Points(pg, new THREE.PointsMaterial({ vertexColors: true, size: 1, sizeAttenuation: false, fog: false, depthWrite: false })); pts.frustumCulled = false; g.add(pts);
-  const B = office ? (SKYF ? 1820 : 2600) : 360, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
+  const B = office ? 2600 : 360, im = new THREE.InstancedMesh(G.plane, new THREE.MeshBasicMaterial({ map: starTex(), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }), B), o = new THREE.Object3D();
   for (let i = 0; i < B; i++) {
     // at the office's home distance a sky unit is about 0.7 px: his stars are 1 to 3 px points with a soft halo
     o.position.copy(rnd().multiplyScalar(350)); o.lookAt(0, 0, 0); o.scale.setScalar(office ? 0.7 + R() * R() * 1.1 : 1.0 + R() * R() * 3.1); o.updateMatrix(); im.setMatrixAt(i, o.matrix);
@@ -4589,9 +4629,8 @@ class Office3D {
     this.tip = stage.querySelector('.tip'); this.layer = stage.querySelector('.o3layer');
     this.sel = null; this.cells = {}; this.paths = {}; this.packets = []; this.rooms = {}; this.fitted = false; this.hover = null;
     this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster();
-    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(SKYF ? 0x010308 : LOOK.sky); this.scene.fog = new THREE.Fog(SKYF ? 0x010308 : LOOK.sky, 180, 460);
+    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(0x01040a); this.scene.fog = new THREE.Fog(0x01040a, 180, 460);
     this.camera = new THREE.PerspectiveCamera(CAM.fov, 2, 0.5, 900);
-    if (SKYF) flyerPlate(this.scene, this.camera, 'sky-flyer-hq.webp?v=2');
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping; this.renderer.toneMappingExposure = 1.0;
@@ -4616,7 +4655,7 @@ class Office3D {
     // a soft light from the camera's own side, as a studio render has: every face turned to the viewer is readable,
     // the hull's two visible sides alike (the sun lights only the one it faces)
     this.fill = new THREE.DirectionalLight(0xdfe8f2, 1.7); S.add(this.fill); S.add(this.fill.target);
-    this.sky = spaceSky(true); S.add(this.sky);
+    this.sky = officeSky(); S.add(this.sky);
     this.world = new THREE.Group(); S.add(this.world);
     this.pk = new THREE.Group(); S.add(this.pk);
     this.clock = new THREE.Clock();
