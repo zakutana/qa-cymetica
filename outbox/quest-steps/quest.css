@@ -98,7 +98,11 @@ main { position: relative; z-index: 2; }
 .pill { position: relative; flex: none; display: inline-flex; align-items: center; gap: 8px; font: 700 12px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--text); white-space: nowrap; }
 .pill i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: live-pulse 2s var(--ease) infinite; }
 @keyframes live-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .48; transform: scale(.86); } }
-.pill b { font: 400 18px/1 'Archivo Black', sans-serif; letter-spacing: 0; color: var(--green); padding: 6px 11px; border-radius: 12px; background: rgba(0, 255, 136, .1); box-shadow: inset 0 0 0 1.5px rgba(0, 255, 136, .7), 0 0 22px -4px rgba(0, 255, 136, .65); }
+.pill b { font: 400 18px/1 'Archivo Black', sans-serif; letter-spacing: 0; color: var(--green); padding: 7px 12px; border-radius: 12px; text-shadow: 0 0 10px rgba(0, 255, 136, .5);
+  background: linear-gradient(113deg, rgba(255, 255, 255, 0) 71%, rgba(255, 255, 255, .085) 71.6%, rgba(255, 255, 255, .012) 90%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(74% 90% at 50% 50%, rgba(0, 255, 136, .12), rgba(0, 255, 136, 0) 100%),
+    linear-gradient(180deg, #111926 0%, #05080e 56%, #060a11 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 -1px 0 rgba(0, 255, 136, .34), 0 0 0 1px rgba(0, 0, 0, .7), 0 10px 22px -12px rgba(0, 255, 136, .55); }
 
 /* ---- type: the heading big (the start page's .lp-h1), everything under it small */
 .kick { font: 800 18px 'JetBrains Mono'; letter-spacing: .26em; text-transform: uppercase; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .6); }
@@ -151,13 +155,31 @@ h1 b { font-weight: 400; }
 .hero-cta { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin-top: 38px; }
 .btn-go, .btn-how { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 18px 26px; border-radius: 16px; white-space: nowrap;
   font: 400 15.5px/1.2 'Archivo Black', sans-serif; letter-spacing: .03em; text-transform: uppercase; transition: transform .25s var(--ease), box-shadow .25s var(--ease); }
-.btn-go { color: #03140c; background: var(--green); box-shadow: 0 0 0 1px rgba(0, 255, 136, .7), 0 10px 34px -6px rgba(0, 255, 136, .55); }
-.btn-how { color: var(--cyan); background: rgba(0, 207, 255, .14); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .55); }
-.btn-go svg, .btn-how svg { flex: none; width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s var(--ease); }
-.btn-go:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(0, 255, 136, .7), 0 14px 40px -6px rgba(0, 255, 136, .8); }
+/* ("Ano, predelej"): the same black glass as the doors' arrow (.door .arr): the colour is the light inside, one reflection, full of colour on hover */
+.btn-go { --cr: 0, 255, 136; --glow: .5; }
+.btn-how { --cr: 0, 207, 255; --glow: .22; }
+.btn-go, .btn-how { isolation: isolate; overflow: hidden; color: rgb(var(--cr)); border-radius: 20px;
+  background: linear-gradient(113deg, rgba(255, 255, 255, 0) 71%, rgba(255, 255, 255, .085) 71.6%, rgba(255, 255, 255, .012) 90%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(74% 90% at 50% 50%, rgba(var(--cr), .12), rgba(var(--cr), 0) 100%),
+    linear-gradient(180deg, #111926 0%, #05080e 56%, #060a11 100%);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .72), inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 -1px 0 rgba(var(--cr), .34),
+    0 0 0 1px rgba(0, 0, 0, .7), 0 18px 36px -16px rgba(var(--cr), var(--glow)), 0 12px 26px -10px rgba(0, 0, 0, .85);
+  transition: transform .32s var(--ease), box-shadow .32s var(--ease), color .22s; }
+.btn-go::before, .btn-how::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity .28s;
+  background: linear-gradient(113deg, rgba(255, 255, 255, 0) 71%, rgba(255, 255, 255, .2) 71.6%, rgba(255, 255, 255, .03) 92%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(130% 120% at 30% -30%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, rgb(var(--cr)), rgb(var(--cr))); }
+.btn-go svg, .btn-how svg { flex: none; width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: round; stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px rgba(var(--cr), .8)); transition: transform .32s var(--ease), filter .22s; }
+.btn-go:hover, .btn-how:hover { color: #03140c; transform: translateY(-3px);
+  box-shadow: inset 0 1.5px 0 #ffffff, inset 0 -1px 0 rgba(0, 0, 0, .28), 0 0 0 1px rgba(var(--cr), .4), 0 24px 44px -16px rgba(var(--cr), .95), 0 0 36px -8px rgba(var(--cr), .5); }
+.btn-go:hover::before, .btn-how:hover::before { opacity: 1; }
+.btn-go:hover svg, .btn-how:hover svg { filter: none; }
 .btn-go:hover svg { transform: translateX(4px); }
-.btn-how:hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px var(--cyan), 0 8px 26px -8px rgba(0, 207, 255, .6); }
 .btn-how:hover svg { transform: translateY(3px); }
+.btn-go:active, .btn-how:active { color: #03140c; transform: translateY(1px) scale(.985); transition-duration: .07s;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, .4), 0 0 0 1px rgba(var(--cr), .4), 0 8px 18px -10px rgba(var(--cr), .7); }
+.btn-go:active::before, .btn-how:active::before { opacity: .84; transition-duration: .07s; }
 .hero-in .board-wrap { justify-self: end; width: min(100%, 660px); }
 /* Cymetica's sun alone, further off and to the right ("vic doprava a vic do dalky ... vic zarivejsi, ted v nem jsou
    diry"): its light as alpha, over a whole glowing core, so the dark between its strands no longer shows the sky */
