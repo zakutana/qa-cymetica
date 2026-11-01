@@ -19,6 +19,9 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { TTFLoader } from 'three/addons/loaders/TTFLoader.js';
+import { Font } from 'three/addons/loaders/FontLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const Q = new URLSearchParams(location.search);
 const W = +(Q.get('w') || innerWidth), H = +(Q.get('h') || innerHeight);
@@ -88,6 +91,32 @@ const win = (t, a, b) => clamp01((t - a) / (b - a));
 const bump = (t, a, b) => Math.sin(Math.PI * win(t, a, b));
 const lerpV = (a, b, k) => a.clone().lerp(b, k);
 
+// ---- The pipeline's six chambers, the page's own (anim.js CH, quest.css .ch), and the seconds each one works on the clock
+// the page's panel reads ("ted i ty barvy zarad do animace robotickych rukou", 2026-11-01): the whole forge works in the
+// colour of the chamber the panel is in
+const CHAMBERS = ['#5b9bff', '#b76dff', '#00cfff', '#ffc83d', '#ff5a68', '#00ff88'].map((h, i) => ({ c: new THREE.Color(h), t0: 2.0 + i * 0.7 }));
+const IDLE_A = new THREE.Color(0x00cfff), IDLE_B = new THREE.Color(0x00ff88);
+function rainbow(u, out) {
+  const n = ((u % 6) + 6) % 6, i = Math.floor(n), f = n - i;
+  return out.copy(CHAMBERS[i].c).lerp(CHAMBERS[(i + 1) % 6].c, f * f * (3 - 2 * f));
+}
+// the colour of the moment: the idle one, each chamber's while it works, all six going round while the product is live
+function pal(t, out, idle = IDLE_A) {
+  if (t < 1.85 || t >= 9.6) return out.copy(idle);
+  if (t < 2.0) return out.copy(idle).lerp(CHAMBERS[0].c, win(t, 1.85, 2.0));
+  if (t < 6.2) {
+    const k = (t - 2.0) / 0.7, i = Math.floor(k), f = k - i;
+    out.copy(CHAMBERS[i].c);
+    return f > 0.88 && i < 5 ? out.lerp(CHAMBERS[i + 1].c, (f - 0.88) / 0.12) : out;
+  }
+  rainbow(5 + (t - 6.2) * 1.15, out);
+  return t < 8.85 ? out : out.lerp(idle, ease(win(t, 8.85, 9.6)));
+}
+const RAINBOW_GLSL = `
+  uniform vec3 uCol[6];
+  vec3 rainbowAt(float u) { float n = mod(u, 6.0); int i = int(floor(n)); float f = n - floor(n); f = f * f * (3.0 - 2.0 * f); return mix(uCol[i], uCol[(i + 1) % 6], f); }`;
+const chamberColours = () => CHAMBERS.map((c) => c.c.clone());
+
 function glowTex(inner, mid, outer = 'rgba(0,0,0,0)') {
   const c = document.createElement('canvas'); c.width = c.height = 256;
   const x = c.getContext('2d'), gr = x.createRadialGradient(128, 128, 0, 128, 128, 128);
@@ -98,6 +127,7 @@ function glowTex(inner, mid, outer = 'rgba(0,0,0,0)') {
 const GLOW_C = glowTex('rgba(235,255,255,1)', 'rgba(0,207,255,0.52)');
 const GLOW_G = glowTex('rgba(230,255,244,1)', 'rgba(0,255,136,0.52)');
 const GLOW_W = glowTex('rgba(255,255,255,1)', 'rgba(255,195,95,0.62)');
+const GLOW_N = glowTex('rgba(255,255,255,1)', 'rgba(255,255,255,0.46)');   // tinted by its material, each moment's colour
 const makeSprite = (map, s, op = 1) => {
   const o = new THREE.Sprite(new THREE.SpriteMaterial({ map, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: op }));
   o.scale.set(s, s, 1); return o;
@@ -153,67 +183,96 @@ const hexCells = [];
   scene.userData.hexFace = faceMesh;
 }
 
-// Architectural Double-Tube Neon Sign on Skeletal Titanium Space-Frame
+// The name ("vytun ten napis build it better", 2026-11-01; it was a picture on a plane, 235 px wide on a 2000 px page):
+// real channel letters in Archivo Black on a titanium truss, a body of polished metal with a bevel, a smoked face, a neon
+// tube round every outline, each letter's own light on the wall behind it. Ice white at rest; as the pipeline goes each
+// letter strikes in the colour of the chamber it falls in, left to right; a surge runs along them going live; on the
+// launch they drain back, so the last frame leads into the first
 const signGroup = new THREE.Group();
-signGroup.position.set(0, 3.34, -4.85);
+signGroup.position.set(0, 3.5, -3.86);   // in front of the wall where it curves forward
 scene.add(signGroup);
-const signW = 5.60, signH = signW * 540 / 3200;
+const LETTERS = [];
+const ICE = new THREE.Color(0.60, 0.84, 1.0);
+const SIGN_W = 7.0;
 {
-  for (const sy of [-0.38, 0.38]) {
-    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.020, 0.020, signW * 1.03, 16), M.titanium);
-    rail.rotation.z = Math.PI / 2; rail.position.set(0, sy * signH, -0.06); signGroup.add(rail);
+  const font = new Font(await new TTFLoader().loadAsync('https://cdn.jsdelivr.net/npm/@fontsource/archivo-black@5.0.19/files/archivo-black-latin-400-normal.woff'));
+  const TXT = 'Build it Better', g = font.data.glyphs;
+  const size = SIGN_W / ([...TXT].reduce((a, ch) => a + g[ch].ha, 0) / font.data.resolution), k = size / font.data.resolution;
+  const DEPTH = 0.22, BEVEL = 0.016, extr = { depth: DEPTH, curveSegments: 10, bevelEnabled: true, bevelThickness: BEVEL, bevelSize: 0.009, bevelSegments: 3 };
+  const box = new THREE.ExtrudeGeometry(font.generateShapes('B', size), extr); box.computeBoundingBox();
+  const CAP = box.boundingBox.max.y - box.boundingBox.min.y - 0.018; box.dispose();
+  const side = new THREE.MeshStandardMaterial({ color: 0xc4cfdb, roughness: 0.14, metalness: 1.0 });
+  const n = [...TXT].filter((ch) => ch !== ' ').length;
+  let x = -SIGN_W / 2, i = 0;
+  for (const ch of TXT) {
+    const adv = g[ch].ha * k;
+    if (ch !== ' ') {
+      const shapes = font.generateShapes(ch, size);
+      const body = new THREE.ExtrudeGeometry(shapes, extr);
+      body.translate(x, -CAP / 2, -(DEPTH + BEVEL));
+      const face = new THREE.MeshStandardMaterial({ color: 0x050a12, roughness: 0.6, metalness: 0.1, envMapIntensity: 0.2, emissive: 0x000000 });
+      const bodyMesh = new THREE.Mesh(body, [face, side]); bodyMesh.castShadow = true; signGroup.add(bodyMesh);
+      const tubes = [];
+      shapes.forEach((s) => [s.getPoints(14), ...s.holes.map((h) => h.getPoints(14))].forEach((pts) => {
+        if (pts.length > 2 && pts[0].distanceTo(pts[pts.length - 1]) < 1e-4) pts = pts.slice(0, -1);
+        const p3 = pts.filter((p, q) => !q || p.distanceTo(pts[q - 1]) > 1e-3).map((p) => new THREE.Vector3(p.x + x, p.y - CAP / 2, 0.014));
+        tubes.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(p3, true, 'catmullrom', 0.04), Math.max(96, p3.length * 10), 0.0118, 6, true));
+      }));
+      const tubeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+      signGroup.add(new THREE.Mesh(mergeGeometries(tubes), tubeMat));
+      // its light on the wall behind it
+      const hc = document.createElement('canvas'); hc.width = hc.height = 256;
+      const hx = hc.getContext('2d'); hx.filter = 'blur(13px)'; hx.font = '400 150px "Archivo Black"'; hx.textAlign = 'center'; hx.textBaseline = 'middle'; hx.fillStyle = '#ffffff'; hx.fillText(ch, 128, 132);
+      const hTex = new THREE.CanvasTexture(hc); hTex.colorSpace = THREE.SRGBColorSpace;
+      const haloMat = new THREE.MeshBasicMaterial({ map: hTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, color: 0x000000 });
+      const halo = new THREE.Mesh(new THREE.PlaneGeometry(CAP * 2.5, CAP * 2.5), haloMat);
+      halo.position.set(x + adv / 2, 0, -0.42); signGroup.add(halo);
+      const tig = 2.0 + (i + 0.35) / n * 4.2;
+      LETTERS.push({ i, ch, tube: tubeMat, face, halo: haloMat, tig, c: CHAMBERS[Math.min(5, Math.floor((tig - 2.0) / 0.7))].c, x01: (x + adv / 2 + SIGN_W / 2) / SIGN_W,
+        world: new THREE.Vector3(x + adv / 2, 0, 0.1).add(signGroup.position), wx: x + adv / 2 });
+      i++;
+    }
+    x += adv;
   }
-  for (let k = -3; k <= 3; k++) {
-    const strut = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, signH * 0.80, 12), M.gunmetal);
-    strut.position.set(k * signW * 0.148, 0, -0.06); signGroup.add(strut);
+  // the truss they stand on, held off the wall
+  for (const sy of [-CAP * 0.29, CAP * 0.29]) {
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, SIGN_W * 1.045, 16), M.titanium);
+    rail.rotation.z = Math.PI / 2; rail.position.set(0, sy, -0.33); signGroup.add(rail);
   }
-  // Matte dark backing strip (zero point-light hotspot reflection, solid over keyed sky!)
-  const matteBack = new THREE.Mesh(
-    new RoundedBoxGeometry(signW * 1.01, signH * 0.90, 0.036, 4, 0.05),
-    new THREE.MeshStandardMaterial({ color: 0x0f1d30, emissive: 0x071220, emissiveIntensity: 0.9, roughness: 0.78, metalness: 0.25 })
-  );
-  matteBack.position.z = -0.035; signGroup.add(matteBack);
-  const rimLine = new THREE.LineSegments(
-    new THREE.EdgesGeometry(new RoundedBoxGeometry(signW * 1.014, signH * 0.905, 0.038, 2, 0.05), 25),
-    new THREE.LineBasicMaterial({ color: 0x1a68a6, transparent: true, opacity: 0.42 })
-  );
-  rimLine.position.z = -0.035; signGroup.add(rimLine);
+  const STEP = SIGN_W * 1.04 / 18;
+  for (let j = 0; j < 18; j++) {
+    const ax = -SIGN_W * 0.52 + j * STEP, up = j % 2 ? 1 : -1, a = new THREE.Vector3(ax, up * CAP * 0.29, -0.33), b = new THREE.Vector3(ax + STEP, -up * CAP * 0.29, -0.33);
+    const d = b.clone().sub(a), web = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, d.length(), 8), M.gunmetal);
+    web.position.copy(a).addScaledVector(d, 0.5); web.quaternion.setFromUnitVectors(UP, d.normalize()); signGroup.add(web);
+  }
+  LETTERS.forEach((L) => {
+    const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.14, 10), M.chrome);
+    pin.rotation.x = Math.PI / 2; pin.position.set(L.wx, CAP * 0.29, -0.27); signGroup.add(pin);
+  });
+  for (const sx of [-1, 1]) {
+    const cap = new THREE.Mesh(new RoundedBoxGeometry(0.16, CAP * 0.86, 0.16, 3, 0.03), M.gunmetal);
+    cap.position.set(sx * SIGN_W * 0.525, 0, -0.33); signGroup.add(cap);
+  }
 }
-const neonTex = (() => {
-  const c = document.createElement('canvas'); c.width = 3200; c.height = 540;
-  const x = c.getContext('2d');
-  x.font = '400 258px "Archivo Black"'; x.textBaseline = 'middle'; x.lineJoin = 'round'; x.lineCap = 'round';
-  const a = 'Build it ', b = 'Better';
-  const wa = x.measureText(a).width, wb = x.measureText(b).width;
-  const x0 = (c.width - wa - wb) / 2, y = c.height / 2 + 8;
-  const drawNeonTube = (s, px, glowCol, tubeCol, coreCol) => {
-    x.save();
-    // 1. Wide colored atmospheric halo
-    x.shadowColor = glowCol;
-    x.globalAlpha = 0.55; x.shadowBlur = 64; x.lineWidth = 24; x.strokeStyle = glowCol; x.strokeText(s, px, y);
-    x.globalAlpha = 0.35; x.shadowBlur = 95; x.fillStyle = glowCol; x.fillText(s, px, y);
-    // 2. Crisp dark glass letter interior so double-tube outline reads razor-sharp!
-    x.shadowBlur = 0; x.globalAlpha = 0.92; x.fillStyle = '#05101c'; x.fillText(s, px, y);
-    // 3. Saturated colored neon glass wall
-    x.shadowColor = glowCol; x.shadowBlur = 22; x.globalAlpha = 0.98;
-    x.lineWidth = 14.5; x.strokeStyle = tubeCol; x.strokeText(s, px, y);
-    // 4. Razor-sharp hot inner filament
-    x.shadowBlur = 4; x.globalAlpha = 1.0;
-    x.lineWidth = 4.6; x.strokeStyle = coreCol; x.strokeText(s, px, y);
-    x.restore();
-  };
-  drawNeonTube(a, x0, '#00cfff', '#1ad6ff', '#dffbff');
-  drawNeonTube(b, x0 + wa, '#00ff88', '#1aff96', '#e2fff1');
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
-})();
-const neonMat = new THREE.MeshBasicMaterial({ map: neonTex, transparent: true, depthWrite: false, color: new THREE.Color(0.96, 0.96, 0.96) });
-const neonMesh = new THREE.Mesh(new THREE.PlaneGeometry(signW, signH), neonMat);
-neonMesh.position.z = 0.015; signGroup.add(neonMesh);
 
 // ---- Multi-Tiered Floating Orbital Forge Deck (100% framed inside viewport with zero clipping!)
 const deck = new THREE.Group();
 scene.add(deck);
 const DECK_RX = 3.72, DECK_RZ = 2.66;
+const RIM = new THREE.ShaderMaterial({
+  uniforms: { uCol: { value: chamberColours() }, uFill: { value: [0, 0, 0, 0, 0, 0] }, uOff: { value: new THREE.Color(0x0a4a66) }, uPow: { value: 1 } },
+  vertexShader: 'varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `
+    uniform vec3 uCol[6]; uniform float uFill[6]; uniform vec3 uOff; uniform float uPow; varying vec2 vU;
+    void main(){
+      float f = mod((0.75 - vU.x) * 6.0, 6.0); int i = int(floor(f)); float s = f - floor(f);
+      float gap = smoothstep(0.0, 0.025, s) * smoothstep(1.0, 0.975, s);
+      float p = uFill[i], on = smoothstep(p + 0.015, p - 0.015, s) * step(0.001, p);
+      float sd = (s - p) * 16.0, head = exp(-sd * sd) * step(0.001, p) * step(p, 0.999);
+      vec3 col = mix(uOff, uCol[i] * (1.5 * uPow), on) + vec3(3.0) * head;
+      gl_FragColor = vec4(col * (0.25 + 0.75 * gap), 1.0);
+    }`
+});
 {
   const baseGroup = new THREE.Group();
   baseGroup.scale.set(DECK_RX / 3.2, 1, DECK_RZ / 3.2);
@@ -245,8 +304,10 @@ const DECK_RX = 3.72, DECK_RZ = 2.66;
     lug.rotation.y = -a + Math.PI / 2;
     baseGroup.add(lug);
   }
-  const outerRim = new THREE.Mesh(new THREE.TorusGeometry(3.17, 0.016, 10, 160), M.cyan);
-  outerRim.rotation.x = Math.PI / 2; outerRim.position.y = 0.012; baseGroup.add(outerRim);
+  // the deck's rim is the pipeline's dial: six arcs, left to right along the front as the panel runs, each filling in its
+  // chamber's colour while that chamber works
+  const outerRim = new THREE.Mesh(new THREE.TorusGeometry(3.17, 0.03, 10, 240), RIM);
+  outerRim.rotation.x = Math.PI / 2; outerRim.position.y = 0.016; baseGroup.add(outerRim);
   const midRim = new THREE.Mesh(new THREE.TorusGeometry(1.88, 0.009, 8, 128), M.cyan);
   midRim.rotation.x = Math.PI / 2; midRim.position.y = 0.014; baseGroup.add(midRim);
 }
@@ -263,7 +324,7 @@ const traces = [];
     const seg = new THREE.Mesh(new THREE.PlaneGeometry(L, 0.014), lineMat);
     seg.rotation.x = -Math.PI / 2; seg.rotation.z = -Math.atan2(dir.z, dir.x);
     seg.position.copy(mid); scene.add(seg);
-    const pulse = makeSprite(i % 3 === 0 ? GLOW_G : GLOW_C, 0.25);
+    const pulse = makeSprite(GLOW_N, 0.25);
     scene.add(pulse);
     traces.push({ p0, p1, pulse, ph: rnd(), k: i % 2 ? 3 : 5 });
   }
@@ -277,7 +338,7 @@ const matPortals = [-1, 1].map((side) => {
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.24, 0.010, 8, 48), side < 0 ? M.cyan : M.green);
   ring.rotation.x = Math.PI / 2; g.add(ring);
   const glow = new THREE.Mesh(new THREE.CircleGeometry(0.24, 36), new THREE.MeshBasicMaterial({
-    map: side < 0 ? GLOW_C : GLOW_G, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false
+    map: GLOW_N, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, depthWrite: false
   }));
   glow.rotation.x = -Math.PI / 2; glow.position.y = 0.004; g.add(glow);
   const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 0.85, 28, 1, true), new THREE.MeshBasicMaterial({
@@ -293,7 +354,7 @@ crucible.position.set(0, 0.015, 0.05);
 scene.add(crucible);
 const crucWell = new THREE.Mesh(new THREE.CylinderGeometry(1.10, 0.98, 0.08, 64), M.obsidian);
 crucWell.position.y = -0.02; crucible.add(crucWell);
-const crucGlow = new THREE.Mesh(new THREE.CircleGeometry(1.08, 96), new THREE.MeshBasicMaterial({ map: glowTex('rgba(0,255,165,0.52)', 'rgba(0,207,255,0.18)'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+const crucGlow = new THREE.Mesh(new THREE.CircleGeometry(1.08, 96), new THREE.MeshBasicMaterial({ map: glowTex('rgba(255,255,255,0.52)', 'rgba(255,255,255,0.18)'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
 crucGlow.rotation.x = -Math.PI / 2; crucGlow.position.y = 0.012; crucible.add(crucGlow);
 const crucRingInner = new THREE.Mesh(new THREE.TorusGeometry(0.84, 0.014, 10, 128), M.green);
 crucRingInner.rotation.x = Math.PI / 2; crucRingInner.position.y = 0.018; crucible.add(crucRingInner);
@@ -315,9 +376,9 @@ for (let i = 0; i < 6; i++) {
 }
 const holoColumn = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 1.02, 2.30, 64, 1, true), new THREE.ShaderMaterial({
   transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
-  uniforms: { uInt: { value: 1.0 } },
+  uniforms: { uInt: { value: 1.0 }, uC: { value: new THREE.Color(0x00eac6) } },
   vertexShader: 'varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-  fragmentShader: 'uniform float uInt; varying vec2 vU; void main(){ float a = pow(1.0 - vU.y, 2.4) * 0.068 * uInt; gl_FragColor = vec4(0.0, 0.92, 0.78, a); }'
+  fragmentShader: 'uniform float uInt; uniform vec3 uC; varying vec2 vU; void main(){ float a = pow(1.0 - vU.y, 2.4) * 0.03 * uInt; gl_FragColor = vec4(uC, a); }'
 }));
 holoColumn.position.set(0, 1.16, 0.05); scene.add(holoColumn);
 
@@ -452,8 +513,13 @@ function buildCyberArm({ pos, scale = 1.0, accentHex = 0x00cfff, pylonHeight = 0
     cowl.position.set(sx * 0.11, L1_LOCAL * 0.50, 0); cowl.castShadow = true; cowl.receiveShadow = true; shoulder.add(cowl);
     const vent = new THREE.Mesh(new THREE.BoxGeometry(0.018, L1_LOCAL * 0.62, 0.095), M.obsidian);
     vent.position.set(sx * 0.162, L1_LOCAL * 0.50, 0); shoulder.add(vent);
-    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.020, L1_LOCAL * 0.50, 0.026), ledMat);
+    const strip = new THREE.Mesh(new THREE.BoxGeometry(0.024, L1_LOCAL * 0.62, 0.075), ledMat);
     strip.position.set(sx * 0.168, L1_LOCAL * 0.50, 0); shoulder.add(strip);
+  }
+  // the arm's colour, in bands round it where the page can see them
+  for (const by of [0.2, 0.8]) {
+    const band = new THREE.Mesh(new THREE.BoxGeometry(0.345, 0.042, 0.362), ledMat);
+    band.position.y = L1_LOCAL * by; shoulder.add(band);
   }
   // Dual Braided Power Umbilicals along Upper Arm
   for (const sz of [-1, 1]) {
@@ -477,8 +543,12 @@ function buildCyberArm({ pos, scale = 1.0, accentHex = 0x00cfff, pylonHeight = 0
   for (const sz of [-1, 1]) {
     const groove = new THREE.Mesh(new THREE.BoxGeometry(0.06, L2_LOCAL * 0.58, 0.016), M.obsidian);
     groove.position.set(0, L2_LOCAL * 0.45, sz * 0.134); elbow.add(groove);
-    const fLed = new THREE.Mesh(new THREE.BoxGeometry(0.036, L2_LOCAL * 0.50, 0.020), ledMat);
+    const fLed = new THREE.Mesh(new THREE.BoxGeometry(0.075, L2_LOCAL * 0.56, 0.020), ledMat);
     fLed.position.set(0, L2_LOCAL * 0.45, sz * 0.138); elbow.add(fLed);
+  }
+  for (const by of [0.14, 0.76]) {
+    const band = new THREE.Mesh(new THREE.BoxGeometry(0.236, 0.04, 0.282), ledMat);
+    band.position.y = L2_LOCAL * by; elbow.add(band);
   }
   // Optical Rangefinder Pod on Forearm Crest
   const pod = new THREE.Mesh(new RoundedBoxGeometry(0.12, 0.24, 0.14, 3, 0.025), M.titanium);
@@ -537,7 +607,7 @@ function attachGrapplerWithPlasma(arm) {
   coil.rotation.x = Math.PI / 2; coil.position.y = 0.15; g.add(coil);
   const plasmaTip = new THREE.Mesh(new THREE.SphereGeometry(0.028, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xdcfff0).multiplyScalar(2.4) }));
   plasmaTip.position.y = 0.30; g.add(plasmaTip);
-  const plasmaGlow = makeSprite(GLOW_G, 0.32, 0.45); plasmaGlow.position.y = 0.30; g.add(plasmaGlow);
+  const plasmaGlow = makeSprite(GLOW_N, 0.32, 0.45); plasmaGlow.position.y = 0.30; g.add(plasmaGlow);
 
   const jaws = [];
   for (const [ang, rOff] of [[0, 0.135], [Math.PI * 0.68, 0.128], [-Math.PI * 0.68, 0.128]]) {
@@ -579,7 +649,7 @@ function attachTriaxialPlasmaWelder(arm) {
   ring.rotation.x = Math.PI / 2; ring.position.y = 0.27; g.add(ring);
   const tip = new THREE.Mesh(new THREE.SphereGeometry(0.032, 16, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xdcfbff).multiplyScalar(2.5) }));
   tip.position.y = 0.48; g.add(tip);
-  const glow = makeSprite(GLOW_C, 0.36, 0.5); glow.position.y = 0.48; g.add(glow);
+  const glow = makeSprite(GLOW_N, 0.36, 0.5); glow.position.y = 0.48; g.add(glow);
   return { tip, glow, ring };
 }
 
@@ -593,7 +663,7 @@ function attachGalvoScanner(arm) {
   const ring = new THREE.Mesh(new THREE.TorusGeometry(0.068, 0.011, 8, 36), M.green);
   ring.rotation.x = Math.PI / 2; ring.position.y = 0.29; g.add(ring);
   const tip = new THREE.Object3D(); tip.position.y = 0.34; g.add(tip);
-  const glow = makeSprite(GLOW_G, 0.28, 0.5); glow.position.y = 0.34; g.add(glow);
+  const glow = makeSprite(GLOW_N, 0.28, 0.5); glow.position.y = 0.34; g.add(glow);
   return { tip, glow };
 }
 
@@ -607,7 +677,7 @@ function attachSpotWelder(arm) {
     prong.position.set(sx, 0.26, 0); prong.rotation.z = sx * 1.4; g.add(prong);
   }
   const tip = new THREE.Object3D(); tip.position.y = 0.38; g.add(tip);
-  const glow = makeSprite(GLOW_W, 0.32, 0.0); glow.position.y = 0.38; g.add(glow);
+  const glow = makeSprite(GLOW_N, 0.32, 0.0); glow.position.y = 0.38; g.add(glow);
   return { tip, glow };
 }
 
@@ -736,7 +806,7 @@ function makeUICanvas(kind) {
       x.fillStyle = col; x.font = '400 62px "Archivo Black"'; x.fillText(v, 792, y + 132);
     });
   } else {
-    x.fillText('CYMETICA PIPELINE · VERIFIED LIVE', 140, 44);
+    x.fillText('BUILD IT BETTER · VERIFIED LIVE', 140, 44);
     x.fillStyle = '#00ff88'; x.fillRect(58, 160, 720, 62);
     x.fillStyle = 'rgba(0,207,255,0.55)'; x.fillRect(58, 270, 540, 42);
     x.fillStyle = 'rgba(0,255,136,0.25)'; x.fillRect(58, 355, 640, 32);
@@ -821,10 +891,10 @@ function createHoloModule({ w, h, pos, rot, accent, kind, spawnSide }) {
 
 // 4 Crisp Panoramic UI Screens (Elevated cleanly above the Pedestal AI Core so ZERO chart area is ever covered!)
 const modules = [
-  createHoloModule({ w: 1.76, h: 1.00, pos: [ 0.00,  0.08, -0.06], rot: [-0.04,  0.00,  0.00], accent: 0x00cfff, kind: 'dashboard', spawnSide:  0 }),
-  createHoloModule({ w: 1.04, h: 0.78, pos: [-1.22,  0.12,  0.22], rot: [-0.03,  0.34,  0.02], accent: 0x00cfff, kind: 'orderbook', spawnSide: -1 }),
-  createHoloModule({ w: 1.04, h: 0.78, pos: [ 1.22,  0.12,  0.22], rot: [-0.03, -0.34, -0.02], accent: 0x00ff88, kind: 'radar',     spawnSide:  1 }),
-  createHoloModule({ w: 1.38, h: 0.34, pos: [ 0.00,  0.79,  0.08], rot: [ 0.05,  0.00,  0.00], accent: 0x00ff88, kind: 'header',    spawnSide:  0 })
+  createHoloModule({ w: 1.76, h: 1.00, pos: [ 0.00,  0.08, -0.06], rot: [-0.04,  0.00,  0.00], accent: 0x5b9bff, kind: 'dashboard', spawnSide:  0 }),
+  createHoloModule({ w: 1.04, h: 0.78, pos: [-1.22,  0.12,  0.22], rot: [-0.03,  0.34,  0.02], accent: 0xb76dff, kind: 'orderbook', spawnSide: -1 }),
+  createHoloModule({ w: 1.04, h: 0.78, pos: [ 1.22,  0.12,  0.22], rot: [-0.03, -0.34, -0.02], accent: 0xb76dff, kind: 'radar',     spawnSide:  1 }),
+  createHoloModule({ w: 1.38, h: 0.34, pos: [ 0.00,  0.79,  0.08], rot: [ 0.05,  0.00,  0.00], accent: 0xb76dff, kind: 'header',    spawnSide:  0 })
 ];
 
 // Pedestal 3D Crystalline AI Reactor Core + Energy Busbars (positioned at y = -0.66 BELOW the main terminal!)
@@ -837,7 +907,7 @@ const aiCrystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.145, 1), new THR
 const aiWire = new THREE.Mesh(new THREE.IcosahedronGeometry(0.20, 1), new THREE.MeshBasicMaterial({ color: 0x8cfaff, wireframe: true, transparent: true, opacity: 0.78 }));
 const aiGyro1 = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.009, 8, 64), M.cyan);
 const aiGyro2 = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.008, 8, 64), M.green);
-const aiHalo = makeSprite(GLOW_G, 0.68, 0.75);
+const aiHalo = makeSprite(GLOW_N, 0.68, 0.75);
 aiCoreGroup.add(aiCrystal, aiWire, aiGyro1, aiGyro2, aiHalo);
 
 // 4 Luminous Energy Conduits connecting Pedestal AI Core up into the 4 Floating Screens
@@ -906,8 +976,8 @@ scene.add(tractorCone);
 function makePlasmaLance(hex, glowMap) {
   const core = new THREE.Mesh(new THREE.CylinderGeometry(0.013, 0.013, 1, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0xf2ffff).multiplyScalar(3.8) }));
   const sheath = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.026, 1, 16, 1, true), new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: 0.52, blending: THREE.AdditiveBlending, depthWrite: false }));
-  const flare = makeSprite(glowMap, 0.90);
-  const hot = makeSprite(GLOW_W, 0.56);
+  const flare = makeSprite(GLOW_N, 0.90);
+  const hot = makeSprite(GLOW_N, 0.56);
   const light = new THREE.PointLight(hex, 0, 6.5, 1.6);
   scene.add(core, sheath, flare, hot, light);
   return { core, sheath, flare, hot, light };
@@ -916,7 +986,7 @@ const lanceL = makePlasmaLance(0x00cfff, GLOW_C);
 const lanceR = makePlasmaLance(0x00ff88, GLOW_G);
 
 const spotLight = new THREE.PointLight(0xffddaa, 0, 4.8, 1.8);
-const spotFlare = makeSprite(GLOW_W, 0.68);
+const spotFlare = makeSprite(GLOW_N, 0.68);
 scene.add(spotLight, spotFlare);
 
 function makeArcLine(segments, hex) {
@@ -973,7 +1043,7 @@ function updateLance(lance, arcs, active, p0, p1, t, seedOff) {
 const laserFanGeo = new THREE.BufferGeometry();
 laserFanGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3));
 laserFanGeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array([
-  0.45, 1.0, 0.82,   0.0, 0.92, 0.62,   0.0, 0.92, 0.62
+  1.0, 1.0, 1.0,   0.7, 0.7, 0.7,   0.7, 0.7, 0.7
 ]), 3));
 const laserFan = new THREE.Mesh(laserFanGeo, new THREE.MeshBasicMaterial({
   vertexColors: true, transparent: true, opacity: 0.28, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false
@@ -982,17 +1052,17 @@ laserFan.frustumCulled = false; scene.add(laserFan);
 const laserBar = makeArcLine(2, 0xb0ffe4);
 
 // ---- 650 Thick, Blazing Volumetric Motion-Streaked 3D Sparks (InstancedMesh Quads oriented along 3D Velocity!)
-const SPARK_N = 650, SPARK_LIFE = 0.66, GRAV = -9.8;
+const SPARK_N = 1450, SIGN_SPARKS = 450, SPARK_LIFE = 0.66, GRAV = -9.8;   // the last SIGN_SPARKS off the letters as they strike
 const sparkTex = (() => {
   const c = document.createElement('canvas'); c.width = 64; c.height = 256;
   const x = c.getContext('2d');
-  // Hot white head near y=36, glowing tapered comet tail toward y=256
+  // Hot white head near y=36, glowing tapered comet tail toward y=256, white so each spark takes its chamber's colour
   const g = x.createLinearGradient(0, 12, 0, 250);
   g.addColorStop(0.00, 'rgba(255,255,255,0)');
   g.addColorStop(0.14, 'rgba(255,255,255,1)');
-  g.addColorStop(0.32, 'rgba(255,235,190,0.88)');
-  g.addColorStop(0.68, 'rgba(255,175,80,0.34)');
-  g.addColorStop(1.00, 'rgba(255,120,20,0)');
+  g.addColorStop(0.32, 'rgba(255,255,255,0.88)');
+  g.addColorStop(0.68, 'rgba(255,255,255,0.34)');
+  g.addColorStop(1.00, 'rgba(255,255,255,0)');
   x.fillStyle = g;
   x.beginPath(); x.ellipse(32, 128, 22, 118, 0, 0, TAU); x.fill();
   // Extra-sharp white core
@@ -1030,15 +1100,15 @@ sparkMesh.frustumCulled = false;
 }
 scene.add(sparkMesh);
 const sparkData = Array.from({ length: SPARK_N }, (_, idx) => {
-  const a = rnd() * TAU, el = -0.15 + rnd() * 1.25, sp = 2.0 + rnd() * 4.4;
+  const a = rnd() * TAU, el = -0.15 + rnd() * 1.25, onSign = idx >= SPARK_N - SIGN_SPARKS, sp = (2.0 + rnd() * 4.4) * (onSign ? 0.42 : 1);
   return {
     born: rnd() * SPARK_LIFE,
     vx: Math.cos(a) * Math.cos(el) * sp,
     vy: Math.sin(el) * sp * 0.92 + 0.8,
     vz: Math.sin(a) * Math.cos(el) * sp,
-    source: idx % 5 === 0 ? 2 : (idx % 2 === 0 ? 0 : 1), // 0 = Left Plasma, 1 = Right Plasma, 2 = Spot Welder
-    warm: idx % 4 !== 0,
-    size: 0.75 + rnd() * 0.65
+    source: onSign ? 3 : (idx % 5 === 0 ? 2 : (idx % 2 === 0 ? 0 : 1)), // 0 = Left Plasma, 1 = Right Plasma, 2 = Spot Welder, 3 = a letter striking
+    hot: idx % 4 === 0,   // white-hot, the rest their colour
+    size: (0.75 + rnd() * 0.65) * (onSign ? 0.8 : 1.15)
   };
 });
 
@@ -1048,17 +1118,31 @@ const scanRing1 = new THREE.Mesh(new THREE.TorusGeometry(1.62, 0.015, 10, 160), 
 scanRing1.rotation.x = Math.PI / 2; scanGroup.add(scanRing1);
 const scanRing2 = new THREE.Mesh(new THREE.TorusGeometry(1.48, 0.010, 8, 128), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00cfff).multiplyScalar(2.0), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
 scanRing2.rotation.x = Math.PI / 2; scanRing2.position.y = -0.06; scanGroup.add(scanRing2);
-const scanCurtain = new THREE.Mesh(new THREE.CircleGeometry(1.62, 96), new THREE.MeshBasicMaterial({ map: GLOW_G, transparent: true, opacity: 0.34, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+const scanCurtain = new THREE.Mesh(new THREE.CircleGeometry(1.62, 96), new THREE.MeshBasicMaterial({ map: GLOW_N, color: 0x00ff88, transparent: true, opacity: 0.34, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
 scanCurtain.rotation.x = -Math.PI / 2; scanGroup.add(scanCurtain);
 
-const shockRingA = new THREE.Mesh(new THREE.TorusGeometry(1, 0.018, 8, 160), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00ff88).multiplyScalar(2.2), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+// the two great shockwaves in all six colours, the idea's and the going live
+const rainbowRing = (tube) => new THREE.Mesh(new THREE.TorusGeometry(1, tube, 8, 200), new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  uniforms: { uCol: { value: chamberColours() }, uOp: { value: 0 }, uSpin: { value: 0 } },
+  vertexShader: 'varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: RAINBOW_GLSL + `
+    uniform float uOp, uSpin; varying vec2 vU;
+    void main(){ gl_FragColor = vec4(rainbowAt(vU.x * 6.0 + uSpin) * 2.4, uOp); }`
+}));
+const shockRingA = rainbowRing(0.022);
 shockRingA.rotation.x = Math.PI / 2; shockRingA.position.set(0, 0.028, 0.02); scene.add(shockRingA);
-const shockRingB = new THREE.Mesh(new THREE.TorusGeometry(1, 0.016, 8, 160), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00cfff).multiplyScalar(2.1), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+const shockRingB = rainbowRing(0.018);
 shockRingB.rotation.x = Math.PI / 2; shockRingB.position.set(0, 0.028, 0.02); scene.add(shockRingB);
+// and a beat across the deck in each chamber's colour as it starts
+const chShocks = CHAMBERS.map((ch) => {
+  const m = new THREE.Mesh(new THREE.TorusGeometry(1, 0.014, 8, 160), new THREE.MeshBasicMaterial({ color: ch.c.clone().multiplyScalar(2.2), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  m.rotation.x = Math.PI / 2; m.position.set(0, 0.03, 0.02); scene.add(m); return m;
+});
 
 const hyperBeamMat = new THREE.ShaderMaterial({
   transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
-  uniforms: { uOp: { value: 0 }, uTime: { value: 0 } },
+  uniforms: { uOp: { value: 0 }, uTime: { value: 0 }, uCol: { value: chamberColours() } },
   vertexShader: `
     varying vec2 vU; varying vec3 vN; varying vec3 vV;
     void main(){
@@ -1068,14 +1152,15 @@ const hyperBeamMat = new THREE.ShaderMaterial({
       vV = normalize(-mv.xyz);
       gl_Position = projectionMatrix * mv;
     }`,
-  fragmentShader: `
+  // the product leaves on a twist of all six colours
+  fragmentShader: RAINBOW_GLSL + `
     uniform float uOp, uTime; varying vec2 vU; varying vec3 vN; varying vec3 vV;
     void main(){
       float radial = pow(abs(dot(normalize(vN), normalize(vV))), 2.2);
       float vFade = smoothstep(0.0, 0.14, vU.y) * pow(1.0 - smoothstep(0.30, 0.98, vU.y), 1.75);
       float streaks = 0.84 + 0.16 * sin(vU.x * 37.699 + uTime * 8.0) * sin(vU.y * 24.0 - uTime * 30.0);
-      vec3 col = mix(vec3(0.0, 0.85, 1.0), vec3(0.16, 1.0, 0.68), smoothstep(0.0, 0.62, vU.y));
-      col += vec3(0.78, 1.0, 0.92) * pow(radial, 3.2) * 0.85;
+      vec3 col = rainbowAt(vU.x * 12.0 + vU.y * 5.0 - uTime * 9.0) * 1.25;
+      col += vec3(1.0) * pow(radial, 3.2) * 0.7;
       gl_FragColor = vec4(col * streaks, radial * vFade * uOp);
     }`
 });
@@ -1085,7 +1170,10 @@ hyperBeam.position.set(0, 2.18, 0.05); scene.add(hyperBeam);
 const motes = (() => {
   const n = 220, pos = new Float32Array(n * 3), g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  const p = new THREE.Points(g, new THREE.PointsMaterial({ color: 0xb0ffe0, size: 0.038, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+  const cols = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) CHAMBERS[i % 6].c.toArray(cols, i * 3);
+  g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
+  const p = new THREE.Points(g, new THREE.PointsMaterial({ vertexColors: true, size: 0.046, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
   p.userData.seed = Array.from({ length: n }, () => [rnd() * TAU, 0.35 + rnd() * 1.35, rnd() * 1.2, 0.7 + rnd() * 0.9]);
   scene.add(p); return p;
 })();
@@ -1104,8 +1192,19 @@ scene.add(new THREE.HemisphereLight(0x224468, 0x050810, 0.40));
 const crucLight = new THREE.PointLight(0x00ffb0, 3.2, 6.5, 1.6); crucLight.position.set(0, 1.15, 0.35); scene.add(crucLight);
 
 // ---- Post-Processing: Controlled High-Threshold Bloom + Seamless Edge Vignette into #05070c
-const composer = new EffectComposer(renderer);
+// (a composer draws without the renderer's antialiasing unless its target has samples: every edge and tube was jagged)
+const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(W, H, { type: THREE.HalfFloatType, samples: 8 }));
 composer.addPass(new RenderPass(scene, camera));
+// (one pixel that is not a number spreads over the frame through the bloom's blur, as a black block)
+composer.addPass(new ShaderPass({
+  uniforms: { tDiffuse: { value: null } },
+  vertexShader: 'varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `
+    uniform sampler2D tDiffuse; varying vec2 vU;
+    void main(){ vec4 c = texture2D(tDiffuse, vU);
+      if (any(isnan(c)) || any(isinf(c))) c = DEBUG_NAN;
+      gl_FragColor = vec4(min(c.rgb, vec3(24.0)), c.a); }`.replace('DEBUG_NAN', Q.has('nan') ? 'vec4(100.0, 0.0, 100.0, 1.0)' : 'vec4(0.0, 0.0, 0.0, 1.0)')
+}));
 composer.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.30, 0.28, 0.90));
 composer.addPass(new OutputPass());
 composer.addPass(new ShaderPass({
@@ -1280,10 +1379,26 @@ function getFirePoints(tb) {
 const _sparkDummy = new THREE.Object3D();
 const _sparkVel = new THREE.Vector3();
 const _sparkCol = new THREE.Color();
+const C_NOW = new THREE.Color(), C_LAG = new THREE.Color(), C_ARM = new THREE.Color(), C_TMP = new THREE.Color();
+const WHITE = new THREE.Color(1, 1, 1);
+const addC = (col, c, k) => { col.r += c.r * k; col.g += c.g * k; col.b += c.b * k; };
+// a tube striking: on, off, on, nearly off, on
+const strike = (d) => (d < 0.03 ? 1 : d < 0.07 ? 0.08 : d < 0.11 ? 1 : d < 0.14 ? 0.2 : 1);
 
 function render(t) {
   t = ((t % PERIOD) + PERIOD) % PERIOD;
   const ph = t / PERIOD * TAU;
+
+  // The colour of this moment, through everything that lights the forge, and a beat as each chamber starts
+  pal(t, C_NOW); pal(t - 0.2, C_LAG, IDLE_B);
+  M.cyan.color.copy(C_NOW); M.cyan.emissive.copy(C_NOW);
+  M.green.color.copy(C_LAG); M.green.emissive.copy(C_LAG);
+  let beat = 0;
+  CHAMBERS.forEach((c) => { const d = t - c.t0; if (d >= 0 && d < 0.7) beat = Math.exp(-d * 5.5); });
+  const isLive = t >= 6.2 && t < 8.85;
+  rimCyan.color.copy(C_NOW); rimCyan.intensity = 2.45 + 2.6 * beat;
+  if (isLive) rainbow(2 + (t - 6.2) * 1.15, rimGreen.color); else rimGreen.color.copy(C_LAG);
+  rimGreen.intensity = 1.75 + 2.6 * beat;
 
   // Locked-off Heroic Cinema Camera (zero background drift, everything razor-sharp inside frame!)
   camera.position.set(0.0, 3.76, 10.55);
@@ -1370,9 +1485,10 @@ function render(t) {
       m.userData.uiMat.uniforms.uAlpha.value = fadeAll;
       m.userData.uiMat.uniforms.uTime.value = t;
 
+      rainbow(i * 1.5 + t * 1.1, C_TMP).multiplyScalar(1.9);
       m.userData.borderMat.color.copy(m.userData.baseBorderColor)
         .lerp(WHITE_HOT, lockFlash * 0.6)
-        .lerp(GREEN_HOT, liveK * 0.75);
+        .lerp(C_TMP, liveK * 0.9);
       m.userData.borderMat.opacity = fadeAll;
 
       // Molten plasma weld seam along lower edge during Build (3.40 - 4.10s)
@@ -1388,6 +1504,7 @@ function render(t) {
 
   [portalFlashL, portalFlashR].forEach((fl, idx) => {
     const p = matPortals[idx];
+    p.beam.material.color.copy(C_NOW); p.glow.material.color.copy(C_NOW);
     p.beam.material.opacity = 0.42 * fl;
     p.glow.material.opacity = 0.25 + 0.60 * fl;
     p.ring.scale.setScalar(1 + 0.14 * fl);
@@ -1400,6 +1517,7 @@ function render(t) {
   if (aiCoreGroup.visible) {
     aiCoreGroup.scale.setScalar(Math.max(0.001, coreIn) * (1 + 0.10 * liveK));
     aiCrystal.rotation.set(t * 2.2, t * 3.4, 0);
+    aiCrystal.material.color.copy(C_NOW); aiCrystal.material.emissive.copy(C_NOW); aiWire.material.color.copy(C_LAG); aiHalo.material.color.copy(C_NOW);
     aiCrystal.material.emissiveIntensity = 1.9 + 3.0 * coreFuse + 1.5 * liveK;
     aiWire.rotation.set(-t * 1.8, t * 2.6, 0);
     aiGyro1.rotation.set(t * 3.8, t * 2.1, 0.4);
@@ -1409,6 +1527,7 @@ function render(t) {
     const busOp = ease(win(t, 5.05, 5.55)) * (0.55 + 0.35 * liveK) * fadeAll;
     coreBusbars.forEach((bm) => { bm.opacity = busOp; });
   }
+  liveOrbitRing.material.color.copy(C_NOW).multiplyScalar(1.6);
   liveOrbitRing.material.opacity = 0.68 * liveK * fadeAll;
   liveOrbitRing.rotation.z = t * 1.4;
 
@@ -1448,23 +1567,34 @@ function render(t) {
     pivot.rotation.z = (idx === 0 ? 1 : 0.85) * (0.30 * stGrip.jaw - 0.12);
   });
 
-  // Dynamic Arm LED & Torque-Ring Telemetry Glow
+  // The arms in the chamber's colour, the wave running from the front pair to the rear; while the product is live each
+  // holds its own place in the six, going round
   [
-    [ARM_WELD,  isWeldingL ? 1 : 0, 0.53],
-    [ARM_GRIP,  (isWeldingR || stGrip.jaw > 0.7) ? 1 : 0, 0.42],
-    [ARM_CLAMP, isSpotting ? 1 : 0, 0.53],
-    [ARM_SCAN,  isScanning ? 1 : 0, 0.42]
-  ].forEach(([a, work, baseHue], idx) => {
-    const hue = liveK > 0.3 ? 0.42 : baseHue;
-    const boost = 1.25 + 0.8 * (0.5 + 0.5 * Math.sin(ph * 5 + idx)) + 1.6 * work + 1.0 * liveK;
-    a.ledMat.color.setHSL(hue, 1, 0.54).multiplyScalar(boost);
-    a.ringMat.emissive.setHSL(hue, 1, 0.50);
-    a.ringMat.emissiveIntensity = 1.8 + 1.7 * work + 1.1 * liveK;
+    [ARM_WELD,  isWeldingL ? 1 : 0, 0],
+    [ARM_GRIP,  (isWeldingR || stGrip.jaw > 0.7) ? 1 : 0, 0.05],
+    [ARM_CLAMP, isSpotting ? 1 : 0, 0.12],
+    [ARM_SCAN,  isScanning ? 1 : 0, 0.17]
+  ].forEach(([a, work, lag], idx) => {
+    pal(t - lag, C_ARM);
+    if (isLive) rainbow(idx * 1.5 + (t - 6.2) * 1.15, C_ARM);
+    const boost = 1.0 + 0.2 * (0.5 + 0.5 * Math.sin(ph * 5 + idx)) + 0.7 * work + 1.1 * beat + 0.25 * liveK;
+    a.ledMat.color.copy(C_ARM).multiplyScalar(boost);
+    a.ringMat.color.copy(C_ARM); a.ringMat.emissive.copy(C_ARM);
+    a.ringMat.emissiveIntensity = 1.15 + 0.8 * work + 1.1 * beat + 0.35 * liveK;
   });
 
-  // ---- Update Dual Plasma Lances, Lightning Arcs, Magnetic Claw Tethers & Galvo Laser Sheet
+  // ---- Update Dual Plasma Lances, Lightning Arcs, Magnetic Claw Tethers & Galvo Laser Sheet: all in the chamber's colour
   const nozL = weldHead.tip.getWorldPosition(new THREE.Vector3());
   const nozR = gripHead.plasmaTip.getWorldPosition(new THREE.Vector3());
+  [[lanceL, weldArcsL], [lanceR, weldArcsR]].forEach(([l, arcs]) => {
+    l.sheath.material.color.copy(C_NOW); l.flare.material.color.copy(C_NOW); l.light.color.copy(C_NOW);
+    l.hot.material.color.copy(C_NOW).lerp(WHITE, 0.7);
+    arcs[0].material.color.copy(C_NOW).lerp(WHITE, 0.55); arcs[1].material.color.copy(C_NOW);
+  });
+  [weldHead.glow, gripHead.plasmaGlow, spotHead.glow, scanHead.glow, spotFlare].forEach((s) => { s.material.color.copy(C_NOW); });
+  spotLight.color.copy(C_NOW);
+  gripArcs.forEach((arc) => { arc.material.color.copy(C_NOW); });
+  laserFan.material.color.copy(C_NOW); laserBar.material.color.copy(C_NOW).lerp(WHITE, 0.5);
   weldHead.glow.material.opacity = isWeldingL ? 1.0 : 0.35;
   gripHead.plasmaGlow.material.opacity = isWeldingR ? 1.0 : 0.35;
   updateLance(lanceL, weldArcsL, isWeldingL, nozL, fireNow.pL || nozL, t, 0.0);
@@ -1514,8 +1644,9 @@ function render(t) {
       const s = sparkData[j];
       const age = ((t - s.born) % SPARK_LIFE + SPARK_LIFE) % SPARK_LIFE;
       const tb = ((t - age) % PERIOD + PERIOD) % PERIOD;
-      const fp = getFirePoints(tb);
-      const origin = s.source === 0 ? fp.pL : (s.source === 1 ? fp.pR : fp.pSpot);
+      const fp = s.source === 3 ? null : getFirePoints(tb);
+      const L = s.source === 3 ? LETTERS[j % LETTERS.length] : null;
+      const origin = L ? (tb >= L.tig && tb <= L.tig + 0.3 ? L.world : null) : (s.source === 0 ? fp.pL : (s.source === 1 ? fp.pR : fp.pSpot));
       if (!origin) {
         _sparkDummy.scale.set(0, 0, 0);
         _sparkDummy.updateMatrix();
@@ -1548,9 +1679,10 @@ function render(t) {
       _sparkDummy.updateMatrix();
       sparkMesh.setMatrixAt(j, _sparkDummy.matrix);
 
-      if (s.warm) _sparkCol.setRGB(3.6 * fade, 2.05 * fade, 0.65 * fade);
-      else if (s.source === 1) _sparkCol.setRGB(0.85 * fade, 3.4 * fade, 2.0 * fade);
-      else _sparkCol.setRGB(0.95 * fade, 2.75 * fade, 3.5 * fade);
+      // each spark the colour of the chamber it was struck in
+      if (L) _sparkCol.copy(L.c); else pal(tb, _sparkCol);
+      if (s.hot) _sparkCol.lerp(WHITE, 0.72);
+      _sparkCol.multiplyScalar(3.7 * fade);
       sparkMesh.setColorAt(j, _sparkCol);
     }
     sparkMesh.instanceMatrix.needsUpdate = true;
@@ -1574,12 +1706,28 @@ function render(t) {
   shockRingA.visible = swLive > 0 && swLive < 1;
   const rA = 0.55 + 2.42 * easeOut(swLive);
   shockRingA.scale.set(rA * (DECK_RX / 3.2), rA * (DECK_RZ / 3.2), 1);
-  shockRingA.material.opacity = 0.88 * Math.sin(Math.PI * swLive);
+  shockRingA.material.uniforms.uOp.value = 0.92 * Math.sin(Math.PI * swLive);
+  shockRingA.material.uniforms.uSpin.value = t * 2.2;
 
   shockRingB.visible = swIdea > 0 && swIdea < 1;
   const rB = 0.45 + 2.35 * easeOut(swIdea);
   shockRingB.scale.set(rB * (DECK_RX / 3.2), rB * (DECK_RZ / 3.2), 1);
-  shockRingB.material.opacity = 0.82 * Math.sin(Math.PI * swIdea);
+  shockRingB.material.uniforms.uOp.value = 0.86 * Math.sin(Math.PI * swIdea);
+  shockRingB.material.uniforms.uSpin.value = -t * 2.2;
+
+  // the beat each chamber sends across the deck, and the dial its arc fills on the rim
+  const rimDrain = 1 - ease(win(t, 8.9, 9.55));
+  CHAMBERS.forEach((c, i) => {
+    const d = (t - c.t0) / 0.62, m = chShocks[i];
+    m.visible = d >= 0 && d < 1;
+    if (m.visible) {
+      const r = 0.7 + 2.3 * easeOut(d);
+      m.scale.set(r * (DECK_RX / 3.2), r * (DECK_RZ / 3.2), 1);
+      m.material.opacity = Math.pow(1 - d, 1.3);
+    }
+    RIM.uniforms.uFill.value[i] = win(t, c.t0, c.t0 + 0.7) * rimDrain;
+  });
+  RIM.uniforms.uPow.value = 1 + 0.2 * liveK * rimDrain;
 
   const hb = bump(t, 8.76, 9.52);
   hyperBeam.visible = hb > 0.01;
@@ -1588,8 +1736,11 @@ function render(t) {
   const hbPinch = 1 - 0.45 * ease(win(t, 8.95, 9.52));
   hyperBeam.scale.set(hbPinch, 1, hbPinch);
 
-  holoColumn.material.uniforms.uInt.value = 0.85 + 1.5 * liveK * fadeAll + 1.3 * hb;
-  crucLight.intensity = 3.0 + 5.5 * liveK * fadeAll + 3.8 * hb;
+  holoColumn.material.uniforms.uC.value.copy(C_NOW);
+  holoColumn.material.uniforms.uInt.value = 0.85 + 1.5 * liveK * fadeAll + 1.3 * hb + 1.6 * beat;
+  crucLight.color.copy(C_NOW);
+  crucLight.intensity = 3.0 + 5.5 * liveK * fadeAll + 3.8 * hb + 12 * beat;
+  crucGlow.material.color.copy(C_NOW); crucVernierA.material.color.copy(C_NOW); crucVernierB.material.color.copy(C_LAG);
   crucVernierA.rotation.z = -ph * 2;
   crucVernierB.rotation.z = ph * 3;
 
@@ -1614,32 +1765,62 @@ function render(t) {
   traces.forEach((tr) => {
     const u = (t / PERIOD * tr.k + tr.ph) % 1;
     tr.pulse.position.lerpVectors(tr.p1, tr.p0, u);
+    tr.pulse.material.color.copy(C_NOW);
     tr.pulse.material.opacity = Math.sin(Math.PI * u) * (0.72 + 0.28 * liveK);
   });
 
-  // Curved Hex Matrix Breathing + Radial Shockwave Ripples on Idea Impact & Live Ignition!
+  // ---- The name: each letter ice white until it strikes in its chamber's colour; a surge along them going live; on the
+  // launch they drain back, from the last to the first
+  const surgeU = win(t, 6.2, 6.9);
+  const surgeAt = -0.2 + 1.4 * surgeU;
+  LETTERS.forEach((L, i) => {
+    const d = t - L.tig;
+    const on = (d >= 0 ? strike(d) : 0) * (1 - ease(win(t, 8.9 + (12 - i) * 0.03, 9.2 + (12 - i) * 0.03)));
+    const surge = surgeU > 0 && surgeU < 1 ? Math.exp(-Math.pow((L.x01 - surgeAt) * 6, 2)) : 0;
+    // a tired tube at rest, as neon has
+    const hum = (L.i === 4 && t > 0.62 && t < 0.67) || (L.i === 11 && t > 1.2 && t < 1.25) ? 0.45 : 1;
+    L.col = L.col || new THREE.Color();
+    L.col.copy(ICE).lerp(L.c, on > 0.5 ? 1 : on * 2);
+    L.tube.color.copy(L.col).lerp(WHITE, 0.06 + 0.6 * surge).multiplyScalar(hum * (1.9 - 0.1 * on + 3.0 * surge));
+    L.face.emissive.copy(L.col);
+    L.face.emissiveIntensity = hum * (0.05 + 0.13 * on + 1.1 * surge);
+    L.halo.color.copy(L.col).multiplyScalar(hum * (0.1 + 0.3 * on + 0.5 * surge));
+  });
+
+  // Curved Hex Matrix Breathing, a ripple in each chamber's colour as it starts, the name's light on the cells behind it,
+  // and all six flowing across it while the product is live
   {
     const face = scene.userData.hexFace, col = new THREE.Color();
-    const cBlue = new THREE.Color(0x1f6ef5), cCyan = new THREE.Color(0x00cfff), cGreen = new THREE.Color(0x00ff88);
+    const cBlue = new THREE.Color(0x1f6ef5), cCyan = new THREE.Color(0x00cfff);
     const rIdea = win(t, 1.54, 2.65) * 6.5, wIdea = bump(t, 1.54, 2.65);
     const rLive = win(t, 6.18, 7.60) * 6.8, wLive = bump(t, 6.18, 7.60);
+    const flow = ease(win(t, 6.2, 6.9)) * (1 - ease(win(t, 8.85, 9.4)));
     hexCells.forEach((h) => {
       const dist = Math.hypot(h.wx, h.wy - 2.1);
       const rip1 = wIdea * Math.exp(-Math.pow((dist - rIdea) * 2.1, 2)) * 0.42;
-      const rip2 = wLive * Math.exp(-Math.pow((dist - rLive) * 1.9, 2)) * 0.50;
+      const rip2 = wLive * Math.exp(-Math.pow((dist - rLive) * 1.9, 2)) * 0.55;
       const base = h.baseLit * (0.55 + 0.45 * Math.sin(ph * h.k + h.ph * TAU));
-      const baseCol = h.isGreen ? cCyan : cBlue;
-      col.copy(baseCol).multiplyScalar(base);
-      if (rip1 > 0.002) { col.r += cCyan.r * rip1; col.g += cCyan.g * rip1; col.b += cCyan.b * rip1; }
-      if (rip2 > 0.002) { col.r += cGreen.r * rip2; col.g += cGreen.g * rip2; col.b += cGreen.b * rip2; }
+      col.copy(h.isGreen ? cCyan : cBlue).multiplyScalar(base);
+      if (rip1 > 0.002) addC(col, cCyan, rip1);
+      CHAMBERS.forEach((c) => {
+        const u = (t - c.t0) / 1.05;
+        if (u <= 0 || u >= 1) return;
+        const w = Math.sin(Math.PI * u) * Math.exp(-Math.pow((dist - u * 6.2) * 2.0, 2)) * 0.34;
+        if (w > 0.002) addC(col, c.c, w);
+      });
+      if (rip2 > 0.002) addC(col, rainbow(h.wx * 0.8 + t * 3, C_TMP), rip2);
+      if (flow > 0.002) addC(col, rainbow(h.wx * 0.62 - h.wy * 0.4 + t * 1.5, C_TMP), flow * (h.ph > 0.62 ? 0.075 : 0.012));
+      // the cells behind the name darker, so it stands off them, and the letter nearest it lights them a little
+      const near = Math.abs(h.wy - signGroup.position.y);
+      if (near < 1.25 && Math.abs(h.wx) < SIGN_W * 0.56) {
+        col.multiplyScalar(0.3 + 0.7 * clamp01((near - 0.35) / 0.7));
+        const L = LETTERS[clamp(Math.round((h.wx / SIGN_W + 0.5) * (LETTERS.length - 1)), 0, LETTERS.length - 1)];
+        addC(col, L.col, 0.045 * (1 - near / 1.25));
+      }
       face.setColorAt(h.i, col);
     });
     face.instanceColor.needsUpdate = true;
   }
-
-  // Subtle Realistic Neon Tube Power-Surge Flicker during Peak Dual-Plasma Draw
-  const flick = (t > 3.64 && t < 3.69) ? 0.65 : 1.0 + 0.08 * liveK;
-  neonMat.color.setScalar(0.95 * flick);
 
   composer.render();
 }
