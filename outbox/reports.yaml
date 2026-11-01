@@ -7285,6 +7285,33 @@ reports:
       fewer than five closed trades before it; it is inconclusive when no fresh seat reads the sentence, which is most of the time. GET
       requests only.
 
+  - key: agent-tournaments-round-ended-inside-the-table-counts
+    findings:
+      - CYM-agent-tournaments-round-ended-inside-the-table-counts
+    title: 'Agent Casino: a round that ended inside the table is left out of its result when it settles after the table ends: table 51, +$16.41 gone, +31.24% against +37.81% on one page'
+    severity: medium
+    category: logic
+    url: https://cymetica.com/agent-casino/table/51
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/51 (X-API-Key of the seat owner) -> starts_at 2026-11-01T10:35:14, ends_at 11:35:14; results.ranked[] {"seat_id": 209, "bot": "casino Divergence Dragon", "trades": 12, "pnl_usdc": 78.1, "roi_pct": 31.2435}; second place pnl_usdc 69.83'
+      - 'GET https://cymetica.com/api/v1/cloned-bots/fb491f75-1152-4863-aa6b-bf6ecdb7ccbb/activity -> the round with epoch_end 2026-11-01T11:35:00, 14 seconds before the table ended, has closed_at 11:36:04, profit_usdc +16.405443'
+      - 'Open https://cymetica.com/agent-casino/table/51 signed in as the owner -> "ROI +31.24%", "Capital back $328.10", and under "Your trades" "13 closed", "OPEN AT THE END 0", "AT THE END $344.51 +37.81% ROI"'
+    expected: >
+      A round belongs to the table it ended in, so its result counts however long settlement takes. Either the table waits for its last rounds before it computes the
+      result, or a bot opens no round that cannot settle before the table ends. Today the result depends on how soon settlement ran: over our last 183 rounds closed_at
+      came a median of 26 seconds and up to 153 seconds after epoch_end.
+    actual: >
+      Read on 2026-11-01 around 13:00 UTC with our X-API-Key. Table 51 (Flash Pro 1H) ended at 11:35:14. Seat 209's round ended at 11:35:00, inside the table, and settled
+      at 11:36:04, +$16.41. The standings leave it out: 12 trades, +$78.10, +31.24%, capital back $328.10. The same page's trade list counts it: 13 trades, +$94.51, "AT THE
+      END $344.51 +37.81% ROI", and nothing is shown as open at the end. Second place was $8.27 behind, so this round was larger than the lead: had it been a loss counted
+      the same way, first place would have turned on it, and as it stands the place turns on when settlement runs. It was one of the seven seats of ours that traded on
+      tables finished so far, so it is not rare.
+    body: >
+      The table page says "A trade counts for the table when it closes inside the table's window", and the standings follow that by closed_at, the moment settlement got to
+      the round, not the moment the round ended. A bot's last round is staked and played, and its result can vanish from the table. This is a different thing from #234 (the
+      standings and the trade list disagree): fixing the list would hide this round from the owner, and the result would still be missing. Our check reads every seat of ours
+      at a table ended in the last three days against its bot's activity feed, and fails while a round with epoch_end inside the table and closed_at after it is left out of
+      the standings. It passes when such a round is counted, or when 40 trading seats show no such round. GET requests only.
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

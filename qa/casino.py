@@ -100,6 +100,22 @@ def with_close_times(trades: list[dict], items: list[dict]) -> list[dict]:
     return out
 
 
+def rounds_left_out(table: dict, row: dict, items: list[dict]) -> list[dict]:
+    """The rounds that ended inside the table but settled after it, when the seat's standings profit
+    is what closed inside and so leaves them out (table 51). `items` is the bot's activity feed."""
+    start, end, pnl = _when(table.get("starts_at")), _when(table.get("ends_at")), _number(row.get("pnl_usdc"))
+    if start is None or end is None or pnl is None:
+        return []
+    closed, late = [], []
+    for item in items or []:
+        over, settled = _when(item.get("epoch_end")), _when(item.get("closed_at"))
+        if settled is not None and start <= settled <= end:
+            closed.append(float(item.get("profit_usdc") or 0))
+        elif over is not None and settled is not None and start <= over <= end < settled:
+            late.append(item)
+    return late if late and abs(sum(closed) - pnl) <= CENTS else []
+
+
 def _feed(table: dict, seat_id, by: str | None = None) -> list[dict]:
     return [c for c in table.get("changes") or [] if isinstance(c, dict) and c.get("seat_id") == seat_id
             and _when(c.get("at")) and (by is None or c.get("by") == by)]

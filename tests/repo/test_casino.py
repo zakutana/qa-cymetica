@@ -197,6 +197,22 @@ def test_a_trade_closed_after_the_tune_does_not_make_the_reason_false():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_round_that_ended_inside_the_table_and_settled_after_it_is_named():
+    """Table 51: the round ending 11:35:00 settled at 11:36:04, the table ended 11:35:14, and the
+    standings' +78.10 leaves out its +16.41. Counted, or never opened, there is nothing to name."""
+    table = {"starts_at": "2026-11-01T10:35:14+00:00", "ends_at": "2026-11-01T11:35:14+00:00"}
+    inside = {"epoch_end": "2026-11-01T11:30:00+00:00", "closed_at": "2026-11-01T11:30:54+00:00", "profit_usdc": "78.100000"}
+    late = {"epoch_end": "2026-11-01T11:35:00+00:00", "closed_at": "2026-11-01T11:36:04+00:00", "profit_usdc": "16.405443"}
+    after = {"epoch_end": "2026-11-01T11:40:00+00:00", "closed_at": "2026-11-01T11:41:20+00:00", "profit_usdc": "-16.519899"}
+
+    left_out = casino.rounds_left_out(table, {"pnl_usdc": 78.1}, [inside, late, after])
+    assert [r["closed_at"] for r in left_out] == [late["closed_at"]]
+    assert casino.rounds_left_out(table, {"pnl_usdc": 94.51}, [inside, late, after]) == []
+    assert casino.rounds_left_out(table, {"pnl_usdc": 78.1}, [inside, after]) == []
+    assert casino.rounds_left_out(table, {"pnl_usdc": None}, [inside, late]) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_risk_line_must_be_on_its_level():
     """Table 44: "Risk reads 8 ... stop loss 4 % ... as you set it": the owner set 8, the coach 4, at
     another table. Their /risk route: trade size L %, stop loss L %, take profit 4 x L %, at least 5 %."""
