@@ -150,8 +150,7 @@ def pytest_generate_tests(metafunc):
 
 
 @pytest.fixture(scope="session")
-def snapshot(request, rest_anon, mcp_anon, all_identities, registry,
-             evidence_store, budget):
+def snapshot(request, rest_anon, mcp_anon, all_identities, registry, budget):
     clients = {"anon": mcp_anon}
     if all_identities["trusted"].present:
         from qa.client import build_mcp_client

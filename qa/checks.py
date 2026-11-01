@@ -1,7 +1,7 @@
 """Run checks in their own pytest and read the record into one word per check: pass, fail, inconclusive.
 
-Rule 10 lives here: a check that could not measure (Inconclusive, a skip, a broken fixture, a timeout, a
-check that is gone) is never a defect and never a fix. Only the call phase of a verdict-role check counts.
+Rule 10 lives here: a check that could not measure (Inconclusive, a skip, a broken fixture, a crash, a timeout,
+a check that is gone) is never a defect and never a fix. Only the call phase of a verdict-role check counts.
 """
 
 from __future__ import annotations
@@ -23,6 +23,11 @@ def load_record(path: Path) -> dict:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+def _asserted(result: dict) -> bool:
+    """A failure the check itself reached. A KeyError or an AttributeError is our check crashing."""
+    return result.get("exception") in (None, "AssertionError", "Failed")
+
+
 def classify(record: dict, nodeids: list[str]) -> dict[str, dict]:
     """{nodeid: {result, reason, left, right}} for the checks asked about."""
     by_node: dict[str, list[dict]] = {}
@@ -36,9 +41,9 @@ def classify(record: dict, nodeids: list[str]) -> dict[str, dict]:
         row = call or (rows[0] if rows else None)
         measured = (row or {}).get("measurement") or {}
         word = _WORDS.get((row or {}).get("outcome"), "inconclusive") if call else "inconclusive"
-        if measured.get("role") == "evidence":
+        if measured.get("role") == "evidence" or (word == "fail" and not _asserted(call)):
             word = "inconclusive"
-        reason = (measured.get("reason") or (row or {}).get("reason") or (row or {}).get("failure_repr")
+        reason =(measured.get("reason") or (row or {}).get("reason") or (row or {}).get("failure_repr")
                   or ("the check did not run" if row is None else ""))
         out[nodeid] = {"result": word, "reason": str(reason), "left": measured.get("left"),
                        "right": measured.get("right")}

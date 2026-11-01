@@ -136,6 +136,7 @@ def pytest_runtest_makereport(item, call):
         "phase": report.when,
         "duration_ms": int(report.duration * 1000),
         "measurement": measurement.as_record() if measurement else None,
+        "exception": call.excinfo.typename if call.excinfo is not None else None,
         "reason": reason,
         "failure_repr": _trim(str(report.longrepr)) if kind in ("failed", "error") else None,
     }

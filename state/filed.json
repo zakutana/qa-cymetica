@@ -193,6 +193,11 @@
      "at": "2026-10-11T22:18:17+00:00"
     },
     {
+     "report_id": 136,
+     "verdict": "pass",
+     "at": "2026-10-11T22:18:21+00:00"
+    },
+    {
      "report_id": 112,
      "verdict": "fail",
      "at": "2026-10-21T09:07:33+00:00"
@@ -201,11 +206,6 @@
      "report_id": 136,
      "verdict": "fail",
      "at": "2026-10-21T09:07:39+00:00"
-    },
-    {
-     "report_id": 136,
-     "verdict": "pass",
-     "at": "2026-10-11T22:18:21+00:00"
     }
    ],
    "their_status": {
@@ -261,13 +261,13 @@
     },
     {
      "report_id": 122,
-     "verdict": "pass",
-     "at": "2026-10-21T09:08:04+00:00"
+     "verdict": "fail",
+     "at": "2026-10-15T17:38:20+00:00"
     },
     {
      "report_id": 122,
-     "verdict": "fail",
-     "at": "2026-10-15T17:38:20+00:00"
+     "verdict": "pass",
+     "at": "2026-10-21T09:08:04+00:00"
     }
    ],
    "their_status": {
@@ -308,7 +308,7 @@
     "229": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_card_that_reads_tradeable_now_can_be_priced",
@@ -475,13 +475,13 @@
     },
     {
      "report_id": 86,
-     "verdict": "fail",
-     "at": "2026-09-22T16:01:53+00:00"
+     "verdict": "pass",
+     "at": "2026-09-21T13:59:19+00:00"
     },
     {
      "report_id": 86,
-     "verdict": "pass",
-     "at": "2026-09-21T13:59:19+00:00"
+     "verdict": "fail",
+     "at": "2026-09-22T16:01:53+00:00"
     }
    ],
    "their_status": {
@@ -755,7 +755,7 @@
     "123": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_round_open_after_its_anchor_says_when_entries_close",
@@ -943,7 +943,7 @@
     "215": "paid"
    },
    "withdrawn": false,
-   "last_check": "inconclusive"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_user_submitted_card_is_visible_only_to_its_author",
@@ -1029,7 +1029,7 @@
    "filed_at": "2026-11-01T10:29:27+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "238": "pending"
+    "238": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -1046,7 +1046,7 @@
    "filed_at": "2026-11-01T09:43:19+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "236": "pending"
+    "236": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -1063,10 +1063,10 @@
    "filed_at": "2026-11-01T10:36:47+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "241": "pending"
+    "241": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-agent-tournaments-how-page-matches-the-tables",
@@ -1080,7 +1080,7 @@
    "filed_at": "2026-11-01T08:35:52+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "235": "pending"
+    "235": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -1120,7 +1120,7 @@
    "filed_at": "2026-11-01T10:29:34+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "239": "pending"
+    "239": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -1137,7 +1137,7 @@
    "filed_at": "2026-11-01T10:29:59+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "240": "pending"
+    "240": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -1154,7 +1154,7 @@
    "filed_at": "2026-11-01T13:04:03+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "242": "pending"
+    "242": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -1195,20 +1195,20 @@
    "verdicts_sent": [
     {
      "report_id": 201,
-     "verdict": "fail",
-     "at": "2026-10-25T03:47:19+00:00"
+     "verdict": "pass",
+     "at": "2026-10-16T20:31:51+00:00"
     },
     {
      "report_id": 201,
-     "verdict": "pass",
-     "at": "2026-10-16T20:31:51+00:00"
+     "verdict": "fail",
+     "at": "2026-10-25T03:47:19+00:00"
     }
    ],
    "their_status": {
     "201": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-agent-tournaments-spent-bot-does-not-read-as-trading",
@@ -1222,7 +1222,7 @@
    "filed_at": "2026-11-01T10:29:18+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "237": "pending"
+    "237": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -1239,7 +1239,7 @@
    "filed_at": "2026-11-01T19:34:57+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "249": "pending"
+    "249": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -1256,7 +1256,7 @@
    "filed_at": "2026-11-01T08:35:43+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "234": "pending"
+    "234": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -1486,16 +1486,6 @@
     },
     {
      "report_id": 132,
-     "verdict": "pass",
-     "at": "2026-10-25T03:47:33+00:00"
-    },
-    {
-     "report_id": 137,
-     "verdict": "pass",
-     "at": "2026-10-25T03:47:39+00:00"
-    },
-    {
-     "report_id": 132,
      "verdict": "fail",
      "at": "2026-10-21T09:07:46+00:00"
     },
@@ -1503,6 +1493,16 @@
      "report_id": 137,
      "verdict": "fail",
      "at": "2026-10-21T09:07:55+00:00"
+    },
+    {
+     "report_id": 132,
+     "verdict": "pass",
+     "at": "2026-10-25T03:47:33+00:00"
+    },
+    {
+     "report_id": 137,
+     "verdict": "pass",
+     "at": "2026-10-25T03:47:39+00:00"
     }
    ],
    "their_status": {
@@ -1981,13 +1981,13 @@
    "verdicts_sent": [
     {
      "report_id": 152,
-     "verdict": "pass",
-     "at": "2026-10-16T20:32:10+00:00"
+     "verdict": "fail",
+     "at": "2026-10-15T17:38:11+00:00"
     },
     {
      "report_id": 152,
-     "verdict": "fail",
-     "at": "2026-10-15T17:38:11+00:00"
+     "verdict": "pass",
+     "at": "2026-10-16T20:32:10+00:00"
     }
    ],
    "their_status": {
@@ -2389,7 +2389,7 @@
     "228": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-every_card_nexus_tells_an_agent_to_trade_exists",
@@ -2509,7 +2509,7 @@
     "93": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-every_gem_screener_route_llms_txt_names_is_in_the_openapi",
@@ -2611,7 +2611,7 @@
     "138": "paid"
    },
    "withdrawn": false,
-   "last_check": "inconclusive"
+   "last_check": "fail"
   },
   {
    "key": "CYM-every_route_nexus_tells_an_agent_to_call_is_published",
@@ -2624,13 +2624,13 @@
    "verdicts_sent": [
     {
      "report_id": 121,
-     "verdict": "pass",
-     "at": "2026-10-02T12:27:07+00:00"
+     "verdict": "fail",
+     "at": "2026-10-01T07:01:50+00:00"
     },
     {
      "report_id": 121,
-     "verdict": "fail",
-     "at": "2026-10-01T07:01:50+00:00"
+     "verdict": "pass",
+     "at": "2026-10-02T12:27:07+00:00"
     }
    ],
    "their_status": {
@@ -2660,13 +2660,13 @@
     },
     {
      "report_id": 85,
-     "verdict": "pass",
-     "at": "2026-09-20T08:34:53+00:00"
+     "verdict": "fail",
+     "at": "2026-09-10T21:46:08+00:00"
     },
     {
      "report_id": 85,
-     "verdict": "fail",
-     "at": "2026-09-10T21:46:08+00:00"
+     "verdict": "pass",
+     "at": "2026-09-20T08:34:53+00:00"
     },
     {
      "report_id": 85,
@@ -2919,13 +2919,13 @@
    "verdicts_sent": [
     {
      "report_id": 133,
-     "verdict": "pass",
-     "at": "2026-10-08T07:39:26+00:00"
+     "verdict": "fail",
+     "at": "2026-10-05T09:06:15+00:00"
     },
     {
      "report_id": 133,
-     "verdict": "fail",
-     "at": "2026-10-05T09:06:15+00:00"
+     "verdict": "pass",
+     "at": "2026-10-08T07:39:26+00:00"
     }
    ],
    "their_status": {
@@ -3230,7 +3230,7 @@
     "189": "paid"
    },
    "withdrawn": false,
-   "last_check": "inconclusive"
+   "last_check": "pass"
   },
   {
    "key": "CYM-nexus-answer-markers-are-true",
@@ -3416,7 +3416,7 @@
     "173": "paid"
    },
    "withdrawn": false,
-   "last_check": "inconclusive"
+   "last_check": "fail"
   },
   {
    "key": "CYM-paper-bot-bet-settles-at-epoch-end",
@@ -3591,7 +3591,7 @@
     "231": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-quant-lab-search-error-names-no-internals",
@@ -3625,7 +3625,7 @@
     "233": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-quant-search-rows-fit-the-list-grid",
@@ -3642,7 +3642,7 @@
     "230": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-register-response-undocumented",
@@ -3740,20 +3740,20 @@
     },
     {
      "report_id": 51,
-     "verdict": "pass",
-     "at": "2026-10-01T07:37:18+00:00"
+     "verdict": "fail",
+     "at": "2026-10-01T00:16:23+00:00"
     },
     {
      "report_id": 51,
-     "verdict": "fail",
-     "at": "2026-10-01T00:16:23+00:00"
+     "verdict": "pass",
+     "at": "2026-10-01T07:37:18+00:00"
     }
    ],
    "their_status": {
     "51": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass"
+   "last_check": "fail"
   },
   {
    "key": "CYM-skill_ids",
@@ -3773,20 +3773,20 @@
     },
     {
      "report_id": 51,
-     "verdict": "pass",
-     "at": "2026-10-01T07:37:21+00:00"
+     "verdict": "fail",
+     "at": "2026-10-01T07:01:46+00:00"
     },
     {
      "report_id": 51,
-     "verdict": "fail",
-     "at": "2026-10-01T07:01:46+00:00"
+     "verdict": "pass",
+     "at": "2026-10-01T07:37:21+00:00"
     }
    ],
    "their_status": {
     "51": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass"
+   "last_check": "fail"
   },
   {
    "key": "CYM-skills_subset",
@@ -3806,20 +3806,20 @@
     },
     {
      "report_id": 56,
-     "verdict": "pass",
-     "at": "2026-10-01T07:37:24+00:00"
+     "verdict": "fail",
+     "at": "2026-10-01T00:16:27+00:00"
     },
     {
      "report_id": 56,
-     "verdict": "fail",
-     "at": "2026-10-01T00:16:27+00:00"
+     "verdict": "pass",
+     "at": "2026-10-01T07:37:24+00:00"
     }
    ],
    "their_status": {
     "56": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass"
+   "last_check": "fail"
   },
   {
    "key": "CYM-supply-analyzer-a-pile-cannot-grow-past-its-max-supply",
@@ -4852,7 +4852,7 @@
     "226": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-traffic-mine-accepts-the-key-its-page-names",
@@ -4932,7 +4932,7 @@
     "223": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-vaix-orderbook-arbitrage-does-not-use-an-excluded-venue",

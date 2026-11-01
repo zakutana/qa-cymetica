@@ -32,6 +32,16 @@ def test_a_row_passes_only_when_every_check_passes():
     assert checks.overall([]) == "inconclusive"
 
 
+def test_a_check_that_crashed_measured_nothing():
+    """A KeyError is our check, not their defect: as a `fail` it would go to them as a verdict."""
+    crashed = {**_result("a", "failed"), "exception": "KeyError", "failure_repr": "KeyError: 'rows'",
+               "measurement": None}
+    asserted = {**_result("b", "failed"), "exception": "AssertionError"}
+    read = checks.classify({"results": [crashed, asserted]}, ["a", "b"])
+    assert read["a"]["result"] == "inconclusive" and "KeyError" in read["a"]["reason"]
+    assert read["b"]["result"] == "fail"
+
+
 def test_a_real_pytest_run_is_recorded_with_its_outcomes(pytester, monkeypatch, tmp_path):
     from qa.paths import REPO_ROOT
 
@@ -50,11 +60,15 @@ def test_a_real_pytest_run_is_recorded_with_its_outcomes(pytester, monkeypatch, 
 
         def test_unsure():
             raise Inconclusive("the page did not answer")
+
+        def test_crash():
+            return {}["rows"]
     """)
     run = pytester.runpytest_subprocess("-p", "qa.report_plugin", "test_inner.py")
     assert run.ret == 1
     read = checks.classify(checks.load_record(out), ["test_inner.py::test_ok", "test_inner.py::test_red",
-                                                     "test_inner.py::test_unsure"])
+                                                     "test_inner.py::test_unsure", "test_inner.py::test_crash"])
+    assert read["test_inner.py::test_crash"]["result"] == "inconclusive"
     assert read["test_inner.py::test_ok"]["result"] == "pass"
     assert read["test_inner.py::test_red"]["result"] == "fail"
     assert read["test_inner.py::test_red"]["reason"] == "two is not three"
