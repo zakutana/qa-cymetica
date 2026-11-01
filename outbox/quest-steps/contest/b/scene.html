@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Build it Better: the drawing becomes the thing</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  html.black, html.black body { background: #000000; }
+  canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: block; }
+</style>
+<script>if (/[?&]black=1/.test(location.search)) document.documentElement.classList.add('black');</script>
+<script type="importmap">{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
+} }</script>
+</head>
+<body>
+<script type="module">
+import * as THREE from 'three';
+import { LineSegments2 } from 'three/addons/lines/LineSegments2.js';
+import { LineSegmentsGeometry } from 'three/addons/lines/LineSegmentsGeometry.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+/* The idea is typed. Its line leaves the caret, runs across and plots the product as a blueprint: one pen, one colour.
+   Then a single level rises from the ground: under it everything is real, the name included; above it, still the drawing.
+   The product's screen comes on. Hold. Everything goes; the page's sky was always behind it.
+   Every frame is a function of t. Nothing accumulates. */
+
+const T = 12;
+const Q = new URLSearchParams(location.search);
+const BLACK = Q.get('black') === '1';
+const DW = 1100, DH = 620;                                  // the design's frame, in css px at full size
+
+// ---- the score, in seconds
+const S = {
+  typeA: 0.3, typeB: 1.35,      // the idea typed
+  goA: 1.7, goB: 2.05,          // the line leaves the caret
+  consA: 2.05, consB: 2.75,     // construction lines
+  edgeA: 2.75, edgeB: 5.05,     // the object
+  dimA: 5.05, dimB: 5.4,        // dimensions
+  riseA: 5.75, riseB: 7.85,     // the level rises: line becomes real
+  onA: 8.05, onB: 8.85,         // its screen comes on
+  outA: 11.15, outB: 11.85      // everything goes
+};
+
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+const win = (t, a, b) => clamp01((t - a) / (b - a));
+const smooth = (x) => { x = clamp01(x); return x * x * (3 - 2 * x); };
+const easeOut = (x) => { x = clamp01(x); return 1 - Math.pow(1 - x, 3); };
+const TAU = Math.PI * 2;
+
+// ---- fit: the canvas keeps the design's proportions, whatever the frame
+const availW = +(Q.get('w') || innerWidth), availH = +(Q.get('h') || innerHeight);
+const fit = Math.min(availW / DW, availH / DH);
+const CW = Math.round(DW * fit), CH = Math.round(DH * fit);
+const DPR = Math.min(window.devicePixelRatio || 1, +(Q.get('dpr') || 1.5));
+
+await new Promise((r) => {
+  const l = document.querySelector('link[href*="fonts.googleapis"]');
+  if (l.sheet) r(); else { l.onload = l.onerror = r; setTimeout(r, 4000); }
+});
+await Promise.race([
+  Promise.all([
+    document.fonts.load('400 112px "Archivo Black"'),
+    document.fonts.load('500 26px "JetBrains Mono"'),
+    document.fonts.load('700 20px "JetBrains Mono"')
+  ]),
+  new Promise((r) => setTimeout(r, 4000))
+]);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: !BLACK, premultipliedAlpha: true, preserveDrawingBuffer: true, powerPreference: 'default', stencil: false });
+renderer.setPixelRatio(DPR);
+renderer.setSize(CW, CH);
+renderer.setClearColor(0x000000, BLACK ? 1 : 0);
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.localClippingEnabled = true;
+renderer.autoClear = false;
+renderer.info.autoReset = false;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.autoUpdate = false;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+
+// ---- the lens: very long, and shifted, so verticals stay vertical and parallels stay parallel, as a product drawing has them
+const PX = 124;                                                               // design px per world unit at the object's axis
+const FOV = 10, DIST = DH / (2 * PX * Math.tan(THREE.MathUtils.degToRad(FOV / 2))), ELEV = 15.5;
+const CAM_Y = DIST * Math.tan(THREE.MathUtils.degToRad(ELEV));
+const OX = 812, OY = 312;                                                     // where the object's centre stands in the frame
+const camera = new THREE.PerspectiveCamera(FOV, DW / DH, 12, 60);
+camera.setViewOffset(DW, DH, DW / 2 - OX, CAM_Y * PX + DH / 2 - OY, DW, DH);
+const ENV_SPIN = 1;
+const azimuth = (t) => THREE.MathUtils.degToRad(33 - 14 * (t / T));           // turns slowly towards the viewer, the whole loop
+function placeCamera(t) {
+  const a = azimuth(t);
+  camera.position.set(Math.sin(a) * DIST, CAM_Y, Math.cos(a) * DIST);
+  camera.lookAt(0, CAM_Y, 0);
+  camera.updateMatrixWorld();
+  scene.environmentRotation.y = a * ENV_SPIN;  // the studio travels with the camera: a turntable under fixed lights
+  QUIET.forEach(([m]) => { m.envMapRotation.y = a * ENV_SPIN; });
+}
+const P = new THREE.Vector3();
+const toPx = (x, y, z) => { P.set(x, y, z).project(camera); return [(P.x + 1) / 2 * DW, (1 - P.y) / 2 * DH]; };
+const worldYtoPx = (y) => OY - y * PX;
+const pxToWorldY = (py) => (OY - py) / PX;
+
+// ---- a studio, no more: real softboxes, brighter than white, so a satin surface and a bevel can catch them. It travels with
+// the camera: a turntable under fixed lights, and the one soft panel in front slides across the face as the thing turns
+{
+  const env = new THREE.Scene();
+  env.add(new THREE.Mesh(new THREE.SphereGeometry(20, 24, 12), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.1, 0.125, 0.15), side: THREE.BackSide })));
+  const panel = (az, el, w, h, v, tilt = 0, tint = [1, 1, 1]) => {
+    const A = THREE.MathUtils.degToRad(az), E = THREE.MathUtils.degToRad(el), dist = 10;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(2 * dist * Math.tan(THREE.MathUtils.degToRad(w / 2)), 2 * dist * Math.tan(THREE.MathUtils.degToRad(h / 2))),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(tint[0] * v, tint[1] * v, tint[2] * v), side: THREE.DoubleSide }));
+    m.position.set(Math.sin(A) * Math.cos(E) * dist, Math.sin(E) * dist, Math.cos(A) * Math.cos(E) * dist);
+    m.lookAt(0, 0, 0); m.rotateZ(THREE.MathUtils.degToRad(tilt));
+    env.add(m);
+  };
+  panel(-30, -14, 30, 70, 4.2, 24);              // the soft panel the face looks into
+  panel(-92, -10, 40, 60, 2.0);                  // its dimmer neighbour, so the face is never dead
+  panel(0, 62, 80, 34, 7);                       // overhead: every upward bevel
+  panel(180, 18, 90, 26, 3);                     // behind: the top face at a grazing angle
+  panel(130, -4, 44, 70, 1.4, 0, [0.82, 0.93, 1]); // the side wall, kept darker than the face
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(env, 0.02).texture;
+  scene.environmentIntensity = 1;
+  pm.dispose();
+}
+const key = new THREE.DirectionalLight(0xffffff, 1.25);
+key.position.set(-5, 10, 11);
+key.castShadow = true;
+key.shadow.mapSize.set(1024, 1024);
+key.shadow.camera.left = -3; key.shadow.camera.right = 3; key.shadow.camera.top = 3.5; key.shadow.camera.bottom = -3.5;
+key.shadow.camera.near = 4; key.shadow.camera.far = 26;
+key.shadow.bias = -0.0005; key.shadow.normalBias = 0.01; key.shadow.radius = 4;
+scene.add(key);
+
+// ---- the product: a pocket chart reader. A lens that reads, a screen that says, one green button
+const W = 2.6, H = 3.5, D = 0.74, R = 0.3, B = 0.06;
+const ZF = D / 2;                                 // its face
+const SEAM = -0.12;
+
+// the level: everything of the solid under it, everything of the drawing above it
+const planeSolid = new THREE.Plane(new THREE.Vector3(0, -1, 0), -100);
+const planeLine = new THREE.Plane(new THREE.Vector3(0, 1, 0), 100);
+
+const M = {
+  body: new THREE.MeshPhysicalMaterial({ color: 0xe2e8ed, roughness: 0.5, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.3, vertexColors: true }),
+  barrel: new THREE.MeshStandardMaterial({ color: 0x8e9ca8, roughness: 0.26, metalness: 1, emissive: 0x18242c }),
+  barrelIn: new THREE.MeshStandardMaterial({ color: 0x20303a, roughness: 0.5, metalness: 0.6, emissive: 0x16242c }),
+  glass: new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.2, metalness: 0, emissive: 0xffffff, envMapIntensity: 0.07 }),
+  screen: new THREE.MeshStandardMaterial({ color: 0x06121a, roughness: 0.2, metalness: 0, emissive: 0x0a2230, envMapIntensity: 0.11 }),
+  button: new THREE.MeshStandardMaterial({ color: 0x00c86a, roughness: 0.44, metalness: 0, emissive: 0x00ad5c, envMapIntensity: 0.5 }),
+  knob: new THREE.MeshStandardMaterial({ color: 0xc8d4dc, roughness: 0.24, metalness: 1, emissive: 0x1c2830 }),
+  hole: new THREE.MeshBasicMaterial({ color: 0x1b2a33 }),
+  ringG: new THREE.MeshBasicMaterial({ color: 0x00ff88, toneMapped: false })
+};
+Object.values(M).forEach((m) => { m.clippingPlanes = [planeSolid]; });
+const QUIET = [[M.glass, 0.12], [M.screen, 0.22], [M.button, 0.4]];
+QUIET.forEach(([m, k]) => { m.envMap = scene.environment; m.envMapIntensity = k; });
+
+// a rounded rectangle's outline, with its outward normals
+function outline(w, h, r, n = 14) {
+  r = Math.max(r, 0.0005);
+  const pts = [], cx = w / 2 - r, cy = h / 2 - r;
+  [[cx, cy, 0], [-cx, cy, 1], [-cx, -cy, 2], [cx, -cy, 3]].forEach(([x, y, q]) => {
+    for (let i = 0; i <= n; i++) {
+      const a = (q + i / n) * Math.PI / 2;
+      pts.push([x + Math.cos(a) * r, y + Math.sin(a) * r, Math.cos(a), Math.sin(a)]);
+    }
+  });
+  return pts;
+}
+// a closed solid lofted through rings of the rounded rectangle along z; each ring { inset, z, nxy, nz, shade }
+function loft(w, h, r, rings, n = 14) {
+  const pos = [], nor = [], col = [], idx = [];
+  const m = outline(w, h, r, n).length;
+  const put = (x, y, z, nx, ny, nz, s) => { pos.push(x, y, z); nor.push(nx, ny, nz); col.push(s, s, s); return pos.length / 3 - 1; };
+  rings.forEach((g) => {
+    const s = g.shade === undefined ? 1 : g.shade;
+    outline(w - 2 * g.inset, h - 2 * g.inset, r - g.inset, n).forEach(([x, y, nx, ny]) => put(x, y, g.z, nx * g.nxy, ny * g.nxy, g.nz, s));
+  });
+  for (let k = 0; k < rings.length - 1; k++) for (let i = 0; i < m; i++) {
+    const a = k * m + i, b = k * m + (i + 1) % m, c = (k + 1) * m + i, d = (k + 1) * m + (i + 1) % m;
+    idx.push(a, c, b, b, c, d);
+  }
+  // the two flat ends, as fans, so a section through it is closed
+  [[0, 1], [rings.length - 1, -1]].forEach(([ri, sign]) => {
+    const g = rings[ri], c0 = put(0, 0, g.z, 0, 0, sign, 1), start = pos.length / 3;
+    outline(w - 2 * g.inset, h - 2 * g.inset, r - g.inset, n).forEach(([x, y]) => put(x, y, g.z, 0, 0, sign, 1));
+    for (let i = 0; i < m; i++) { const a = start + i, b = start + (i + 1) % m; if (sign > 0) idx.push(c0, a, b); else idx.push(c0, b, a); }
+  });
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  geo.setIndex(idx);
+  return geo;
+}
+function arcRings(zStart, bev, dir, k = 5) {           // from the flat end round to the wall (dir -1: from the front face going back)
+  const out = [];
+  for (let i = 0; i <= k; i++) {
+    const a = i / k * Math.PI / 2;
+    out.push({ inset: bev * (1 - Math.sin(a)), z: zStart + dir * bev * (1 - Math.cos(a)), nxy: Math.sin(a), nz: -dir * Math.cos(a) });
+  }
+  return out;
+}
+const lathe = (profile, seg = 96) => {
+  const g = new THREE.LatheGeometry(profile.map(([r, y]) => new THREE.Vector2(r, y)), seg);
+  g.rotateX(Math.PI / 2);          // its axis along +z, base at z = 0
+  return g;
+};
+
+const solid = new THREE.Group(); scene.add(solid);
+const closed = [];                 // everything with a real inside, for the section and for the drawing's hidden lines
+function add(geo, mat, x = 0, y = 0, z = 0) {
+  const me = new THREE.Mesh(geo, mat); me.position.set(x, y, z); me.castShadow = true; me.receiveShadow = true; solid.add(me);
+  const c = geo.clone(); c.translate(x, y, z); c.deleteAttribute('uv'); c.deleteAttribute('color');
+  closed.push(c.index ? c.toNonIndexed() : c);
+  return me;
+}
+
+// the body, its fillet, and a shadow gap where the two shells meet
+const bodyGeo = loft(W, H, R, [
+  ...arcRings(ZF, B, -1),
+  { inset: 0, z: SEAM + 0.04, nxy: 1, nz: 0 },
+  { inset: 0.0, z: SEAM + 0.016, nxy: 0.7, nz: -0.7 },
+  { inset: 0.02, z: SEAM + 0.014, nxy: 1, nz: 0, shade: 0.12 },
+  { inset: 0.02, z: SEAM - 0.014, nxy: 1, nz: 0, shade: 0.12 },
+  { inset: 0.0, z: SEAM - 0.016, nxy: 0.7, nz: 0.7 },
+  { inset: 0, z: SEAM - 0.04, nxy: 1, nz: 0 },
+  ...arcRings(-ZF, B, 1).reverse()
+]);
+{ // a face very slightly crowned, in its normals only: a long lens otherwise sees one flat tone on it
+  const p = bodyGeo.attributes.position, n = bodyGeo.attributes.normal, v = new THREE.Vector3();
+  for (let i = 0; i < p.count; i++) if (p.getZ(i) > ZF - 1e-4) {
+    v.set(p.getX(i) * 0.13, p.getY(i) * 0.13, 1).normalize(); n.setXYZ(i, v.x, v.y, v.z);
+  }
+  // and the falloff of one big light across it, top left to bottom right, baked in the vertex colours
+  const c = bodyGeo.attributes.color;
+  for (let i = 0; i < p.count; i++) {
+    const f = THREE.MathUtils.clamp(0.56 + (-p.getX(i) * 0.15 + p.getY(i) * 0.25), 0, 1);
+    const s = 0.6 + 0.4 * f;
+    c.setXYZ(i, c.getX(i) * s, c.getY(i) * s, c.getZ(i) * s * (1.0 + 0.03 * (1 - f)));
+  }
+}
+add(bodyGeo, M.body);
+
+// the screen: one sheet of glass, proud of the face by a hair, its corners concentric with the body's
+const MARGIN = 0.14;
+const SW = W - 2 * MARGIN, SH = 2.14, SX = 0, SY = H / 2 - MARGIN - SH / 2, SR = R - MARGIN;
+{
+  const g = loft(SW, SH, SR, [...arcRings(0.018, 0.008, -1, 3), { inset: 0, z: -0.02, nxy: 1, nz: 0 }, { inset: 0.002, z: -0.03, nxy: 1, nz: 0 }], 10);
+  const gp = g.attributes.position, gn = g.attributes.normal, v = new THREE.Vector3();
+  for (let i = 0; i < gp.count; i++) if (gp.getZ(i) > 0.0179) {       // the glass curves a little too: its reflection is a soft diagonal, not one flat tone
+    v.set(gp.getX(i) * 0.2, gp.getY(i) * 0.2, 1).normalize(); gn.setXYZ(i, v.x, v.y, v.z);
+  }
+  add(g, M.screen, SX, SY, ZF);
+}
+
+// the band under it: lens, perforation, button, on one line
+const BAND_Y = (SY - SH / 2 - H / 2) / 2;
+const LX = -0.74, LY = BAND_Y, LR = 0.42;
+add(lathe([[0, 0], [LR, 0], [LR, 0.075], [LR - 0.008, 0.086], [LR - 0.02, 0.09], [LR - 0.055, 0.09], [LR - 0.062, 0.085], [LR - 0.062, 0.03], [0, 0.03]]), M.barrel, LX, LY, ZF);
+const LENS = (() => {                 // the glass, its coating painted, so a look into it has depth
+  const c = document.createElement('canvas'); c.width = c.height = 512;
+  const x = c.getContext('2d'), m = 256;
+  const g = x.createRadialGradient(m, m, 0, m, m, m);
+  g.addColorStop(0, '#071c28'); g.addColorStop(0.3, '#082838'); g.addColorStop(0.62, '#0a2f42'); g.addColorStop(0.86, '#0c3a50'); g.addColorStop(1, '#0a1d28');
+  x.fillStyle = g; x.fillRect(0, 0, 512, 512);
+  const ring = (r, w, col) => { x.strokeStyle = col; x.lineWidth = w; x.beginPath(); x.arc(m, m, r, 0, TAU); x.stroke(); };
+  ring(250, 8, '#16323f'); ring(196, 3, 'rgba(0,207,255,.28)'); ring(128, 3, 'rgba(0,207,255,.3)'); ring(72, 10, '#06161f');
+  x.fillStyle = '#071c28'; x.beginPath(); x.arc(m, m, 66, 0, TAU); x.fill();
+  // the coating's two reflections
+  x.globalCompositeOperation = 'lighter'; x.filter = 'blur(14px)';
+  x.strokeStyle = 'rgba(0,207,255,.6)'; x.lineWidth = 24; x.beginPath(); x.arc(m, m, 165, Math.PI * 1.08, Math.PI * 1.46); x.stroke();
+  x.strokeStyle = 'rgba(0,255,136,.34)'; x.lineWidth = 18; x.beginPath(); x.arc(m, m, 120, Math.PI * 0.16, Math.PI * 0.4); x.stroke();
+  x.filter = 'blur(3px)'; x.fillStyle = 'rgba(255,255,255,.9)'; x.beginPath(); x.ellipse(m - 66, m - 92, 20, 10, -0.6, 0, TAU); x.fill();
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+})();
+M.glass.emissiveMap = LENS;
+{
+  const q = LR - 0.058, rs = 0.86, cap = Math.asin(q / rs);
+  const dome = new THREE.SphereGeometry(rs, 48, 10, 0, TAU, 0, cap);
+  dome.rotateX(Math.PI / 2);
+  dome.translate(0, 0, 0.03 - rs * Math.cos(cap));
+  const p = dome.attributes.position, uv = dome.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i) / (2 * q) + 0.5, p.getY(i) / (2 * q) + 0.5);
+  const base = new THREE.CircleGeometry(q, 48); base.rotateX(Math.PI); base.translate(0, 0, 0.03);
+  add(mergeGeometries([dome.toNonIndexed(), base.toNonIndexed()]), M.glass, LX, LY, ZF);
+  const ring = new THREE.Mesh(new THREE.RingGeometry(LR - 0.042, LR - 0.03, 96), M.ringG);
+  ring.position.set(LX, LY, ZF + 0.0905); solid.add(ring);
+}
+// the one colour on the body
+const BTX = 0.86, BTY = BAND_Y, BTR = 0.21;
+add(lathe([[0, 0], [BTR, 0], [BTR, 0.05], [BTR - 0.008, 0.06], [BTR - 0.024, 0.064], [BTR * 0.5, 0.056], [0, 0.052]], 64), M.button, BTX, BTY, ZF);
+// the speaker: a grid of holes
+const HOLES = [];
+{
+  const cols = 7, rows = 5, step = 0.1, cx = 0.05;
+  for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) HOLES.push([cx + (i - (cols - 1) / 2) * step, BAND_Y + (j - (rows - 1) / 2) * step]);
+  const inst = new THREE.InstancedMesh(new THREE.CircleGeometry(0.026, 12), M.hole, HOLES.length);
+  const m = new THREE.Matrix4();
+  HOLES.forEach(([x, y], i) => inst.setMatrixAt(i, m.makeTranslation(x, y, ZF + 0.0015)));
+  solid.add(inst);
+}
+// a knurled wheel on its top edge
+const KX = 0.8, KY = H / 2, KR = 0.21, KH = 0.15;
+{
+  const g = new THREE.LatheGeometry([[0, 0], [KR, 0], [KR, KH * 0.33], [KR, KH * 0.66], [KR, KH], [KR - 0.012, KH + 0.012], [0, KH + 0.012]].map(([r, y]) => new THREE.Vector2(r, y)), 192);
+  const pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i), r = Math.hypot(x, z);
+    if (r > KR - 0.001 && y > 0.008 && y < KH - 0.001) {
+      const a = Math.atan2(z, x), s = 1 - 0.03 * (0.5 + 0.5 * Math.cos(a * 40));
+      pos.setXYZ(i, x * s, y, z * s);
+    }
+  }
+  g.computeVertexNormals();
+  add(g, M.knob, KX, KY - 0.002, -0.02);
+}
+
+// ---- what its screen says, painted once. Revealed left to right, nothing redrawn
+const screenPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), -100);
+const content = (() => {
+  const w = 1200, h = Math.round(1200 * SH / SW), c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d');
+  x.fillStyle = '#000000'; x.fillRect(0, 0, w, h);
+  const top = 300, bot = h - 70;
+  x.strokeStyle = 'rgba(0,207,255,.14)'; x.lineWidth = 2;
+  for (let i = 0; i < 5; i++) { const y = top + (bot - top) * i / 4; x.beginPath(); x.moveTo(60, y); x.lineTo(w - 60, y); x.stroke(); }
+  // twelve candles, read off a rising line: one model, no hand-typed figures
+  const N = 12, cw = (w - 130) / N;
+  const path = [0.10, 0.17, 0.13, 0.26, 0.23, 0.37, 0.33, 0.48, 0.58, 0.54, 0.74, 0.92];
+  let prev = 0.06;
+  path.forEach((v, i) => {
+    const y = (u) => bot - u * (bot - top), cx = 65 + cw * (i + 0.5);
+    const up = v >= prev;
+    x.strokeStyle = x.fillStyle = up ? '#00ff38' : '#ff3626';
+    x.lineWidth = 7; x.beginPath(); x.moveTo(cx, y(Math.max(v, prev) + 0.035)); x.lineTo(cx, y(Math.min(v, prev) - 0.03)); x.stroke();
+    x.beginPath(); x.roundRect(cx - cw * 0.3, Math.min(y(v), y(prev)), cw * 0.6, Math.max(10, Math.abs(y(v) - y(prev))), 5); x.fill();
+    prev = v;
+  });
+  x.fillStyle = '#ffffff'; x.font = '400 158px "Archivo Black", sans-serif'; x.textBaseline = 'alphabetic';
+  try { x.letterSpacing = '-2px'; } catch (e) {}
+  x.fillText('UPTREND', 60, 208);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  const shape = new THREE.Shape();
+  outline(SW - 0.05, SH - 0.05, SR - 0.025, 10).forEach(([px, py], i) => (i ? shape.lineTo(px, py) : shape.moveTo(px, py)));
+  const geo = new THREE.ShapeGeometry(shape), gp = geo.attributes.position, guv = geo.attributes.uv;
+  for (let i = 0; i < gp.count; i++) guv.setXY(i, gp.getX(i) / (SW - 0.05) + 0.5, gp.getY(i) / (SH - 0.05) + 0.5);
+  const me = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, toneMapped: false, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, clippingPlanes: [screenPlane] }));
+  me.position.set(SX, SY, ZF + 0.0185);
+  scene.add(me);
+  return me;
+})();
+// ---- a section through it: the inside of every closed part, flat green, reads as the cut face of solid material
+const merged = mergeGeometries(closed);
+const section = new THREE.Mesh(merged, new THREE.MeshBasicMaterial({ color: 0x00ff88, side: THREE.BackSide, toneMapped: false, clippingPlanes: [planeSolid] }));
+scene.add(section);
+// the same shape, depth only, above the level: it is what makes the drawing's hidden lines hidden
+const ghost = new THREE.Mesh(merged, new THREE.MeshBasicMaterial({ colorWrite: false, polygonOffset: true, polygonOffsetFactor: 2, polygonOffsetUnits: 2, clippingPlanes: [planeLine] }));
+ghost.renderOrder = 1;
+scene.add(ghost);
+
+const IDEA = '“an AI that reads any chart”';
+const LEFT = 34;
+const TITLE_SIZE = 96;
+const GROUND_PX = worldYtoPx(-H / 2);
+const BASE2 = Math.round(GROUND_PX) - 4, BASE1 = BASE2 - Math.round(TITLE_SIZE * 1.0);
+const IDEA_FONT = 25;
+const IDEA_BASE = BASE1 - TITLE_SIZE * 0.78 - 32;
+const IDEA_LINE_Y = IDEA_BASE - IDEA_FONT * 0.3;
+placeCamera(S.consA);
+const JOIN_Y = (toPx(-W / 2, 0, ZF)[1] - IDEA_LINE_Y) / PX;       // where on the left datum the idea's line lands
+
+// ---- the drawing. One list of strokes per kind, each stroke a polyline; a pen walks them in order
+const CYAN = 0x00cfff;
+const zf = ZF + 0.003;
+function strokesOf() {
+  const cons = [], edge = [], dims = [];
+  const line = (arr, a, b) => arr.push([a, b]);
+  const poly = (arr, pts, close) => arr.push(close ? [...pts, pts[0]] : pts);
+  const rrect = (w, h, r, cx, cy, z, n = 10) => outline(w, h, r, n).map(([x, y]) => [cx + x, cy + y, z]);
+  const circ = (r, cx, cy, z, n = 72) => Array.from({ length: n }, (_, i) => [cx + Math.cos(i / n * TAU) * r, cy + Math.sin(i / n * TAU) * r, z]);
+  // construction: the idea's line meets the left datum; the pen turns down it, then builds the frame
+  const E = 0.5;
+  line(cons, [-W / 2, JOIN_Y, zf], [-W / 2, -H / 2 - E, zf]);
+  line(cons, [-W / 2, JOIN_Y, zf], [-W / 2, H / 2 + E, zf]);
+  line(cons, [-W / 2 - E, H / 2, zf], [W / 2 + E, H / 2, zf]);
+  line(cons, [W / 2, H / 2 + E, zf], [W / 2, -H / 2 - E, zf]);
+  line(cons, [W / 2 + E, -H / 2, zf], [-W / 2 - E, -H / 2, zf]);
+  line(cons, [-W / 2 - 0.2, SY, zf], [W / 2 + 0.2, SY, zf]);
+  line(cons, [SX, H / 2 + 0.2, zf], [SX, SY - SH / 2 - 0.1, zf]);
+  line(cons, [-W / 2 - 0.2, BAND_Y, zf], [W / 2 + 0.2, BAND_Y, zf]);
+  line(cons, [LX, LY + LR + 0.12, zf], [LX, LY - LR - 0.12, zf]);
+  line(cons, [BTX, BTY + BTR + 0.12, zf], [BTX, BTY - BTR - 0.12, zf]);
+  // the object, big to small
+  poly(edge, rrect(W - 2 * B, H - 2 * B, R - B, 0, 0, ZF), true);
+  poly(edge, rrect(W, H, R, 0, 0, ZF - B), true);
+  poly(edge, rrect(W, H, R, 0, 0, SEAM), true);
+  poly(edge, rrect(W, H, R, 0, 0, -ZF + B), true);
+  // what joins front and back: the corners' silhouettes and tangents, seen from where the camera mostly is
+  const r = R, cx = W / 2 - r, cy = H / 2 - r;
+  const ma = azimuth(4.0), vx = Math.sin(ma), vy = Math.tan(THREE.MathUtils.degToRad(ELEV)), zA = ZF - B, zB = -ZF + B;
+  const th = Math.atan2(vx, -vy);          // where a corner's surface turns edge-on
+  [[th, -cx, cy], [th + Math.PI, cx, -cy]].forEach(([a, x, y]) => {
+    const px = x + Math.cos(a) * r, py = y + Math.sin(a) * r;
+    line(edge, [px, py, zA], [px, py, zB]);
+  });
+  [[0, cx, cy], [Math.PI / 2, cx, cy], [0, cx, -cy]].forEach(([a, x, y]) => {
+    const px = x + Math.cos(a) * r, py = y + Math.sin(a) * r;
+    line(edge, [px, py, zA], [px, py, zB]);
+  });
+  // the screen
+  poly(edge, rrect(SW, SH, SR, SX, SY, ZF + 0.021), true);
+  // the lens, ring by ring
+  [[LR, 0.075], [LR - 0.02, 0.091], [LR - 0.055, 0.091], [LR - 0.062, 0.05], [0.24, 0.07], [0.12, 0.075], [0.05, 0.08]].forEach(([q, h]) => poly(edge, circ(q, LX, LY, ZF + h + 0.002), true));
+  // the button
+  [[BTR, 0.052], [BTR - 0.024, 0.066]].forEach(([q, h]) => poly(edge, circ(q, BTX, BTY, ZF + h + 0.002, 56), true));
+  // the holes
+  HOLES.forEach(([x, y]) => poly(edge, circ(0.026, x, y, zf, 12), true));
+  // the wheel, and its teeth
+  const KZ = -0.02;
+  const ring3 = (q, y, n = 64) => Array.from({ length: n }, (_, i) => [KX + Math.cos(i / n * TAU) * q, y, KZ + Math.sin(i / n * TAU) * q]);
+  poly(edge, ring3(KR, KY + 0.002), true);
+  poly(edge, ring3(KR, KY + KH), true);
+  poly(edge, ring3(KR - 0.012, KY + KH + 0.012), true);
+  for (let i = 0; i < 40; i++) {
+    const a = i / 40 * TAU;
+    line(edge, [KX + Math.cos(a) * (KR + 0.002), KY, KZ + Math.sin(a) * (KR + 0.002)], [KX + Math.cos(a) * (KR + 0.002), KY + KH, KZ + Math.sin(a) * (KR + 0.002)]);
+  }
+  // dimensions: the line itself, a slash at each end
+  const dY = -H / 2 - 0.32, dX = W / 2 + 0.32;
+  line(dims, [-W / 2, dY, zf], [W / 2, dY, zf]);
+  [-W / 2, W / 2].forEach((x) => line(dims, [x - 0.06, dY - 0.06, zf], [x + 0.06, dY + 0.06, zf]));
+  line(dims, [dX, -H / 2, zf], [dX, H / 2, zf]);
+  [-H / 2, H / 2].forEach((y) => line(dims, [dX - 0.06, y - 0.06, zf], [dX + 0.06, y + 0.06, zf]));
+  return { cons, edge, dims };
+}
+const STROKES = strokesOf();
+
+// a line kind: segments in pen order, the time each is reached, and draw count from time
+function makeLines(strokes, { width, opacity, hidden, a, b }) {
+  const seg = [], ends = [], times = [];
+  const durs = strokes.map((pts) => {
+    let len = 0;
+    for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1], pts[i][2] - pts[i - 1][2]);
+    return 0.012 + Math.pow(len, 0.72);
+  });
+  const total = durs.reduce((s, d) => s + d, 0);
+  let clock = 0;
+  strokes.forEach((pts, si) => {
+    const expanded = [];
+    for (let i = 1; i < pts.length; i++) {
+      const p = pts[i - 1], q = pts[i], l = Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]), n = Math.max(1, Math.ceil(l / 0.06));
+      for (let k = 0; k < n; k++) {
+        const u0 = k / n, u1 = (k + 1) / n;
+        expanded.push([p[0] + (q[0] - p[0]) * u0, p[1] + (q[1] - p[1]) * u0, p[2] + (q[2] - p[2]) * u0, p[0] + (q[0] - p[0]) * u1, p[1] + (q[1] - p[1]) * u1, p[2] + (q[2] - p[2]) * u1]);
+      }
+    }
+    expanded.forEach((e, i) => {
+      seg.push(...e); ends.push([e[3], e[4], e[5]]);
+      times.push((clock + durs[si] * (i + 1) / expanded.length) / total);
+    });
+    clock += durs[si];
+  });
+  const geo = new LineSegmentsGeometry(); geo.setPositions(seg);
+  const mk = (extra) => {
+    const m = new LineMaterial({ color: CYAN, linewidth: width * fit, transparent: true, opacity, depthWrite: false, clippingPlanes: [planeLine], ...extra });
+    m.resolution.set(CW, CH);
+    const o = new LineSegments2(geo, m); o.frustumCulled = false; o.renderOrder = 2; scene.add(o);
+    return o;
+  };
+  const front = mk({});
+  let back = null;
+  if (hidden) {
+    back = mk({ opacity: opacity * hidden, depthFunc: THREE.GreaterDepth, dashed: true, dashSize: 0.05, gapSize: 0.05, dashScale: 1, linewidth: width * fit * 0.8 });
+    back.computeLineDistances();
+    back.renderOrder = 3;
+  }
+  return {
+    geo, front, back, ends, times, n: times.length, a, b,
+    set(t) {                       // returns the pen's point while it is drawing, or null
+      const u = win(t, a, b);
+      let lo = 0, hi = this.n;
+      while (lo < hi) { const m = (lo + hi) >> 1; if (this.times[m] <= u) lo = m + 1; else hi = m; }
+      const count = u >= 1 ? this.n : lo;
+      geo.instanceCount = count;
+      const on = count > 0;
+      front.visible = on; if (back) back.visible = on;
+      return (u > 0 && u < 1 && count > 0) ? this.ends[count - 1] : null;
+    }
+  };
+}
+const LINES = {
+  cons: makeLines(STROKES.cons, { width: 1.0, opacity: 0.42, a: S.consA, b: S.consB }),
+  edge: makeLines(STROKES.edge, { width: 1.45, opacity: 1, hidden: 0.34, a: S.edgeA, b: S.edgeB }),
+  dims: makeLines(STROKES.dims, { width: 1.0, opacity: 0.62, a: S.dimA, b: S.dimB })
+};
+
+// ---- the flat layer: type and the few lines that live on the page, not in the object. Units are design px, y down
+const hud = new THREE.Scene();
+const hudCam = new THREE.OrthographicCamera(0, DW, 0, DH, -1, 1);
+const clipAbove = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);    // keeps what is under the level (y down: larger y)
+const clipBelow = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);   // keeps what is above the level
+const clipIdeaX = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);   // the typing
+function textMesh(draw, x, y, w, h, planes) {
+  const k = fit * DPR, c = document.createElement('canvas');
+  c.width = Math.round(w * k); c.height = Math.round(h * k);
+  const g = c.getContext('2d'); g.scale(k, k); g.textBaseline = 'alphabetic';
+  const out = draw(g) || {};
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.flipY = false; tex.generateMipmaps = false;
+  tex.minFilter = THREE.LinearFilter; tex.magFilter = THREE.LinearFilter;
+  const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false, depthTest: false, depthWrite: false, side: THREE.DoubleSide, clippingPlanes: planes || [] });
+  const me = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+  me.position.set(x + w / 2, y + h / 2, 0);
+  hud.add(me);
+  return Object.assign(me, out);
+}
+// the idea: cyan while it is only an idea, white when the level has passed it
+const ideaMetrics = (() => { const g = document.createElement('canvas').getContext('2d'); g.font = `500 ${IDEA_FONT}px "JetBrains Mono", monospace`; return { cw: g.measureText('0').width }; })();
+const ideaW = ideaMetrics.cw * IDEA.length;
+const paintIdea = (col) => (g) => { g.font = `500 ${IDEA_FONT}px "JetBrains Mono", monospace`; g.fillStyle = col; g.fillText(IDEA, 0, IDEA_FONT + 4); };
+const ideaOn = textMesh(paintIdea('#00cfff'), LEFT, IDEA_BASE - IDEA_FONT - 4, Math.ceil(ideaW) + 6, IDEA_FONT + 14, [clipIdeaX, clipBelow]);
+const ideaReal = textMesh(paintIdea('#ffffff'), LEFT, IDEA_BASE - IDEA_FONT - 4, Math.ceil(ideaW) + 6, IDEA_FONT + 14, [clipAbove]);
+const kick = textMesh((g) => {
+  g.font = '700 22px "JetBrains Mono", monospace'; g.fillStyle = '#8fa6b3';
+  try { g.letterSpacing = '0.16em'; } catch (e) {}
+  g.fillText('YOUR IDEA', 0, 24);
+}, LEFT, IDEA_BASE - IDEA_FONT - 42, 260, 32);
+// the name, real under the level and nothing above it
+const titleBox = { x: LEFT - 8, y: BASE1 - TITLE_SIZE, w: 560, h: BASE2 - BASE1 + TITLE_SIZE + 26 };
+const title = textMesh((g) => {
+  g.font = `400 ${TITLE_SIZE}px "Archivo Black", sans-serif`;
+  try { g.letterSpacing = '-0.012em'; } catch (e) {}
+  g.fillStyle = '#ffffff'; g.fillText('Build it', 8, TITLE_SIZE);
+  g.fillStyle = '#00ff88'; g.fillText('Better', 8, BASE2 - BASE1 + TITLE_SIZE);
+}, titleBox.x, titleBox.y, titleBox.w, titleBox.h, [clipAbove]);
+// what comes out
+const OUT_W = 320;
+const outcome = textMesh((g) => {
+  g.font = '700 24px "JetBrains Mono", monospace'; g.fillStyle = '#ffffff'; g.textAlign = 'center';
+  try { g.letterSpacing = '0.14em'; } catch (e) {}
+  g.fillText('A REAL PRODUCT', OUT_W / 2, 24);
+}, OX - OUT_W / 2, GROUND_PX + 40, OUT_W, 34);
+
+// the dimensions' figures: they go when the level passes them
+const label = (txt) => textMesh((g) => {
+  g.font = '500 22px "JetBrains Mono", monospace'; g.fillStyle = '#00cfff';
+  g.fillText(txt, 0, 23);
+}, 0, 0, 120, 32, [clipBelow]);
+const lWidth = label('88 mm'), lHeight = label('118 mm');
+
+// thin flat lines and the pen's dot
+const flatMat = (hex, op = 1) => new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: op, toneMapped: false, depthTest: false, depthWrite: false, side: THREE.DoubleSide });
+const bar = (hex, op) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), flatMat(hex, op)); m.visible = false; hud.add(m); return m; };
+function setBar(m, x0, y0, x1, y1, w) {
+  const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy);
+  m.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0); m.rotation.z = Math.atan2(dy, dx); m.scale.set(l, w, 1); m.visible = l > 0.01;
+}
+const caret = bar(0x00cfff, 1);
+const approach = bar(0x00cfff, 0.8);
+const levelL = bar(0x00cfff, 1), levelR = bar(0x00cfff, 1);
+const tickL = bar(0x00cfff, 1);
+const pen = new THREE.Mesh(new THREE.CircleGeometry(1, 20), flatMat(0xffffff, 1)); pen.visible = false; hud.add(pen);
+const veil = new THREE.Mesh(new THREE.PlaneGeometry(DW, DH), new THREE.MeshBasicMaterial({ transparent: true, toneMapped: false, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
+  blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.ZeroFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneMinusSrcAlphaFactor }));
+veil.position.set(DW / 2, DH / 2, 0); veil.renderOrder = 99; veil.visible = false; hud.add(veil);
+
+// ---- the score, played
+const LEVEL0 = -H / 2 - 0.6;                                             // under the drawing's own lowest line
+const LEVEL1 = H / 2 + 0.62;                                             // just over the drawing's own top
+const CONTOUR = outline(W, H, R, 6);
+const SHADOW_Y = 0;
+function draw(t) {
+  t = ((t % T) + T) % T;
+  placeCamera(t);
+
+  // the level, steady, as a machine moves
+  const uRise = win(t, S.riseA, S.riseB);
+  const rising = t >= S.riseA && t < S.riseB;
+  const eased = uRise < 0.08 ? (uRise * uRise / 0.16) / 0.96 : (uRise - 0.04) / 0.96;     // a soft start, then constant
+  const level = t < S.riseA ? -100 : (t >= S.riseB ? 100 : LEVEL0 + (LEVEL1 - LEVEL0) * eased);
+  planeSolid.constant = level;
+  planeLine.constant = -level;
+  const levelPx = worldYtoPx(level);
+
+  const solidOn = rising || t >= S.riseB;
+  solid.visible = solidOn;
+  section.visible = rising;
+  const drawingOn = t >= S.goA && t < S.riseB;
+  ghost.visible = drawingOn;
+
+  // the pen
+  let tip = null;
+  for (const k of ['cons', 'edge', 'dims']) {
+    const L = LINES[k], p = L.set(t);
+    if (!drawingOn) { L.front.visible = false; if (L.back) L.back.visible = false; }
+    if (p && !tip) tip = p;
+  }
+
+  // the screen
+  const on = win(t, S.onA, S.onB);
+  content.visible = t >= S.onA;
+  screenPlane.constant = SX - (SW - 0.06) / 2 + (SW - 0.06) * smooth(on) + 0.001;   // keeps x below the sweep
+
+  // ---- the flat layer
+  // the idea, typed by the character
+  const chars = Math.floor(win(t, S.typeA, S.typeB) * IDEA.length + 1e-6);
+  const caretX = LEFT + chars * ideaMetrics.cw;
+  clipIdeaX.constant = caretX;
+  const ideaShown = t >= S.typeA && t < S.outB;
+  ideaOn.visible = ideaShown; ideaReal.visible = ideaShown && t >= S.riseA;
+  kick.visible = t >= S.typeA - 0.2 && t < S.outB;
+  kick.material.opacity = smooth(win(t, S.typeA - 0.2, S.typeA + 0.1));
+  // the level's two clips: the flat layer's y grows downward
+  clipAbove.constant = -levelPx; clipBelow.constant = levelPx;        // refined below while it rises
+  if (t < S.riseA) { clipAbove.constant = -1e5; clipBelow.constant = 1e5; }
+  if (t >= S.riseB) { clipAbove.constant = 1e5; clipBelow.constant = -1e5; }
+
+  const blink = t < S.typeA ? 0 : t < S.typeB ? 1 : (t < S.goA ? ((t - S.typeB) % 0.3 < 0.17 ? 1 : 0) : 0);
+  caret.visible = blink > 0 && t < S.goA;
+  if (caret.visible) setBar(caret, caretX + 2, IDEA_BASE - IDEA_FONT * 0.82, caretX + 2, IDEA_BASE + IDEA_FONT * 0.16, 2.4);
+
+  // the line leaving the caret, straight across to the object's left datum
+  const start = toPx(-W / 2, JOIN_Y, zf);
+  const fromX = LEFT + ideaW + 8;
+  const go = easeOut(win(t, S.goA, S.goB));
+  const endX = fromX + (start[0] - fromX) * go;
+  const approachOn = t >= S.goA && levelPx > IDEA_LINE_Y;
+  approach.visible = approachOn;
+  if (approachOn) setBar(approach, fromX, IDEA_LINE_Y, endX, IDEA_LINE_Y, 1.25);
+
+  // the pen's point, while it draws
+  let tipPx = null;
+  if (t >= S.goA && t < S.goB) tipPx = [endX, IDEA_LINE_Y];
+  else if (tip) tipPx = toPx(tip[0], tip[1], tip[2]);
+  pen.visible = !!tipPx;
+  if (tipPx) { pen.position.set(tipPx[0], tipPx[1], 0); pen.scale.setScalar(3); }
+
+  // the dimensions' figures come as the pen finishes them
+  const figure = smooth(win(t, S.dimA + 0.12, S.dimB));
+  const vis = figure > 0 && t < S.riseB;
+  lWidth.visible = lHeight.visible = vis;
+  if (vis) {
+    const a = toPx(0, -H / 2 - 0.32, zf), b = toPx(W / 2 + 0.32, 0, zf);
+    lWidth.position.set(a[0] - 4, a[1] + 18, 0);
+    lHeight.position.set(b[0] + 74, b[1] - 2, 0);
+    lWidth.material.opacity = lHeight.material.opacity = 0.9 * figure;
+  }
+
+  // the level itself: a hairline from the name to the section and on past it, gone at the top
+  title.visible = t >= S.riseA && t < S.outB;
+  const showLevel = rising;
+  const lineFade = 1 - smooth(win(uRise, 0.86, 1));
+  levelL.material.opacity = levelR.material.opacity = tickL.material.opacity = lineFade;
+  levelL.visible = levelR.visible = tickL.visible = showLevel;
+  if (showLevel) {
+    let minX = 1e9, maxX = -1e9, minY = levelPx, maxY = levelPx;
+    if (level > -H / 2 && level < H / 2) {
+      for (let i = 0; i < CONTOUR.length; i++) {
+        const c = CONTOUR[i];
+        // the section at this level spans the body's width and depth
+        for (const z of [ZF - B, -ZF + B]) {
+          const q = toPx(c[0], level, z);
+          if (q[0] < minX) { minX = q[0]; minY = q[1]; }
+          if (q[0] > maxX) { maxX = q[0]; maxY = q[1]; }
+        }
+      }
+    } else { minX = maxX = OX; }
+    if (minX === maxX) { setBar(levelL, LEFT - 8, levelPx, DW - 16, levelPx, 1.25); levelR.visible = false; }
+    else { setBar(levelL, LEFT - 8, minY, minX, minY, 1.25); setBar(levelR, maxX, maxY, DW - 16, maxY, 1.25); }
+    setBar(tickL, LEFT - 8, minY - 7, LEFT - 8, minY + 7, 1.25);
+    clipAbove.constant = -minY; clipBelow.constant = minY;
+  }
+
+  // what comes out, said once the thing is on
+  const say = smooth(win(t, S.onA + 0.3, S.onB + 0.3));
+  outcome.visible = say > 0 && t < S.outB;
+  outcome.material.opacity = say;
+  outcome.position.y = GROUND_PX + 44 + 17 + (1 - say) * 8;
+
+  // the whole frame goes as one
+  const gone = smooth(win(t, S.outA, S.outB));
+  veil.visible = gone > 0; veil.material.opacity = gone;
+
+  // ---- render
+  renderer.info.reset();
+  renderer.clear();
+  renderer.render(scene, camera);
+  renderer.clearDepth();
+  const tm = renderer.toneMapping; renderer.toneMapping = THREE.NoToneMapping;
+  renderer.render(hud, hudCam);
+  renderer.toneMapping = tm;
+}
+
+// ---- the first frame: bake the one shadow, compile everything, so no hitch waits inside the loop
+renderer.shadowMap.needsUpdate = true;
+planeSolid.constant = 100; planeLine.constant = 100;
+placeCamera(4);
+[solid, section, ghost, content].forEach((o) => (o.visible = true));
+for (const k in LINES) { LINES[k].front.visible = true; if (LINES[k].back) LINES[k].back.visible = true; }
+renderer.compile(scene, camera);
+renderer.render(scene, camera);
+
+// ---- the clock
+let live = true, last = 0;
+const samples = [];
+function tick(now) {
+  if (!live) return;
+  if (last) { samples.push(now - last); if (samples.length > 800) samples.shift(); }
+  last = now;
+  draw((now / 1000) % T);
+  requestAnimationFrame(tick);
+}
+window.QUEST_SCENE = {
+  T,
+  ready: true,
+  seek(t) { live = false; draw(t); },
+  play() { if (!live) { live = true; last = 0; requestAnimationFrame(tick); } },
+  stats() {
+    const s = [...samples].sort((a, b) => a - b), q = (p) => s[Math.floor(p * (s.length - 1))] || 0;
+    const gl = renderer.getContext(), dbg = gl.getExtension('WEBGL_debug_renderer_info');
+    return { frames: s.length, p50: q(0.5), p95: q(0.95), p99: q(0.99), calls: renderer.info.render.calls, tris: renderer.info.render.triangles,
+      gpu: dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : 'n/a', buffer: [renderer.domElement.width, renderer.domElement.height] };
+  }
+};
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

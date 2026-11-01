@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio C: buttons</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ==== DROP-IN: .btn-go .btn-how .pill .door .arr .door .ray =================================================
+   The machine's own keys. Each is a matte cap sitting in a dark machined well; the cap has real travel and the well
+   stays where it is, so the pointer never loses it. No glow on any key: the light is from above, and only the pill's
+   lamp gives any of its own. The markup is the page's, unchanged. */
+:root { --key-spring: cubic-bezier(.3, 1.55, .5, 1); --key-heavy: cubic-bezier(.7, 0, .12, 1);
+  --key-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .5 0 0 0 0 .5 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* -- the hero pair ---------------------------------------------------------------------------------------- */
+.btn-go, .btn-how { position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: 16px; height: 64px; padding: 0 14px 0 32px; border-radius: 19px; white-space: nowrap; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent;
+  font: 400 15.5px/1 'Archivo Black', sans-serif; letter-spacing: .035em; text-transform: uppercase; text-decoration: none;
+  background: linear-gradient(180deg, #030508, #0b0f15);
+  box-shadow: inset 0 1px 2px #000, inset 0 0 0 1px rgba(0, 0, 0, .7), 0 1px 0 rgba(255, 255, 255, .14), 0 20px 36px -16px rgba(0, 0, 0, .85); }
+.btn-go::before, .btn-how::before, .btn-go::after, .btn-how::after { content: ''; position: absolute; left: 4px; right: 4px; top: 4px; bottom: 7px; border-radius: 15px; z-index: -1; pointer-events: none;
+  transition: transform .3s var(--key-spring), box-shadow .3s var(--key-spring), filter .25s ease; }
+.btn-go::after, .btn-how::after { background: var(--key-grain); mix-blend-mode: soft-light; opacity: .34; }
+.btn-go > *, .btn-how > * { position: relative; transform: translateY(-1.5px); transition: transform .3s var(--key-spring); }
+.btn-go svg, .btn-how svg { flex: none; width: 36px; height: 36px; padding: 9px; border-radius: 11px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: background .25s ease; }
+.btn-go svg path, .btn-how svg path { transition: transform .34s var(--key-spring); }
+
+.btn-go { color: #04170e; }
+.btn-go > span { text-shadow: 0 1px 0 rgba(255, 255, 255, .3); }
+.btn-go::before { background: linear-gradient(180deg, #3affa8 0, #10ff90 16%, #00f584 62%, #00de78 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .72), inset 1px 0 0 rgba(255, 255, 255, .14), inset -1px 0 0 rgba(0, 80, 45, .16), inset 0 -1px 0 rgba(0, 90, 50, .4), 0 3px 0 #008a4b, 0 4px 5px rgba(0, 0, 0, .8); }
+.btn-go svg { color: #00ff88; background: linear-gradient(180deg, #03100a, #082015); box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255, 255, 255, .42); }
+
+.btn-how { color: #eef6fa; }
+.btn-how > span { text-shadow: 0 -1px 0 rgba(0, 0, 0, .7); }
+.btn-how::before { background: linear-gradient(180deg, #3b424d 0, #2c323b 20%, #22272f 64%, #1b1f26 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .36), inset 1px 0 0 rgba(255, 255, 255, .05), inset -1px 0 0 rgba(0, 0, 0, .2), inset 0 -1px 0 rgba(0, 0, 0, .5), 0 3px 0 #0a0d12, 0 4px 5px rgba(0, 0, 0, .8); }
+.btn-how::after { opacity: .5; }
+.btn-how svg { color: #00cfff; background: linear-gradient(180deg, #05080d, #0c1219); box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255, 255, 255, .13); }
+
+/* the cap comes up to meet the finger, and the arrow steps along its socket */
+.btn-go:hover::before, .btn-go:hover::after, .btn-how:hover::before, .btn-how:hover::after, .btn-go.is-hover::before, .btn-go.is-hover::after, .btn-how.is-hover::before, .btn-how.is-hover::after { transform: translateY(-2px); }
+.btn-go:hover > *, .btn-how:hover > *, .btn-go.is-hover > *, .btn-how.is-hover > * { transform: translateY(-3.5px); }
+.btn-go:hover::before, .btn-go.is-hover::before { filter: brightness(1.1); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85), inset 1px 0 0 rgba(255, 255, 255, .16), inset -1px 0 0 rgba(0, 80, 45, .16), inset 0 -1px 0 rgba(0, 90, 50, .4), 0 5px 0 #008a4b, 0 6px 7px rgba(0, 0, 0, .8); }
+.btn-how:hover::before, .btn-how.is-hover::before { filter: brightness(1.38); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42), inset 1px 0 0 rgba(255, 255, 255, .05), inset -1px 0 0 rgba(0, 0, 0, .2), inset 0 -1px 0 rgba(0, 0, 0, .5), 0 5px 0 #0a0d12, 0 6px 7px rgba(0, 0, 0, .8); }
+.btn-go:hover svg path, .btn-go.is-hover svg path { transform: translateX(4.4px); }
+.btn-go:hover svg, .btn-go.is-hover svg { background: linear-gradient(180deg, #0a2a1c, #12402c); }
+.btn-how:hover svg, .btn-how.is-hover svg { background: linear-gradient(180deg, #111a24, #1c2936); }
+.btn-how:hover svg path, .btn-how.is-hover svg path { transform: translateY(4.4px); }
+/* pressed: down fast, the wall gone, and it comes back on the spring */
+.btn-go:active::before, .btn-go:active::after, .btn-how:active::before, .btn-how:active::after, .btn-go.is-active::before, .btn-go.is-active::after, .btn-how.is-active::before, .btn-how.is-active::after { transform: translateY(2.5px); transition-duration: .07s; transition-timing-function: ease-out; }
+.btn-go:active > *, .btn-how:active > *, .btn-go.is-active > *, .btn-how.is-active > * { transform: translateY(1px); transition: transform .07s ease-out; }
+.btn-go:active::before, .btn-go.is-active::before { filter: brightness(.93); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .38), inset 0 -1px 0 rgba(0, 90, 50, .4), 0 .5px 0 #008a4b, 0 1px 2px rgba(0, 0, 0, .8); }
+.btn-how:active::before, .btn-how.is-active::before { filter: brightness(.86); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), inset 0 -1px 0 rgba(0, 0, 0, .5), 0 .5px 0 #0a0d12, 0 1px 2px rgba(0, 0, 0, .8); }
+.btn-go:active svg path, .btn-go.is-active svg path { transform: translateX(4.4px); }
+.btn-how:active svg path, .btn-how.is-active svg path { transform: translateY(4.4px); }
+.btn-go:focus-visible, .btn-how:focus-visible, .arr:focus-visible { outline: 2px solid #00cfff; outline-offset: 3px; }
+
+/* -- the bar's figure: a small instrument. A plate, a real lamp, and the number on its counter ----------------- */
+.pill { position: relative; flex: none; display: inline-flex; align-items: center; gap: 11px; height: 46px; padding: 0 16px 0 16px; border-radius: 15px; white-space: nowrap;
+  font: 800 13px/1 'JetBrains Mono', monospace; letter-spacing: .07em; text-transform: uppercase; color: #dbe6ec;
+  background: linear-gradient(180deg, #252a32, #171b21 70%, #13161b);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .24), inset 0 -1px 0 rgba(0, 0, 0, .55), 0 2px 0 #06080c, 0 3px 4px rgba(0, 0, 0, .7), 0 14px 26px -12px rgba(0, 0, 0, .9);
+  transition: transform .3s var(--key-spring), box-shadow .3s var(--key-spring); }
+.pill i { position: relative; flex: none; width: 11px; height: 11px; margin-right: 1px; border-radius: 50%;
+  background: radial-gradient(circle at 42% 34%, #d8ffee 0, #36ffa0 26%, #00ff88 48%, #00b860 78%, #005f33 100%);
+  box-shadow: 0 0 0 2px #05070b, 0 1px 0 2.5px rgba(255, 255, 255, .16), 0 0 12px 1px rgba(0, 255, 136, .55);
+  animation: c-lamp 3.2s ease-in-out infinite; }
+@keyframes c-lamp { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(.74); } }
+.pill b { position: relative; display: inline-flex; align-items: center; height: 34px; padding: 0 12px; border-radius: 9px; overflow: hidden;
+  font: 400 19px/1 'Archivo Black', sans-serif; letter-spacing: .01em; color: #00ff88;
+  background: linear-gradient(180deg, #030508, #0a0e14);
+  box-shadow: inset 0 1px 3px #000, inset 0 0 0 1px rgba(0, 0, 0, .6), 0 1px 0 rgba(255, 255, 255, .13); }
+.pill b::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(3, 5, 8, .62); box-shadow: 0 1px 0 rgba(255, 255, 255, .035); pointer-events: none; }
+.pill:hover, .pill.is-hover { transform: translateY(-2px); background: linear-gradient(180deg, #343a44, #22272f 70%, #1b1f26); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42), inset 0 -1px 0 rgba(0, 0, 0, .55), 0 4px 0 #06080c, 0 5px 6px rgba(0, 0, 0, .7), 0 18px 30px -12px rgba(0, 0, 0, .9); }
+.pill:hover i, .pill.is-hover i { box-shadow: 0 0 0 2px #05070b, 0 1px 0 2.5px rgba(255, 255, 255, .16), 0 0 16px 3px rgba(0, 255, 136, .7); animation: none; }
+.pill:active, .pill.is-active { transform: translateY(1.5px); transition-duration: .07s; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 -1px 0 rgba(0, 0, 0, .55), 0 .5px 0 #06080c, 0 1px 2px rgba(0, 0, 0, .7); }
+
+/* -- the door's key, and the slot that runs to it --------------------------------------------------------------
+   One rule for both doors: they already carry --cr. Going over a door, the slider in the slot runs home, and as it
+   arrives the arrow steps forward: the same thing the lead screw does in the scene. */
+.arr { --cr: 0, 255, 136; position: relative; isolation: isolate; flex: none; width: 70px; height: 70px; border-radius: 21px; display: grid; place-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  color: #04170e; background: linear-gradient(180deg, #030508, #0b0f15);
+  box-shadow: inset 0 1px 2px #000, inset 0 0 0 1px rgba(0, 0, 0, .7), 0 1px 0 rgba(255, 255, 255, .15), 0 18px 30px -14px rgba(0, 0, 0, .9); }
+.door { --cr: 0, 255, 136; }
+.door.uv { --cr: 0, 207, 255; }
+.door.uv .arr, .arr.c { --cr: 0, 207, 255; color: #021320; }
+.door .arr { --cr: inherit; }
+.arr::before, .arr::after { content: ''; position: absolute; left: 5px; right: 5px; top: 5px; bottom: 9px; border-radius: 16px; z-index: -1; pointer-events: none; transition: transform .3s var(--key-spring), box-shadow .3s var(--key-spring), filter .25s ease; }
+.arr::before { background: linear-gradient(180deg, color-mix(in srgb, rgb(var(--cr)) 76%, #fff) 0, color-mix(in srgb, rgb(var(--cr)) 94%, #fff) 16%, rgb(var(--cr)) 58%, color-mix(in srgb, rgb(var(--cr)) 86%, #000) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .78), inset 1px 0 0 rgba(255, 255, 255, .14), inset -1px 0 0 rgba(0, 40, 60, .16), inset 0 -1px 0 rgba(0, 40, 60, .4), 0 4px 0 color-mix(in srgb, rgb(var(--cr)) 54%, #000), 0 5px 6px rgba(0, 0, 0, .82); }
+.arr::after { background: var(--key-grain); mix-blend-mode: soft-light; opacity: .34; }
+.arr svg { position: relative; width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; transform: translateY(-2px); transition: transform .34s var(--key-spring); filter: drop-shadow(0 1px 0 rgba(255, 255, 255, .32)); }
+.arr:hover::before, .arr:hover::after, .arr.is-hover::before, .arr.is-hover::after, .door.is-hover .arr::before, .door.is-hover .arr::after { transform: translateY(-2px); }
+.arr:hover svg, .arr.is-hover svg { transform: translate(5px, -4px); }
+.door:hover .arr svg, .door.is-hover .arr svg { transform: translate(5px, -4px); transition-delay: .5s; }
+.door:hover .arr::before, .door:hover .arr::after { transform: translateY(-2px); transition-delay: .5s; }
+.arr:hover::before, .arr.is-hover::before, .door:hover .arr::before, .door.is-hover .arr::before { filter: brightness(1.1); }
+.door:active .arr::before, .door:active .arr::after, .arr:active::before, .arr:active::after, .arr.is-active::before, .arr.is-active::after { transform: translateY(3.5px); transition: transform .07s ease-out, box-shadow .07s ease-out, filter .07s; }
+.door:active .arr::before, .arr:active::before, .arr.is-active::before { filter: brightness(.92); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .36), inset 0 -1px 0 rgba(0, 40, 60, .4), 0 .5px 0 color-mix(in srgb, rgb(var(--cr)) 54%, #000), 0 1px 2px rgba(0, 0, 0, .82); }
+.door:active .arr svg, .arr:active svg, .arr.is-active svg { transform: translate(4px, 1.5px); transition: transform .07s ease-out; transition-delay: 0s; }
+
+.ray { position: relative; flex: 1; min-width: 40px; height: 8px; border-radius: 4px; display: block;
+  background: linear-gradient(180deg, #020305, #090c11);
+  box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255, 255, 255, .13); }
+.ray::before { content: ''; position: absolute; left: 3px; right: 3px; top: 3px; height: 2px; border-radius: 1px; background: linear-gradient(90deg, rgba(var(--cr), 0), rgba(var(--cr), .28) 45%, rgba(var(--cr), .75)); }
+.ray::after { content: ''; position: absolute; left: 7%; top: -3px; width: 30px; height: 14px; border-radius: 5px;
+  background: linear-gradient(180deg, #4a515c, #2c323b 45%, #1f242b);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42), inset 0 -1px 0 rgba(0, 0, 0, .5), 0 2px 0 #0a0d12, 0 3px 4px rgba(0, 0, 0, .8);
+  transition: left .62s var(--key-heavy); }
+.door:hover .ray::after, .door.is-hover .ray::after { left: calc(100% - 30px); }
+
+/* ==== END OF DROP-IN ============================================================================================ */
+
+/* ---- the page's own ground, and its door, for looking at them in place: not part of the drop-in */
+:root { --green: #00ff88; --cyan: #00cfff; --text: #eef6fa; --dim: #a9bfcd; --mute: #8fa3bb; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #05070c; min-height: 100%; }
+body { font-family: 'JetBrains Mono', monospace; color: var(--text); -webkit-font-smoothing: antialiased; }
+#sky { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(1100px 650px at 80% 8%, rgba(0, 207, 255, .08), rgba(0, 207, 255, 0) 65%),
+    radial-gradient(1000px 600px at 15% 20%, rgba(0, 255, 136, .045), rgba(0, 255, 136, 0) 62%),
+    radial-gradient(140% 105% at 50% 50%, rgba(5, 7, 12, 0) 55%, rgba(5, 7, 12, .8) 100%),
+    linear-gradient(rgba(5, 7, 12, .16), rgba(5, 7, 12, .16)),
+    url(../../pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
+main { position: relative; z-index: 1; width: min(1500px, calc(100% - 64px)); margin: 0 auto; padding: 0 0 70px; display: grid; gap: 56px; }
+.bar { display: flex; align-items: center; justify-content: flex-end; gap: 40px; height: 98px; margin: 0 calc(50% - 50vw); padding: 0 calc(50vw - 50%) 10px;
+  background: linear-gradient(180deg, rgba(5, 7, 12, .94) 0%, rgba(5, 7, 12, .72) 50%, rgba(5, 7, 12, 0) 100%); }
+.row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 56px; }
+.st { display: grid; gap: 16px; justify-items: start; }
+.st > em { font: 700 14px 'JetBrains Mono'; font-style: normal; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.pair { display: flex; gap: 18px; align-items: center; }
+.doors { display: grid; grid-template-columns: repeat(2, minmax(0, 706px)); justify-content: space-between; gap: 44px; }
+.door { --c: var(--green); position: relative; display: flex; flex-direction: column; border-radius: 28px; overflow: hidden; isolation: isolate; text-decoration: none; color: inherit; cursor: pointer;
+  background: linear-gradient(180deg, rgba(8, 14, 24, .25), rgba(5, 9, 15, .84));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(var(--cr), .42), 0 0 60px rgba(var(--cr), .13), 0 30px 60px rgba(0, 0, 0, .48); }
+.door.uv { --c: var(--cyan); }
+.door .art { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: url(../../pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
+.door .art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; mix-blend-mode: screen; }
+.door .art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 9, 15, 0) 50%, rgba(5, 9, 15, .94) 100%); }
+.door .cta { position: relative; z-index: 4; display: flex; align-items: center; gap: 22px; margin-top: -64px; padding: 0 24px 26px 32px; }
+.door .cta .t { flex: none; font: 400 32px/1.04 'Archivo Black', sans-serif; color: #fff; text-transform: uppercase; letter-spacing: .01em; text-shadow: 0 3px 18px rgba(0, 0, 0, .9); }
+.door .cta .t span { color: var(--c); }
+.keys { display: flex; align-items: center; gap: 24px; }
+h3 { font: 700 15px 'JetBrains Mono'; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div id="sky"></div>
+<main>
+  <section>
+    <div class="bar"><span class="pill"><i></i>Up to <b>500,000</b> <span>ET10</span> / month</span></div>
+    <div class="row" style="margin-top:10px">
+      <div class="st"><em>Rest</em><span class="pill"><i></i>Up to <b>500,000</b> <span>ET10</span> / month</span></div>
+      <div class="st"><em>Hover</em><span class="pill is-hover"><i></i>Up to <b>500,000</b> <span>ET10</span> / month</span></div>
+      <div class="st"><em>Pressed</em><span class="pill is-active"><i></i>Up to <b>500,000</b> <span>ET10</span> / month</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="row">
+      <div class="st"><em>Rest</em><div class="pair">
+        <a class="btn-go" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+        <a class="btn-how" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+      </div></div>
+      <div class="st"><em>Hover</em><div class="pair">
+        <a class="btn-go is-hover" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+        <a class="btn-how is-hover" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+      </div></div>
+    </div>
+    <div class="row" style="margin-top:40px">
+      <div class="st"><em>Pressed</em><div class="pair">
+        <a class="btn-go is-active" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+        <a class="btn-how is-active" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+      </div></div>
+      <div class="st"><em>The door's key: rest, hover, pressed</em><div class="keys">
+        <span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span class="arr is-hover"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span class="arr is-active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span style="width:24px"></span>
+        <span class="arr c"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span class="arr c is-hover"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+        <span class="arr c is-active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      </div></div>
+    </div>
+  </section>
+
+  <section>
+    <h3>In place, at real size. Go over a door</h3>
+    <div class="doors">
+      <a class="door go" href="#">
+        <span class="art"><img src="../../pics/office.webp" alt=""></span>
+        <span class="cta"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+      </a>
+      <a class="door uv" href="#">
+        <span class="art"><img src="../../pics/universe.webp" alt=""></span>
+        <span class="cta"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+      </a>
+    </div>
+  </section>
+</main>
+</body>
+</html>

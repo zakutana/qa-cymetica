@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Build it Better</title>
+<!-- Studio E. No machine at all: the name is the machine. A folded paper dart, your idea, glides in out of the stars,
+     passes behind the word "Better" and comes out the same shape, engineered, and leaves as a new star.
+     One object, one motion, one word. Every frame is a function of t; QUEST_SCENE.seek(t) draws exactly t. -->
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@800&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  html.black, html.black body { background: #000000; }
+  #stage { position: absolute; left: 50%; top: 50%; width: 1100px; height: 620px; transform-origin: 50% 50%; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #name { position: absolute; left: 0; right: 0; top: 168px; margin: 0; text-align: center; color: #f2f7fa;
+    font: 400 134px/.98 'Archivo Black', sans-serif; letter-spacing: -.022em; pointer-events: none;
+    text-shadow: 0 3px 22px rgba(5, 7, 12, .8); }
+  html.black #name { text-shadow: 0 3px 22px #000000; }
+  #name .g { color: #00ff88; }
+  .tag { position: absolute; left: 0; top: 0; font: 800 26px/1 'JetBrains Mono', monospace; letter-spacing: .06em; text-transform: uppercase;
+    opacity: 0; white-space: nowrap; will-change: transform, opacity; }
+  #t-in { color: #e6eff4; }
+  #t-out { color: #00ff88; }
+</style>
+<script type="importmap">{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.172.0/examples/jsm/"
+} }</script>
+</head>
+<body>
+<div id="stage">
+  <canvas id="gl"></canvas>
+  <h1 id="name">Build it<br><span class="g" id="better">Better</span></h1>
+  <div class="tag" id="t-in">Your idea</div>
+  <div class="tag" id="t-out">Real product</div>
+</div>
+<script type="module">
+import * as THREE from 'three';
+
+const Q = new URLSearchParams(location.search);
+if (Q.has('black')) document.documentElement.classList.add('black');
+const T = 10;                   // the loop, seconds
+const SW = 1100, SH = 620;      // the stage everything is laid out on
+
+await Promise.all([
+  document.fonts.load('400 134px "Archivo Black"'),
+  document.fonts.load('800 26px "JetBrains Mono"')
+]);
+
+const stage = document.getElementById('stage');
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setClearColor(0x000000, 0);
+renderer.toneMapping = THREE.NeutralToneMapping;
+renderer.toneMappingExposure = 1;
+renderer.localClippingEnabled = true;
+const camera = new THREE.PerspectiveCamera(30, SW / SH, 3, 120);
+camera.position.set(0, 0, 10);
+const scene = new THREE.Scene();
+
+function fit() {
+  const s = Math.min(innerWidth / SW, innerHeight / SH);
+  stage.style.transform = `translate(-50%, -50%) scale(${s})`;
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5) * s);
+  renderer.setSize(SW, SH, false);
+}
+addEventListener('resize', () => { fit(); draw(lastT); });
+
+// a seeded generator: the textures come out the same on every load
+let seed = 20261101;
+const rnd = () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296;
+
+// ---- the light: a dark studio, three soft strips. Baked once; the hull slides through it
+{
+  const env = new THREE.Scene();
+  {
+    const c = document.createElement('canvas'); c.width = 8; c.height = 256;
+    const x = c.getContext('2d'), g = x.createLinearGradient(0, 0, 0, 256);
+    g.addColorStop(0, '#5d7286'); g.addColorStop(.36, '#1c2836'); g.addColorStop(.5, '#090d14'); g.addColorStop(.62, '#0b1a22'); g.addColorStop(1, '#14493f');
+    x.fillStyle = g; x.fillRect(0, 0, 8, 256);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    env.add(new THREE.Mesh(new THREE.SphereGeometry(40, 24, 16), new THREE.MeshBasicMaterial({ map: t, side: THREE.BackSide })));
+  }
+  const strip = (w, h, x, y, z, col, k) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(col).multiplyScalar(k), side: THREE.DoubleSide }));
+    m.position.set(x, y, z); m.lookAt(0, 0, 0); env.add(m);
+  };
+  strip(30, 5, 0, 24, 8, 0xffffff, 5);        // the long overhead softbox
+  strip(4, 22, -24, 4, 18, 0xdff2ff, 2.2);    // left fill
+  strip(26, 2, 6, -14, 18, 0x9fe8ff, 1.2);    // a low thin kicker, cool
+  strip(40, 1.6, 0, 8, 30, 0xffffff, 2.4);    // a thin line in front: the streak that runs along the wing
+  strip(44, 3.2, 0, 24, -12, 0xd8e6ee, 2.2);  // behind and above: what the top of the hull sees as it leaves
+  strip(44, 1.2, 0, 15, -26, 0xffffff, 7);    // and one hard line under it, so the metal reads as metal
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(env, 0.012).texture;
+  pm.dispose();
+}
+const key = new THREE.DirectionalLight(0xffffff, 1.1);
+key.position.set(-3, 7, 6);
+scene.add(key);
+
+// ---- the seam: a vertical line on screen, through the camera, behind the two t's of "Better"
+const better = document.getElementById('better');
+const stageBox = stage.getBoundingClientRect();
+const scaleNow = stageBox.width / SW;
+const range = document.createRange();
+range.setStart(better.firstChild, 3); range.setEnd(better.firstChild, 3);
+const seamPx = (range.getBoundingClientRect().left - stageBox.left) / scaleNow + 21;   // into the second t's stem
+const halfW0 = Math.tan(THREE.MathUtils.degToRad(15)) * 10 * (SW / SH);
+const seamX = ((seamPx / SW) * 2 - 1) * halfW0;
+const seamN = new THREE.Vector3(10, 0, seamX).normalize();
+const clipPaper = new THREE.Plane(seamN.clone().negate(), seamN.dot(camera.position));
+const clipShip = new THREE.Plane(seamN.clone(), -seamN.dot(camera.position));
+
+// ---- the idea: a folded sheet, ruled, with a note on it
+const LEN = 4.3;
+const SPAN = 0.30;   // half span, of a unit length
+function paperMaps() {
+  const S = 1024;
+  const c = document.createElement('canvas'); c.width = c.height = S;
+  const x = c.getContext('2d');
+  x.fillStyle = '#eef3f4'; x.fillRect(0, 0, S, S);
+  // fibres
+  for (let i = 0; i < 2600; i++) {
+    x.fillStyle = rnd() < .5 ? 'rgba(255,255,255,.05)' : 'rgba(70,95,115,.035)';
+    x.fillRect(rnd() * S, rnd() * S, 1 + rnd() * 16, 1);
+  }
+  // the ruled sheet of a notebook: faint blue lines, one red margin
+  x.strokeStyle = 'rgba(59,130,246,.42)'; x.lineWidth = 2.2;
+  for (let y = 26; y < S; y += 58) { x.beginPath(); x.moveTo(0, y); x.lineTo(S, y); x.stroke(); }
+  x.strokeStyle = 'rgba(255,68,68,.5)'; x.lineWidth = 2.6;
+  x.beginPath(); x.moveTo(210, 0); x.lineTo(210, S); x.stroke();
+  // the note, in pencil, on the wing nearest the viewer: a bulb and a word
+  x.strokeStyle = '#27384c'; x.lineWidth = 6.5; x.lineCap = 'round'; x.lineJoin = 'round';
+  const line = (pts) => { x.beginPath(); x.moveTo(pts[0], pts[1]); for (let i = 2; i < pts.length; i += 6) x.bezierCurveTo(pts[i], pts[i + 1], pts[i + 2], pts[i + 3], pts[i + 4], pts[i + 5]); x.stroke(); };
+  x.save(); x.translate(290, 650); x.rotate(-.03);
+  line([20, 30, 18, -30, 92, -34, 92, 28, 92, 50, 74, 54, 70, 76, 62, 74, 50, 74, 42, 76, 38, 54, 20, 50, 20, 30]); // bulb
+  line([44, 90, 50, 88, 62, 88, 68, 90]);
+  line([46, 104, 52, 102, 60, 102, 66, 104]);
+  line([56, -52, 56, -58, 56, -62, 56, -68]); line([2, -22, -3, -27, -6, -30, -10, -34]); line([110, -22, 114, -27, 118, -30, 122, -34]);
+  // i d e a
+  x.translate(146, 60);
+  line([4, 30, 4, 44, 4, 56, 6, 72]); line([3, 6, 4, 6, 5, 6, 5, 7]);
+  line([64, 34, 40, 18, 22, 44, 30, 62, 38, 76, 58, 72, 66, 54]); line([66, -14, 66, 14, 66, 44, 70, 74]);
+  line([92, 50, 112, 48, 122, 30, 104, 26, 84, 22, 76, 56, 94, 70, 106, 76, 118, 72, 128, 62]);
+  line([182, 34, 160, 16, 138, 44, 148, 66, 158, 80, 176, 64, 182, 44]); line([182, 30, 180, 48, 184, 66, 192, 74]);
+  x.restore();
+  const map = new THREE.CanvasTexture(c);
+  map.colorSpace = THREE.SRGBColorSpace; map.flipY = false; map.anisotropy = 4;
+
+  // the sheet has been crumpled once and smoothed out: creases as a height field, turned into a normal map
+  const H = 512, h = new Float32Array(H * H);
+  const hc = document.createElement('canvas'); hc.width = hc.height = H;
+  const hx = hc.getContext('2d', { willReadFrequently: true });
+  hx.fillStyle = '#808080'; hx.fillRect(0, 0, H, H);
+  for (let i = 0; i < 46; i++) {
+    const a = rnd() * 6.283, l = 90 + rnd() * 260, cx = rnd() * H, cy = rnd() * H;
+    hx.strokeStyle = rnd() < .5 ? 'rgba(255,255,255,.34)' : 'rgba(0,0,0,.34)';
+    hx.lineWidth = 1 + rnd() * 2.4;
+    hx.beginPath(); hx.moveTo(cx, cy); hx.lineTo(cx + Math.cos(a) * l, cy + Math.sin(a) * l); hx.stroke();
+  }
+  hx.filter = 'blur(1.4px)'; hx.drawImage(hc, 0, 0); hx.filter = 'none';
+  const d = hx.getImageData(0, 0, H, H), px = d.data;
+  for (let i = 0; i < H * H; i++) h[i] = px[i * 4] / 255;
+  const out = hx.createImageData(H, H);
+  for (let y = 0; y < H; y++) for (let xx = 0; xx < H; xx++) {
+    const l = h[y * H + (xx + H - 1) % H], r = h[y * H + (xx + 1) % H], u = h[((y + H - 1) % H) * H + xx], dn = h[((y + 1) % H) * H + xx];
+    const nx = (l - r) * 2.2, ny = (u - dn) * 2.2, k = 1 / Math.hypot(nx, ny, 1), j = (y * H + xx) * 4;
+    out.data[j] = (nx * k * .5 + .5) * 255; out.data[j + 1] = (ny * k * .5 + .5) * 255; out.data[j + 2] = (k * .5 + .5) * 255; out.data[j + 3] = 255;
+  }
+  hx.putImageData(out, 0, 0);
+  const normalMap = new THREE.CanvasTexture(hc);
+  normalMap.flipY = false;
+  return { map, normalMap };
+}
+const pm = paperMaps();
+const paperMat = new THREE.MeshStandardMaterial({ map: pm.map, normalMap: pm.normalMap, normalScale: new THREE.Vector2(.55, .55), roughness: .92, metalness: 0,
+  side: THREE.DoubleSide, envMapIntensity: .75, clippingPlanes: [clipPaper] });
+
+function tri(arr, a, b, c) { arr.push(...a, ...b, ...c); }
+function paperGeo() {
+  const p = [];
+  const N = [.5, 0, 0], tail = -.5;
+  const flat = (a, b, c) => tri(p, a, b, c);
+  const Ap = [tail, .004, .016], An = [tail, .004, -.016], K = [tail, -.115, 0];
+  const Wp = [tail, .046, SPAN], Wn = [tail, .046, -SPAN];
+  // wings, each two faces: the sheet's inner fold and the outer panel
+  const Fp = [-.10, .014, .135], Fn = [-.10, .014, -.135];
+  flat(N, Ap, Fp); flat(N, Fp, Wp); flat(Ap, Wp, Fp);
+  flat(N, Fn, An); flat(N, Wn, Fn); flat(An, Fn, Wn);
+  // keel
+  flat(N, K, Ap); flat(N, An, K);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+  const uv = [];
+  for (let i = 0; i < p.length; i += 3) {
+    // planform; the keel's faces take a slice of the sheet away from the note
+    const below = p[i + 1] < -.001;
+    uv.push(p[i] + .5, (p[i + 2] + SPAN) / (2 * SPAN) * (below ? .2 : 1));
+  }
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.computeVertexNormals();
+  return g;
+}
+
+// ---- the product: the same dart, engineered. One lofted skin, white above and graphite below
+function hullMap() {
+  const S = 2048, c = document.createElement('canvas'); c.width = S; c.height = S / 2;
+  const x = c.getContext('2d'), W = S, H = S / 2;
+  x.fillStyle = '#c3ced6'; x.fillRect(0, 0, W, H);
+  const P = (u, v) => [u * W, v * H];
+  x.lineCap = 'round';
+  // panel lines, drawn thin and sparse
+  x.strokeStyle = 'rgba(30,50,66,.5)'; x.lineWidth = 2.4;
+  const seg = (u0, v0, u1, v1) => { x.beginPath(); x.moveTo(...P(u0, v0)); x.lineTo(...P(u1, v1)); x.stroke(); };
+  seg(.82, .5, .02, .5 - .085); seg(.82, .5, .02, .5 + .085);
+  [[.42, .17], [.22, .29]].forEach(([u, d]) => { seg(u, .5 - d * .43, u, .5 - d); seg(u, .5 + d * .43, u, .5 + d); });
+  seg(.32, .5 - .07, .17, .5 - .07); seg(.32, .5 + .07, .17, .5 + .07);
+  // the rear deck in graphite, where the engines live
+  const g = x.createLinearGradient(.2 * W, 0, 0, 0);
+  g.addColorStop(0, 'rgba(14,22,32,0)'); g.addColorStop(.28, 'rgba(14,22,32,.94)'); g.addColorStop(1, 'rgba(10,16,24,1)');
+  x.fillStyle = g;
+  x.beginPath(); x.moveTo(...P(.26, .5 - .05)); x.lineTo(...P(0, .5 - .13)); x.lineTo(...P(0, .5 + .13)); x.lineTo(...P(.26, .5 + .05)); x.closePath(); x.fill();
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; t.anisotropy = 8;
+  return t;
+}
+function hullGeo() {
+  const NS = 96, NC = 72, pos = [], uv = [], col = [], idx = [];
+  const white = new THREE.Color(1, 1, 1), dark = new THREE.Color(.05, .07, .095), c = new THREE.Color();
+  const yAt = (s, v, top) => {
+    const b = SPAN * Math.pow(s, 1.06);
+    const z = b * v, av = Math.abs(v);
+    const body = Math.pow(Math.sin(Math.min(s * 1.45, 1) * Math.PI / 2), .8);
+    const rf = .03 + .062 * Math.min(s * 1.2, 1);
+    const hump = Math.exp(-(z * z) / (rf * rf));
+    const dihedral = .046 * s * av * av;
+    if (top) return dihedral + .026 * s * (1 - av * av) + .05 * body * hump;
+    return dihedral - .006 * s * (1 - av * av) - .038 * body * hump;
+  };
+  for (let i = 0; i <= NS; i++) {
+    const s = Math.pow(i / NS, 1.25) * .9994 + .0006, x = .5 - s;
+    const b = SPAN * Math.pow(s, 1.06);
+    for (let j = 0; j < NC; j++) {
+      const a = (j / NC) * Math.PI * 2, v = Math.cos(a), top = Math.sin(a) >= 0;
+      const lens = Math.abs(Math.sin(a));
+      const y = yAt(s, v, top) * (.12 + .88 * Math.pow(lens, .7)) + .046 * s * v * v * (1 - (.12 + .88 * Math.pow(lens, .7)));
+      pos.push(x, y, b * v);
+      uv.push(x + .5, .5 + b * v);          // planform, same scale both ways
+      c.copy(top ? white : dark);
+      col.push(c.r, c.g, c.b);
+    }
+  }
+  for (let i = 0; i < NS; i++) for (let j = 0; j < NC; j++) {
+    const a = i * NC + j, b2 = i * NC + (j + 1) % NC, d = (i + 1) * NC + j, e = (i + 1) * NC + (j + 1) % NC;
+    idx.push(a, b2, d, b2, e, d);
+  }
+  // the tail: a closing fan, graphite
+  const centre = pos.length / 3;
+  pos.push(-.5, 0, 0); uv.push(.0, .5); col.push(dark.r, dark.g, dark.b);
+  for (let j = 0; j < NC; j++) idx.push(NS * NC + j, NS * NC + (j + 1) % NC, centre);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+function hullLight() {
+  // the one green line, along each leading edge, painted on the same planform as the hull
+  const S = 2048, c = document.createElement('canvas'); c.width = S; c.height = S / 2;
+  const x = c.getContext('2d');
+  x.fillStyle = '#000000'; x.fillRect(0, 0, S, S / 2);
+  x.strokeStyle = '#00ff88'; x.lineWidth = 5; x.lineCap = 'round';
+  [-1, 1].forEach((sd) => {
+    x.beginPath(); x.moveTo(.97 * S, .25 * S); x.lineTo(.015 * S, (.5 + sd * .276) * (S / 2)); x.stroke();
+  });
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace; t.flipY = false; t.anisotropy = 8;
+  return t;
+}
+const hullMat = new THREE.MeshStandardMaterial({ map: hullMap(), vertexColors: true, roughness: .27, metalness: 1, envMapIntensity: 1.4, clippingPlanes: [clipShip],
+  emissive: 0xffffff, emissiveMap: hullLight(), emissiveIntensity: 1 });
+const graphiteMat = new THREE.MeshStandardMaterial({ color: 0x0d141d, roughness: .34, metalness: .55, envMapIntensity: 1.1, clippingPlanes: [clipShip] });
+const glassMat = new THREE.MeshStandardMaterial({ color: 0x03070c, roughness: .05, metalness: .9, envMapIntensity: 2.4, clippingPlanes: [clipShip] });
+const fireMat = new THREE.MeshBasicMaterial({ color: 0x000000, toneMapped: false, clippingPlanes: [clipShip] });
+
+function finGeo(len, tall, thick) {
+  const sh = new THREE.Shape();
+  sh.moveTo(0, 0); sh.lineTo(-len, 0); sh.lineTo(-len * 1.1, tall); sh.lineTo(-len * .72, tall); sh.closePath();
+  const g = new THREE.ExtrudeGeometry(sh, { depth: thick, bevelEnabled: true, bevelSize: thick * .35, bevelThickness: thick * .35, bevelSegments: 2, steps: 1 });
+  g.translate(0, 0, -thick / 2);
+  return g;
+}
+
+const craft = new THREE.Group();       // position and attitude, shared by both
+const paper = new THREE.Group();
+const ship = new THREE.Group();
+craft.add(paper, ship);
+scene.add(craft);
+paper.add(new THREE.Mesh(paperGeo(), paperMat));
+paper.scale.setScalar(LEN);
+ship.scale.setScalar(LEN);
+ship.add(new THREE.Mesh(hullGeo(), hullMat));
+// canopy
+{
+  const m = new THREE.Mesh(new THREE.SphereGeometry(1, 36, 18), glassMat);
+  m.scale.set(.15, .017, .0165); m.position.set(.13, .036, 0);
+  ship.add(m);
+}
+// the paper's keel, kept
+{
+  const v = new THREE.Mesh(finGeo(.28, -.07, .006), graphiteMat);
+  v.position.set(-.215, -.02, 0);
+  ship.add(v);
+}
+// the engine: one bar of light across the tail, the only fire in the scene
+{
+  const d = new THREE.Mesh(new THREE.PlaneGeometry(.17, .0085), fireMat);
+  d.rotation.y = -Math.PI / 2;
+  d.position.set(-.5015, .004, 0);
+  ship.add(d);
+}
+function softDot(rgb) {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, `rgba(${rgb},1)`); g.addColorStop(.14, `rgba(${rgb},.55)`); g.addColorStop(.42, `rgba(${rgb},.1)`); g.addColorStop(1, `rgba(${rgb},0)`);
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+const glowMat = new THREE.SpriteMaterial({ map: softDot('120,255,190'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, opacity: 0, clippingPlanes: [clipShip] });
+const glow = new THREE.Sprite(glowMat);
+glow.position.set(-.53, .009, 0);
+glow.scale.set(.42, .12, 1);
+ship.add(glow);
+// the object as a point of light, while it is too far to be anything else
+const starMat = new THREE.SpriteMaterial({ map: softDot('255,255,255'), blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, depthTest: false, opacity: 0 });
+const star = new THREE.Sprite(starMat);
+scene.add(star);
+
+// ---- the flight: stage pixels and a depth at given times, one smooth cubic through them, then the attitude
+const TAN = Math.tan(THREE.MathUtils.degToRad(15));
+const S = (x, y, z) => { const hh = (10 - z) * TAN; return [(x - 550) / 310 * hh, (310 - y) / 310 * hh, z]; };
+const YB = 349;     // the height of "Better" on the stage
+const KEYS = [
+  [0.00, S(232, 62, -46)],
+  [1.10, S(178, 150, -17)],
+  [2.25, S(205, 300, -4.6)],
+  [3.45, S(350, YB + 10, -1.3)],
+  [4.45, S(556, YB, -.9)],
+  [5.40, S(790, YB - 14, -1.2)],
+  [6.20, S(895, 292, -3.8)],
+  [7.10, S(962, 188, -14)],
+  [8.50, S(915, 56, -54)]
+];
+const VEL = KEYS.map((k, i) => {
+  const a = KEYS[Math.max(i - 1, 0)], b = KEYS[Math.min(i + 1, KEYS.length - 1)];
+  return k[1].map((_, c) => (b[1][c] - a[1][c]) / (b[0] - a[0]));
+});
+const ease = (a, b, x) => { const u = Math.min(1, Math.max(0, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
+function flight(t, outP, outV) {
+  let i = 0;
+  const tt = Math.min(KEYS[KEYS.length - 1][0], Math.max(0, t));
+  while (i < KEYS.length - 2 && tt > KEYS[i + 1][0]) i++;
+  const h = KEYS[i + 1][0] - KEYS[i][0], s = (tt - KEYS[i][0]) / h, s2 = s * s, s3 = s2 * s;
+  for (let c = 0; c < 3; c++) {
+    const p0 = KEYS[i][1][c], p1 = KEYS[i + 1][1][c], m0 = VEL[i][c] * h, m1 = VEL[i + 1][c] * h;
+    outP.setComponent(c, (2 * s3 - 3 * s2 + 1) * p0 + (s3 - 2 * s2 + s) * m0 + (-2 * s3 + 3 * s2) * p1 + (s3 - s2) * m1);
+    outV.setComponent(c, ((6 * s2 - 6 * s) * p0 + (3 * s2 - 4 * s + 1) * m0 + (-6 * s2 + 6 * s) * p1 + (3 * s2 - 2 * s) * m1) / h);
+  }
+}
+const p = new THREE.Vector3(), f = new THREE.Vector3(), r = new THREE.Vector3(), u = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
+const M = new THREE.Matrix4(), q = new THREE.Quaternion(), X = new THREE.Vector3(1, 0, 0), Z = new THREE.Vector3(0, 0, 1);
+const TAG_IN = document.getElementById('t-in'), TAG_OUT = document.getElementById('t-out');
+const SWAP = 4.45;
+const tagP = new THREE.Vector3(), tagV = new THREE.Vector3();
+
+let lastT = 0;
+function draw(tIn) {
+  const t = ((tIn % T) + T) % T;
+  lastT = t;
+  flight(t, p, f);
+  f.normalize();
+  // the paper does not fly straight: it rises and sinks and rocks. It stops when the word has it
+  const wob = (1 - ease(2.9, 3.6, t)) * ease(.5, 1.6, t);
+  p.y += Math.sin(t * 2.6) * .13 * wob;
+  const pitchW = Math.cos(t * 2.6) * .11 * wob;
+  const rock = Math.sin(t * 1.7 + .6) * .17 * wob;
+  r.crossVectors(f, UP).normalize();
+  u.crossVectors(r, f).normalize();
+  M.makeBasis(f, u, r);
+  craft.quaternion.setFromRotationMatrix(M);
+  // roll the top towards the viewer; the product levels out as it leaves
+  const roll = .62 * ease(0, 2.2, t) - .47 * ease(3, 4.0, t) + .33 * ease(5.1, 5.9, t) + rock - .14 * ease(6, 7.4, t);
+  craft.quaternion.multiply(q.setFromAxisAngle(X, roll));
+  craft.quaternion.multiply(q.setFromAxisAngle(Z, pitchW));
+  craft.position.copy(p);
+  // it grows out of a point and goes back to one: the far ends of the flight are too near to do that by distance alone
+  const away = (1 - ease(.15, 1.3, t)) + ease(7.2, 8.45, t);
+  craft.scale.setScalar(Math.max(.012, 1 - away));
+
+  const dist = camera.position.distanceTo(p);
+  paper.visible = t > .12 && t < SWAP + 1.1;
+  ship.visible = t > SWAP - 1.2 && t < 8.5;
+  // the engine catches once the nose is out, and stays on
+  const fire = ease(SWAP + .35, SWAP + 1.1, t);
+  fireMat.color.setRGB(.04 + .3 * fire, .02 + fire, .02 + .55 * fire);
+  glowMat.opacity = .55 * fire;
+
+  // far away it is a star: white arriving, green leaving
+  const a0 = ease(0, .5, t), a1 = 1 - ease(8.7, 9.6, t);
+  starMat.color.set(t < SWAP ? 0xffffff : 0x66ffb8);
+  starMat.opacity = Math.min(1, away * 1.6) * a0 * a1;
+  star.position.copy(p);
+  const sz = dist * .021;
+  star.scale.set(sz, sz, 1);
+
+  // the words go with the object, under it, so the eye has one place to be
+  flight(t, tagP, tagV);
+  tagP.project(camera);
+  const sx = (tagP.x * .5 + .5) * SW, sy = (-tagP.y * .5 + .5) * SH, near = LEN * (SH / 2) / ((10 - p.z) * TAN);
+  const ty = Math.min(SH - 60, sy + .13 * near + 12);
+  TAG_IN.style.opacity = ease(1.0, 1.6, t) * (1 - ease(2.9, 3.4, t));
+  TAG_IN.style.transform = `translate(${Math.max(52, sx - 90).toFixed(1)}px, ${ty.toFixed(1)}px)`;
+  TAG_OUT.style.opacity = ease(5.2, 5.8, t) * (1 - ease(7.0, 7.6, t));
+  TAG_OUT.style.transform = `translate(${Math.max(806, Math.min(SW - 262, sx - 110)).toFixed(1)}px, ${Math.min(SH - 60, sy + .2 * near + 18).toFixed(1)}px)`;
+
+  renderer.render(scene, camera);
+}
+
+fit();
+let live = true;
+const t0 = performance.now();
+function loop(now) {
+  if (!live) return;
+  draw((now - t0) / 1000);
+  requestAnimationFrame(loop);
+}
+window.QUEST_SCENE = { T, seek(t) { live = false; draw(t); }, draw };
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

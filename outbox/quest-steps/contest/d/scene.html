@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Build it Better: frosted glass (scene for the Quest page)</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: transparent; }
+  canvas { display: block; }
+</style>
+<script>if (/[?&]black=1/.test(location.search)) document.documentElement.style.background = '#000';</script>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.172.0/build/three.module.js" } }</script>
+</head>
+<body>
+<!-- Step 2 of the Quest, studio D. An idea is a blur until it is built. Tilted sheets of frosted glass slide in one at a
+     time; whatever stands behind a sheet is a soft blur, and the further behind, the softer, as real frost does. When the
+     sheets slide together the gaps close, the blur goes, and the idea on the back sheet, the design, the build and the
+     deploy come into focus as one finished app. The frost is computed, not faked with a tint: every fragment asks which
+     sheets stand between it and the eye and how far behind them it is, then reads a pre-blurred copy of itself. So there
+     is no full-screen blur pass, which is why this is cheap on a weak chip. One light, behind the glass. No particles. -->
+<script type="module">
+import * as THREE from 'three';
+
+const Q = new URLSearchParams(location.search);
+const BLACK = Q.get('black') === '1';
+const T = 12;
+
+// ---------------------------------------------------------------- the timeline
+const AT = {
+  ideaIn: [-0.5, 0.9],
+  panes: [[2.2, 3.05], [3.6, 4.45], [5.0, 5.85]],
+  close: [6.25, 7.05],
+  live: [7.05, 9.05],
+  exit: [10.6, 11.6],
+};
+const clamp = (x) => Math.max(0, Math.min(1, x));
+const win = (t, a, b) => clamp((t - a) / (b - a));
+const smooth = (x) => x * x * x * (x * (x * 6 - 15) + 10);
+const out3 = (x) => 1 - Math.pow(1 - x, 3);
+const out4 = (x) => 1 - Math.pow(1 - x, 4);
+const lerp = (a, b, x) => a + (b - a) * x;
+
+// ---------------------------------------------------------------- fonts, then the sheets' faces, drawn once
+await Promise.race([
+  Promise.all([
+    document.fonts.load('400 100px "Archivo Black"'),
+    document.fonts.load('800 40px "JetBrains Mono"'),
+    document.fonts.load('700 40px "JetBrains Mono"'),
+  ]),
+  new Promise((r) => setTimeout(r, 4000)),
+]);
+
+const PW = 1400, PH = 896;             // a sheet's face in canvas px
+const UW = 6.4, UH = UW * PH / PW;     // and in world units
+const PX = UW / PW;
+const MARGIN = 170;                    // room for the blur to spill
+
+function mk(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+const hasFilter = 'filter' in CanvasRenderingContext2D.prototype;
+function blurred(src, scale, radius) {
+  const w = Math.max(2, Math.round(src.width * scale)), h = Math.max(2, Math.round(src.height * scale));
+  const c = mk(w, h), x = c.getContext('2d');
+  if (hasFilter) { x.filter = `blur(${radius * scale}px)`; x.drawImage(src, 0, 0, w, h); return c; }
+  // no canvas filter (old Safari): shrink and grow, which is a coarser blur of about the same reach
+  const s = Math.max(2, Math.round(radius * 0.6)), t = mk(Math.max(2, src.width / s | 0), Math.max(2, src.height / s | 0));
+  t.getContext('2d').drawImage(src, 0, 0, t.width, t.height);
+  x.imageSmoothingQuality = 'high'; x.drawImage(t, 0, 0, w, h);
+  return c;
+}
+let maxAniso = 1;
+function tex(c, mips) {
+  const t = new THREE.CanvasTexture(c);
+  t.premultiplyAlpha = true;
+  t.colorSpace = THREE.NoColorSpace;
+  t.generateMipmaps = !!mips;
+  t.minFilter = mips ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.anisotropy = mips ? maxAniso : 1;
+  return t;
+}
+function spaced(x, s, px, py, ls) { // text with letter spacing, in every browser
+  let at = px;
+  for (const ch of s) { x.fillText(ch, at, py); at += x.measureText(ch).width + ls; }
+  return at - ls;
+}
+function round(x, ax, ay, w, h, r) { x.beginPath(); x.roundRect(ax, ay, w, h, r); }
+
+// ---------------------------------------------------------------- the renderer
+const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, premultipliedAlpha: true, powerPreference: 'high-performance' });
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;   // everything stays in the page's own sRGB, blended as CSS blends
+renderer.toneMapping = THREE.NoToneMapping;
+renderer.setClearColor(0x000000, BLACK ? 1 : 0);
+maxAniso = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(27, 1, 0.5, 80);
+const CAM = new THREE.Vector3(0, 0.1, 13);
+const VIEW_W = 11, VIEW_H = 6.2;       // the box that always fits
+function resize() {
+  const w = +(Q.get('w') || innerWidth), h = +(Q.get('h') || innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  const fitH = Math.max(VIEW_H, VIEW_W / camera.aspect);
+  camera.fov = 2 * Math.atan(fitH / 2 / CAM.z) * 180 / Math.PI;
+  camera.updateProjectionMatrix();
+  if (U.uRes) U.uRes.value.set(renderer.domElement.width, renderer.domElement.height);
+}
+
+// ---------------------------------------------------------------- the shaders
+const U = { uRes: { value: new THREE.Vector2(1, 1) } };
+const invs = Array.from({ length: 5 }, () => new THREE.Matrix4());
+const camL = Array.from({ length: 5 }, () => new THREE.Vector3());
+
+const VERT = /* glsl */`
+  uniform vec2 uOff; uniform mat4 uInv[5]; varying vec2 vUv; varying vec2 vL; varying vec3 vB[5];
+  void main() { vUv = uv; vL = position.xy + uOff; vec4 w = modelMatrix * vec4(position, 1.0);
+    ${[0, 1, 2, 3, 4].map((i) => `vB[${i}] = (uInv[${i}] * w).xyz;`).join(' ')}
+    gl_Position = projectionMatrix * viewMatrix * w; }`;
+
+const FROST = /* glsl */`
+  precision highp float;
+  const vec2 H = vec2(${(UW / 2).toFixed(4)}, ${(UH / 2).toFixed(4)});
+  const float RAD = 0.17;
+  uniform vec3 uCamL[5]; uniform float uOn[5];
+  uniform vec2 uResE;
+  float edgeFade() { vec2 s = gl_FragCoord.xy / uResE; return smoothstep(0.0, 0.03, s.x) * smoothstep(0.0, 0.03, 1.0 - s.x) * smoothstep(0.0, 0.03, s.y) * smoothstep(0.0, 0.03, 1.0 - s.y); }
+  varying vec2 vUv; varying vec2 vL; varying vec3 vB[5];
+  float sd(vec2 p, vec2 h, float r) { vec2 q = abs(p) - h + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
+  // how much frost stands between this fragment and the eye: 0 is sharp, 3 the softest. A sheet right up against what it
+  // covers does not blur it, one far in front does, and that is the whole picture: close the gaps and it comes into focus
+  float frost() {
+    float b = 0.0;
+    ${[0, 1, 2, 3, 4].map((i) => `if (uOn[${i}] >= 0.002) {
+      vec3 B = vB[${i}]; vec3 A = uCamL[${i}];
+      float den = A.z - B.z;
+      float t = abs(den) < 1e-4 ? -1.0 : A.z / den;
+      if (t > 0.0 && t < 1.0) {
+        vec2 q = mix(A.xy, B.xy, t);
+        float cover = 1.0 - smoothstep(-0.02, 0.02, sd(q, H, RAD));
+        float gap = length(B - A) * (1.0 - t);
+        b += uOn[${i}] * cover * smoothstep(0.24, 1.25, gap) * 2.3;
+      }
+    }`).join('\n')}
+    return min(b, 3.0);
+  }`;
+
+const LAYER_FRAG = FROST + /* glsl */`
+  uniform sampler2D t0, t1, t2, t3; uniform float uA, uRev;
+  void main() {
+    if (uA < 0.002) discard;
+    float b = frost();
+    vec4 c = texture2D(t0, vUv);
+    if (b <= 0.002) { }
+    else if (b < 1.0) c = mix(c, texture2D(t1, vUv), b);
+    else if (b < 2.0) c = mix(texture2D(t1, vUv), texture2D(t2, vUv), b - 1.0);
+    else c = mix(texture2D(t2, vUv), texture2D(t3, vUv), b - 2.0);
+    if (uRev < 1.0) c *= 1.0 - smoothstep(uRev - 0.012, uRev + 0.012, vUv.x);
+    gl_FragColor = c * uA * edgeFade() * (1.0 - 0.1 * b);
+  }`;
+
+// the sheet itself: the Universe board's glass (uvpanel.css .uvb-in) as light. Its rim cyan, its top edge lit, a white
+// sheen off the top left corner, and so little milk that the sheets behind still show
+const PANE_FRAG = FROST + /* glsl */`
+  uniform sampler2D uGrain;
+  uniform float uA, uBody, uRim, uGlow, uShadow, uSheen;
+  void main() {
+    if (uA < 0.002) discard;
+    float b = frost();
+    float d = sd(vL, H, RAD);
+    float aa = fwidth(d) * 0.8;
+    float soft = aa + b * 0.075;
+    float inside = 1.0 - smoothstep(-soft, soft, d);
+    vec2 p = (vL + H) / (2.0 * H);       // 0..1, y up
+    vec2 tl = vec2(p.x, 1.0 - p.y);      // from the top left corner
+
+    // the frost: a little scattered light, whiter towards the top
+    float milk = mix(0.018, 0.04, p.y);
+    vec3 col = vec3(0.60, 0.82, 0.92) * milk;
+    float al = milk;
+    // the sheen off the corner, the cyan in the corner
+    float diag = dot(tl, normalize(vec2(1.0, 0.72)));
+    float sheen = mix(0.11, 0.015, smoothstep(0.0, 0.26, diag)) * (1.0 - smoothstep(0.26, 0.55, diag));
+    col += vec3(1.0) * sheen; al += sheen * (1.0 - al);
+    float corner = 0.10 * (1.0 - smoothstep(0.0, 0.8, length(tl * vec2(1.0, 1.25))));
+    col += vec3(0.0, 0.81, 1.0) * corner; al += corner * (1.0 - al);
+    // a soft cyan rising off the bottom edge, inside the glass
+    float foot = exp(-(vL.y + H.y) / 0.3) * 0.08;
+    col += vec3(0.0, 0.81, 1.0) * foot;
+    // the grain that makes it frost and not plastic, fixed to the sheet
+    float g = texture2D(uGrain, vL * 0.62).r - 0.5;
+    col += vec3(g * 0.018); al = clamp(al + g * 0.01, 0.0, 1.0);
+    // one streak of light crossing, when the sheet has just closed
+    if (uSheen > -0.5 && uSheen < 1.5) {
+      float st = dot(p - vec2(0.0, 0.0), normalize(vec2(1.0, 0.42)));
+      float s = exp(-pow((st - uSheen) / 0.055, 2.0)) * 0.13;
+      col += vec3(0.86, 1.0, 0.97) * s; al += s * (1.0 - al);
+    }
+    vec4 body = vec4(col, al) * inside * uBody;
+
+    // the rim: a hairline, cyan down the sides and bottom, white along the top edge; through frost it spreads and dims
+    float w = 0.012;
+    float rimA = (1.0 - smoothstep(w * 0.4, w + soft, abs(d + w))) * (w / (w + soft * 0.9));
+    float top = smoothstep(0.55, 1.0, p.y);
+    float left = 1.0 - smoothstep(0.0, 0.5, p.x);
+    vec3 rimC = mix(vec3(0.0, 0.81, 1.0), vec3(1.0), clamp(pow(top, 2.2) + left * 0.25, 0.0, 1.0));
+    float rimI = mix(0.62, 1.0, top) * uRim;
+    // the lit top edge: the light soaks a little way into the glass
+    float lip = (1.0 - smoothstep(0.0, 0.1 + soft, abs(vL.y - H.y + 0.02))) * smoothstep(H.x, H.x - 0.5, abs(vL.x)) * 0.16 * uRim * inside;
+
+    // outside the sheet: a shadow on what stands behind it, and only a breath of cyan round it
+    float o = max(d, 0.0);
+    float shadow = exp(-o / 0.42) * (1.0 - inside) * uShadow * (1.0 - smoothstep(0.42, 0.74, o));
+    float glow = exp(-o / 0.2) * (1.0 - inside) * uGlow * (1.0 - smoothstep(0.5, 0.74, o));
+
+    vec4 c = vec4(0.0, 0.0, 0.0, shadow);
+    c = vec4(c.rgb * (1.0 - body.a) + body.rgb, c.a * (1.0 - body.a) + body.a);
+    c.rgb += vec3(0.0, 0.81, 1.0) * glow; c.a += glow * 0.6;
+    c.rgb += vec3(1.0) * lip; c.a += lip * (1.0 - c.a);
+    c.rgb += rimC * rimA * rimI; c.a = clamp(c.a + rimA * rimI * (1.0 - c.a), 0.0, 1.0);
+    gl_FragColor = c * uA * edgeFade();
+  }`;
+
+// behind each sheet: the page's sky as frost would show it, fixed to the screen so that it stays still while the glass
+// slides over it, and the one light of the scene, which only frost catches
+const BASE_FRAG = /* glsl */`
+  precision highp float;
+  const vec2 H = vec2(${(UW / 2).toFixed(4)}, ${(UH / 2).toFixed(4)});
+  const float RAD = 0.17;
+  uniform sampler2D uSky; uniform vec2 uRes; uniform float uA, uLight; uniform vec3 uLightC; uniform vec2 uLightP;
+  varying vec2 vL; varying vec3 vB[5];
+  float sd(vec2 p, vec2 h, float r) { vec2 q = abs(p) - h + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
+  void main() {
+    if (uA < 0.002) discard;
+    float d = sd(vL, H, RAD);
+    float inside = 1.0 - smoothstep(-fwidth(d) * 0.8, fwidth(d) * 0.8, d);
+    vec2 s = gl_FragCoord.xy / uRes;
+    vec3 c = texture2D(uSky, s).rgb;
+    vec2 q = (s - uLightP) * vec2(uRes.x / uRes.y, 1.0);
+    c += uLightC * uLight * exp(-dot(q, q) / 0.075);
+    vec2 e = smoothstep(vec2(0.0), vec2(0.03), s) * smoothstep(vec2(0.0), vec2(0.03), 1.0 - s);
+    gl_FragColor = vec4(c, 1.0) * inside * uA * 0.96 * e.x * e.y;
+  }`;
+
+// ---------------------------------------------------------------- the frost's sky and grain
+const skyC = mk(768, 432);
+{
+  const x = skyC.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 0, 432);
+  g.addColorStop(0, '#0c1b29'); g.addColorStop(1, '#081420');
+  x.fillStyle = g; x.fillRect(0, 0, 768, 432);
+  const blob = (bx, by, r, col) => { const f = x.createRadialGradient(bx, by, 0, bx, by, r); f.addColorStop(0, col); f.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = f; x.fillRect(0, 0, 768, 432); };
+  blob(610, 90, 330, 'rgba(0,120,170,.10)');
+  blob(420, 360, 300, 'rgba(0,150,110,.06)');
+  blob(740, 380, 240, 'rgba(40,90,190,.09)');
+}
+const skyT = tex(skyC, false); skyT.flipY = true;
+
+const grainC = mk(256, 256);
+{
+  const x = grainC.getContext('2d'), d = x.createImageData(256, 256);
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < d.data.length; i += 4) { const v = 128 + (rnd() - 0.5) * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+  x.putImageData(d, 0, 0);
+}
+const grainT = tex(grainC, true); grainT.wrapS = grainT.wrapT = THREE.RepeatWrapping; grainT.premultiplyAlpha = false;
+
+// ---------------------------------------------------------------- what is on the sheets
+// rect is in face px; draw gets a context whose origin is the face's top left corner
+const made = [], baked = new Map();
+function layer(rect, draw, front) {
+  const M = front ? 8 : MARGIN;
+  let textures = baked.get(draw);
+  if (!textures) {
+    const c = mk(rect.w + M * 2, rect.h + M * 2), x = c.getContext('2d');
+    x.translate(M - rect.x, M - rect.y);
+    x.textBaseline = 'alphabetic';
+    draw(x);
+    const sharp = tex(c, true);
+    textures = front ? [sharp, sharp, sharp, sharp] : [sharp, tex(blurred(c, 0.5, 14), false), tex(blurred(c, 0.25, 36), false), tex(blurred(c, 0.125, 84), false)];
+    baked.set(draw, textures);
+    made.push(...new Set(textures));
+  }
+  const w = (rect.w + M * 2) * PX, h = (rect.h + M * 2) * PX;
+  const off = new THREE.Vector2((rect.x + rect.w / 2 - PW / 2) * PX, -(rect.y + rect.h / 2 - PH / 2) * PX);
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: VERT, fragmentShader: LAYER_FRAG, transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false,
+    uniforms: { uOff: { value: off }, t0: { value: textures[0] }, t1: { value: textures[1] }, t2: { value: textures[2] }, t3: { value: textures[3] },
+      uResE: U.uRes, uInv: { value: invs }, uCamL: { value: camL }, uOn: { value: [0, 0, 0, 0, 0] }, uA: { value: 1 }, uRev: { value: 1 } },
+  });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+  mesh.position.set(off.x, off.y, 0);
+  return mesh;
+}
+const GREEN = ['#eafff4', '#00ff88', '#00a067'], CYAN = ['#e6fbff', '#00cfff', '#0086b5'], BLUE = ['#e3edff', '#3b82f6', '#1d4ea8'];
+function grad(x, y0, y1, st) { const g = x.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, st[0]); g.addColorStop(0.55, st[1]); g.addColorStop(1, st[2]); return g; }
+
+// a step's sheet: its big gradient numeral and its name, where the finished app will have the idea's words
+function caption(num, word, st, front) {
+  return layer({ x: 40, y: 60, w: 1320, h: 320 }, (x) => {
+    x.font = '400 262px "Archivo Black"';
+    x.fillStyle = grad(x, 110, 340, st);
+    x.fillText(num, 74, 322);
+    const nw = x.measureText(num).width;
+    x.font = '400 126px "Archivo Black"';
+    x.fillStyle = '#f4fbff';
+    x.fillText(word, 74 + nw + 46, 300);
+  }, front);
+}
+
+const FACE = {
+  idea: (x) => {
+    x.font = '400 86px "Archivo Black"'; x.fillStyle = '#ffffff';
+    x.fillText('A screener that finds', 74, 268);
+    x.fillText('hidden gems first.', 74, 366);
+  },
+  ideaTag: (x) => {
+    x.font = '800 48px "JetBrains Mono"'; x.fillStyle = '#7ee8ff';
+    spaced(x, 'YOUR IDEA', 74, 146, 9);
+  },
+  appTag: (x) => {
+    x.font = '400 66px "Archivo Black"';
+    x.fillStyle = grad(x, 96, 150, GREEN);
+    x.fillText('Gem Screener', 74, 148);
+  },
+  rules: (x) => {
+    const g = x.createLinearGradient(0, 0, PW, 0);
+    g.addColorStop(0, 'rgba(255,255,255,0)'); g.addColorStop(0.2, 'rgba(255,255,255,.2)'); g.addColorStop(0.75, 'rgba(0,207,255,.4)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.fillRect(40, 416, PW - 80, 2);
+  },
+  wire: (x) => {
+    x.strokeStyle = 'rgba(150,225,255,.5)'; x.lineWidth = 3; x.setLineDash([14, 12]);
+    round(x, 74, 462, 560, 360, 22); x.stroke();
+    round(x, 690, 462, 636, 360, 22); x.stroke();
+    x.setLineDash([]);
+    x.fillStyle = 'rgba(150,225,255,.2)';
+    round(x, 108, 520, 400, 120, 14); x.fill();
+    round(x, 108, 680, 270, 44, 12); x.fill();
+    x.strokeStyle = 'rgba(150,225,255,.5)';
+    x.beginPath(); x.moveTo(726, 780); x.lineTo(1290, 780); x.moveTo(726, 780); x.lineTo(726, 500); x.stroke();
+  },
+  chart: (x) => {
+    const L = 690, R = 1330, B = 824, TOP = 470;
+    const curve = (u) => B - (B - TOP - 16) * (Math.pow(u, 1.7) * 0.84 + 0.05 * Math.sin(u * 8.2) * (0.35 + u * 0.7) + 0.05);
+    x.strokeStyle = 'rgba(190,235,255,.13)'; x.lineWidth = 2;
+    for (let i = 0; i < 3; i++) { const y = B - i * 138; x.beginPath(); x.moveTo(L, y); x.lineTo(R, y); x.stroke(); }
+    x.beginPath(); x.moveTo(L, B);
+    for (let i = 0; i <= 120; i++) { const u = i / 120; x.lineTo(lerp(L, R, u), curve(u)); }
+    x.lineTo(R, B); x.closePath();
+    const a = x.createLinearGradient(0, TOP, 0, B); a.addColorStop(0, 'rgba(0,255,136,.34)'); a.addColorStop(1, 'rgba(0,255,136,0)');
+    x.fillStyle = a; x.fill();
+    x.beginPath();
+    for (let i = 0; i <= 120; i++) { const u = i / 120; x.lineTo(lerp(L, R, u), curve(u)); }
+    x.strokeStyle = '#00ff88'; x.lineWidth = 7; x.lineJoin = 'round'; x.lineCap = 'round'; x.stroke();
+    const tx = R, ty = curve(1);
+    x.fillStyle = 'rgba(0,255,136,.28)'; x.beginPath(); x.arc(tx, ty, 21, 0, 7); x.fill();
+    x.fillStyle = '#eafff4'; x.beginPath(); x.arc(tx, ty, 10, 0, 7); x.fill();
+  },
+  deployed: (x) => {
+    x.font = '700 54px "JetBrains Mono"'; x.fillStyle = '#e4f3f8';
+    x.fillText('real users', 78, 786);
+  },
+  live: (x) => {
+    const px = 1136, py = 88, w = 190, h = 74;
+    round(x, px, py, w, h, 37);
+    const g = x.createLinearGradient(0, py, 0, py + h); g.addColorStop(0, '#4dffae'); g.addColorStop(1, '#00e87b');
+    x.fillStyle = g; x.fill();
+    x.fillStyle = '#03140c';
+    x.beginPath(); x.arc(px + 40, py + h / 2, 11, 0, 7); x.fill();
+    x.font = '400 42px "Archivo Black"';
+    x.fillText('LIVE', px + 64, py + 52);
+  },
+};
+
+// the live figure: its own small texture, redrawn only when the figure changes
+const DIG = { x: 62, y: 500, w: 620, h: 240 };
+const digC = mk(DIG.w, DIG.h), digX = digC.getContext('2d');
+const digT = tex(digC, false); digT.premultiplyAlpha = true;
+const digMat = new THREE.ShaderMaterial({
+  vertexShader: VERT, fragmentShader: LAYER_FRAG, transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false,
+  uniforms: { uOff: { value: new THREE.Vector2((DIG.x + DIG.w / 2 - PW / 2) * PX, -(DIG.y + DIG.h / 2 - PH / 2) * PX) },
+    t0: { value: digT }, t1: { value: digT }, t2: { value: digT }, t3: { value: digT },
+    uResE: U.uRes, uInv: { value: invs }, uCamL: { value: camL }, uOn: { value: [0, 0, 0, 0, 0] }, uA: { value: 1 }, uRev: { value: 1 } },
+});
+const digM = new THREE.Mesh(new THREE.PlaneGeometry(DIG.w * PX, DIG.h * PX), digMat);
+digM.position.set(digMat.uniforms.uOff.value.x, digMat.uniforms.uOff.value.y, 0);
+let digLast = null;
+function setFigure(s) {
+  if (s === digLast) return;
+  digLast = s;
+  digX.clearRect(0, 0, DIG.w, DIG.h);
+  digX.font = '400 196px "Archivo Black"';
+  digX.fillStyle = grad(digX, 30, 216, GREEN);
+  digX.fillText(s, 12, 208);
+  digT.needsUpdate = true;
+}
+
+// ---------------------------------------------------------------- a sheet: frost behind, glass, what is on it
+const Z_GEOM = new THREE.PlaneGeometry(UW + 1.5, UH + 1.5);
+const baseGeom = new THREE.PlaneGeometry(UW + 0.02, UH + 0.02);
+function sheet() {
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(baseGeom, new THREE.ShaderMaterial({
+    vertexShader: VERT, fragmentShader: BASE_FRAG, transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false,
+    uniforms: { uInv: { value: invs }, uOff: { value: new THREE.Vector2(0, 0) }, uSky: { value: skyT }, uRes: U.uRes, uA: { value: 1 }, uLight: { value: 0 },
+      uLightC: { value: new THREE.Color(0, 1, 0.6) }, uLightP: { value: new THREE.Vector2(0.7, 0.45) } },
+  }));
+  const pane = new THREE.Mesh(Z_GEOM, new THREE.ShaderMaterial({
+    vertexShader: VERT, fragmentShader: PANE_FRAG, transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false,
+    uniforms: { uOff: { value: new THREE.Vector2(0, 0) }, uGrain: { value: grainT }, uResE: U.uRes, uInv: { value: invs }, uCamL: { value: camL }, uOn: { value: [0, 0, 0, 0, 0] },
+      uA: { value: 1 }, uBody: { value: 1 }, uRim: { value: 1 }, uGlow: { value: 0.05 }, uShadow: { value: 0.34 }, uSheen: { value: -9 } },
+  }));
+  g.add(base, pane);
+  scene.add(g);
+  return { g, base, pane, layers: [], op: 0 };
+}
+function addLayer(s, mesh) { s.g.add(mesh); s.layers.push(mesh); return mesh; }
+
+// index in invs / camL: 0 the idea's sheet leaving, 1 the idea's sheet, 2, 3, 4 the three steps
+const OUT = sheet(), IDEA = sheet(), P1 = sheet(), P2 = sheet(), P3 = sheet();
+const ALL = [OUT, IDEA, P1, P2, P3];
+
+const L = {};
+function ideaFaces(s) {
+  return { words: addLayer(s, layer({ x: 40, y: 180, w: 1320, h: 220 }, FACE.idea)),
+    tag: addLayer(s, layer({ x: 60, y: 90, w: 500, h: 70 }, FACE.ideaTag)),
+    app: addLayer(s, layer({ x: 60, y: 90, w: 620, h: 80 }, FACE.appTag)) };
+}
+L.idea = ideaFaces(IDEA); L.out = ideaFaces(OUT);
+L.rules = addLayer(P1, layer({ x: 30, y: 400, w: PW - 60, h: 40 }, FACE.rules));
+L.wire = addLayer(P1, layer({ x: 60, y: 450, w: 1290, h: 390 }, FACE.wire));
+L.c1 = addLayer(P1, caption('1', 'Design', GREEN));
+L.chart = addLayer(P2, layer({ x: 670, y: 450, w: 680, h: 390 }, FACE.chart));
+L.c2 = addLayer(P2, caption('2', 'Build', CYAN));
+L.deployed = addLayer(P3, layer({ x: 60, y: 730, w: 600, h: 80 }, FACE.deployed, true));
+L.live = addLayer(P3, layer({ x: 1120, y: 76, w: 220, h: 100 }, FACE.live, true));
+L.c3 = addLayer(P3, caption('3', 'Deploy', BLUE, true));
+P3.g.add(digM); P3.layers.push(digM);
+
+// the name, big and plain, a little further back than the glass, which never crosses it
+const TITLE_W = 1760, TITLE_H = 280;
+const titleC = mk(TITLE_W, TITLE_H);
+{
+  const x = titleC.getContext('2d');
+  x.font = '400 196px "Archivo Black"'; x.textBaseline = 'alphabetic';
+  x.shadowColor = 'rgba(0,0,0,.55)'; x.shadowBlur = 30; x.shadowOffsetY = 6;
+  x.fillStyle = '#ffffff';
+  x.fillText('Build it ', 40, 204);
+  const nw = x.measureText('Build it ').width;
+  x.fillStyle = '#00ff88';
+  x.fillText('Better', 40 + nw, 204);
+}
+const titleT = tex(titleC, true), titleTex = [titleT, titleT, titleT, titleT];
+made.push(titleT);
+const TITLE_Z = -1.0, TITLE_UW = 6.0, TITLE_UH = TITLE_UW * TITLE_H / TITLE_W;
+const titleM = new THREE.Mesh(new THREE.PlaneGeometry(TITLE_UW, TITLE_UH), new THREE.ShaderMaterial({
+  vertexShader: VERT, fragmentShader: LAYER_FRAG, transparent: true, premultipliedAlpha: true, depthTest: false, depthWrite: false,
+  uniforms: { uOff: { value: new THREE.Vector2(0, 0) }, t0: { value: titleTex[0] }, t1: { value: titleTex[1] }, t2: { value: titleTex[2] }, t3: { value: titleTex[3] },
+    uResE: U.uRes, uInv: { value: invs }, uCamL: { value: camL }, uOn: { value: [0, 0, 0, 0, 0] }, uA: { value: 1 }, uRev: { value: 1 } },
+}));
+titleM.position.set(-2.07, 2.46, TITLE_Z);
+scene.add(titleM);
+
+// the painting order: all frost first, then the name, then the sheets back to front
+let order = 1;
+ALL.forEach((s) => { s.base.renderOrder = order++; });
+titleM.renderOrder = order++;
+ALL.forEach((s) => { s.pane.renderOrder = order++; s.layers.forEach((m) => { m.renderOrder = order++; }); });
+
+// ---------------------------------------------------------------- where everything is at time t
+const qStack = new THREE.Quaternion(), qExtra = new THREE.Quaternion(), eY = new THREE.Euler();
+const vOff = new THREE.Vector3(), vPos = new THREE.Vector3();
+const STACK_AT = new THREE.Vector3(-0.72, -0.34, 0), STACK_END = -0.2;
+const LANE = { gap: 1.3, dx: 0.16, dy: -0.1 };
+
+function pose(s, tm, k) {                    // k: 0 the idea's sheet, 1..3 the steps
+  const c = smooth(win(tm, AT.close[0], AT.close[1]));
+  const ex = win(tm, AT.exit[0], AT.exit[1]);
+  const turn = lerp(-0.66, -0.34, c);
+  eY.set(0.055, turn, 0.0, 'YXZ');
+  qStack.setFromEuler(eY);
+  // each sheet lands on the same spot, so the eye never has to move: the ones before it step back, into the frost.
+  // Then they all slide together. A hair of air stays between them: the finished slab shows its sheets
+  let landed = 0;
+  AT.panes.forEach(([a, b]) => { landed += smooth(win(tm, a + 0.1, b + 0.15)); });
+  const back = k - landed;
+  vOff.set(lerp(back * LANE.dx, 0, c), lerp(back * LANE.dy, 0, c), lerp(back * LANE.gap, (k - 3) * 0.05, c));
+  let extraY = 0, extraZ = 0, op = 1;
+  if (k > 0) {
+    const [a, b] = AT.panes[k - 1];
+    const sl = out4(win(tm, a, b));
+    vOff.x += (1 - sl) * 5.6;
+    vOff.y -= (1 - sl) * 0.9;
+    extraY = (1 - sl) * -0.26;
+    extraZ = (1 - sl) * -0.035;
+    op = tm < a ? 0 : smooth(win(tm, a, a + 0.32));
+  } else {
+    const e = out4(win(tm, AT.ideaIn[0], AT.ideaIn[1]));
+    vOff.x -= (1 - e) * 0.9;
+    vOff.y -= (1 - e) * 0.25;
+    vOff.z -= (1 - e) * 5.5;
+    extraY = (1 - e) * 0.16;
+    op = smooth(win(tm, AT.ideaIn[0], AT.ideaIn[0] + 0.85));
+  }
+  vOff.applyQuaternion(qStack);
+  vPos.copy(STACK_AT).add(vOff);
+  vPos.x += (STACK_END - STACK_AT.x) * c;
+  // shipped: away into the sky, up and to the right, getting small
+  if (ex > 0) {
+    const q = ex * ex * (3 - 2 * ex);
+    vPos.x += q * 2.4; vPos.y += q * 1.7; vPos.z -= q * 12.0;
+    op *= 1 - smooth(win(ex, 0.22, 0.88));
+  }
+  s.g.position.copy(vPos);
+  eY.set(0, extraY, extraZ, 'YXZ'); qExtra.setFromEuler(eY);
+  s.g.quaternion.copy(qStack).multiply(qExtra);
+  s.op = op;
+}
+
+const USERS = 1284;
+const lightP = new THREE.Vector2(0.56, 0.32);
+const cCyan = new THREE.Color(0.0, 0.62, 0.86), cGreen = new THREE.Color(0.0, 0.9, 0.5), cNow = new THREE.Color();
+
+function draw(tIn) {
+  const t = ((tIn % T) + T) % T;
+  const leaving = t >= AT.exit[0];
+  const enteringNext = t >= T + AT.ideaIn[0];
+  const ti = enteringNext ? t - T : t;          // the idea's sheet starts before the loop's zero, while the last one leaves
+
+  // the camera breathes once a loop
+  const a = 2 * Math.PI * t / T;
+  camera.position.set(CAM.x + Math.sin(a) * 0.1, CAM.y + Math.cos(a) * 0.05, CAM.z);
+  camera.lookAt(0, 0, 0);
+  camera.updateMatrixWorld();
+
+  OUT.g.visible = leaving;
+  IDEA.g.visible = !leaving || enteringNext;
+  if (leaving) pose(OUT, t, 0);
+  if (IDEA.g.visible) pose(IDEA, ti, 0);
+  [P1, P2, P3].forEach((s, i) => { s.g.visible = t >= AT.panes[i][0]; if (s.g.visible) pose(s, t, i + 1); });
+
+  const c = smooth(win(t, AT.close[0], AT.close[1]));
+  const cap = 1 - smooth(win(t, AT.close[0] - 0.05, AT.close[0] + 0.38));
+  const inStep = (i) => t >= AT.panes[i][0];
+
+  ALL.forEach((s, i) => {
+    s.g.updateMatrixWorld(true);
+    invs[i].copy(s.g.matrixWorld).invert();
+    camL[i].copy(camera.position).applyMatrix4(invs[i]);
+  });
+  const seen = (s) => (s.g.visible ? s.op : 0);
+  // what stands in front of what, in the painting order. The leaving slab's and the new idea's sheets ignore each other
+  const stepsOn = !enteringNext;
+  const fr = (m, list) => { const u = m.material.uniforms.uOn.value; for (let i = 0; i < 5; i++) u[i] = list[i]; };
+  const pOn = c >= 1 ? [0, 0, 0] : [seen(P1), seen(P2), seen(P3)];
+  const set = (s, list) => { fr(s.pane, list); s.layers.forEach((m) => fr(m, list)); };
+  set(OUT, [0, 0, pOn[0], pOn[1], pOn[2]]);
+  set(IDEA, leaving ? [0, 0, 0, 0, 0] : [0, 0, pOn[0], pOn[1], pOn[2]]);
+  set(P1, [0, 0, 0, pOn[1], pOn[2]]);
+  set(P2, [0, 0, 0, 0, pOn[2]]);
+  set(P3, [0, 0, 0, 0, 0]);
+
+  // the one light, behind the glass: low on the idea, up when the app comes into focus
+  const lightAt = (tm) => lerp(0.16 + 0.02 * Math.sin(2 * Math.PI * tm / T), 0.26, smooth(win(tm, AT.close[0] + 0.45, AT.close[1] + 0.25))) * (1 + 0.7 * Math.exp(-Math.pow((tm - AT.close[1]) / 0.5, 2)));
+  ALL.forEach((s) => {
+    const b = s.base.material.uniforms;
+    const tm = s === IDEA ? ti : t;
+    cNow.copy(cCyan).lerp(cGreen, smooth(win(tm, AT.panes[0][0], AT.close[1])));
+    b.uA.value = s.op; b.uLight.value = lightAt(tm); b.uLightC.value.copy(cNow); b.uLightP.value.copy(lightP);
+    const p = s.pane.material.uniforms; p.uA.value = s.op; p.uSheen.value = -9;
+  });
+
+  // a sheet that has closed on the others gives up most of its own milk and rim: a block of glass, one surface
+  [P1, P2, P3].forEach((s, i) => {
+    const p = s.pane.material.uniforms;
+    const front = i === 2;
+    p.uBody.value = lerp(1, front ? 0.28 : 0.04, c);
+    p.uRim.value = lerp(1, front ? 0.85 : 0.26, c);
+    p.uShadow.value = lerp(0.34, 0.0, c);
+    p.uGlow.value = lerp(0.05, front ? 0.07 : 0, c);
+  });
+  [OUT, IDEA].forEach((s) => { const p = s.pane.material.uniforms; const cc = s === OUT ? 1 : (enteringNext ? 0 : c); p.uBody.value = 1; p.uRim.value = lerp(1, 0.5, cc); p.uShadow.value = lerp(0.3, 0.42, cc); p.uGlow.value = 0.05; });
+  const sw = win(t, AT.close[1] - 0.1, AT.close[1] + 1.05);
+  if (sw > 0 && sw < 1) P3.pane.material.uniforms.uSheen.value = lerp(-0.25, 1.25, smooth(sw));
+
+  // what is on the sheets, each with its sheet's opacity
+  const ls = (m, s, v) => { m.material.uniforms.uA.value = s.op * v; };
+  const ideaPhase = enteringNext ? 0 : c;
+  ls(L.idea.words, IDEA, 1); ls(L.out.words, OUT, 1);
+  ls(L.idea.tag, IDEA, 1 - smooth(win(ideaPhase, 0.2, 0.6))); ls(L.out.tag, OUT, 0);
+  ls(L.idea.app, IDEA, smooth(win(ideaPhase, 0.5, 1))); ls(L.out.app, OUT, 1);
+  ls(L.rules, P1, 1); ls(L.wire, P1, cap * 0.9); ls(L.c1, P1, cap);
+  ls(L.c2, P2, cap); ls(L.c3, P3, cap);
+  ls(L.deployed, P3, 1);
+  ls(L.live, P3, smooth(win(t, AT.close[1] - 0.2, AT.close[1] + 0.2)));
+  ls(digM, P3, 1);
+
+  // the chart draws itself while Build lands, and finishes as the users come
+  const lv = win(t, AT.live[0], AT.live[1]);
+  L.chart.material.uniforms.uA.value = P2.op;
+  L.chart.material.uniforms.uRev.value = lerp(0.1 + 0.42 * out3(win(t, AT.panes[1][0] + 0.2, AT.panes[1][1] + 0.3)), 1.02, out3(lv) * (inStep(1) ? 1 : 0));
+  const n = Math.round(USERS * out3(lv) / 3) * 3;
+  const figure = lv >= 1 ? USERS : n;
+  setFigure(figure.toLocaleString('en-US'));
+  ALL.forEach((s) => { s.layers.forEach((m) => { m.visible = m.material.uniforms.uA.value > 0.002; }); });
+
+  renderer.render(scene, camera);
+}
+
+// ---------------------------------------------------------------- the clock
+resize();
+addEventListener('resize', () => { resize(); if (stopped) draw(lastT); });
+made.forEach((x) => renderer.initTexture(x));
+renderer.compile(scene, camera);
+renderer.initTexture(skyT); renderer.initTexture(grainT); renderer.initTexture(digT);
+
+let stopped = false, lastT = 0, dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+const t0 = performance.now();
+let prev = 0, slow = 0, seenF = 0;
+function frame(now) {
+  if (stopped) return;
+  lastT = (now - t0) / 1000 % T;
+  draw(lastT);
+  if (prev && now - prev < 200) {
+    seenF++; if (now - prev > 24) slow++;
+    if (seenF >= 45) {
+      if (slow > 22 && dpr > 1) { dpr = Math.max(1, dpr - 0.25); renderer.setPixelRatio(dpr); renderer.setSize(+(Q.get('w') || innerWidth), +(Q.get('h') || innerHeight)); U.uRes.value.set(renderer.domElement.width, renderer.domElement.height); }
+      seenF = slow = 0;
+    }
+  }
+  prev = now;
+  requestAnimationFrame(frame);
+}
+window.QUEST_SCENE = { T, seek(t) { stopped = true; lastT = t; draw(t); } };
+const start = Q.get('t');
+if (start !== null) window.QUEST_SCENE.seek(+start); else requestAnimationFrame(frame);
+</script>
+</body>
+</html>

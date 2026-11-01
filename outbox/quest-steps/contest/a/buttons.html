@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quest Buttons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ==== the pieces. One material, the scene's: polished black glass with one light above it. What is lit, is lit from
+   inside. Every state is also a class (.is-hover, .is-pressed) only so this sheet can show it. Markup is the page's own. */
+
+/* -- START A COMPANY: a bar of green light. Its arrow sits in a key of the scene's black glass. */
+.btn-go, .btn-go *, .btn-how, .btn-how *, .pill, .pill *, .arr, .arr * { box-sizing: border-box; }
+.btn-go, .btn-how { position: relative; isolation: isolate; overflow: hidden; display: inline-flex; align-items: center; gap: 18px; height: 64px; padding: 0 10px 0 28px; border-radius: 19px; white-space: nowrap; cursor: pointer; user-select: none;
+  font: 400 16px/1 'Archivo Black', sans-serif; letter-spacing: .035em; text-transform: uppercase; text-decoration: none; -webkit-tap-highlight-color: transparent;
+  transition: transform .28s cubic-bezier(.2, .8, .2, 1), box-shadow .28s cubic-bezier(.2, .8, .2, 1), background-color .28s; }
+.btn-go svg, .btn-how svg { flex: none; width: 44px; height: 44px; padding: 10px; border-radius: 12px; fill: none; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; transition: transform .28s cubic-bezier(.2, .8, .2, 1), box-shadow .28s; }
+
+.btn-go { color: #03140c; background:
+    radial-gradient(120% 150% at 28% -46%, rgba(255, 255, 255, .62), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, #14ff95 0%, #00ff88 44%, #00de78 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(0, 84, 48, .55), inset 0 0 0 1px rgba(0, 96, 56, .16),
+    0 1px 1px rgba(0, 0, 0, .55), 0 18px 38px -14px rgba(0, 255, 136, .62); }
+.btn-go svg { stroke: #00ff88; background: linear-gradient(180deg, #121a27, #05080e);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .34), inset 0 0 0 1px rgba(255, 255, 255, .05), 0 1px 0 rgba(255, 255, 255, .42), 0 0 0 1px rgba(0, 72, 42, .28); }
+/* the one reflection, as the object in the scene has it: a hard edge and a soft tail, passing once when you arrive */
+.btn-go::after, .btn-how::after { content: ''; position: absolute; z-index: -1; top: -20%; bottom: -20%; left: -60%; width: 46%; pointer-events: none; transform: skewX(-17deg);
+  background: linear-gradient(90deg, rgba(255, 255, 255, .5) 0, rgba(255, 255, 255, .5) 1px, rgba(255, 255, 255, .13) 1.5px, rgba(255, 255, 255, 0) 100%); opacity: 0; }
+.btn-go:hover, .btn-go.is-hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 #ffffff, inset 0 -1px 0 rgba(0, 84, 48, .55), inset 0 0 0 1px rgba(0, 96, 56, .16),
+    0 1px 1px rgba(0, 0, 0, .55), 0 24px 46px -14px rgba(0, 255, 136, .95), 0 0 34px -8px rgba(0, 255, 136, .5); }
+.btn-go:active, .btn-go.is-pressed { transform: translateY(1px); background:
+    radial-gradient(120% 150% at 28% -46%, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, #00d874 0%, #00e87c 60%, #00f183 100%);
+  box-shadow: inset 0 2px 5px rgba(0, 58, 33, .55), inset 0 0 0 1px rgba(0, 96, 56, .25), 0 0 0 rgba(0, 0, 0, 0), 0 6px 16px -8px rgba(0, 255, 136, .6); transition-duration: .07s; }
+.btn-go:active svg, .btn-go.is-pressed svg, .btn-how:active svg, .btn-how.is-pressed svg { transform: scale(.94); transition-duration: .07s; }
+
+/* -- SEE THE 5 STEPS: the same bar in unlit glass; the sky is frosted behind it, its light is only on its rim */
+.btn-how { color: #ffffff; background: linear-gradient(180deg, rgba(20, 29, 44, .74), rgba(6, 10, 18, .84));
+  -webkit-backdrop-filter: blur(10px) saturate(1.2); backdrop-filter: blur(10px) saturate(1.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 0 0 1px rgba(150, 220, 255, .16), 0 1px 1px rgba(0, 0, 0, .55), 0 18px 34px -18px rgba(0, 0, 0, .9); }
+.btn-how svg { stroke: #00cfff; background: rgba(0, 207, 255, .1); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .34), inset 0 1px 0 rgba(255, 255, 255, .2); }
+.btn-how:hover, .btn-how.is-hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), inset 0 0 0 1px rgba(0, 207, 255, .55), 0 1px 1px rgba(0, 0, 0, .55), 0 22px 40px -16px rgba(0, 207, 255, .55); }
+.btn-how:hover svg, .btn-how.is-hover svg { background: rgba(0, 207, 255, .18); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .7), inset 0 1px 0 rgba(255, 255, 255, .3); }
+.btn-how:active, .btn-how.is-pressed { transform: translateY(1px); background: linear-gradient(180deg, rgba(4, 8, 15, .9), rgba(10, 16, 26, .84));
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .8), inset 0 0 0 1px rgba(0, 207, 255, .42); transition-duration: .07s; }
+
+/* the arrow leaves the key on one side and comes back on the other */
+.btn-go svg path, .btn-how svg path, .arr svg path { transform-box: fill-box; }
+@keyframes pass-x { 0% { transform: translateX(0); opacity: 1; } 46% { transform: translateX(16px); opacity: 0; } 47% { transform: translateX(-16px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+@keyframes pass-y { 0% { transform: translateY(0); opacity: 1; } 46% { transform: translateY(16px); opacity: 0; } 47% { transform: translateY(-16px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+.btn-go:hover svg path { animation: pass-x .5s cubic-bezier(.5, 0, .2, 1); }
+.btn-how:hover svg path { animation: pass-y .5s cubic-bezier(.5, 0, .2, 1); }
+.btn-go:hover::after, .btn-how:hover::after { opacity: 1; left: 120%; transition: left .9s cubic-bezier(.3, 0, .2, 1); }
+.btn-go:focus-visible, .btn-how:focus-visible, .arr:focus-visible { outline: 2px solid #ffffff; outline-offset: 3px; }
+
+/* -- UP TO 500,000 ET10 / MONTH: one capsule of the same glass; the number is a readout set into it */
+.pill { position: relative; flex: none; display: inline-flex; align-items: center; gap: 9px; height: 48px; padding: 0 18px 0 8px; border-radius: 999px; white-space: nowrap;
+  font: 700 13px/1 'JetBrains Mono', monospace; letter-spacing: .07em; text-transform: uppercase; color: #c8d8e3;
+  background: linear-gradient(180deg, rgba(20, 29, 44, .74), rgba(6, 10, 18, .84));
+  -webkit-backdrop-filter: blur(10px) saturate(1.2); backdrop-filter: blur(10px) saturate(1.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42), inset 0 0 0 1px rgba(150, 220, 255, .13), 0 1px 1px rgba(0, 0, 0, .5), 0 14px 28px -18px rgba(0, 0, 0, .9);
+  transition: box-shadow .28s cubic-bezier(.2, .8, .2, 1), transform .28s cubic-bezier(.2, .8, .2, 1); }
+/* the live dot: a small lens, lit; one ring leaves it, slowly */
+.pill i { position: relative; flex: none; width: 9px; height: 9px; margin: 0 5px 0 10px; border-radius: 50%;
+  background: radial-gradient(circle at 42% 36%, #f2fff9 0 22%, #00ff88 62%, #00c96b 100%); box-shadow: 0 0 9px rgba(0, 255, 136, .8); }
+.pill i::after { content: ''; position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 255, 136, .9); animation: live-ring 2.6s cubic-bezier(.2, .6, .3, 1) infinite; }
+@keyframes live-ring { 0% { transform: scale(1); opacity: .9; } 70%, 100% { transform: scale(2.7); opacity: 0; } }
+.pill b { font: 400 20px/1 'Archivo Black', sans-serif; letter-spacing: .005em; color: #00ff88; padding: 8px 14px 7px; margin: 0 3px; border-radius: 999px;
+  background: linear-gradient(180deg, #030a08, #071612); text-shadow: 0 0 16px rgba(0, 255, 136, .5);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .9), inset 0 0 0 1px rgba(0, 255, 136, .3), 0 1px 0 rgba(255, 255, 255, .12); transition: box-shadow .28s, color .28s; }
+.pill:hover, .pill.is-hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), inset 0 0 0 1px rgba(0, 255, 136, .4), 0 1px 1px rgba(0, 0, 0, .5), 0 16px 30px -16px rgba(0, 255, 136, .45); }
+.pill:hover b, .pill.is-hover b { box-shadow: inset 0 2px 4px rgba(0, 0, 0, .9), inset 0 0 0 1px rgba(0, 255, 136, .62), 0 1px 0 rgba(255, 255, 255, .16); }
+.pill:active, .pill.is-pressed { transform: translateY(1px); background: linear-gradient(180deg, rgba(4, 8, 15, .9), rgba(10, 16, 26, .84));
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, .8), inset 0 0 0 1px rgba(0, 255, 136, .34); transition-duration: .07s; }
+
+/* -- the door's ray and key. The key is the scene's object at 98 px: black glass, its arrow the light inside, the one
+   reflection across it. Arrive and it fills with light, as the object does at its payoff. --cr: the door's colour. */
+.ray { flex: 1; min-width: 24px; height: 2px; margin-right: -22px; border-radius: 2px;
+  background: linear-gradient(90deg, rgba(var(--cr, 0, 255, 136), 0), rgba(var(--cr, 0, 255, 136), .85) 78%, #ffffff);
+  box-shadow: 0 0 9px rgba(var(--cr, 0, 255, 136), .5); transition: box-shadow .3s; }
+.arr { position: relative; isolation: isolate; flex: none; display: grid; place-items: center; width: 98px; height: 98px; border-radius: 29px; overflow: hidden; cursor: pointer;
+  color: rgb(var(--cr, 0, 255, 136));
+  background:
+    linear-gradient(113deg, rgba(255, 255, 255, 0) 71%, rgba(255, 255, 255, .085) 71.6%, rgba(255, 255, 255, .012) 90%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(74% 74% at 50% 50%, rgba(var(--cr, 0, 255, 136), .15), rgba(var(--cr, 0, 255, 136), 0) 100%),
+    linear-gradient(180deg, #111926 0%, #05080e 56%, #060a11 100%);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .72), inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 -1px 0 rgba(var(--cr, 0, 255, 136), .34),
+    0 0 0 1px rgba(0, 0, 0, .7), 0 22px 44px -18px rgba(var(--cr, 0, 255, 136), .5), 0 12px 26px -10px rgba(0, 0, 0, .85);
+  transition: transform .32s cubic-bezier(.2, .8, .2, 1), box-shadow .32s cubic-bezier(.2, .8, .2, 1), color .22s; }
+.arr::before { content: ''; position: absolute; inset: 0; z-index: -1; opacity: 0; transition: opacity .28s;
+  background:
+    linear-gradient(113deg, rgba(255, 255, 255, 0) 71%, rgba(255, 255, 255, .2) 71.6%, rgba(255, 255, 255, .03) 92%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(130% 120% at 30% -30%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, rgb(var(--cr, 0, 255, 136)), rgb(var(--cr, 0, 255, 136))); }
+.arr svg { width: 46px; height: 46px; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  filter: drop-shadow(0 0 7px rgba(var(--cr, 0, 255, 136), .8)); transition: transform .32s cubic-bezier(.2, .8, .2, 1), filter .22s; }
+.arr:hover, .arr.is-hover, .door:hover .arr { color: #03140c; transform: translateY(-3px);
+  box-shadow: inset 0 1.5px 0 #ffffff, inset 0 -1px 0 rgba(0, 0, 0, .28), 0 0 0 1px rgba(var(--cr, 0, 255, 136), .4), 0 30px 54px -16px rgba(var(--cr, 0, 255, 136), .95), 0 0 42px -6px rgba(var(--cr, 0, 255, 136), .5); }
+.arr:hover::before, .arr.is-hover::before, .door:hover .arr::before { opacity: 1; }
+.arr:hover svg, .arr.is-hover svg, .door:hover .arr svg { transform: translateX(5px); filter: none; }
+.door:hover .ray, .ray.is-hover { box-shadow: 0 0 16px rgba(var(--cr, 0, 255, 136), .95); }
+.arr:active, .arr.is-pressed, .door:active .arr { color: #03140c; transform: translateY(1px) scale(.975); transition-duration: .07s;
+  box-shadow: inset 0 3px 8px rgba(0, 0, 0, .4), 0 0 0 1px rgba(var(--cr, 0, 255, 136), .4), 0 8px 18px -10px rgba(var(--cr, 0, 255, 136), .7); }
+.arr:active::before, .arr.is-pressed::before, .door:active .arr::before { opacity: .84; transition-duration: .07s; }
+.arr:active svg, .arr.is-pressed svg, .door:active .arr svg { transform: translateX(2px); filter: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-go:hover svg path, .btn-how:hover svg path { animation: none; }
+  .btn-go:hover::after, .btn-how:hover::after { display: none; }
+  .pill i::after { animation: none; }
+}
+@media (max-width: 860px) {
+  .arr { width: 72px; height: 72px; border-radius: 22px; }
+  .arr svg { width: 34px; height: 34px; }
+}
+
+/* ==== this sheet only */
+html { background: #05070c; }
+body { margin: 0; min-height: 100vh; font-family: 'JetBrains Mono', monospace; color: #eef6fa; overflow-x: hidden; }
+#sky { position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(1100px 650px at 80% 8%, rgba(0, 207, 255, .08), rgba(0, 207, 255, 0) 65%),
+    radial-gradient(1000px 600px at 15% 20%, rgba(0, 255, 136, .045), rgba(0, 255, 136, 0) 62%),
+    radial-gradient(140% 105% at 50% 50%, rgba(5, 7, 12, 0) 55%, rgba(5, 7, 12, .8) 100%),
+    linear-gradient(rgba(5, 7, 12, .16), rgba(5, 7, 12, .16)),
+    url(../../pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
+.sheet { width: min(1600px, calc(100% - 32px)); margin: 0 auto; padding: 56px 0 72px; display: grid; gap: 62px; }
+.row { display: grid; grid-template-columns: 116px repeat(3, auto); justify-content: start; align-items: center; gap: 30px 44px; }
+.lab { font: 500 15px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: #8ba2bb; }
+.hd { font: 500 15px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: #8ba2bb; padding-bottom: 2px; }
+.pair { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; }
+.door { --cr: 0, 255, 136; --c: #00ff88; display: block; color: inherit; text-decoration: none; }
+.door.uv { --cr: 0, 207, 255; --c: #00cfff; }
+.doors { display: grid; grid-template-columns: repeat(2, minmax(0, 760px)); gap: 44px; }
+/* the door's .cta as the page lays it out */
+.cta { display: flex; align-items: center; gap: 22px; padding: 18px 28px 18px 32px; }
+.cta .t { flex: none; font: 400 32px/1.04 'Archivo Black', sans-serif; color: #ffffff; text-transform: uppercase; letter-spacing: .01em; text-shadow: 0 3px 18px rgba(0, 0, 0, .9); }
+.cta .t span { color: var(--c); text-shadow: 0 0 24px rgba(var(--cr), .55), 0 3px 18px rgba(0, 0, 0, .9); }
+.keys { display: flex; flex-wrap: wrap; gap: 40px 44px; align-items: flex-start; }
+.key { display: grid; justify-items: center; gap: 16px; --cr: 0, 255, 136; }
+.key.uv { --cr: 0, 207, 255; }
+@media (max-width: 1100px) {
+  .row { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .row .hd { display: none; }
+  .doors { grid-template-columns: minmax(0, 1fr); }
+  .cta { padding: 14px 4px; gap: 14px; }
+  .cta .t { font-size: 21px; }
+  .pair .btn-go, .pair .btn-how { font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div id="sky" aria-hidden="true"></div>
+<div class="sheet">
+
+  <section class="row" aria-label="The hero pair">
+    <span class="hd"></span><span class="hd">Rest</span><span class="hd">Hover</span><span class="hd">Pressed</span>
+    <span class="lab">Hero</span>
+    <div class="pair">
+      <a class="btn-go" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+    </div>
+    <div class="pair">
+      <a class="btn-go is-hover" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+    </div>
+    <div class="pair">
+      <a class="btn-go is-pressed" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+    </div>
+    <span class="lab"></span>
+    <div class="pair">
+      <a class="btn-how" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+    </div>
+    <div class="pair">
+      <a class="btn-how is-hover" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+    </div>
+    <div class="pair">
+      <a class="btn-how is-pressed" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+    </div>
+    <span class="lab">Top bar</span>
+    <div><span class="pill"><i></i>Up to <b>500,000</b> <span>ET10</span> / month</span></div>
+    <div><span class="pill is-hover"><i></i>Up to <b>500,000</b> <span>ET10</span> / month</span></div>
+    <div><span class="pill is-pressed"><i></i>Up to <b>500,000</b> <span>ET10</span> / month</span></div>
+  </section>
+
+  <section class="doors" aria-label="The two doors">
+    <a class="door go" href="#"><span class="cta"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a>
+    <a class="door uv" href="#"><span class="cta"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a>
+  </section>
+
+  <section class="keys" aria-label="The door's arrow, hover and pressed">
+    <span class="key"><span class="arr is-hover"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><span class="lab">Hover</span></span>
+    <span class="key"><span class="arr is-pressed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><span class="lab">Pressed</span></span>
+    <span class="key uv"><span class="arr is-hover"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><span class="lab">Hover</span></span>
+    <span class="key uv"><span class="arr is-pressed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><span class="lab">Pressed</span></span>
+  </section>
+</div>
+</body>
+</html>

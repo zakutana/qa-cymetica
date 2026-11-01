@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio B: buttons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ---------------- the page, only so the pieces stand on what they will stand on ---------------- */
+:root { --green: #00ff88; --cyan: #00cfff; --ease: cubic-bezier(.22, 1, .36, 1); }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #05070c; color: #ffffff; }
+#sky { position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(1100px 650px at 80% 8%, rgba(0, 207, 255, .08), rgba(0, 207, 255, 0) 65%),
+    radial-gradient(1000px 600px at 15% 20%, rgba(0, 255, 136, .045), rgba(0, 255, 136, 0) 62%),
+    radial-gradient(140% 105% at 50% 50%, rgba(5, 7, 12, 0) 55%, rgba(5, 7, 12, .8) 100%),
+    linear-gradient(rgba(5, 7, 12, .16), rgba(5, 7, 12, .16)),
+    url(../../pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
+main { position: relative; z-index: 1; width: min(1640px, 100%); margin: 0 auto; padding: 44px 32px 90px; }
+.cap { font: 700 14px 'JetBrains Mono', monospace; letter-spacing: .14em; text-transform: uppercase; color: #8ea3b0; margin: 0 0 14px; }
+section { margin-bottom: 64px; }
+.row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 54px; }
+.row > div { display: flex; flex-direction: column; }
+.pair { display: flex; flex-wrap: wrap; gap: 18px; padding: 6px 8px 14px; }
+.bar { display: flex; justify-content: flex-end; align-items: center; height: 88px; padding: 0 34px; background: rgba(5, 8, 14, .55); border-bottom: 1px solid rgba(143, 180, 200, .1); }
+.doors { display: grid; grid-template-columns: repeat(2, minmax(0, 760px)); gap: 44px; }
+.states .door { width: 560px; }
+
+/* ================ THE PIECES: this block is what gets dropped into quest.css ================
+   One idea, the scene's: the line is the drawing, the key is the thing it becomes. A key is a machined part: a lit top
+   edge, a real side wall it travels down when pressed, no halo round it. The secondary button is the same key still in
+   line, with a draughtsman's crop marks; hover fills it from the bottom by a rising level, its text inverting exactly at
+   that level, the way the scene's product turns real. Markup is the page's own, unchanged.
+   It REPLACES quest.css's rules for .btn-go, .btn-how, .pill, .door .arr, .door .cta .ray and their :hover; it is not appended
+   beside them. Keep the phone rules, and there set .door .arr { --s: 54px }. --s is 98px as briefed; the page has 64px today. */
+
+/* ---- 1. the hero pair */
+.btn-go, .btn-how { --travel: 4px; position: relative; display: inline-flex; align-items: center; justify-content: space-between; gap: 18px; height: 60px; padding: 0 9px 0 26px; border-radius: 13px; white-space: nowrap; text-decoration: none; cursor: pointer; user-select: none; isolation: isolate;
+  font: 400 16px/60px 'Archivo Black', sans-serif; letter-spacing: .035em; text-transform: uppercase; }
+.btn-go svg, .btn-how svg { flex: none; width: 42px; height: 42px; padding: 11px; border-radius: 8px; overflow: hidden; fill: none; stroke: currentColor; stroke-width: 2.3; stroke-linecap: square; stroke-linejoin: miter; }
+
+.btn-go { color: #03160d; text-shadow: 0 1px 0 rgba(255, 255, 255, .38);
+  background: linear-gradient(180deg, #1fff96 0, #00ff88 45%, #00ea7d 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .62), inset 0 -1px 0 rgba(0, 86, 46, .4), 0 0 0 1px rgba(0, 92, 50, .9),
+    0 var(--travel) 0 0 #00a457, 0 calc(var(--travel) + 1px) 0 0 #00532c, 0 22px 30px -12px rgba(0, 0, 0, .9);
+  transition: transform .16s var(--ease), box-shadow .16s var(--ease), filter .2s; }
+.btn-go::before { content: ''; position: absolute; inset: 4px; z-index: -1; border-radius: 9px; pointer-events: none; box-shadow: inset 0 0 0 1px rgba(0, 76, 40, .2), 0 1px 0 rgba(255, 255, 255, .22); }
+.btn-go svg { color: var(--green); background: linear-gradient(180deg, #021a10, #06291b); box-shadow: inset 0 2px 3px rgba(0, 0, 0, .75), 0 1px 0 rgba(255, 255, 255, .5); }
+.btn-go:is(:hover, .hov) { --travel: 6px; transform: translateY(-2px); filter: brightness(1.03); }
+.btn-go:is(:hover, .hov) svg path { animation: go-thru .42s var(--ease); }
+.btn-go:is(:active, .act) { --travel: 0px; transform: translateY(4px); filter: none; box-shadow: inset 0 2px 4px rgba(0, 70, 38, .55), inset 0 -1px 0 rgba(255, 255, 255, .2), 0 0 0 1px rgba(0, 92, 50, .9), 0 1px 0 0 #00532c, 0 8px 14px -8px rgba(0, 0, 0, .9); transition-duration: .05s; }
+@keyframes go-thru { 0% { transform: translateX(0); } 45% { transform: translateX(26px); } 46% { transform: translateX(-26px); } 100% { transform: translateX(0); } }
+
+.btn-how { color: var(--cyan); background: rgba(5, 12, 20, .62);
+  box-shadow: inset 0 0 0 1.25px rgba(0, 207, 255, .8);
+  transition: transform .16s var(--ease), box-shadow .3s; }
+/* the draughtsman's crop marks, standing off the corners */
+.btn-how::before { content: ''; position: absolute; inset: -6px; z-index: -2; pointer-events: none; transition: inset .3s var(--ease), opacity .3s; opacity: .95;
+  --m: rgba(0, 207, 255, .85);
+  background:
+    linear-gradient(var(--m), var(--m)) 0 0 / 10px 1.25px, linear-gradient(var(--m), var(--m)) 0 0 / 1.25px 10px,
+    linear-gradient(var(--m), var(--m)) 100% 0 / 10px 1.25px, linear-gradient(var(--m), var(--m)) 100% 0 / 1.25px 10px,
+    linear-gradient(var(--m), var(--m)) 0 100% / 10px 1.25px, linear-gradient(var(--m), var(--m)) 0 100% / 1.25px 10px,
+    linear-gradient(var(--m), var(--m)) 100% 100% / 10px 1.25px, linear-gradient(var(--m), var(--m)) 100% 100% / 1.25px 10px;
+  background-repeat: no-repeat; }
+/* the level: rises through the drawing and leaves it solid */
+.btn-how::after { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; transform-origin: 50% 100%; transform: scaleY(0); transition: transform .38s cubic-bezier(.3, .7, .3, 1);
+  background: linear-gradient(180deg, #24d6ff 0, #00cfff 45%, #00bcea 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .62); }
+.btn-how span { display: inline-block; height: 60px; color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(to top, #021219 50%, var(--cyan) 50%); background-size: 100% 200%; background-position: 0 0; transition: background-position .38s cubic-bezier(.3, .7, .3, 1); }
+.btn-how svg { color: var(--cyan); box-shadow: inset 0 0 0 1.25px rgba(0, 207, 255, .55); transition: color .14s .14s, background-color .14s .14s, box-shadow .14s .14s; }
+.btn-how:is(:hover, .hov)::after { transform: scaleY(1); }
+.btn-how:is(:hover, .hov)::before { inset: -3px; }
+.btn-how:is(:hover, .hov) span { background-position: 0 100%; }
+.btn-how:is(:hover, .hov) svg { color: var(--cyan); background-color: #03202c; box-shadow: inset 0 2px 3px rgba(0, 0, 0, .7), 0 1px 0 rgba(255, 255, 255, .5); }
+.btn-how:is(:hover, .hov) svg path { animation: how-thru .42s .08s var(--ease); }
+.btn-how:is(:hover, .hov) { box-shadow: inset 0 0 0 1.25px rgba(0, 207, 255, 1), 0 0 0 1px rgba(0, 80, 110, .9), 0 4px 0 0 #0086ac, 0 5px 0 0 #00465c, 0 22px 30px -12px rgba(0, 0, 0, .9); transform: translateY(-2px); }
+.btn-how:is(:active, .act) { transform: translateY(4px); box-shadow: inset 0 2px 4px rgba(0, 50, 70, .6), 0 0 0 1px rgba(0, 80, 110, .9), 0 1px 0 0 #00465c; transition-duration: .05s; }
+.btn-how:is(:active, .act)::after { transform: scaleY(1); }
+.btn-how:is(:active, .act)::before { inset: -2px; opacity: .5; }
+.btn-how:is(:active, .act) span { background-position: 0 100%; }
+.btn-how:is(:active, .act) svg { background-color: #03202c; box-shadow: inset 0 2px 3px rgba(0, 0, 0, .7), 0 1px 0 rgba(255, 255, 255, .5); }
+@keyframes how-thru { 0% { transform: translateY(0); } 45% { transform: translateY(26px); } 46% { transform: translateY(-26px); } 100% { transform: translateY(0); } }
+.btn-go:focus-visible, .btn-how:focus-visible, .door:focus-visible .arr { outline: 1.25px solid #ffffff; outline-offset: 5px; }
+
+/* ---- 2. the figure in the top bar: a readout let into the bar, a real LED beside it */
+.pill { position: relative; flex: none; display: inline-flex; align-items: center; gap: 10px; font: 700 15px/1 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: #cfdde6; white-space: nowrap; }
+.pill i { position: relative; flex: none; width: 9px; height: 9px; margin-right: 3px; border-radius: 50%; background: radial-gradient(circle at 36% 30%, #eafff5 0, #5dffb4 28%, #00ff88 55%, #00b863 100%); box-shadow: 0 0 0 2px #06140e, 0 0 0 3px rgba(0, 255, 136, .42); }
+.pill i::after { content: ''; position: absolute; inset: -3px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 255, 136, .8); animation: pill-live 2.4s cubic-bezier(.2, .6, .3, 1) infinite; }
+@keyframes pill-live { 0% { transform: scale(1); opacity: .9; } 70%, 100% { transform: scale(1.8); opacity: 0; } }
+.pill b { position: relative; padding: 9px 13px 8px; border-radius: 10px; font: 400 22px/1 'Archivo Black', sans-serif; letter-spacing: .01em; color: var(--green); font-variant-numeric: tabular-nums;
+  background: linear-gradient(180deg, #020d08 0, #06180f 100%);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, .9), inset 0 0 0 1px rgba(0, 255, 136, .34), 0 1px 0 rgba(0, 255, 136, .55), 0 -1px 0 rgba(0, 0, 0, .6); }
+
+/* ---- 3. the door's arrow: the same key, large, and the ray a dimension line that ends at it */
+.door { --cr: 0, 255, 136; --k1: #1fff96; --k2: #00ff88; --k3: #00ea7d; --wall: #00a457; --deep: #00532c; --well0: #021a10; --well1: #06291b; --rim: 0, 92, 50; }
+.door.uv { --cr: 0, 207, 255; --k1: #24d6ff; --k2: #00cfff; --k3: #00bcea; --wall: #0086ac; --deep: #00465c; --well0: #021620; --well1: #05283a; --rim: 0, 80, 110; }
+.door .cta .ray { flex: 1; height: 9px; min-width: 20px; display: block; position: relative; border-radius: 0; box-shadow: none;
+  background: linear-gradient(90deg, rgba(var(--cr), .06), rgba(var(--cr), .95)) 0 50% / 100% 1.25px no-repeat,
+    linear-gradient(rgb(var(--cr)), rgb(var(--cr))) 100% 50% / 1.25px 100% no-repeat; }
+.door .cta .ray::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1.25px; margin-top: -.625px; background: #ffffff; transform: scaleX(0); transform-origin: 0 50%; transition: transform .5s var(--ease); }
+.door:is(:hover, .hov) .cta .ray::after { transform: scaleX(1); }
+.door .arr { --s: 98px; --travel: calc(var(--s) * .065); position: relative; flex: none; width: var(--s); height: var(--s); border-radius: calc(var(--s) * .2); display: grid; place-items: center; isolation: isolate;
+  background: linear-gradient(180deg, var(--k1) 0, var(--k2) 45%, var(--k3) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .62), inset 0 -1px 0 rgba(var(--rim), .45), 0 0 0 1px rgb(var(--rim)),
+    0 var(--travel) 0 0 var(--wall), 0 calc(var(--travel) + 1px) 0 0 var(--deep), 0 calc(var(--s) * .3) calc(var(--s) * .4) calc(var(--s) * -.14) rgba(0, 0, 0, .9);
+  transition: transform .16s var(--ease), box-shadow .16s var(--ease); }
+.door .arr, .door.uv .arr { color: rgb(var(--cr)); }
+/* the arrow sits in a dark well let into the key, as on the primary button */
+.door .arr svg { width: 74%; height: 74%; padding: 14%; border-radius: calc(var(--s) * .12); overflow: hidden; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: square; stroke-linejoin: miter;
+  background: linear-gradient(180deg, var(--well0), var(--well1)); box-shadow: inset 0 2px 4px rgba(0, 0, 0, .75), 0 1px 0 rgba(255, 255, 255, .5); }
+.door:is(:hover, .hov) .arr { --travel: calc(var(--s) * .09); transform: translateY(calc(var(--s) * -.025)); }
+.door:is(:hover, .hov) .arr svg path { animation: arr-thru .46s .12s var(--ease); }
+.door:is(:active, .act) .arr { transform: translateY(var(--travel)); --travel: calc(var(--s) * .065); box-shadow: inset 0 3px 6px rgba(var(--rim), .55), inset 0 -1px 0 rgba(255, 255, 255, .2), 0 0 0 1px rgb(var(--rim)), 0 1px 0 0 var(--deep), 0 calc(var(--s) * .08) calc(var(--s) * .16) calc(var(--s) * -.08) rgba(0, 0, 0, .9); transition-duration: .05s; }
+@keyframes arr-thru { 0% { transform: translateX(0); } 45% { transform: translateX(26px); } 46% { transform: translateX(-26px); } 100% { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) { .pill i::after, .btn-go svg path, .btn-how svg path, .door .arr svg path { animation: none !important; } }
+/* ================ end of the pieces ================ */
+
+/* the door itself, copied from quest.css so the arrow is seen where it lives */
+.door { position: relative; display: flex; flex-direction: column; border-radius: 28px; overflow: hidden; isolation: isolate; text-decoration: none; color: inherit;
+  background: linear-gradient(180deg, rgba(8, 14, 24, .25), rgba(5, 9, 15, .84));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(var(--cr), .42), 0 0 60px rgba(var(--cr), .13), 0 30px 60px rgba(0, 0, 0, .48); }
+.door .art { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: #05070c 50% 42% / 88% no-repeat; }
+.door.go .art { background-image: url(../../pics/office.webp); }
+.door.uv .art { background-image: url(../../pics/universe.webp); background-size: 100%; }
+.door .art::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(5, 9, 15, 0) 50%, rgba(5, 9, 15, .94) 100%); }
+.door .cta { position: relative; z-index: 4; display: flex; align-items: center; gap: 22px; margin-top: -84px; padding: 0 28px 34px 32px; }
+.door .cta .t { flex: none; font: 400 32px/1.04 'Archivo Black', sans-serif; color: #ffffff; text-transform: uppercase; letter-spacing: .01em; text-shadow: 0 3px 18px rgba(0, 0, 0, .9); }
+.door .cta .t span { color: rgb(var(--cr)); }
+.door.small .arr { --s: 64px; }
+.door.small .cta { margin-top: -60px; padding-bottom: 28px; }
+</style>
+</head>
+<body>
+<div id="sky" aria-hidden="true"></div>
+<main>
+  <section>
+    <p class="cap">1 / the hero pair</p>
+    <div class="row">
+      <div><p class="cap">Rest</p><div class="pair">
+        <a class="btn-go" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+        <a class="btn-how" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+      </div></div>
+      <div><p class="cap">Hover</p><div class="pair">
+        <a class="btn-go hov" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+        <a class="btn-how hov" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+      </div></div>
+      <div><p class="cap">Pressed</p><div class="pair">
+        <a class="btn-go act" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+        <a class="btn-how act" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+      </div></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="cap">2 / the top bar figure</p>
+    <div class="bar"><span class="pill"><i></i>Up to <b>500,000</b> <span>ET10</span> / month</span></div>
+  </section>
+
+  <section>
+    <p class="cap">3 / the door's arrow: 98 css as briefed</p>
+    <div class="doors">
+      <a class="door go" href="#"><span class="art"></span>
+        <span class="cta"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a>
+      <a class="door uv" href="#"><span class="art"></span>
+        <span class="cta"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a>
+    </div>
+  </section>
+
+  <section>
+    <p class="cap">3 / hover and pressed</p>
+    <div class="row states">
+      <div><p class="cap">Hover</p>
+        <a class="door go hov" href="#" style="height:190px;justify-content:flex-end"><span class="cta" style="margin-top:0"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a></div>
+      <div><p class="cap">Pressed</p>
+        <a class="door uv act" href="#" style="height:190px;justify-content:flex-end"><span class="cta" style="margin-top:0"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="cap">3 / at 64 css, the size quest.css has it today</p>
+    <div class="row states">
+      <div><a class="door go small" href="#" style="height:150px;justify-content:flex-end"><span class="cta" style="margin-top:0"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a></div>
+      <div><a class="door uv small" href="#" style="height:150px;justify-content:flex-end"><span class="cta" style="margin-top:0"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a></div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

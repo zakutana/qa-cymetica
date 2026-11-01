@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quest buttons, frosted glass</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ---- Studio D's buttons. Same material as the scene: glass with a lit top edge and light inside it, never a flat fill.
+   The markup is the page's own (.btn-go, .btn-how, .pill, .arr), so this block drops in. :hover and :active are mirrored
+   by .is-hover and .is-press only so that this sheet can show them standing still. */
+:root { --green: #00ff88; --cyan: #00cfff; --ease: cubic-bezier(.2, .8, .2, 1);
+  --frost: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* the hero pair: one height, one chip for the arrow, two materials, and each a second sheet behind its face, as the door's
+   arrow has and as the scene's whole story has: hover opens the gap, pressing closes it. The face is ::after, the sheet
+   behind it ::before, the element itself carries only the type */
+.btn-go, .btn-how { position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 22px; height: 68px; padding: 0 11px 0 30px; border-radius: 21px;
+  font: 400 17px/1 'Archivo Black', sans-serif; letter-spacing: .03em; text-transform: uppercase; white-space: nowrap; cursor: pointer; user-select: none; text-decoration: none;
+  transition: transform .3s var(--ease); }
+.btn-go::before, .btn-how::before, .btn-go::after, .btn-how::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+.btn-go::before, .btn-how::before { z-index: -2; transform: translate(9px, -8px); transition: transform .35s var(--ease), background-color .3s, box-shadow .3s; }
+.btn-go::after, .btn-how::after { z-index: -1; transition: box-shadow .3s var(--ease), background-position .85s var(--ease), background-color .3s; }
+.btn-go svg, .btn-how svg { flex: none; width: 46px; height: 46px; padding: 12px; border-radius: 13px; overflow: hidden; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+  transition: background .3s, box-shadow .3s, transform .3s var(--ease); }
+.btn-go:focus-visible, .btn-how:focus-visible, .door:focus-visible .arr { outline: 2px solid #ffffff; outline-offset: 5px; }
+@keyframes fly-x { 0% { transform: none; opacity: 1; } 44% { transform: translateX(24px); opacity: 0; } 45% { transform: translateX(-24px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+@keyframes fly-y { 0% { transform: none; opacity: 1; } 44% { transform: translateY(24px); opacity: 0; } 45% { transform: translateY(-24px); opacity: 0; } 100% { transform: none; opacity: 1; } }
+
+.hero-cta { gap: 28px; }
+
+/* primary: a slab of green glass with the light inside it, brightest off its top left corner; one streak across it on the way in */
+.btn-go { color: #03170d; background: none; box-shadow: none; }
+.btn-go:hover { box-shadow: none; }
+.btn-go::before { background: linear-gradient(135deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, .03) 38%), rgba(0, 255, 136, .17);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .8), inset 0 0 0 1.2px rgba(0, 255, 136, .8); }
+.btn-go::after {
+  background:
+    linear-gradient(105deg, rgba(255, 255, 255, 0) 42%, rgba(255, 255, 255, .6) 50%, rgba(255, 255, 255, 0) 58%) 135% 0 / 260% 100% no-repeat,
+    var(--frost),
+    radial-gradient(110% 170% at 8% -40%, rgba(255, 255, 255, .72), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, #2bff9e 0%, #00ff88 46%, #00dc76 100%);
+  background-blend-mode: normal, overlay, normal, normal;
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .95), inset 0 -2px 0 rgba(0, 96, 54, .5), inset 1px 0 0 rgba(255, 255, 255, .28), inset -1px 0 0 rgba(255, 255, 255, .14),
+    0 16px 26px -14px rgba(0, 255, 136, .55), 0 3px 10px rgba(0, 0, 0, .4); }
+.btn-go svg { color: #00ff88; background: linear-gradient(180deg, #0d3323, #03170d 70%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .26), 0 1px 0 rgba(255, 255, 255, .42), 0 0 0 1px rgba(0, 70, 40, .35); }
+.btn-go:hover, .btn-go.is-hover { transform: translateY(-2px); }
+.btn-go:hover::before, .btn-go.is-hover::before { transform: translate(14px, -12px); background-color: rgba(0, 255, 136, .28); }
+.btn-go:hover::after, .btn-go.is-hover::after { background-position: -35% 0, 0 0, 0 0, 0 0;
+  box-shadow: inset 0 1.5px 0 #ffffff, inset 0 -2px 0 rgba(0, 96, 54, .5), inset 1px 0 0 rgba(255, 255, 255, .4), inset -1px 0 0 rgba(255, 255, 255, .24),
+    0 20px 30px -14px rgba(0, 255, 136, .8), 0 3px 10px rgba(0, 0, 0, .4); }
+.btn-go:hover svg, .btn-go.is-hover svg { background: linear-gradient(180deg, #114a33, #052317 70%); color: #6dffbb; }
+.btn-go:hover svg { transform: none; }
+.btn-go:hover svg path { animation: fly-x .55s var(--ease); }
+.btn-go:active, .btn-go.is-press { transform: translate(3px, 2px) scale(.985); transition-duration: .08s; }
+.btn-go:active::before, .btn-go.is-press::before { transform: translate(1px, -1px); transition-duration: .08s; }
+.btn-go:active::after, .btn-go.is-press::after { transition-duration: .08s;
+  background:
+    var(--frost),
+    radial-gradient(110% 170% at 8% -40%, rgba(255, 255, 255, .34), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, #00e27a 0%, #00e87d 46%, #00c86c 100%);
+  background-blend-mode: overlay, normal, normal;
+  box-shadow: inset 0 2px 7px rgba(0, 66, 36, .65), inset 0 -1px 0 rgba(255, 255, 255, .28), 0 1px 4px rgba(0, 0, 0, .5); }
+.btn-go:active svg, .btn-go.is-press svg { transform: scale(.95); }
+
+/* secondary: clear panes of the Universe board's frost: the sky blurred behind them, a cyan rim, a lit top edge */
+.btn-how { color: #f4fbff; background: none; box-shadow: none; }
+.btn-how:hover { box-shadow: none; }
+.btn-how::before { background: linear-gradient(135deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, .02) 38%), rgba(0, 207, 255, .1);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .6), inset 0 0 0 1.2px rgba(0, 207, 255, .55); }
+.btn-how::after { background-color: rgba(0, 207, 255, 0);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, .22) 0%, rgba(255, 255, 255, .06) 28%, rgba(255, 255, 255, 0) 50%), radial-gradient(120% 130% at 0% 0%, rgba(0, 207, 255, .26), rgba(0, 207, 255, 0) 62%), linear-gradient(180deg, rgba(16, 34, 50, .86), rgba(6, 11, 20, .92));
+  -webkit-backdrop-filter: blur(16px) saturate(1.5) brightness(1.1); backdrop-filter: blur(16px) saturate(1.5) brightness(1.1);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .78), inset 1px 0 0 rgba(255, 255, 255, .3), inset 0 0 0 1.2px rgba(0, 207, 255, .62), inset 0 -14px 20px -16px rgba(0, 207, 255, .55), 0 16px 28px -18px rgba(0, 0, 0, .95); }
+.btn-how svg { color: var(--cyan); background: linear-gradient(180deg, rgba(0, 207, 255, .24), rgba(0, 207, 255, .1)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .42), inset 0 0 0 1px rgba(0, 207, 255, .42); }
+.btn-how:hover, .btn-how.is-hover { transform: translateY(-2px); }
+.btn-how:hover::before, .btn-how.is-hover::before { transform: translate(14px, -12px); background-color: rgba(0, 207, 255, .2); }
+.btn-how:hover::after, .btn-how.is-hover::after { background-color: rgba(0, 207, 255, .1);
+  box-shadow: inset 0 1.5px 0 #ffffff, inset 1px 0 0 rgba(255, 255, 255, .44), inset 0 0 0 1.2px rgba(0, 207, 255, .95), inset 0 -14px 20px -14px rgba(0, 207, 255, .8), 0 18px 30px -18px rgba(0, 0, 0, .95); }
+.btn-how:hover svg, .btn-how.is-hover svg { color: #a8f3ff; background: linear-gradient(180deg, rgba(0, 207, 255, .42), rgba(0, 207, 255, .2)); }
+.btn-how:hover svg { transform: none; }
+.btn-how:hover svg path { animation: fly-y .55s var(--ease); }
+.btn-how:active, .btn-how.is-press { transform: translate(3px, 2px) scale(.985); transition-duration: .08s; }
+.btn-how:active::before, .btn-how.is-press::before { transform: translate(1px, -1px); transition-duration: .08s; }
+.btn-how:active::after, .btn-how.is-press::after { transition-duration: .08s; background-color: rgba(3, 8, 14, .5);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, .7), inset 0 0 0 1.2px rgba(0, 207, 255, .42), inset 0 -1px 0 rgba(0, 207, 255, .3); }
+
+/* the bar's figure: the number in a small pane of glass, its numerals the board's gradient; a live dot with one ring */
+.pill { position: relative; isolation: isolate; flex: none; display: inline-flex; align-items: center; gap: 11px; font: 700 14px/1 'JetBrains Mono', monospace; letter-spacing: .09em; text-transform: uppercase; color: #dbe8ef; white-space: nowrap; }
+.pill i { position: relative; flex: none; width: 9px; height: 9px; margin-right: 3px; border-radius: 50%; background: radial-gradient(circle at 40% 32%, #eafff4, var(--green) 62%); box-shadow: 0 0 9px rgba(0, 255, 136, .9); animation: none; }
+.pill i::after { content: ''; position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 1.5px rgba(0, 255, 136, .8); animation: live-ring 2.6s var(--ease) infinite; }
+@keyframes live-ring { 0% { transform: scale(1); opacity: .9; } 70%, 100% { transform: scale(2.7); opacity: 0; } }
+.pill b { position: relative; top: 0; display: inline-block; border-radius: 14px; box-shadow: none; padding: 10px 15px 10px; font: 400 21px/1 'Archivo Black', sans-serif; letter-spacing: .01em; color: transparent;
+  background: linear-gradient(180deg, #f2fff9 12%, #00ff88 62%, #00c76c); -webkit-background-clip: text; background-clip: text; transition: top .3s var(--ease); }
+.pill b::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: 14px; transition: box-shadow .3s;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .18) 0%, rgba(255, 255, 255, .04) 32%, rgba(255, 255, 255, 0) 52%), radial-gradient(120% 140% at 0% 0%, rgba(0, 255, 136, .2), rgba(0, 255, 136, 0) 64%), linear-gradient(180deg, rgba(16, 38, 40, .62), rgba(5, 12, 18, .78));
+  -webkit-backdrop-filter: blur(12px) saturate(1.5); backdrop-filter: blur(12px) saturate(1.5);
+  box-shadow: inset 0 1.2px 0 rgba(255, 255, 255, .6), inset 0 0 0 1px rgba(0, 255, 136, .34), inset 0 -10px 14px -12px rgba(0, 255, 136, .55), 0 10px 22px -14px rgba(0, 255, 136, .55); }
+.pill:hover b, .pill.is-hover b { top: -1px; }
+.pill:hover b::before, .pill.is-hover b::before { box-shadow: inset 0 1.2px 0 #ffffff, inset 0 0 0 1px rgba(0, 255, 136, .7), inset 0 -10px 14px -10px rgba(0, 255, 136, .8), 0 0 26px -6px rgba(0, 255, 136, .7); }
+.pill:active b, .pill.is-press b { top: 1px; transition-duration: .08s; }
+.pill:active b::before, .pill.is-press b::before { box-shadow: inset 0 2px 6px rgba(0, 0, 0, .7), inset 0 0 0 1px rgba(0, 255, 136, .4); }
+
+/* the door's arrow: two sheets of coloured glass, tilted as the scene's are, a hand's breadth apart. Hover turns them to
+   face you and opens the gap; pressing closes it. The scene's whole story, in one button */
+.door { --cr: 0, 255, 136; --deep: #00bf67; --ink: #03170d; }
+.door.uv { --cr: 0, 207, 255; --deep: #0092cf; --ink: #021621; }
+.door .cta .ray { flex: 1; height: 2px; border-radius: 2px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .95), rgba(255, 255, 255, 0)) -90px 0 / 90px 100% no-repeat, linear-gradient(90deg, rgba(var(--cr), 0), rgba(var(--cr), .75) 72%, rgba(255, 255, 255, .95)); transition: background-position .8s var(--ease); box-shadow: none; }
+.door:hover .cta .ray, .door.is-hover .cta .ray { background-position: calc(100% + 90px) 0, 0 0; }
+.door .arr { position: relative; flex: none; display: grid; place-items: center; width: 98px; height: 98px; border-radius: 28px; color: var(--ink, #03170d); transform-style: preserve-3d;
+  transform: perspective(520px) rotateY(-20deg) rotateX(4deg); transition: transform .5s var(--ease), box-shadow .3s var(--ease);
+  background: radial-gradient(95% 95% at 18% 4%, rgba(255, 255, 255, .78), rgba(255, 255, 255, 0) 62%), linear-gradient(165deg, rgb(var(--cr)) 34%, var(--deep) 108%);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, .95), inset 2px 0 0 rgba(255, 255, 255, .32), inset 0 -2px 0 rgba(0, 0, 0, .18), 0 20px 28px -18px rgba(var(--cr), .6); }
+/* the frost on the front sheet */
+.door .arr::after { content: ''; position: absolute; inset: 0; border-radius: inherit; background: var(--frost); opacity: .2; mix-blend-mode: overlay; pointer-events: none; }
+/* the sheet behind */
+.door .arr::before { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; transform: translate3d(13px, -11px, -30px); transition: transform .5s var(--ease), background .3s;
+  background: linear-gradient(135deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .03) 42%), rgba(var(--cr), .2); box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .8), inset 0 0 0 1.2px rgba(var(--cr), .85); }
+.door .arr svg { position: relative; width: 46px; height: 46px; overflow: hidden; fill: none; stroke: currentColor; stroke-width: 2.7; stroke-linecap: round; stroke-linejoin: round; transform: translateZ(1px); }
+.door:hover .arr, .door.is-hover .arr { transform: perspective(520px) rotateY(0deg) rotateX(0deg) translateY(-2px);
+  box-shadow: inset 0 2px 0 #ffffff, inset 2px 0 0 rgba(255, 255, 255, .42), inset 0 -2px 0 rgba(0, 0, 0, .18), 0 24px 34px -16px rgba(var(--cr), .85); }
+.door:hover .arr::before, .door.is-hover .arr::before { transform: translate3d(20px, -17px, -30px); background: linear-gradient(135deg, rgba(255, 255, 255, .34), rgba(255, 255, 255, .05) 42%), rgba(var(--cr), .32); }
+.door:hover .arr svg { transform: translateZ(1px); }
+.door:hover .arr svg path { animation: fly-x .55s var(--ease); }
+.door:active .arr, .door.is-press .arr { transform: perspective(520px) rotateY(-6deg) rotateX(1deg) translate3d(5px, 3px, -24px); transition-duration: .1s; filter: brightness(.9);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, .34), inset 0 -1px 0 rgba(255, 255, 255, .3), 0 10px 20px -14px rgba(var(--cr), .8); }
+.door:active .arr::before, .door.is-press .arr::before { transform: translate3d(2px, -2px, -2px); transition-duration: .1s; }
+
+/* ---- below this line: only this sheet, not for dropping in ---- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: #05070c; }
+body { min-height: 100vh; font-family: 'JetBrains Mono', monospace; color: #eef6fa; background: #05070c; -webkit-font-smoothing: antialiased; }
+#sky { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: radial-gradient(1100px 650px at 80% 8%, rgba(0, 207, 255, .08), rgba(0, 207, 255, 0) 65%), radial-gradient(1000px 600px at 15% 20%, rgba(0, 255, 136, .045), rgba(0, 255, 136, 0) 62%), radial-gradient(140% 105% at 50% 50%, rgba(5, 7, 12, 0) 55%, rgba(5, 7, 12, .8) 100%), linear-gradient(rgba(5, 7, 12, .16), rgba(5, 7, 12, .16)), url(../../pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
+main { position: relative; z-index: 1; width: min(1360px, calc(100% - 64px)); margin: 0 auto; padding: 56px 0 90px; display: grid; gap: 64px; }
+.row { display: grid; grid-template-columns: 120px repeat(3, auto); justify-content: start; align-items: center; gap: 34px 46px; }
+.row.bar { grid-template-columns: 120px auto; }
+.st { font: 700 15px 'JetBrains Mono'; letter-spacing: .12em; text-transform: uppercase; color: #7f93ad; }
+.pair { display: flex; gap: 26px; flex-wrap: wrap; }
+.stack { display: grid; gap: 26px; }
+.doors { display: grid; grid-template-columns: repeat(2, minmax(0, 620px)); gap: 40px; }
+.door { position: relative; display: flex; flex-direction: column; border-radius: 28px; overflow: hidden; isolation: isolate; color: #fff; text-decoration: none; cursor: pointer;
+  background: linear-gradient(180deg, rgba(8, 14, 24, .25), rgba(5, 9, 15, .84));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(var(--cr), .42), 0 0 60px rgba(var(--cr), .13), 0 30px 60px rgba(0, 0, 0, .48); }
+.door .art { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: url(../../pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
+.door .art img { position: absolute; left: 50%; top: 4%; height: 92%; transform: translateX(-50%); mix-blend-mode: screen; }
+.door .art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(5, 9, 15, 0) 50%, rgba(5, 9, 15, .94) 100%); }
+.door .cta { position: relative; z-index: 4; display: flex; align-items: center; gap: 22px; margin-top: -84px; padding: 0 34px 26px 32px; }
+.door.strip .cta { margin-top: 0; padding-top: 34px; }
+.door .cta .t { flex: none; font: 400 32px/1.04 'Archivo Black', sans-serif; color: #ffffff; text-transform: uppercase; letter-spacing: .01em; text-shadow: 0 3px 18px rgba(0, 0, 0, .9); }
+.door .cta .t span { color: rgb(var(--cr)); }
+.states { display: grid; gap: 14px; }
+.lab { display: block; margin: 0 0 12px 2px; }
+@media (max-width: 1100px) { .row { grid-template-columns: 1fr; } .row.bar { grid-template-columns: 1fr; } .doors { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="sky" aria-hidden="true"></div>
+<main>
+  <section class="row">
+    <span class="st">Rest</span>
+    <div class="pair">
+      <a class="btn-go" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+      <a class="btn-how" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+    </div>
+  </section>
+  <section class="row">
+    <span class="st">Hover</span>
+    <div class="pair">
+      <a class="btn-go is-hover" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+      <a class="btn-how is-hover" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+    </div>
+  </section>
+  <section class="row">
+    <span class="st">Pressed</span>
+    <div class="pair">
+      <a class="btn-go is-press" href="#"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+      <a class="btn-how is-press" href="#"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+    </div>
+  </section>
+
+  <section class="row bar">
+    <span class="st">Top bar</span>
+    <div class="pair" style="gap: 56px; align-items: center;">
+      <span class="pill"><i></i>Up to <b>500,000</b> <span>ET10</span> / month</span>
+      <span class="pill is-hover"><i></i>Up to <b>500,000</b> <span>ET10</span> / month</span>
+      <span class="pill is-press"><i></i>Up to <b>500,000</b> <span>ET10</span> / month</span>
+    </div>
+  </section>
+
+  <section class="stack">
+    <div class="doors">
+      <a class="door go" href="#">
+        <span class="art"><img src="../../pics/office.webp" alt=""></span>
+        <span class="cta"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+      </a>
+      <a class="door uv" href="#">
+        <span class="art"><img src="../../pics/universe.webp" alt="" style="top: 0; height: 100%;"></span>
+        <span class="cta"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+      </a>
+    </div>
+    <div class="doors">
+      <div class="states"><span class="st lab">Hover</span>
+        <a class="door go strip is-hover" href="#"><span class="cta"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a>
+      </div>
+      <div class="states"><span class="st lab">Hover</span>
+        <a class="door uv strip is-hover" href="#"><span class="cta"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a>
+      </div>
+      <div class="states"><span class="st lab">Pressed</span>
+        <a class="door go strip is-press" href="#"><span class="cta"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a>
+      </div>
+      <div class="states"><span class="st lab">Pressed</span>
+        <a class="door uv strip is-press" href="#"><span class="cta"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span></a>
+      </div>
+    </div>
+  </section>
+</main>
+</body>
+</html>

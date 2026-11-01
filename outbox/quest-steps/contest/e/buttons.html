@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quest Buttons</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== The pieces. Same two materials as the scene: green enamel, polished dark metal, and one thin line of light.
+   .is-hover and .is-press only force the state for this sheet; :hover and :active are the real ones.
+   Dropping in: the hero pair wants the arrow inside <span class="ic"> with two <g>, and .right or .down on the link (see below).
+   The old .door .cta .ray and .door .arr rules go, their specificity beats these. .door:hover drives the arrow as before. ===== */
+:root { --e: cubic-bezier(.2, .75, .2, 1); }
+
+/* ---- the hero pair ---- */
+.btn-go, .btn-how { position: relative; display: inline-flex; align-items: center; gap: 18px; height: 68px; padding: 0 12px 0 28px; border-radius: 20px; white-space: nowrap;
+  font: 400 17px/1 'Archivo Black', sans-serif; letter-spacing: .025em; text-transform: uppercase; text-decoration: none; cursor: pointer; user-select: none;
+  transition: transform .22s var(--e), box-shadow .22s var(--e), filter .22s var(--e); }
+.btn-go { color: #03160d;
+  background: linear-gradient(180deg, #38ffa4 0%, #00ff88 30%, #00f481 70%, #00e478 100%);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .9), inset 0 -1.5px 0 rgba(0, 96, 54, .55),
+    0 3px 0 #00924f, 0 4px 0 #004d2a, 0 16px 26px -8px rgba(0, 0, 0, .75), 0 22px 56px -18px rgba(0, 255, 136, .6); }
+.btn-how { color: #f2f9fc;
+  background: linear-gradient(180deg, #243140 0%, #141d29 42%, #0b121b 100%);
+  box-shadow: inset 0 1.5px 0 rgba(235, 248, 255, .42), inset 0 0 0 1px rgba(150, 215, 240, .14),
+    0 3px 0 #05090f, 0 4px 0 #010305, 0 16px 26px -8px rgba(0, 0, 0, .75); }
+/* the well the arrow sits in */
+.btn-go .ic, .btn-how .ic { flex: none; width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; overflow: hidden; }
+.btn-go .ic { color: #00ff88; background: linear-gradient(180deg, #070d14, #101a24);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, .9), 0 1px 0 rgba(255, 255, 255, .55); }
+.btn-how .ic { color: #00cfff; background: linear-gradient(180deg, #04070c, #0a1119);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, .95), 0 1px 0 rgba(200, 235, 250, .2); }
+.btn-go > svg, .btn-how > svg, .ic svg { flex: none; width: 22px; height: 22px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.ic g { transition: transform .42s var(--e); }
+/* two arrows: on hover one leaves by the far side and the other comes in behind it */
+.right g + g { transform: translateX(-34px); }
+.down g + g { transform: translateY(-34px); }
+
+.btn-go:hover, .btn-go.is-hover { transform: translateY(-2px); filter: saturate(1.05) brightness(1.04);
+  box-shadow: inset 0 1.5px 0 #ffffff, inset 0 -1.5px 0 rgba(0, 96, 54, .55),
+    0 4px 0 #00924f, 0 5px 0 #004d2a, 0 22px 30px -8px rgba(0, 0, 0, .75), 0 26px 70px -14px rgba(0, 255, 136, .85); }
+.btn-how:hover, .btn-how.is-hover { transform: translateY(-2px);
+  box-shadow: inset 0 1.5px 0 rgba(235, 248, 255, .6), inset 0 0 0 1px rgba(0, 207, 255, .55),
+    0 4px 0 #05090f, 0 5px 0 #010305, 0 22px 30px -8px rgba(0, 0, 0, .75), 0 18px 54px -16px rgba(0, 207, 255, .55); }
+.right:hover g, .right.is-hover g { transform: translateX(34px); }
+.right:hover g + g, .right.is-hover g + g { transform: none; }
+.down:hover g, .down.is-hover g { transform: translateY(34px); }
+.down:hover g + g, .down.is-hover g + g { transform: none; }
+
+.btn-go:active, .btn-go.is-press { transform: translateY(3px); filter: brightness(.88); transition-duration: .06s;
+  box-shadow: inset 0 2px 5px rgba(0, 92, 52, .55), inset 0 -1px 0 rgba(255, 255, 255, .22),
+    0 0 0 #00924f, 0 1px 0 #004d2a, 0 6px 12px -4px rgba(0, 0, 0, .8), 0 8px 26px -12px rgba(0, 255, 136, .5); }
+.btn-how:active, .btn-how.is-press { transform: translateY(3px); transition-duration: .06s;
+  background: linear-gradient(180deg, #0c131c, #131c27);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .85), inset 0 0 0 1px rgba(0, 207, 255, .55),
+    0 0 0 #05090f, 0 1px 0 #010305, 0 6px 12px -4px rgba(0, 0, 0, .8); }
+.btn-go:focus-visible, .btn-how:focus-visible, .arr:focus-visible { outline: 2px solid #ffffff; outline-offset: 4px; }
+
+/* ---- the bar's figure ---- */
+.pill { position: relative; display: inline-flex; align-items: center; gap: 11px; height: 52px; padding: 0 6px 0 18px; border-radius: 26px; white-space: nowrap;
+  font: 700 16px/1 'JetBrains Mono', monospace; letter-spacing: .05em; text-transform: uppercase; color: #e6f0f5;
+  background: linear-gradient(180deg, #1c2733, #0d141d 60%, #0a1018);
+  box-shadow: inset 0 1px 0 rgba(235, 248, 255, .34), inset 0 0 0 1px rgba(150, 215, 240, .12), 0 10px 22px -8px rgba(0, 0, 0, .8);
+  transition: box-shadow .22s var(--e), transform .22s var(--e); }
+.pill i { position: relative; flex: none; width: 8px; height: 8px; border-radius: 50%; background: #00ff88; box-shadow: 0 0 8px rgba(0, 255, 136, .9); }
+.pill i::after { content: ''; position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 1.5px #00ff88; animation: pill-live 2.6s var(--e) infinite; }
+@keyframes pill-live { 0% { transform: scale(1); opacity: .9; } 70%, 100% { transform: scale(2.9); opacity: 0; } }
+.pill b { font: 400 22px/1 'Archivo Black', sans-serif; letter-spacing: 0; color: #03160d; padding: 8px 14px 8px; border-radius: 14px;
+  background: linear-gradient(180deg, #4dffb0, #0dff90 40%, #00e97c);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(0, 96, 54, .55), 0 2px 0 #00703d; transition: transform .16s var(--e), box-shadow .16s var(--e); }
+.pill .un { padding-right: 12px; }
+.pill:hover, .pill.is-hover { box-shadow: inset 0 1px 0 rgba(235, 248, 255, .5), inset 0 0 0 1px rgba(0, 255, 136, .5), 0 10px 22px -8px rgba(0, 0, 0, .8), 0 8px 34px -12px rgba(0, 255, 136, .55); }
+.pill:hover b, .pill.is-hover b { transform: translateY(-1px); box-shadow: inset 0 1px 0 #ffffff, inset 0 -1px 0 rgba(0, 96, 54, .55), 0 3px 0 #00703d; }
+.pill:active, .pill.is-press { transform: translateY(1px); }
+.pill:active b, .pill.is-press b { transform: translateY(2px); box-shadow: inset 0 1px 3px rgba(0, 92, 52, .6), 0 0 0 #00703d; }
+
+/* ---- the door's arrow, and the thin line that runs into it. Inside a .door the colour comes from --cr as before ---- */
+.arr, .ray { --hi: #5affb6; --md: #00ff88; --lo: #00e478; --sd: #00924f; --dk: #004d2a; --ink: #03160d; --cr: 0, 255, 136; }
+.uv .arr, .uv .ray { --hi: #86e9ff; --md: #16d4ff; --lo: #00b8ea; --sd: #006f94; --dk: #003a4e; --ink: #021219; --cr: 0, 207, 255; }
+.ray { position: relative; display: block; flex: 1; min-width: 40px; height: 2px; margin-right: -22px; overflow: hidden;   /* it runs into the seat */
+  background: linear-gradient(90deg, rgba(var(--cr), 0), rgba(var(--cr), .9) 62%, var(--hi)); }
+.ray::after { content: ''; position: absolute; top: 0; bottom: 0; left: -40%; width: 40%;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), #ffffff); opacity: 0; }
+.cta:hover .ray::after, .door:hover .ray::after, .cta.is-hover .ray::after { opacity: 1; animation: ray-run 1.1s var(--e) infinite; }
+@keyframes ray-run { to { left: 100%; } }
+.arr { position: relative; flex: none; width: 98px; height: 98px; border-radius: 30px; display: grid; place-items: center; cursor: pointer; color: var(--ink);
+  /* the seat, polished metal; the key itself is ::before */
+  background: linear-gradient(180deg, #05090f, #18222e);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, .95), 0 1px 0 rgba(235, 248, 255, .28), 0 18px 34px -10px rgba(0, 0, 0, .85), 0 22px 60px -18px rgba(var(--cr), .6);
+  transition: box-shadow .24s var(--e); }
+.arr::before { content: ''; position: absolute; inset: 7px 7px 10px; border-radius: 24px;
+  background: radial-gradient(90% 56% at 50% 100%, rgba(255, 255, 255, .2), rgba(255, 255, 255, 0) 70%), linear-gradient(180deg, var(--hi) 0%, var(--md) 24%, var(--lo) 100%);
+  box-shadow: inset 0 1.5px 0 rgba(255, 255, 255, .95), inset 0 -1.5px 0 rgba(0, 0, 0, .14), 0 3px 0 var(--sd), 0 4px 0 var(--dk);
+  transition: transform .22s var(--e), box-shadow .22s var(--e), filter .22s var(--e); }
+.arr svg { position: relative; width: 38px; height: 38px; margin-top: -3px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .28s var(--e); }
+.cta:hover .arr::before, .door:hover .arr::before, .cta.is-hover .arr::before { transform: translateY(-2px); filter: brightness(1.05);
+  box-shadow: inset 0 1.5px 0 #ffffff, inset 0 -1.5px 0 rgba(0, 0, 0, .14), 0 5px 0 var(--sd), 0 6px 0 var(--dk); }
+.cta:hover .arr, .door:hover .arr, .cta.is-hover .arr { box-shadow: inset 0 2px 4px rgba(0, 0, 0, .95), 0 1px 0 rgba(235, 248, 255, .28), 0 18px 34px -10px rgba(0, 0, 0, .85), 0 24px 74px -12px rgba(var(--cr), .95); }
+.cta:hover .arr svg, .door:hover .arr svg, .cta.is-hover .arr svg { transform: translate(5px, -2px); }
+.arr:active::before, .cta.is-press .arr::before { transform: translateY(4px); filter: brightness(.88); transition-duration: .06s;
+  box-shadow: inset 0 3px 7px rgba(0, 0, 0, .3), inset 0 -1px 0 rgba(255, 255, 255, .25), 0 0 0 var(--sd), 0 1px 0 var(--dk); }
+.arr:active svg, .cta.is-press .arr svg { transform: translate(2px, 4px); transition-duration: .06s; }
+@media (prefers-reduced-motion: reduce) { .pill i::after, .ray::after { animation: none !important; } }
+
+/* ===== the sheet itself, not part of the pieces ===== */
+html, body { margin: 0; min-height: 100%; }
+body { color: #dfeaf0; font: 500 15px/1.3 'JetBrains Mono', monospace;
+  background: radial-gradient(1100px 650px at 80% 8%, rgba(0, 207, 255, .08), rgba(0, 207, 255, 0) 65%),
+    radial-gradient(1000px 600px at 15% 20%, rgba(0, 255, 136, .045), rgba(0, 255, 136, 0) 62%),
+    linear-gradient(rgba(5, 7, 12, .16), rgba(5, 7, 12, .16)),
+    url(../../pics/space.webp) 50% 50% / cover no-repeat fixed, #05070c; }
+.sheet { max-width: 1480px; margin: 0 auto; padding: 56px 40px 80px; display: grid; gap: 60px; }
+.row { display: grid; grid-template-columns: 110px 1fr; gap: 26px 20px; align-items: center; }
+.row > span { color: #8fa3b1; letter-spacing: .08em; text-transform: uppercase; font-size: 14px; }
+.pair { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+.doors-sheet { display: grid; grid-template-columns: repeat(auto-fit, minmax(620px, 1fr)); gap: 44px 60px; }
+.col { display: grid; gap: 30px; }
+.cta { display: flex; align-items: center; gap: 22px; }
+.cta .t { flex: none; font: 400 32px/1.04 'Archivo Black', sans-serif; color: #ffffff; text-transform: uppercase; letter-spacing: .01em; }
+.cta.uv .t span { color: #00cfff; }
+.note { color: #8fa3b1; font-size: 14px; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 -14px; }
+@media (max-width: 720px) { .row { grid-template-columns: 1fr; } .doors-sheet { grid-template-columns: 1fr; } .cta .t { font-size: 22px; } }
+</style>
+</head>
+<body>
+<div class="sheet">
+  <section class="row">
+    <span>Rest</span>
+    <div class="pair">
+      <a class="btn-go right"><span>Start a company</span><span class="ic"><svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M3.5 10h13M11 4.5l5.5 5.5-5.5 5.5"/></g><g><path d="M3.5 10h13M11 4.5l5.5 5.5-5.5 5.5"/></g></svg></span></a>
+      <a class="btn-how down"><span>See the 5 steps</span><span class="ic"><svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M10 3.5v13M4.5 11l5.5 5.5 5.5-5.5"/></g><g><path d="M10 3.5v13M4.5 11l5.5 5.5 5.5-5.5"/></g></svg></span></a>
+      <span style="width:40px"></span>
+      <span class="pill"><i></i>Up to <b>500,000</b> <span class="un">ET10 / month</span></span>
+    </div>
+    <span>Hover</span>
+    <div class="pair">
+      <a class="btn-go right is-hover"><span>Start a company</span><span class="ic"><svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M3.5 10h13M11 4.5l5.5 5.5-5.5 5.5"/></g><g><path d="M3.5 10h13M11 4.5l5.5 5.5-5.5 5.5"/></g></svg></span></a>
+      <a class="btn-how down is-hover"><span>See the 5 steps</span><span class="ic"><svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M10 3.5v13M4.5 11l5.5 5.5 5.5-5.5"/></g><g><path d="M10 3.5v13M4.5 11l5.5 5.5 5.5-5.5"/></g></svg></span></a>
+      <span style="width:40px"></span>
+      <span class="pill is-hover"><i></i>Up to <b>500,000</b> <span class="un">ET10 / month</span></span>
+    </div>
+    <span>Pressed</span>
+    <div class="pair">
+      <a class="btn-go right is-press"><span>Start a company</span><span class="ic"><svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M3.5 10h13M11 4.5l5.5 5.5-5.5 5.5"/></g><g><path d="M3.5 10h13M11 4.5l5.5 5.5-5.5 5.5"/></g></svg></span></a>
+      <a class="btn-how down is-press"><span>See the 5 steps</span><span class="ic"><svg viewBox="0 0 20 20" aria-hidden="true"><g><path d="M10 3.5v13M4.5 11l5.5 5.5 5.5-5.5"/></g><g><path d="M10 3.5v13M4.5 11l5.5 5.5 5.5-5.5"/></g></svg></span></a>
+      <span style="width:40px"></span>
+      <span class="pill is-press"><i></i>Up to <b>500,000</b> <span class="un">ET10 / month</span></span>
+    </div>
+  </section>
+
+  <section class="doors-sheet">
+    <div class="col">
+      <p class="note">Rest</p>
+      <div class="cta"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12h15M13 5.5l6.5 6.5-6.5 6.5"/></svg></span></div>
+      <p class="note">Hover</p>
+      <div class="cta is-hover"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12h15M13 5.5l6.5 6.5-6.5 6.5"/></svg></span></div>
+      <p class="note">Pressed</p>
+      <div class="cta is-press"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12h15M13 5.5l6.5 6.5-6.5 6.5"/></svg></span></div>
+    </div>
+    <div class="col">
+      <p class="note">Rest</p>
+      <div class="cta uv"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12h15M13 5.5l6.5 6.5-6.5 6.5"/></svg></span></div>
+      <p class="note">Hover</p>
+      <div class="cta uv is-hover"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12h15M13 5.5l6.5 6.5-6.5 6.5"/></svg></span></div>
+      <p class="note">Pressed</p>
+      <div class="cta uv is-press"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12h15M13 5.5l6.5 6.5-6.5 6.5"/></svg></span></div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
