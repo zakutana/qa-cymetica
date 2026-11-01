@@ -630,6 +630,42 @@ UV_CENTER = """([k, dy]) => { const o = CO.uv, cam = o.camera, t = o.controls.ta
   o.tween(np.clone().sub(nt).multiplyScalar(k).add(nt), nt, 0); }"""
 
 
+# sixteenth take ("v univerzu udelej aby to melo stejnou krychli 3D nad sebou jak to mame v kroku s promo marketem"): over the
+# Universe's Promo Market, in place of its own magenta hologram and searchlights, step 3's cube (quest.css .holo) as an
+# object of the scene: the same glass, the same three pages on its faces, turned to the camera as the page's is to the
+# reader (its transforms with y flipped) and standing on a corner, swaying and bobbing at the same pace (holo-sway 18 s,
+# holo-bob 6.5 s), over the Universe's own cone of light. Only our recording browser sees it
+UV_CUBE_SIDE, UV_CUBE_Y = 3.4, 9.25
+UV_CUBE = """async ([faces, side, cy]) => { const T = CO.U3.THREE, it = CO.uv.items.find(x => x.kind === 'product' && x.product.c.name === 'Promo Market'); let st = null;
+  it.plot.root.traverse(n => { if (n.isGroup && Math.abs(n.scale.x - 0.85) < 1e-3 && n.children.length > 20) st = n; });
+  const airship = st.children.find(ch => ch.isGroup && Math.abs(ch.position.y - 7.65) < 0.02);
+  const cone = st.children.find(ch => ch.isMesh && Math.abs(ch.position.y - 6.525) < 0.05);
+  st.children.forEach(ch => { if (ch !== airship && ch !== cone && (ch.isPoints || ch.isSprite || ch.position.y > 5.85)) ch.visible = false; });
+  it.plot.halo.visible = false;
+  const tex = async (url) => { const im = new Image(); im.src = url; await im.decode(); const S = 640, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d');
+    const g = x.createLinearGradient(0, 0, S, S); g.addColorStop(0, 'rgba(0,207,255,.30)'); g.addColorStop(.46, 'rgba(0,207,255,.09)'); g.addColorStop(1, 'rgba(0,255,136,.17)');
+    x.fillStyle = g; x.fillRect(0, 0, S, S);
+    x.globalAlpha = .88; const m = S * .13, w = S - 2 * m; x.drawImage(im, 0, 0, Math.min(im.naturalWidth, im.naturalHeight), Math.min(im.naturalWidth, im.naturalHeight), m, m, w, w); x.globalAlpha = 1;
+    for (let y = 0; y < S; y += 6) { x.fillStyle = 'rgba(0,207,255,.05)'; x.fillRect(0, y, S, 2); }
+    x.strokeStyle = 'rgba(0,207,255,.3)'; x.lineWidth = 48; x.strokeRect(0, 0, S, S); x.strokeStyle = 'rgba(0,207,255,.75)'; x.lineWidth = 12; x.strokeRect(0, 0, S, S);
+    const t = new T.CanvasTexture(c); t.colorSpace = T.SRGBColorSpace; t.anisotropy = 8; return t; };
+  const ts = []; for (const f of faces) ts.push(await tex(f));
+  const mats = [0, 1, 2, 0, 1, 2].map(i => new T.MeshBasicMaterial({ map: ts[i], transparent: true, depthWrite: false, blending: T.AdditiveBlending, side: T.FrontSide }));
+  const hold = new T.Group(); hold.position.set(0, cy, 0); st.add(hold);
+  const bob = new T.Group(); hold.add(bob); bob.rotation.x = 12 * Math.PI / 180;
+  const cube = new T.Group(); bob.add(cube); cube.rotation.order = 'YXZ'; cube.rotation.set(0.6155, 0, -Math.PI / 4);
+  cube.add(new T.Mesh(new T.BoxGeometry(side, side, side), mats));
+  const b = it.plot.b, tick0 = b.tick;
+  const q = new T.Quaternion();
+  b.tick = (t) => { tick0(t); st.getWorldQuaternion(q); hold.quaternion.copy(q.invert().multiply(CO.uv.camera.quaternion)); cube.rotation.y = -(1 + 35 * Math.sin(2 * Math.PI * t / 18)) * Math.PI / 180; bob.position.y = 0.06 * side * (0.5 - 0.5 * Math.cos(2 * Math.PI * t / 6.5)); };
+  return { st: !!st, airship: !!airship }; }"""
+
+
+def uv_cube_faces():
+    """the three pages on step 3's cube, as data urls"""
+    return ['data:image/webp;base64,' + base64.b64encode((HERE / 'pics' / 'apps' / f'{n}.webp').read_bytes()).decode() for n in ('gem-screener', 'agent-casino', 'airdrop-farmer')]
+
+
 def universe(b, seconds=20, dsf=1.5):
     """step 5: the LIVE Universe (cymetica.com/company/app#universe), its sky, its sun, its real companies and products
     on its orbits ("v univerzu je pozadi mnohem lepe udelane") and, in our browser only, the leaderboard's companies
@@ -654,6 +690,7 @@ def universe(b, seconds=20, dsf=1.5):
     # and the Universe stands in the page's own space as the HQ does (anim.js data-key), its orbits' dust kept
     page.evaluate("() => { const o = CO.uv; o.sky.visible = false; o.scene.background = new o.scene.background.constructor(0x000000); }")
     page.evaluate(UV_CENTER, [UV_BACK, UV_UP])
+    print('universe: the cube', page.evaluate(UV_CUBE, [uv_cube_faces(), UV_CUBE_SIDE, UV_CUBE_Y]))
     time.sleep(2.5)
     spread = page.evaluate(UV_SPREAD, ['Your company', list(UV_YOU_AT), seconds + 2, UV_SPACE])
     print('universe: moved along their lanes', spread['moved'], 'the closest two', spread['closest'], 'half-widths apart')

@@ -68,7 +68,9 @@ revenue share), which is unchanged.
    (of the sixth: "ty nove tlacitka jsou humus ... obramovani porad stejne jeste horsi"): chips as before with the live
    Add department chip's round head; buttons copied from Agent Casino's .at-btn; forge and pipeline panel in cyan and
    green, only the panel's icons coloured; orbit and building clips filmed frame by frame on the page's clock, each
-   outline read at the same moments and played by the clip's time, tight and moving with the thing.
+   outline read at the same moments and played by the clip's time, tight and moving with the thing. Then step 3's cube
+   over the Universe's Promo Market too, as an object of the scene in our recording browser (record.py UV_CUBE; step 5's
+   clip and the door's).
 15. **Gemini's fork of this page, adopted** (2026-10-31). Antigravity copied this folder at 2201936a
    (the fourteenth take's first round) to `Downloads\cymetica\outbox\quest-steps` and served it on 8765; the operator:
    "NAD TEBOU VYHRAVA ma vse lepsi, jen ten step s market it bych zmenil". Its index.html, quest.css, quest.js,
