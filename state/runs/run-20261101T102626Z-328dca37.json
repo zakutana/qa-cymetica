@@ -1,0 +1,427 @@
+{
+  "schema": 2,
+  "run_id": "run-20261101T102626Z-328dca37",
+  "started_at": "2026-11-01T10:26:35+00:00",
+  "finished_at": "2026-11-01T10:28:40+00:00",
+  "git_head": "328dca372e167e8463a1797309f5486babb2e591",
+  "git_short": "328dca37",
+  "git_dirty": true,
+  "prereg_id": null,
+  "prereg_tag_sha": null,
+  "prereg_commit": null,
+  "platform_fingerprint": "sha256:cc62b69e35eb799e6ac1486988053c4b268846e8cfd03c2b561b902fc9e4263a",
+  "fingerprint_parts": {
+    "/.well-known/mcp.json": "dda3670339ba528254ed3bca84c629e4cb36a60a45ff7930a30453114937987c",
+    "/.well-known/agent-card.json": "5e0d977f916d6293f18b6e7e495ec5159068f6a2a1015c0782fcb9d6b2907923",
+    "/.well-known/agent-skills.json": "4028cc7c59a597e36944ed18e7b47ecc5348fdb40f22ca67d7d3bf3795d4ebbd",
+    "/.well-known/ai-plugin.json": "b7f63bb3434f28dc867492918640fc4c8fb80a27f4c4155589e389f703a3fc3a",
+    "/.well-known/udc.json": "1ec34383ede550c71fb3e81b989b8b92b0da3ce7ccbdc497c9edf5a8fcbd6c14",
+    "/openapi.json": "1e1b7e2efeaff813451d647f88f52353e50627b882e63a65842dd1238b8e108c",
+    "/openapi-public.json": "726c3439c21150f843033c9d6306a141fa86ea52e321eedb7fe8dad031200623",
+    "/llms.txt": "913ad233784e6f29b5431749316ea2b0f887260e0fb3d38b8f8fd072590b48a9",
+    "mcp:tools/list:none": "4beb3863f1df20256e597baae317ec4d17011466136c906b9b58c675b974a1ce"
+  },
+  "fingerprint_errors": {},
+  "fingerprint_drifted": false,
+  "fingerprint_changed_parts": [],
+  "identities_present": {
+    "anon": true,
+    "trusted": true,
+    "recognized": false
+  },
+  "python_version": "3.13.13",
+  "pytest_version": "8.3.4",
+  "selector": "tests/rest/test_agent_tournaments_pick_window_ends_with_the_table.py tests/rest/test_agent_tournaments_risk_line_carries_its_level.py tests/rest/test_agent_tournaments_spent_bot_does_not_read_as_trading.py tests/rest/test_agent_tournaments_board_counts_what_was_paid.py -q -p no:cacheprovider --tb=no",
+  "selector_full": false,
+  "narrowing": [],
+  "paths": [
+    "tests/rest/test_agent_tournaments_pick_window_ends_with_the_table.py",
+    "tests/rest/test_agent_tournaments_risk_line_carries_its_level.py",
+    "tests/rest/test_agent_tournaments_spent_bot_does_not_read_as_trading.py",
+    "tests/rest/test_agent_tournaments_board_counts_what_was_paid.py"
+  ],
+  "allow_mutate": false,
+  "collected": [
+    "tests/rest/test_agent_tournaments_pick_window_ends_with_the_table.py::test_agent_tournaments_pick_window_ends_with_the_table",
+    "tests/rest/test_agent_tournaments_risk_line_carries_its_level.py::test_agent_tournaments_risk_line_carries_its_level",
+    "tests/rest/test_agent_tournaments_spent_bot_does_not_read_as_trading.py::test_agent_tournaments_spent_bot_does_not_read_as_trading",
+    "tests/rest/test_agent_tournaments_board_counts_what_was_paid.py::test_agent_tournaments_board_counts_what_was_paid"
+  ],
+  "results": [
+    {
+      "nodeid": "tests/rest/test_agent_tournaments_pick_window_ends_with_the_table.py::test_agent_tournaments_pick_window_ends_with_the_table",
+      "component": "rest.agent_tournaments",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "agent-tournaments-pick-window-ends-with-the-table",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 20812,
+      "evidence_ids": [
+        "ce97b76ce043e75725d86ff291beac4548ca64d578830faa6b7d053105484d03",
+        "cf53b09b3bbcdb138f25534c65828f28fd2ffff540fbc02a5cec595d33193db4",
+        "101fff6adc92aa26655c3b057f060e0f6a23d144b41aef804771e6a5e034f41a",
+        "b11498202fd3a19767809a2b99573ff9aeeffe764daf941ad512ed4a0f164e80",
+        "4e2fd6b85768a3d086ea45c1503a3f0729fce91a252d0c12b286532f7ce38901",
+        "2c5f5101428c522b62780f81cd462e64fc6c365d2942015f6651d67530be50c4",
+        "2d801253e9ba242791a275247f72e3d76dd2c89d45b2b302e4bc3f6b0e640138",
+        "9fcfc979a85b92d7a276d5a98e1273934ffc259d2c6a8ac30a2051b8f695c88d",
+        "beb34e362028a6af7aba9f42880991d6dbf278fb1de9006c31becd231e9000c1",
+        "80cf479456ffb30ae18febdd7d19ed764a358a664b9c0b5cd091da7560de47fc",
+        "b497fb5805a0f12d899695cf414fa805cccc6265b21f812b01972a4a2c90a33c",
+        "d49053a67db839438a942b3d963836a5cceb918c9cb83fb5d65171f5b390985b",
+        "b78d376f2d2822ca2f41bdb51344f2671e2443044494a57d136dcea9a8042564"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "10 of 12 tables say a pick closes later than it does: table 46: closes in 86046 s, the table ends in 3247 s; table 45: closes in 85940 s, the table ends in 3140 s; table 44: closes in 85155 s, the table ends in 2355 s; table 43: closes in 85937 s, the table ends in 17537 s; table 42: closed, and closes_in_s still counts 78265",
+        "left": {
+          "tables_with_a_late_pick_window": 10
+        },
+        "right": {
+          "tables_with_a_late_pick_window": 0
+        },
+        "sources": {
+          "table": "/api/v1/agent-tournaments/tables/{id} (picks, ends_in_s, status)"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "agent-tournaments-pick-window-ends-with-the-table",
+        "role": "verdict",
+        "population": {
+          "tables": [
+            46,
+            45,
+            44,
+            43,
+            42,
+            41,
+            40,
+            35,
+            34,
+            33,
+            32,
+            31
+          ],
+          "off": [
+            {
+              "key": "pick_window",
+              "table_id": 46,
+              "what": "closes in 86046 s, the table ends in 3247 s"
+            },
+            {
+              "key": "pick_window",
+              "table_id": 45,
+              "what": "closes in 85940 s, the table ends in 3140 s"
+            },
+            {
+              "key": "pick_window",
+              "table_id": 44,
+              "what": "closes in 85155 s, the table ends in 2355 s"
+            },
+            {
+              "key": "pick_window",
+              "table_id": 43,
+              "what": "closes in 85937 s, the table ends in 17537 s"
+            },
+            {
+              "key": "pick_window",
+              "table_id": 42,
+              "what": "closed, and closes_in_s still counts 78265"
+            },
+            {
+              "key": "pick_window",
+              "table_id": 41,
+              "what": "closed, and closes_in_s still counts 78281"
+            },
+            {
+              "key": "pick_window",
+              "table_id": 40,
+              "what": "closed, and closes_in_s still counts 43795"
+            },
+            {
+              "key": "pick_window",
+              "table_id": 35,
+              "what": "closes in 85930 s, the table ends in 17530 s"
+            },
+            {
+              "key": "pick_window",
+              "table_id": 34,
+              "what": "closed, and closes_in_s still counts 43805"
+            },
+            {
+              "key": "pick_window",
+              "table_id": 33,
+              "what": "closed, and closes_in_s still counts 41346"
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "20b45c792b6cf3cbd6561fb61e4b1d7604d4e7339aecc96e1993958dd2f9ead4",
+      "helpers_fingerprint": "b4908700f49be85bf3b717544150f5c01a93699169b341b092fb349bbe6fe350",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "E   AssertionError: 10 of 12 tables say a pick closes later than it does: table 46: closes in 86046 s, the table ends in 3247 s; table 45: closes in 85940 s, the table ends in 3140 s; table 44: closes in 85155 s, the table ends in 2355 s; table 43: closes in 85937 s, the table ends in 17537 s; table 42: closed, and closes_in_s still counts 78265\n      left  = {'tables_with_a_late_pick_window': 10}\n      right = {'tables_with_a_late_pick_window': 0}"
+    },
+    {
+      "nodeid": "tests/rest/test_agent_tournaments_risk_line_carries_its_level.py::test_agent_tournaments_risk_line_carries_its_level",
+      "component": "rest.agent_tournaments",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "agent-tournaments-risk-line-carries-its-level",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 27511,
+      "evidence_ids": [
+        "861183595eff43c9dbde7c3df2dd3092236320831e48fa372bc8e17c1a8f8ddc",
+        "88ced4feea2ceaddae837866ee767520b0d279ee924fa42658c12228995d39df",
+        "7f2623546977fffda2613e6fdc8de078dd882d694e1674874395bc7d5094ff6b",
+        "cc86d40ee0118f63b91151606d7fa6a3a339df773df19c638c71b4e362fb4093",
+        "33f2ed1d3958a1084d26c6340570031dcf29bc4e97296922a3b6bd957902feaa",
+        "3eb57e4ba2c133ab9ab4e2a6718b4a7d3387b356135195cdbee9ab2cc6ff7c85",
+        "f86a93988ca2c5029c956e2692f94fc033d58ccbcecfd29a34cf0d20b98c7aa2",
+        "3c20bca5a8c74e1e663e131c572cc6b71953b1a4be664ee584c7ece420b8c0f8"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "6 of 7 running seats of ours claim a Risk level their numbers are not on: table 46: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0); table 45: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0); table 44: 'Risk reads 8: size 8 %, stop loss 4 %, take profit 32 %, as you set it.'; Risk 8 means (8.0, 8.0, 32.0); table 43: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 10 %.'; Risk 5 means (5.0, 5.0, 20.0); table 35: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 4 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0)",
+        "left": {
+          "seats_off_their_level": 6
+        },
+        "right": {
+          "seats_off_their_level": 0
+        },
+        "sources": {
+          "table": "/api/v1/agent-tournaments/tables/{id} (my_risk, my_coach_line.risk_line)",
+          "contract": "OpenAPI POST /seats/{seat_id}/risk: trade size L %, stop loss L %, take profit 4 x L % (at least 5 %)"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "agent-tournaments-risk-line-carries-its-level",
+        "role": "verdict",
+        "population": {
+          "tables": [
+            46,
+            45,
+            44,
+            43,
+            35,
+            31,
+            27
+          ],
+          "off": [
+            {
+              "key": "risk_line_off_level",
+              "table_id": 46,
+              "what": "'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0)",
+              "seat_id": 202
+            },
+            {
+              "key": "risk_line_off_level",
+              "table_id": 45,
+              "what": "'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0)",
+              "seat_id": 167
+            },
+            {
+              "key": "risk_line_off_level",
+              "table_id": 44,
+              "what": "'Risk reads 8: size 8 %, stop loss 4 %, take profit 32 %, as you set it.'; Risk 8 means (8.0, 8.0, 32.0)",
+              "seat_id": 166
+            },
+            {
+              "key": "risk_line_off_level",
+              "table_id": 43,
+              "what": "'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 10 %.'; Risk 5 means (5.0, 5.0, 20.0)",
+              "seat_id": 168
+            },
+            {
+              "key": "risk_line_off_level",
+              "table_id": 35,
+              "what": "'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 4 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0)",
+              "seat_id": 169
+            },
+            {
+              "key": "risk_line_off_level",
+              "table_id": 31,
+              "what": "'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 4 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0)",
+              "seat_id": 170
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "23ba7fb7a83400c27f53ddedb9f42912877abcb54f3330125dbd6d349cf8a656",
+      "helpers_fingerprint": "1c1a9de07d16e75d6515bfc3a04275451e93815feef4cae00cdf579e739227b3",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "E   AssertionError: 6 of 7 running seats of ours claim a Risk level their numbers are not on: table 46: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0); table 45: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0); table 44: 'Risk reads 8: size 8 %, stop loss 4 %, take profit 32 %, as you set it.'; Risk 8 means (8.0, 8.0, 32.0); table 43: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 10 %.'; Risk 5 means (5.0, 5.0, 20.0); table 35: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 4 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0)\n      left  = {'seats_off_their_level': 6}\n      right = {'seats_off_their_level': 0}"
+    },
+    {
+      "nodeid": "tests/rest/test_agent_tournaments_spent_bot_does_not_read_as_trading.py::test_agent_tournaments_spent_bot_does_not_read_as_trading",
+      "component": "rest.agent_tournaments",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "agent-tournaments-spent-bot-does-not-read-as-trading",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 31676,
+      "evidence_ids": [
+        "0e90b34290051ce5211ee4cfef76d3c427002ceef4c5c5ac1168329f91d8e8b2",
+        "5a0786acd3740d436eefda27f4a28b9aea573d9e50233be0b9145353e1f54308",
+        "3f94c0ef64e2b7360ead1effe9b4b42190ae6f01ffe1be5c5399298b8534de9e",
+        "23a0c4841182791ef1799d99a83b0a94b8480461aa7eea7977ddd7fe8cce5e0f",
+        "39797774172f3eedd04a48bd2fe36e49b4f97206c126943c9339bbfb4e9d18f1",
+        "e5ce8c1813f1284c9cc7a3be3e54a8d01cc106f9557a0fc7027b37ff828b140d",
+        "d6a771e04fa2d148ca49c51110e324bc8bf2086812750045cf58bcbcebc55ea6",
+        "6d6977a6365fd6d63666bf4a61bf6c9deebf6685584913a646824cb8d8644f60"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "1 of 1 seats of ours with no new trade left today read as trading: table 46: 20/20 today and the state reads 'Trading'",
+        "left": {
+          "spent_seats_reading_trading": 1
+        },
+        "right": {
+          "spent_seats_reading_trading": 0
+        },
+        "sources": {
+          "table": "/api/v1/agent-tournaments/tables/{id} (standings[].allowance_used_up, trades_today, bot_state)",
+          "rule": "/api/v1/agent-tournaments/rules daily_entries"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "agent-tournaments-spent-bot-does-not-read-as-trading",
+        "role": "verdict",
+        "population": {
+          "spent_tables": [
+            46
+          ],
+          "off": [
+            {
+              "key": "allowance_vs_state",
+              "table_id": 46,
+              "what": "20/20 today and the state reads 'Trading'",
+              "seat_id": 202
+            }
+          ]
+        }
+      },
+      "check_fingerprint": "02ccf48be9ad2d8f847ccfd0c4839a17afe682abdf19e4f34ac2b760bb14e98a",
+      "helpers_fingerprint": "7c177bb1631c677394144618831a68b111e21458807c81d5815b53854aebb456",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "E   AssertionError: 1 of 1 seats of ours with no new trade left today read as trading: table 46: 20/20 today and the state reads 'Trading'\n      left  = {'spent_seats_reading_trading': 1}\n      right = {'spent_seats_reading_trading': 0}"
+    },
+    {
+      "nodeid": "tests/rest/test_agent_tournaments_board_counts_what_was_paid.py::test_agent_tournaments_board_counts_what_was_paid",
+      "component": "rest.agent_tournaments",
+      "tier": "SAFE",
+      "surface": "rest",
+      "claim_id": "agent-tournaments-board-counts-what-was-paid",
+      "ticket_id": null,
+      "volatile": false,
+      "outcome": "failed",
+      "phase": "call",
+      "role": "verdict",
+      "duration_ms": 34310,
+      "evidence_ids": [
+        "92a3f5d96fa7e6e7f7bc75f1d3a77b457b2d5ee3c6d1b134943b2a3cc293861f",
+        "6140dfc4a69b1cb48d0542d64240867988ddc2a26694d73454d70223c97e2b38",
+        "56194fd256f899836438419e7d4a2852de44cb6f381da265f9849b09eb40e49e",
+        "4a11590ee8859d6e9862af6f4d6f2dea346dc5d7805f73e284d1fa916c705d87",
+        "ef20163e494ddb3ec023e7137bbc127ef1513632806ba8018d5951a0342f3331",
+        "00837bec1b16a85f8389af6b91cd58724f0b489619bd7b9b099709da056fcca8",
+        "7c97b0f76244220893caa7f60f3bc949ffb801e1ad4385cfc786f36de4fcabc9",
+        "3ece673d5ce2002a954a91c3e78615737657a0273021610b01aa8e2e81ba95dc",
+        "0738856b930753aad13d48ac42e3a0117fa8a175a56369ecbe7ad7468322febe",
+        "3e46904cfcd4c8de6d452eed6bc20ba6d1effa29ff15f9cc710caee2d2a79f67",
+        "5b13db0f88bc4d728157fb055eab584e7d939cb6fc3cf9eb62fa8343b1e03580",
+        "31a66c4576f4e7550bf5e5167f2eb8ef05d397579399c7ef5f6917a67b611c68",
+        "b2604c4bb5530ce089fc265982c266a691d6acaf35fb9114d6d75f8456d4c9bd",
+        "269c089f59dc14d8e002bcbf6748d1ebbdaf81907d019cff4ffeecf9a8106d72",
+        "30d56e83ec61b5db17d67c300eefbd6eab8f3fdaa6d55dc1590ef350d383e803",
+        "d95f7d1a9a6531e9565f27700a4c2dd5d1ffaae2c763394f87311c2551a15105",
+        "89598f62b0067dd6eb90fb03d36f01245571d0c3a3fab307f541efe4e8fc1c2c"
+      ],
+      "measurement": {
+        "verdict": "failed",
+        "reason": "board says {'tables_done': 15, 'paid_usdc': 645.0, 'paid_et10': 1566.0}, its tables add up to {'tables_done': 15, 'paid_usdc': 645.0, 'paid_et10': 366.0} (1200 ET10 capped, not paid)",
+        "left": {
+          "board_totals_off": 1
+        },
+        "right": {
+          "board_totals_off": 0
+        },
+        "sources": {
+          "board": "/api/v1/agent-tournaments/leaderboard?window=all (paid_usdc, paid_et10)",
+          "tables": "/api/v1/agent-tournaments/tables/{id} (results.ranked, et10_paid)",
+          "contract": "llms.txt: a prize past the cap is recorded `capped` and is not paid out"
+        },
+        "provenance": {},
+        "evidence_ids": [],
+        "fingerprint": null,
+        "claim_id": "agent-tournaments-board-counts-what-was-paid",
+        "role": "verdict",
+        "population": {
+          "tables": [
+            42,
+            41,
+            40,
+            34,
+            33,
+            32,
+            24,
+            23,
+            17,
+            15,
+            14,
+            13,
+            11,
+            5,
+            2
+          ],
+          "board": {
+            "tables_done": 15,
+            "paid_usdc": 645.0,
+            "paid_et10": 1566.0
+          }
+        }
+      },
+      "check_fingerprint": "67f87b05ff7f572c8ee3f521b517ade234ffbe1528f9cc6c76d08e9e4b2ac00c",
+      "helpers_fingerprint": "0cc285159bc8007fb5544138da1bc1c38505e0cdb5a0e6d8d5db320bd11bccfe",
+      "helpers_formula": 2,
+      "reason": null,
+      "failure_repr": "E   AssertionError: board says {'tables_done': 15, 'paid_usdc': 645.0, 'paid_et10': 1566.0}, its tables add up to {'tables_done': 15, 'paid_usdc': 645.0, 'paid_et10': 366.0} (1200 ET10 capped, not paid)\n      left  = {'board_totals_off': 1}\n      right = {'board_totals_off': 0}"
+    }
+  ],
+  "totals": {
+    "failed": 4
+  },
+  "ratelimit": {
+    "requests": 46,
+    "limit": 2000,
+    "remaining": 1983,
+    "fraction_used": 0.0085,
+    "exhausted": false
+  },
+  "record_integrity": {
+    "consistent": true,
+    "results_not_in_collected": [],
+    "collected_not_run": [],
+    "budget_truncated": false
+  },
+  "code_dirty_after": false,
+  "fingerprint_after": "sha256:cc62b69e35eb799e6ac1486988053c4b268846e8cfd03c2b561b902fc9e4263a",
+  "exit_status": 1
+}
