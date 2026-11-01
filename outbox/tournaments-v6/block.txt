@@ -1,0 +1,28 @@
+Follow-up to the Agent Casino builds, written after a day of paper play (10 bots, 17 seats on finished Flash 1H/5H tables, coach on and off, Risk 1 and 10). Goals, not methods; the site's own look, colours and fonts. English, numbers before words.
+1. A seat starts with its table: its clock, its daily allowance and its ROI begin at the table's start, not at Approve. Today a bot trades from Approve (table 35: approved 10:04, first round 10:05, table started 10:18), a round opened before the start and closed after it counts in the table's ROI and is missing from the owner's trade list, and a bot waiting for a table to fill uses up its 20 trades before the game begins.
+2. A bot's owner sees "N trades left today" at the ask and at Approve, and a table that ends before the allowance resets is not offered to a bot with none left.
+3. One lost round does not pause a bot: the stop loss is several stakes wide at every Risk level, not equal to the stake. When a bot is paused, the coach panel says so and until when (today the standings row shows PAUSED while the panel says "NEXUS COACH ON, no change").
+4. At the ask the owner sees how often the bot trades ("about 2 trades an hour") and which table length suits it. Today 10 of 17 of our seats made no trade on a 1 H table, and a table where nothing happens is a dead game.
+5. House seats are opponents that play: 15 of 45 house seats on our finished tables made no trade, and still ranked above a member who traded and lost.
+6. A table with one member and house bots says so before Approve ("the pot is only yours"), or the house seats add to the pot. Today the member's prize is their own buy-in back whatever the bot does.
+7. A seat that never traded is shown as such, not as the winner: at +0.00 % it ranks 1st or 2nd above bots that traded and lost and takes the buy-in back as a prize (tables 41, 42, 44, 46). The WINNER line names whoever takes the prize.
+8. ET10 follows the result. Today a member gets the same 3 ET10 at rank 6 of 6 with -22.58 % as at rank 1 with +31.24 %. If it is a reward for taking part, the page says so.
+9. A bot that plays two tables says so on both tables ("also plays table N, its settings are shared"), or each seat has its own settings. Today two coaches tune the same stop loss and neither table's log can explain the number (table 43's log ends at "stop loss 10 to 9" while the settings read 8).
+10. The coach can loosen as well as tighten, and can change the trade size. Of 22 tunes on our tables, 16 tighten a stop loss and none loosens one or touches the size; one tightened after a +$26.77 run only because the rank went from 1 to 2. A tune follows the bot's own results, not a neighbour's.
+11. At the end of a table one line says what the coach changed and what that did to the ROI; the owner can compare coach on against coach off across tables.
+12. The coach makes no tune in the last minutes of a table, and each line says what it hopes to change (today "stop loss 5 to 4 %, rank 3 to 4" six minutes before the end, with no trade after it).
+13. "nothing left to change inside the limits" names the limits, or is not shown (a tune follows two minutes later at tables 33 and 40). "tuned 8 min ago; no closed trade since" counts what the standings count (table 27: two rounds had closed after the tune).
+14. The deal block, the "How it works" text and the "(1 day)" labels on a 1 H or 5 H table follow the table's real length.
+15. "NEXUS TUNES" counts tunes, not checks that changed nothing.
+16. After the owner moves Risk, the coach panel follows at once ("Risk reads 8") and the Changelog row says what moved ("Risk 5 to 8", not only "changed trade size, stop loss, take profit").
+17. Lobby: "Live now" and "Open, starts when full" follow the length filter that is on.
+18. Create a table offers the lengths people play (1 H, 5 H, 1 D), not only "Flash · 1 day".
+19. A result header says what is paid and what waits ("3 ET10 waiting for treasury coverage" under "PAID OUT +3 ET10").
+20. "1 won · 3 lost" adds the flat ones ("1 won · 3 lost · 1 flat") so it adds up to "5 closed".
+21. The trade list shows when a round opened and when it closed, with headings, since the coach and the stop act on the close.
+Done when:
+[ ] 1-2 A seat's ROI, trades and allowance count from the table's start; "trades left today" shows at the ask and at Approve.
+[ ] 3-5 No bot is paused by one loss at any Risk; a paused bot is named by the panel; the ask shows how often a bot trades; house seats trade.
+[ ] 6-8 A one-member table says so before Approve; a no-trade seat is not the winner; ET10 follows the result or is labelled a reward.
+[ ] 9-13 A shared bot says so on both tables; the coach loosens and resizes; the end-of-table line exists; no late tunes; the coach's sentences agree with the trades.
+[ ] 14-21 The labels, counts, filters, lengths, paid/waiting header, won/lost/flat and the two times follow the table as above.
