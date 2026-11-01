@@ -187,13 +187,24 @@ def sky(_b):
     save(img, 'space.webp', quality=88)
 
 
+CALM_STAR = 105
+
+
 def calm(_b):
-    """the same sky without its stars, only the nebula's colour, behind the Universe ("bo se snazis moc detailu zobrazovat"):
-    every speck taken out (a minimum, then a maximum, over more than a star's width), then blurred"""
+    """the same sky behind the Universe with only its brightest stars ("bo se snazis moc detailu zobrazovat", then "ale za
+    tim nejsou hvezdy ... ze jsi to nejak nalepil"): the nebula alone (a minimum, then a maximum, over more than a star's
+    width, then blurred), and of the 20,000 stars over it those that stand more than CALM_STAR above it, whole"""
     from PIL import ImageFilter
-    img = Image.open(HERE / 'pics' / 'space.webp').convert('RGB').resize((1920, 1080), Image.LANCZOS)
-    img = img.filter(ImageFilter.MinFilter(9)).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.GaussianBlur(14))
-    save(img, 'space-calm.webp', quality=92)
+    img = Image.open(HERE / 'pics' / 'space.webp').convert('RGB')
+    base = img.filter(ImageFilter.MinFilter(17)).filter(ImageFilter.MaxFilter(17)).filter(ImageFilter.GaussianBlur(14))
+    a, n = np.asarray(img, np.float32), np.asarray(base, np.float32)
+    top = np.clip(a - n, 0, 255).max(-1)
+    t8 = Image.fromarray(top.astype(np.uint8))
+    peak = (top == np.asarray(t8.filter(ImageFilter.MaxFilter(5)), np.float32)) & (top >= CALM_STAR)
+    keep = Image.fromarray((peak * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(15)).filter(ImageFilter.GaussianBlur(1.5))
+    m = np.asarray(keep, np.float32)[..., None] / 255
+    print('calm: stars kept', int(peak.sum()), 'of', int(((top == np.asarray(t8.filter(ImageFilter.MaxFilter(5)), np.float32)) & (top > 12)).sum()))
+    save(Image.fromarray(np.clip(n + (a - n) * m, 0, 255).astype(np.uint8), 'RGB'), 'space-calm.webp', quality=88)
 
 
 def sun(b):

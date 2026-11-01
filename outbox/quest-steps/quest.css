@@ -621,9 +621,10 @@ h1 b { font-weight: 400; }
 .stage.uni .pic { width: 137%; margin-left: -28%; }
 .stage.uni .pic::before, .stage.duo .near::before { content: ''; position: absolute; z-index: -1; inset: -4% -2%; pointer-events: none;
   background: radial-gradient(50% 50% at 50% 50%, rgba(2, 4, 8, .62), rgba(2, 4, 8, .42) 55%, rgba(2, 4, 8, 0) 100%); }
-/* ("bo se snazis moc detailu zobrazovat"): the page's stars do not show through the map, only the nebula's colour (capture.py calm) */
-.stage.uni .pic::before { inset: -6% -5%; background: linear-gradient(rgba(5, 7, 12, .3), rgba(5, 7, 12, .3)), url(pics/space-calm.webp) 50% 50% / cover no-repeat, #05070c;
-  -webkit-mask-image: radial-gradient(50% 50% at 50% 50%, #000 74%, transparent 100%); mask-image: radial-gradient(50% 50% at 50% 50%, #000 74%, transparent 100%); }
+/* ("bo se snazis moc detailu zobrazovat", "ale za tim nejsou hvezdy ... ze jsi to nejak nalepil"): behind the map the same sky with only
+   its brightest stars (capture.py calm), thinning out of the page's own over a long way, so no edge shows */
+.stage.uni .pic::before { inset: -22% -14%; background: linear-gradient(rgba(5, 7, 12, .16), rgba(5, 7, 12, .16)), url(pics/space-calm.webp) 50% 50% / cover no-repeat, #05070c;
+  -webkit-mask-image: radial-gradient(50% 50% at 50% 50%, #000 42%, transparent 100%); mask-image: radial-gradient(50% 50% at 50% 50%, #000 42%, transparent 100%); }
 .stage.uni .sun { position: absolute; z-index: 2; left: 50.61%; top: 38.78%; width: 30.5%; transform: translate(-50%, -50%); pointer-events: none; }
 /* (sixteenth take: "nad nejakou lod dej tag YOUR COMPANY"): over your company's station, which the clip holds still
    (record.py UV_SPREAD prints where); the Universe's plate (.b3 above), green as its plate over your own land is */
@@ -695,7 +696,7 @@ h1 b { font-weight: 400; }
   background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, .1), rgba(255, 255, 255, 0)); transition: left .85s var(--ease); }
 .door:hover::after { left: 125%; }
 .door.uv { --cr: 0, 207, 255; --c: var(--cyan); }
-.door.uv .art { background-image: url(pics/space-calm.webp); }
+.door.uv .art { background-image: url(pics/space-calm.webp); background-size: 190%; }
 .door:hover { transform: translateY(-8px); box-shadow: inset 0 1px 0 #ffffff, inset 0 0 0 1px rgba(var(--cr), .9), 0 0 95px rgba(var(--cr), .34), 0 40px 70px rgba(0, 0, 0, .58); }
 .door .art { position: relative; display: block; aspect-ratio: 16 / 9; overflow: hidden; background: url(pics/space.webp) 50% 50% / cover no-repeat, #05070c; }
 .door-tag { position: absolute; left: 22px; top: 20px; z-index: 4; display: inline-flex; align-items: center; gap: 8px; padding: 6px 13px; border-radius: 99px;
