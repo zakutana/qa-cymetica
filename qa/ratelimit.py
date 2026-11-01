@@ -32,7 +32,7 @@ import time
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
-from qa.state import file_lock, state_dir
+from qa.paths import file_lock, state_dir
 
 PER_MINUTE = 60
 MAX_RETRY_AFTER_S = 120.0

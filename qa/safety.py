@@ -43,8 +43,6 @@ from urllib.parse import parse_qsl
 import httpx
 import yaml
 
-from qa import timings
-
 REPO_ROOT = Path(__file__).resolve().parent.parent
 COMPONENTS_YAML = REPO_ROOT / "components.yaml"
 
@@ -195,13 +193,11 @@ class SafetyTransport(httpx.BaseTransport):
         self,
         inner: httpx.BaseTransport,
         registry: EndpointRegistry,
-        evidence=None,
         budget=None,
         pacer=None,
     ):
         self.inner = inner
         self.registry = registry
-        self.evidence = evidence
         self.budget = budget
         # The shared brake (qa/ratelimit.py). qa/client.py passes one for the real
         # network; a negative control's transport has none.
@@ -226,64 +222,27 @@ class SafetyTransport(httpx.BaseTransport):
         if self.budget is not None:
             self.budget.before_request()
 
-        # Timed only when it reaches the real network: a test's MockTransport
-        # or a guard's negative control is never written (qa/timings.py).
-        real = isinstance(self.inner, httpx.HTTPTransport)
         if self.pacer is not None:
-            # Before the clock starts: a wait for our own brake is not their latency.
             self.pacer.wait(request)
-        started = time.perf_counter()
-        try:
-            response = self.inner.handle_request(request)
-        except Exception as exc:
-            if real:
-                timings.record(request, started, tier, error=type(exc).__name__)
-            raise
+        response = self.inner.handle_request(request)
 
         if self.pacer is not None:
             from qa.ratelimit import may_retry, retry_after
 
             self.pacer.learn(request, response)
             if response.status_code == 429 and may_retry(method):
-                # Their 429 is written down, then honoured: hold the route for
-                # Retry-After and ask a READ once more. A write is never resent.
-                if real:
-                    timings.record(request, started, tier, status=429, to="headers")
-                if self.evidence is not None:
-                    # Their 429 is kept: it is what a finding about their rate
-                    # limiting would stand on (code review, 2026-10-07).
-                    try:
-                        self.evidence.capture(request, response, tier, rule.id if rule else None)
-                    except Exception:  # noqa: BLE001 -- the retry is what matters here
-                        pass
+                # Hold the route for Retry-After and ask a READ once more. A write is never resent.
                 pause = retry_after(response)
                 response.close()
                 self.pacer.hold(request, pause)
                 if self.budget is not None:
                     self.budget.before_request()   # the second send is counted too
                 self.pacer.wait(request)
-                started = time.perf_counter()
-                try:
-                    response = self.inner.handle_request(request)
-                except Exception as exc:
-                    if real:
-                        timings.record(request, started, tier, error=type(exc).__name__)
-                    raise
+                response = self.inner.handle_request(request)
                 self.pacer.learn(request, response)
 
         if self.budget is not None:
             self.budget.after_response(response)
-        if self.evidence is not None:
-            try:
-                self.evidence.capture(request, response, tier, rule.id if rule else None)
-            except Exception as exc:
-                if real:
-                    timings.record(request, started, tier, status=response.status_code,
-                                   error=type(exc).__name__, to="body")
-                raise
-        if real:
-            timings.record(request, started, tier, status=response.status_code,
-                           to="body" if self.evidence is not None else "headers")
         return response
 
     # -- policy -----------------------------------------------------------

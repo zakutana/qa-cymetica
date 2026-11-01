@@ -1,11 +1,7 @@
 """Collection-time enforcement, fixtures, and session wiring.
 
-Three things happen here that the rest of the suite depends on:
-
-  1. An untagged test aborts collection. Not a warning -- a hard stop. It is
-     the only way a convention survives contact with a tired operator at 2am.
-  2. tests/meta/ is reordered to run first and aborts the session on failure.
-     If the guard cannot be shown to block, zero live requests are issued.
+  1. An untagged vendor check aborts collection. Not a warning -- a hard stop.
+  2. The guard proves itself at pytest_configure, before any request can go out.
   3. Every test runs inside a tier context, so the transport always knows who
      is calling and there is no path that can forget to say.
 """
@@ -28,8 +24,6 @@ from qa.client import (  # noqa: E402
     remove_client_guard,
 )
 from qa.config import identities  # noqa: E402
-from qa.evidence import CURRENT_EVIDENCE, EvidenceStore  # noqa: E402
-from qa.marks import Inconclusive  # noqa: E402
 from qa.safety import (  # noqa: E402
     CURRENT_NODEID,
     CURRENT_TIER,
@@ -49,8 +43,6 @@ def pytest_addoption(parser):
     group = parser.getgroup("qa-cymetica")
     group.addoption("--allow-mutate", action="store_true", default=False,
                     help="Permit MUTATE-tier tests to create real platform state.")
-    group.addoption("--prereg", default=None, metavar="PRE-NNNN",
-                    help="Preregistration id this run is executing under.")
     group.addoption("--snapshot-window", type=int, default=30, metavar="SECONDS",
                     help="Max age spread across sources in one reconciliation.")
 
@@ -60,10 +52,7 @@ def pytest_configure(config):
         config.addinivalue_line("markers", f"{marker}(value): qa metadata")
     install_client_guard()
 
-    # The guard demonstrates itself here, where it is installed, instead of
-    # depending on tests/meta being in the selector. The ordering below aborts
-    # a session whose guard tests FAIL; a selector that never collects them
-    # aborts nothing, and live requests have gone out that way. ~1 ms, no
+    # The guard demonstrates itself here, where it is installed. ~1 ms, no
     # network -- every client in the check sits on a transport that cannot
     # send. See qa/client.py::assert_client_guard_blocks.
     try:
@@ -90,6 +79,8 @@ def pytest_collection_modifyitems(session, config, items):
     errors: list[str] = []
 
     for item in items:
+        if "/self/" in item.nodeid.replace("\\", "/"):
+            continue  # our own tests, not a check on their platform
         component = item.get_closest_marker("qa_component")
         tier = item.get_closest_marker("qa_tier")
 
@@ -115,25 +106,6 @@ def pytest_collection_modifyitems(session, config, items):
             + "\n    ".join(errors)
         )
 
-    # Guard self-tests first. A broken guard must stop the session before any
-    # live request is made, so their position in the run order is load-bearing.
-    items.sort(key=lambda i: 0 if "/meta/" in i.nodeid.replace("\\", "/") else 1)
-
-
-def pytest_runtest_logreport(report):
-    """Abort the whole session the moment a guard self-test fails."""
-    if report.failed and "/meta/" in report.nodeid.replace("\\", "/"):
-        session = getattr(pytest, "_qa_session", None)
-        if session is not None:
-            session.shouldstop = (
-                f"SAFETY GUARD SELF-TEST FAILED ({report.nodeid}). "
-                f"No live requests will be issued."
-            )
-
-
-def pytest_sessionstart(session):
-    pytest._qa_session = session
-
 
 # ---------------------------------------------------------------------------
 # Session resources
@@ -144,12 +116,6 @@ def registry(request) -> EndpointRegistry:
     reg.mutate_enabled = bool(request.config.getoption("--allow-mutate"))
     reg.mutate_allowed_hosts = frozenset({"cymetica.com"})
     return reg
-
-
-@pytest.fixture(scope="session")
-def evidence_store(request) -> EvidenceStore:
-    run_id = getattr(request.session, "qa_run_id", "run-adhoc")
-    return EvidenceStore(run_id)
 
 
 @pytest.fixture(scope="session")
@@ -177,16 +143,10 @@ def _tier_context(request):
     marker = request.node.get_closest_marker("qa_tier")
     tier = SafetyTier(marker.args[0]) if marker else None
 
-    tokens = (
-        CURRENT_TIER.set(tier),
-        CURRENT_NODEID.set(request.node.nodeid),
-        CURRENT_EVIDENCE.set([]),
-    )
+    tokens = (CURRENT_TIER.set(tier), CURRENT_NODEID.set(request.node.nodeid))
     try:
         yield
     finally:
-        request.node.stash_evidence = CURRENT_EVIDENCE.get() or []
-        CURRENT_EVIDENCE.reset(tokens[2])
         CURRENT_NODEID.reset(tokens[1])
         CURRENT_TIER.reset(tokens[0])
 
@@ -195,31 +155,31 @@ def _tier_context(request):
 # Clients
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="session")
-def rest_anon(registry, evidence_store, budget):
-    client = build_client(identities()["anon"], registry, evidence_store, budget)
+def rest_anon(registry, budget):
+    client = build_client(identities()["anon"], registry, budget=budget)
     yield client
     client.close()
 
 
 @pytest.fixture(scope="session")
-def rest_trusted(registry, evidence_store, budget, all_identities):
+def rest_trusted(registry, budget, all_identities):
     identity = _identity_or_skip(all_identities, "trusted")
-    client = build_client(identity, registry, evidence_store, budget)
+    client = build_client(identity, registry, budget=budget)
     yield client
     client.close()
 
 
 @pytest.fixture(scope="session")
-def mcp_anon(registry, evidence_store, budget):
-    client = build_mcp_client(identities()["anon"], registry, evidence_store, budget)
+def mcp_anon(registry, budget):
+    client = build_mcp_client(identities()["anon"], registry, budget=budget)
     yield client
     client.http.close()
 
 
 @pytest.fixture(scope="session")
-def mcp_trusted(registry, evidence_store, budget, all_identities):
+def mcp_trusted(registry, budget, all_identities):
     identity = _identity_or_skip(all_identities, "trusted")
-    client = build_mcp_client(identity, registry, evidence_store, budget)
+    client = build_mcp_client(identity, registry, budget=budget)
     yield client
     client.http.close()
 
@@ -228,9 +188,3 @@ def mcp_trusted(registry, evidence_store, budget, all_identities):
 def rest_client(rest_anon):
     """Default client for guard self-tests: no credential required."""
     return rest_anon
-
-
-# Inconclusive classification moved to qa/report_plugin.py in phase 1 of the
-# hardening plan: the recorder is now the single tryfirst classifier, so there
-# is no second wrapper whose ordering could disagree with it. The import of
-# Inconclusive above (line 32) is kept so the pinned line ranges do not shift.

@@ -209,7 +209,6 @@ def assert_client_guard_blocks() -> None:
 def build_client(
     identity: Identity,
     registry: EndpointRegistry,
-    evidence=None,
     budget=None,
     base_url: str | None = None,
     timeout: float = DEFAULT_TIMEOUT,
@@ -229,13 +228,12 @@ def build_client(
     headers.update(identity.headers())
     if identity.scope != "read":
         # Read by the transport to refuse trade-scoped credentials on
-        # non-MUTATE tests. Stripped from evidence by the redactor.
+        # non-MUTATE tests.
         headers["X-API-Key-Scope"] = identity.scope
 
     transport = SafetyTransport(
         inner=inner if inner is not None else httpx.HTTPTransport(retries=0),
         registry=registry,
-        evidence=evidence,
         budget=budget,
         # The shared brake, on the real network only (qa/ratelimit.py).
         pacer=ratelimit.shared() if inner is None else None,
@@ -257,7 +255,6 @@ def build_client(
 def build_mock_client(
     handler,
     registry: EndpointRegistry | None = None,
-    evidence=None,
     budget=None,
     base_url: str = "https://cymetica.com",
     timeout: float = 5.0,
@@ -273,7 +270,6 @@ def build_mock_client(
     transport = SafetyTransport(
         inner=httpx.MockTransport(handler),
         registry=registry if registry is not None else EndpointRegistry.load(),
-        evidence=evidence,
         budget=budget,
     )
     kwargs = dict(
@@ -288,77 +284,7 @@ def build_mock_client(
     return httpx.Client(**kwargs)
 
 
-def build_fingerprint_client(
-    registry: EndpointRegistry | None = None,
-    timeout: float = 20.0,
-    inner: httpx.BaseTransport | None = None,
-) -> httpx.Client:
-    """The client `qa/fingerprint.py` reads the platform corpus with.
-
-    It exists because that module used to import `_FACTORY_SENTINEL` and build
-    its own `httpx.Client`, which is exactly what the guard's refusal message
-    tells a caller not to do -- so the corpus was read every session with no
-    SafetyTransport under it. The reads are SAFE GETs of public documents and
-    the tier is granted by hand in `compute()`, so nothing was at risk; what
-    was missing was the guard. Architecture audit, 2026-09-20.
-
-    Three arguments are deliberate and none of them is a default to tidy up:
-
-    * **The request shape is the corpus's shape.** `Accept: */*`,
-      `follow_redirects=True` and a 20 s timeout are what the recorded
-      fingerprints were taken under, and the hash is over response bytes --
-      normalising any of them to `build_client`'s values would move the
-      fingerprint and demote every GREEN row to AMBER on the next run
-      (`qa/fold.py` pins rows to `pinned_fingerprint`).
-    * **`evidence=None`.** `EvidenceStore` is keyed by run id, and
-      `session.qa_run_id` is assigned two lines AFTER `compute()` runs at
-      `qa/report_plugin.py:118-120`. There is no store to write into yet.
-    * **`budget=None`.** A budget here would register itself as the session's
-      active one and overwrite what `run["ratelimit"]` means; and an exhausted
-      budget raises inside `compute()`, whose per-part handler swallows it --
-      so every part would become an error, the fingerprint would come back
-      None, and `fingerprint_drifted` would read False on a run that measured
-      nothing at all.
-
-    `inner` is for the negative controls, the same as `build_client`'s.
-    """
-    transport = SafetyTransport(
-        inner=inner if inner is not None else httpx.HTTPTransport(retries=0),
-        registry=registry if registry is not None else EndpointRegistry.load(),
-        evidence=None,
-        budget=None,
-        pacer=ratelimit.shared() if inner is None else None,
-    )
-    kwargs = dict(
-        headers={"User-Agent": USER_AGENT, "Accept": "*/*"},
-        transport=transport,
-        timeout=timeout,
-        follow_redirects=True,
-    )
-    if _GUARD_INSTALLED:
-        kwargs["_qa_factory"] = _FACTORY_SENTINEL
-    return httpx.Client(**kwargs)
-
-
-class _Uncounted(httpx.BaseTransport):
-    """Carries a request without `SafetyTransport` writing it to the timings
-    diary. That diary is evidence about THEIR host -- `scripts/timeouts.py` reads
-    every row as theirs -- and a CoinGecko timeout in it would be blamed on them.
-    `SafetyTransport` only times what reaches an `httpx.HTTPTransport`, so
-    wrapping it is enough; nothing else about the request changes."""
-
-    def __init__(self, inner: httpx.BaseTransport):
-        self.inner = inner
-
-    def handle_request(self, request: httpx.Request) -> httpx.Response:
-        return self.inner.handle_request(request)
-
-    def close(self) -> None:
-        self.inner.close()
-
-
 def build_source_client(
-    evidence=None,
     timeout: float = 60.0,
     inner: httpx.BaseTransport | None = None,
 ) -> httpx.Client:
@@ -370,24 +296,19 @@ def build_source_client(
     of the guard is underneath it, as under `build_client`: no tier in scope is
     refused, and a write to any host is refused because no rule declares one.
 
-    Three arguments are deliberate:
+    Two arguments are deliberate:
 
     * **`budget=None`.** `RateLimitBudget` reads `x-ratelimit-*` from every
       response and stops the whole session at 60 % of a quota. A third party's
-      rate-limit headers are not Cymetica's quota, and one of them tripping it
-      would turn a run partial and cost it level V -- the reason
-      `build_fingerprint_client` has no budget either.
+      rate-limit headers are not Cymetica's quota.
     * **No credential.** These are anonymous reads of public APIs. An identity's
       key must never be sent to a host that is not theirs.
-    * **Not timed.** See `_Uncounted`.
 
-    `evidence` is kept: the body of what a source said is what backs a finding
-    made from it. `inner` is for the negative controls.
+    `inner` is for the negative controls.
     """
     transport = SafetyTransport(
-        inner=_Uncounted(inner if inner is not None else httpx.HTTPTransport(retries=0)),
+        inner=inner if inner is not None else httpx.HTTPTransport(retries=0),
         registry=EndpointRegistry.load(),
-        evidence=evidence,
         budget=None,
         pacer=ratelimit.shared() if inner is None else None,
     )
@@ -523,7 +444,6 @@ class McpClient:
 def build_mcp_client(
     identity: Identity,
     registry: EndpointRegistry,
-    evidence=None,
     budget=None,
     inner: httpx.BaseTransport | None = None,
 ) -> McpClient:
@@ -534,7 +454,7 @@ def build_mcp_client(
     # Found by the contract audit on 2026-09-07; the REST remediation had simply
     # never been carried across to this constructor.
     http = build_client(
-        identity, registry, evidence, budget, base_url=base_urls()["mcp"],
+        identity, registry, budget, base_url=base_urls()["mcp"],
         inner=inner,
     )
     http.headers["Content-Type"] = "application/json"
