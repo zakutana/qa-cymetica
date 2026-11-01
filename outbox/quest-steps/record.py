@@ -293,7 +293,10 @@ def farmer(b, seconds=12):
 # twice, its slow turn held still, its own clock run at `tsc` so the billboard's magenta and amber come round 4 times
 # Sixteenth take's third round ("gem screener posun trosku dozadu a doleva at ho neprekryva napis od airdrop farmera"):
 # the gem on the lane inside and further round it (gl, gx), the camera still aimed by where it stood (ga), so nothing else moves
-MARKET = dict(ga=0.32, gl=0, gx=0.5, cl=3, ca=0.75, az=1.25, el=0.55, dist=13.0, ty=0.3, pk=0.2, pr=3.0, ps=2.8, lap=30.0, tsc=28 / 30,
+# Fourth round ("dej jeste mozne ze 4 tyto open slot ikonky at je viditelne ze se daji kupovat landy, treba 1 dopredu a 2
+# dozadu"): free slots of the map's own on the lanes, [lane, angle], one in front and three behind. And the box pinned, as
+# every plate and outline on the page stands in % of it
+MARKET = dict(box=(0, 36, 1946, 1044), slots=[[1, -0.2], [2, 1.0], [1, 1.6], [3, 1.4]], ga=0.32, gl=0, gx=0.5, cl=3, ca=0.75, az=1.25, el=0.55, dist=13.0, ty=0.3, pk=0.2, pr=3.0, ps=2.8, lap=30.0, tsc=28 / 30,
               pan=1.0)   # the airship's hull, measured over a lap: 58 to 92 % of the canvas across (at 0: 70 to 104)
 MARKET_SETUP = """(o) => { const uv = CO.uv, V = uv.camera.position.constructor, up = new V(0, 1, 0);
   uv.arc = function () {}; (uv.arcs || []).forEach(a => { uv.scene.remove(a.head, a.streak); }); uv.arcs = [];
@@ -307,6 +310,8 @@ MARKET_SETUP = """(o) => { const uv = CO.uv, V = uv.camera.position.constructor,
   const at = (lane, a) => new V(Math.sin(a) * lanes[lane], f0.y, Math.cos(a) * lanes[lane]);
   const f = at(2, a0), g = at(1, a0 + o.ga);
   F.plot.root.position.copy(f); G.plot.root.position.copy(at(o.gl, a0 + o.gx)); C.plot.root.position.copy(at(o.cl, a0 + o.ca));
+  const free = uv.items.filter(x => x.kind === 'slot' && !x.owned && x.plot); uv.landShow = function () {};
+  window.__slots = o.slots.map(([l, g], i) => { const it = free[i]; it.orbit = null; it.plot.root.visible = true; it.plot.root.position.copy(at(l, a0 + g)); return it.plot.root; });
   const out = new V(f.x, 0, f.z).normalize(), along = up.clone().cross(out).normalize();
   const T = f.clone().lerp(g, 0.45); T.y += h * o.ty;
   const dir = out.clone().multiplyScalar(Math.cos(o.az)).addScaledVector(along, -Math.sin(o.az)).multiplyScalar(Math.cos(o.el)).addScaledVector(up, Math.sin(o.el));
@@ -344,10 +349,11 @@ MARKET_WHERE = """() => { const uv = CO.uv, cam = uv.camera, V = cam.position.co
 
 
 def market_box(page, sel):
-    """the box both of step 3's clips are cut to"""
-    box, size = lit_box(page, sel, 0.03)
-    # to the canvas's right edge: what is lit now leaves out the airship's far side (cut at 85 % when it was measured)
-    return (box[0], box[1], (size[0] - box[0]) // 2 * 2, box[3]), size
+    """the box both of step 3's clips are cut to: what was lit, to the canvas's right edge (what is lit leaves out the
+    airship's far side), pinned; and the canvas's size, which it was measured on"""
+    _, size = lit_box(page, sel, 0.03)
+    assert size == (1947, 1081), size
+    return MARKET['box'], size
 
 
 def market(b, seconds=12):
@@ -371,7 +377,7 @@ def market(b, seconds=12):
     time.sleep(1)
     page.evaluate(RECORD, [sel, 1000, 4_000_000])
     record(page, sel, seconds, 'market-orbit', bps=16_000_000, crop=box)
-    page.evaluate(f"() => {{ const r = {by}; ['ad-farmer', 'ad-gem', 'ad-casino'].forEach(id => {{ r(id).visible = false; }}); r('ad-promo').visible = true; }}")
+    page.evaluate(f"() => {{ const r = {by}; ['ad-farmer', 'ad-gem', 'ad-casino'].forEach(id => {{ r(id).visible = false; }}); window.__slots.forEach(s => {{ s.visible = false; }}); r('ad-promo').visible = true; }}")
     page.evaluate(capture.HIDE_SKY)
     time.sleep(1)
     record(page, sel, MARKET['lap'], 'market-building', bps=16_000_000, crop=box)
@@ -382,18 +388,63 @@ def market(b, seconds=12):
 
 # sixteenth take's third round ("na kazde kdyz najede nekdo mysi tak se highlightuje ... ty highlighy zkus udelat tim
 # zelenym ze budou obramovane ale at to vypada top"; a line drawn live round whatever was lit in the clip came out
-# jagged and ran inside the gem, along the lanes and round the building's every ring): each product alone on black,
-# everything of it over some seconds as one shape with its holes filled, and round that one shape a neon line and its
-# glow, as a picture of the clip's size cut to itself. The page lights it under the pointer. The airship goes its own
-# way, so the Promo Market's shape is without it
-OUTLINED = {'gem': ('ad-gem', 70), 'farmer': ('ad-farmer', 60), 'casino': ('ad-casino', 60), 'promo': ('ad-promo', 40)}   # and how lit is it: below that a halo, and the line stands off it in a bubble
+# jagged and ran inside the gem, along the lanes and round the building's every ring), and its fourth ("animace highlihtu
+# maji byt jen po obvodu a mas tam bugy a klidne trosku tensi to obramovani": a line with a glow outside it left the
+# inside black, and it ran round the bloom and the halos, in bubbles round nothing): each product alone on black, no
+# bloom, no sprite, no additive light, so only what is solid; everything of it over a whole bob of the building as one
+# shape with its holes filled; round that shape one line, an SVG path in outlines.js, which the page lights under the
+# pointer and runs a light along. The airship goes its own way, so the Promo Market's shape is without it
+# name: its item, how lit counts, its lights kept (the casino's little hologram over it is light), thin things taken off
+# in pixels (the building's two lamp posts stuck out of its line as spikes)
+OUTLINED = {'gem': ('ad-gem', 6, False, 0), 'farmer': ('ad-farmer', 6, False, 0), 'casino': ('ad-casino', 30, True, 0), 'promo': ('ad-promo', 6, False, 15)}
+MATTE = """(ids) => { const uv = CO.uv; uv.post = null;
+  ids.forEach(id => { uv.items.find(x => x.c.id === id).plot.root.traverse(n => {
+    if (n.isPoints || (id !== 'ad-casino' && (n.isSprite || (n.material && n.material.blending === 2)))) n.visible = false; }); });
+  window.__slots.forEach(s => { s.visible = false; });
+  window.__st.children.forEach(ch => { if (ch.isGroup && Math.abs(ch.position.y - 7.65) < 0.02) ch.visible = false; }); }"""
 
 
-def outline_of(lit):
-    """a lit mask (bool array, the clip's size): the green line and glow round its one shape, RGBA"""
+def contour(solid, every=5):
+    """round the edge of a bool mask: SVG path data in its pixels, each loop smoothed and thinned to a point in `every`"""
+    import numpy as np
+    a = np.pad(solid, 1)
+    ahead = {}
+    for y, x in zip(*np.nonzero(a)):
+        if not a[y - 1, x]:
+            ahead.setdefault((x, y), []).append((x + 1, y))
+        if not a[y, x + 1]:
+            ahead.setdefault((x + 1, y), []).append((x + 1, y + 1))
+        if not a[y + 1, x]:
+            ahead.setdefault((x + 1, y + 1), []).append((x, y + 1))
+        if not a[y, x - 1]:
+            ahead.setdefault((x, y + 1), []).append((x, y))
+    out = []
+    while ahead:
+        start = next(iter(ahead))
+        pts, at = [], start
+        while at in ahead:
+            pts.append(at)
+            ends = ahead[at]
+            to = ends.pop()
+            if not ends:
+                del ahead[at]
+            at = to
+        if len(pts) < 60:
+            continue
+        p = np.array(pts, np.float32) - 1
+        k = np.ones(9) / 9
+        xs = np.convolve(np.r_[p[-4:, 0], p[:, 0], p[:4, 0]], k, 'valid')
+        ys = np.convolve(np.r_[p[-4:, 1], p[:, 1], p[:4, 1]], k, 'valid')
+        out.append('M' + 'L'.join(f'{u:.1f} {v:.1f}' for u, v in zip(xs[::every], ys[::every])) + 'Z')
+    return ''.join(out)
+
+
+def outline_of(lit, thin=0):
+    """a lit mask (bool array, the clip's size): its one shape, joined, specks out, holes filled, what is under `thin`
+    pixels wide off it, corners round"""
     import numpy as np
     from PIL import ImageDraw, ImageFilter
-    m = Image.fromarray((lit * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(5))
+    m = Image.fromarray((lit * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(9))
     # specks out: what is not joined to something of 200 pixels; then its holes filled, from the edge in
     a = np.asarray(m) > 127
     seen = np.zeros(a.shape, bool)
@@ -418,23 +469,16 @@ def outline_of(lit):
     pad.paste(filled, (1, 1))
     ImageDraw.floodfill(pad, (0, 0), 128)
     solid = (np.asarray(pad)[1:-1, 1:-1] != 128)
+    if thin:
+        solid = np.asarray(Image.fromarray((solid * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(thin)).filter(ImageFilter.MaxFilter(thin))) > 127
     smooth = lambda arr, r: np.asarray(Image.fromarray((arr * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(r)), np.float32) / 255
-    solid = smooth(solid, 5) > 0.5      # its corners round, so the line runs as one stroke, not along every pixel
-    step = lambda lo, hi, v: (lambda t: t * t * (3 - 2 * t))(np.clip((v - lo) / (hi - lo), 0, 1))
-    inner = step(0.35, 0.65, smooth(solid, 1.6))
-    outer = step(0.05, 0.16, smooth(solid, 3.4))
-    line = outer * (1 - inner)
-    glow = (smooth(outer, 9) * 0.8 + smooth(outer, 24) * 0.55) * (1 - inner)
-    alpha = np.clip(line + glow, 0, 1)
-    pale, green = np.array([200, 255, 228], np.float32), np.array([0, 255, 136], np.float32)
-    k = (line / np.maximum(alpha, 1e-3))[..., None]
-    rgb = green + (pale - green) * k
-    return Image.fromarray(np.dstack([rgb, alpha * 255]).astype(np.uint8), 'RGBA'), solid
+    return smooth(solid, 3) > 0.5      # its corners round, so the line runs as one stroke, not along every pixel
 
 
-def outlines(b, frames=8):
-    """pics/hl-<name>.webp for each of OUTLINED, and what index.html needs for it: the picture's left, top and width
-    and the shape's box (its .hot), in % of the clip"""
+def outlines(b, frames=10, look=None):
+    """outlines.js: the path round each of OUTLINED, in the clip's pixels; and each shape's box (its .hot in index.html),
+    in % of the clip. `look`: a folder for each shape's mask"""
+    import json
     import numpy as np
     page = capture.universe(b, viewport={'width': 1600, 'height': 1000}, dsf=1.25)
     page.evaluate(MARKET_SETUP, MARKET)
@@ -442,27 +486,29 @@ def outlines(b, frames=8):
     sel = '#uv3d canvas'
     (x, y, w, h), _ = market_box(page, sel)
     page.evaluate(capture.HIDE_SKY)
-    page.evaluate("""() => { const st = window.__st; st.children.forEach(ch => { if (ch.isGroup && Math.abs(ch.position.y - 7.65) < 0.02) ch.visible = false; }); }""")
+    items = [v[0] for v in OUTLINED.values()]
+    page.evaluate(MATTE, items)
     by = "(id) => CO.uv.items.find(x => x.c.id === id).plot.root"
-    for name, (item, th) in OUTLINED.items():
-        page.evaluate(f"(me) => {{ const r = {by}; {[v[0] for v in OUTLINED.values()]}.forEach(id => {{ r(id).visible = id === me; }}); }}", item)
+    paths = {'w': w, 'h': h}
+    for name, (item, th, _, thin) in OUTLINED.items():
+        page.evaluate(f"(me) => {{ const r = {by}; {items}.forEach(id => {{ r(id).visible = id === me; }}); }}", item)
         time.sleep(1)
         lit = np.zeros((h, w), bool)
-        for _ in range(frames):
+        for _ in range(frames):        # the building's bob comes round in 15 s
             data = page.evaluate("(sel) => document.querySelector(sel).toDataURL('image/png')", sel)
             im = Image.open(io.BytesIO(base64.b64decode(data.split(',', 1)[1]))).convert('RGB').crop((x, y, x + w, y + h))
             lit |= np.asarray(im, np.uint8).max(axis=2) > th
-            time.sleep(0.9)
-        out, solid = outline_of(lit)
-        l, t, r, b_ = out.getchannel('A').point(lambda v: 255 if v > 3 else 0).getbbox()
-        dest = capture.HERE / 'pics' / f'hl-{name}.webp'
-        out.crop((l, t, r, b_)).save(dest, quality=88, method=6)
+            time.sleep(1.6)
+        solid = outline_of(lit, thin)
+        if look:
+            Image.fromarray((solid * 255).astype(np.uint8)).save(Path(look) / f'matte-{name}.png')
+        paths[name] = contour(solid)
         ys, xs = np.nonzero(solid)
         p = lambda v, d: round(v / d * 100, 2)
-        print(f'hl-{name}.webp {r - l}x{b_ - t} {dest.stat().st_size // 1024} KB',
-              f'img left: {p(l, w)}%; top: {p(t, h)}%; width: {p(r - l, w)}%',
+        print(f'{name}: path {len(paths[name]) // 1024} KB',
               f'| hot left: {p(xs.min(), w)}%; top: {p(ys.min(), h)}%; width: {p(xs.max() - xs.min(), w)}%; height: {p(ys.max() - ys.min(), h)}%')
     page.close()
+    (capture.HERE / 'outlines.js').write_text('/* record.py outlines: the line round each of step 3\'s products, in the clip\'s pixels */\nwindow.QUEST_OUTLINES = ' + json.dumps(paths) + ';\n', encoding='utf-8')
 
 
 # step 5's Universe has six companies today; the leaderboard beside it names five more, so they are given a station

@@ -174,7 +174,7 @@ h1 b { font-weight: 400; }
 /* the flyer's glass, now crystal, clear and glossy, on the right and turned the other way ("na druhou stranu a natocis
    ho naopak"): its far edge towards the words */
 .board-wrap { perspective: 1900px; perspective-origin: 100% 40%; }
-.board { padding: 36px 44px 26px; border-radius: 30px; transform: rotateY(var(--ry, -12deg)) rotateX(var(--rx, 2.6deg)); transform-origin: 100% 50%;
+.board { padding: 36px 44px 26px; border-radius: 30px; transform: rotateY(var(--ry, -26deg)) rotateX(var(--rx, 2.6deg)); transform-origin: 100% 50%;
   background: radial-gradient(120% 90% at 80% 10%, rgba(0, 207, 255, .06), rgba(5, 9, 16, .22) 70%);
   transition: transform .45s cubic-bezier(.16, .84, .3, 1), box-shadow .45s var(--ease); }
 .board:hover { box-shadow: inset 0 1px 0 #ffffff, inset 0 -1px 0 rgba(160, 240, 255, .5), inset 1px 0 0 rgba(255, 255, 255, .42), inset -1px 0 0 rgba(255, 255, 255, .2),
@@ -354,67 +354,83 @@ h1 b { font-weight: 400; }
 .tube .st.live i { background: var(--green); box-shadow: 0 0 12px var(--green); }
 .tube .st.live .sv { color: var(--green); text-shadow: 0 0 12px rgba(0, 255, 136, .55); }
 .tube .st.live .pc { color: #03140c; background: var(--green); box-shadow: 0 0 16px rgba(0, 255, 136, .6); }
-.tube .track { position: absolute; left: 30px; right: 30px; top: 107px; height: 3px; border-radius: 2px; background: rgba(30, 48, 80, .9); }
-.tube .track .lit { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 2px; box-shadow: 0 0 12px var(--green);
-  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .7) 0 6px, rgba(255, 255, 255, 0) 6px 18px), linear-gradient(90deg, var(--cyan), var(--green));
-  background-size: 18px 100%, 100% 100%; animation: flowing .5s linear infinite; }
+/* its longer name ("prejmenuj na Build it Better pipeline") on one line beside its status on a narrower screen too */
+.tube { container-type: inline-size; }
+.tube .hd { min-height: 36px; }
+.tube .pn { white-space: nowrap; }
+@container (max-width: 640px) {
+  .tube .pn { font-size: 12.5px; letter-spacing: .08em; gap: 7px; }
+  .tube .st { font-size: 11px; gap: 7px; letter-spacing: .05em; }
+  .tube .st .pc { min-width: 3.6em; }
+}
+.tube .track { position: absolute; left: 30px; right: 30px; top: 99.5px; height: 3px; border-radius: 2px; background: rgba(30, 48, 80, .9); container-type: inline-size; }
+/* the line lit runs through the chambers' colours, each where its chamber stands, whatever length it has got to */
+.tube .track .lit { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 2px; box-shadow: 0 0 10px rgba(255, 255, 255, .4);
+  background: repeating-linear-gradient(90deg, rgba(255, 255, 255, .7) 0 6px, rgba(255, 255, 255, 0) 6px 18px), linear-gradient(90deg, #5b9bff 8%, #b76dff 25%, #00cfff 42%, #ffc83d 58%, #ff5a68 75%, #00ff88 92%);
+  background-size: 18px 100%, 100cqw 100%; animation: flowing .5s linear infinite; }
 @keyframes flowing { to { background-position: 18px 0, 0 0; } }
-.tube .track .orb { position: absolute; top: 50%; left: 0; width: 22px; height: 22px; border-radius: 50%; transform: translate(-50%, -50%); opacity: 0; transition: opacity .2s;
-  background: radial-gradient(circle, #f2fffb 0 30%, var(--green) 55%, rgba(0, 255, 136, 0) 72%); box-shadow: 0 0 24px 8px rgba(0, 255, 136, .55); }
+/* the spark takes the colour of the chamber it is in (anim.js sets --oc) */
+.tube .track .orb { --oc: 0, 255, 136; position: absolute; top: 50%; left: 0; width: 22px; height: 22px; border-radius: 50%; transform: translate(-50%, -50%); opacity: 0; transition: opacity .2s;
+  background: radial-gradient(circle, #ffffff 0 30%, rgb(var(--oc)) 55%, rgba(var(--oc), 0) 72%); box-shadow: 0 0 24px 8px rgba(var(--oc), .55); }
 .tube .track .orb::before { content: ''; position: absolute; right: 50%; top: 50%; width: 120px; height: 6px; margin-top: -3px; border-radius: 3px; pointer-events: none;
-  background: linear-gradient(90deg, rgba(0, 207, 255, 0), rgba(0, 207, 255, .5) 60%, rgba(220, 255, 240, .95)); filter: blur(1.5px); }
+  background: linear-gradient(90deg, rgba(var(--oc), 0), rgba(var(--oc), .5) 60%, rgba(255, 255, 255, .95)); filter: blur(1.5px); }
 .chs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+/* each chamber its own colour and its own coloured icon ("je to moc jedno brdo ty kostky, mozna nejak barevnejsi by bylo
+   lepsi? jak v quant labu tady mame ruzne ikonky barevne", 2026-11-01), from the Universe's accents, CO.ACCENTS */
+.ch.spec { --a: #5b9bff; --ar: 91, 155, 255; } .ch.design { --a: #b76dff; --ar: 183, 109, 255; } .ch.build { --a: #00cfff; --ar: 0, 207, 255; }
+.ch.sec { --a: #ffc83d; --ar: 255, 200, 61; } .ch.dep { --a: #ff5a68; --ar: 255, 90, 104; } .ch.host { --a: #00ff88; --ar: 0, 255, 136; }
 .ch { position: relative; display: grid; justify-items: center; gap: 7px; padding: 14px 8px 14px; border-radius: 14px; text-align: center; overflow: hidden;
-  background: rgba(8, 14, 24, .7); box-shadow: inset 0 0 0 1px rgba(30, 48, 80, .9); transition: box-shadow .3s, background .3s, transform .35s var(--ease); }
-.ch .no { position: absolute; left: 9px; top: 7px; font: 800 11px 'JetBrains Mono'; letter-spacing: .08em; color: var(--dim3, #3a4d68); transition: color .3s; }
-.ch .ci { position: relative; display: grid; place-items: center; width: 48px; height: 48px; color: var(--mute); transition: color .3s, transform .3s var(--ease); }
-.ch .ci > svg:not(.pr) { position: relative; width: 24px; height: 24px; }
+  background: linear-gradient(180deg, rgba(var(--ar), .13), rgba(var(--ar), .02) 62%), rgba(8, 14, 24, .72);
+  box-shadow: inset 0 1px 0 rgba(var(--ar), .45), inset 0 0 0 1px rgba(var(--ar), .2); transition: box-shadow .3s, background .3s, transform .35s var(--ease); }
+.ch .no { position: absolute; left: 9px; top: 7px; font: 800 11px 'JetBrains Mono'; letter-spacing: .08em; color: rgba(var(--ar), .75); transition: color .3s; }
+.ch .ci { position: relative; display: grid; place-items: center; width: 48px; height: 48px; transition: transform .3s var(--ease); }
+.ch .ci > svg:not(.pr) { position: relative; width: 28px; height: 28px; filter: saturate(.8) brightness(.82); transition: filter .3s; }
+.ch.act .ci > svg:not(.pr), .ch.done .ci > svg:not(.pr) { filter: drop-shadow(0 0 7px rgba(var(--ar), .75)); }
 .ch .ci .pr { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
-.ch .ci .pr circle { fill: rgba(6, 9, 15, .9); stroke: var(--green); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 132; stroke-dashoffset: calc(132 * (1 - var(--p, 0))); filter: drop-shadow(0 0 4px rgba(0, 255, 136, .8)); }
-.ch:not(.act):not(.done) .ci .pr circle { stroke: rgba(30, 48, 80, .95); stroke-dashoffset: 0; filter: none; }
-.ch.done .ci .pr circle { stroke-dashoffset: 0; stroke: rgba(0, 255, 136, .55); filter: none; }
-.ch b { font: 700 16px Inter, sans-serif; color: var(--mute); transition: color .3s; }
+.ch .ci .pr circle { fill: rgba(6, 9, 15, .92); stroke: var(--a); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 132; stroke-dashoffset: calc(132 * (1 - var(--p, 0))); filter: drop-shadow(0 0 4px rgba(var(--ar), .8)); }
+.ch:not(.act):not(.done) .ci .pr circle { stroke: rgba(var(--ar), .28); stroke-dashoffset: 0; filter: none; }
+.ch.done .ci .pr circle { stroke-dashoffset: 0; stroke: rgba(var(--ar), .7); filter: none; }
+.ch b { font: 700 16px Inter, sans-serif; color: #b9c6d8; transition: color .3s; }
 .ch .fx { position: relative; display: block; width: 76%; height: 20px; }
 .ch .ok { position: absolute; right: 7px; top: 6px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font: 800 11px 'JetBrains Mono'; color: #03140c;
-  background: var(--green); box-shadow: 0 0 10px var(--green); opacity: 0; transform: scale(.5); transition: opacity .25s, transform .3s var(--ease); }
-/* the working chamber: lifted, lit, a band of light sweeping down it */
-.ch.act { transform: translateY(-7px); background: linear-gradient(180deg, rgba(0, 255, 136, .18), rgba(0, 207, 255, .07)), rgba(8, 14, 24, .8);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), inset 0 0 0 1px rgba(0, 255, 136, .8), 0 0 34px rgba(0, 255, 136, .4), 0 14px 26px rgba(0, 0, 0, .5); }
+  background: var(--a); box-shadow: 0 0 10px var(--a); opacity: 0; transform: scale(.5); transition: opacity .25s, transform .3s var(--ease); }
+/* the working chamber: lifted, lit in its colour, a band of light sweeping down it */
+.ch.act { transform: translateY(-7px); background: linear-gradient(180deg, rgba(var(--ar), .3), rgba(var(--ar), .07)), rgba(8, 14, 24, .8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), inset 0 0 0 1px rgba(var(--ar), .9), 0 0 34px rgba(var(--ar), .45), 0 14px 26px rgba(0, 0, 0, .5); }
 .ch.act::after { content: ''; position: absolute; left: 0; right: 0; top: -40%; height: 40%; pointer-events: none;
-  background: linear-gradient(180deg, rgba(0, 255, 136, 0), rgba(0, 255, 136, .22), rgba(0, 255, 136, 0)); animation: sweepdown .7s linear infinite; }
+  background: linear-gradient(180deg, rgba(var(--ar), 0), rgba(var(--ar), .25), rgba(var(--ar), 0)); animation: sweepdown .7s linear infinite; }
 @keyframes sweepdown { to { top: 100%; } }
-.ch.act .no, .ch.done .no { color: var(--green); }
-.ch.act .ci, .ch.done .ci { color: var(--green); }
+.ch.act .no, .ch.done .no { color: var(--a); }
 .ch.act .ci { transform: scale(1.14); }
 .ch.act b, .ch.done b { color: #ffffff; }
-.ch.done { box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .38); }
+.ch.done { background: linear-gradient(180deg, rgba(var(--ar), .2), rgba(var(--ar), .04) 70%), rgba(8, 14, 24, .72); box-shadow: inset 0 1px 0 rgba(var(--ar), .7), inset 0 0 0 1px rgba(var(--ar), .5), 0 0 16px rgba(var(--ar), .14); }
 .ch.done .ok { opacity: 1; transform: scale(1); }
 /* each chamber's small machine, running while it works */
-.ch .fx i { position: absolute; display: block; background: rgba(0, 207, 255, .35); border-radius: 2px; }
+.ch .fx i { position: absolute; display: block; background: rgba(var(--ar), .28); border-radius: 2px; }
 .ch.spec .fx i { left: 0; height: 3px; width: 0; } .ch.spec .fx i:nth-child(1) { top: 2px; } .ch.spec .fx i:nth-child(2) { top: 9px; } .ch.spec .fx i:nth-child(3) { top: 16px; }
-.ch.spec.act .fx i, .ch.spec.done .fx i { background: var(--green); animation: grow .55s var(--ease) forwards; }
+.ch.spec.act .fx i, .ch.spec.done .fx i { background: var(--a); animation: grow .55s var(--ease) forwards; }
 .ch.spec.act .fx i:nth-child(2) { animation-delay: .12s; } .ch.spec.act .fx i:nth-child(3) { animation-delay: .24s; }
 .ch.spec.done .fx i { width: 100%; animation: none; } .ch.spec.done .fx i:nth-child(3) { width: 60%; }
 @keyframes grow { to { width: 100%; } }
 .ch.design .fx i { width: 46%; height: 8px; opacity: .3; transform: scale(.4); } .ch.design .fx i:nth-child(1) { left: 0; top: 0; } .ch.design .fx i:nth-child(2) { right: 0; top: 0; }
 .ch.design .fx i:nth-child(3) { left: 0; bottom: 0; } .ch.design .fx i:nth-child(4) { right: 0; bottom: 0; }
-.ch.design.act .fx i, .ch.design.done .fx i { opacity: 1; transform: none; background: var(--cyan); transition: transform .3s var(--ease), opacity .3s; }
-.ch.design.act .fx i:nth-child(2) { transition-delay: .1s; } .ch.design.act .fx i:nth-child(3) { transition-delay: .2s; } .ch.design.act .fx i:nth-child(4) { transition-delay: .3s; background: var(--green); }
-.ch.build .fx b { position: absolute; left: 0; top: 0; font: 800 12px 'JetBrains Mono'; color: var(--mute); }
-.ch.build .fx i { right: 0; top: 7px; width: 0; height: 5px; left: 34%; } .ch.build.act .fx b, .ch.build.done .fx b { color: var(--green); }
-.ch.build.act .fx i { background: var(--green); animation: bar .65s linear forwards; } .ch.build.done .fx i { background: var(--green); width: 66%; }
+.ch.design.act .fx i, .ch.design.done .fx i { opacity: 1; transform: none; background: var(--a); transition: transform .3s var(--ease), opacity .3s; }
+.ch.design.act .fx i:nth-child(2) { transition-delay: .1s; } .ch.design.act .fx i:nth-child(3) { transition-delay: .2s; } .ch.design.act .fx i:nth-child(4) { transition-delay: .3s; }
+.ch.build .fx b { position: absolute; left: 0; top: 0; font: 800 12px 'JetBrains Mono'; color: rgba(var(--ar), .5); }
+.ch.build .fx i { right: 0; top: 7px; width: 0; height: 5px; left: 34%; } .ch.build.act .fx b, .ch.build.done .fx b { color: var(--a); }
+.ch.build.act .fx i { background: var(--a); animation: bar .65s linear forwards; } .ch.build.done .fx i { background: var(--a); width: 66%; }
 @keyframes bar { to { width: 66%; } }
-.ch.sec .fx i { left: 0; right: 0; top: 0; bottom: 0; background: none; box-shadow: inset 0 0 0 1px rgba(30, 48, 80, .9); }
-.ch.sec.act .fx i { box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .6); background: linear-gradient(180deg, rgba(0, 255, 136, 0), rgba(0, 255, 136, .5) 50%, rgba(0, 255, 136, 0)) 0 -20px / 100% 20px no-repeat; animation: scan .5s linear infinite; }
-.ch.sec.done .fx i { box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .5); }
+.ch.sec .fx i { left: 0; right: 0; top: 0; bottom: 0; background: none; box-shadow: inset 0 0 0 1px rgba(var(--ar), .3); }
+.ch.sec.act .fx i { box-shadow: inset 0 0 0 1px rgba(var(--ar), .7); background: linear-gradient(180deg, rgba(var(--ar), 0), rgba(var(--ar), .55) 50%, rgba(var(--ar), 0)) 0 -20px / 100% 20px no-repeat; animation: scan .5s linear infinite; }
+.ch.sec.done .fx i { box-shadow: inset 0 0 0 1px rgba(var(--ar), .65); }
 @keyframes scan { to { background-position: 0 20px; } }
-.ch.dep .fx i { width: 3px; height: 100%; bottom: 0; background: rgba(0, 207, 255, .25); } .ch.dep .fx i:nth-child(1) { left: 40%; } .ch.dep .fx i:nth-child(2) { left: 58%; }
-.ch.dep.act .fx i { background: linear-gradient(0deg, rgba(0, 255, 136, 0), var(--green)); animation: lift .4s linear infinite; } .ch.dep.act .fx i:nth-child(2) { animation-delay: .2s; }
-.ch.dep.done .fx i { background: rgba(0, 255, 136, .45); }
+.ch.dep .fx i { width: 3px; height: 100%; bottom: 0; background: rgba(var(--ar), .25); } .ch.dep .fx i:nth-child(1) { left: 40%; } .ch.dep .fx i:nth-child(2) { left: 58%; }
+.ch.dep.act .fx i { background: linear-gradient(0deg, rgba(var(--ar), 0), var(--a)); animation: lift .4s linear infinite; } .ch.dep.act .fx i:nth-child(2) { animation-delay: .2s; }
+.ch.dep.done .fx i { background: rgba(var(--ar), .6); }
 @keyframes lift { from { transform: translateY(8px); opacity: 0; } 50% { opacity: 1; } to { transform: translateY(-8px); opacity: 0; } }
-.ch.host .fx i { top: 6px; width: 8px; height: 8px; border-radius: 50%; background: rgba(0, 207, 255, .3); } .ch.host .fx i:nth-child(1) { left: 14%; } .ch.host .fx i:nth-child(2) { left: 44%; } .ch.host .fx i:nth-child(3) { left: 74%; }
-.ch.host.act .fx i { background: var(--green); box-shadow: 0 0 8px var(--green); animation: led .45s steps(1) infinite; } .ch.host.act .fx i:nth-child(2) { animation-delay: .15s; } .ch.host.act .fx i:nth-child(3) { animation-delay: .3s; }
-.ch.host.done .fx i { background: var(--green); box-shadow: 0 0 8px var(--green); }
+.ch.host .fx i { top: 6px; width: 8px; height: 8px; border-radius: 50%; background: rgba(var(--ar), .25); } .ch.host .fx i:nth-child(1) { left: 14%; } .ch.host .fx i:nth-child(2) { left: 44%; } .ch.host .fx i:nth-child(3) { left: 74%; }
+.ch.host.act .fx i { background: var(--a); box-shadow: 0 0 8px var(--a); animation: led .45s steps(1) infinite; } .ch.host.act .fx i:nth-child(2) { animation-delay: .15s; } .ch.host.act .fx i:nth-child(3) { animation-delay: .3s; }
+.ch.host.done .fx i { background: var(--a); box-shadow: 0 0 8px var(--a); }
 @keyframes led { 50% { opacity: .25; } }
 .outlet .burst { position: absolute; left: 50%; top: 42%; width: 60px; height: 60px; margin: -30px; border-radius: 50%; pointer-events: none; opacity: 0; box-shadow: 0 0 0 2px var(--green); }
 .machine.pop .outlet .burst { animation: burst .8s var(--ease) forwards; }
@@ -556,26 +572,31 @@ h1 b { font-weight: 400; }
 .b3 .rib::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 5px var(--acc); opacity: .85; flex: none; }
 .b3 .teth { width: 0; height: 0; border: 4px solid transparent; border-top-color: var(--fr); border-bottom: 0; margin-top: -1px; }
 .b3.product .rib { border-color: var(--acc); color: #eef4fa; }
-/* step 3's products lit under the pointer (anim.js): a neon outline round the whole of it (record.py outlines), the
-   plate in green, a little bigger, the cube in a green glow, what is not under the pointer stepping back */
+/* step 3's products lit under the pointer (anim.js): only round the edge ("animace highlihtu maji byt jen po obvodu ...
+   klidne trosku tensi to obramovani", 2026-11-01): a thin green line round the whole of it (record.py outlines; its
+   widths in the clip's pixels, about 0.6 of a page's at 2000 px) with two lights running along it; the plate in green,
+   a little bigger; what is not under the pointer stepping back */
 .b3[data-hot] { pointer-events: auto; cursor: pointer; text-decoration: none; }
 .hot { position: absolute; z-index: 3; display: block; cursor: pointer; }
 .hot:focus { outline: none; }
-.pic > img.hlo { position: absolute; z-index: 2; height: auto; pointer-events: none; opacity: 0; transition: opacity .25s var(--ease); -webkit-mask-image: none; mask-image: none; }
-.pic > img.hlo.hov { opacity: 1; animation: hlo-pulse 1.9s ease-in-out infinite; }
-@keyframes hlo-pulse { 50% { opacity: .68; } }
+.hlo { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; overflow: visible; }
+.hlo g { opacity: 0; transition: opacity .25s var(--ease); }
+.hlo g.hov { opacity: 1; }
+.hlo path { fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.hlo .gl { stroke: rgba(0, 255, 136, .2); stroke-width: 9; }
+.hlo .ln { stroke: var(--green); stroke-width: 2.6; }
+.hlo .rn { stroke: #eafff5; stroke-width: 3.6; stroke-dasharray: 8 42; }
+.hlo g.hov .rn { animation: hlo-run 3.4s linear infinite; }
+@keyframes hlo-run { to { stroke-dashoffset: -50; } }
 .b3.hov { --fr: var(--green); transform: translate(-50%, -100%) scale(1.08); }
 .b3.hov .rib { border-color: var(--green); color: #ffffff; box-shadow: 0 0 0 1px rgba(0, 255, 136, .45), 0 0 18px rgba(0, 255, 136, .6), 0 0 44px rgba(0, 255, 136, .28); }
 .b3.hov .rib::before { background: var(--green); box-shadow: 0 0 7px var(--green); opacity: 1; }
 .stage.market .holo-at, .stage.market .users, .stage.market .flow { transition: opacity .3s var(--ease), filter .3s var(--ease); }
 .stage.market[data-hl] .users, .stage.market[data-hl] .flow, .stage.market[data-hl] .b3:not(.hov) { opacity: .45; }
 .stage.market[data-hl]:not([data-hl=promo]) .holo-at { opacity: .45; }
-/* the cube: each glass face framed in green (a glow over the whole cube came through its glass and filled it), its light
-   turned green with it */
+/* the cube: each glass face's edge a thin green line (a glow over the whole cube came through its glass and filled it) */
 .stage.market .holo .f { transition: box-shadow .25s var(--ease); }
-.stage.market .holo .aura, .stage.market .holo .pool, .stage.market .holo .beam { transition: filter .25s var(--ease); }
-.stage.market[data-hl=promo] .holo .f { box-shadow: inset 0 0 0 2px #a8ffd4, inset 0 0 22px rgba(0, 255, 136, .5), 0 0 26px rgba(0, 255, 136, .55); }
-.stage.market[data-hl=promo] .holo .aura, .stage.market[data-hl=promo] .holo .pool, .stage.market[data-hl=promo] .holo .beam { filter: hue-rotate(-40deg) saturate(1.4); }
+.stage.market[data-hl=promo] .holo .f { box-shadow: inset 0 0 0 1.5px var(--green), 0 0 6px rgba(0, 255, 136, .35); }
 .users { position: absolute; z-index: 3; left: 45.1%; top: 71%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px;
   padding: 6px 15px; border-radius: 99px; white-space: nowrap;
   font: 700 15px/1 'JetBrains Mono'; color: var(--text);
@@ -798,5 +819,5 @@ h1 b { font-weight: 400; }
 }
 @media (prefers-reduced-motion: reduce) {
   .rv { opacity: 1; transform: none; transition: none; }
-  .pts li::before, .pic > img.hlo.hov, .tube::before, .door .arr::before, .brand .qb-orbit, .brand .qb-star, #sun, .step.build .conduit i, .flow .fl, .pill i, .lab-hud .st-dot, .lb .gh .dot { animation: none; }
+  .pts li::before, .hlo g.hov .rn, .tube::before, .door .arr::before, .brand .qb-orbit, .brand .qb-star, #sun, .step.build .conduit i, .flow .fl, .pill i, .lab-hud .st-dot, .lb .gh .dot { animation: none; }
 }

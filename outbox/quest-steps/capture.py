@@ -25,6 +25,7 @@ import socket
 import sys
 import threading
 import time
+import os
 from pathlib import Path
 
 import numpy as np
@@ -256,7 +257,7 @@ def stations(b):
 
 def universe(b, query='?season0', viewport=None, dsf=2):
     """our Universe mock (outbox/company-live) with its ads on, settled, its camera and items ours to move"""
-    base = serve(OUTBOX / 'company-live')
+    base = serve(Path(os.environ.get('QUEST_MOCK') or OUTBOX / 'company-live'))   # QUEST_MOCK: a copy of it held still while the tree's is being changed
     page = b.new_page(viewport=viewport or {'width': 1600, 'height': 1000}, device_scale_factor=dsf)
     page.goto(base + 'index.html' + query + '#universe', wait_until='domcontentloaded', timeout=60000)
     time.sleep(16)

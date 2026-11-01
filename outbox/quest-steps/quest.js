@@ -130,7 +130,7 @@
     heroSec.addEventListener('pointermove', function (e) {
       if (innerWidth <= 900) return;
       var nx = (e.clientX / innerWidth - 0.5) * 2, ny = (e.clientY / innerHeight - 0.5) * 2;
-      heroBoard.style.setProperty('--ry', (-12 + nx * 2.8).toFixed(2) + 'deg');
+      heroBoard.style.setProperty('--ry', (-26 + nx * 2.8).toFixed(2) + 'deg');
       heroBoard.style.setProperty('--rx', (2.6 - ny * 2.2).toFixed(2) + 'deg');
     }, { passive: true });
     heroSec.addEventListener('pointerleave', function () {

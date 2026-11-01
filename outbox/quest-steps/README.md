@@ -43,8 +43,12 @@ revenue share), which is unchanged.
    Universe's own (uv.css .b3, copied), the Promo Market with one of its own over its cube, lit with its building
    while the pointer is on its name in the words; step 3 says again that your products can stand on your own land
    in the Universe; what earns points has no box any more, only its green words and the "+ pts" tag. Its third round:
-   step 3's products are links, each lit under the pointer with a green neon outline round its whole shape (record.py
-   outlines), the cube's faces framed in green, the plate over the Promo Market gone; the gem on the lane inside, back and left, clear of the
+   step 3's products are links, each lit under the pointer with a thin green line round its whole shape and two lights
+   running along it (record.py outlines, outlines.js), the cube's edges green, the plate over the Promo Market gone;
+   four of the map's free slots on the lanes (record.py MARKET slots), one in front and three behind, so land is seen
+   to be for sale; the pipeline called Build it Better's, each chamber in its own colour with its own coloured icon;
+   the prize board turned further (26 degrees); step 3 "Get seen."; what earns points always the last line; the first
+   door just "Start a company"; the gem on the lane inside, back and left, clear of the
    farmer's plate (record.py MARKET gl, gx); the Vault holds its own piles of money (record.py office: u3d.js piles() at
    full, in the recording browser only); step 1's departments on one line, each with the live office's astronaut in its
    role's helmet (office.js avatar()); step 5 "Farm points. Climb the leaderboard." with three lines; the Universe a

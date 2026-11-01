@@ -200,7 +200,17 @@
   (function () {
     var m = document.querySelector('[data-anim=pipeline]'); if (!m) return;
     var vid = document.querySelector('#s2 video');
-    var CH = [['doc', 'Spec', 'spec'], ['design', 'Design', 'design'], ['development', 'Build', 'build'], ['shield', 'Security', 'sec'], ['rocket', 'Deploy', 'dep'], ['cloud', 'Hosting', 'host']];
+    var CH = [['doc', 'Spec', 'spec', '91, 155, 255'], ['design', 'Design', 'design', '183, 109, 255'], ['development', 'Build', 'build', '0, 207, 255'], ['shield', 'Security', 'sec', '255, 200, 61'], ['rocket', 'Deploy', 'dep', '255, 90, 104'], ['cloud', 'Hosting', 'host', '0, 255, 136']];
+    // each chamber's icon in colours of its own, as the Quant Lab's tiles have them ("jak v quant labu tady mame ruzne
+    // ikonky barevne", 2026-11-01), drawn, as an emoji differs from browser to browser
+    var GLYPH = {
+      spec: '<path d="M8 3h11l6 6v20H8z" fill="#e8f1ff"/><path d="M19 3l6 6h-6z" fill="#9dc2ff"/><path d="M11.5 14h9M11.5 18h9M11.5 22h6" stroke="#3b82f6" stroke-width="2.2" stroke-linecap="round"/>',
+      design: '<path d="M16 3.5C8.5 3.5 3 8.9 3 15.5S8.6 28.5 15 28.5c2 0 3.2-1.2 3.2-2.8 0-1.6-1.3-2.2-1.3-3.7 0-1.5 1.2-2.5 2.8-2.5h3.6c3.7 0 5.7-2.3 5.7-5.6 0-5.6-5.4-10.4-13-10.4z" fill="#a855f7"/><circle cx="10" cy="11.5" r="2.4" fill="#ff4fd8"/><circle cx="17" cy="8.5" r="2.4" fill="#ffc83d"/><circle cx="23" cy="12.5" r="2.4" fill="#00cfff"/><circle cx="8.5" cy="18.5" r="2.4" fill="#00ff88"/>',
+      build: '<rect x="3" y="5" width="26" height="22" rx="4" fill="#0b3a55"/><path d="M7 5h18a4 4 0 0 1 4 4v2H3V9a4 4 0 0 1 4-4z" fill="#00cfff"/><circle cx="7" cy="8" r="1.2" fill="#fff"/><circle cx="11" cy="8" r="1.2" fill="#fff"/><path d="M13 15.5l-4 4 4 4M19 15.5l4 4-4 4" fill="none" stroke="#e6fbff" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>',
+      sec: '<path d="M16 3l11 4v8c0 7.2-4.6 12-11 14C9.6 27 5 22.2 5 15V7z" fill="#ffc83d"/><path d="M16 3l11 4v8c0 7.2-4.6 12-11 14z" fill="#dfa41f"/><path d="M11 15.5l3.6 3.6 6.9-7.1" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>',
+      dep: '<g transform="rotate(45 16 16)"><path d="M12.5 21h7L16 30z" fill="#ffc83d"/><path d="M10 15l-4.5 5v4l4.5-3zM22 15l4.5 5v4l-4.5-3z" fill="#ff5a68"/><path d="M16 2c4 3 6 8 6 13v6H10v-6c0-5 2-10 6-13z" fill="#eef4fa"/><path d="M16 2c2.3 1.7 4 4 5 6.6H11C12 6 13.7 3.7 16 2z" fill="#ff5a68"/><circle cx="16" cy="13.5" r="2.8" fill="#00cfff" stroke="#5b6b80" stroke-width="1.2"/></g>',
+      host: '<path d="M9.5 25a6.5 6.5 0 0 1-1.1-12.9A8.2 8.2 0 0 1 24 11.2 6.9 6.9 0 0 1 23.5 25z" fill="#e6f7ff"/><path d="M3.9 21.8a6.5 6.5 0 0 0 5.6 3.2h14a6.9 6.9 0 0 0 6-4.2c-9.600 3.400-17.600 3.400-25.600 1z" fill="#9ad9f5"/><circle cx="23.500" cy="24" r="5" fill="#00ff88"/><path d="M21.200 24l1.700 1.700 2.900-3" fill="none" stroke="#04331f" stroke-width="1.800" stroke-linecap="round" stroke-linejoin="round"/>'
+    };
     var FX = {
       spec: '<i></i><i></i><i></i>', design: '<i></i><i></i><i></i><i></i>', build: '<b>&lt;/&gt;</b><i></i>',
       sec: '<i></i>', dep: '<i></i><i></i>', host: '<i></i><i></i><i></i>'
@@ -211,12 +221,12 @@
     var DOING = ['Writing the spec', 'Designing every screen', 'Writing the code', 'Checking its security', 'Deploying it', 'Putting it online'];
     m.innerHTML =
       '<div class="inlet"><span class="cap">Your idea</span><p class="say">&ldquo;<span class="tx"></span><span class="caret"></span>&rdquo;</p></div>' +
-      '<div class="tube"><div class="hd"><span class="pn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/></svg>Cymetica pipeline</span>' +
+      '<div class="tube"><div class="hd"><span class="pn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.4"/></svg>Build it Better pipeline</span>' +
           '<span class="st"><i></i><b class="sv"></b><span class="pc">0%</span></span></div>' +
         '<div class="track"><span class="lit"></span><span class="orb"></span></div>' +
         '<div class="chs">' + CH.map(function (c, j) {
           return '<div class="ch ' + c[2] + '"><span class="no">0' + (j + 1) + '</span><span class="ci"><svg class="pr" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="21"/></svg>' +
-            window.QUEST_ICON_SVG(c[0]) + '</span><b>' + c[1] + '</b><span class="fx">' + FX[c[2]] + '</span><span class="ok">&check;</span></div>';
+            '<svg viewBox="0 0 32 32" aria-hidden="true">' + GLYPH[c[2]] + '</svg></span><b>' + c[1] + '</b><span class="fx">' + FX[c[2]] + '</span><span class="ok">&check;</span></div>';
         }).join('') + '</div></div>' +
       // out of the pipeline, the ring of the products already built ("to tocici dej spis jako vystup z te pipeline"):
       // it turns yours to the front as it goes live (the ring's own code, below, reads S.out); no count under it ("to
@@ -240,6 +250,7 @@
       var k = win(T, 2.0, 6.2), i = Math.min(5, Math.floor(k * 6));
       var x = T < 2.0 ? 0 : T >= 6.2 ? 1 : (i + ease((k * 6) - i)) / 6;
       orb.style.left = (x * 100).toFixed(2) + '%';
+      orb.style.setProperty('--oc', CH[i][3]);
       orb.style.opacity = T >= 1.8 && T < 6.5 ? 1 : 0;
       lit.style.width = (x * 100).toFixed(2) + '%';
       lit.style.opacity = T < 8.8 ? 1 : 1 - win(T, 8.8, 9.6);
@@ -382,19 +393,27 @@
   /* ---------------- step 3: every product on the map lit under the pointer, and a link ---------------- */
   // ("na kazde kdyz najede nekdo mysi tak se highlightuje a pujde na nej kliknout a otevre se ta stranka v novem okne a
   // ty highlighy zkus udelat tim zelenym ze budou obramovane", 2026-11-01): a .hot over each, its name's plate and the
-  // Promo Market's name in the words all do the same; the outline is a picture of its own (record.py outlines), the
-  // cube's a CSS glow
+  // Promo Market's name in the words all do the same; the outlines are record.py's, the cube's edges CSS
   (function () {
     var stage = document.querySelector('.stage.market'); if (!stage) return;
-    var orbit = stage.querySelector('[data-anim=market-orbit]'), bld = stage.querySelector('[data-anim=market-building]');
+    var orbit = stage.querySelector('[data-anim=market-orbit]'), bld = stage.querySelector('[data-anim=market-building]'), O = window.QUEST_OUTLINES;
+    if (O) {
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', 'hlo'); svg.setAttribute('viewBox', '0 0 ' + O.w + ' ' + O.h); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
+      svg.innerHTML = ['gem', 'farmer', 'casino', 'promo'].map(function (n) {
+        return '<g data-name="' + n + '"><path class="gl" d="' + O[n] + '"/><path class="ln" d="' + O[n] + '"/><path class="rn" pathLength="100" d="' + O[n] + '"/></g>';
+      }).join('');
+      stage.querySelector('.pic').appendChild(svg);
+    }
     function lit(name) {
       if (name) stage.dataset.hl = name; else delete stage.dataset.hl;
-      [].forEach.call(stage.querySelectorAll('.b3[data-hot], .hlo[data-hot]'), function (p) { p.classList.toggle('hov', p.dataset.hot === name); });
+      [].forEach.call(stage.querySelectorAll('.b3[data-hot]'), function (p) { p.classList.toggle('hov', p.dataset.hot === name); });
+      [].forEach.call(stage.querySelectorAll('.hlo g'), function (g) { g.classList.toggle('hov', g.getAttribute('data-name') === name); });
       var hit = name && name !== 'promo' && stage.querySelector('.hot[data-hot=' + name + ']'), s = hit && hit.style;
       if (orbit.keyed) orbit.keyed.hot(!name ? null : hit ? [parseFloat(s.left) / 100, parseFloat(s.top) / 100, (parseFloat(s.left) + parseFloat(s.width)) / 100, (parseFloat(s.top) + parseFloat(s.height)) / 100] : []);
       if (bld.keyed) bld.keyed.hot(!name ? null : name === 'promo' ? [0, 0, 1, 1] : []);
     }
-    [].forEach.call(document.querySelectorAll('[data-hot]'), function (a) {
+    [].forEach.call(document.querySelectorAll('a[data-hot]'), function (a) {
       var on = function () { lit(a.dataset.hot); }, off = function () { lit(null); };
       a.addEventListener('pointerenter', on); a.addEventListener('pointerleave', off);
       a.addEventListener('focus', on); a.addEventListener('blur', off);
