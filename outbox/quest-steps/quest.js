@@ -100,21 +100,6 @@
     });
   });
 
-  // ---- subtle 3D specular parallax on the hero prize board
-  var heroBoard = document.querySelector('#hero .board'), heroSec = document.getElementById('hero');
-  if (heroBoard && heroSec && !reduce) {
-    heroSec.addEventListener('pointermove', function (e) {
-      if (innerWidth <= 900) return;
-      var nx = (e.clientX / innerWidth - 0.5) * 2, ny = (e.clientY / innerHeight - 0.5) * 2;
-      heroBoard.style.setProperty('--ry', (-26 + nx * 2.8).toFixed(2) + 'deg');
-      heroBoard.style.setProperty('--rx', (2.6 - ny * 2.2).toFixed(2) + 'deg');
-    }, { passive: true });
-    heroSec.addEventListener('pointerleave', function () {
-      heroBoard.style.removeProperty('--ry');
-      heroBoard.style.removeProperty('--rx');
-    });
-  }
-
   // ---- a step rises in the first time it comes on screen
   var rv = [].slice.call(document.querySelectorAll('.rv'));
   if (reduce || !('IntersectionObserver' in window)) rv.forEach(function (e) { e.classList.add('in'); });
