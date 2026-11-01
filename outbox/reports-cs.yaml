@@ -123,3 +123,4 @@ reports:
   246: "Firma: body sezóny píšou „Counted hourly“, ale počítadlo stojí přes 11 hodin od první hodiny sezóny"
   247: "Firma, Products: Build a Company 40 a Agent Casino 94, /app-usage u nich počítá 126 a 148 různých lidí"
   248: "Firma, Products: u Agent Casina číslo říká 94, graf pod ním se sečte na 22 a před 26. 10. je prázdný"
+  249: "Agent Casino: bot sází z vlastního zůstatku, ne z kapitálu stolu: kolo za $21,39 na stole s kapitálem $25"
