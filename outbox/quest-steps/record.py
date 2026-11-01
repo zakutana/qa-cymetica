@@ -395,11 +395,16 @@ def market(b, seconds=12):
 # shape with its holes filled; round that shape one line, an SVG path in outlines.js, which the page lights under the
 # pointer and runs a light along. The airship goes its own way, so the Promo Market's shape is without it
 # name: its item, how lit counts, its lights kept (the casino's little hologram over it is light), thin things taken off
-# in pixels (the building's two lamp posts stuck out of its line as spikes)
-OUTLINED = {'gem': ('ad-gem', 6, False, 0), 'farmer': ('ad-farmer', 6, False, 0), 'casino': ('ad-casino', 30, True, 0), 'promo': ('ad-promo', 6, False, 15)}
+# in pixels (the building's two lamp posts stuck out of its line as spikes).
+# And its fifth ("porad mas to obramovani proste blbe, jen u agent casina je to dobre"): the casino hardly moves and its
+# shape had all its lights in it; the gem bobs, the farmer rocks and the Promo Market's ring of words was left out, so the
+# object crossed a line that lay tight on one moment of it. So each is now a sticker's edge: everything the eye sees of it
+# (only particles and soft sprites off) over the whole of its motion, its waists and notches closed to a radius, stood a
+# little off it, rounded. The casino's path is kept as it was filmed
+# name: its item, the radius its notches are closed to, how far the line stands off it, how far its corners are rounded
+OUTLINED = {'gem': ('ad-gem', 22, 5, 5), 'farmer': ('ad-farmer', 26, 5, 5), 'promo': ('ad-promo', 64, 6, 7)}
 MATTE = """(ids) => { const uv = CO.uv; uv.post = null;
-  ids.forEach(id => { uv.items.find(x => x.c.id === id).plot.root.traverse(n => {
-    if (n.isPoints || (id !== 'ad-casino' && (n.isSprite || (n.material && n.material.blending === 2)))) n.visible = false; }); });
+  ids.forEach(id => { uv.items.find(x => x.c.id === id).plot.root.traverse(n => { if (n.isPoints || n.isSprite) n.visible = false; }); });
   window.__slots.forEach(s => { s.visible = false; });
   window.__st.children.forEach(ch => { if (ch.isGroup && Math.abs(ch.position.y - 7.65) < 0.02) ch.visible = false; }); }"""
 
@@ -439,46 +444,35 @@ def contour(solid, every=5):
     return ''.join(out)
 
 
-def outline_of(lit, thin=0):
-    """a lit mask (bool array, the clip's size): its one shape, joined, specks out, holes filled, what is under `thin`
-    pixels wide off it, corners round"""
+def grown(a, r):
+    """a bool mask grown by a disc of radius r"""
+    import numpy as np
+    yy, xx = np.ogrid[-r:r + 1, -r:r + 1]
+    k = np.zeros(a.shape)
+    k[:2 * r + 1, :2 * r + 1] = yy * yy + xx * xx <= r * r
+    k = np.roll(k, (-r, -r), (0, 1))
+    return np.fft.irfft2(np.fft.rfft2(a.astype(float)) * np.fft.rfft2(k), a.shape) > 0.5
+
+
+def outline_of(lit, close, off, blur):
+    """a lit mask (bool array, the clip's size): its shape with its waists and notches closed to radius `close`, stood
+    `off` pixels off the object, holes filled, corners rounded by `blur`"""
     import numpy as np
     from PIL import ImageDraw, ImageFilter
-    m = Image.fromarray((lit * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.MinFilter(9))
-    # specks out: what is not joined to something of 200 pixels; then its holes filled, from the edge in
-    a = np.asarray(m) > 127
-    seen = np.zeros(a.shape, bool)
-    keep = np.zeros(a.shape, bool)
-    for y0, x0 in zip(*np.nonzero(a)):
-        if seen[y0, x0]:
-            continue
-        stack, part = [(y0, x0)], []
-        seen[y0, x0] = True
-        while stack:
-            y, x = stack.pop()
-            part.append((y, x))
-            for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
-                if 0 <= ny < a.shape[0] and 0 <= nx < a.shape[1] and a[ny, nx] and not seen[ny, nx]:
-                    seen[ny, nx] = True
-                    stack.append((ny, nx))
-        if len(part) >= 200:
-            ys, xs = zip(*part)
-            keep[list(ys), list(xs)] = True
-    filled = Image.fromarray((keep * 255).astype(np.uint8))
-    pad = Image.new('L', (filled.width + 2, filled.height + 2), 0)
-    pad.paste(filled, (1, 1))
+    a = grown(~grown(~grown(lit, close), close), off)
+    im = Image.fromarray((a * 255).astype(np.uint8))
+    pad = Image.new('L', (im.width + 2, im.height + 2), 0)
+    pad.paste(im, (1, 1))
     ImageDraw.floodfill(pad, (0, 0), 128)
-    solid = (np.asarray(pad)[1:-1, 1:-1] != 128)
-    if thin:
-        solid = np.asarray(Image.fromarray((solid * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(thin)).filter(ImageFilter.MaxFilter(thin))) > 127
-    smooth = lambda arr, r: np.asarray(Image.fromarray((arr * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(r)), np.float32) / 255
-    return smooth(solid, 3) > 0.5      # its corners round, so the line runs as one stroke, not along every pixel
+    solid = np.asarray(pad)[1:-1, 1:-1] != 128
+    return np.asarray(Image.fromarray((solid * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(blur)), np.float32) / 255 > 0.5
 
 
-def outlines(b, frames=10, look=None):
+def outlines(b, frames=26, look=None):
     """outlines.js: the path round each of OUTLINED, in the clip's pixels; and each shape's box (its .hot in index.html),
-    in % of the clip. `look`: a folder for each shape's mask"""
+    in % of the clip. The casino's stays as outlines.js has it. `look`: a folder for each shape's mask"""
     import json
+    import re
     import numpy as np
     page = capture.universe(b, viewport={'width': 1600, 'height': 1000}, dsf=1.25)
     page.evaluate(MARKET_SETUP, MARKET)
@@ -486,20 +480,20 @@ def outlines(b, frames=10, look=None):
     sel = '#uv3d canvas'
     (x, y, w, h), _ = market_box(page, sel)
     page.evaluate(capture.HIDE_SKY)
-    items = [v[0] for v in OUTLINED.values()]
+    items = [v[0] for v in OUTLINED.values()] + ['ad-casino']
     page.evaluate(MATTE, items)
     by = "(id) => CO.uv.items.find(x => x.c.id === id).plot.root"
-    paths = {'w': w, 'h': h}
-    for name, (item, th, _, thin) in OUTLINED.items():
+    paths = {'w': w, 'h': h, 'casino': json.loads(re.search(r'QUEST_OUTLINES = (\{.*\});', (capture.HERE / 'outlines.js').read_text(encoding='utf-8'), re.S).group(1))['casino']}
+    for name, (item, close, off, blur) in OUTLINED.items():
         page.evaluate(f"(me) => {{ const r = {by}; {items}.forEach(id => {{ r(id).visible = id === me; }}); }}", item)
         time.sleep(1)
         lit = np.zeros((h, w), bool)
-        for _ in range(frames):        # the building's bob comes round in 15 s
+        for _ in range(frames):        # the building's bob comes round in 15 s, the farmer's rock is slower than its bob
             data = page.evaluate("(sel) => document.querySelector(sel).toDataURL('image/png')", sel)
             im = Image.open(io.BytesIO(base64.b64decode(data.split(',', 1)[1]))).convert('RGB').crop((x, y, x + w, y + h))
-            lit |= np.asarray(im, np.uint8).max(axis=2) > th
-            time.sleep(1.6)
-        solid = outline_of(lit, thin)
+            lit |= np.asarray(im, np.uint8).max(axis=2) > 24
+            time.sleep(0.9)
+        solid = outline_of(lit, close, off, blur)
         if look:
             Image.fromarray((solid * 255).astype(np.uint8)).save(Path(look) / f'matte-{name}.png')
         paths[name] = contour(solid)

@@ -55,9 +55,16 @@ revenue share), which is unchanged.
    and only those ("nedavej do vsech barev to je tragicke"), each striking from half power to full left to right, a surge
    going live; all six on the shockwaves and the launch beam. The gem on the lane inside, back and left, clear of the
    farmer's plate (record.py MARKET gl, gx); the Vault holds its own piles of money (record.py office: u3d.js piles() at
-   full, in the recording browser only); step 1's departments on one line, each with the live office's astronaut in its
-   role's helmet (office.js avatar()); step 5 "Farm points. Climb the leaderboard." with three lines; the Universe a
-   link in step 1's words only; the last section's kicker "Enter the Universe".
+   full, in the recording browser only); step 5 "Farm points. Climb the leaderboard." with three lines; the Universe a
+   link in step 1's words only; the last section's kicker "Enter the Universe". Its sixth round ("porad mas to obramovani
+   proste blbe, jen u agent casina je to dobre"): the gem bobs and the farmer rocks and the line lay tight on one moment
+   of them, the Promo Market's ring of words was left out of its shape; now each line is a sticker's edge round all it
+   does (record.py outlines), the casino's kept as it was, and the cube's goes round its outside only, its corners read
+   as they turn (anim.js). The bar's figure, the two first buttons and the doors' arrows are the live Universe's riveted
+   plate, no pills or balls. Step 1's departments are cards with their real pictures, as the live Add department dialog
+   has them (pics/agents, from static/company/shots; the manager's, which has no file, drawn by their renderer in our
+   browser). The forge calmer ("asi prehnane barevny"): the chamber's colour only in the arms' lights, what they strike
+   with and the rim's dial; deck, wall, light on the armour and the going live in the page's cyan and green.
 15. **Gemini's fork of this page, adopted** (2026-10-31). Antigravity copied this folder at 2201936a
    (the fourteenth take's first round) to `Downloads\cymetica\outbox\quest-steps` and served it on 8765; the operator:
    "NAD TEBOU VYHRAVA ma vse lepsi, jen ten step s market it bych zmenil". Its index.html, quest.css, quest.js,

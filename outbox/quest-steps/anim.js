@@ -393,7 +393,7 @@
   /* ---------------- step 3: every product on the map lit under the pointer, and a link ---------------- */
   // ("na kazde kdyz najede nekdo mysi tak se highlightuje a pujde na nej kliknout a otevre se ta stranka v novem okne a
   // ty highlighy zkus udelat tim zelenym ze budou obramovane", 2026-11-01): a .hot over each, its name's plate and the
-  // Promo Market's name in the words all do the same; the outlines are record.py's, the cube's edges CSS
+  // Promo Market's name in the words all do the same; the outlines are record.py's, the cube's drawn here
   (function () {
     var stage = document.querySelector('.stage.market'); if (!stage) return;
     var orbit = stage.querySelector('[data-anim=market-orbit]'), bld = stage.querySelector('[data-anim=market-building]'), O = window.QUEST_OUTLINES;
@@ -405,6 +405,30 @@
       }).join('');
       stage.querySelector('.pic').appendChild(svg);
     }
+    // the cube's line goes round its outside only, as the others' do (each face's edge ran a seam across it): its eight
+    // corners, read as the browser projects them while it turns, and the hull of those; drawn only while it is lit
+    var cube = stage.querySelector('.holo .hstage'), at = stage.querySelector('.holo-at'), hullOn = false, hullSvg, hullPaths, corners;
+    if (cube && at) {
+      var vx = '';
+      [0, 100].forEach(function (x) { [0, 100].forEach(function (y) { [-0.5, 0.5].forEach(function (z) {
+        vx += '<i class="vx" style="left:' + x + '%;top:' + y + '%;transform:translateZ(calc(var(--s) * ' + z + '))"></i>';
+      }); }); });
+      cube.insertAdjacentHTML('beforeend', vx);
+      corners = [].slice.call(cube.querySelectorAll('.vx'));
+      at.insertAdjacentHTML('beforeend', '<svg class="hlo hlc" aria-hidden="true"><g data-name="promo"><path class="gl"/><path class="ln"/><path class="rn" pathLength="100"/></g></svg>');
+      hullSvg = at.querySelector('.hlc'); hullPaths = [].slice.call(hullSvg.querySelectorAll('path'));
+    }
+    function drawHull() {
+      var o = hullSvg.getBoundingClientRect(), pts = corners.map(function (c) { var r = c.getBoundingClientRect(); return [r.left - o.left, r.top - o.top]; });
+      pts.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+      var cross = function (a, b, c) { return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]); }, half = function (list) {
+        var h = []; list.forEach(function (q) { while (h.length > 1 && cross(h[h.length - 2], h[h.length - 1], q) <= 0) h.pop(); h.push(q); }); h.pop(); return h;
+      }, hull = half(pts).concat(half(pts.slice().reverse()));
+      var cx = 0, cy = 0; hull.forEach(function (q) { cx += q[0] / hull.length; cy += q[1] / hull.length; });
+      var d = 'M' + hull.map(function (q) { var l = Math.hypot(q[0] - cx, q[1] - cy) || 1, k = 1 + 3 / l; return (cx + (q[0] - cx) * k).toFixed(1) + ' ' + (cy + (q[1] - cy) * k).toFixed(1); }).join('L') + 'Z';
+      hullPaths.forEach(function (h) { h.setAttribute('d', d); });
+      if (hullOn) requestAnimationFrame(drawHull);
+    }
     function lit(name) {
       if (name) stage.dataset.hl = name; else delete stage.dataset.hl;
       [].forEach.call(stage.querySelectorAll('.b3[data-hot]'), function (p) { p.classList.toggle('hov', p.dataset.hot === name); });
@@ -412,6 +436,7 @@
       var hit = name && name !== 'promo' && stage.querySelector('.hot[data-hot=' + name + ']'), s = hit && hit.style;
       if (orbit.keyed) orbit.keyed.hot(!name ? null : hit ? [parseFloat(s.left) / 100, parseFloat(s.top) / 100, (parseFloat(s.left) + parseFloat(s.width)) / 100, (parseFloat(s.top) + parseFloat(s.height)) / 100] : []);
       if (bld.keyed) bld.keyed.hot(!name ? null : name === 'promo' ? [0, 0, 1, 1] : []);
+      if (hullSvg && (name === 'promo') !== hullOn) { hullOn = name === 'promo'; if (hullOn) drawHull(); }
     }
     [].forEach.call(document.querySelectorAll('a[data-hot]'), function (a) {
       var on = function () { lit(a.dataset.hot); }, off = function () { lit(null); };

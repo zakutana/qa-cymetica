@@ -96,11 +96,9 @@ const lerpV = (a, b, k) => a.clone().lerp(b, k);
 // colour of the chamber the panel is in
 const CHAMBERS = ['#5b9bff', '#b76dff', '#00cfff', '#ffc83d', '#ff5a68', '#00ff88'].map((h, i) => ({ c: new THREE.Color(h), t0: 2.0 + i * 0.7 }));
 const IDLE_A = new THREE.Color(0x00cfff), IDLE_B = new THREE.Color(0x00ff88);
-function rainbow(u, out) {
-  const n = ((u % 6) + 6) % 6, i = Math.floor(n), f = n - i;
-  return out.copy(CHAMBERS[i].c).lerp(CHAMBERS[(i + 1) % 6].c, f * f * (3 - 2 * f));
-}
-// the colour of the moment: the idle one, each chamber's while it works, all six going round while the product is live
+// the colour of the moment, for the arms and what they strike with ("a build it better je asi prehnane barevny",
+// 2026-11-01: the deck, the wall, the armour's light and the going live are the page's cyan and green again): the idle
+// one, each chamber's while it works, green while the product is live
 function pal(t, out, idle = IDLE_A) {
   if (t < 1.85 || t >= 9.6) return out.copy(idle);
   if (t < 2.0) return out.copy(idle).lerp(CHAMBERS[0].c, win(t, 1.85, 2.0));
@@ -109,13 +107,14 @@ function pal(t, out, idle = IDLE_A) {
     out.copy(CHAMBERS[i].c);
     return f > 0.88 && i < 5 ? out.lerp(CHAMBERS[i + 1].c, (f - 0.88) / 0.12) : out;
   }
-  rainbow(5 + (t - 6.2) * 1.15, out);
+  out.copy(CHAMBERS[5].c);
   return t < 8.85 ? out : out.lerp(idle, ease(win(t, 8.85, 9.6)));
 }
 const RAINBOW_GLSL = `
   uniform vec3 uCol[6];
   vec3 rainbowAt(float u) { float n = mod(u, 6.0); int i = int(floor(n)); float f = n - floor(n); f = f * f * (3.0 - 2.0 * f); return mix(uCol[i], uCol[(i + 1) % 6], f); }`;
 const chamberColours = () => CHAMBERS.map((c) => c.c.clone());
+const calmColours = () => [IDLE_A, IDLE_B, IDLE_A, IDLE_B, IDLE_A, IDLE_B].map((c) => c.clone());
 
 function glowTex(inner, mid, outer = 'rgba(0,0,0,0)') {
   const c = document.createElement('canvas'); c.width = c.height = 256;
@@ -270,7 +269,7 @@ const RIM = new THREE.ShaderMaterial({
       float gap = smoothstep(0.0, 0.025, s) * smoothstep(1.0, 0.975, s);
       float p = uFill[i], on = smoothstep(p + 0.015, p - 0.015, s) * step(0.001, p);
       float sd = (s - p) * 16.0, head = exp(-sd * sd) * step(0.001, p) * step(p, 0.999);
-      vec3 col = mix(uOff, uCol[i] * (1.5 * uPow), on) + vec3(3.0) * head;
+      vec3 col = mix(uOff, uCol[i] * (0.8 * uPow), on) + vec3(1.6) * head;
       gl_FragColor = vec4(col * (0.25 + 0.75 * gap), 1.0);
     }`
 });
@@ -1122,10 +1121,10 @@ scanRing2.rotation.x = Math.PI / 2; scanRing2.position.y = -0.06; scanGroup.add(
 const scanCurtain = new THREE.Mesh(new THREE.CircleGeometry(1.62, 96), new THREE.MeshBasicMaterial({ map: GLOW_N, color: 0x00ff88, transparent: true, opacity: 0.34, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
 scanCurtain.rotation.x = -Math.PI / 2; scanGroup.add(scanCurtain);
 
-// the two great shockwaves in all six colours, the idea's and the going live
+// the two great shockwaves, the idea's and the going live
 const rainbowRing = (tube) => new THREE.Mesh(new THREE.TorusGeometry(1, tube, 8, 200), new THREE.ShaderMaterial({
   transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-  uniforms: { uCol: { value: chamberColours() }, uOp: { value: 0 }, uSpin: { value: 0 } },
+  uniforms: { uCol: { value: calmColours() }, uOp: { value: 0 }, uSpin: { value: 0 } },
   vertexShader: 'varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   fragmentShader: RAINBOW_GLSL + `
     uniform float uOp, uSpin; varying vec2 vU;
@@ -1135,7 +1134,7 @@ const shockRingA = rainbowRing(0.022);
 shockRingA.rotation.x = Math.PI / 2; shockRingA.position.set(0, 0.028, 0.02); scene.add(shockRingA);
 const shockRingB = rainbowRing(0.018);
 shockRingB.rotation.x = Math.PI / 2; shockRingB.position.set(0, 0.028, 0.02); scene.add(shockRingB);
-// and a beat across the deck in each chamber's colour as it starts
+// and a faint beat across the deck in each chamber's colour as it starts
 const chShocks = CHAMBERS.map((ch) => {
   const m = new THREE.Mesh(new THREE.TorusGeometry(1, 0.014, 8, 160), new THREE.MeshBasicMaterial({ color: ch.c.clone().multiplyScalar(2.2), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
   m.rotation.x = Math.PI / 2; m.position.set(0, 0.03, 0.02); scene.add(m); return m;
@@ -1143,7 +1142,7 @@ const chShocks = CHAMBERS.map((ch) => {
 
 const hyperBeamMat = new THREE.ShaderMaterial({
   transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
-  uniforms: { uOp: { value: 0 }, uTime: { value: 0 }, uCol: { value: chamberColours() } },
+  uniforms: { uOp: { value: 0 }, uTime: { value: 0 }, uCol: { value: calmColours() } },
   vertexShader: `
     varying vec2 vU; varying vec3 vN; varying vec3 vV;
     void main(){
@@ -1153,7 +1152,7 @@ const hyperBeamMat = new THREE.ShaderMaterial({
       vV = normalize(-mv.xyz);
       gl_Position = projectionMatrix * mv;
     }`,
-  // the product leaves on a twist of all six colours
+  // the product leaves on a twist of the page's two colours
   fragmentShader: RAINBOW_GLSL + `
     uniform float uOp, uTime; varying vec2 vU; varying vec3 vN; varying vec3 vV;
     void main(){
@@ -1172,7 +1171,7 @@ const motes = (() => {
   const n = 220, pos = new Float32Array(n * 3), g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   const cols = new Float32Array(n * 3);
-  for (let i = 0; i < n; i++) CHAMBERS[i % 6].c.toArray(cols, i * 3);
+  for (let i = 0; i < n; i++) (i % 2 ? IDLE_A : IDLE_B).toArray(cols, i * 3);
   g.setAttribute('color', new THREE.BufferAttribute(cols, 3));
   const p = new THREE.Points(g, new THREE.PointsMaterial({ vertexColors: true, size: 0.046, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
   p.userData.seed = Array.from({ length: n }, () => [rnd() * TAU, 0.35 + rnd() * 1.35, rnd() * 1.2, 0.7 + rnd() * 0.9]);
@@ -1390,16 +1389,12 @@ function render(t) {
   t = ((t % PERIOD) + PERIOD) % PERIOD;
   const ph = t / PERIOD * TAU;
 
-  // The colour of this moment, through everything that lights the forge, and a beat as each chamber starts
+  // The colour of this moment, for the arms and what they strike with, and a beat as each chamber starts
   pal(t, C_NOW); pal(t - 0.2, C_LAG, IDLE_B);
-  M.cyan.color.copy(C_NOW); M.cyan.emissive.copy(C_NOW);
-  M.green.color.copy(C_LAG); M.green.emissive.copy(C_LAG);
   let beat = 0;
   CHAMBERS.forEach((c) => { const d = t - c.t0; if (d >= 0 && d < 0.7) beat = Math.exp(-d * 5.5); });
-  const isLive = t >= 6.2 && t < 8.85;
-  rimCyan.color.copy(C_NOW); rimCyan.intensity = 2.45 + 2.6 * beat;
-  if (isLive) rainbow(2 + (t - 6.2) * 1.15, rimGreen.color); else rimGreen.color.copy(C_LAG);
-  rimGreen.intensity = 1.75 + 2.6 * beat;
+  rimCyan.intensity = 2.45 + 0.8 * beat;
+  rimGreen.intensity = 1.75 + 0.8 * beat;
 
   // Locked-off Heroic Cinema Camera (zero background drift, everything razor-sharp inside frame!)
   camera.position.set(0.0, 3.76, 10.55);
@@ -1486,7 +1481,7 @@ function render(t) {
       m.userData.uiMat.uniforms.uAlpha.value = fadeAll;
       m.userData.uiMat.uniforms.uTime.value = t;
 
-      rainbow(i * 1.5 + t * 1.1, C_TMP).multiplyScalar(1.9);
+      C_TMP.copy(CHAMBERS[5].c).multiplyScalar(1.9);
       m.userData.borderMat.color.copy(m.userData.baseBorderColor)
         .lerp(WHITE_HOT, lockFlash * 0.6)
         .lerp(C_TMP, liveK * 0.9);
@@ -1568,8 +1563,7 @@ function render(t) {
     pivot.rotation.z = (idx === 0 ? 1 : 0.85) * (0.30 * stGrip.jaw - 0.12);
   });
 
-  // The arms in the chamber's colour, the wave running from the front pair to the rear; while the product is live each
-  // holds its own place in the six, going round
+  // The arms' lights in the chamber's colour, the wave running from the front pair to the rear
   [
     [ARM_WELD,  isWeldingL ? 1 : 0, 0],
     [ARM_GRIP,  (isWeldingR || stGrip.jaw > 0.7) ? 1 : 0, 0.05],
@@ -1577,11 +1571,10 @@ function render(t) {
     [ARM_SCAN,  isScanning ? 1 : 0, 0.17]
   ].forEach(([a, work, lag], idx) => {
     pal(t - lag, C_ARM);
-    if (isLive) rainbow(idx * 1.5 + (t - 6.2) * 1.15, C_ARM);
-    const boost = 1.0 + 0.2 * (0.5 + 0.5 * Math.sin(ph * 5 + idx)) + 0.7 * work + 1.1 * beat + 0.25 * liveK;
+    const boost = 0.8 + 0.2 * (0.5 + 0.5 * Math.sin(ph * 5 + idx)) + 0.5 * work + 0.5 * beat + 0.25 * liveK;
     a.ledMat.color.copy(C_ARM).multiplyScalar(boost);
     a.ringMat.color.copy(C_ARM); a.ringMat.emissive.copy(C_ARM);
-    a.ringMat.emissiveIntensity = 1.15 + 0.8 * work + 1.1 * beat + 0.35 * liveK;
+    a.ringMat.emissiveIntensity = 1.0 + 0.5 * work + 0.5 * beat + 0.3 * liveK;
   });
 
   // ---- Update Dual Plasma Lances, Lightning Arcs, Magnetic Claw Tethers & Galvo Laser Sheet: all in the chamber's colour
@@ -1682,7 +1675,7 @@ function render(t) {
 
       // each spark the colour of the chamber it was struck in
       if (L) _sparkCol.copy(L.c); else pal(tb, _sparkCol);
-      if (s.hot) _sparkCol.lerp(WHITE, 0.72);
+      _sparkCol.lerp(WHITE, s.hot ? 0.8 : 0.5);
       _sparkCol.multiplyScalar(3.7 * fade);
       sparkMesh.setColorAt(j, _sparkCol);
     }
@@ -1724,7 +1717,7 @@ function render(t) {
     if (m.visible) {
       const r = 0.7 + 2.3 * easeOut(d);
       m.scale.set(r * (DECK_RX / 3.2), r * (DECK_RZ / 3.2), 1);
-      m.material.opacity = Math.pow(1 - d, 1.3);
+      m.material.opacity = 0.3 * Math.pow(1 - d, 1.3);
     }
     RIM.uniforms.uFill.value[i] = win(t, c.t0, c.t0 + 0.7) * rimDrain;
   });
@@ -1737,11 +1730,11 @@ function render(t) {
   const hbPinch = 1 - 0.45 * ease(win(t, 8.95, 9.52));
   hyperBeam.scale.set(hbPinch, 1, hbPinch);
 
-  holoColumn.material.uniforms.uC.value.copy(C_NOW);
-  holoColumn.material.uniforms.uInt.value = 0.85 + 1.5 * liveK * fadeAll + 1.3 * hb + 1.6 * beat;
-  crucLight.color.copy(C_NOW);
-  crucLight.intensity = 3.0 + 5.5 * liveK * fadeAll + 3.8 * hb + 12 * beat;
-  crucGlow.material.color.copy(C_NOW); crucVernierA.material.color.copy(C_NOW); crucVernierB.material.color.copy(C_LAG);
+  holoColumn.material.uniforms.uC.value.copy(IDLE_A);
+  holoColumn.material.uniforms.uInt.value = 0.85 + 1.5 * liveK * fadeAll + 1.3 * hb + 0.4 * beat;
+  crucLight.color.copy(IDLE_A);
+  crucLight.intensity = 3.0 + 5.5 * liveK * fadeAll + 3.8 * hb + 3 * beat;
+  crucGlow.material.color.copy(IDLE_A); crucVernierA.material.color.copy(IDLE_A); crucVernierB.material.color.copy(IDLE_B);
   crucVernierA.rotation.z = -ph * 2;
   crucVernierB.rotation.z = ph * 3;
 
@@ -1766,7 +1759,7 @@ function render(t) {
   traces.forEach((tr) => {
     const u = (t / PERIOD * tr.k + tr.ph) % 1;
     tr.pulse.position.lerpVectors(tr.p1, tr.p0, u);
-    tr.pulse.material.color.copy(C_NOW);
+    tr.pulse.material.color.copy(IDLE_A);
     tr.pulse.material.opacity = Math.sin(Math.PI * u) * (0.72 + 0.28 * liveK);
   });
 
@@ -1786,14 +1779,12 @@ function render(t) {
     L.halo.color.copy(L.c).multiplyScalar(hum * (0.12 + 0.2 * on + 0.5 * surge));
   });
 
-  // Curved Hex Matrix Breathing, a ripple in each chamber's colour as it starts, the name's light on the cells behind it,
-  // and all six flowing across it while the product is live
+  // Curved Hex Matrix Breathing, and the name's light on the cells behind it
   {
     const face = scene.userData.hexFace, col = new THREE.Color();
     const cBlue = new THREE.Color(0x1f6ef5), cCyan = new THREE.Color(0x00cfff);
     const rIdea = win(t, 1.54, 2.65) * 6.5, wIdea = bump(t, 1.54, 2.65);
     const rLive = win(t, 6.18, 7.60) * 6.8, wLive = bump(t, 6.18, 7.60);
-    const flow = ease(win(t, 6.2, 6.9)) * (1 - ease(win(t, 8.85, 9.4)));
     hexCells.forEach((h) => {
       const dist = Math.hypot(h.wx, h.wy - 2.1);
       const rip1 = wIdea * Math.exp(-Math.pow((dist - rIdea) * 2.1, 2)) * 0.42;
@@ -1801,14 +1792,7 @@ function render(t) {
       const base = h.baseLit * (0.55 + 0.45 * Math.sin(ph * h.k + h.ph * TAU));
       col.copy(h.isGreen ? cCyan : cBlue).multiplyScalar(base);
       if (rip1 > 0.002) addC(col, cCyan, rip1);
-      CHAMBERS.forEach((c) => {
-        const u = (t - c.t0) / 1.05;
-        if (u <= 0 || u >= 1) return;
-        const w = Math.sin(Math.PI * u) * Math.exp(-Math.pow((dist - u * 6.2) * 2.0, 2)) * 0.34;
-        if (w > 0.002) addC(col, c.c, w);
-      });
-      if (rip2 > 0.002) addC(col, rainbow(h.wx * 0.8 + t * 3, C_TMP), rip2);
-      if (flow > 0.002) addC(col, rainbow(h.wx * 0.62 - h.wy * 0.4 + t * 1.5, C_TMP), flow * (h.ph > 0.62 ? 0.075 : 0.012));
+      if (rip2 > 0.002) addC(col, cCyan, rip2);
       // the cells behind the name darker, so it stands off them, and the letter nearest it lights them a little
       const near = Math.abs(h.wy - signGroup.position.y);
       if (near < 1.25 && Math.abs(h.wx) < SIGN_W * 0.56) {
