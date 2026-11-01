@@ -7330,12 +7330,12 @@ reports:
     actual: >
       GET /api/v1/event-cards/c387c6ae-b49c-4227-bf18-559cb67d0b7c on 2026-11-01: status live, basket CTVA weight
       1.0 and nothing else, index_base 100, current_index 14.17, pw_base 82.54, pw_index 11.70. Its index-history goes
-      94.08 at 2026-10-01 11:57 UTC to 16.32 at 15:42 UTC, -82.7 % in one step, and has stayed near there. So a holder
+      from about 94 to 16.32 in one published step on 2026-10-01, about -83 %, and has stayed near there. So a holder
       of this card is marked at about -86 % for an event that cost a holder of the shares nothing. The card is
       open for trading during US market hours, so a buyer is sold the same mark.
     steps:
       - 'GET https://cymetica.com/api/v1/event-cards/c387c6ae-b49c-4227-bf18-559cb67d0b7c -> basket [CTVA 1.0], current_index 14.17, pw_base 82.54, pw_index 11.70'
-      - 'GET https://cymetica.com/api/v1/event-cards/c387c6ae-b49c-4227-bf18-559cb67d0b7c/index-history?interval=all -> 2026-10-01T11:57 index 94.08, 2026-10-01T15:42 index 16.32'
+      - 'GET https://cymetica.com/api/v1/event-cards/c387c6ae-b49c-4227-bf18-559cb67d0b7c/index-history?interval=all -> one step on 2026-10-01 from about 94 to index 16.32'
       - 'Corteva Form 8-K, https://www.sec.gov/Archives/edgar/data/0001755672/000119312526414490/ck0001755672-20260929.htm -> one Vylor share per Corteva share, effective 2026-10-01'
     body: >
       Of the live cards with a history this is the only one with a step of 40 % or more, so it is one card today;
