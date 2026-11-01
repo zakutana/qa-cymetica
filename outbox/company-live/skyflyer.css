@@ -1,9 +1,0 @@
-/* ?sky=flyer: the revenue-share flyer's deep space behind the Universe and the Headquarters (skyplate.py makes the two plates).
-   The plate is the stage's background and the 3D canvas is screened over it, which is how the flyer was made; without the
-   class on <html> nothing here applies. */
-html.sky-flyer .uvstage {
-  background: #01040a url(sky-flyer-uv.webp) center / cover no-repeat; isolation: isolate; }
-html.sky-flyer .uv3d canvas { mix-blend-mode: screen; }
-html.sky-flyer .stage:not(.uvstage) {
-  background: #01040a url(sky-flyer-hq.webp) center / cover no-repeat; isolation: isolate; }
-html.sky-flyer .office3d canvas { mix-blend-mode: screen; }
