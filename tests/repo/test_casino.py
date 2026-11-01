@@ -197,6 +197,23 @@ def test_a_trade_closed_after_the_tune_does_not_make_the_reason_false():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_stake_above_a_tenth_of_the_tables_capital_is_named():
+    """Table 62 (Flash Micro 1H, $25 capital, Risk 10): one round of $21.39, 85.6 % of the capital, from
+    a bot whose own balance was $214; table 40: $11.87 of $25. Their trade size ranges 1 to 10 %."""
+    big = {"symbol": "BTC", "amount_usdc": 21.389063, "pnl_usdc": -21.389063, "closed": True}
+    mid = {"symbol": "BTC", "amount_usdc": 11.86989, "pnl_usdc": -11.86989, "closed": True}
+    fine = {"symbol": "ETH", "amount_usdc": 2.5, "pnl_usdc": 1.0, "closed": True}
+    table = {"id": 62, "capital_usdc": 25.0, "my_seat": {"seat_id": 232, "bot": "casino Bollinger Bandit"},
+             "your_trades": [big, fine]}
+    found = casino.oversized_stakes(table)
+    assert [(f["amount_usdc"], round(f["share_pct"], 1)) for f in found] == [(21.389063, 85.6)]
+    assert casino.oversized_stakes({**table, "your_trades": [fine, {**fine, "amount_usdc": 2.52}]}) == []
+    assert len(casino.oversized_stakes({**table, "your_trades": [mid]})) == 1
+    assert casino.oversized_stakes({"capital_usdc": 250.0, "your_trades": [{"amount_usdc": 16.4}]}) == []
+    assert casino.oversized_stakes({"your_trades": [big]}) == []
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_bot_at_a_table_is_seated_whatever_the_diary_says_of_it():
     """2026-11-01 14:01: Risk 10 and a 2 % stop loss went to two bots that already sat at tables 43 and
     35 (their diary rows had no instance), and their settings are the bot's, so two coaches tuned one

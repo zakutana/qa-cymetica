@@ -446,6 +446,24 @@ def variant_write(variant: str) -> tuple[str, dict] | None:
             "D": ("bot-settings", {"stop_loss_pct": 2.0})}.get(variant)
 
 
+STAKE_CEILING_PCT = 10.0
+
+
+def oversized_stakes(table: dict, ceiling_pct: float = STAKE_CEILING_PCT) -> list[dict]:
+    """The owner's rounds staked above `ceiling_pct` of the table's capital: their settings allow a trade
+    size of 1 to 10 %, and a bot that stakes from its own balance, not the table's, goes far past it."""
+    capital = _number(table.get("capital_usdc"))
+    if not capital or capital <= 0:
+        return []
+    out = []
+    for trade in table.get("your_trades") or []:
+        amount = _number(trade.get("amount_usdc")) if isinstance(trade, dict) else None
+        if amount is not None and amount > capital * ceiling_pct / 100 + CENTS:
+            out.append({"table_id": table.get("id"), "symbol": trade.get("symbol"), "amount_usdc": amount,
+                        "capital_usdc": capital, "share_pct": amount / capital * 100})
+    return out
+
+
 def seated_instances(my_seats: list[dict]) -> set:
     """The bots that sit at a table that has not ended, from `my-seats`, which names every seat. A
     bot's settings are its own, not the seat's, so a second table would share them with the first."""

@@ -7487,6 +7487,33 @@ reports:
       Carrying the old path's days into daily would fix it. Our check passes when every product's visitors is within
       2 of the sum of its daily. GET requests only.
 
+  - key: agent-tournaments-stake-stays-inside-the-tables-capital
+    findings:
+      - CYM-agent-tournaments-stake-stays-inside-the-tables-capital
+    title: 'Agent Casino: a bot stakes from its own balance, not the table''s capital: one round of $21.39 on a $25 Flash Micro table (85.6%) at "size 10 %", max loss $30'
+    severity: high
+    category: logic
+    url: https://cymetica.com/agent-casino/table/62
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/62 (X-API-Key of the seat owner) -> capital_usdc 25.0; my_risk {"level": 10, "trade_size_pct": 10.0}; my_bot_settings {"trade_size_pct": 10.0, "fixed": {"max_position_pct": 10.0}, "ranges": {"trade_size_pct": [1.0, 10.0]}}; your_trades [{"symbol": "BTC", "side": "sell", "amount_usdc": 21.389063, "pnl_usdc": -21.389063, "closed": true}]; the seat row says 1 trade, roi_pct -85.5563'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/my-bots -> "casino Bollinger Bandit" balance_usdc 216.27 (21.389063 is 10.0 % of 213.89, its balance when the round opened)'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/tables/40 -> capital_usdc 25.0, seat "casino Trend Titan" your_trades amount_usdc 3.37851, 7.6242, 11.86989 (13.5 %, 30.5 %, 47.5 % of the capital). The same bots on Flash Pro tables (capital 250) stake 4.5 to 8.7 %.'
+      - 'Open https://cymetica.com/agent-casino/table/62 signed in as the owner -> every seat reads "$25 capital", ours "1 trades · $25 capital · P&L −$21.38", header "Max loss $30"'
+    expected: >
+      A round is staked from the table's capital: with trade size 10 % on a $25 table at most $2.50, whatever the bot's own balance. The settings say so (trade_size_pct
+      range 1 to 10, max_position_pct 10), the page prints "$25 capital" under every seat and counts ROI against it, and /agent-casino/how says "Max loss? Buy-in + trading capital:
+      $30 or $300. Never more."
+    actual: >
+      Read on 2026-11-01 19:3x UTC with our X-API-Key. Table 62 (Flash Micro 1H, capital $25), Risk 10: the bot's first round was a BTC sell of $21.389063 and lost all of it,
+      -$21.39, ROI -85.56 %, 71 % of the table's max loss in one round. The amount is 10.0 % of the bot's own balance (213.89), not of the $25. Table 40 (Flash Micro 1H) shows the
+      same on three rounds (13.5 %, 30.5 %, 47.5 % of the capital); on Flash Pro tables, where the bot's balance is close to the $250 capital, the stakes look right (4.5 to 8.7 %).
+      Across our 135 rounds on tables so far, 4 are over a tenth of the capital and all four are on Flash Micro tables.
+    body: >
+      On a Micro table the size setting means nothing the owner can rely on: Risk 10 reads "size 10 %" and risks 86 % of the capital in one round, a bot that has grown its own
+      balance can lose several times the table's capital (and its max loss) in one round, and the ROI ranking is decided by how large the bot's own balance happens to be. A bot is
+      supposed to start a table with the table's capital ("On approval your bot gets the table's trading capital ... and starts trading", /rules). Our check reads every table our key
+      sat at and fails while a round of ours is staked above 10 % of its table's capital, the top of the trade size their own settings allow. It passes when every stake is within 10 %,
+      which needs either the stake taken from the capital or the bot funded to the capital at the seat, and it is inconclusive under 40 rounds with none over. GET requests only.
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
