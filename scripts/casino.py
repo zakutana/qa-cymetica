@@ -342,6 +342,11 @@ def cmd_tick(confirm: bool) -> int:
             t for t in experiments(rows) if t not in {r.get("table_id") for r in rows if r.get("type") == "final"}}
         tables = {t: _read(client, f"{BASE}/tables/{t}") for t in sorted(x for x in wanted if x is not None)}
         tables = {k: v for k, v in tables.items() if isinstance(v, dict)}
+        for table_id, table in tables.items():
+            bot = experiments(rows).get(table_id, {}).get("instance_id") or (table.get("my_bot_settings") or {}).get("instance_id")
+            if bot and table.get("your_trades") and any(r.get("kind") == "TUNED" for r in table.get("my_tune_log") or []):
+                activity = _read(client, f"/api/v1/cloned-bots/{bot}/activity") or {}
+                table["your_trades"] = casino.with_close_times(table["your_trades"], activity.get("items") or [])
         apply_variants(client, rows, tables, confirm)
 
         five = any(casino.FIVE_RULE in str((t.get("my_coach_line") or {}).get("line")) for t in tables.values())
@@ -362,7 +367,9 @@ def cmd_tick(confirm: bool) -> int:
         found += casino.stale_asks(my_seats or [], lobby.get("my_agents"))
         new = keep_findings(rows, found)
         ended = finals(rows, tables)
-        idle_now = [t for t, table in tables.items() if (seat_row(table) or {}).get("idle_line")]
+        # An idle line, or a state that is not trading ("Paused: stop-loss hit"): the page is looked at.
+        idle_now = [t for t, table in tables.items() if table.get("status") == "running" and (
+            (seat_row(table) or {}).get("idle_line") or (seat_row(table) or {}).get("bot_state") not in (None, "trading"))]
         idle_seen = {r.get("table_id") for r in rows if r.get("type") == "idle_seen"}
         fresh_idle = [t for t in idle_now if t not in idle_seen]
         for table_id in fresh_idle:

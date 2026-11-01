@@ -178,6 +178,25 @@ def test_the_reason_a_tune_gives_must_be_in_the_trades():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_trade_closed_after_the_tune_does_not_make_the_reason_false():
+    """`your_trades[].at` is when a round OPENED (table 51 at 10:39: `at` 10:35:59, still open); only the
+    bot's activity feed has `closed_at`. Table 35: opened 10:32:13, closed 10:36:29."""
+    trades = [{"symbol": "ETH", "amount_usdc": 10.0, "pnl_usdc": -10.0, "closed": True, "at": "2026-11-01T10:32:13+00:00"}]
+    items = [{"symbol": "ETH", "amount_usdc": "10.000000", "closed_at": "2026-11-01T10:36:29+00:00"},
+             {"symbol": "ETH", "amount_usdc": "11.875000", "closed_at": "2026-11-01T10:21:08+00:00"}]
+    merged = casino.with_close_times(trades, items)
+    assert merged[0]["closed_at"] == "2026-11-01T10:36:29+00:00"
+    assert casino.with_close_times(trades, [])[0].get("closed_at") is None
+
+    none_yet = {"at": "2026-11-01T10:34:00+00:00", "kind": "TUNED", "by": "NEXUS",
+                "text": "CLOB ETH/USDC on · no trade for 14 min (none yet)"}
+    feed = [{"seat_id": 154, "what": ["markets"], "by": "NEXUS", "at": "2026-11-01T10:34:01+00:00"}]
+    opened = done_table(my_tune_log=[none_yet], changes=feed, your_trades=merged)
+    assert "tune_reason" not in keys(casino.contradictions(opened))
+    assert "coach_rule_vs_tunes" in keys(casino.contradictions(opened, five_rule=True))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_risk_line_must_be_on_its_level():
     """Table 44: "Risk reads 8 ... stop loss 4 % ... as you set it": the owner set 8, the coach 4, at
     another table. Their /risk route: trade size L %, stop loss L %, take profit 4 x L %, at least 5 %."""

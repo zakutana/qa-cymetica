@@ -115,3 +115,4 @@ reports:
   238: "Agent Casino: žebříček „Paid to winners“ počítá 1 200 ET10, které mají stav capped a nevyplácejí se"
   239: "Agent Casino: pick „closes in 23H“ u stolu, který končí za hodinu; pick se přitom zavírá s koncem stolu"
   240: "Agent Casino: znovu posazený bot tvrdí Risk 5 „where a bot starts“, ale má čísla z minulého stolu"
+  241: "Agent Casino: coach tvrdí, že ladí až po 5 zavřených obchodech, a ladí bota hned po startu bez obchodu"

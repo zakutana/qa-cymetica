@@ -77,11 +77,27 @@ def _tunes(table: dict) -> list[dict]:
     return sorted(rows, key=lambda r: _when(r["at"]))
 
 
+def _closed_when(trade: dict) -> datetime | None:
+    """When a trade closed. `your_trades[].at` is when it OPENED; the real time comes from the bot's
+    activity feed (`with_close_times`), and without it `at` is the earliest it can have closed."""
+    return _when(trade.get("closed_at")) or _when(trade.get("at"))
+
+
 def _closed(table: dict) -> list[dict]:
     """The owner's closed trades, newest first."""
-    rows = [t for t in table.get("your_trades") or []
-            if isinstance(t, dict) and t.get("closed") and _when(t.get("at"))]
-    return sorted(rows, key=lambda t: _when(t["at"]), reverse=True)
+    rows = [t for t in table.get("your_trades") or [] if isinstance(t, dict) and t.get("closed") and _closed_when(t)]
+    return sorted(rows, key=_closed_when, reverse=True)
+
+
+def with_close_times(trades: list[dict], items: list[dict]) -> list[dict]:
+    """`your_trades` with each trade's `closed_at` from the bot's activity feed, by symbol and amount."""
+    out = []
+    for trade in trades or []:
+        match = next((i for i in items or [] if isinstance(i, dict) and i.get("symbol") == trade.get("symbol")
+                      and i.get("closed_at") and abs(float(i.get("amount_usdc") or 0) - float(trade.get("amount_usdc") or 0)) <= CENTS),
+                     None)
+        out.append({**trade, "closed_at": match.get("closed_at")} if match else dict(trade))
+    return out
 
 
 def _feed(table: dict, seat_id, by: str | None = None) -> list[dict]:
@@ -223,7 +239,7 @@ def tune_reason(table: dict) -> list[dict]:
     out = []
     for tune in _tunes(table):
         at, text = _when(tune["at"]), tune.get("text") or ""
-        before = [t for t in closed if _when(t["at"]) <= at]
+        before = [t for t in closed if _closed_when(t) <= at]
         m = _LOSSES.search(text)
         if m:
             count, symbols, total = int(m.group(1)), set(m.group(2).split("/")), float(m.group(3))
@@ -330,7 +346,7 @@ def coach_rule_vs_tunes(table: dict) -> list[dict]:
     """A tune before five closed trades, while the coach says it tunes once the bot has five."""
     closed = _closed(table)
     for tune in _tunes(table):
-        count = sum(1 for t in closed if _when(t["at"]) <= _when(tune["at"]))
+        count = sum(1 for t in closed if _closed_when(t) <= _when(tune["at"]))
         if count < FIVE:
             return [_found("coach_rule_vs_tunes", table, f"tuned at {tune['at']} with {count} closed trade(s): "
                                                          f"{tune.get('text')!r}", seat_id=_my_id(table))]
