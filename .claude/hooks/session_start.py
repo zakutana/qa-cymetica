@@ -11,8 +11,9 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent / "start"
-# The order they are printed in, and the source of each.
-SOURCES = (("next_step", "summary"), ("verdict_owed", "lines"), ("open_threads", "lines"), ("memory_index", "lines"))
+# The order they are printed in, and the source of each. The one that reads the network goes last and each line
+# is flushed as it comes, so a stalled read past the hook's timeout costs only its own line.
+SOURCES = (("next_step", "summary"), ("open_threads", "lines"), ("memory_index", "lines"), ("verdict_owed", "lines"))
 
 
 def _part(name: str):
@@ -22,25 +23,23 @@ def _part(name: str):
     return module
 
 
-def gather() -> list[str]:
-    said: list[str] = []
-    for module, function in SOURCES:
-        try:
-            said.extend(str(line) for line in getattr(_part(module), function)() or [] if str(line).strip())
-        except Exception:  # noqa: BLE001 -- a session start never fails
-            continue
-    return said
+def said_by(module: str, function: str) -> list[str]:
+    """One source's lines; one that raises says nothing."""
+    try:
+        return [str(line) for line in getattr(_part(module), function)() or [] if str(line).strip()]
+    except Exception:  # noqa: BLE001 -- a session start never fails
+        return []
 
 
 def main() -> int:
     try:
-        said = gather()
-        if said:
-            try:
-                sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-            except (AttributeError, ValueError):
-                pass
-            print("\n".join(said))
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError):
+            pass
+        for module, function in SOURCES:
+            for line in said_by(module, function):
+                print(line, flush=True)
     except Exception:  # noqa: BLE001
         return 0
     return 0

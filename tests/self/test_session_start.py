@@ -32,12 +32,14 @@ def test_a_verdict_is_owed_on_a_shipped_ticket_of_ours_only():
     assert start.owed(items, rows) == ["ET-1", "ET-5"]
 
 
-def test_a_source_that_breaks_costs_only_its_own_line(monkeypatch):
+def test_a_source_that_breaks_costs_only_its_own_line(tmp_path, monkeypatch, capsys):
     hook = _load(HOOKS / "session_start.py")
+    next_file = tmp_path / "NEXT.md"
+    next_file.write_text("- [ ] 2026-11-02  to do\n", encoding="utf-8")
+    monkeypatch.setenv("QA_NEXT_FILE", str(next_file))
     monkeypatch.setattr(hook, "SOURCES", (("does_not_exist", "lines"), ("next_step", "summary")))
-    monkeypatch.setenv("QA_NEXT_FILE", str(HOOKS / "nothing-here.md"))
-    assert hook.gather() == []
     assert hook.main() == 0
+    assert "to do" in capsys.readouterr().out
 
 
 def test_next_md_reads_open_items_only(tmp_path, monkeypatch):
