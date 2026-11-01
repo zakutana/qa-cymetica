@@ -51,8 +51,9 @@ revenue share), which is unchanged.
    door just "Start a company". Its fifth round, the workshop (scenes/tools.html): the whole forge works in the colour
    of the chamber the panel is in, the same clock: arms, lances, sparks, tethers, laser, lights on the armour, wall and
    floor, a beat across the deck as each starts; the deck's rim is the pipeline's dial, six arcs filling in turn; the name
-   real channel letters with a neon tube round every outline, over twice its size, each striking in its chamber's colour
-   left to right, a surge going live, all six on the shockwaves and the launch beam. The gem on the lane inside, back and left, clear of the
+   real channel letters with a neon tube round every outline, over twice its size, white and green as the page's headings
+   and only those ("nedavej do vsech barev to je tragicke"), each striking from half power to full left to right, a surge
+   going live; all six on the shockwaves and the launch beam. The gem on the lane inside, back and left, clear of the
    farmer's plate (record.py MARKET gl, gx); the Vault holds its own piles of money (record.py office: u3d.js piles() at
    full, in the recording browser only); step 1's departments on one line, each with the live office's astronaut in its
    role's helmet (office.js avatar()); step 5 "Farm points. Climb the leaderboard." with three lines; the Universe a

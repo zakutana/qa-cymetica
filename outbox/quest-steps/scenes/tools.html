@@ -185,14 +185,15 @@ const hexCells = [];
 
 // The name ("vytun ten napis build it better", 2026-11-01; it was a picture on a plane, 235 px wide on a 2000 px page):
 // real channel letters in Archivo Black on a titanium truss, a body of polished metal with a bevel, a smoked face, a neon
-// tube round every outline, each letter's own light on the wall behind it. Ice white at rest; as the pipeline goes each
-// letter strikes in the colour of the chamber it falls in, left to right; a surge runs along them going live; on the
-// launch they drain back, so the last frame leads into the first
+// tube round every outline, each letter's own light on the wall behind it. White and green as the page's own headings,
+// and only those ("ten napis build it better nedavej do vsech barev to je tragicke": the six colours are the forge's, a
+// rainbow name was thrown away): at half power at rest; as the pipeline goes each letter strikes to full, left to right;
+// a surge runs along them going live; on the launch they drain back, so the last frame leads into the first
 const signGroup = new THREE.Group();
 signGroup.position.set(0, 3.5, -3.86);   // in front of the wall where it curves forward
 scene.add(signGroup);
 const LETTERS = [];
-const ICE = new THREE.Color(0.60, 0.84, 1.0);
+const SIGN_WHITE = new THREE.Color(0.86, 0.95, 1.0), SIGN_GREEN = new THREE.Color(0x00ff88);
 const SIGN_W = 7.0;
 {
   const font = new Font(await new TTFLoader().loadAsync('https://cdn.jsdelivr.net/npm/@fontsource/archivo-black@5.0.19/files/archivo-black-latin-400-normal.woff'));
@@ -228,7 +229,7 @@ const SIGN_W = 7.0;
       const halo = new THREE.Mesh(new THREE.PlaneGeometry(CAP * 2.5, CAP * 2.5), haloMat);
       halo.position.set(x + adv / 2, 0, -0.42); signGroup.add(halo);
       const tig = 2.0 + (i + 0.35) / n * 4.2;
-      LETTERS.push({ i, ch, tube: tubeMat, face, halo: haloMat, tig, c: CHAMBERS[Math.min(5, Math.floor((tig - 2.0) / 0.7))].c, x01: (x + adv / 2 + SIGN_W / 2) / SIGN_W,
+      LETTERS.push({ i, ch, tube: tubeMat, face, halo: haloMat, tig, c: i < 7 ? SIGN_WHITE : SIGN_GREEN, x01: (x + adv / 2 + SIGN_W / 2) / SIGN_W,
         world: new THREE.Vector3(x + adv / 2, 0, 0.1).add(signGroup.position), wx: x + adv / 2 });
       i++;
     }
@@ -1769,7 +1770,7 @@ function render(t) {
     tr.pulse.material.opacity = Math.sin(Math.PI * u) * (0.72 + 0.28 * liveK);
   });
 
-  // ---- The name: each letter ice white until it strikes in its chamber's colour; a surge along them going live; on the
+  // ---- The name: each letter at half power until it strikes to full; a surge along them going live; on the
   // launch they drain back, from the last to the first
   const surgeU = win(t, 6.2, 6.9);
   const surgeAt = -0.2 + 1.4 * surgeU;
@@ -1779,12 +1780,10 @@ function render(t) {
     const surge = surgeU > 0 && surgeU < 1 ? Math.exp(-Math.pow((L.x01 - surgeAt) * 6, 2)) : 0;
     // a tired tube at rest, as neon has
     const hum = (L.i === 4 && t > 0.62 && t < 0.67) || (L.i === 11 && t > 1.2 && t < 1.25) ? 0.45 : 1;
-    L.col = L.col || new THREE.Color();
-    L.col.copy(ICE).lerp(L.c, on > 0.5 ? 1 : on * 2);
-    L.tube.color.copy(L.col).lerp(WHITE, 0.06 + 0.6 * surge).multiplyScalar(hum * (1.9 - 0.1 * on + 3.0 * surge));
-    L.face.emissive.copy(L.col);
-    L.face.emissiveIntensity = hum * (0.05 + 0.13 * on + 1.1 * surge);
-    L.halo.color.copy(L.col).multiplyScalar(hum * (0.1 + 0.3 * on + 0.5 * surge));
+    L.tube.color.copy(L.c).lerp(WHITE, 0.6 * surge).multiplyScalar(hum * (1.35 + 0.6 * on + 3.0 * surge));
+    L.face.emissive.copy(L.c);
+    L.face.emissiveIntensity = hum * (0.03 + 0.08 * on + 0.22 * surge);
+    L.halo.color.copy(L.c).multiplyScalar(hum * (0.12 + 0.2 * on + 0.5 * surge));
   });
 
   // Curved Hex Matrix Breathing, a ripple in each chamber's colour as it starts, the name's light on the cells behind it,
@@ -1815,7 +1814,7 @@ function render(t) {
       if (near < 1.25 && Math.abs(h.wx) < SIGN_W * 0.56) {
         col.multiplyScalar(0.3 + 0.7 * clamp01((near - 0.35) / 0.7));
         const L = LETTERS[clamp(Math.round((h.wx / SIGN_W + 0.5) * (LETTERS.length - 1)), 0, LETTERS.length - 1)];
-        addC(col, L.col, 0.045 * (1 - near / 1.25));
+        addC(col, L.c, 0.045 * (1 - near / 1.25));
       }
       face.setColorAt(h.i, col);
     });
