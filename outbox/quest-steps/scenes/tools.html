@@ -94,7 +94,8 @@ const lerpV = (a, b, k) => a.clone().lerp(b, k);
 // ---- The pipeline's six chambers, the page's own (anim.js CH, quest.css .ch), and the seconds each one works on the clock
 // the page's panel reads ("ted i ty barvy zarad do animace robotickych rukou", 2026-11-01): the whole forge works in the
 // colour of the chamber the panel is in
-const CHAMBERS = ['#5b9bff', '#b76dff', '#00cfff', '#ffc83d', '#ff5a68', '#00ff88'].map((h, i) => ({ c: new THREE.Color(h), t0: 2.0 + i * 0.7 }));
+// ("a build it better je asi prehnane barevny", then "je porad stejne barevny", 2026-11-01): the page's two colours in turn
+const CHAMBERS = ['#00cfff', '#00ff88', '#00cfff', '#00ff88', '#00cfff', '#00ff88'].map((h, i) => ({ c: new THREE.Color(h), t0: 2.0 + i * 0.7 }));
 const IDLE_A = new THREE.Color(0x00cfff), IDLE_B = new THREE.Color(0x00ff88);
 // the colour of the moment, for the arms and what they strike with ("a build it better je asi prehnane barevny",
 // 2026-11-01: the deck, the wall, the armour's light and the going live are the page's cyan and green again): the idle

@@ -3153,6 +3153,7 @@
 {"archive": "evidence-2026-09", "bytes": 13258, "call": "GET https://cymetica.com/.well-known/agent-skills.json?", "id": "0e1a60ea5278feebfdc6da2d8464c8c4b4c74624472f5f8561c2ed33bc4a31d9", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 9135, "call": "POST https://cymetica.com/mcp/v1/? tools/call:get_deep_answer", "id": "0e1c6ffb931569324be08c0d2f6500bc96d8c2187fff4f037bcf95dd3487739d", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 7711, "call": "GET https://cymetica.com/api/v1/cloned-bots/17efa669-c1d8-4471-85a6-6a5f216002bf/activity?page,page_size", "id": "0e1db5eaa136cf1fafae8bee0a6c14d1426a33d5932fa20ad46513fab16dd5f9", "why": "row"}
+{"archive": "", "bytes": 5108, "call": "POST https://cymetica.com/api/v1/cloned-bots/clone?", "id": "0e1f7a80f7d9d8505e1e10ad051825fcbe54ad76f79378335693c0f7e40d9d1a", "why": "trade"}
 {"archive": "evidence-2026-10", "bytes": 10897, "call": "GET https://cymetica.com/api/v1/cloned-bots/314ed16d-ba4a-44cf-82e5-d09ea49f7f68/activity?page,page_size", "id": "0e2006bd3958f69527058f74a7e115e9f0d6cd2acb648315ef8a7b88307e33d7", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 6440, "call": "GET https://data-api.binance.vision/api/v3/klines?interval,limit,startTime,symbol", "id": "0e20a969f3f7a4e139e3a6043fe40d5d294cf21a5f00ce4c508e12fe7846f533", "why": "row"}
 {"archive": "evidence-2026-09", "bytes": 554874, "call": "GET https://cymetica.com/api/v1/event-cards?limit,offset", "id": "0e2257b99a0b6e2f568b8a553c2e65f5937d57fc84496b61d3456c03bf21978b", "why": "row"}

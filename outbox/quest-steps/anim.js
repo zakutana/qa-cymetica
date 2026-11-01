@@ -154,6 +154,7 @@
     var birth = +box.dataset.birth || 0, start = birth ? Math.max(0, birth - 2) : from;
     if (birth) S.birth = { from: +start.toFixed(2), born: +(birth - start).toFixed(2) };
     var cur = 0, on = false, raf = 0, started = false;
+    box.clipNow = function () { return vids[cur]; };
     function play(v) { if (!v.getAttribute('src')) attach(v); var p = v.play(); if (p && p.catch) p.catch(function () {}); }
     function attach(v) { if (v.getAttribute('src')) return; v.preload = 'auto'; v.src = url; }
     function detach() {
@@ -200,7 +201,7 @@
   (function () {
     var m = document.querySelector('[data-anim=pipeline]'); if (!m) return;
     var vid = document.querySelector('#s2 video');
-    var CH = [['doc', 'Spec', 'spec', '91, 155, 255'], ['design', 'Design', 'design', '183, 109, 255'], ['development', 'Build', 'build', '0, 207, 255'], ['shield', 'Security', 'sec', '255, 200, 61'], ['rocket', 'Deploy', 'dep', '255, 90, 104'], ['cloud', 'Hosting', 'host', '0, 255, 136']];
+    var CH = [['doc', 'Spec', 'spec', '0, 207, 255'], ['design', 'Design', 'design', '0, 207, 255'], ['development', 'Build', 'build', '0, 207, 255'], ['shield', 'Security', 'sec', '0, 207, 255'], ['rocket', 'Deploy', 'dep', '0, 207, 255'], ['cloud', 'Hosting', 'host', '0, 255, 136']];
     // each chamber's icon in colours of its own, as the Quant Lab's tiles have them ("jak v quant labu tady mame ruzne
     // ikonky barevne", 2026-11-01), drawn, as an emoji differs from browser to browser
     var GLYPH = {
@@ -401,7 +402,8 @@
       var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('class', 'hlo'); svg.setAttribute('viewBox', '0 0 ' + O.w + ' ' + O.h); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
       svg.innerHTML = ['gem', 'farmer', 'casino', 'promo'].map(function (n) {
-        return '<g data-name="' + n + '"><path class="gl" d="' + O[n] + '"/><path class="ln" d="' + O[n] + '"/><path class="rn" pathLength="100" d="' + O[n] + '"/></g>';
+        var d = O[n] || 'M0 0Z';
+        return '<g data-name="' + n + '"><path class="gl" d="' + d + '"/><path class="ln" d="' + d + '"/><path class="rn" pathLength="100" d="' + d + '"/></g>';
       }).join('');
       stage.querySelector('.pic').appendChild(svg);
     }
@@ -429,8 +431,36 @@
       hullPaths.forEach(function (h) { h.setAttribute('d', d); });
       if (hullOn) requestAnimationFrame(drawHull);
     }
+    // the line goes with the thing ("porad mas to obramovani proste blbe", three times): record.py films each clip by a clock of
+    // its own and, for every tenth of a second of it, the outline of the gem, the farmer and the Promo Market, so the line is
+    // tight on it as the casino's (which stands still and keeps one path) and the two never part; through the loop's
+    // cross-fade one outline turns into the other
+    var TR = {}, trackOn = null;
+    if (O && O.track) Object.keys(O.track).forEach(function (n) {
+      var t = O.track[n], bin = atob(t.b64), a = new Int16Array(bin.length / 2);
+      for (var i = 0; i < a.length; i++) a[i] = bin.charCodeAt(i * 2) | (bin.charCodeAt(i * 2 + 1) << 8);
+      TR[n] = { n: t.n, fps: t.fps, m: a.length / (2 * t.n), loop: !!t.loop, a: a, clip: n === 'promo' ? bld : orbit, paths: svg.querySelectorAll('g[data-name=' + n + '] path') };
+    });
+    function poseAt(tr, T, out) {
+      var f = T * tr.fps, k = f - Math.floor(f), i = Math.floor(f) % tr.m, j = (i + 1) % tr.m, c = tr.n * 2;
+      if (!tr.loop) { if (Math.floor(f) >= tr.m - 1) { i = tr.m - 1; j = i; k = 0; } }
+      for (var q = 0; q < c; q++) out[q] = (tr.a[i * c + q] * (1 - k) + tr.a[j * c + q] * k) / 10;
+    }
+    var P1 = new Float32Array(1024), P2 = new Float32Array(1024);
+    function drawTrack() {
+      if (!trackOn) return;
+      var tr = TR[trackOn], v = tr.clip.clipNow && tr.clip.clipNow(), T = v ? v.currentTime : 0, c = tr.n * 2;
+      poseAt(tr, T, P1);
+      if (!tr.loop && v && T < XF && isFinite(v.duration)) { poseAt(tr, v.duration - XF + T, P2); var w = T / XF; for (var q = 0; q < c; q++) P1[q] = P2[q] * (1 - w) + P1[q] * w; }
+      var d = 'M';
+      for (var e = 0; e < c; e += 2) d += (e ? 'L' : '') + P1[e].toFixed(1) + ' ' + P1[e + 1].toFixed(1);
+      d += 'Z';
+      for (var h = 0; h < tr.paths.length; h++) tr.paths[h].setAttribute('d', d);
+      requestAnimationFrame(drawTrack);
+    }
     function lit(name) {
       if (name) stage.dataset.hl = name; else delete stage.dataset.hl;
+      var wasOn = trackOn; trackOn = name && TR[name] ? name : null; if (trackOn && !wasOn) drawTrack();
       [].forEach.call(stage.querySelectorAll('.b3[data-hot]'), function (p) { p.classList.toggle('hov', p.dataset.hot === name); });
       [].forEach.call(stage.querySelectorAll('.hlo g'), function (g) { g.classList.toggle('hov', g.getAttribute('data-name') === name); });
       var hit = name && name !== 'promo' && stage.querySelector('.hot[data-hot=' + name + ']'), s = hit && hit.style;

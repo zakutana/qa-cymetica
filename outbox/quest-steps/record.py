@@ -356,6 +356,28 @@ def market_box(page, sel):
     return MARKET['box'], size
 
 
+# seventh round: every animation of these products is a function of the clock alone, so the clock is ours: the clips are
+# filmed a frame at a time, and outlines() below reads the very same moments
+STEP_CLOCK = """() => { const uv = CO.uv; window.__T = 0; uv.clock.getElapsedTime = () => window.__T; uv.pace = () => true; }"""
+AT_T = """([T, sel, x, y, w, h, mime]) => new Promise((ok) => { window.__T = T;
+  requestAnimationFrame(() => requestAnimationFrame(() => { const c = window.__cc || (window.__cc = document.createElement('canvas')); c.width = w; c.height = h;
+    c.getContext('2d').drawImage(document.querySelector(sel), x, y, w, h, 0, 0, w, h); ok(c.toDataURL(mime, 0.95)); })); })"""
+
+
+def stepped(page, sel, seconds, name, box, fps=30):
+    """the canvas `sel` cut to `box`, frame by frame on the page's own clock, as clips/<name>.webm"""
+    x, y, w, h = box
+    fd, tmp = tempfile.mkstemp(suffix='.mjpeg')
+    with os.fdopen(fd, 'wb') as f:
+        for i in range(int(seconds * fps)):
+            f.write(base64.b64decode(page.evaluate(AT_T, [i / fps, sel, x, y, w, h, 'image/jpeg']).split(',', 1)[1]))
+    out = CLIPS / f'{name}.webm'
+    ffmpeg('-f', 'image2pipe', '-c:v', 'mjpeg', '-framerate', str(fps), '-i', tmp, '-c:v', 'libvpx', '-b:v', '16M', '-crf', '5',
+           '-qmin', '2', '-qmax', '30', '-auto-alt-ref', '0', '-g', str(fps), '-pix_fmt', 'yuv420p', str(out))
+    Path(tmp).unlink()
+    print(f'{out.name} {w}x{h} {int(seconds * fps)} frames {out.stat().st_size // 1024} KB')
+
+
 def market(b, seconds=12):
     """step 3: two clips of one camera (MARKET), cut to the same box: the orbit (its lanes, the farmer, the gem and the
     Agent Casino; keyed as light, data-key="glow", the lanes being 2 to 7 % bright), `seconds` long, and the Promo
@@ -372,15 +394,11 @@ def market(b, seconds=12):
           {k: pct(v) for k, v in page.evaluate(MARKET_WHERE).items()}, '(% of the clip)')
     by = "(id) => CO.uv.items.find(x => x.c.id === id).plot.root"
     page.evaluate(f"() => {{ ({by})('ad-promo').visible = false; }}")
-    # the page's first recording stands still for half a second a third of a second in (0.56, 0.56 and, after four
-    # seconds' rest, 0.46 s; the second recording never did): a second's recording first, thrown away
-    time.sleep(1)
-    page.evaluate(RECORD, [sel, 1000, 4_000_000])
-    record(page, sel, seconds, 'market-orbit', bps=16_000_000, crop=box)
+    page.evaluate(STEP_CLOCK)
+    stepped(page, sel, seconds, 'market-orbit', box)
     page.evaluate(f"() => {{ const r = {by}; ['ad-farmer', 'ad-gem', 'ad-casino'].forEach(id => {{ r(id).visible = false; }}); window.__slots.forEach(s => {{ s.visible = false; }}); r('ad-promo').visible = true; }}")
     page.evaluate(capture.HIDE_SKY)
-    time.sleep(1)
-    record(page, sel, MARKET['lap'], 'market-building', bps=16_000_000, crop=box)
+    stepped(page, sel, MARKET['lap'], 'market-building', box)
     page.close()
     frame_poster('market-orbit', 1.0)
     frame_poster('market-building', 1.0)
@@ -396,13 +414,12 @@ def market(b, seconds=12):
 # pointer and runs a light along. The airship goes its own way, so the Promo Market's shape is without it
 # name: its item, how lit counts, its lights kept (the casino's little hologram over it is light), thin things taken off
 # in pixels (the building's two lamp posts stuck out of its line as spikes).
-# And its fifth ("porad mas to obramovani proste blbe, jen u agent casina je to dobre"): the casino hardly moves and its
-# shape had all its lights in it; the gem bobs, the farmer rocks and the Promo Market's ring of words was left out, so the
-# object crossed a line that lay tight on one moment of it. So each is now a sticker's edge: everything the eye sees of it
-# (only particles and soft sprites off) over the whole of its motion, its waists and notches closed to a radius, stood a
-# little off it, rounded. The casino's path is kept as it was filmed
-# name: its item, the radius its notches are closed to, how far the line stands off it, how far its corners are rounded
-OUTLINED = {'gem': ('ad-gem', 22, 5, 5), 'farmer': ('ad-farmer', 26, 5, 5), 'promo': ('ad-promo', 64, 6, 7)}
+# Its sixth stood a sticker's edge off a union of the motion ("obramovani porad stejne jeste horsi"). What the casino has is a
+# line tight on it, and it stands still. So: tight, and it moves. The outline of every tenth of a second of the clip
+# (STEP_CLOCK), each resampled to the same number of points from the same place, kept in outlines.js; the page goes
+# through them by the clip's own time. The casino's one path stays as it was filmed
+# name: its item, the part of the clip it stays in (x, y, w, h), its points, seconds of outlines, whether they repeat
+OUTLINED = {'gem': ('ad-gem', (400, 210, 260, 290), 110, 12, False), 'farmer': ('ad-farmer', (740, 430, 300, 330), 120, 12, False), 'promo': ('ad-promo', (1110, 370, 560, 660), 170, 15, True)}
 MATTE = """(ids) => { const uv = CO.uv; uv.post = null;
   ids.forEach(id => { uv.items.find(x => x.c.id === id).plot.root.traverse(n => { if (n.isPoints || n.isSprite) n.visible = false; }); });
   window.__slots.forEach(s => { s.visible = false; });
@@ -454,11 +471,15 @@ def grown(a, r):
     return np.fft.irfft2(np.fft.rfft2(a.astype(float)) * np.fft.rfft2(k), a.shape) > 0.5
 
 
-def outline_of(lit, close, off, blur):
-    """a lit mask (bool array, the clip's size): its shape with its waists and notches closed to radius `close`, stood
-    `off` pixels off the object, holes filled, corners rounded by `blur`"""
+def outline_of(lit, close=7, off=2, blur=2):
+    """a lit mask: what is in it joined (a stem from the disc up into the thing, which may have lifted off it), its notches
+    closed to radius `close`, `off` pixels out, holes filled, its corners rounded by `blur`"""
     import numpy as np
     from PIL import ImageDraw, ImageFilter
+    ys, xs = np.nonzero(lit)
+    lit = lit.copy()
+    cx, top, bot = int(np.median(xs)), int(ys.min() + 0.35 * (ys.max() - ys.min())), int(ys.min() + 0.85 * (ys.max() - ys.min()))
+    lit[top:bot, cx - 2:cx + 3] = True
     a = grown(~grown(~grown(lit, close), close), off)
     im = Image.fromarray((a * 255).astype(np.uint8))
     pad = Image.new('L', (im.width + 2, im.height + 2), 0)
@@ -468,9 +489,49 @@ def outline_of(lit, close, off, blur):
     return np.asarray(Image.fromarray((solid * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(blur)), np.float32) / 255 > 0.5
 
 
-def outlines(b, frames=26, look=None):
-    """outlines.js: the path round each of OUTLINED, in the clip's pixels; and each shape's box (its .hot in index.html),
-    in % of the clip. The casino's stays as outlines.js has it. `look`: a folder for each shape's mask"""
+def round_of(solid, n):
+    """the longest edge of a mask as n points evenly along it, clockwise, from the one straight above its middle"""
+    import numpy as np
+    a = np.pad(solid, 1)
+    ahead = {}
+    for y, x in zip(*np.nonzero(a)):
+        if not a[y - 1, x]:
+            ahead.setdefault((x, y), []).append((x + 1, y))
+        if not a[y, x + 1]:
+            ahead.setdefault((x + 1, y), []).append((x + 1, y + 1))
+        if not a[y + 1, x]:
+            ahead.setdefault((x + 1, y + 1), []).append((x, y + 1))
+        if not a[y, x - 1]:
+            ahead.setdefault((x, y + 1), []).append((x, y))
+    best = []
+    while ahead:
+        at = start = next(iter(ahead))
+        pts = []
+        while at in ahead:
+            pts.append(at)
+            ends = ahead[at]
+            to = ends.pop()
+            if not ends:
+                del ahead[at]
+            at = to
+        if len(pts) > len(best):
+            best = pts
+    p = np.array(best, np.float64) - 1
+    k = np.ones(11) / 11
+    p = np.stack([np.convolve(np.r_[p[-5:, i], p[:, i], p[:5, i]], k, 'valid') for i in (0, 1)], axis=1)
+    mid = p.mean(axis=0)
+    above = p[:, 1] < mid[1]
+    p = np.roll(p, -int(np.argmin(np.abs(p[:, 0] - mid[0]) + (~above) * 1e6)), axis=0)
+    step = np.hypot(*np.diff(np.r_[p, p[:1]], axis=0).T)
+    s = np.r_[0, np.cumsum(step)]
+    want = np.linspace(0, s[-1], n, endpoint=False)
+    q = np.r_[p, p[:1]]
+    return np.stack([np.interp(want, s, q[:, i]) for i in (0, 1)], axis=1)
+
+
+def outlines(b, look=None, fps=10):
+    """outlines.js: for each of OUTLINED the outline of every moment, as 0.1 pixels of the clip in little-endian Int16 and
+    base64; each shape's box (its .hot in index.html), in % of the clip. The casino's path stays as outlines.js has it"""
     import json
     import re
     import numpy as np
@@ -480,29 +541,32 @@ def outlines(b, frames=26, look=None):
     sel = '#uv3d canvas'
     (x, y, w, h), _ = market_box(page, sel)
     page.evaluate(capture.HIDE_SKY)
+    page.evaluate(STEP_CLOCK)
     items = [v[0] for v in OUTLINED.values()] + ['ad-casino']
     page.evaluate(MATTE, items)
     by = "(id) => CO.uv.items.find(x => x.c.id === id).plot.root"
-    paths = {'w': w, 'h': h, 'casino': json.loads(re.search(r'QUEST_OUTLINES = (\{.*\});', (capture.HERE / 'outlines.js').read_text(encoding='utf-8'), re.S).group(1))['casino']}
-    for name, (item, close, off, blur) in OUTLINED.items():
+    old = json.loads(re.search(r'QUEST_OUTLINES = (\{.*\});', (capture.HERE / 'outlines.js').read_text(encoding='utf-8'), re.S).group(1))
+    data = {'w': w, 'h': h, 'casino': old['casino'], 'track': {}}
+    for name, (item, (bx, by0, bw, bh), n, secs, loop) in OUTLINED.items():
         page.evaluate(f"(me) => {{ const r = {by}; {items}.forEach(id => {{ r(id).visible = id === me; }}); }}", item)
-        time.sleep(1)
-        lit = np.zeros((h, w), bool)
-        for _ in range(frames):        # the building's bob comes round in 15 s, the farmer's rock is slower than its bob
-            data = page.evaluate("(sel) => document.querySelector(sel).toDataURL('image/png')", sel)
-            im = Image.open(io.BytesIO(base64.b64decode(data.split(',', 1)[1]))).convert('RGB').crop((x, y, x + w, y + h))
-            lit |= np.asarray(im, np.uint8).max(axis=2) > 24
-            time.sleep(0.9)
-        solid = outline_of(lit, close, off, blur)
-        if look:
-            Image.fromarray((solid * 255).astype(np.uint8)).save(Path(look) / f'matte-{name}.png')
-        paths[name] = contour(solid)
-        ys, xs = np.nonzero(solid)
+        poses, box = [], [1e9, 1e9, 0, 0]
+        for i in range(secs * fps):
+            shot = page.evaluate(AT_T, [i / fps, sel, x + bx, y + by0, bw, bh, 'image/png'])
+            im = Image.open(io.BytesIO(base64.b64decode(shot.split(',', 1)[1]))).convert('RGB')
+            solid = outline_of(np.asarray(im, np.uint8).max(axis=2) > 24)
+            ys, xs = np.nonzero(solid)
+            box = [min(box[0], xs.min() + bx), min(box[1], ys.min() + by0), max(box[2], xs.max() + bx), max(box[3], ys.max() + by0)]
+            poses.append(round_of(solid, n) + (bx, by0))
+            if look and i % 30 == 0:
+                im.save(Path(look) / f'matte-{name}-{i}.png')
+        poses = np.array(poses)
+        poses = (np.roll(poses, 1, axis=0) + 2 * poses + np.roll(poses, -1, axis=0)) / 4 if loop else np.r_[poses[:1], (poses[:-2] + 2 * poses[1:-1] + poses[2:]) / 4, poses[-1:]]
+        raw = np.round(poses * 10).astype('<i2').tobytes()
+        data['track'][name] = {'n': n, 'fps': fps, 'loop': loop, 'b64': base64.b64encode(raw).decode()}
         p = lambda v, d: round(v / d * 100, 2)
-        print(f'{name}: path {len(paths[name]) // 1024} KB',
-              f'| hot left: {p(xs.min(), w)}%; top: {p(ys.min(), h)}%; width: {p(xs.max() - xs.min(), w)}%; height: {p(ys.max() - ys.min(), h)}%')
+        print(f'{name}: {len(poses)} moments, {len(raw) // 1024} KB', f'| hot left: {p(box[0], w)}%; top: {p(box[1], h)}%; width: {p(box[2] - box[0], w)}%; height: {p(box[3] - box[1], h)}%')
     page.close()
-    (capture.HERE / 'outlines.js').write_text('/* record.py outlines: the line round each of step 3\'s products, in the clip\'s pixels */\nwindow.QUEST_OUTLINES = ' + json.dumps(paths) + ';\n', encoding='utf-8')
+    (capture.HERE / 'outlines.js').write_text('/* record.py outlines: the line round each of step 3\'s products, in the clip\'s pixels: the casino\'s one path, the others\' every moment */\nwindow.QUEST_OUTLINES = ' + json.dumps(data) + ';\n', encoding='utf-8')
 
 
 # step 5's Universe has six companies today; the leaderboard beside it names five more, so they are given a station
