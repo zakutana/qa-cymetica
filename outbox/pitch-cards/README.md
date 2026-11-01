@@ -2,12 +2,11 @@
 
 Asked for by the operator on 2026-10-31 (replacing Prove It, which was thrown out): a room like a TV investors' show where
 Nexus brings its pitches and the user, with credit loaded on the platform ($100 in the operator's example), swipes left to
-pass or right to give it an amount; then follows how the deal does. A pitch is short and backed by data shown first; a
-notification on Cymetica says when Nexus has one. Nexus pitches only high-confidence ideas with results behind them, or truly big news (a mega deal or
+pass or right to give it an amount; then follows how the deal does. A pitch is short and backed by data shown first. Nexus pitches only high-confidence ideas with results behind them, or truly big news (a mega deal or
 IPO), never a fresh untested event card.
 
 **Open:** `python outbox/pitch-cards/serve.py` (the `pitch-cards` entry in `.claude/launch.json`), then
-http://127.0.0.1:8802/pitch-cards. `?view=board` or `?view=deals` opens those tabs, `?nopush` leaves the notification off.
+http://127.0.0.1:8802/pitch-cards. `?view=board` or `?view=deals` opens those tabs.
 
 ## How it is built
 

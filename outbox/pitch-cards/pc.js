@@ -188,7 +188,7 @@
     for (var k = Math.min(P.length - 1, S.i + 2); k >= S.i; k--)
       h += '<article class="pc-card k-' + P[k].kind + ' ' + (k === S.i ? 'top' : k === S.i + 1 ? 'back1' : 'back2') + '" data-k="' + k + '">' + frontHtml(P[k]) + '</article>';
     if (S.i >= P.length) h = '<div class="pc-empty"><b>That’s all<br><span>for now.</span></b><small title="A fund: live ' + D.bar.fund_weeks + '+ weeks, +' + D.bar.fund_ret + '% or more since it went live, up over the last 30 days. A deal: $' +
-      (D.bar.deal_usd / 1e9) + 'B or more, in the last ' + D.bar.deal_days + ' days, with a live ripple card.">Nexus pitches only when the data is strong. You get a notification when there’s a new one.</small>' +
+      (D.bar.deal_usd / 1e9) + 'B or more, in the last ' + D.bar.deal_days + ' days, with a live ripple card.">Nexus pitches only when the data is strong.</small>' +
       '<button type="button" data-tab="board">SEE THE PROFIT BOARD →</button></div>';
     $('deck').innerHTML = h;
     pc.classList.toggle('done', S.i >= P.length);
@@ -353,7 +353,6 @@
     if (id === 'no') { if (turned) { S.pending = null; flip(t, false); } else no(); }
     else if (id === 'yes') { if (turned) invest(); else yes(); }
     else if (id === 'more') { SHOWN += 40; drawBoard(); }
-    else if (id === 'push') { e.preventDefault(); hidePush(); view('deck'); }
   });
   document.addEventListener('keydown', function (e) {
     var t = top();
@@ -368,14 +367,8 @@
     c.style.setProperty('--gx', (100 * (e.clientX - r.left) / r.width).toFixed(1) + '%'); c.style.setProperty('--gy', (100 * (e.clientY - r.top) / r.height).toFixed(1) + '%');
   });
 
-  function hidePush() { var p = $('push'); if (p.hidden) return; p.classList.add('out'); setTimeout(function () { p.hidden = true; p.classList.remove('out'); }, 350); }
   layout();
   var q = location.search.match(/view=(deals|board)/);
   if (q) view(q[1]); else drawDeck();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { layout(); redraw(); });
-  if (D.pitches.length && !/nopush/.test(location.search)) setTimeout(function () {   // the notification Cymetica would send when Nexus has a pitch
-    $('pushT').textContent = D.pitches.length + ' new pitch' + (D.pitches.length > 1 ? 'es' : '') + ' for you';
-    $('pushS').textContent = D.pitches.map(function (p) { return p.kind === 'fund' ? p.name + ' ' + pct(p.ret) : money(p.size) + ' mega deal'; }).join(' · ');
-    $('push').hidden = false; setTimeout(hidePush, 6000);
-  }, 2400);
 })();
