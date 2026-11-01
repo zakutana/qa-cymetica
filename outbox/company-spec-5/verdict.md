@@ -22,5 +22,7 @@ the ET number of the round-5 request itself is not written down yet.
 | A the runner works while work is queued | | not checkable: the company is paused |
 | B11 anti-farming | stronger | not tested (needs a new run of the proxy bot) |
 
-Recommended verdict: **Fail**. The Season board, the centre of the request (pictures 1 and 2), is not on the page, prizes were not changed and company creation
-is not free; what is live is the rules in the API and the Products tab.
+Recommended verdict: **Fail**. **The main defect (the operator, 2026-11-01): the board was not changed.** Season 1 is running (`/api/v1/company/season`: season 2026-11,
+prizes, a ranking) while the Universe board and its leaderboard, the centre of the request (pictures 1 and 2), still say REVENUE SHARE, "not measured yet, so
+nobody is ranked and nothing is paid". The page and the API contradict each other. Besides: prizes were not changed and company creation is not free; what is
+live is the rules in the API and the Products tab.
