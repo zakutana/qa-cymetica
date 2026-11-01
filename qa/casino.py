@@ -446,6 +446,13 @@ def variant_write(variant: str) -> tuple[str, dict] | None:
             "D": ("bot-settings", {"stop_loss_pct": 2.0})}.get(variant)
 
 
+def seated_instances(my_seats: list[dict]) -> set:
+    """The bots that sit at a table that has not ended, from `my-seats`, which names every seat. A
+    bot's settings are its own, not the seat's, so a second table would share them with the first."""
+    return {s.get("instance_id") for s in my_seats or [] if isinstance(s, dict) and s.get("instance_id")
+            and s.get("table_status") in ("open", "running", "filling")}
+
+
 def next_asks(rows: list[dict], bots: list[dict], tables: list[dict], seated: set, spent: set,
               running: int) -> list[dict]:
     """One ask per open table, least tried variant first, a bot once a tick, nothing already tried.

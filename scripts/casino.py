@@ -257,10 +257,11 @@ def keep_findings(rows: list[dict], found: list[dict]) -> list[dict]:
     return casino.new_keys(found, rows)
 
 
-def ask_next(client, rows: list[dict], tables_open: list[dict], my_rows: list[dict], running: int) -> int:
+def ask_next(client, rows: list[dict], tables_open: list[dict], my_seats: list[dict] | None, running: int) -> int:
     """The next round: a new species if one is left, then one ask per free table. Returns the asks made.
-    With no room at any table there is no round, and no clone waiting for one."""
-    if running >= casino.MAX_RUNNING or not tables_open:
+    With no room at any table there is no round, and no clone waiting for one. `my_seats` is what
+    names the bots already seated: unread, no bot is chosen, as a bot at two tables shares its settings."""
+    if running >= casino.MAX_RUNNING or not tables_open or my_seats is None:
         return 0
     outsider, clone = _sibling("outsider"), _sibling("clone")
     body = _read(client, f"{BASE}/my-bots")
@@ -281,8 +282,7 @@ def ask_next(client, rows: list[dict], tables_open: list[dict], my_rows: list[di
                 body = _read(client, f"{BASE}/my-bots") or body
                 bots = casino.for_the_casino(body.get("bots") or [])
                 print(f"  cloned {name}")
-    seated = {r.get("instance_id") for r in rows if r.get("type") == "experiment"
-              and r.get("table_id") in {m.get("table_id") for m in my_rows}}
+    seated = casino.seated_instances(my_seats)
     spent = {r.get("instance_id") for r in rows if r.get("type") == "spent"
              and str(r.get("at", ""))[:10] == _now().date().isoformat()}
     asked = 0
@@ -388,7 +388,7 @@ def cmd_tick(confirm: bool) -> int:
                     and t.get("id") not in taken]
             live = len({r.get("table_id") for r in my_rows if r.get("table_id") not in
                         {w.get("table_id") for w in load() if w.get("type") == "lapse_watch"}})
-            asks += ask_next(client, load(), free, my_rows, live)
+            asks += ask_next(client, load(), free, my_seats, live)
     finally:
         client.close()
 

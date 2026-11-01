@@ -197,6 +197,23 @@ def test_a_trade_closed_after_the_tune_does_not_make_the_reason_false():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_bot_at_a_table_is_seated_whatever_the_diary_says_of_it():
+    """2026-11-01 14:01: Risk 10 and a 2 % stop loss went to two bots that already sat at tables 43 and
+    35 (their diary rows had no instance), and their settings are the bot's, so two coaches tuned one
+    set of numbers and the log of neither table could explain them. `my-seats` names every seat."""
+    mine = [{"seat_id": 168, "table_id": 43, "instance_id": "692c", "table_status": "running"},
+            {"seat_id": 169, "table_id": 35, "instance_id": "ede3", "table_status": "running"},
+            {"seat_id": 208, "table_id": 48, "instance_id": "821a", "table_status": "open"},
+            {"seat_id": 167, "table_id": 45, "instance_id": "d204", "table_status": "done"},
+            {"seat_id": 9, "table_id": 9, "table_status": "running"}]
+    assert casino.seated_instances(mine) == {"692c", "ede3", "821a"}
+    bots = [{"instance_id": "692c", "species": "Perceptron Oracle"}, {"instance_id": "free", "species": "Crash Detector"}]
+    tables = [{"id": 54, "tier": "fmicro1h"}]
+    asks = casino.next_asks([], bots, tables, casino.seated_instances(mine), set(), 0)
+    assert [(a["variant"], a["instance_id"]) for a in asks] == [("A", "free")]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_round_that_ended_inside_the_table_and_settled_after_it_is_named():
     """Table 51: the round ending 11:35:00 settled at 11:36:04, the table ended 11:35:14, and the
     standings' +78.10 leaves out its +16.41. Counted, or never opened, there is nothing to name."""
