@@ -52537,6 +52537,7 @@
   "run_id": "run-20261101T191049Z-efeded63",
   "run_level": "R",
   "updated_at": "2026-11-01T19:12:00+00:00",
+  "run_carried": true,
   "counts": {
     "WITHDRAWN": 13,
     "VERIFIED FIXED": 116,
@@ -52548,7 +52549,7 @@
     "RAISED": 15
   },
   "events_head": {
-    "seq": 4640,
-    "chain": "a9fe8427c695a467ce5448b68e1e61705fa8a2eb5acc9297ced5c2c240bcea6f"
+    "seq": 4641,
+    "chain": "21bd924856db899bd16531d54566793bae9f0ac44174b487208de76bb873b2cf"
   }
 }
