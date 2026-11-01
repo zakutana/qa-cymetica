@@ -56,13 +56,13 @@ def _now() -> datetime:
 
 
 def _dir() -> Path:
-    from qa.state import state_dir
+    from qa.paths import state_dir
 
     return state_dir() / NAME
 
 
 def diary_path() -> Path:
-    from qa.state import state_dir
+    from qa.paths import state_dir
 
     return state_dir() / f"{NAME}.jsonl"
 
@@ -101,7 +101,7 @@ def load_diary() -> list[dict]:
 
 
 def append_diary(row: dict) -> None:
-    from qa.state import file_lock
+    from qa.paths import file_lock
 
     target = diary_path()
     target.parent.mkdir(parents=True, exist_ok=True)

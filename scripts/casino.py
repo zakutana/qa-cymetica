@@ -7,17 +7,16 @@
     python scripts/casino.py handled KEY --how #N  a contradiction dealt with (a report, the spec, ours)
     python scripts/casino.py lapse --table T --instance I   one ask left to run out its 24 hours
     python scripts/casino.py brief                 where it stands
-    python scripts/casino.py report                state/casino/report.json, for the /lab page
 
 The comparisons are qa/casino.py; docs/agent-casino-test-2026-11-01.md is the test they came out of.
 
-An ask is `scripts/outsider.py seat`, with its floor. Their OpenAPI makes approving a seat BearerJWT
+An ask is `seat()` below, with its floor. Their OpenAPI makes approving a seat BearerJWT
 only, so no key here can do it: `decide: approve N` is the owner's click, in the signed-in Browser
 pane. What this writes is declared in components.yaml with a closed body (fill_house, coach, risk,
 bot_settings), each read back first by `qa.casino.write_refusal`: a paper USDC table, a seat of ours.
 
-Every write is two records in state/casino.jsonl (rule 9): the intent before the POST, the outcome
-after. A failed read is said, never taken for an empty one (rule 8).
+Every write is two records in state/casino.jsonl: the intent before the POST, the outcome
+after. A failed read is said, never taken for an empty one.
 """
 
 from __future__ import annotations
@@ -25,6 +24,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -37,9 +37,10 @@ from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
-from qa.state import file_lock, state_dir  # noqa: E402
+from qa.paths import file_lock, state_dir  # noqa: E402
 
 BASE = "/api/v1/agent-tournaments"
+INSTANCE = re.compile(r"^[A-Za-z0-9_-]{1,100}$")
 FLASH_TIERS = ("fmicro1h", "fpro1h", "fmicro5h", "fpro5h", "fmicro", "fpro")
 SEAT_FIELDS = ("rank", "roi_pct", "trades", "volume_usdc", "pnl_usdc", "bot_state", "bot_state_label",
                "bot_state_reason", "trades_today", "daily_allowance", "allowance_used_up", "qualified")
@@ -77,8 +78,8 @@ def _append(record: dict) -> dict:
     return record
 
 
-def _sibling(name: str):
-    spec = importlib.util.spec_from_file_location(f"casino_{name}", REPO_ROOT / "scripts" / f"{name}.py")
+def _clone_script():
+    spec = importlib.util.spec_from_file_location("casino_clone", REPO_ROOT / "scripts" / "clone.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -257,13 +258,138 @@ def keep_findings(rows: list[dict], found: list[dict]) -> list[dict]:
     return casino.new_keys(found, rows)
 
 
+def seat_outcome_of(status: int, served) -> str:
+    """`accepted` is a 2xx carrying the approve_url the owner needs; `rejected` their 4xx; anything
+    else may have landed and is `unknown`, which counts as a seat asked for until their table says otherwise."""
+    if 200 <= status < 300 and isinstance(served, dict) \
+            and isinstance(served.get("approve_url"), str) and served["approve_url"]:
+        return "accepted"
+    if 400 <= status < 500:
+        return "rejected"
+    return "unknown"
+
+
+def asked_before(table_id: str, rows: list[dict], table: dict | None = None,
+                 instance_id: str | None = None) -> str | None:
+    """A seat intent of ours at this table that went through or may have: one with no outcome, or with
+    `accepted` / `unknown`. One seat per BOT per table (the operator, 2026-10-28: five different bots at
+    one table; without `instance_id`, per owner).
+
+    Unless their table says the seat is gone: an accepted ask whose seat_id their standings no longer list
+    was left. Only a table that lists its standings can say that: an OPEN table serves `standings: []`
+    while our seat waits for approval, and reading that as gone allowed a second ask."""
+    outcomes = {r.get("id"): r for r in rows if r.get("type") == "outcome" and r.get("kind") == "seat"}
+    listed = [s for key in ("standings", "seats") for s in ((table or {}).get(key) or [])
+              if isinstance(s, dict) and s.get("seat_id") is not None]
+    seated = {str(s.get("seat_id")) for s in listed} if listed else None
+    for intent in rows:
+        if intent.get("type") != "intent" or intent.get("kind") != "seat" \
+                or str(intent.get("table_id")) != str(table_id) \
+                or (instance_id is not None and str(intent.get("instance_id")) != str(instance_id)):
+            continue
+        said = outcomes.get(intent.get("id"))
+        if said is None or said.get("outcome") in ("accepted", "unknown"):
+            seat_id = (said or {}).get("seat_id")
+            if seated is not None and seat_id is not None and str(seat_id) not in seated:
+                continue
+            return intent.get("id")
+    return None
+
+
+def _next_seat_id(rows: list[dict]) -> str:
+    used = [int(r["id"].split("-")[1]) for r in rows
+            if isinstance(r.get("id"), str) and r["id"].startswith("SEAT-")]
+    return f"SEAT-{max(used, default=0) + 1:04d}"
+
+
+def _send_seat(client, url: str, body: dict, table_id: str, **fields) -> dict:
+    """The intent before the POST, the outcome after."""
+    import httpx
+
+    seat_id = _next_seat_id(load())
+    _append({"id": seat_id, "type": "intent", "kind": "seat", "url": url, "body": body, "table_id": table_id, **fields})
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        response = client.post(url, json=body)
+    except httpx.HTTPError as exc:
+        never_left = isinstance(exc, (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout))
+        _append({"id": seat_id, "type": "outcome", "kind": "seat", "table_id": table_id,
+                 "outcome": "not_sent" if never_left else "unknown", "error": f"{type(exc).__name__}: {exc}"[:300]})
+        raise
+    finally:
+        CURRENT_TIER.reset(token)
+    try:
+        served = response.json()
+    except ValueError:
+        served = None
+    served = served if isinstance(served, dict) else None
+    return _append({"id": seat_id, "type": "outcome", "kind": "seat", "table_id": table_id,
+                    "outcome": seat_outcome_of(response.status_code, served), "http_status": response.status_code,
+                    "approve_url": (served or {}).get("approve_url"), "seat_id": (served or {}).get("seat_id"),
+                    "response": served if served is not None else (response.text or "")[:300]})
+
+
+def seat(table_id: str, instance_id: str, confirm: bool, client=None) -> int:
+    """Ask for a seat at a paper table for one of our paper clones. 0 = asked (or, dry, would be asked);
+    anything else = refused, with the reason printed. The owner's click on approve_url is not ours."""
+    table_id, instance_id = str(table_id), str(instance_id)
+    if not casino.TABLE.match(table_id) or not INSTANCE.match(instance_id):
+        print(f"refused: {table_id!r} / {instance_id!r} is not a table id and a bot id")
+        return 2
+    clone = _clone_script()
+    if not clone.paper_by_our_record(instance_id):
+        print(f"refused: {instance_id} is not a paper clone of ours by our record "
+              f"(state/clones.jsonl); only our own paper bots are seated")
+        return 1
+    own = client is None
+    client = client if client is not None else _client(write=confirm)
+    try:
+        rules = _read(client, f"{BASE}/rules")
+        table = _read(client, f"{BASE}/tables/{table_id}")
+        why = casino.seat_refusal(table_id, table, rules, instance_id=instance_id)
+        if why:
+            print(f"refused: {why}")
+            return 1
+        earlier = asked_before(table_id, load(), table, instance_id=instance_id)
+        if earlier:
+            print(f"refused: {earlier} already asked for a seat for {instance_id} at table {table_id}; "
+                  f"one seat per bot per table")
+            return 1
+        try:
+            theirs = clone.instance(client, instance_id)
+        except SystemExit as exc:
+            print(f"refused: {exc}")
+            return 1
+        if not clone.startable(theirs):
+            economics = theirs.get("execution_economics") or {}
+            print(f"refused: they say {instance_id} is_paper={theirs.get('is_paper')!r}, "
+                  f"execution_class={economics.get('execution_class')!r}; both must say paper")
+            return 1
+        body = {"instance_id": instance_id}
+        url = f"{BASE}/tables/{table_id}/seat"
+        print(f"table {table_id}: {table.get('tier')} paper, buy-in {table.get('buyin_usdc')} paper USDC, "
+              f"{table.get('seats_free')} seats free\n  POST {url} {json.dumps(body)}")
+        if not confirm:
+            print("nothing sent: seat needs --confirm")
+            return 0
+        outcome = _send_seat(client, url, body, table_id, instance_id=instance_id,
+                             table={k: table.get(k) for k in ("mode", "tier", "status", "buyin_usdc", "capital_usdc")})
+    finally:
+        if own:
+            client.close()
+    print(f"{outcome['id']}: {outcome['outcome']} (HTTP {outcome['http_status']})")
+    if outcome.get("approve_url"):
+        print(f"the owner approves the seat here: {outcome['approve_url']}")
+    return 0 if outcome["outcome"] == "accepted" else 1
+
+
 def ask_next(client, rows: list[dict], tables_open: list[dict], my_seats: list[dict] | None, running: int) -> int:
     """The next round: a new species if one is left, then one ask per free table. Returns the asks made.
     With no room at any table there is no round, and no clone waiting for one. `my_seats` is what
     names the bots already seated: unread, no bot is chosen, as a bot at two tables shares its settings."""
     if running >= casino.MAX_RUNNING or not tables_open or my_seats is None:
         return 0
-    outsider, clone = _sibling("outsider"), _sibling("clone")
+    clone = _clone_script()
     body = _read(client, f"{BASE}/my-bots")
     bots = casino.for_the_casino((body or {}).get("bots") or [])
     if body is None:
@@ -274,7 +400,7 @@ def ask_next(client, rows: list[dict], tables_open: list[dict], my_seats: list[d
         if wanted:
             name = f"casino {wanted.get('name')}"
             try:
-                made = clone.clone(wanted["source_type"], wanted["id"], name, None, True)
+                made = clone.clone(wanted["source_type"], wanted["id"], name, True)
             except SystemExit as exc:
                 _append({"type": "clone_refused", "name": name, "why": str(exc)[:300]})
                 made = None
@@ -287,7 +413,7 @@ def ask_next(client, rows: list[dict], tables_open: list[dict], my_seats: list[d
              and str(r.get("at", ""))[:10] == _now().date().isoformat()}
     asked = 0
     for ask in casino.next_asks(rows, bots, tables_open, seated, spent, running):
-        code = outsider.seat(str(ask["table_id"]), str(ask["instance_id"]), True, client=client)
+        code = seat(str(ask["table_id"]), str(ask["instance_id"]), True, client=client)
         if code == 0:
             _append({"type": "experiment", "by": "tick", **ask})
             asked += 1
@@ -305,13 +431,12 @@ def watched_asks(rows: list[dict], my_agents: dict) -> list:
 def cmd_lapse(table_id: str, instance_id: str) -> int:
     """One ask left to run out its 24 hours, to see what a lapsed ask reads as (round 3, line 2; the
     check agent-tournaments-lapsed-ask-does-not-read-pending)."""
-    outsider = _sibling("outsider")
     client = _client(write=True)
     try:
-        code = outsider.seat(table_id, instance_id, True, client=client)
+        code = seat(table_id, instance_id, True, client=client)
     finally:
         client.close()
-    said = next((r for r in reversed(outsider.load()) if r.get("type") == "outcome" and r.get("kind") == "seat"), {})
+    said = next((r for r in reversed(load()) if r.get("type") == "outcome" and r.get("kind") == "seat"), {})
     if code == 0:
         _append({"type": "lapse_watch", "table_id": int(table_id), "seat_id": said.get("seat_id"),
                  "instance_id": instance_id})
@@ -393,7 +518,6 @@ def cmd_tick(confirm: bool) -> int:
         client.close()
 
     _append({"type": "tick", "running": len(running), "asks": asks, "new": len(new)})
-    write_report(load(), len(running))
     print(f"tables: {len(running)} running, {len(tables) - len(running)} other; asks {asks}; new contradictions {len(new)}")
     if watched:
         print(f"  left to lapse, never approved: seats {watched}")
@@ -431,7 +555,7 @@ def cmd_audit(ids: list[int]) -> int:
 
 
 def summary(rows: list[dict], running: int | None = None) -> list[str]:
-    """The /lab lines: numbers first, in English."""
+    """Where it stands: numbers first."""
     finals_ = [r for r in rows if r.get("type") == "final"]
     species = {r.get("species") for r in rows if r.get("type") == "experiment"}
     last_tick = next((r for r in reversed(rows) if r.get("type") == "tick"), {})
@@ -450,15 +574,6 @@ def summary(rows: list[dict], running: int | None = None) -> list[str]:
     return [first, second, third, fourth]
 
 
-def write_report(rows: list[dict], running: int | None = None) -> Path:
-    target = state_dir() / "casino" / "report.json"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps({"title": "Agent Casino", "lines": summary(rows, running),
-                                  "at": _now().isoformat(timespec="seconds")}, ensure_ascii=False, indent=1),
-                      encoding="utf-8")
-    return target
-
-
 def cmd_brief() -> int:
     rows = load()
     for line in summary(rows):
@@ -467,11 +582,6 @@ def cmd_brief() -> int:
     for row in rows:
         if row.get("type") == "found" and row.get("key") not in handled:
             print(f"  open  {row.get('key')}  table {row.get('table_id')}: {row.get('what')}")
-    return 0
-
-
-def cmd_report() -> int:
-    print(f"-> {write_report(load())}")
     return 0
 
 
@@ -490,7 +600,6 @@ def main(argv: list[str] | None = None) -> int:
     lapse.add_argument("--table", required=True)
     lapse.add_argument("--instance", required=True)
     sub.add_parser("brief")
-    sub.add_parser("report")
     args = parser.parse_args(argv)
     if args.cmd == "tick":
         return cmd_tick(args.confirm)
@@ -501,7 +610,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "handled":
         _append({"type": "handled", "key": args.key, "how": args.how})
         return 0
-    return {"brief": cmd_brief, "report": cmd_report}[args.cmd]()
+    return cmd_brief()
 
 
 if __name__ == "__main__":

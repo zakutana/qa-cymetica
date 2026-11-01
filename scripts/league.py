@@ -5,7 +5,6 @@
     python scripts/league.py answer --puzzle N [--confirm]
     python scripts/league.py tick [--confirm]   answer every open puzzle we can, not yet answered
     python scripts/league.py brief              our player, its answers, the prizes
-    python scripts/league.py report             state/league/report.json, for the /lab page
 
 [operator 2026-10-09] "Ucastni se" (their X post: 1,000 / 2,500 / 10,000 ET10 a puzzle, Phase 1,
 no user deposits). Two writes, both declared in components.yaml with a closed body --
@@ -37,7 +36,7 @@ from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
-from qa.state import file_lock, state_dir  # noqa: E402
+from qa.paths import file_lock, state_dir  # noqa: E402
 
 BASE = "/api/v1/agent-league"
 PRIZE_LIMIT = 200   # rows asked of /prizes; its default is the newest 50
@@ -176,16 +175,6 @@ def answered_ids(client, player_id, rows: list[dict]) -> set:
     return {p for p in done if p is not None}
 
 
-def _capture(response) -> str | None:
-    from qa.evidence import EvidenceStore
-
-    try:
-        return EvidenceStore("script-league").capture(
-            response.request, response, SafetyTier.MUTATE) or None
-    except Exception:  # noqa: BLE001
-        return None
-
-
 def _send(client, kind: str, url: str, body: dict, **intent_fields) -> dict:
     """One write: the intent first, then the POST, then the outcome -- always an outcome."""
     intent = _append({"type": "intent", "kind": kind, "at": _now(), "url": url, "body": body,
@@ -203,7 +192,7 @@ def _send(client, kind: str, url: str, body: dict, **intent_fields) -> dict:
     served = _json(response)
     outcome = {"id": intent["id"], "type": "outcome", "kind": kind, "at": _now(),
                "outcome": outcome_of(response.status_code, served),
-               "http_status": response.status_code, "evidence_id": _capture(response),
+               "http_status": response.status_code,
                "response": served if isinstance(served, dict) else (response.text or "")[:300],
                **{k: v for k, v in intent_fields.items() if k == "puzzle_id"}}
     _append(outcome)
@@ -386,24 +375,12 @@ def cmd_brief() -> int:
     return 0
 
 
-def cmd_report() -> int:
-    said = summary()
-    target = state_dir() / "league" / "report.json"
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps({"title": "Agent League", "lines": said["lines"],
-                                  "at": _now()}, ensure_ascii=False, indent=1),
-                      encoding="utf-8")
-    print(f"-> {target}")
-    return 0
-
-
 def main(argv: list[str] | None = None) -> int:
     printable()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("puzzles")
     sub.add_parser("brief")
-    sub.add_parser("report")
     join = sub.add_parser("join")
     join.add_argument("--confirm", action="store_true")
     answer = sub.add_parser("answer")
@@ -412,7 +389,7 @@ def main(argv: list[str] | None = None) -> int:
     tick = sub.add_parser("tick")
     tick.add_argument("--confirm", action="store_true")
     args = parser.parse_args(argv)
-    return {"puzzles": cmd_puzzles, "brief": cmd_brief, "report": cmd_report,
+    return {"puzzles": cmd_puzzles, "brief": cmd_brief,
             "join": lambda: cmd_join(args.confirm),
             "answer": lambda: cmd_answer(args.puzzle, args.confirm),
             "tick": lambda: cmd_tick(args.confirm)}[args.cmd]()

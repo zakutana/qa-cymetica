@@ -12,8 +12,7 @@ Five writes, each declared in components.yaml with a closed body: `company.creat
 `company.department`, `company.message` (the owner's word to the Manager), and the brake,
 `company.pause` / `company.resume` (no body). Nothing else under /api/v1/company is ours to send:
 an approval is the owner's act, and DELETE, investable and entity stay default-denied. Without
---confirm a write prints the exact body and records nothing. A company worker (QA_CREW_DEPT) never
-makes any of them: its outward writes stay denied by default.
+--confirm a write prints the exact body and records nothing.
 
 Every write is two records in state/company.jsonl, ids CO-NNNN: the intent BEFORE the POST, the
 outcome after (rule 9). `accepted` is a 2xx naming an id; a 2xx without one is `unknown`.
@@ -23,7 +22,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import sys
 from datetime import datetime, timezone
@@ -36,7 +34,7 @@ from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
-from qa.state import file_lock, state_dir  # noqa: E402
+from qa.paths import file_lock, state_dir  # noqa: E402
 
 BASE = "/api/v1/company"
 
@@ -201,16 +199,6 @@ def _json(response):
         return None
 
 
-def _capture(response) -> str | None:
-    from qa.evidence import EvidenceStore
-
-    try:
-        return EvidenceStore("script-company").capture(
-            response.request, response, SafetyTier.MUTATE) or None
-    except Exception:  # noqa: BLE001
-        return None
-
-
 def _outcome_of(exc: BaseException) -> str:
     """`not_sent` only when the request cannot have left; a timeout or a cut stream may have
     landed, and that is `unknown` (bb.py's reading)."""
@@ -242,7 +230,6 @@ def _send(client, kind: str, url: str, body: dict) -> dict:
     return _append({"id": intent["id"], "type": "outcome", "kind": kind, "at": _now(),
                     "outcome": outcome, "http_status": response.status_code,
                     "company_id": named if kind == "create" else None,
-                    "evidence_id": _capture(response),
                     "response": ({k: said[k] for k in KEEP if k in said} if served is not None
                                  and isinstance(served, dict) else (response.text or "")[:300])})
 
@@ -265,9 +252,6 @@ def cmd_create(body_file, confirm: bool) -> int:
     if not confirm:
         print("nothing sent: create needs --confirm")
         return 0
-    if os.environ.get("QA_CREW_DEPT"):
-        print("refused, nothing sent: a company worker never creates a company")
-        return 2
     client = _client()
     try:
         outcome = _send(client, "create", f"{BASE}/", body)
@@ -286,9 +270,6 @@ def cmd_department(raw_company, body_file, confirm: bool) -> int:
     if not confirm:
         print("nothing sent: department needs --confirm")
         return 0
-    if os.environ.get("QA_CREW_DEPT"):
-        print("refused, nothing sent: a company worker never adds a department")
-        return 2
     client = _client()
     try:
         outcome = _send(client, "department", url, body)
@@ -306,9 +287,6 @@ def cmd_message(raw_company, text, confirm: bool) -> int:
     if not confirm:
         print("nothing sent: message needs --confirm")
         return 0
-    if os.environ.get("QA_CREW_DEPT"):
-        print("refused, nothing sent: a company worker never writes to their Manager")
-        return 2
     client = _client()
     try:
         outcome = _send(client, "message", url, body)
@@ -326,9 +304,6 @@ def cmd_brake(kind: str, raw_company, confirm: bool) -> int:
     if not confirm:
         print(f"nothing sent: {kind} needs --confirm")
         return 0
-    if os.environ.get("QA_CREW_DEPT"):
-        print(f"refused, nothing sent: a company worker never does a {kind}")
-        return 2
     client = _client()
     try:
         outcome = _send(client, kind, url, None)

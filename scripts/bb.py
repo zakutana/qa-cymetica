@@ -7,11 +7,10 @@
     python scripts/bb.py verdict TICKET pass|fail [--note-file F] [--confirm]   BB-VERDICT
     python scripts/bb.py withdraw TICKET [--confirm]                     BB-WITHDRAW
     python scripts/bb.py get TICKET     their record of one request (a read)
-    python scripts/bb.py mine           our requests, from state/bb.jsonl
+    python scripts/bb.py mine           our requests, from state/bb.jsonl: filed here, or filed on
+                                        their form and acted on from here
 
-[operator 2026-10-11] "Ja nic podavat kebudu ty muzes sam klidne build it better podavat i ty
-featury": the laboratory's desk files its own requests. Without --confirm a write prints the
-exact body it would send and records nothing; nothing leaves.
+Without --confirm a write prints the exact body it would send and records nothing; nothing leaves.
 
 Five writes, each declared in components.yaml under rest.build_it_better with a closed body
 (`build_it_better.file|accept|change|verdict|withdraw`), so the transport refuses an extra key
@@ -27,8 +26,7 @@ the body)", which is the MCP tools' shape, not REST's. Withdraw is in llms.txt a
 list only, so it is sent in accept's shape. The account that filed a request may act without
 the token (`yours`), and we file with our X-API-Key, so the token is a second key, not the only
 one. It is kept in state/bb_tokens.json (ticket -> token, gitignored) and nowhere else: taken
-out of the response before the outcome row is written, replaced in the captured evidence, and
-X-BB-Token is a secret header to the evidence redactor.
+out of the response before the outcome row is written.
 
 Every write is two records in state/bb.jsonl (rule 9), ids BB-NNNN: the intent BEFORE the POST,
 the outcome after. `accepted` is a 2xx naming a ticket (for a filing, a 201 with `created:
@@ -53,12 +51,12 @@ sys.path.insert(0, str(REPO_ROOT))
 from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
-from qa.crew import crew_brake  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
-from qa.state import file_lock, state_dir  # noqa: E402
+from qa.paths import file_lock, state_dir  # noqa: E402
 
 BASE = "/api/v1/build-it-better/requests"
 AGENT = "qa-cymetica desk"
+REDACTED = "<redacted>"
 
 # The body keys a filing may carry, and exactly the ones components.yaml declares for
 # `build_it_better.file` (a test holds the two equal). BBRequestIn's other four are refused:
@@ -238,6 +236,18 @@ def mine(rows: list[dict]) -> list[dict]:
                     "after": [f"{r.get('kind')} {r.get('outcome')}" for r in rows
                               if done and r.get("type") == "outcome" and r.get("kind") != "file"
                               and r.get("ticket") == done]})
+    # A ticket filed on their web form has no filing here, only what we did on it afterwards.
+    filed = {row["ticket"] for row in out if row["ticket"]}
+    for row in rows:
+        done = row.get("ticket")
+        if row.get("type") != "outcome" or row.get("kind") == "file" or not done or done in filed:
+            continue
+        filed.add(done)
+        out.append({"id": row.get("id"), "at": row.get("at"), "ticket": done,
+                    "app": (row.get("response") or {}).get("app_name") if isinstance(row.get("response"), dict) else None,
+                    "outcome": "web form", "open_ticket": None, "token_held": done in held,
+                    "after": [f"{r.get('kind')} {r.get('outcome')}" for r in rows
+                              if r.get("type") == "outcome" and r.get("ticket") == done]})
     return out
 
 
@@ -300,29 +310,7 @@ def _scrub(value, secret: str | None):
     """A copy of `value` with the token's text replaced wherever it appears."""
     if not secret:
         return value
-    from qa.evidence import REDACTED
-
     return json.loads(json.dumps(value, ensure_ascii=False).replace(secret, REDACTED))
-
-
-def _capture(response, secret: str | None) -> str | None:
-    """The exchange, kept like league.py's -- with the token's text replaced in their answer.
-    The X-BB-Token we SENT is a secret header to the redactor, so the request is safe as is."""
-    import httpx
-
-    from qa.evidence import REDACTED, EvidenceStore
-
-    try:
-        if secret:
-            content = response.content.replace(secret.encode("utf-8"), REDACTED.encode("utf-8"))
-            headers = [(k, v) for k, v in response.headers.multi_items()
-                       if k.lower() not in ("content-length", "content-encoding", "transfer-encoding")]
-            response = httpx.Response(response.status_code, headers=headers, content=content,
-                                      request=response.request)
-        return EvidenceStore("script-bb").capture(
-            response.request, response, SafetyTier.MUTATE) or None
-    except Exception:  # noqa: BLE001
-        return None
 
 
 def _send(client, kind: str, url: str, body: dict | None, ticket_id: str | None = None,
@@ -356,7 +344,6 @@ def _send(client, kind: str, url: str, body: dict | None, ticket_id: str | None 
     done = ticket_id or named
     record = {"id": intent["id"], "type": "outcome", "kind": kind, "at": _now(),
               "ticket": done, "outcome": outcome, "http_status": response.status_code,
-              "evidence_id": _capture(response, secret),
               "token_held": bool(done and done in tokens()),
               "response": ({k: (said[k][:500] if isinstance(said[k], str) else said[k])
                             for k in KEEP if k in said} if isinstance(served, dict)
@@ -390,12 +377,6 @@ def cmd_file(app_url, app_name, improvements_file, design_urls, confirm: bool) -
     if not confirm:
         print("nothing sent: file needs --confirm")
         return 0
-    # The company's brake (docs/crew-plan.md): its workers file at most two a day. Not
-    # applied to a session -- the operator's own filings are theirs.
-    braked = crew_brake("bb", load())
-    if braked:
-        print(f"refused, nothing sent: {braked}")
-        return 2
     client = _client(write=True)
     try:
         outcome, spec = _send(client, "file", BASE, body)
@@ -405,11 +386,6 @@ def cmd_file(app_url, app_name, improvements_file, design_urls, confirm: bool) -
     if spec:
         print(f"\nBB-SPEC:\n{spec}")
     return 0 if outcome["outcome"] == "accepted" else 1
-
-
-def ours(ticket_id: str, rows: list[dict]) -> bool:
-    """A ticket this repository filed itself (`mine`)."""
-    return any(row.get("ticket") == ticket_id for row in mine(rows))
 
 
 def cmd_act(kind: str, raw_ticket: str, body: dict | None, confirm: bool) -> int:
@@ -424,14 +400,6 @@ def cmd_act(kind: str, raw_ticket: str, body: dict | None, confirm: bool) -> int
     if not confirm:
         print(f"nothing sent: {kind} needs --confirm")
         return 0
-    # The company's grant was to FILE (the laborator skill, 2026-10-11): a worker acts only on
-    # a ticket the company filed itself; a verdict on the operator's own ticket -- ET-30773 --
-    # is the operator's (crew-before-c9, item 3). A dry run sends nothing and is not refused;
-    # a session is the operator's and is not refused here.
-    if os.environ.get("QA_CREW_DEPT") and not ours(ticket_id, load()):
-        print(f"refused, nothing sent: {ticket_id} was not filed by the company; "
-              f"its {kind} is the operator's")
-        return 2
     client = _client(write=True)
     try:
         outcome, spec = _send(client, kind, url, body, ticket_id=ticket_id, token=token)

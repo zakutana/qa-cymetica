@@ -12,6 +12,7 @@ missing reading is not a contradiction and not an agreement either, and the tick
 
 from __future__ import annotations
 
+import math
 import re
 from datetime import datetime, timedelta, timezone
 
@@ -546,3 +547,57 @@ def decide(new: list[dict], asks: int, unstarted: list, ended: list, ends: list,
         return f"decide: look {ended[0]}"
     times = sorted(t for t in (_when(e) for e in ends) if t is not None)
     return f"decide: quiet until {times[0]:%H:%M} UTC" if times else "decide: quiet"
+
+
+# -- the seat's floor ---------------------------------------------------------------------
+TABLE = re.compile(r"^[A-Za-z0-9-]{1,64}$")
+
+
+def _positive(value) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) \
+        and math.isfinite(value) and value > 0
+
+
+def seat_refusal(table_id: str, table, rules, instance_id: str | None = None) -> str | None:
+    """Why a seat may NOT be asked for at this table, or None.
+
+    A seat of ours already at the table refuses only the SAME bot again (their rules: one owner
+    may seat several DIFFERENT bots at a paper table, one copy of each; the operator, 2026-10-28:
+    five different bots at one table). Called without a bot, the old floor holds: any seat of ours
+    refuses.
+
+    Read off THEIR table (`GET /api/v1/agent-tournaments/tables/{id}`) and rules
+    (`/rules`), never off the lobby -- `/lobby?mode=paper` is filtered by the very
+    thing being asked. Their table carries no field for the buy-in's currency: what says
+    the buy-in is paper is the table's own `mode: "paper"` together with the rules'
+    `paper_note` ("the buy-in comes from your paper USDC"). So both are required, the
+    paper mode must be open, the table open with a free seat and none of ours, and its
+    `buyin_usdc` the one its tier publishes."""
+    if not isinstance(table, dict) or not isinstance(rules, dict):
+        return "their table or rules could not be read; nothing is asked on an unread answer"
+    if str(table.get("id")) != str(table_id):
+        return f"they answered table {table.get('id')!r} for table {table_id!r}"
+    if table.get("mode") != "paper":
+        return (f"table {table_id} reads mode={table.get('mode')!r}; a seat is asked only "
+                f"where their table says paper")
+    modes = rules.get("modes") if isinstance(rules.get("modes"), dict) else {}
+    if modes.get("paper") != "open":
+        return f"their rules say paper tables are {modes.get('paper')!r}, not open"
+    note = str(rules.get("paper_note") or "")
+    if "paper usdc" not in note.casefold():
+        return ("their rules no longer say a paper table's buy-in comes from paper USDC "
+                f"(paper_note: {note[:120]!r}); the buy-in is not known to be paper")
+    if table.get("status") != "open":
+        return f"table {table_id} is {table.get('status')!r}, not open"
+    free = table.get("seats_free")
+    if not isinstance(free, int) or isinstance(free, bool) or free < 1:
+        return f"table {table_id} has {free!r} seats free"
+    if table.get("my_seat") is not None and instance_id is None:
+        return f"we already hold a seat at table {table_id}: {table.get('my_seat')!r}"
+    buyin = table.get("buyin_usdc")
+    tiers = [t for t in rules.get("tiers") or [] if isinstance(t, dict)
+             and t.get("tier") == table.get("tier")]
+    if not _positive(buyin) or not tiers or tiers[0].get("buyin_usdc") != buyin:
+        return (f"table {table_id}'s buy-in {buyin!r} is not the {table.get('tier')!r} "
+                f"tier's published buy-in")
+    return None

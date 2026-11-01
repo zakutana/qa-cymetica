@@ -13,12 +13,7 @@ Two commands write, two read:
     python scripts/correspond.py list
     python scripts/correspond.py show ET-22498
 
-What this is NOT. These events move neither axis and the fold does not read
-them: a chat with the vendor is not a filing on a report, and the display state
-of a finding must stay traceable to a run or to the bounty API. `--findings` is
-accepted so `show` can say which rows a message was about, and is deliberately
-advisory -- if a later session wires it into qa/fold.py, the states it produces
-will be ones no run and no report can account for.
+`--findings` is accepted so `show` can say which rows a message was about.
 
 The operator confirms; nothing here guesses. A message they forget to confirm
 leaves no trace at all, which is their decision, made on 2026-09-08 when asked
@@ -38,7 +33,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from qa.console import printable  # noqa: E402
-from qa.state import append_event, journal_path, read_events  # noqa: E402
+from qa.paths import append_event, journal_path, read_events  # noqa: E402
 
 SOURCE = "scripts/correspond.py"
 CHANNEL = "telegram"
@@ -176,21 +171,6 @@ def _text_from(args) -> str:
     return args.text or ""
 
 
-def _append_or_die(event: dict) -> None:
-    """`duplicate` is an error on this path, not idempotence.
-
-    Everywhere else a repeated event is the same fact arriving twice. Here it is
-    a message the operator was told was recorded and was not.
-    """
-    outcome = append_event(event)
-    if outcome != "appended":
-        raise SystemExit(
-            f"refusing: {event['type']} {event['msg_id']} is already on the "
-            f"journal, so this text would be dropped rather than stored.\n"
-            f"  read it with: python scripts/correspond.py show {event['msg_id']}"
-        )
-
-
 def cmd_sent(args) -> int:
     events = read_events()
     text = _text_from(args)
@@ -206,12 +186,11 @@ def cmd_sent(args) -> int:
         event["note"] = args.note
     if args.findings:
         event["findings"] = [f.strip() for f in args.findings.split(",") if f.strip()]
-    _append_or_die(event)
+    append_event(event)
 
     print(f"recorded as {event['msg_id']}"
           + (f" (their ref {event['via']})" if event.get("via") else ""))
     print(f"  journal  {journal_path()}")
-    print("  the fold does not read this; there is nothing to re-fold")
     if not opens_with_handle(text):
         # Recorded regardless: this command records what the operator has
         # ALREADY sent, and a journal tidied to match the rule would no
@@ -219,11 +198,6 @@ def cmd_sent(args) -> int:
         print(f"  NOTE: this message does not open with {HANDLE}, which is "
               f"what [operator 2026-09-13] asks of every message we draft. "
               f"Recorded as sent, because it was.")
-    # [operator 2026-09-24] in the channels skill: every Telegram message
-    # has an a2a twin, until they revoke it. Printed here because this is the
-    # one step every session takes when a message went out.
-    print("  NOW its a2a twin, same text: python scripts/a2a.py send "
-          "--text-file <the same file> --confirm")
     return 0
 
 
@@ -250,11 +224,10 @@ def cmd_reply(args) -> int:
         event["via"] = args.via
     if args.note:
         event["note"] = args.note
-    _append_or_die(event)
+    append_event(event)
 
     print(f"recorded as {event['msg_id']}, answering {args.to}")
     print(f"  journal  {journal_path()}")
-    print("  the fold does not read this; there is nothing to re-fold")
     return 0
 
 
@@ -313,7 +286,7 @@ def main(argv: list[str] | None = None) -> int:
     send.add_argument("--text")
     send.add_argument("--text-file")
     send.add_argument("--via", help="their ticket id, e.g. ET-22498")
-    send.add_argument("--findings", help="comma-separated; advisory, never folded")
+    send.add_argument("--findings", help="comma-separated; only for `show`")
     send.add_argument("--note")
     # When it was actually sent, not when it was typed in here. Every telegram
     # event recorded before 2026-09-08 carries the moment of recording, with

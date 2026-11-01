@@ -18,10 +18,8 @@ Nothing is written to the journal either -- an intent recorded for a message
 that never left would have the journal claim we asked them something we did
 not.
 
-Two events per send, and keyed on OUR id rather than theirs. That is rule 9,
-and the reason is the case the record exists for: a POST that times out has no
-server id, and the text must survive it. `unknown` is settled by a later read
-of the inbox, never by editing.
+Two events per send, keyed on OUR id rather than theirs: a POST that times out
+has no server id, and the text must survive it.
 
 Reading their side is `scripts/bounty.py fetch_inbox`, which this does not
 duplicate: `list` and `show` read the journal that the inbox read fills.
@@ -41,9 +39,8 @@ sys.path.insert(0, str(REPO_ROOT))
 from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.console import printable  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
-from qa.crew import crew_brake  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
-from qa.state import append_event, journal_path, read_events  # noqa: E402
+from qa.paths import append_event, journal_path, read_events  # noqa: E402
 
 SOURCE = "scripts/a2a.py"
 CHANNEL = "a2a"
@@ -133,16 +130,6 @@ def _client_for():
                         EndpointRegistry.load(), timeout=60.0)
 
 
-def _capture(response) -> str | None:
-    from qa.evidence import EvidenceStore
-
-    try:
-        return EvidenceStore("script-a2a").capture(
-            response.request, response, SafetyTier.PROBE)
-    except Exception:  # noqa: BLE001
-        return None
-
-
 def _text_from(args) -> str:
     if args.text_file:
         return Path(args.text_file).read_text(encoding="utf-8")
@@ -163,12 +150,6 @@ def cmd_send(args) -> int:
         return 0
 
     events = read_events()
-    # The company's brake (docs/crew-plan.md): a worker sends at most three an hour. Not
-    # applied to a session -- the operator's own sends are theirs.
-    braked = crew_brake("a2a", events)
-    if braked:
-        print(f"refused, nothing sent: {braked}")
-        return 2
     msg_id = next_a2a_id(events)
     at = _now()
     append_event({"type": "a2a_intent", "at": at, "by": "operator",
@@ -197,7 +178,6 @@ def cmd_send(args) -> int:
         CURRENT_TIER.reset(token)
         client.close()
 
-    evidence_id = _capture(response)
     try:
         body = response.json()
     except ValueError:
@@ -209,7 +189,7 @@ def cmd_send(args) -> int:
     outcome = {"type": "a2a_outcome", "at": _now(), "by": "agent",
                "source": SOURCE, "msg_id": msg_id,
                "outcome": "accepted" if accepted else "unknown",
-               "http_status": response.status_code, "evidence_id": evidence_id}
+               "http_status": response.status_code}
     if their_id:
         outcome["via"] = str(their_id)
     if message.get("created_at"):
