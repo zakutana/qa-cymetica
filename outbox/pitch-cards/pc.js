@@ -315,7 +315,7 @@
   function tags(r) { return '<span class="pb-tag t-' + r.k + '">' + TAGS[r.k] + '</span>' + (r.pitch ? '<span class="pb-tag t-pitch">Pitch</span>' : ''); }
   function daysCell(r) {   // its whole life as a line, the peak marked on it
     var at = r.days ? Math.min(100, Math.max(0, 100 * (r.days - r.dp) / r.days)) : 100;
-    return '<span class="pb-dn" title="' + r.days + ' days since it started, peak ' + r.dp + ' days ago"><b>' + r.days + '</b><i>/</i><em>' + r.dp + '</em></span>' +
+    return '<span class="pb-dn" title="' + r.days + ' days since it started, peak ' + r.dp + ' days ago"><b>' + r.days + 'd</b><i>/</i><em>' + (r.dp ? r.dp + 'd ago' : 'today') + '</em></span>' +
       '<span class="pb-life"><u style="width:' + at.toFixed(1) + '%"></u><s style="left:' + at.toFixed(1) + '%"></s></span>';
   }
   function drawBoard() {
