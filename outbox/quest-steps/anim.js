@@ -54,11 +54,15 @@
   // brightness, which the HQ's key cut away, so here the dim light is laid onto the page's sky as light (alpha below its
   // brightness) and only what is bright is whole; either way alpha from the brightest channel, the colour kept (it was
   // filmed over black, so it is already the colour times its alpha)
-  var KEY_FS = 'precision mediump float; uniform sampler2D A, B; uniform float w, lo, hi, kg; uniform vec2 sc, of; varying vec2 uv;' +
+  // While the pointer is on something in the clip (step 3, below) everything outside hr (x0, y0, x1, y1 of the clip)
+  // steps back, softly, so the lanes running out of hr carry no edge
+  var KEY_FS = 'precision mediump float; uniform sampler2D A, B; uniform float w, lo, hi, kg, hs; uniform vec2 sc, of; uniform vec4 hr; varying vec2 uv;' +
     'vec4 key(vec3 c) { float m = max(c.r, max(c.g, c.b)); float a = smoothstep(lo, hi, m); return vec4(mix(min(c, vec3(a)), c, kg), a); }' +
     // the loop's cross-fade as a dissolve, one copy into the other: never the two half see-through (measured: one over
     // the other dimmed the HQ by a sixth mid-fade)
-    'void main() { vec2 t = uv * sc + of; gl_FragColor = mix(key(texture2D(A, t).rgb), key(texture2D(B, t).rgb), w); }';
+    'void main() { vec2 t = uv * sc + of; vec4 o = mix(key(texture2D(A, t).rgb), key(texture2D(B, t).rgb), w);' +
+    ' if (hs > 0.001) { vec2 q = max(hr.xy - t, t - hr.zw); o *= 1.0 - 0.55 * hs * smoothstep(0.0, 0.06, length(max(q, vec2(0.0)))); }' +
+    ' gl_FragColor = o; }';
   var KEY_VS = 'attribute vec2 p; varying vec2 uv; void main() { uv = p * 0.5 + 0.5; gl_Position = vec4(p, 0.0, 1.0); }';
   function keyed(box, vids, posterUrl) {
     var cv = document.createElement('canvas'), gl = cv.getContext('webgl', { premultipliedAlpha: true, alpha: true, antialias: false });
@@ -72,10 +76,11 @@
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     var lp = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(lp); gl.vertexAttribPointer(lp, 2, gl.FLOAT, false, 0, 0);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    var U = {}; ['A', 'B', 'w', 'sc', 'of', 'lo', 'hi', 'kg'].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
+    var U = {}; ['A', 'B', 'w', 'sc', 'of', 'lo', 'hi', 'kg', 'hs', 'hr'].forEach(function (n) { U[n] = gl.getUniformLocation(pr, n); });
     gl.uniform1i(U.A, 0); gl.uniform1i(U.B, 1);
-    var glow = box.dataset.key === 'glow';
+    var glow = box.dataset.key === 'glow', hot = null, hv = 0;
     gl.uniform1f(U.lo, glow ? 0.0 : 0.025); gl.uniform1f(U.hi, glow ? 0.45 : 0.12); gl.uniform1f(U.kg, glow ? 1 : 0);
+    gl.uniform1f(U.hs, 0);
     var tex = [0, 1].map(function (i) {
       var t = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + i); gl.bindTexture(gl.TEXTURE_2D, t);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -101,9 +106,10 @@
       if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
       gl.viewport(0, 0, w, h);
       // as object-fit: cover
-      var ca = w / h, va = sw / shh;
-      if (ca > va) { gl.uniform2f(U.sc, 1, va / ca); gl.uniform2f(U.of, 0, (1 - va / ca) / 2); }
-      else { gl.uniform2f(U.sc, ca / va, 1); gl.uniform2f(U.of, (1 - ca / va) / 2, 0); }
+      var ca = w / h, va = sw / shh, sx = ca > va ? 1 : ca / va, sy = ca > va ? va / ca : 1;
+      gl.uniform2f(U.sc, sx, sy); gl.uniform2f(U.of, (1 - sx) / 2, (1 - sy) / 2);
+      hv = reduce ? (hot ? 1 : 0) : hv + ((hot ? 1 : 0) - hv) * 0.2;
+      gl.uniform1f(U.hs, hv < 0.004 ? 0 : hv);
       var w = 0;
       if (src === poster) up(0, poster);
       else {
@@ -116,7 +122,13 @@
       gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
-    return { draw: draw };
+    // hot([x0, y0, x1, y1]) in the clip from its top left: the rest back; [] all of it back; null: as it was
+    function hotSet(r) {
+      hot = r;
+      if (r) { var e = r.length ? r : [-9, -9, -9, -9]; gl.uniform4f(U.hr, e[0], 1 - e[3], e[2], 1 - e[1]); }
+      if (reduce) draw();
+    }
+    return { draw: draw, hot: hotSet };
   }
 
   /* ---------------- the clips ---------------- */
@@ -130,7 +142,7 @@
     var vids = [a];
     if (box.classList.contains('xf')) { var b = a.cloneNode(true); b.classList.add('b'); box.appendChild(b); vids.push(b); }
     vids.forEach(function (v) { v.muted = true; v.playsInline = true; v.addEventListener('error', function () { if (v.getAttribute('src')) box.classList.add('dead'); }); });
-    var key = 'key' in box.dataset ? keyed(box, vids, a.getAttribute('poster')) : null;
+    var key = box.keyed = 'key' in box.dataset ? keyed(box, vids, a.getAttribute('poster')) : null;
     if (key) vids.forEach(function (v) { v.addEventListener('loadeddata', key.draw); v.addEventListener('seeked', key.draw); });
     // the poster behind the video too: a video that does not paint shows its poster, never a hole (a keyed clip draws
     // its own, keyed)
@@ -296,7 +308,7 @@
         if (mine >= 0) items[mine].el.classList.remove('mine');
         mine = m2; if (mine >= 0) items[mine].el.classList.add('mine');
         ring.classList.toggle('mine', mine >= 0);
-        plate.textContent = (mine >= 0 ? 'Your ' : '') + items[bi].name;
+        plate.textContent = items[bi].name;
       }
     });
   })();
@@ -364,6 +376,28 @@
     run('hqHud', box, function (t) {
       var idx = Math.floor(t / 1.8) % dps.length;
       dps.forEach(function (d, i) { d.style.borderColor = ''; d.classList.toggle('cmd', i === 0 || i === idx); });
+    });
+  })();
+
+  /* ---------------- step 3: every product on the map lit under the pointer, and a link ---------------- */
+  // ("na kazde kdyz najede nekdo mysi tak se highlightuje a pujde na nej kliknout a otevre se ta stranka v novem okne a
+  // ty highlighy zkus udelat tim zelenym ze budou obramovane", 2026-11-01): a .hot over each, its name's plate and the
+  // Promo Market's name in the words all do the same; the outline is a picture of its own (record.py outlines), the
+  // cube's a CSS glow
+  (function () {
+    var stage = document.querySelector('.stage.market'); if (!stage) return;
+    var orbit = stage.querySelector('[data-anim=market-orbit]'), bld = stage.querySelector('[data-anim=market-building]');
+    function lit(name) {
+      if (name) stage.dataset.hl = name; else delete stage.dataset.hl;
+      [].forEach.call(stage.querySelectorAll('.b3[data-hot], .hlo[data-hot]'), function (p) { p.classList.toggle('hov', p.dataset.hot === name); });
+      var hit = name && name !== 'promo' && stage.querySelector('.hot[data-hot=' + name + ']'), s = hit && hit.style;
+      if (orbit.keyed) orbit.keyed.hot(!name ? null : hit ? [parseFloat(s.left) / 100, parseFloat(s.top) / 100, (parseFloat(s.left) + parseFloat(s.width)) / 100, (parseFloat(s.top) + parseFloat(s.height)) / 100] : []);
+      if (bld.keyed) bld.keyed.hot(!name ? null : name === 'promo' ? [0, 0, 1, 1] : []);
+    }
+    [].forEach.call(document.querySelectorAll('[data-hot]'), function (a) {
+      var on = function () { lit(a.dataset.hot); }, off = function () { lit(null); };
+      a.addEventListener('pointerenter', on); a.addEventListener('pointerleave', off);
+      a.addEventListener('focus', on); a.addEventListener('blur', off);
     });
   })();
 

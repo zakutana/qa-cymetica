@@ -143,7 +143,13 @@ def office(b, seconds=24, closer=1.0, dsf=1.5):
       (o.drift || []).forEach((d) => { const m = d && d.isObject3D ? d : d && (d.m || d.mesh); if (m && m.isObject3D) { m.visible = false; hid.push(m.type); } });
       sc.background = new sc.background.constructor(0x000000); if (sc.fog) sc.fog.color.setHex(0x000000);
       return { hidden: hid.length, first: o.drift && o.drift[0] ? Object.keys(o.drift[0]).slice(0, 8) : null }; }"""))
-    time.sleep(1.5)
+    # sixteenth take's third round ("do vaultu dej penize hromadu"): the Vault's own piles (u3d.js piles(): ET10's green
+    # bars and USDC's blue coins on pallets, whole near two million and a quarter of a million), in this browser only;
+    # what it really holds, nothing, may not rebuild them while it is filmed
+    print('office: vault', page.evaluate("""() => { const o = CO.builder.office, r = o.rooms.vault;
+      o.piles(r, { et10: 2e6, usdc: 2.5e5 }, false); o.piles = function () {};
+      return r.pileSet.all.map(im => im.visible); }"""))
+    time.sleep(3)
     # the camera still (or in to `closer` of the way), its astronauts at work; the page plays from data-loop-from
     if closer != 1.0:
         page.evaluate("""(k) => { const o = CO.builder.office;
@@ -285,7 +291,9 @@ def farmer(b, seconds=12):
 # long (`lap` s, 80 in the Universe: a 12 s clip would have jumped it back a sixth of a lap at every loop), and so
 # everything of the building seamless at that length: its rings turned whole quarters, its band a whole width, its bob
 # twice, its slow turn held still, its own clock run at `tsc` so the billboard's magenta and amber come round 4 times
-MARKET = dict(ga=0.32, cl=3, ca=0.75, az=1.25, el=0.55, dist=13.0, ty=0.3, pk=0.2, pr=3.0, ps=2.8, lap=30.0, tsc=28 / 30,
+# Sixteenth take's third round ("gem screener posun trosku dozadu a doleva at ho neprekryva napis od airdrop farmera"):
+# the gem on the lane inside and further round it (gl, gx), the camera still aimed by where it stood (ga), so nothing else moves
+MARKET = dict(ga=0.32, gl=0, gx=0.5, cl=3, ca=0.75, az=1.25, el=0.55, dist=13.0, ty=0.3, pk=0.2, pr=3.0, ps=2.8, lap=30.0, tsc=28 / 30,
               pan=1.0)   # the airship's hull, measured over a lap: 58 to 92 % of the canvas across (at 0: 70 to 104)
 MARKET_SETUP = """(o) => { const uv = CO.uv, V = uv.camera.position.constructor, up = new V(0, 1, 0);
   uv.arc = function () {}; (uv.arcs || []).forEach(a => { uv.scene.remove(a.head, a.streak); }); uv.arcs = [];
@@ -298,7 +306,7 @@ MARKET_SETUP = """(o) => { const uv = CO.uv, V = uv.camera.position.constructor,
   const lanes = uv.laneDefs.map(l => l.r).sort((a, b) => a - b);
   const at = (lane, a) => new V(Math.sin(a) * lanes[lane], f0.y, Math.cos(a) * lanes[lane]);
   const f = at(2, a0), g = at(1, a0 + o.ga);
-  F.plot.root.position.copy(f); G.plot.root.position.copy(g); C.plot.root.position.copy(at(o.cl, a0 + o.ca));
+  F.plot.root.position.copy(f); G.plot.root.position.copy(at(o.gl, a0 + o.gx)); C.plot.root.position.copy(at(o.cl, a0 + o.ca));
   const out = new V(f.x, 0, f.z).normalize(), along = up.clone().cross(out).normalize();
   const T = f.clone().lerp(g, 0.45); T.y += h * o.ty;
   const dir = out.clone().multiplyScalar(Math.cos(o.az)).addScaledVector(along, -Math.sin(o.az)).multiplyScalar(Math.cos(o.el)).addScaledVector(up, Math.sin(o.el));
@@ -335,6 +343,13 @@ MARKET_WHERE = """() => { const uv = CO.uv, cam = uv.camera, V = cam.position.co
   return out; }"""
 
 
+def market_box(page, sel):
+    """the box both of step 3's clips are cut to"""
+    box, size = lit_box(page, sel, 0.03)
+    # to the canvas's right edge: what is lit now leaves out the airship's far side (cut at 85 % when it was measured)
+    return (box[0], box[1], (size[0] - box[0]) // 2 * 2, box[3]), size
+
+
 def market(b, seconds=12):
     """step 3: two clips of one camera (MARKET), cut to the same box: the orbit (its lanes, the farmer, the gem and the
     Agent Casino; keyed as light, data-key="glow", the lanes being 2 to 7 % bright), `seconds` long, and the Promo
@@ -344,9 +359,7 @@ def market(b, seconds=12):
     page.evaluate(MARKET_SETUP, MARKET)
     time.sleep(3)
     sel = '#uv3d canvas'
-    box, size = lit_box(page, sel, 0.03)
-    # to the canvas's right edge: what is lit now leaves out the airship's far side (cut at 85 % when it was measured)
-    box = (box[0], box[1], (size[0] - box[0]) // 2 * 2, box[3])
+    box, size = market_box(page, sel)
     x, y, w, h = box
     pct = lambda pt: (round((pt[0] - x) / w * 100, 1), round((pt[1] - y) / h * 100, 1))
     print('market: canvas', size, 'box', box, 'aspect', f'{w} / {h}',
@@ -365,6 +378,91 @@ def market(b, seconds=12):
     page.close()
     frame_poster('market-orbit', 1.0)
     frame_poster('market-building', 1.0)
+
+
+# sixteenth take's third round ("na kazde kdyz najede nekdo mysi tak se highlightuje ... ty highlighy zkus udelat tim
+# zelenym ze budou obramovane ale at to vypada top"; a line drawn live round whatever was lit in the clip came out
+# jagged and ran inside the gem, along the lanes and round the building's every ring): each product alone on black,
+# everything of it over some seconds as one shape with its holes filled, and round that one shape a neon line and its
+# glow, as a picture of the clip's size cut to itself. The page lights it under the pointer. The airship goes its own
+# way, so the Promo Market's shape is without it
+OUTLINED = {'gem': ('ad-gem', 70), 'farmer': ('ad-farmer', 60), 'casino': ('ad-casino', 60), 'promo': ('ad-promo', 40)}   # and how lit is it: below that a halo, and the line stands off it in a bubble
+
+
+def outline_of(lit):
+    """a lit mask (bool array, the clip's size): the green line and glow round its one shape, RGBA"""
+    import numpy as np
+    from PIL import ImageDraw, ImageFilter
+    m = Image.fromarray((lit * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5)).filter(ImageFilter.MinFilter(5))
+    # specks out: what is not joined to something of 200 pixels; then its holes filled, from the edge in
+    a = np.asarray(m) > 127
+    seen = np.zeros(a.shape, bool)
+    keep = np.zeros(a.shape, bool)
+    for y0, x0 in zip(*np.nonzero(a)):
+        if seen[y0, x0]:
+            continue
+        stack, part = [(y0, x0)], []
+        seen[y0, x0] = True
+        while stack:
+            y, x = stack.pop()
+            part.append((y, x))
+            for ny, nx in ((y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)):
+                if 0 <= ny < a.shape[0] and 0 <= nx < a.shape[1] and a[ny, nx] and not seen[ny, nx]:
+                    seen[ny, nx] = True
+                    stack.append((ny, nx))
+        if len(part) >= 200:
+            ys, xs = zip(*part)
+            keep[list(ys), list(xs)] = True
+    filled = Image.fromarray((keep * 255).astype(np.uint8))
+    pad = Image.new('L', (filled.width + 2, filled.height + 2), 0)
+    pad.paste(filled, (1, 1))
+    ImageDraw.floodfill(pad, (0, 0), 128)
+    solid = (np.asarray(pad)[1:-1, 1:-1] != 128)
+    smooth = lambda arr, r: np.asarray(Image.fromarray((arr * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(r)), np.float32) / 255
+    solid = smooth(solid, 5) > 0.5      # its corners round, so the line runs as one stroke, not along every pixel
+    step = lambda lo, hi, v: (lambda t: t * t * (3 - 2 * t))(np.clip((v - lo) / (hi - lo), 0, 1))
+    inner = step(0.35, 0.65, smooth(solid, 1.6))
+    outer = step(0.05, 0.16, smooth(solid, 3.4))
+    line = outer * (1 - inner)
+    glow = (smooth(outer, 9) * 0.8 + smooth(outer, 24) * 0.55) * (1 - inner)
+    alpha = np.clip(line + glow, 0, 1)
+    pale, green = np.array([200, 255, 228], np.float32), np.array([0, 255, 136], np.float32)
+    k = (line / np.maximum(alpha, 1e-3))[..., None]
+    rgb = green + (pale - green) * k
+    return Image.fromarray(np.dstack([rgb, alpha * 255]).astype(np.uint8), 'RGBA'), solid
+
+
+def outlines(b, frames=8):
+    """pics/hl-<name>.webp for each of OUTLINED, and what index.html needs for it: the picture's left, top and width
+    and the shape's box (its .hot), in % of the clip"""
+    import numpy as np
+    page = capture.universe(b, viewport={'width': 1600, 'height': 1000}, dsf=1.25)
+    page.evaluate(MARKET_SETUP, MARKET)
+    time.sleep(3)
+    sel = '#uv3d canvas'
+    (x, y, w, h), _ = market_box(page, sel)
+    page.evaluate(capture.HIDE_SKY)
+    page.evaluate("""() => { const st = window.__st; st.children.forEach(ch => { if (ch.isGroup && Math.abs(ch.position.y - 7.65) < 0.02) ch.visible = false; }); }""")
+    by = "(id) => CO.uv.items.find(x => x.c.id === id).plot.root"
+    for name, (item, th) in OUTLINED.items():
+        page.evaluate(f"(me) => {{ const r = {by}; {[v[0] for v in OUTLINED.values()]}.forEach(id => {{ r(id).visible = id === me; }}); }}", item)
+        time.sleep(1)
+        lit = np.zeros((h, w), bool)
+        for _ in range(frames):
+            data = page.evaluate("(sel) => document.querySelector(sel).toDataURL('image/png')", sel)
+            im = Image.open(io.BytesIO(base64.b64decode(data.split(',', 1)[1]))).convert('RGB').crop((x, y, x + w, y + h))
+            lit |= np.asarray(im, np.uint8).max(axis=2) > th
+            time.sleep(0.9)
+        out, solid = outline_of(lit)
+        l, t, r, b_ = out.getchannel('A').point(lambda v: 255 if v > 3 else 0).getbbox()
+        dest = capture.HERE / 'pics' / f'hl-{name}.webp'
+        out.crop((l, t, r, b_)).save(dest, quality=88, method=6)
+        ys, xs = np.nonzero(solid)
+        p = lambda v, d: round(v / d * 100, 2)
+        print(f'hl-{name}.webp {r - l}x{b_ - t} {dest.stat().st_size // 1024} KB',
+              f'img left: {p(l, w)}%; top: {p(t, h)}%; width: {p(r - l, w)}%',
+              f'| hot left: {p(xs.min(), w)}%; top: {p(ys.min(), h)}%; width: {p(xs.max() - xs.min(), w)}%; height: {p(ys.max() - ys.min(), h)}%')
+    page.close()
 
 
 # step 5's Universe has six companies today; the leaderboard beside it names five more, so they are given a station
@@ -549,7 +647,7 @@ def promo_cube(b, loop=18.0, fps=30):
     print(f'{out.name} {len(frames)} frames {out.stat().st_size // 1024} KB')
 
 
-SHOTS = {'office': office, 'workshop': workshop, 'lab': lab, 'market': market, 'universe': universe}
+SHOTS = {'office': office, 'workshop': workshop, 'lab': lab, 'market': market, 'outlines': outlines, 'universe': universe}
 # (the twelfth take's doors show step 1's HQ and step 5's Universe, so the start tutorial's own two are no longer made)
 EXTRA = {'universe-mock': universe_mock, 'doors': doors, 'farmer': farmer, 'promo-cube': promo_cube}
 

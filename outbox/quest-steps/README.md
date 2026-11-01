@@ -42,7 +42,13 @@ revenue share), which is unchanged.
    map's left with a YOUR COMPANY tag over it. Its second round: the name plates in steps 3 and 5 are the live
    Universe's own (uv.css .b3, copied), the Promo Market with one of its own over its cube, lit with its building
    while the pointer is on its name in the words; step 3 says again that your products can stand on your own land
-   in the Universe; what earns points has no box any more, only its green words and the "+ pts" tag.
+   in the Universe; what earns points has no box any more, only its green words and the "+ pts" tag. Its third round:
+   step 3's products are links, each lit under the pointer with a green neon outline round its whole shape (record.py
+   outlines), the cube's faces framed in green, the plate over the Promo Market gone; the gem on the lane inside, back and left, clear of the
+   farmer's plate (record.py MARKET gl, gx); the Vault holds its own piles of money (record.py office: u3d.js piles() at
+   full, in the recording browser only); step 1's departments on one line, each with the live office's astronaut in its
+   role's helmet (office.js avatar()); step 5 "Farm points. Climb the leaderboard." with three lines; the Universe a
+   link in step 1's words only; the last section's kicker "Enter the Universe".
 15. **Gemini's fork of this page, adopted** (2026-10-31). Antigravity copied this folder at 2201936a
    (the fourteenth take's first round) to `Downloads\cymetica\outbox\quest-steps` and served it on 8765; the operator:
    "NAD TEBOU VYHRAVA ma vse lepsi, jen ten step s market it bych zmenil". Its index.html, quest.css, quest.js,

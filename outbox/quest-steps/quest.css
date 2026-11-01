@@ -249,20 +249,21 @@ h1 b { font-weight: 400; }
   background: radial-gradient(closest-side, rgba(0, 255, 136, .1), rgba(0, 207, 255, .05) 58%, transparent 100%);
   box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .14), 0 0 80px rgba(0, 207, 255, .08); }
 /* the company in two figures ("4 departments, 9 Agents led by NEXUS") framed in a clear crystal telemetry module */
-.crew-box { margin-top: 38px; padding: 20px 24px 18px; border-radius: 20px; max-width: 610px;
+.crew-box { margin-top: 38px; padding: 20px 24px 18px; border-radius: 20px; width: fit-content; max-width: 100%;
   background: linear-gradient(180deg, rgba(6, 12, 22, .38), rgba(4, 9, 16, .2)); }
 .crew { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px 12px; }
 .crew b { font: 400 50px/1 'Archivo Black', sans-serif; color: var(--green); text-shadow: 0 0 22px rgba(0, 255, 136, .55); }
 .crew span { font: 700 17px 'JetBrains Mono'; letter-spacing: .04em; color: var(--text); }
 .crew span em { font-style: normal; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .55); }
 .crew i { width: 1px; height: 36px; margin: 0 12px; align-self: center; background: linear-gradient(180deg, rgba(0, 207, 255, 0), rgba(0, 207, 255, .75), rgba(0, 207, 255, 0)); }
-.depts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .1); }
-.dp { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 99px;
-  font: 700 11.5px/1 'JetBrains Mono', monospace; letter-spacing: .06em; color: var(--dim);
+/* on one line, each with its little agent where the light was ("dej ty departmenty na 1 radek a dej jim ikonky tech
+   agentu malinke misto tech svetilek", 2026-11-01; quest.js draws them) */
+.depts { display: flex; gap: 6px; margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .1); }
+.dp { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px; border-radius: 99px; white-space: nowrap;
+  font: 700 11.5px/1 'JetBrains Mono', monospace; letter-spacing: .03em; color: var(--dim);
   background: rgba(5, 10, 18, .55); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .24); }
-.dp i { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 7px var(--cyan); }
+.dp svg { flex: none; width: 13px; height: 22px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)); }
 .dp.cmd { color: #ffffff; box-shadow: inset 0 0 0 1px rgba(0, 255, 136, .48), 0 0 14px rgba(0, 255, 136, .14); }
-.dp.cmd i { background: var(--green); box-shadow: 0 0 9px var(--green); animation: live-pulse 2s var(--ease) infinite; }
 .crop { position: relative; aspect-ratio: 1500 / 1132; overflow: hidden; }
 .crop .clip { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
 .crop video { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: fill; }
@@ -301,7 +302,7 @@ h1 b { font-weight: 400; }
 .ring .it.front .mk { box-shadow: 0 0 0 1px rgba(0, 255, 136, .85), 0 0 40px rgba(0, 255, 136, .45); }
 /* yours, as it comes out of the pipeline: brought to the front, lit, tagged */
 .ring .it.mine .mk { box-shadow: 0 0 0 2px var(--green), 0 0 64px rgba(0, 255, 136, .65); }
-.ring .it.mine::after { content: 'Yours \00b7 live'; position: absolute; left: 50%; top: -10px; transform: translate(-50%, -100%); padding: 3px 8px; border-radius: 6px; white-space: nowrap;
+.ring .it.mine::after { content: 'Live'; position: absolute; left: 50%; top: -10px; transform: translate(-50%, -100%); padding: 3px 8px; border-radius: 6px; white-space: nowrap;
   font: 800 11px 'JetBrains Mono'; letter-spacing: .14em; text-transform: uppercase; color: #03140c; background: var(--green); box-shadow: 0 0 16px rgba(0, 255, 136, .6); }
 .ring.mine .plate b { color: var(--green); text-shadow: 0 0 18px rgba(0, 255, 136, .6); }
 .ring .base { position: absolute; left: 4%; right: 4%; top: 152px; height: 60px; border-radius: 50%; pointer-events: none;
@@ -555,17 +556,26 @@ h1 b { font-weight: 400; }
 .b3 .rib::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 5px var(--acc); opacity: .85; flex: none; }
 .b3 .teth { width: 0; height: 0; border: 4px solid transparent; border-top-color: var(--fr); border-bottom: 0; margin-top: -1px; }
 .b3.product .rib { border-color: var(--acc); color: #eef4fa; }
-.b3.hov { --fr: var(--acc); }
-.b3.hov .rib { color: #eef4fa; box-shadow: 0 0 16px color-mix(in srgb, var(--acc) 55%, transparent); }
-/* the Promo Market lit while the pointer is on its name in the words (quest.js data-hl): its plate as the map lights a
-   plate under the pointer, a little bigger, the building and its cube brighter in a cyan glow, the rest of the picture
-   stepping back */
-.stage.market .pic > .clip, .stage.market .holo-at, .stage.market .users, .stage.market .plus, .stage.market .flow { transition: opacity .35s var(--ease), filter .35s var(--ease); }
-.stage.market.hl-promo .pic > .clip:not(.bld), .stage.market.hl-promo .b3:not(.pm), .stage.market.hl-promo .users, .stage.market.hl-promo .plus, .stage.market.hl-promo .flow { opacity: .35; }
-.stage.market.hl-promo .bld { filter: brightness(1.3) drop-shadow(0 0 14px rgba(0, 207, 255, .75)); }
-.stage.market.hl-promo .holo-at { filter: brightness(1.35) drop-shadow(0 0 22px rgba(0, 207, 255, .6)); }
-.stage.market.hl-promo .b3.pm { --fr: var(--acc); transform: translate(-50%, -100%) scale(1.12); }
-.stage.market.hl-promo .b3.pm .rib { color: #eef4fa; box-shadow: 0 0 16px color-mix(in srgb, var(--acc) 55%, transparent), 0 0 34px rgba(0, 207, 255, .35); }
+/* step 3's products lit under the pointer (anim.js): a neon outline round the whole of it (record.py outlines), the
+   plate in green, a little bigger, the cube in a green glow, what is not under the pointer stepping back */
+.b3[data-hot] { pointer-events: auto; cursor: pointer; text-decoration: none; }
+.hot { position: absolute; z-index: 3; display: block; cursor: pointer; }
+.hot:focus { outline: none; }
+.pic > img.hlo { position: absolute; z-index: 2; height: auto; pointer-events: none; opacity: 0; transition: opacity .25s var(--ease); -webkit-mask-image: none; mask-image: none; }
+.pic > img.hlo.hov { opacity: 1; animation: hlo-pulse 1.9s ease-in-out infinite; }
+@keyframes hlo-pulse { 50% { opacity: .68; } }
+.b3.hov { --fr: var(--green); transform: translate(-50%, -100%) scale(1.08); }
+.b3.hov .rib { border-color: var(--green); color: #ffffff; box-shadow: 0 0 0 1px rgba(0, 255, 136, .45), 0 0 18px rgba(0, 255, 136, .6), 0 0 44px rgba(0, 255, 136, .28); }
+.b3.hov .rib::before { background: var(--green); box-shadow: 0 0 7px var(--green); opacity: 1; }
+.stage.market .holo-at, .stage.market .users, .stage.market .flow { transition: opacity .3s var(--ease), filter .3s var(--ease); }
+.stage.market[data-hl] .users, .stage.market[data-hl] .flow, .stage.market[data-hl] .b3:not(.hov) { opacity: .45; }
+.stage.market[data-hl]:not([data-hl=promo]) .holo-at { opacity: .45; }
+/* the cube: each glass face framed in green (a glow over the whole cube came through its glass and filled it), its light
+   turned green with it */
+.stage.market .holo .f { transition: box-shadow .25s var(--ease); }
+.stage.market .holo .aura, .stage.market .holo .pool, .stage.market .holo .beam { transition: filter .25s var(--ease); }
+.stage.market[data-hl=promo] .holo .f { box-shadow: inset 0 0 0 2px #a8ffd4, inset 0 0 22px rgba(0, 255, 136, .5), 0 0 26px rgba(0, 255, 136, .55); }
+.stage.market[data-hl=promo] .holo .aura, .stage.market[data-hl=promo] .holo .pool, .stage.market[data-hl=promo] .holo .beam { filter: hue-rotate(-40deg) saturate(1.4); }
 .users { position: absolute; z-index: 3; left: 45.1%; top: 71%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 8px;
   padding: 6px 15px; border-radius: 99px; white-space: nowrap;
   font: 700 15px/1 'JetBrains Mono'; color: var(--text);
@@ -741,7 +751,9 @@ h1 b { font-weight: 400; }
   #s1 .pic, .step.build .stage .pic, .stage.uni .pic { width: 100%; margin-left: 0; }
   .crew-box { margin-top: 26px; padding: 16px; }
   .crew b { font-size: 34px; } .crew span { font-size: 14px; }
-  .dp { font-size: 10.5px; padding: 4px 9px; }
+  .crew-box { width: auto; }
+  .depts { flex-wrap: wrap; }
+  .dp { font-size: 10.5px; }
   .step.build .conduit { display: none; }
   .ring { height: 240px; margin-top: 16px; } .ring .items { height: 166px; } .ring .it { width: 150px; height: 85px; } .ring .base { top: 134px; height: 54px; }
   .machine { grid-template-columns: 1fr; gap: 14px; margin-top: 16px; }
@@ -786,5 +798,5 @@ h1 b { font-weight: 400; }
 }
 @media (prefers-reduced-motion: reduce) {
   .rv { opacity: 1; transform: none; transition: none; }
-  .pts li::before, .tube::before, .door .arr::before, .brand .qb-orbit, .brand .qb-star, #sun, .step.build .conduit i, .flow .fl, .pill i, .dp.cmd i, .lab-hud .st-dot, .lb .gh .dot { animation: none; }
+  .pts li::before, .pic > img.hlo.hov, .tube::before, .door .arr::before, .brand .qb-orbit, .brand .qb-star, #sun, .step.build .conduit i, .flow .fl, .pill i, .lab-hud .st-dot, .lb .gh .dot { animation: none; }
 }

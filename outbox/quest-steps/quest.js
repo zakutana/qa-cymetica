@@ -46,7 +46,9 @@
       universe: 'https://cymetica.com/company/app#universe',
       bib: 'https://cymetica.com/build-it-better',
       promo: 'https://cymetica.com/promo-market',
-      casino: 'https://cymetica.com/agent-casino'
+      casino: 'https://cymetica.com/agent-casino',
+      gem: 'https://cymetica.com/gem-screener',
+      farmer: 'https://cymetica.com/airdrop-farmer'
     }
   };
   var S = window.QUEST_STATE = { ready: false, active: 0, frames: {} };
@@ -79,13 +81,28 @@
   });
   document.querySelectorAll('[data-figure]').forEach(function (el) { el.textContent = fmt(get(el.dataset.figure)); });
   document.querySelectorAll('[data-link]').forEach(function (a) { a.href = Q.links[a.dataset.link]; a.target = '_blank'; a.rel = 'noopener'; });
-  // a link with data-hl lights its own thing in its step's picture while the pointer or the focus is on it ("kdyz
-  // nekdo najede mysi na promo market v textu tak se highlightuje ten promo market na mape", 2026-11-01)
-  document.querySelectorAll('[data-hl]').forEach(function (a) {
-    var stage = a.closest('.step').querySelector('.stage'), cls = 'hl-' + a.dataset.hl;
-    var on = function () { stage.classList.add(cls); }, off = function () { stage.classList.remove(cls); };
-    a.addEventListener('pointerenter', on); a.addEventListener('pointerleave', off);
-    a.addEventListener('focus', on); a.addEventListener('blur', off);
+  // each department's little agent ("dej jim ikonky tech agentu malinke misto tech svetilek. staci 1 ikonka na
+  // department", 2026-11-01): the live office's own astronaut (cymetica.com/static/company/office.js avatar(), read
+  // 2026-11-01), its helmet and visor the department's role's (its ROLE2D)
+  var ROLE2D = { manager: ['#bccad6'], developer: ['#1c9cb4'], lab_scientist: ['#5aa888'], trader: ['#c49035', '#6a4a14'], qa_tester: ['#c4532f', '#160a08'] };
+  function shade(hex, k) {
+    var n = parseInt(hex.slice(1), 16), to = k > 0 ? 255 : 0, a = Math.abs(k);
+    return 'rgb(' + [n >> 16, (n >> 8) & 255, n & 255].map(function (c) { return Math.round(c + (to - c) * a); }).join(',') + ')';
+  }
+  document.querySelectorAll('.dp[data-role]').forEach(function (d) {
+    var role = d.dataset.role, c = ROLE2D[role][0], visor = ROLE2D[role][1] || '#0e2c56', suit2 = '#b3c1cf', pack = '#4a5c70';
+    d.insertAdjacentHTML('afterbegin', '<svg viewBox="-9 -29 18 30" aria-hidden="true"><defs>' +
+      '<linearGradient id="dp-suit-' + role + '" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f4f8fb"/><stop offset="1" stop-color="#b9c7d4"/></linearGradient>' +
+      '<radialGradient id="dp-helmet-' + role + '" cx=".36" cy=".3" r=".78"><stop offset="0" stop-color="' + shade(c, 0.45) + '"/><stop offset=".55" stop-color="' + c + '"/><stop offset="1" stop-color="' + shade(c, -0.45) + '"/></radialGradient></defs>' +
+      '<rect x="-4.3" y="-8.6" width="3.6" height="8" rx="1.6" fill="' + suit2 + '"/><rect x=".7" y="-8.6" width="3.6" height="8" rx="1.6" fill="' + suit2 + '"/>' +
+      '<rect x="-4.7" y="-2.3" width="4.1" height="2.5" rx="1" fill="' + pack + '"/><rect x=".6" y="-2.3" width="4.1" height="2.5" rx="1" fill="' + pack + '"/>' +
+      '<rect x="-3.8" y="-18.8" width="10.2" height="9.8" rx="2.6" fill="' + pack + '"/>' +
+      '<rect x="-7.7" y="-16.4" width="3.4" height="9.2" rx="1.7" fill="url(#dp-suit-' + role + ')"/><rect x="4.3" y="-16.4" width="3.4" height="9.2" rx="1.7" fill="' + suit2 + '"/>' +
+      '<rect x="-5.4" y="-17.6" width="10.8" height="10.8" rx="4.2" fill="url(#dp-suit-' + role + ')"/>' +
+      '<rect x="-2.9" y="-14.7" width="5.8" height="3.1" rx=".9" fill="' + pack + '"/><circle cx="1.3" cy="-13.15" r=".8" fill="#38f2b8" opacity=".6"/>' +
+      '<ellipse cx="0" cy="-17.4" rx="4.5" ry="1.45" fill="' + pack + '"/>' +
+      '<circle cx="0" cy="-22.2" r="5.7" fill="url(#dp-helmet-' + role + ')"/>' +
+      '<ellipse cx="-1.2" cy="-21.8" rx="3.9" ry="2.8" fill="' + visor + '"/><ellipse cx="-2.5" cy="-22.8" rx="1.3" ry=".75" fill="#cfe6ff" opacity=".75"/></svg>');
   });
 
   // ---- the rail: the quest's track: a round light a step with its number in it (no hexagon: "nelibi se mi ten
