@@ -5,6 +5,7 @@
 scene.webp   the room alone: the baked glass pane painted out, Nexus gone, so it can fill any screen behind him
 nexus.webp   Nexus cut out by hand-traced outline (2560 x 1440 coordinates below), to stand in FRONT of the card: the card
              sits under his finger and slides behind him when it is swiped to him. Left edge x=NX, top y=NY in the render.
+             Cut from SHARP at twice those coordinates, so a screen at any scale has the pixels (see gen/MANIFEST.md).
 """
 from __future__ import annotations
 
@@ -15,6 +16,7 @@ from PIL import Image, ImageDraw, ImageFilter
 
 HERE = Path(__file__).resolve().parent
 SRC = HERE.parent / "quest" / "gen" / "lab-16x9.png"
+SHARP = HERE.parent / "quest" / "gen" / "lab-16x9-5120.png"   # the same render through Real-ESRGAN, twice the size
 NX, NY = 1640, 280
 
 # Nexus's outline in the render's pixels, down his face, over the collar and shoulder, along the arm to the fingertip,
@@ -88,23 +90,23 @@ def room(a: np.ndarray) -> np.ndarray:
 def nexus(a: np.ndarray) -> Image.Image:
     """Nexus alone: the outline feathered a little, and the baked pane's rim taken off his hand."""
     b = a.astype(np.float32).copy()
-    for y in range(600, 900):
-        l, r = 1783, 1801
+    for y in range(1200, 1800):
+        l, r = 3566, 3602
         t = np.linspace(0, 1, r - l)[:, None]
         b[y, l:r] = b[y, l] * (1 - t) + b[y, r] * t
-    # the render was enlarged to 2560 and is soft at this size: the edges of his shell are brought back, finest first
-    im = Image.fromarray(np.clip(b, 0, 255).astype(np.uint8)).filter(ImageFilter.UnsharpMask(1.5, 110, 2)).filter(ImageFilter.UnsharpMask(4, 35, 3)).convert("RGBA")
+    im = Image.fromarray(np.clip(b, 0, 255).astype(np.uint8)).convert("RGBA")
     mask = Image.new("L", im.size, 0)
-    ImageDraw.Draw(mask).polygon(OUTLINE, fill=255)
-    mask = mask.filter(ImageFilter.GaussianBlur(1.1))
+    ImageDraw.Draw(mask).polygon([(2 * x, 2 * y) for x, y in OUTLINE], fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(2.2))
     im.putalpha(mask)
-    return im.crop((NX, NY, 2560, 1440))
+    return im.crop((2 * NX, 2 * NY, 5120, 2880))
 
 
 if __name__ == "__main__":
     src = np.asarray(Image.open(SRC).convert("RGB"))
     Image.fromarray(room(src)).save(HERE / "scene.webp", quality=92, method=6)
-    nexus(src).save(HERE / "nexus.webp", quality=96, method=6)
-    Image.fromarray(src[310:690, 1880:2260]).resize((192, 192), Image.LANCZOS).save(HERE / "nexus-face.webp", quality=92, method=6)
+    sharp = np.asarray(Image.open(SHARP).convert("RGB"))
+    nexus(sharp).save(HERE / "nexus.webp", quality=90, method=6)
+    Image.fromarray(sharp[620:1380, 3760:4520]).resize((192, 192), Image.LANCZOS).save(HERE / "nexus-face.webp", quality=92, method=6)
     for f in ("scene.webp", "nexus.webp", "nexus-face.webp"):
         print(f, (HERE / f).stat().st_size // 1024, "KB")
