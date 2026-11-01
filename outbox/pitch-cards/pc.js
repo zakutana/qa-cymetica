@@ -304,7 +304,7 @@
     var d = line.map(function (q, i) { return (i ? 'L' : 'M') + X(q[0]).toFixed(1) + ' ' + Y(q[1]).toFixed(1); }).join(''), z = Y(0), e = line[line.length - 1];
     box.innerHTML = '<svg viewBox="0 0 ' + W + ' ' + H + '" aria-hidden="true"><defs>' +
       '<clipPath id="pbUp"><rect x="0" y="-20" width="' + W + '" height="' + (z + 20).toFixed(1) + '"/></clipPath><clipPath id="pbDn"><rect x="0" y="' + z.toFixed(1) + '" width="' + W + '" height="' + (H + 20) + '"/></clipPath></defs>' +
-      '<line class="zero" x1="0" x2="' + W + '" y1="' + z.toFixed(1) + '" y2="' + z.toFixed(1) + '"/><text class="ztx" x="0" y="' + (z - 7).toFixed(1) + '">$100 = break even</text>' +
+      '<line class="zero" x1="0" x2="' + W + '" y1="' + z.toFixed(1) + '" y2="' + z.toFixed(1) + '"/><text class="ztx" text-anchor="end" x="' + (W - 2) + '" y="' + (z + 18).toFixed(1) + '">$100 = break even</text>' +
       '<g clip-path="url(#pbUp)"><path class="g up" d="' + d + '"/><path class="l up" d="' + d + '"/></g><g clip-path="url(#pbDn)"><path class="g dn" d="' + d + '"/><path class="l dn" d="' + d + '"/></g>' +
       '<circle cx="' + X(e[0]).toFixed(1) + '" cy="' + Y(e[1]).toFixed(1) + '" r="3.8" fill="#eafff4"/>' +
       '<text class="axs" x="6" y="' + (H - 4) + '">' + day(line[0][0]) + '</text><text class="axs" text-anchor="end" x="' + (W - 2) + '" y="' + (H - 4) + '">today</text></svg>';
@@ -314,7 +314,7 @@
     var val = 100 * (1 + st.avg / 100), pos = st.avg >= 0;
     $('pbK').textContent = '$100 in each, on its first day';
     $('pbV').textContent = usd(val, 2); $('pbV').className = pos ? 'pos' : 'neg';
-    $('pbS').textContent = 'today · ' + big(st.n) + ' things you could have bought';
+    $('pbS').textContent = 'today · ' + big(st.n) + ' things you could have bought' + (st.suspect ? ' · ' + big(st.suspect) + ' suspect left out' : '');
     drawBoardLine(st.line);
     $('boardTiles').innerHTML = stat('Up', big(st.up) + '<em>/' + big(st.n) + '</em>') +
       stat('Best', st.best == null ? '–' : pct(st.best, 1), st.best > 0 ? 'pos' : 'neg', null, st.best_n) +
@@ -331,7 +331,7 @@
       var cls = r.r > 0 ? 'pos' : r.r < 0 ? 'neg' : 'zero';
       return '<a class="pc-tr" role="row" href="https://cymetica.com' + esc(r.u || '') + '" target="_blank" rel="noopener"><span class="n">' + (i + 1) + '</span>' +
         '<span class="w"><b title="' + esc(r.n) + '">' + esc(r.n) + '</b><small>' + (r.pitch ? '<i>Pitch</i>' : '') + esc(r.s) + ' · ' + day(r.d) + '</small></span>' +
-        '<span class="v ' + cls + '">' + (r.j ? '<i class="jmp" title="One step of ' + pct(r.j[0], 0) + ' between two readings on ' + day(r.j[1]) + ': a jump in the index, not a market. Never counted as Best.">JUMP</i>' : '') + pct(r.r, 1) + '</span>' +
+        '<span class="v ' + cls + '">' + (r.j ? '<i class="jmp" title="' + esc(r.j) + ' Left out of the figures above.">SUSPECT</i>' : '') + pct(r.r, 1) + '</span>' +
         '<span class="v pk"' + (r.pd ? ' title="on ' + day(r.pd) + '"' : '') + '>' + (r.p == null ? '–' : (r.late ? '≥' : '') + pct(r.p, 1)) + '</span>' +
         '<span class="v dd">' + r.days + '</span>' +
         '<span class="v mo' + (r.m ? ' has' : '') + '">' + (r.m == null ? '–' : usd(r.m)) + '</span></a>';

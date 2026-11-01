@@ -165,7 +165,8 @@ def read_long(client) -> None:
                     missed.append(off)
                     continue
                 for c in cards:
-                    every[c["id"]] = {k: c.get(k) for k in ("title", "status", "card_url", "created_at", "trading_closes_at", "index_base", "current_index", "bull_notional_usdc", "bear_notional_usdc")}
+                    every[c["id"]] = {k: c.get(k) for k in ("title", "status", "card_url", "created_at", "trading_closes_at", "index_base", "current_index", "bull_notional_usdc", "bear_notional_usdc")} | {
+                        "legs": [[b.get("symbol"), b.get("weight"), b.get("asset_type")] for b in c.get("basket") or []]}
                 print(f"cards {off}/{total} kept {len(every)}", flush=True)
                 EVERY_CARD.write_text(json.dumps(every, ensure_ascii=False), encoding="utf-8")
         todo = missed
@@ -209,6 +210,18 @@ def read_long(client) -> None:
     print("read: cards", len(every), "histories", len(done), "of", len(live))
 
 
+def suspect(c: dict, h: dict) -> str | None:
+    """Why this row's number is not a result anyone could have had, or None. It stays on the list and leaves the figures."""
+    if h.get("jump"):
+        return f"One step of {h['jump'][0]:+.0f}% between two readings on {h['jump'][1]}: a jump in the index, not a market."
+    legs = c.get("legs") or []
+    dash = sum(w or 0 for s, w, a in legs if s == "DASH" and a == "crypto")
+    moved = (c["current_index"] / c["index_base"] - 1) / dash if dash else 0
+    if dash >= .2 and moved >= 1.5 and any(a == "stock" for _, _, a in legs):   # the four of 13-15 Sep, each about +260% on the leg
+        return f"Its DASH leg is the Dash coin, beside stock legs, and this result needs that leg up {moved:+.0%} in 3 days; on 13-17 Sep the coin held $50-56. Looks like another price under the ticker."
+    return None
+
+
 def days_since(iso: str, now: datetime) -> int:
     return (now - datetime.fromisoformat(iso[:10]).replace(tzinfo=timezone.utc)).days
 
@@ -236,7 +249,7 @@ def profit_board(funds: list, fund_week: dict, pitches: list, now: datetime) -> 
         if c["status"] in H72:
             peak = max(ret, 100 * (h["peak"] / c["index_base"] - 1)) if h.get("peak") else None
             h72.append({"k": "h72", "n": title, "s": "72h card", "u": c["card_url"], "d": c["created_at"][:10], "days": 3, "r": ret, "p": round(peak, 2) if peak is not None else None,
-                        "pd": h["peak_t"][:10] if h.get("peak_t") else None, "m": money, "late": False, "pitch": False, "j": h.get("jump")})
+                        "pd": h["peak_t"][:10] if h.get("peak_t") else None, "m": money, "late": False, "pitch": False, "j": suspect(c, h)})
             continue
         if c["status"] != "live":
             hidden["other"][c["status"]] = hidden["other"].get(c["status"], 0) + 1
@@ -247,17 +260,18 @@ def profit_board(funds: list, fund_week: dict, pitches: list, now: datetime) -> 
         lag = (datetime.fromisoformat(h["first_t"][:10]) - datetime.fromisoformat(c["created_at"][:10])).days if h.get("first_t") else 0
         rows.append({"k": "company" if company else "card", "n": (company.group(1) + " " + company.group(2)) if company else (deal.group(1) + " · " + re.sub(r"\s*\(\$[\d.]+[BM]\)\s*$", "", deal.group(2)).replace(" to acquire ", " buys ")) if deal else title,
                      "s": "Company card" if company else "Deal card" if deal else "Card", "u": c["card_url"], "d": c["created_at"][:10], "days": days_since(c["created_at"], now),
-                     "r": ret, "p": round(peak, 2) if peak is not None else None, "pd": h["peak_t"][:10] if h.get("peak_t") else None, "m": money, "late": lag > 3, "pitch": i in pitched, "j": h.get("jump"),
+                     "r": ret, "p": round(peak, 2) if peak is not None else None, "pd": h["peak_t"][:10] if h.get("peak_t") else None, "m": money, "late": lag > 3, "pitch": i in pitched, "j": suspect(c, h),
                      "_w": [[d, 100 * (v / c["index_base"] - 1)] for d, v in h.get("week", [])]})
     def tile(rs):
+        everything, rs = rs, [r for r in rs if not r.get("j")]
         n = len(rs)
         peaks = [r for r in rs if r["p"] is not None]
-        clean = [r for r in rs if not r.get("j")]
-        best = max(clean, key=lambda r: r["r"]) if clean else None
+        best = max(rs, key=lambda r: r["r"]) if rs else None
         return {"n": n, "up": sum(1 for r in rs if r["r"] > 0), "avg": round(sum(r["r"] for r in rs) / n, 2) if n else 0, "best": best["r"] if best else None, "best_n": best["n"] if best else None,
-                "peaks": len(peaks), "hit20": sum(1 for r in peaks if r["p"] >= 20), "money_n": sum(1 for r in rs if r["m"]), "money": round(sum(r["m"] or 0 for r in rs), 2), "jumps": sum(1 for r in rs if r.get("j"))}
+                "peaks": len(peaks), "hit20": sum(1 for r in peaks if r["p"] >= 20), "money_n": sum(1 for r in rs if r["m"]), "money": round(sum(r["m"] or 0 for r in rs), 2), "suspect": len(everything) - n}
     def line_of(rs):
         """The average of everything that had started by each week: a 72-hour card counts at its final result from its first week."""
+        rs = [r for r in rs if not r.get("j")]
         starts = sorted({r["d"] for r in rs})
         if not starts:
             return []

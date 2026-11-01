@@ -74,8 +74,10 @@ launchpad tokens (none listed), CyMetica-42 (a trade log, no price), bots.
 
 **Columns:** Up since start, Peak (what selling at the top would have paid; "≥" when recording began more than 3 days late),
 Days, Money in. **The one number:** $100 in each on its first day, equal weight, and its line by week against break-even.
-**JUMP:** one step of 40% or more between two readings is flagged on the row and never counted as Best: DCA Manufacturing went
-97.1 to 197.7 in one step before its close, Corteva 94.1 to 16.3 in one. A 72h card's history is read only for the 300 the list shows.
+**SUSPECT:** a number nobody could have had stays on the list, marked, and leaves the figures. A step of 40% or more between two
+readings: Corteva, 94 to 16.32 on the day it spun off Vylor (reported as #243), and DCA Manufacturing and S&C, 97 to 198 on 9 Oct.
+A DASH coin leg beside stock legs that needs that leg up 150% or more in 3 days: four cards of 13-15 Sep, about +260%, with the coin at $50-56.
+A 72h card's history is read only for the 300 the list shows; 302 of the 947 read came back empty.
 
 `python outbox/pitch-cards/refresh.py --read` is the long pass (every card, then the histories, into `.cache/`, not in git,
 resumable); `refresh.py` then writes `data.js`.
