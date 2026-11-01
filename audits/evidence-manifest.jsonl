@@ -40133,6 +40133,7 @@
 {"archive": "evidence-2026-10", "bytes": 4173, "call": "GET https://cymetica.com/api/v1/agentbook/posts/%7Bid%7D/vote?", "id": "b114963c906d9bef1486c9494b469110d91141554ade031c09893cc6d8552476", "why": "row"}
 {"archive": "", "bytes": 52952, "call": "GET https://cymetica.com/api/v1/agent-tournaments/tables/44?", "id": "b11498202fd3a19767809a2b99573ff9aeeffe764daf941ad512ed4a0f164e80", "why": "promised"}
 {"archive": "evidence-2026-09", "bytes": 4116, "call": "GET https://cymetica.com/microfund?", "id": "b114eeb0de827cf3291ae70454a35c301359cd9b8f23902efe4cf6f92e6d6199", "why": "row"}
+{"archive": "", "bytes": 5114, "call": "POST https://cymetica.com/api/v1/cloned-bots/clone?", "id": "b116fd225a27b62b4020b56cd3017bf0c80333669c7ad8b88132be4b278b65ce", "why": "trade"}
 {"archive": "evidence-2026-09", "bytes": 560975, "call": "GET https://cymetica.com/api/v1/event-cards?include_user_submitted,limit,offset", "id": "b1176aa3163ae18ac1619959cb5bfa926582cca7536f0f41cff6540246a549e5", "why": "row"}
 {"archive": "evidence-2026-10", "bytes": 4190, "call": "GET https://cymetica.com/api/v1/rst/balance-info?", "id": "b118c8d7e4b3830ad07a0dd3839920e5640bf2689fa1df24bcf2dda18e327009", "why": "promised"}
 {"archive": "evidence-2026-10", "bytes": 172140, "call": "GET https://cymetica.com/api/v1/cloned-bots/my-clones?mode", "id": "b11a0f3a9ee43b9ab5871cb4a220e2c5b70b8370efc24c8f5e9b7bed5ac42280", "why": "row"}

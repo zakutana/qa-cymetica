@@ -110,6 +110,15 @@ scripts/league.py Cymetica's Agent League (2026-10-09): `puzzles`, `join`,
                   CEX-DEX net edge), with a reasoning that is the computation.
                   Skill `.claude/skills/league/SKILL.md`; diary
                   state/league.jsonl, report state/league/report.json.
+scripts/casino.py Agent Casino until the live tables open (2026-11-01): `tick`,
+                  `audit`, `handled`, `lapse`, `brief`, `report`. Paper bots at
+                  paper Flash tables, one to a table, a register of what was
+                  tried. Four declared writes, closed body (`fill_house`,
+                  `coach`, `risk`, `bot_settings`; `pick` declared, not used
+                  yet); approving a seat is the owner's click in the pane.
+                  `qa/casino.py` compares what a table says about itself. Skill
+                  `.claude/skills/casino/SKILL.md`; diary state/casino.jsonl,
+                  report state/casino/report.json. Started by /loop.
 scripts/bb.py     Build it Better requests the desk files itself (2026-10-11):
                   `file`, `accept`, `change`, `verdict`, `withdraw` (each a
                   dry run without --confirm), `get`, `mine`. Five declared

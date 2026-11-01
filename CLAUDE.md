@@ -110,6 +110,7 @@ Agents and skills carry their own model and effort in frontmatter. What the sess
 | sweep, filing, verification (`qa-sweep`) | Sonnet 5 · high — which claims still reproduce, whose bug it really is, is exactly the edge-case-hunting effort buys |
 | correspondence written to the vendor (`correspond.py`, `a2a.py send`) | Sonnet 5 · high — every claim about Cymetica is checked against their live page before it goes out under our name |
 | a session in the laboratory (`laborator`) | Sonnet 5 · high — one tick, but its rules have a long history of edge cases nobody re-derived (see `MEMORY.md`) |
+| a tick of Agent Casino (`casino`) | Sonnet 5 · high, a new check in it Opus 5 · high–xhigh — most ticks only read; the one that files is the row below |
 | writing a new check against their platform — a surface nothing tests yet | Opus 5 · high–xhigh — a check is a sanitizer: it must survive a population it has not seen, the shape that needed xhigh above |
 | `qa/state.py`, `qa/fold.py`, `qa/measure.py`, review | Opus 5 · high–xhigh — the ledger's own storage engine; a wrong transition is silent, the shape of a storage-engine bug that needed xhigh to catch |
 | the deep pass | Opus 5 · xhigh (its frontmatter carries it) — full autonomy overnight, nobody reviews the middle |

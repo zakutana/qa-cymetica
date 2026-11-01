@@ -242,6 +242,16 @@ PINNED = {
         ("2026-10-09", "Normalne bse povoluji",
          "4da2cf5d5f25b42adfa8bea48fb517cde0f30fba7316133311f9431302ae26c4"),
     ],
+    ".claude/skills/casino/SKILL.md": [
+        # 2026-11-01, added because they said it: test Agent Casino until the live tables open, approve
+        # the seats in the signed-in browser; and the paper permission of 2026-10-28 it rests on.
+        ("2026-11-01", "to bude ongoing task chci at porad zkousis",
+         "7814bcd8d8003814e7b9172d66949e12ae9f47dcc2de1e82a231ee48ab10c43c"),
+        ("2026-11-01", "pak to sam v browseru klikni na approve",
+         "086dc91d94e522880e8dfde2e51b99f42c86b3ec7563c658283f3eff242b3e70"),
+        ("2026-10-28", "je to paper rezim, nic se stat nemuze",
+         "fd55f05b976c6e24e2828f9f14c76fd904912df16fcbd44a79747c65178e9033"),
+    ],
     ".claude/skills/crew/SKILL.md": [
         ("2026-10-11", "nemelo by cele vedeni labroky uz mit vice delniku",
          "18f8d6a04c73d07214ba7e9474ea1e8b0f1207e54025f14c50af693eace9f1f6"),

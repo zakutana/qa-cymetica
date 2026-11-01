@@ -5,6 +5,7 @@
                                                    ask the next seats. Its last line says what to do.
     python scripts/casino.py audit --tables 33,40  the comparisons on any tables, nothing written
     python scripts/casino.py handled KEY --how #N  a contradiction dealt with (a report, the spec, ours)
+    python scripts/casino.py lapse --table T --instance I   one ask left to run out its 24 hours
     python scripts/casino.py brief                 where it stands
     python scripts/casino.py report                state/casino/report.json, for the /lab page
 
@@ -292,6 +293,28 @@ def ask_next(client, rows: list[dict], tables_open: list[dict], my_rows: list[di
     return asked
 
 
+def watched_asks(rows: list[dict], my_agents: dict) -> list:
+    """Asks left on purpose to lapse: they wait for no click, and the round does not count them."""
+    watch = {r.get("seat_id") for r in rows if r.get("type") == "lapse_watch"}
+    return [s for s in my_agents.get("approve_all_ids") or [] if s in watch]
+
+
+def cmd_lapse(table_id: str, instance_id: str) -> int:
+    """One ask left to run out its 24 hours, to see what a lapsed ask reads as (round 3, line 2; the
+    check agent-tournaments-lapsed-ask-does-not-read-pending)."""
+    outsider = _sibling("outsider")
+    client = _client(write=True)
+    try:
+        code = outsider.seat(table_id, instance_id, True, client=client)
+    finally:
+        client.close()
+    said = next((r for r in reversed(outsider.load()) if r.get("type") == "outcome" and r.get("kind") == "seat"), {})
+    if code == 0:
+        _append({"type": "lapse_watch", "table_id": int(table_id), "seat_id": said.get("seat_id"),
+                 "instance_id": instance_id})
+    return code
+
+
 def read_world(client) -> tuple[dict | None, list | None]:
     lobby = _read(client, f"{BASE}/lobby")
     mine = _read(client, f"{BASE}/my-seats")
@@ -347,17 +370,23 @@ def cmd_tick(confirm: bool) -> int:
                      "line": (seat_row(tables[table_id]) or {}).get("idle_line")})
 
         running = [t for t in tables.values() if t.get("status") == "running"]
-        asks = int(lobby["my_agents"].get("asks") or 0)
+        watched = watched_asks(load(), lobby["my_agents"])
+        asks = int(lobby["my_agents"].get("asks") or 0) - len(watched)
         if confirm and not new and not asks and not unstarted:
+            taken = {r.get("table_id") for r in my_rows} | {r.get("table_id") for r in load() if r.get("type") == "lapse_watch"}
             free = [t for t in lobby.get("open_tables") or [] if isinstance(t, dict) and t.get("tier") in FLASH_TIERS
-                    and t.get("id") not in {r.get("table_id") for r in my_rows}]
-            live = len({r.get("table_id") for r in my_rows})
+                    and t.get("id") not in taken]
+            live = len({r.get("table_id") for r in my_rows if r.get("table_id") not in
+                        {w.get("table_id") for w in load() if w.get("type") == "lapse_watch"}})
             asks += ask_next(client, load(), free, my_rows, live)
     finally:
         client.close()
 
+    _append({"type": "tick", "running": len(running), "asks": asks, "new": len(new)})
     write_report(load(), len(running))
     print(f"tables: {len(running)} running, {len(tables) - len(running)} other; asks {asks}; new contradictions {len(new)}")
+    if watched:
+        print(f"  left to lapse, never approved: seats {watched}")
     for item in new:
         print(f"  new  {item.get('key')}  table {item.get('table_id')}: {item.get('what')}")
     print(casino.decide(new, asks, unstarted, [*ended, *fresh_idle], [t.get("ends_at") for t in running], _now()))
@@ -446,11 +475,16 @@ def main(argv: list[str] | None = None) -> int:
     done = sub.add_parser("handled")
     done.add_argument("key")
     done.add_argument("--how", required=True)
+    lapse = sub.add_parser("lapse")
+    lapse.add_argument("--table", required=True)
+    lapse.add_argument("--instance", required=True)
     sub.add_parser("brief")
     sub.add_parser("report")
     args = parser.parse_args(argv)
     if args.cmd == "tick":
         return cmd_tick(args.confirm)
+    if args.cmd == "lapse":
+        return cmd_lapse(args.table, args.instance)
     if args.cmd == "audit":
         return cmd_audit([int(x) for x in args.tables.split(",") if x.strip()])
     if args.cmd == "handled":

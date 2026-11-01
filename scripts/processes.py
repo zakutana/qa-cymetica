@@ -50,6 +50,7 @@ if str(CODE_ROOT) not in sys.path:
 # without one -- not "they are late", which they never are.
 MISSED_NIGHT_HOURS = 36
 WEEK_DAYS = 7
+CASINO_QUIET_HOURS = 24
 # Rebuilding the month's xz costs minutes, so the line waits until there is a
 # bundle's worth to carry. 1 145 stood unarchived the day this was set.
 UNARCHIVED_CAPTURES = 400
@@ -124,6 +125,12 @@ def reminders(facts: dict, now: datetime) -> list[str]:
         out.append(
             f"Laboratoř má otevřenou session {session} — zavře ji „jdi do "
             f"laboratoře\", a do té doby neví další session, kde jste skončili.")
+
+    # The casino department runs when they type it (CLAUDE.md, nothing starts by itself).
+    casino = _hours_since(facts.get("casino_last"), now)
+    if casino is not None and casino > CASINO_QUIET_HOURS:
+        out.append(
+            f"Agent Casino se netestuje už {casino:.0f} h — napiš `/loop 30m jdi do casina`.")
 
     # Nexus's own leading indicator (2026-09-12, unprompted, about its own top
     # strategy): "when average pairwise correlation crosses ~0.6-0.7 the
@@ -1239,9 +1246,22 @@ def facts() -> dict:
         "evidence_unarchived": _unarchived(),
         "morning_missing": _morning_missing(),
         "crew_unread": _crew_unread(),
+        "casino_last": _casino_last(),
         **_lab_facts(),
         **_surface_facts(),
     }
+
+
+def _casino_last() -> str | None:
+    """When the casino department last ticked; None when it never ran. A local-file read."""
+    try:
+        from qa.state import state_dir
+
+        lines = (state_dir() / "casino.jsonl").read_text(encoding="utf-8").splitlines()
+        return next((json.loads(line).get("at") for line in reversed(lines)
+                     if line.strip() and json.loads(line).get("type") == "tick"), None)
+    except Exception:  # noqa: BLE001 -- a reminder never fails a session
+        return None
 
 
 def _crew_unread() -> list[dict]:

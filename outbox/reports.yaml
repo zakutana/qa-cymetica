@@ -7167,7 +7167,7 @@ reports:
     url: https://cymetica.com/agent-casino/table/43
     title: >-
       Agent Casino: a bot seated again reads "Risk 5 (the middle, where a bot starts)" with stop loss 2.5 % and take
-      profit 10 %: its tuned numbers follow it from its last table, under a line that says otherwise
+      profit 10 %: its tuned numbers follow it from its last table, and the line denies it
     expected: >
       A seat's Risk line carries the numbers of its level, which POST /seats/{id}/risk defines as trade size L %,
       stop loss L %, take profit 4 x L % (at least 5 %): at Risk 5, 5 %, 5 %, 20 %. The ET-32932 follow-up we filed
@@ -7255,6 +7255,35 @@ reports:
       apart as "capped", would fix it. Our check adds up every finished table and fails while the board's paid_usdc or paid_et10
       differs from the prizes less what et10_paid records as capped; a pending prize counts as paid, and it is inconclusive if
       the board or a table cannot be read. GET requests only.
+
+  - key: agent-tournaments-coach-tunes-as-it-says
+    findings: [CYM-agent-tournaments-coach-tunes-as-it-says]
+    severity: low
+    category: logic
+    url: https://cymetica.com/agent-casino
+    title: >-
+      Agent Casino: the NEXUS coach tells the owner it "tunes once the bot has 5 closed trades", and tunes bots with 0 closed
+      trades minutes after the start, on rank alone
+    expected: >
+      What "What it did" says about the coach is what the coach does. A fresh seat reads: "The coach is on and has not changed
+      anything yet: it checks every 10 minutes and tunes once the bot has 5 closed trades." So no tune before five closed trades,
+      or a sentence naming what does set it off (a rank drop, no trade for N minutes).
+    actual: >
+      Read on 2026-11-01 between 10:21 and 10:33 UTC with our X-API-Key. Table 46, a few seconds after its start:
+      my_coach_line.line is that sentence. my_tune_log at tables started the same minutes: table 35 "stop loss 5 → 4 % · rank 1 → 6"
+      at 10:22:14, table 31 "stop loss 5 → 4 % · rank 1 → 2" at 10:26:17, table 45 "stop loss 3 → 2.5 % · rank 1 → 2" at 10:26:17, each
+      with your_trades empty at that time. Table 42 at 08:15: "stop loss 8 → 7 % · rank 1 → 2" with no closed trade, and table 41 at 08:26:
+      "CLOB ETH/USDC on · no trade for 14 min (none yet)".
+    steps:
+      - 'Start a table with a seat of yours and GET https://cymetica.com/api/v1/agent-tournaments/tables/{id} (X-API-Key of the seat owner) within the first minute -> "my_coach_line": {"line": "The coach is on and has not changed anything yet: it checks every 10 minutes and tunes once the bot has 5 closed trades."}'
+      - 'GET /tables/35 (same key) -> my_tune_log: {"kind": "TUNED", "text": "stop loss 5 → 4 % · rank 1 → 6", "at": "2026-11-01T10:22:14"}; your_trades has no trade closed before it'
+      - 'GET /tables/42 (same key) -> my_tune_log: {"kind": "TUNED", "text": "stop loss 8 → 7 % · rank 1 → 2", "at": "2026-11-01T08:15:48"}; the first closed trade is at 08:25'
+    body: >
+      The owner is told one rule and the bot gets another: a rival's first winning trade tightens a stop loss on a bot that has not
+      traded yet, and an owner reading the panel cannot understand why. Saying what sets the coach off, or holding it to the five trades,
+      would fix it. Our check reads our newest seats and fails while a fresh seat reads that sentence and a seat of ours has a tune with
+      fewer than five closed trades before it; it is inconclusive when no fresh seat reads the sentence, which is most of the time. GET
+      requests only.
 
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the

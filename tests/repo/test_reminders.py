@@ -114,6 +114,18 @@ def test_a_missing_morning_report_is_named_so_the_session_makes_it():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_the_casino_is_named_once_a_day_went_by_without_a_tick():
+    """[operator 2026-11-01] wants Agent Casino tested until the live tables open, and nothing here
+    starts by itself: the reminder gives them the words. Silent before it ever ran, and while it runs."""
+    mod = _module()
+    quiet = mod.reminders(_facts(casino_last=_ago(hours=2)), NOW)
+    assert not _says(quiet, "agent casino"), quiet
+    assert not _says(mod.reminders(_facts(casino_last=None), NOW), "agent casino")
+    due = mod.reminders(_facts(casino_last=_ago(hours=30)), NOW)
+    assert _says(due, "agent casino", "/loop"), due
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_what_the_companys_manager_wrote_is_named_until_a_session_reads_it():
     """docs/crew-plan.md, C5: the manager's notes to the operator wait in one diary. The
     session start names how many and the first, so the session reads them out in Czech
