@@ -1762,6 +1762,9 @@ function dustMesh(P, peak) {
 // colour written as measured comes out wrong. Undone here in reverse: ACES's output matrix, its curve, its input
 // matrix, then the saturation. Good to a few levels, bloom aside.
 const UVLOOK = { exposure: 1.15, sat: 0.9 };
+// ?sky=flyer (the operator, 2026-11-01): the flyer's deep space, a plate behind the canvas that is screened over it
+// (skyflyer.css), so the scene's own sky goes near-black and leaves the plate its darkness and its stars
+const SKYF = /[?&]sky=flyer\b/.test(location.search);
 const ACES_IN = new THREE.Matrix3().set(0.59719, 0.35458, 0.04823, 0.07600, 0.90834, 0.01566, 0.02840, 0.13383, 0.83777);
 const ACES_OUT = new THREE.Matrix3().set(1.60475, -0.53108, -0.07367, -0.10208, 1.10813, -0.00605, -0.00327, -0.07276, 1.07602);
 const ACES_IN_INV = ACES_IN.clone().invert(), ACES_OUT_INV = ACES_OUT.clone().invert();
@@ -1907,7 +1910,7 @@ function uvSky(AZ) {
   const hot = toward(-0.55, 0.75), warm = toward(-0.1, 0.95), cold = toward(0.9, -0.9), f = vnoise(19);
   // his sky, measured: #01080d over most of it, #051d28 at the top left, #01060a at the bottom right
   const rgb = (hex) => { const h = look(hex).getHex(THREE.SRGBColorSpace); return [h >> 16 & 255, h >> 8 & 255, h & 255]; };
-  const B0 = rgb('#01090e'), B1 = rgb('#062030'), B2 = rgb('#01050a');
+  const B0 = rgb(SKYF ? '#000206' : '#01090e'), B1 = rgb(SKYF ? '#010a14' : '#062030'), B2 = rgb(SKYF ? '#000104' : '#01050a');
   // (63 ms of noise: drawn in idle time, before the map's first frame or its warm())
   const tex = ctexIdle(1024, 512, (c, W, H) => {
     const img = c.createImageData(W, H), d = img.data, v = new THREE.Vector3();
@@ -1953,7 +1956,7 @@ class Universe3D {
     this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster(); this.hover = null; this.mouseIn = false; this.lastUse = 0;
     geo();
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x01080d);
+    this.scene.background = new THREE.Color(SKYF ? 0x000206 : 0x01080d);
     this.camera = new THREE.PerspectiveCamera(UVCAM.fov, 2, 0.5, 9000);
     // no antialias on the renderer itself: three.js resolves it through ONE quad shared by every renderer on the
     // page, so a second renderer (a preview) would take this canvas over. The pass multisamples instead.
@@ -3505,7 +3508,7 @@ function spaceSky(office) {
   const UV_NEB = [[-32, 8, 72, 8, 0.72, 'teal'], [-54, -8, 62, 3, 0.62, 'cyan'], [-12, 14, 56, 19, 0.38, 'teal'],
     [32, -22, 64, 13, 0.45, 'cyan'], [52, -32, 56, 37, 0.35, 'teal'], [150, -15, 80, 17, 0.55, 'teal'], [95, -35, 60, 23, 0.35, 'green'], [-130, -30, 70, 29, 0.45, 'blue']];
   (office ? OFFICE_NEB : UV_NEB).forEach(([az, el, size, seed, op, tone]) => {
-    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: office ? filamentTex(seed) : nebTex(seed, ...PAL[tone]), transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+    const m = new THREE.Mesh(G.plane, new THREE.MeshBasicMaterial({ map: office ? filamentTex(seed) : nebTex(seed, ...PAL[tone]), transparent: true, opacity: SKYF && office ? op * 0.3 : op, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
     const s = 2 * D * Math.tan(size * Math.PI / 360);
     m.scale.set(s, s, 1); m.position.copy(skyDir(az, el).multiplyScalar(D)); m.lookAt(0, 0, 0); m.rotateZ(R() * 6.28); m.renderOrder = -10; m.frustumCulled = false; g.add(m);
   });
@@ -4570,7 +4573,7 @@ class Office3D {
     this.tip = stage.querySelector('.tip'); this.layer = stage.querySelector('.o3layer');
     this.sel = null; this.cells = {}; this.paths = {}; this.packets = []; this.rooms = {}; this.fitted = false; this.hover = null;
     this.mouse = new THREE.Vector2(); this.ray = new THREE.Raycaster();
-    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(LOOK.sky); this.scene.fog = new THREE.Fog(LOOK.sky, 180, 460);
+    this.scene = new THREE.Scene(); this.scene.background = new THREE.Color(SKYF ? 0x010308 : LOOK.sky); this.scene.fog = new THREE.Fog(SKYF ? 0x010308 : LOOK.sky, 180, 460);
     this.camera = new THREE.PerspectiveCamera(CAM.fov, 2, 0.5, 900);
     this.renderer = new THREE.WebGPURenderer({ antialias: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
