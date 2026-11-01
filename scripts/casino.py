@@ -258,7 +258,10 @@ def keep_findings(rows: list[dict], found: list[dict]) -> list[dict]:
 
 
 def ask_next(client, rows: list[dict], tables_open: list[dict], my_rows: list[dict], running: int) -> int:
-    """The next round: a new species if one is left, then one ask per free table. Returns the asks made."""
+    """The next round: a new species if one is left, then one ask per free table. Returns the asks made.
+    With no room at any table there is no round, and no clone waiting for one."""
+    if running >= casino.MAX_RUNNING or not tables_open:
+        return 0
     outsider, clone = _sibling("outsider"), _sibling("clone")
     body = _read(client, f"{BASE}/my-bots")
     bots = casino.for_the_casino((body or {}).get("bots") or [])
@@ -431,8 +434,9 @@ def summary(rows: list[dict], running: int | None = None) -> list[str]:
     """The /lab lines: numbers first, in English."""
     finals_ = [r for r in rows if r.get("type") == "final"]
     species = {r.get("species") for r in rows if r.get("type") == "experiment"}
-    live = running if running is not None else None
-    first = f"{live if live is not None else '?'} tables running, {len(finals_)} finished, {len(species)} bots tried"
+    last_tick = next((r for r in reversed(rows) if r.get("type") == "tick"), {})
+    live = running if running is not None else last_tick.get("running", "?")
+    first = f"{live} tables running, {len(finals_)} finished, {len(species)} bots tried"
     gaps = [g for r in finals_ for g in r.get("gaps") or []]
     tunes = sum(int(r.get("tunes") or 0) for r in finals_)
     checks = sum(int(r.get("checks") or 0) for r in finals_)

@@ -121,6 +121,9 @@ state/lab/
 # cost the run its level V; `keep.py snapshot` copies the diary into audits/.
 state/gem_audit.jsonl
 state/gem_audit/
+# The casino department's diary and report, for the same reason (scripts/casino.py).
+state/casino.jsonl
+state/casino/
 
 # Where the loop's last tick stopped: the search queue and the clocks. Rewritten
 # every twenty minutes while a /loop runs, and rebuilt from the diaries if it is
