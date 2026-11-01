@@ -79,19 +79,9 @@ def _probe(title: str) -> str:
 # the reason line called that report one "which they have not validated" about
 # a report validated two stages earlier.
 #
-# Derived from qa/fold.py's sets rather than retyped, so their vocabulary is
-# stated in one place. tests/rest/test_status_vocabulary_is_mapped.py holds
-# those against the live enum, which makes this transitively held too.
-def _published_stages() -> frozenset:
-    from qa.fold import _FIX_CLAIMED_STATUSES, _REPLIED_STATUSES, _REJECTED_STATUSES
-
-    # Everything they engage with, minus the rejections (an invalid report was
-    # never validated) and minus triage, which is before validation.
-    engaged = (_REPLIED_STATUSES | _FIX_CLAIMED_STATUSES) - _REJECTED_STATUSES
-    return frozenset(engaged - {"triaging"})
-
-
-PUBLISHED = _published_stages()
+# Everything they engage with, minus the rejections (an invalid report was
+# never validated) and minus triage, which is before validation.
+PUBLISHED = frozenset({"validated", "in_progress", "openclaw_testing", "ready_for_review", "fixed", "paid"})
 
 # Sent on every submission. The finding is that some are accepted and then
 # not stored, so what comes back is compared against what went out.
@@ -106,7 +96,7 @@ def _our_submissions() -> list[dict]:
     filing became two events, so it ends at #56 and this check would have
     measured a shrinking, stale population without saying so.
     """
-    from qa.state import read_events
+    from qa.paths import read_events
 
     titles: dict[str, str] = {}
     out: list[dict] = []

@@ -6,10 +6,6 @@
 # 201 that files the request, and lets its holder accept, change, judge or withdraw that ticket.
 state/bb_tokens.json
 
-# Rebuildable projection of the journal. The journal is the source of truth.
-state/qa.sqlite
-state/qa.sqlite-*
-
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -21,184 +17,30 @@ dist/
 .DS_Store
 Thumbs.db
 
-# The journal's append lock. A zero-byte file whose only job is to exist while
-# one process holds it; committing it would put a machine's transient state in
-# everyone's tree.
+# Locks and half-written files under state/.
 state/**/*.lock
 state/*.lock
-
-# Run records. Every pytest invocation writes one, including the single-file
-# runs with --tb=line that make up most of a working session: on 2026-09-07,
-# 237 of 283 committed records had adjudicated nothing, and the tree grew
-# 9-15 MB on a working day. The cost that mattered was not the megabytes --
-# an untracked record makes `git status --porcelain` dirty, prereg.py refuses
-# a dirty tree, and so every sweep opened by committing debug output.
-#
-# A record is evidence when a fold stood on it, and scripts/ledger.py force-
-# adds exactly that one. tests/repo asserts the converse: nothing cited by the
-# ledger, the journal or a preregistration may be untracked. Records committed
-# before this line stay committed.
-#
-# Since 2026-09-10 two things keep the untracked pile down: a session that ran
-# only tests/meta and tests/repo writes no record at all (qa/report_plugin.py
-# ::should_record), and scripts/prune_runs.py removes what nothing cites.
-state/runs/
-
-# Half-written snapshots. Every atomic write under state/ goes tmp-then-replace,
-# and a process killed between the two leaves the tmp behind -- untracked, which
-# means git status is dirty, which means prereg.py refuses and no run can reach
-# level V. protect_state.py then blocks removing it from a shell, so the
-# operator is left with a tree they cannot clean by the sanctioned route.
 state/**/*.tmp
 state/*.tmp
 
-# The same two for the evidence manifest (qa/manifest.py): its writers -- the
-# pre-commit hook, every fold, `keep.py archive` -- take audits/evidence-manifest
-# .jsonl.lock and replace the file through a temporary of their own. Untracked
-# beside it, either would make every tree dirty and every preregistration refuse.
-audits/*.lock
-audits/*.tmp
-
-# What Nexus was asked and how long it took to answer. A deep investigation
-# runs for minutes and this file grows while it polls, so committing it would
-# mean a tree that is dirty exactly while a question is outstanding -- and a
-# preregistration refuses a dirty tree. tests/mcp/test_nexus_channel.py reads
-# it from disk; nothing else needs it in git.
-state/nexus.jsonl
-
-# The same, for his answers through the sync door (qa-agent/ask) while the deep
-# lane is at capacity. Its own file because #85 and #86 measure the deep
-# channel off nexus.jsonl.
-state/nexus_shallow.jsonl
-
-# Every paper trade and the account either side of it. Gitignored for the same
-# reason as state/nexus.jsonl -- it is appended to while a campaign runs, and a
-# tree that is dirty during a run is a tree no run can reach level V from.
-# scripts/paper.py proof reads it from disk.
-state/paper.jsonl
-
-# Every paper clone, transfer and pause, and the account either side of them
-# (scripts/clone.py). Committed until 2026-09-23, while the laboratory wrote it
-# in the middle of a tick -- the same dirty-tree reason as paper.jsonl. Copied
-# into audits/lab/ by `scripts/keep.py snapshot`; untracked once by
-# `scripts/keep.py release clones.jsonl`.
-state/clones.jsonl
-
-# The Nexus rooms: the operator's notes from the console and what the sampler
-# reads on a timer. The same reason again, only sharper -- a note is one click
-# away at any moment, including the middle of a sweep. qa/rooms.py reads both
-# from disk; docs/nexus-rooms-plan.md says why they exist.
-state/rooms.jsonl
-state/samples.jsonl
-# A sampler started as a process of its own once wrote its stdout here (2026-10-03); a
-# running process now logs outside the repository, and these two are kept out of the tree.
-state/sampler-run.log
-state/sampler-run.err
-
-# How long each real request to their host took (qa/timings.py), one line per
-# request, written during every run -- tracked, it would cost each run its
-# level V. Read by scripts/timeouts.py.
-state/timings.jsonl
-# The request brake's shared slots (qa/ratelimit.py), rewritten on every request.
+# What a run writes: rewritten all the time, and remade by running again. No capture body is kept and no gigabytes
+# go in git.
+state/runs/
+state/bounty.json
 state/pace.json
-# The FOMO collector's requests today, every process's (scripts/fomo_watch.py, the daily
-# ceiling), rewritten on every request it makes.
-state/fomo_requests.json
-
-# The laboratory's own notebook: what a session did, what it learned, what the
-# next one should pick up. Outside git for the reason the four above are --
-# it is appended to while a run may be in flight -- and copied into audits/lab/
-# by `scripts/keep.py snapshot`, so months of it are not on one disk.
-state/lab.jsonl
-
-# The laboratory's report (`lab.py report`, plan v2 V4): a projection of the
-# diaries above, rewritten whenever the /lab page is asked for. Outside git for
-# their reason, and so the committed console hashes nothing that is not in git.
-state/lab/
-
-# The Gem Screener audit (scripts/gem_audit.py, a department): its diary and its
-# report. Written by a tick while a sweep may be in flight, so tracked it would
-# cost the run its level V; `keep.py snapshot` copies the diary into audits/.
-state/gem_audit.jsonl
 state/gem_audit/
-# The casino department's diary and report, for the same reason (scripts/casino.py).
-state/casino.jsonl
 state/casino/
-
-# Where the loop's last tick stopped: the search queue and the clocks. Rewritten
-# every twenty minutes while a /loop runs, and rebuilt from the diaries if it is
-# lost -- a cache of the walk, not a record of anything.
-state/lab_tick.json
-# Present only while a tick runs (scripts/lab.py tick_exclusive). Committed
-# mid-tick it would make a clean tree dirty, and a level-V run impossible.
-state/lab_tick.running
-# When each running room's index was last read for an early verdict.
-state/lab_early.json
-# What the last surface scan found (processes.py surface_drift), for the
-# session start to read instead of scanning (plan v2, V7). A cache.
-state/surface_drift.json
-
-# What the laboratory has already asked their backtest, keyed on the basket.
-# Appended to while a run may be in flight, like the diaries above; the deep
-# pass copies it into audits/lab/ so months of search do not live on one disk.
-state/backtests.jsonl
-
-# FOMO Radar's `hot` signals, tracked to measure whether they actually predict
-# a memecoin moving -- scripts/fomo_watch.py. Same reason as the diaries
-# above: appended to by a running poller, snapshotted by the deep pass.
-state/fomo_signals.jsonl
-
-# The outsider, the laboratory's section 6 (scripts/outsider.py): a stranger agent's runs,
-# its picks and its coins' checkpoints. Written by a laboratory tick, so tracked it would
-# cost a run its level V; `keep.py snapshot` copies it into audits/lab/.
-state/outsider.jsonl
-# Each look's raw JSON (`outsider.py run`), before `record` reads it into the diary above. Neither
-# committed nor ignored, every look left the tree dirty (NEXT.md 2026-10-18).
-state/outsider/
-
-# The company (docs/crew-plan.md, scripts/crew.py): what its loops did, the ticket bus,
-# what the manager says to the operator, and its small per-loop files (heartbeats, the
-# worker a department is running, logs, the stop flag). Written by detached loops while a
-# sweep may be in flight, so tracked they would cost a run its level V; the three diaries
-# are a department's, so `keep.py snapshot` copies them into audits/lab/.
-state/crew.jsonl
-state/crew_tickets.jsonl
-state/crew_operator.jsonl
-state/crew/
-
-# The Hot headlines watch -- scripts/hot_watch.py, a round every tick. Unlike
-# the diaries above it is NOT snapshotted: about 2 MB a day would grow git for
-# ever. The six-hourly reading goes into lab.jsonl, which is.
-state/hot_watch.jsonl
-
-# Captured requests and responses. 7 747 files and 469 MB by 2026-09-12,
-# growing 40-170 MB a day -- 120 MB of one day's 170 written by two checks that
-# walk the event-card listing page by page on every run -- and nothing in the
-# pipeline reads the store by machine.
-#
-# What a clone still has to be able to open is force-added and stays tracked:
-# their answers the ledger stands on, and the request and response behind every
-# verdict and report we have sent, which scripts/verify.py promises them
-# "provided on request". qa/keepset.py names that set, .githooks/pre-commit
-# adds it in the commit that cites it, scripts/prune_runs.py cuts the rest
-# after three days, and tests/repo/test_evidence_in_git.py holds both
-# directions -- cited is tracked, and nothing else is.
+state/league/
 evidence/
-
-# The monthly evidence bundles (docs/data-plan.md D2). The MANIFEST is in git
-# and proves what each one holds; the bodies themselves are what left.
-archive/
 
 # The /company mockup's downloaded textures and models (CC0, ambientCG and Poly Haven): the bodies stay out
 # of git, outbox/company-live/assets.json (in git) names each file with its source, licence, bytes and sha256.
 outbox/company-live/assets/
 
-# Pictures our own scripts render from a page in git (render.py, make_mockup.py, shoot_previews.py, the station
-# agents' shots): 97 MB of them sat untracked on 2026-10-25, the pack is 209 MB against its 150 ceiling and the
-# 2026-10-18 pass found each mockup picture committed up to six times. Each is remade by running its script; what a
-# request text links (a spec/ folder, a picture named in request.txt) is committed by name and is not listed here.
-# Exact paths, or a name pattern inside one folder of shots; never a repo-wide pattern like *-1440.png, which would
-# silently keep out the next picture a request links.
+# Pictures our own scripts render from a page in git: each is remade by running its script; what a request text
+# links (a spec/ folder, a picture named in request.txt) is committed by name and is not listed here. Exact paths,
+# or a name pattern inside one folder of shots; never a repo-wide pattern like *-1440.png, which would silently keep
+# out the next picture a request links.
 outbox/company-skins/built-*.png
 outbox/company-skins/settings-*.png
 outbox/company-skins/showcase-*.png

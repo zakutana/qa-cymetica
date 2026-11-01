@@ -782,7 +782,7 @@ def _children(source: str) -> list[str]:
 
 
 @qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_BUYBACK)
-def test_a_buyback_is_a_purchase_of_the_token(rest_anon, evidence_store):
+def test_a_buyback_is_a_purchase_of_the_token(rest_anon):
     """Among records shown Squeezing or whose pile reaches 0, none books a buyback from
     holders' revenue that DeFiLlama's own methodology describes only as a payout."""
     batch = _batch(rest_anon)
@@ -792,7 +792,7 @@ def test_a_buyback_is_a_purchase_of_the_token(rest_anon, evidence_store):
                 and r["pile_24m"][0] > 0 and min(x for x in r["pile_24m"] if _num(x)) <= 0)]
     if not rows:
         raise Inconclusive("no row is shown Squeezing or drains its pile")
-    source = build_source_client(evidence=evidence_store, timeout=60.0)
+    source = build_source_client(timeout=60.0)
     judged, payouts, unread, not_judged = 0, [], [], []
     try:
         for row in rows:
@@ -912,7 +912,7 @@ def _page_text(body: str) -> str:
 
 
 @qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_SOURCES)
-def test_a_cited_source_says_what_it_is_credited_with(rest_anon, evidence_store):
+def test_a_cited_source_says_what_it_is_credited_with(rest_anon):
     """HYPE's record: a disposition credited to a page is not contradicted by that page,
     and every url cited for a hand-entered input answers 200."""
     record = _single(rest_anon, "HYPE")
@@ -923,7 +923,7 @@ def test_a_cited_source_says_what_it_is_credited_with(rest_anon, evidence_store)
              and i.get("key") in ("vesting_schedule", "staking_exit", "buyback_disposition")]
     if not cited:
         raise Inconclusive("HYPE's record cites no hand-entered input with a url")
-    source = build_source_client(evidence=evidence_store, timeout=60.0)
+    source = build_source_client(timeout=60.0)
     problems, read = [], []
     try:
         for item in cited:
@@ -1132,13 +1132,13 @@ def _routescan(source, **params) -> float | None:
 
 
 @qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_LOCKED)
-def test_tokens_locked_by_holders_are_not_shown_as_a_reserve(rest_anon, evidence_store):
+def test_tokens_locked_by_holders_are_not_shown_as_a_reserve(rest_anon):
     """PHAR: the PHAR its holders have locked in xPHAR (read on Avalanche) is not shown as the
     reserve, and at least half of it is shown as staked."""
     record = _single(rest_anon, "pharaoh-exchange")
     if record is None:
         raise Inconclusive(f"{ANALYZE}?symbol=pharaoh-exchange could not be read")
-    source = build_source_client(evidence=evidence_store, timeout=60.0)
+    source = build_source_client(timeout=60.0)
     try:
         try:
             docs = source.get(PHARAOH_DOCS)
@@ -1187,7 +1187,7 @@ def test_tokens_locked_by_holders_are_not_shown_as_a_reserve(rest_anon, evidence
 # --- 11. an unknown schedule served as "none scheduled" ----------------------------------
 
 @qa(component="rest.supply_analyzer", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_SCHEDULE)
-def test_an_unknown_schedule_is_not_served_as_none_scheduled(rest_anon, evidence_store):
+def test_an_unknown_schedule_is_not_served_as_none_scheduled(rest_anon):
     """No record that names its vesting schedule unknown serves next_unlock as
     "none_scheduled"; for the chains among them, DeFiLlama's unlock file (the feed the
     analyzer names) is read to show what is scheduled."""
@@ -1198,7 +1198,7 @@ def test_an_unknown_schedule_is_not_served_as_none_scheduled(rest_anon, evidence
     served = [r for r in rows if unknown_served_as_none(r)]
     now = int(time.time())
     probed, scheduled = [], []
-    source = build_source_client(evidence=evidence_store, timeout=60.0)
+    source = build_source_client(timeout=60.0)
     try:
         for row in [r for r in served if (r.get("token") or {}).get("kind") == "chains"]:
             slug = (row.get("token") or {}).get("slug") or ""

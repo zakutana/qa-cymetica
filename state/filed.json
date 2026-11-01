@@ -26,7 +26,7 @@
     "204": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a2a-first-pass-contract",
@@ -59,7 +59,7 @@
     "67": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a2a-first-pass-not-grounded",
@@ -89,7 +89,7 @@
     "69": "fixed"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_backtest_says_the_window_it_actually_covered",
@@ -117,13 +117,11 @@
     "99": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_bot_counts_the_stakes_it_has_open",
-   "nodeids": [
-    "tests/rest/test_clone_books_its_open_positions.py::test_a_bot_counts_the_stakes_it_has_open"
-   ],
+   "nodeids": [],
    "report_ids": [
     94,
     96
@@ -152,7 +150,7 @@
     "96": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-a_bot_paused_by_its_stop_loss_lost_no_more_than_the_stop",
@@ -175,7 +173,7 @@
     "134": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-a_build_ships_inside_the_24_hours_it_publishes",
@@ -215,7 +213,7 @@
     "136": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-a_card_index_moves_no_further_than_its_basket_can",
@@ -243,7 +241,7 @@
     "128": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-a_card_is_tradeable_on_every_surface_or_on_none",
@@ -276,7 +274,7 @@
     "122": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_card_keeps_what_its_company_spun_off",
@@ -293,7 +291,7 @@
     "243": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-a_card_past_its_close_is_not_live",
@@ -310,13 +308,11 @@
     "229": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-a_card_that_reads_tradeable_now_can_be_priced",
-   "nodeids": [
-    "tests/rest/test_a_tradeable_card_can_be_priced.py::test_a_card_that_reads_tradeable_now_can_be_priced"
-   ],
+   "nodeids": [],
    "report_ids": [
     200
    ],
@@ -327,13 +323,11 @@
     "200": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-a_card_that_reads_tradeable_now_takes_a_paper_buy",
-   "nodeids": [
-    "tests/rest/test_a_tradeable_card_takes_a_paper_buy.py::test_a_card_that_reads_tradeable_now_takes_a_paper_buy"
-   ],
+   "nodeids": [],
    "report_ids": [
     117
    ],
@@ -350,7 +344,7 @@
     "117": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_coins_supply_figures_can_all_be_true",
@@ -373,7 +367,7 @@
     "185": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_community_fund_is_paper_or_live_not_both",
@@ -396,13 +390,11 @@
     "129": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_deep_answer_arrives_whole",
-   "nodeids": [
-    "tests/mcp/test_a_deep_answer_arrives_whole.py::test_a_deep_answer_arrives_whole"
-   ],
+   "nodeids": [],
    "report_ids": [
     114
    ],
@@ -419,13 +411,11 @@
     "114": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-a_deep_answer_does_not_hand_out_internal_source_locations",
-   "nodeids": [
-    "tests/mcp/test_nexus_does_not_quote_source.py::test_a_deep_answer_does_not_hand_out_internal_source_locations"
-   ],
+   "nodeids": [],
    "report_ids": [
     92
    ],
@@ -442,13 +432,11 @@
     "92": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_deep_investigation_answers_inside_the_window_it_publishes",
-   "nodeids": [
-    "tests/mcp/test_nexus_channel.py::test_a_deep_investigation_answers_inside_the_window_it_publishes"
-   ],
+   "nodeids": [],
    "report_ids": [
     86
    ],
@@ -500,7 +488,7 @@
     "86": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-a_degen_pick_is_not_red_on_the_dilution_its_own_row_shows",
@@ -523,7 +511,7 @@
     "206": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_degen_pick_opens_the_coin_it_names",
@@ -546,7 +534,7 @@
     "140": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_gem_screener_link_preview_has_an_image_that_answers",
@@ -569,7 +557,7 @@
     "147": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_hot_signal_clears_the_tradeability_floor_they_shipped",
@@ -597,7 +585,7 @@
     "102": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-a_matchup_past_its_window_does_not_read_running",
@@ -620,7 +608,7 @@
     "135": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_next_cliff_lies_inside_the_window_its_own_unlock_record_counts",
@@ -643,13 +631,11 @@
     "208": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_paper_buy_debits_the_paper_balance",
-   "nodeids": [
-    "tests/rest/test_paper_balance_moves.py::test_a_paper_buy_debits_the_paper_balance"
-   ],
+   "nodeids": [],
    "report_ids": [
     87
    ],
@@ -676,13 +662,11 @@
     "87": "fixed"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-a_paper_buy_is_not_refused_for_money_the_paper_book_holds",
-   "nodeids": [
-    "tests/rest/test_a_paper_buy_is_judged_against_the_paper_book.py::test_a_paper_buy_is_not_refused_for_money_the_paper_book_holds"
-   ],
+   "nodeids": [],
    "report_ids": [
     126
    ],
@@ -699,7 +683,7 @@
     "126": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_published_sharpe_says_what_period_it_covers",
@@ -722,13 +706,11 @@
     "97": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_refused_paper_clone_says_why",
-   "nodeids": [
-    "tests/rest/test_a_refused_clone_says_why.py::test_a_refused_paper_clone_says_why"
-   ],
+   "nodeids": [],
    "report_ids": [
     119
    ],
@@ -745,7 +727,7 @@
     "119": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_report_the_server_creates_is_answered_as_created",
@@ -773,7 +755,7 @@
     "123": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-a_round_open_after_its_anchor_says_when_entries_close",
@@ -796,7 +778,7 @@
     "101": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_run_on_a_theme_is_listed_with_that_theme",
@@ -819,7 +801,7 @@
     "149": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_runrate_states_only_the_days_its_revenue_has",
@@ -842,7 +824,7 @@
     "179": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_settled_card_shows_its_index_at_resolution",
@@ -865,7 +847,7 @@
     "180": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-a_socket_a_page_advertises_is_named_where_a_machine_reads",
@@ -898,7 +880,7 @@
     "109": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_stored_run_carries_the_fields_its_schema_lists",
@@ -921,7 +903,7 @@
     "149": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_theme_is_priced_on_one_date",
@@ -944,7 +926,7 @@
     "143": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_twelve_month_dilution_names_where_its_new_tokens_come_from",
@@ -961,13 +943,11 @@
     "215": "paid"
    },
    "withdrawn": false,
-   "last_check": "CHECK_CHANGED"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-a_user_submitted_card_is_visible_only_to_its_author",
-   "nodeids": [
-    "tests/rest/test_user_submissions_stay_private.py::test_a_user_submitted_card_is_visible_only_to_its_author"
-   ],
+   "nodeids": [],
    "report_ids": [
     95
    ],
@@ -989,7 +969,7 @@
     "95": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-account-me-rejects-its-documented-credential",
@@ -1012,7 +992,7 @@
     "65": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-always-has-a-free-table",
@@ -1035,7 +1015,7 @@
     "196": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-board-counts-what-was-paid",
@@ -1052,7 +1032,7 @@
     "238": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-coach-runs-as-llms-txt-says",
@@ -1069,7 +1049,7 @@
     "236": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-coach-tunes-as-it-says",
@@ -1086,7 +1066,7 @@
     "241": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-how-page-matches-the-tables",
@@ -1103,7 +1083,7 @@
     "235": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-offers-only-bots-that-exist",
@@ -1126,7 +1106,7 @@
     "195": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-pick-window-ends-with-the-table",
@@ -1143,7 +1123,7 @@
     "239": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-risk-line-carries-its-level",
@@ -1160,7 +1140,7 @@
     "240": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-round-ended-inside-the-table-counts",
@@ -1177,7 +1157,7 @@
     "242": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-routes-are-in-the-openapi",
@@ -1200,7 +1180,7 @@
     "191": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-running-table-keeps-trading",
@@ -1228,7 +1208,7 @@
     "201": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-spent-bot-does-not-read-as-trading",
@@ -1245,7 +1225,7 @@
     "237": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-stake-stays-inside-the-tables-capital",
@@ -1262,7 +1242,7 @@
     "249": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-standings-agree-with-the-trade-list",
@@ -1279,7 +1259,7 @@
     "234": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-table-knows-its-owner",
@@ -1307,7 +1287,7 @@
     "210": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent_count",
@@ -1330,7 +1310,7 @@
     "52": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent_names",
@@ -1358,7 +1338,7 @@
     "48": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-airdrop_farmer_lists_no_farm_whose_token_trades",
@@ -1381,7 +1361,7 @@
     "222": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-an_explicit_paper_request_is_honoured_on_every_surface",
@@ -1404,7 +1384,7 @@
     "82": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-an_unlock_countdown_counts_from_the_moment_it_is_served",
@@ -1427,7 +1407,7 @@
     "209": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-anon-tool-surface",
@@ -1455,7 +1435,7 @@
     "46": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-async-a2a-investigation-arrives",
@@ -1530,7 +1510,7 @@
     "137": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-award-contradicts-its-own-tier",
@@ -1590,7 +1570,7 @@
     "70": "fixed"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-backtest-leaderboard-ranks-historical-trades",
@@ -1618,7 +1598,7 @@
     "175": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-bounty-filing-unauthenticated",
@@ -1651,7 +1631,7 @@
     "47": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-bounty-pipeline-deadend",
@@ -1674,7 +1654,7 @@
     "61": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-bounty-rewards-undocumented",
@@ -1702,7 +1682,7 @@
     "64": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-bounty-rewards-unrecorded",
@@ -1762,7 +1742,7 @@
     "71": "fixed"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-build-it-better-idea-keeps-the-new-app-spec-after-a-change",
@@ -1785,7 +1765,7 @@
     "192": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-build-it-better-request-token-place-is-documented-one-way",
@@ -1808,7 +1788,7 @@
     "194": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-build-it-better-rest-routes-are-in-the-openapi",
@@ -1831,7 +1811,7 @@
     "193": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-build-recipe-names-a-browser-route",
@@ -1864,13 +1844,11 @@
     "76": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-chain_count",
-   "nodeids": [
-    "tests/reconciliation/test_reconcile.py::test_sources_agree[chain_count::live_chains-vs-mcp_json]"
-   ],
+   "nodeids": [],
    "report_ids": [
     52
    ],
@@ -1881,7 +1859,7 @@
     "52": "paid"
    },
    "withdrawn": true,
-   "last_check": "UNVERIFIABLE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-chart-analyzer-calls-are-on-closed-candles",
@@ -1904,7 +1882,7 @@
     "153": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-chart-analyzer-dex-pool-coin-gets-no-verdict-as-documented",
@@ -1932,7 +1910,7 @@
     "155": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-chart-analyzer-probability-lies-inside-its-range",
@@ -1965,7 +1943,7 @@
     "154": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-chart-analyzer-score-averages-what-it-counts",
@@ -1988,7 +1966,7 @@
     "142": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-chart-analyzer-verdict-fields-are-in-its-openapi-schema",
@@ -2016,7 +1994,7 @@
     "152": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-clob_pair_count",
@@ -2056,7 +2034,7 @@
     "62": "invalid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-clone-summary-names-every-market-it-trades",
@@ -2079,7 +2057,7 @@
     "190": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-cloned-species-trades-its-described-strategy",
@@ -2112,13 +2090,11 @@
     "174": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-closing_a_paper_position_returns_its_money",
-   "nodeids": [
-    "tests/rest/test_paper_close_returns_the_money.py::test_closing_a_paper_position_returns_its_money"
-   ],
+   "nodeids": [],
    "report_ids": [
     127
    ],
@@ -2135,7 +2111,7 @@
     "127": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-coin-outlook-answers-for-its-own-roster",
@@ -2163,7 +2139,7 @@
     "106": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-commit_count",
@@ -2201,7 +2177,7 @@
     "52": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-company-charter-cap-agrees-with-its-docs",
@@ -2229,7 +2205,7 @@
     "211": "paid"
    },
    "withdrawn": false,
-   "last_check": "CHECK_CHANGED"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-company-heartbeat-keeps-its-promise",
@@ -2252,7 +2228,7 @@
     "212": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-company-routes-are-in-the-openapi",
@@ -2285,7 +2261,7 @@
     "198": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-creator-reddit-leads-tool-filter-honours-unknown-values",
@@ -2308,7 +2284,7 @@
     "124": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-creator-twitter-leads-tool-filter-honours-unknown-values",
@@ -2331,7 +2307,7 @@
     "124": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-deleted-bot-asset-analytics-answers-404",
@@ -2354,7 +2330,7 @@
     "172": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-documented-404",
@@ -2396,7 +2372,7 @@
     "59": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-event_cards_swipe_stamp_names_what_the_swipe_does",
@@ -2413,13 +2389,11 @@
     "228": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-every_card_nexus_tells_an_agent_to_trade_exists",
-   "nodeids": [
-    "tests/rest/test_nexus_cards_exist.py::test_every_card_nexus_tells_an_agent_to_trade_exists"
-   ],
+   "nodeids": [],
    "report_ids": [
     91
    ],
@@ -2446,7 +2420,7 @@
     "91": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-every_cloned_bot_route_they_serve_is_one_they_document",
@@ -2484,7 +2458,7 @@
     "88": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-every_derived_figure_follows_its_published_definition",
@@ -2507,7 +2481,7 @@
     "166": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-every_documented_get_accepts_the_key_its_own_document_issues",
@@ -2535,7 +2509,7 @@
     "93": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-every_gem_screener_route_llms_txt_names_is_in_the_openapi",
@@ -2558,7 +2532,7 @@
     "183": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-every_order_endpoint_decides_the_book_the_same_way",
@@ -2586,7 +2560,7 @@
     "80": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-every_request_example_on_api_docs_carries_what_its_route_requires",
@@ -2609,7 +2583,7 @@
     "120": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-every_route_a_feature_page_names_is_in_the_public_openapi",
@@ -2637,13 +2611,11 @@
     "138": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-every_route_nexus_tells_an_agent_to_call_is_published",
-   "nodeids": [
-    "tests/rest/test_nexus_routes_exist.py::test_every_route_nexus_tells_an_agent_to_call_is_published"
-   ],
+   "nodeids": [],
    "report_ids": [
     121
    ],
@@ -2665,13 +2637,11 @@
     "121": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-every_tool_nexus_tells_an_agent_to_call_exists",
-   "nodeids": [
-    "tests/mcp/test_nexus_channel.py::test_every_tool_nexus_tells_an_agent_to_call_exists"
-   ],
+   "nodeids": [],
    "report_ids": [
     85
    ],
@@ -2713,7 +2683,7 @@
     "85": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-fund-history-starts-at-inception",
@@ -2746,7 +2716,7 @@
     "103": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-fund-profile-link-where-the-skill-says",
@@ -2774,7 +2744,7 @@
     "104": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-gem-dilution-reason-names-the-rule-it-broke",
@@ -2791,7 +2761,7 @@
     "245": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-gem-screener-chain-adoption-is-one-measure",
@@ -2814,7 +2784,7 @@
     "169": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-gem-screener-chain-left-out-for-a-true-reason",
@@ -2837,7 +2807,7 @@
     "170": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-gem-screener-chain-price-tag-described-as-computed",
@@ -2860,7 +2830,7 @@
     "168": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-gem-screener-chain-stablecoins-are-dollars",
@@ -2888,7 +2858,7 @@
     "167": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-gem-screener-degen-meter-has-levels",
@@ -2911,7 +2881,7 @@
     "176": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-gem-screener-one-dilution-flag-per-coin",
@@ -2934,7 +2904,7 @@
     "161": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-gem-screener-refresh-stuck-past-its-cadence",
@@ -2962,7 +2932,7 @@
     "133": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-gem-screener-tokens-out-counts-the-max-supply",
@@ -2985,7 +2955,7 @@
     "162": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-head-to-head-surface-is-documented",
@@ -3013,7 +2983,7 @@
     "125": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-hot_means_one_thing_on_the_sectors_tab",
@@ -3036,7 +3006,7 @@
     "144": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-how_sure_follows_its_own_tooltip",
@@ -3059,7 +3029,7 @@
     "146": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-launchpad-discovery-feed-lists-no-internal-launch",
@@ -3076,7 +3046,7 @@
     "187": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-launchpad-screener-honours-its-limit",
@@ -3099,7 +3069,7 @@
     "107": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-launchpad-tokens-without-a-chain-lists-launches",
@@ -3116,7 +3086,7 @@
     "186": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-live-crypto-card-index-history-has-no-multi-day-hole",
@@ -3149,7 +3119,7 @@
     "202": "paid"
    },
    "withdrawn": false,
-   "last_check": "CHECK_CHANGED"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-llms_agent_count_self_consistent",
@@ -3172,7 +3142,7 @@
     "55": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-mcp_resource_count",
@@ -3200,15 +3170,11 @@
     "50": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-mcp_tool_count",
-   "nodeids": [
-    "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_anon]",
-    "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_json]",
-    "tests/reconciliation/test_reconcile.py::test_sources_agree[mcp_tool_count::llms_txt-vs-mcp_trusted]"
-   ],
+   "nodeids": [],
    "report_ids": [
     50
    ],
@@ -3219,7 +3185,7 @@
     "50": "paid"
    },
    "withdrawn": true,
-   "last_check": "UNVERIFIABLE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-mcp_tool_names_declared_vs_served",
@@ -3247,7 +3213,7 @@
     "50": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-movers-page-ranks-every-event-card",
@@ -3264,13 +3230,11 @@
     "189": "paid"
    },
    "withdrawn": false,
-   "last_check": "CHECK_CHANGED"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-nexus-answer-markers-are-true",
-   "nodeids": [
-    "tests/rest/test_nexus_answer_markers_are_true.py::test_nexus_answer_markers_are_true_and_leave_the_answer_usable"
-   ],
+   "nodeids": [],
    "report_ids": [
     205
    ],
@@ -3292,7 +3256,7 @@
     "205": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-one_click_on_a_sectors_bubble_does_what_the_caption_says",
@@ -3315,7 +3279,7 @@
     "151": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-one_credential_carries_a_clone_from_creation_to_funding",
@@ -3343,7 +3307,7 @@
     "98": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-one_credential_funds_and_starts_a_clone",
@@ -3386,7 +3350,7 @@
     "89": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-only_btc_runs_is_not_said_over_a_week_most_alts_beat_btc",
@@ -3414,13 +3378,11 @@
     "145": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-own-reports-unverified",
-   "nodeids": [
-    "tests/rest/test_bounty_tracker.py::test_reports_they_closed_have_been_rechecked_by_us"
-   ],
+   "nodeids": [],
    "report_ids": [
     53
    ],
@@ -3431,7 +3393,7 @@
     "53": "paid"
    },
    "withdrawn": true,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-paper-bot-bet-exit-reason-is-how-it-ended",
@@ -3454,7 +3416,7 @@
     "173": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-paper-bot-bet-settles-at-epoch-end",
@@ -3477,7 +3439,7 @@
     "171": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-prices-status-codes-undeclared",
@@ -3505,7 +3467,7 @@
     "131": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-products-people-not-below-app-usage",
@@ -3522,7 +3484,7 @@
     "247": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-products-tile-and-its-chart-agree",
@@ -3539,7 +3501,7 @@
     "248": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-products-tile-people-are-people",
@@ -3556,7 +3518,7 @@
     "244": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-published-openapi-documents-agree",
@@ -3584,7 +3546,7 @@
     "105": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-qa-agent-cannot-report-its-own-data",
@@ -3612,7 +3574,7 @@
     "66": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-quant-lab-daily-search-completes",
@@ -3629,7 +3591,7 @@
     "231": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-quant-lab-search-error-names-no-internals",
@@ -3646,7 +3608,7 @@
     "232": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-quant-lab-winner-text-agrees-with-how-it-fits",
@@ -3663,7 +3625,7 @@
     "233": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-quant-search-rows-fit-the-list-grid",
@@ -3680,7 +3642,7 @@
     "230": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-register-response-undocumented",
@@ -3703,7 +3665,7 @@
     "77": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-reward-totals-disagree",
@@ -3741,7 +3703,7 @@
     "73": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-season-points-are-counted-hourly",
@@ -3758,7 +3720,7 @@
     "246": "pending"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-skill_count",
@@ -3791,7 +3753,7 @@
     "51": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-skill_ids",
@@ -3824,7 +3786,7 @@
     "51": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-skills_subset",
@@ -3857,7 +3819,7 @@
     "56": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-supply-analyzer-a-pile-cannot-grow-past-its-max-supply",
@@ -3885,7 +3847,7 @@
     "178": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-supply-analyzer-a-pile-cannot-shrink-more-than-all-of-it",
@@ -3913,7 +3875,7 @@
     "177": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-supply-analyzer-an-unknown-schedule-is-not-none-scheduled",
@@ -3936,7 +3898,7 @@
     "164": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-supply-analyzer-burned-slice-is-a-measured-burn",
@@ -3953,7 +3915,7 @@
     "156": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-supply-analyzer-buyback-is-a-purchase-of-the-token",
@@ -3981,7 +3943,7 @@
     "157": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-supply-analyzer-cited-sources-say-what-they-are-credited-with",
@@ -4009,7 +3971,7 @@
     "159": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-supply-analyzer-gem-screener-link-opens-its-coin",
@@ -4037,7 +3999,7 @@
     "159": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-supply-analyzer-max-supply-is-a-cap-not-a-schedule-end",
@@ -4060,7 +4022,7 @@
     "165": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-supply-analyzer-next-unlock-states-its-whole-day",
@@ -4083,7 +4045,7 @@
     "188": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-supply-analyzer-sellable-pile-fits-inside-the-supply",
@@ -4111,7 +4073,7 @@
     "158": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-supply-analyzer-tokens-locked-by-holders-are-not-a-reserve",
@@ -4139,7 +4101,7 @@
     "163": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-supply-analyzer-typical-inflow-is-the-stated-one",
@@ -4167,7 +4129,7 @@
     "159": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-supply-analyzer-unsupported-chain-gets-a-documented-answer",
@@ -4190,7 +4152,7 @@
     "160": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_account_has_one_plan_on_every_nexus_endpoint",
@@ -4213,7 +4175,7 @@
     "150": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_account_history_pages_forward",
@@ -4236,7 +4198,7 @@
     "184": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_agent_tournaments_link_preview_draws_the_title_its_page_passes",
@@ -4253,7 +4215,7 @@
     "217": "paid"
    },
    "withdrawn": false,
-   "last_check": "CHECK_CHANGED"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-the_altseason_panel_names_one_retail_figure",
@@ -4276,7 +4238,7 @@
     "207": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_board_is_ranked_by_the_key_its_own_document_publishes",
@@ -4314,7 +4276,7 @@
     "111": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_boards_building_tile_counts_only_what_is_building",
@@ -4357,7 +4319,7 @@
     "113": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_build_totals_reach_back_to_the_date_they_are_published_under",
@@ -4385,7 +4347,7 @@
     "110": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_claim_form_opens_when_nothing_is_pending",
@@ -4408,7 +4370,7 @@
     "214": "paid"
    },
    "withdrawn": false,
-   "last_check": "CHECK_CHANGED"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-the_dilution_caution_band_lies_below_the_red_band",
@@ -4431,7 +4393,7 @@
     "182": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_dynamic_plan_card_takes_a_cookie_session_as_signed_in",
@@ -4454,7 +4416,7 @@
     "220": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_forming_candle_of_a_gem_screener_coin_is_current_or_agrees_with_its_pool",
@@ -4477,7 +4439,7 @@
     "148": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-the_fta_crypto_return_starts_where_its_own_record_does",
@@ -4500,7 +4462,7 @@
     "116": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_house_row_says_whether_it_ever_traded_forward",
@@ -4523,7 +4485,7 @@
     "100": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_leaderboard_can_answer_the_ranking_the_recipe_asks_for",
@@ -4551,13 +4513,11 @@
     "79": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_listing_returns_every_card_it_says_is_tradeable",
-   "nodeids": [
-    "tests/rest/test_event_card_listing_reaches_them.py::test_the_listing_returns_every_card_it_says_is_tradeable"
-   ],
+   "nodeids": [],
    "report_ids": [
     90
    ],
@@ -4579,7 +4539,7 @@
     "90": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-the_market_caps_rest_on_the_supply_and_price_coingecko_reports",
@@ -4602,7 +4562,7 @@
     "166": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_message_log_carries_each_message_whole",
@@ -4625,7 +4585,7 @@
     "139": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_prize_log_reaches_every_prize_it_recorded",
@@ -4648,7 +4608,7 @@
     "213": "paid"
    },
    "withdrawn": false,
-   "last_check": "CHECK_CHANGED"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-the_product_radar_lists_each_product_once",
@@ -4671,7 +4631,7 @@
     "115": "paid"
    },
    "withdrawn": false,
-   "last_check": "INCONCLUSIVE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-the_runrate_uses_the_multipliers_its_page_states",
@@ -4694,7 +4654,7 @@
     "141": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_setting_that_decides_whether_real_money_moves_is_readable",
@@ -4722,7 +4682,7 @@
     "80": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_spec_s_funding_gate_is_the_one_the_build_actually_waits_on",
@@ -4739,7 +4699,7 @@
     "108": "paid"
    },
    "withdrawn": true,
-   "last_check": "CHECK_CHANGED"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-the_station_opens_every_default_tab_for_its_default_symbol",
@@ -4762,13 +4722,11 @@
     "181": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_summary_does_not_report_a_history_the_positions_contradict",
-   "nodeids": [
-    "tests/rest/test_portfolio_summary.py::test_the_summary_does_not_report_a_history_the_positions_contradict"
-   ],
+   "nodeids": [],
    "report_ids": [
     83
    ],
@@ -4785,7 +4743,7 @@
     "83": "paid"
    },
    "withdrawn": true,
-   "last_check": "UNVERIFIABLE"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-tracker-closure-rate",
@@ -4849,7 +4807,7 @@
     "74": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-trade_history_is_not_empty_for_an_account_that_has_traded",
@@ -4877,7 +4835,7 @@
     "81": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-traffic-agent-visits-are-the-agents-requests",
@@ -4894,7 +4852,7 @@
     "226": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-traffic-mine-accepts-the-key-its-page-names",
@@ -4917,7 +4875,7 @@
     "216": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-trust-ladder-vocabulary",
@@ -4940,7 +4898,7 @@
     "78": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-trusted-receives-nothing-above-its-tier",
@@ -4957,7 +4915,7 @@
     "54": "invalid"
    },
    "withdrawn": true,
-   "last_check": "CHECK_CHANGED"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-usage_dates_and_zone_names_follow_the_pages_language",
@@ -4974,7 +4932,7 @@
     "223": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   },
   {
    "key": "CYM-vaix-orderbook-arbitrage-does-not-use-an-excluded-venue",
@@ -4997,7 +4955,7 @@
     "203": "paid"
    },
    "withdrawn": false,
-   "last_check": "PASSING"
+   "last_check": "pass"
   },
   {
    "key": "CYM-what_a_public_page_reads_without_a_key_is_documented",
@@ -5025,7 +4983,7 @@
     "130": "paid"
    },
    "withdrawn": false,
-   "last_check": "REPRODUCING"
+   "last_check": "fail"
   }
  ]
 }

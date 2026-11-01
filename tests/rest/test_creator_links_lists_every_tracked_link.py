@@ -43,13 +43,13 @@ CLAIM_ID = "creator-links-list-names-every-tracked-link"
 
 
 @pytest.fixture(scope="module")
-def rest_creator(registry, evidence_store, budget, all_identities):
+def rest_creator(registry, budget, all_identities):
     """The operator's own key: the creator queue answers it since 2026-09-25,
     and the tg_expire76 key it used before was retired that day."""
     identity = all_identities.get("trusted")
     if identity is None or not identity.present:
         pytest.skip("no QA_TRUSTED_KEY: the creator's claimed leads cannot be read")
-    client = build_client(identity, registry, evidence_store, budget)
+    client = build_client(identity, registry, budget=budget)
     yield client
     client.close()
 

@@ -114,11 +114,11 @@ def judge(farms: list[dict], gate: list, markets: dict) -> dict:
             "why": f"none of the {len(PINNED)} farms whose token trades is listed any more"}
 
 
-def read_markets(pins: list[dict], evidence_store) -> tuple[dict, list[str]]:
+def read_markets(pins: list[dict]) -> tuple[dict, list[str]]:
     """{pin key: 24h volume in USD} for the pins given, and the sources that could not be read."""
     markets: dict = {}
     failed: list[str] = []
-    client = build_source_client(evidence=evidence_store)
+    client = build_source_client()
     try:
         cg = {p["market"][1]: p["key"] for p in pins if p["market"][0] == "coingecko"}
         if cg:
@@ -146,7 +146,7 @@ def read_markets(pins: list[dict], evidence_store) -> tuple[dict, list[str]]:
 
 
 @qa(component="rest.airdrop_farmer", tier=SafetyTier.SAFE, surface="rest")
-def test_airdrop_farmer_lists_no_farm_whose_token_trades(rest_anon, evidence_store):
+def test_airdrop_farmer_lists_no_farm_whose_token_trades(rest_anon):
     """No farm in the 'No token live yet' list has a token that traded in the last 24 hours."""
     try:
         r = get_patiently(rest_anon, FARMS)
@@ -164,7 +164,7 @@ def test_airdrop_farmer_lists_no_farm_whose_token_trades(rest_anon, evidence_sto
     gate = body.get("gate") or []
 
     found = listed(farms)
-    markets, unread_sources = read_markets([pin for pin, _ in found], evidence_store) if found else ({}, [])
+    markets, unread_sources = read_markets([pin for pin, _ in found]) if found else ({}, [])
     out = judge(farms, gate, markets)
     population = {
         "farms_listed": len(farms), "generated_at": body.get("generated_at"),

@@ -123,7 +123,7 @@ def _money(x) -> str:
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_STABLES)
-def test_a_chains_stablecoins_are_the_dollars_defillama_counts(rest_anon, evidence_store):
+def test_a_chains_stablecoins_are_the_dollars_defillama_counts(rest_anon):
     """Every chain's stablecoins are within 3 % of DeFiLlama's dollar value of the
     USD-pegged coins on that chain, on the day the snapshot dates the input -- or, when
     that day is DeFiLlama's still-open newest point, between it and the closed day
@@ -132,7 +132,7 @@ def test_a_chains_stablecoins_are_the_dollars_defillama_counts(rest_anon, eviden
     snap, _ = _page(rest_anon)
     chains = _chains(snap)
     charts: dict = {}
-    source = build_source_client(evidence=evidence_store, timeout=60.0)
+    source = build_source_client(timeout=60.0)
     try:
         for chain in chains:
             url = g.LLAMA_STABLECOIN_CHART.format(chain=urllib.parse.quote(str(chain.get("name") or "")))
@@ -263,7 +263,7 @@ def _llama_has(get, url: str, test) -> bool | None:
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_LEFT_OUT)
-def test_a_chain_left_out_for_no_market_data_has_none(rest_anon, evidence_store):
+def test_a_chain_left_out_for_no_market_data_has_none(rest_anon):
     """No chain is left out of the tab for missing market data while CoinGecko answers a
     market cap at least the listing floor for its token."""
     snap, _ = _page(rest_anon)
@@ -275,7 +275,7 @@ def test_a_chain_left_out_for_no_market_data_has_none(rest_anon, evidence_store)
     markets: dict = {}
     inputs: dict = {}
     if ids:
-        source = build_source_client(evidence=evidence_store, timeout=60.0)
+        source = build_source_client(timeout=60.0)
         try:
             try:
                 rows = g.fetch_coingecko(source.get, ids)

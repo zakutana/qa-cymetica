@@ -1,24 +1,9 @@
 """SessionStart: the work we agreed on, in one line, so nobody has to say it twice.
 
-[operator 2026-09-10] *"hele snad si zapamatujes co pises az se te pak zeptam
-po deep passu a po clearu... Nechci se starat o to ze pred deep passem ti mam
-pak po clearu rikat kde jsme skoncili a cim pokracovat."*
+[operator 2026-09-10] *"Nechci se starat o to ze ... po clearu rikat kde jsme skoncili a cim pokracovat."*
 
-Nothing carried that. Three things reach a fresh session -- the memory index,
-the last deep pass's handover, the unanswered Telegram threads -- and none of
-them is "the piece of work we said we would do next". DEEP-PASS.md's *Čeká na
-tebe* is deliberately the opposite of it: things that need the operator's
-judgement, not things we already decided. So a next step agreed at 23:00 and a
-`/clear` at 23:05 left the operator to remember it, which is precisely the job
-they said was not theirs.
-
-Same shape as open_threads.py, for the same reason: an index, never the
-content. One line per open item, none at all when nothing is open, and never a
-failure -- a note about what to do next must not be able to stop the work.
-
-The file it reads is `NEXT.md` at the repository root, plain markdown, edited
-by hand. Deliberately not a CLI: a mechanism nobody can read with `cat` is one
-more thing to trust, and the format is three fields on a line.
+The file it reads is `NEXT.md` at the repository root, plain markdown, edited by hand. An index, never the
+content; none at all when nothing is open, and it never fails a session.
 """
 
 from __future__ import annotations

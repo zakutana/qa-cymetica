@@ -125,7 +125,7 @@ def _all_bets(rest_trusted) -> tuple[list[dict], list[str]]:
     return bets, unread
 
 
-def _references(bets: list[dict], evidence_store) -> dict:
+def _references(bets: list[dict]) -> dict:
     """(symbol, second) -> Binance close of that second, for every epoch end and close."""
     windows: dict = {}
     for b in bets:
@@ -134,7 +134,7 @@ def _references(bets: list[dict], evidence_store) -> dict:
         key = (b["symbol"], b["epoch_end_s"])
         windows[key] = max(windows.get(key, 0), b["closed_s"])
     prices: dict = {}
-    source = build_source_client(evidence=evidence_store, timeout=60.0)
+    source = build_source_client(timeout=60.0)
     try:
         for (symbol, end), last in sorted(windows.items()):
             start = end - 1
@@ -156,13 +156,13 @@ def _references(bets: list[dict], evidence_store) -> dict:
 
 
 @qa(component="rest.agents", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM_SETTLE)
-def test_a_settled_bet_is_paid_on_the_price_at_its_epoch_end(rest_trusted, evidence_store):
+def test_a_settled_bet_is_paid_on_the_price_at_its_epoch_end(rest_trusted):
     """Every settled 5-minute bet of our paper clones: its exit price against
     Binance spot at its epoch's end."""
     bets, unread = _all_bets(rest_trusted)
     if not bets:
         raise Inconclusive(f"no settled 5-minute bet on our paper clones ({len(unread)} feeds unread)")
-    prices = _references(bets, evidence_store)
+    prices = _references(bets)
     readings = []
     for b in bets:
         r = ct.settlement_reading(b, prices.get((b["symbol"], b["epoch_end_s"] - 1)),

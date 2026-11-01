@@ -48,7 +48,7 @@ from __future__ import annotations
 
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
-from qa.state import read_events
+from qa.paths import read_events
 
 WINDOW = 12
 ROUTE = "POST /api/v1/bounty/reports"

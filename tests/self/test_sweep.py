@@ -74,6 +74,11 @@ def test_open_rows_leave_out_withdrawn_rejected_and_already_passed(sweep):
     assert [r["key"] for r in sweep.open_rows(rows, everything=True)] == ["a", "c", "d", "e"]
 
 
+def test_a_row_we_passed_that_failed_since_stays_open(sweep):
+    row = _row("d", 4, verdicts_sent=[{"report_id": 4, "verdict": "pass", "at": "2026-10-02"}], last_check="fail")
+    assert sweep.open_rows([row]) == [row]
+
+
 # -- what it would tell them ---------------------------------------------------------------------
 @pytest.mark.parametrize("result,status,newest,fixed_at,expected", [
     ("inconclusive", "fixed", None, None, None),           # rule 10: never a verdict from an inconclusive
@@ -227,3 +232,4 @@ def test_the_tracker_status_is_written_back_to_filed(sweep):
     vendor = Vendor(reports=[{"id": 7, "status": "paid", "title": "t"}])
     _sweep_run(sweep, vendor, [_row(status="pending")], {"tests/rest/test_a.py::test_a": _reading("inconclusive")})
     assert load_filed()["rows"][0]["their_status"] == {"7": "paid"}
+    assert load_filed()["rows"][0]["last_check"] == "inconclusive"

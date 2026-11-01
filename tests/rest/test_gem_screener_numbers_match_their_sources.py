@@ -94,10 +94,10 @@ def read_page(rest_anon) -> tuple[dict, str]:
     return snap, response.text
 
 
-def from_source(evidence_store, fetch):
+def from_source(fetch):
     """Run `fetch(get)` with a source client, turning an unreadable source into
     Inconclusive. The client is closed whatever happens."""
-    client = build_source_client(evidence=evidence_store)
+    client = build_source_client()
     try:
         return fetch(client.get)
     except g.SourceUnavailable as exc:
@@ -118,7 +118,7 @@ def _verdict(parts: list[tuple[str, str, str]]) -> tuple[str, str]:
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
-def test_the_market_caps_rest_on_the_supply_and_price_coingecko_reports(rest_anon, evidence_store):
+def test_the_market_caps_rest_on_the_supply_and_price_coingecko_reports(rest_anon):
     """Market cap is price times circulating supply, so it is checked as its two
     parts against CoinGecko, plus the benchmark's market cap, which every upside
     is divided by -- and the product itself: each row's market cap must be its
@@ -126,7 +126,7 @@ def test_the_market_caps_rest_on_the_supply_and_price_coingecko_reports(rest_ano
     Without that last part a market cap built from another supply passed while
     its price and supply both matched (C04, deep pass of 2026-09-30)."""
     snap = read_snapshot(rest_anon)
-    rows = from_source(evidence_store, lambda get: g.fetch_coingecko(
+    rows = from_source(lambda get: g.fetch_coingecko(
         get, [a.get("gecko_id") for a in snap["apps"]]))
     total = len(snap["apps"])
 
@@ -169,12 +169,12 @@ def test_the_market_caps_rest_on_the_supply_and_price_coingecko_reports(rest_ano
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
-def test_the_revenue_is_what_defillama_reports(rest_anon, evidence_store):
+def test_the_revenue_is_what_defillama_reports(rest_anon):
     """The denominator of every upside: 30-day revenue per app against
     DefiLlama's fees-and-revenue overview, a parent app being the sum of its
     child protocols and a leaf the protocol with its id."""
     snap = read_snapshot(rest_anon)
-    protocols = from_source(evidence_store, g.fetch_llama_revenue)
+    protocols = from_source(g.fetch_llama_revenue)
     total = len(snap["apps"])
     tail, max_median, max_tail, min_share = REVENUE
     summary = g.deviation_summary(g.revenue_pairs(snap, protocols), tail=tail)
@@ -190,7 +190,7 @@ def test_the_revenue_is_what_defillama_reports(rest_anon, evidence_store):
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
-def test_the_pool_liquidity_is_what_dexscreener_reports(rest_anon, evidence_store):
+def test_the_pool_liquidity_is_what_dexscreener_reports(rest_anon):
     """What a degen can actually buy: the pool liquidity the slippage figure is
     computed from, against DexScreener's for the same pair. A chain whose
     request failed is named and the comparison still has to cover 80 % of pairs."""
@@ -198,7 +198,7 @@ def test_the_pool_liquidity_is_what_dexscreener_reports(rest_anon, evidence_stor
     wanted = g.pair_addresses(snap)
     if not wanted:
         raise Inconclusive("the snapshot names no pair addresses to compare")
-    found, failed = from_source(evidence_store, lambda get: g.fetch_dexscreener(get, wanted))
+    found, failed = from_source(lambda get: g.fetch_dexscreener(get, wanted))
     tail, max_median, max_tail, min_share = LIQUIDITY
     summary = g.deviation_summary(g.liquidity_pairs(snap, found), tail=tail)
     verdict, why = g.judge_deviation(summary, len(wanted), min_compared_share=min_share,

@@ -2,69 +2,63 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "console-preview",
-      "runtimeExecutable": "python",
-      "runtimeArgs": ["scripts/serve.py", "--port", "8791", "--poll", "1"],
-      "port": 8791
-    },
-    {
       "name": "company-mock",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8793", "--bind", "127.0.0.1", "--directory", "outbox/company-live"],
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/company-live", "8793", "--quiet"],
       "port": 8793
     },
     {
       "name": "my-agents-mock",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8794", "--bind", "127.0.0.1", "--directory", "outbox/my-agents-redesign"],
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/my-agents-redesign", "8794", "--quiet"],
       "port": 8794
     },
     {
       "name": "account-mock",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8795", "--bind", "127.0.0.1", "--directory", "outbox/account-redesign"],
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/account-redesign", "8795", "--quiet"],
       "port": 8795
     },
     {
       "name": "airdrop-farms-mock",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8796", "--bind", "127.0.0.1", "--directory", "outbox/airdrop-farms"],
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/airdrop-farms", "8796", "--quiet"],
       "port": 8796
     },
     {
       "name": "quest",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8797", "--bind", "127.0.0.1", "--directory", "outbox/quest"],
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/quest", "8797", "--quiet"],
       "port": 8797
     },
     {
       "name": "quest-steps",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["outbox/quest-steps/serve.py", "8800"],
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/quest-steps", "8800", "--quiet"],
       "port": 8800
     },
     {
       "name": "quant-lab-graphic",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8798", "--bind", "127.0.0.1", "--directory", "outbox/quant-lab-graphic"],
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/quant-lab-graphic", "8798", "--quiet"],
       "port": 8798
     },
     {
       "name": "capital-maximizer",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8799", "--bind", "127.0.0.1", "--directory", "outbox/capital-maximizer"],
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/capital-maximizer", "8799", "--quiet"],
       "port": 8799
     },
     {
       "name": "quant-lab-v2",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["outbox/quant-lab-v2/serve.py", "--quiet"],
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/quant-lab-v2", "8801", "--quiet"],
       "port": 8801
     },
     {
       "name": "pitch-cards",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["outbox/pitch-cards/serve.py", "--quiet"],
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/pitch-cards", "8802", "--quiet"],
       "port": 8802
     }
   ]

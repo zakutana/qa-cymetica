@@ -69,8 +69,9 @@ def _last_verdict(row: dict, report_id) -> str | None:
 
 
 def _closed(row: dict) -> bool:
+    """We told them it passes, and the last time we looked it still did."""
     ids = row.get("report_ids") or []
-    return bool(ids) and all(_last_verdict(row, i) == "pass" for i in ids)
+    return bool(ids) and row.get("last_check") != "fail" and all(_last_verdict(row, i) == "pass" for i in ids)
 
 
 def _rejected(row: dict) -> bool:
@@ -275,6 +276,11 @@ def run_sweep(client, run_checks=checks.run, send: bool = False, everything: boo
     nodeids = sorted({n for r in rows for n in r.get("nodeids") or []})
     readings, run_file = run_checks(nodeids) if nodeids else ({}, "")
     grouped = by_report(rows, readings)
+    for row in rows:
+        found = [readings[n] for n in row.get("nodeids") or [] if n in readings]
+        if found:
+            row["last_check"] = checks.overall(found)
+    save_filed(filed)
 
     table, due, unread = [], [], []
     for report_id, entry in sorted(grouped.items(), key=lambda kv: str(kv[0])):

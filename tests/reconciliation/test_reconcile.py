@@ -156,7 +156,7 @@ def snapshot(request, rest_anon, mcp_anon, all_identities, registry,
     if all_identities["trusted"].present:
         from qa.client import build_mcp_client
         clients["trusted"] = build_mcp_client(
-            all_identities["trusted"], registry, evidence_store, budget
+            all_identities["trusted"], registry, budget=budget
         )
     return Snapshot(
         spec=load_claims()["sources"],

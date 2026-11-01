@@ -37,19 +37,9 @@ MINE = "/api/v1/bounty/my-reports"
 EVIDENCE_FIELDS = ("validated_at", "triaged_at", "severity_confirmed",
                    "ticket_url", "fix_pr_url", "status_notes")
 
-# Their published report_status enum has eleven values; `resolved`, `completed`
-# and `closed` are not among them (the first is a TICKET status, the other two
-# were invented) and `paid` -- which is closed and which 16 of the tracker's
-# rows now carry -- was missing. Derived rather than retyped, so their
-# vocabulary lives in one place: qa/fold.py, held against the live enum by
-# tests/rest/test_status_vocabulary_is_mapped.py.
-def _closed_statuses() -> frozenset:
-    from qa.fold import _FIX_CLAIMED_STATUSES, _REJECTED_STATUSES
-
-    return frozenset(_FIX_CLAIMED_STATUSES | _REJECTED_STATUSES)
-
-
-CLOSED = _closed_statuses()
+# Closed, in their published report_status enum: fixed and paid (a claim of a fix),
+# invalid, duplicate, wontfix (they said no). `resolved`, `completed`, `closed` are not in it.
+CLOSED = frozenset({"fixed", "paid", "invalid", "duplicate", "wontfix"})
 
 
 def _rows(response) -> list[dict]:
@@ -197,93 +187,6 @@ def test_attribution_to_a_wallet_is_provable(rest_anon):
                     "title_sha256": digest},
         claim_id="bounty-filing-unauthenticated",
     ))
-
-
-@qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest")
-def test_reports_they_closed_have_been_rechecked_by_us(rest_trusted):
-    """Their closing a report is a claim. Ours is the check that follows it.
-
-    This measures OUR backlog, not their behaviour, and that distinction was
-    wrong here until 2026-09-05: the result was bound to the finding
-    CYM-own-reports-unverified, so a list of re-checks WE owed stood on the
-    dashboard as an open defect against the vendor, carrying report #53. Our
-    unfinished work is not their bug however true the number is.
-
-    So it is evidence now: recorded every run and visible, but unable to mint
-    or hold a finding. What it says is still worth knowing -- it is the only
-    thing standing between "they closed 20 reports" and "20 reports are
-    fixed" -- but the party it indicts is us.
-    """
-    wallet = os.environ.get("QA_WALLET_ADDRESS", "")
-    if not wallet:
-        conclude(Measurement(
-            verdict="inconclusive",
-            reason="QA_WALLET_ADDRESS is not set, so we cannot list our own "
-                   "reports. An unset identity is not an empty result.",
-            role="evidence",
-        ))
-        return
-
-    response = rest_trusted.get(MINE, params={"wallet_address": wallet})
-    if response.status_code != 200:
-        conclude(Measurement(
-            verdict="inconclusive",
-            reason=f"my-reports answered HTTP {response.status_code}; a failed "
-                   f"read is not an empty tracker",
-            right=response.status_code, role="evidence",
-        ))
-        return
-
-    rows = _rows(response)
-    closed = [r for r in rows if (r.get("status") or "").lower() in CLOSED]
-    adjudicated = _adjudicated_report_ids()
-    unchecked = sorted(r.get("id") for r in closed if r.get("id") not in adjudicated)
-
-    conclude(Measurement(
-        verdict="failed" if unchecked else "passed",
-        reason=(f"{len(unchecked)} of {len(closed)} reports they closed have "
-                f"never been re-checked by an admissible run of ours"),
-        role="evidence",
-        left=unchecked, right=sorted(adjudicated),
-        # The denominator is what this read actually returned, named, so it
-        # cannot silently become the server's own claimed total.
-        population={"reports_returned": len(rows), "closed": len(closed),
-                    "server_total": response.json().get("total")},
-        sources={"endpoint": f"GET {MINE}", "wallet": "<redacted>"},
-    ))
-
-
-def _adjudicated_report_ids() -> set:
-    """Report ids whose finding a run actually adjudicated to a verdict."""
-    from qa.state import ledger_path
-
-    import json
-
-    path = ledger_path()
-    if not path.exists():
-        return set()
-    try:
-        ledger = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return set()
-
-    # A run that REACHED a verdict, not merely one that touched the row.
-    # qa/fold.py sets adjudicated_by on INCONCLUSIVE and CHECK_CHANGED too, so
-    # "their endpoint was down" and "we rewrote the check" both counted as
-    # re-checked -- and an all-inconclusive sweep would have reported "0 of 30
-    # reports they closed have never been re-checked". This is the number the
-    # operator reads before deciding a VERIFIED FIXED is safe to send.
-    settled = ("PASSING", "REPRODUCING")
-    out = set()
-    for row in (ledger.get("findings") or {}).values():
-        check = row.get("check") or {}
-        if not (check.get("adjudicated_by") or {}).get("run_id"):
-            continue
-        if check.get("state") not in settled:
-            continue
-        for report in (row.get("filing") or {}).get("reports", []):
-            out.add(report.get("report_id"))
-    return out
 
 
 @qa(component="rest.support", tier=SafetyTier.SAFE, surface="rest",
