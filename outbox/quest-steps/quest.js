@@ -79,6 +79,14 @@
   });
   document.querySelectorAll('[data-figure]').forEach(function (el) { el.textContent = fmt(get(el.dataset.figure)); });
   document.querySelectorAll('[data-link]').forEach(function (a) { a.href = Q.links[a.dataset.link]; a.target = '_blank'; a.rel = 'noopener'; });
+  // a link with data-hl lights its own thing in its step's picture while the pointer or the focus is on it ("kdyz
+  // nekdo najede mysi na promo market v textu tak se highlightuje ten promo market na mape", 2026-11-01)
+  document.querySelectorAll('[data-hl]').forEach(function (a) {
+    var stage = a.closest('.step').querySelector('.stage'), cls = 'hl-' + a.dataset.hl;
+    var on = function () { stage.classList.add(cls); }, off = function () { stage.classList.remove(cls); };
+    a.addEventListener('pointerenter', on); a.addEventListener('pointerleave', off);
+    a.addEventListener('focus', on); a.addEventListener('blur', off);
+  });
 
   // ---- the rail: the quest's track: a round light a step with its number in it (no hexagon: "nelibi se mi ten
   // hexagon co pouzivas v logu a stepech"), the lines between them filling as you read down the page (a spark at the

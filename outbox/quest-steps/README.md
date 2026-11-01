@@ -39,7 +39,10 @@ revenue share), which is unchanged.
    from its name. The Quant Lab's BUILD no longer runs its setup into the grid (outbox/quant-lab-v2 ql.js: the chips
    shrink to fit between 1300 and about 1480 px, the width the clip is filmed at). Step 5's Universe: every company
    turned along its lane until no two ships stand near each other (record.py UV_SPREAD), yours held still on the
-   map's left with a YOUR COMPANY tag over it.
+   map's left with a YOUR COMPANY tag over it. Its second round: the name plates in steps 3 and 5 are the live
+   Universe's own (uv.css .b3, copied), the Promo Market with one of its own over its cube, lit with its building
+   while the pointer is on its name in the words; step 3 says again that your products can stand on your own land
+   in the Universe; what earns points has no box any more, only its green words and the "+ pts" tag.
 15. **Gemini's fork of this page, adopted** (2026-10-31). Antigravity copied this folder at 2201936a
    (the fourteenth take's first round) to `Downloads\cymetica\outbox\quest-steps` and served it on 8765; the operator:
    "NAD TEBOU VYHRAVA ma vse lepsi, jen ten step s market it bych zmenil". Its index.html, quest.css, quest.js,
