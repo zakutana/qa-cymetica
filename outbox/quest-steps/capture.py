@@ -187,6 +187,15 @@ def sky(_b):
     save(img, 'space.webp', quality=88)
 
 
+def calm(_b):
+    """the same sky without its stars, only the nebula's colour, behind the Universe ("bo se snazis moc detailu zobrazovat"):
+    every speck taken out (a minimum, then a maximum, over more than a star's width), then blurred"""
+    from PIL import ImageFilter
+    img = Image.open(HERE / 'pics' / 'space.webp').convert('RGB').resize((1920, 1080), Image.LANCZOS)
+    img = img.filter(ImageFilter.MinFilter(9)).filter(ImageFilter.MaxFilter(9)).filter(ImageFilter.GaussianBlur(14))
+    save(img, 'space-calm.webp', quality=92)
+
+
 def sun(b):
     """Cymetica's sun alone, from our Universe mock (its ball, glow and rays; no orbit, ring or station), on black: the
     page screens it over the sky. Prints how wide its bright ball is, so the page can size the companies by it."""
@@ -344,7 +353,7 @@ def apps(_b, n=13):
     print('apps: of', data['count'], 'built, in the ring:', json.dumps([[a['name'], a['path'].strip('/')] for a in picked]))
 
 
-SHOTS = {'sky': sky, 'sun': sun, 'stations': stations, 'builder': builder, 'promo': promo, 'apps': apps}
+SHOTS = {'sky': sky, 'calm': calm, 'sun': sun, 'stations': stations, 'builder': builder, 'promo': promo, 'apps': apps}
 
 
 def main(names):

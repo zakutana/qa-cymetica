@@ -726,6 +726,9 @@ def universe(b, seconds=20, dsf=1.5):
     # ("to neni ono ten universe, on je takovy zrnity": it went through 10 Mbit/s at 1600 wide and was then stretched to his
     # 1791: filmed frame by frame on its clock, from where it stands, at the size it is drawn)
     page.evaluate("() => { const uv = CO.uv, t0 = uv.clock.getElapsedTime(); window.__T = 0; uv.clock.getElapsedTime = () => t0 + window.__T; uv.pace = () => true; }")
+    # ("vis proc je to tak moc zrnite? bo se snazis moc detailu zobrazovat"): the lanes' thousands of specks of dust off, after
+    # lit_box so the map keeps its box and the page its sun and tag; the lanes stay
+    page.evaluate("() => { CO.uv.dust.visible = false; }")
     stepped(page, sel, seconds, 'universe', box, bps='24M', crf='4')
     page.close()
     frame_poster('universe', 1.0)
