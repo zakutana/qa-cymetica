@@ -39,13 +39,6 @@ html.st-embed, html.st-embed body { overflow: hidden; background: #05080e; }
 .pc-tabs button.on { color: var(--ink); background: rgba(0, 207, 255, .12); box-shadow: inset 0 0 0 1px rgba(0, 207, 255, .22); }
 .pc-tabs i { font: 800 11px/18px 'JetBrains Mono', monospace; min-width: 18px; height: 18px; padding: 0 5px; text-align: center; border-radius: 9px; color: #04140c; background: var(--green); box-shadow: 0 0 10px rgba(0, 255, 136, .6); }
 .pc-tabs i:empty { display: none; }
-.pc .pc-bal { margin-left: auto; }
-.pc-bal { display: inline-flex; align-items: center; gap: 10px; height: 40px; padding: 0 4px 0 14px; border: 1px solid var(--line); border-radius: 12px; background: rgba(6, 10, 18, .6); }
-.pc-bal:hover { border-color: rgba(0, 255, 136, .5); }
-.pc-bal b { font: 400 16px 'Archivo Black', sans-serif; font-variant-numeric: tabular-nums; }
-.pc-bal i { font: 500 18px/28px Inter, sans-serif; width: 30px; height: 30px; text-align: center; border-radius: 8px; color: var(--green); box-shadow: inset 0 0 0 1.5px rgba(0, 255, 136, .6); }
-.pc-bal.tick b { animation: pctick .7s ease; }
-@keyframes pctick { 35% { color: var(--green); } }
 
 /* ------------------------------------------------------------------ the words beside the card */
 .pc-view { display: none; }
@@ -206,9 +199,6 @@ html.st-embed, html.st-embed body { overflow: hidden; background: #05080e; }
 .pc.narrow .pc-brand { gap: 7px; }
 .pc.narrow .pc-brand svg { width: 30px; height: 30px; }
 .pc.narrow .pc-brand b { font-size: 14px; }
-.pc.narrow .pc-bal { height: 40px; padding: 0 4px 0 11px; gap: 8px; }
-.pc.narrow .pc-bal b { font-size: 15px; }
-.pc.narrow .pc-bal i { width: 30px; height: 30px; line-height: 28px; }
 .pc.narrow .pc-card { background: linear-gradient(112deg, rgba(205, 240, 255, .13) 0%, rgba(205, 240, 255, .03) 20%, rgba(205, 240, 255, 0) 38%), rgb(6, 12, 20); border-radius: 22px; }
 .pc.narrow .pc-room { -webkit-mask-image: linear-gradient(180deg, #000 44%, transparent 64%); mask-image: linear-gradient(180deg, #000 44%, transparent 64%); }
 .pc.narrow .pc-nx { -webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 56%); mask-image: linear-gradient(180deg, #000 30%, transparent 56%); }

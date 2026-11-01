@@ -263,7 +263,7 @@
   function invest() {
     var el = top(), p = S.pending;
     if (AMT < 1) { toast('Enter an amount first.'); return; }
-    S.deals.unshift({ p: p, amt: AMT, at: new Date() }); S.bal -= AMT; drawBal();
+    S.deals.unshift({ p: p, amt: AMT, at: new Date() }); S.bal -= AMT;
     $('nDeals').textContent = S.deals.length;
     el.classList.add('gone-r'); look();             // the card goes to him, and behind him
     toast('Invested ' + usd(AMT) + ' in ' + nameOf(p));
@@ -271,7 +271,6 @@
     S.pending = null;
     setTimeout(function () { S.i++; drawDeck(); }, 520);
   }
-  function drawBal() { $('bal').textContent = usd(S.bal); var b = $('addc'); b.classList.remove('tick'); void b.offsetWidth; b.classList.add('tick'); }
 
   /* ------------------------------------------------------------------ my deals */
   function stat(k, v, cls, small) { return '<div class="pc-stat"><span>' + k + '</span><b class="' + (cls || '') + '">' + v + '</b>' + (small ? '<small>' + small + '</small>' : '') + '</div>'; }
@@ -331,7 +330,6 @@
     if (id === 'no') { if (turned) { S.pending = null; flip(t, false); } else no(); }
     else if (id === 'yes') { if (turned) invest(); else yes(); }
     else if (id === 'more') { SHOWN += 40; drawBoard(); }
-    else if (id === 'addc') toast('Mock: on the real page this adds credit from your USDC balance.');
     else if (id === 'push') { e.preventDefault(); hidePush(); view('deck'); }
   });
   document.addEventListener('keydown', function (e) {
@@ -348,7 +346,7 @@
   });
 
   function hidePush() { var p = $('push'); if (p.hidden) return; p.classList.add('out'); setTimeout(function () { p.hidden = true; p.classList.remove('out'); }, 350); }
-  layout(); $('bal').textContent = usd(S.bal);
+  layout();
   var q = location.search.match(/view=(deals|board)/);
   if (q) view(q[1]); else drawDeck();
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { layout(); redraw(); });

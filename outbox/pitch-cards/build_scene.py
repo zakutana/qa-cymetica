@@ -2,7 +2,8 @@
 
     python outbox/pitch-cards/build_scene.py
 
-scene.webp   the room alone: the baked glass pane painted out, Nexus gone, so it can fill any screen behind him
+scene.webp   the room alone: the baked glass pane painted out, Nexus gone, so it can fill any screen behind him. This
+             writes that plate to ROOM; scene.webp comes from its enlargement ROOM_SHARP (see gen/MANIFEST.md).
 nexus.webp   Nexus cut out by hand-traced outline (2560 x 1440 coordinates below), to stand in FRONT of the card: the card
              sits under his finger and slides behind him when it is swiped to him. Left edge x=NX, top y=NY in the render.
              Cut from SHARP at twice those coordinates, so a screen at any scale has the pixels (see gen/MANIFEST.md).
@@ -17,6 +18,8 @@ from PIL import Image, ImageDraw, ImageFilter
 HERE = Path(__file__).resolve().parent
 SRC = HERE.parent / "quest" / "gen" / "lab-16x9.png"
 SHARP = HERE.parent / "quest" / "gen" / "lab-16x9-5120.png"   # the same render through Real-ESRGAN, twice the size
+ROOM = HERE.parent / "quest" / "gen" / "room-2560.png"
+ROOM_SHARP = HERE.parent / "quest" / "gen" / "room-5120.png"   # ROOM through Real-ESRGAN
 NX, NY = 1640, 280
 
 # Nexus's outline in the render's pixels, down his face, over the collar and shoulder, along the arm to the fingertip,
@@ -104,7 +107,8 @@ def nexus(a: np.ndarray) -> Image.Image:
 
 if __name__ == "__main__":
     src = np.asarray(Image.open(SRC).convert("RGB"))
-    Image.fromarray(room(src)).save(HERE / "scene.webp", quality=92, method=6)
+    Image.fromarray(room(src)).save(ROOM)
+    Image.open(ROOM_SHARP).convert("RGB").save(HERE / "scene.webp", quality=88, method=6)
     sharp = np.asarray(Image.open(SHARP).convert("RGB"))
     nexus(sharp).save(HERE / "nexus.webp", quality=90, method=6)
     Image.fromarray(sharp[620:1380, 3760:4520]).resize((192, 192), Image.LANCZOS).save(HERE / "nexus-face.webp", quality=92, method=6)
