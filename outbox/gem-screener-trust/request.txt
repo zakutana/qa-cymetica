@@ -17,7 +17,7 @@ Done when:
 [ ] 1 Trust Wallet and Meteora show the amount and date on the card; a pick without an exploit in the last year shows none.
 [ ] 2 Every pick over 3% slip shows the slip and the volume as drawn; one at 3% or under is unchanged.
 [ ] 3-4 Each pick's block carries its own warnings with its own figure; a pick with none has no block; no card mentions the theme.
-[ ] 5 Lido and Aave show both windows in the panel and the smiley's tooltip; Pump, whose share is the same on both, reads as today.
+[ ] 5 Lido and Aave show both windows in the panel and the smiley's tooltip; Jupiter, whose share is 50% on both, reads as today.
 [ ] 6 The line is on every app with a Rug power reading, and names the pool's chain only when it differs.
 [ ] 7 After a refresh that changes the picks, the log shows who entered and left, by name and reason, without an account.
 [ ] 8 The count equals the apps failing exactly one gate.

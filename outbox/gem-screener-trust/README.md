@@ -6,12 +6,12 @@ Asked for by the operator on 2026-11-02, in their words: *"esce nez to podas vyt
 
 Their live page through a GET-only proxy, with `patch.js` inside their script and `patch.css` added, so every figure is their own. The box at the bottom right jumps to each improvement. The list is in `../gem-screener-degen-audit.md`.
 
-**request.txt:** a draft of the 10 kept after the operator's cut of 2 Nov; pictures 1-3 are rendered once they accept the mock. Followed form: ET-32311.
+**request.txt:** the 10 kept after the operator's cut of 2 Nov, 4,470 of 8,000 characters, 26 of 40 lines, 4 of 6 pictures (`render.py`). Followed form: ET-32311. Filed as it stood, then `change-1.txt`.
 
 | | |
 |---|---|
-| Ticket | not filed |
-| Filed | |
+| Ticket | ET-33759 |
+| Filed | 2026-11-02 |
 | Accepted, deadline | |
 | Shipped | |
 | Verdict | |

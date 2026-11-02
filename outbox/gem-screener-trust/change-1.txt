@@ -1,0 +1,1 @@
+One correction to our own text, nothing else changes. In the "Done when" line for item 5, replace "Pump, whose share is the same on both, reads as today" with "Jupiter, whose share is 50% on both, reads as today". Pump's share differs between the two windows (47% and 62%), so Pump shows both, as item 5 says.

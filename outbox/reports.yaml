@@ -8136,6 +8136,191 @@ reports:
       We hold no automated check for this one because it needs your restart; the figures are what we read at the time. A test of generated_at being newer in the page, and a restarted worker that
       does not advertise an old snapshot, would each stop it. Read-only on our side: we opened the same socket the page opens and sent nothing beyond it.
 
+  - key: gem-screener-to-holders-none-where-unknown
+    findings: [CYM-to_holders_says_none_only_where_it_knows]
+    check: tests/rest/test_gem_screener_small_words.py::test_to_holders_says_none_only_where_it_knows
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app?coin=dolomite
+    title: "Gem Screener: Degen pick Dolomite reads \"To holders: None, no payouts, buybacks or burns found\" while its own report says \"holders' share unknown\""
+    expected: >
+      "None" is a finding. Where the source could not be read, the tile says unknown, as the page's own rule has it ("Absent field = unknown").
+    actual: >
+      Read on 2026-11-02. Panel, Supply, To holders: "None", "no payouts, buybacks or burns found", tooltip "No holders' revenue on any feed we read."
+      Same panel, Degen report: "holders' share unknown" and "Holders share: DefiLlama's fee page could not be read." DefiLlama's holders-revenue route for
+      Dolomite answers HTTP 400, so nothing was read, and none is not what was found.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app?coin=dolomite -> Supply, To holders: None, no payouts, buybacks or burns found'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/dolomite/degen-report -> "holders'' share unknown"; "DefiLlama''s fee page could not be read"'
+      - 'GET https://api.llama.fi/summary/fees/dolomite?dataType=dailyHoldersRevenue -> HTTP 400'
+    body: >
+      Our check is on this coin by name and fails while both sentences stand. Either moving clears it. GET requests only.
+
+  - key: gem-screener-picks-route-misses-a-cards-unknown
+    findings: [CYM-the_picks_route_warns_what_the_card_says]
+    check: tests/rest/test_gem_screener_small_words.py::test_the_picks_route_warns_what_the_card_says
+    severity: low
+    category: api
+    url: https://cymetica.com/api/v1/gem-screener/picks
+    title: "Gem Screener: CoWSwap's card shows 12-month dilution \"unknown\"; /picks, whose warnings agents are told to repeat, does not mention it"
+    expected: >
+      What a pick's card marks unknown is among the warnings /picks gives for it. CARDS, Trust Wallet and SSV carry "dilution unknown" there.
+    actual: >
+      Read on 2026-11-02. Card: Dilution "unknown". /coins/cowswap: dilution flag "ok" on 0 % a week from emissions, with no 12-month figure. /picks warnings for COW:
+      "the business is no longer growing", "the theme has lagged BTC over the last month". degen.gate7.n_ok_unknown counts 3; four cards show unknown.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/picks -> COW warnings without dilution'
+      - 'Open https://cymetica.com/gem-screener/app, tab Top Picks -> CoWSwap, Dilution: unknown'
+    body: >
+      Our check fails while a pick with no 12-month figure has no dilution word in its warnings. Either a warning or a figure clears it. GET requests only.
+
+  - key: gem-screener-vetted-without-its-level
+    findings: [CYM-vetted_is_not_passed_on_a_level_it_could_not_read]
+    check: tests/rest/test_gem_screener_small_words.py::test_vetted_is_not_passed_on_a_level_it_could_not_read
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/coins/yield-basis
+    title: "Gem Screener: Yield Basis is Vetted with no reading of \"35%+ of its best quarter\", at 6 % of its best 30 days"
+    expected: >
+      A rule that could not be read is not a rule passed. Trend has its own reason for that ("trend cannot be measured").
+    actual: >
+      Read on 2026-11-02. Yield Basis: 399 days, reliable true, reliable_fail empty, traj.level_vs_peak absent, phase New. 30-day revenue $117,610 is 6.2 % of its best
+      30 days; months Aug $36K, Sep $3.9K, Oct $121K. It is the only such row of 225. It fails other gates, so no pick changes.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/yield-basis -> vetted {ok true, failed []}, trajectory without level_vs_peak'
+    body: >
+      Our check fails while a Vetted row has no level to read. GET requests only.
+
+  - key: gem-screener-bonk-fun-route-from-another-product
+    findings: [CYM-bonk_fun_is_labelled_from_its_own_money]
+    check: tests/rest/test_gem_screener_small_words.py::test_bonk_fun_is_labelled_from_its_own_money
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/coins/bonk.fun
+    title: "Gem Screener: BONK.fun's \"Directly\" quotes Bonkswap, 0.02 % of the family's holders revenue, and \"94% of revenue, burned\" against a source that splits it"
+    expected: >
+      The route shown for holders is the route of the money, and "burned" covers what is burned.
+    actual: >
+      Read on 2026-11-02. checks[reaches_you]: "Directly", "Swap fees allocated to buybacks.", source fees/bonkswap. DefiLlama holders revenue over 30 days: family $1,486,955, Bonkswap $276.
+      holders_line "Holders get 94% of revenue, burned"; holders_how_src "After 10th jun 2025: 58% of total fees (Buy/burn 50% + SBR 4% + BonkRewards 4%)", so at most 50 of those 58 are burned.
+      The row's category is "Telegram Bot" and its description "Meme token launchpad".
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/bonk.fun -> degen_level.checks[reaches_you].source_url .../fees/bonkswap'
+      - 'GET https://api.llama.fi/summary/fees/bonkswap?dataType=dailyHoldersRevenue -> total30d 276'
+      - 'GET https://api.llama.fi/summary/fees/bonk.fun?dataType=dailyHoldersRevenue -> total30d 1486955'
+    body: >
+      Our check is on this coin by name. It clears when the quote comes from the part that earns the money and the word covers the split. GET requests only.
+
+  - key: gem-screener-chart-on-another-market
+    findings: [CYM-a_chart_says_which_market_it_read]
+    check: tests/rest/test_gem_screener_small_words.py::test_a_chart_says_which_market_it_read
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/coins/saucerswap
+    title: "Gem Screener: SaucerSwap's chart is read on Base and USD AI's on Solana, while each row's pool and liquidity are on another chain, and nothing says so"
+    expected: >
+      A chart score reads the market the row prices, or says which market it read.
+    actual: >
+      Read on 2026-11-02. SaucerSwap: contract on base, chart_analyzer_url chain=base; liquidity on hedera, $41,979. USD AI: contract on solana, chart_analyzer_url chain=solana; liquidity on arbitrum,
+      $1,954,127. A reader of the chart score takes it for the coin's main market.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/saucerswap -> contract.chain base, liquidity.chain hedera, chart_analyzer_url ...chain=base'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/usd-ai -> contract.chain solana, liquidity.chain arbitrum, chart_analyzer_url ...chain=solana'
+    body: >
+      Our check is on these two by name. A chart on the pool's chain, or a line naming the chart's chain, clears it. GET requests only.
+
+  - key: gem-screener-report-wording-on-chains-and-a-cut-sentence
+    findings: [CYM-a_report_reads_as_the_coin_it_is_on]
+    check: tests/rest/test_gem_screener_small_words.py::test_a_report_reads_as_the_coin_it_is_on
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/coins/tron/degen-report
+    title: "Gem Screener: a chain's Degen report says \"cheap for its revenue\" though chains are priced on adoption; Sudoswap's report stops at \"The sudoswap AMM is a minimal.\""
+    expected: >
+      A chain's verdict uses the measure it was priced on, and a description ends as a sentence.
+    actual: >
+      Read on 2026-11-02. Tron's report: "Verdict: cheap for its revenue and vetted". Its price_vs_revenue unit is "market cap / adoption: daily users, DEX volume, TVL and stablecoins together".
+      Sudoswap's report: "What it is: The sudoswap AMM is a minimal.", cut at a comma.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/tron/degen-report -> "Verdict: cheap for its revenue and vetted"'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/sudoswap/degen-report -> "What it is: The sudoswap AMM is a minimal."'
+    body: >
+      Our check reads the two reports. Lines are cached, so a fix reaches them as they regenerate. GET requests only.
+
+  - key: gem-screener-float-tag-misses-rows-under-its-line
+    findings: [CYM-the_float_tag_follows_its_own_line]
+    check: tests/rest/test_gem_screener_small_words.py::test_the_float_tag_follows_its_own_line
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: "Gem Screener: 8 apps show under 25 % of tokens out without the low-float tag whose line is 25 %, Hyperliquid and Stargate among them"
+    expected: >
+      risk_rules.float_tag is 0.25. A row the page shows under it carries the tag, as 37 others do.
+    actual: >
+      Read on 2026-11-02. No float tag on Stargate 9.3 %, Shadow 10.4 %, Streamflow 15.4 %, ORE 17.2 %, Morpheus 21.7 %, Hyperliquid 23.9 %, Ramses 8.4 %, Bean 3.4 %. Our guess is that the tag reads DefiLlama's
+      unlocked figure and the shown percentage reads CoinGecko's; nothing we can read says which, and either way the reader sees a row under the line and no tag.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app, snapshot: risk_rules.float_tag 0.25; apps[slug=hyperliquid].supply.out_pct 23.94, risks without float'
+    body: >
+      Our check fails while three or more rows show under the line untagged. One figure for both clears it. GET requests only.
+
+  - key: gem-screener-small-sentences-against-their-data
+    findings: [CYM-one_word_means_one_number]
+    check: tests/rest/test_gem_screener_small_words.py::test_one_word_means_one_number
+    severity: low
+    category: documentation
+    url: https://cymetica.com/gem-screener/app
+    title: "Gem Screener: five small statements against their data, among them \"52% on the old card\" (it reads 48), \"Hot right now\" naming 3 of 4, and two 30-day revenues for one sector"
+    expected: >
+      A sentence on the page is true of the data beside it.
+    actual: >
+      Read on 2026-11-02. (1) The Altseason (i): "52% on the old card"; the old card's number, altseason.index, is 48. 52 is the breadth on another universe. (2) Sectors: "Hot right now" names 3; the table marks 4 Hot
+      (RWA is left out, the code takes the first three) and nothing says more exist. (3) The Degen level's Heat line on StonkFun: "Price vs revenue: needs history", which is the Strength 3M check, on a coin whose Price vs revenue
+      (1.39x) is shown. (4) /gem-screener: younger apps "are marked young in the table"; 46 are under a year, the New tag marks 31.
+      (5) Sectors: Memecoins reads about $91.8M in the table (fundament.last30) and about $87.5M of "revenue over 30 days" in its panel (fundament.rev30d), DEX & perps $214.0M and $211.6M, under one label.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app, snapshot altseason.index 48, altseason_cycle.components.breadth.value 52; (i) on the Altseason panel'
+      - 'Tab Sectors -> "Hot right now" 3 names; sector_stages.counts.hot 4'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/stonkfun -> degen_level.areas[heat].line "Price run: needs history · Price vs revenue: needs history"; price_vs_revenue 1.39'
+    body: >
+      One job, five statements. Our check fails per statement while it stands. GET requests only.
+
+  - key: gem-screener-docs-do-not-name-what-is-served
+    findings: [CYM-the_docs_name_what_is_served]
+    check: tests/rest/test_gem_screener_small_words.py::test_the_docs_name_what_is_served
+    severity: low
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: "Gem Screener docs: llms.txt says about 215 apps (236 are served), /api-docs has no row for /picks, and /page-extras is documented nowhere"
+    expected: >
+      The docs agents read state what is served.
+    actual: >
+      Read on 2026-11-02. llms.txt and the gem_screener_ranked description: "about 215 apps"; /ranked total 236. /api-docs has Gem Screener rows and none for GET /api/v1/gem-screener/picks, the route llms.txt starts from.
+      GET /api/v1/gem-screener/page-extras carries the excluded names and the altseason series, and is in neither llms.txt nor /openapi-public.json. Exit flags, "young" and "main pool" are defined nowhere a reader looks.
+    steps:
+      - 'GET https://cymetica.com/llms.txt -> "about 215 apps"; GET /api/v1/gem-screener/ranked?limit=1 -> total 236'
+      - 'GET https://cymetica.com/api-docs -> contains gem-screener, not gem-screener/picks'
+      - 'GET https://cymetica.com/openapi-public.json -> no page-extras'
+    body: >
+      Our check fails per line while it stands. GET requests only.
+
+  - key: trailing-slash-redirect-leaves-https
+    findings: [CYM-a_trailing_slash_stays_on_https]
+    check: tests/rest/test_gem_screener_small_words.py::test_a_trailing_slash_stays_on_https
+    severity: low
+    category: security
+    url: https://cymetica.com/api/v1/gem-screener/ranked/
+    title: "A trailing slash on an API route redirects to http: 307 to http://cymetica.com/api/v1/gem-screener/ranked"
+    expected: >
+      A redirect from https stays on https.
+    actual: >
+      Read on 2026-11-02: GET https://cymetica.com/api/v1/gem-screener/ranked/ answers 307, Location http://cymetica.com/api/v1/gem-screener/ranked. A client following it sends its request, with any key, over plain http unless something upstream
+      upgrades it; we did not follow it. Seen on this route, and it looks like the framework's default behind a proxy.
+    steps:
+      - 'curl -si https://cymetica.com/api/v1/gem-screener/ranked/ -> HTTP 307, location http://cymetica.com/api/v1/gem-screener/ranked'
+    body: >
+      Our check reads the Location without following it. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

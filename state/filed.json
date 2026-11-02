@@ -5542,6 +5542,166 @@
     "273": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "gem-screener-to-holders-none-where-unknown",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_to_holders_says_none_only_where_it_knows"
+   ],
+   "report_ids": [
+    274
+   ],
+   "title": "Gem Screener: Degen pick Dolomite reads \"To holders: None, no payouts, buybacks or burns found\" while its own report says \"holders' share unknown\"",
+   "filed_at": "2026-11-02T13:16:12+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "274": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-picks-route-misses-a-cards-unknown",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_the_picks_route_warns_what_the_card_says"
+   ],
+   "report_ids": [
+    275
+   ],
+   "title": "Gem Screener: CoWSwap's card shows 12-month dilution \"unknown\"; /picks, whose warnings agents are told to repeat, does not mention it",
+   "filed_at": "2026-11-02T13:16:24+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "275": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-vetted-without-its-level",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_vetted_is_not_passed_on_a_level_it_could_not_read"
+   ],
+   "report_ids": [
+    276
+   ],
+   "title": "Gem Screener: Yield Basis is Vetted with no reading of \"35%+ of its best quarter\", at 6 % of its best 30 days",
+   "filed_at": "2026-11-02T13:16:35+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "276": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-bonk-fun-route-from-another-product",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_bonk_fun_is_labelled_from_its_own_money"
+   ],
+   "report_ids": [
+    277
+   ],
+   "title": "Gem Screener: BONK.fun's \"Directly\" quotes Bonkswap, 0.02 % of the family's holders revenue, and \"94% of revenue, burned\" against a source that splits it",
+   "filed_at": "2026-11-02T13:16:48+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "277": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-chart-on-another-market",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_a_chart_says_which_market_it_read"
+   ],
+   "report_ids": [
+    278
+   ],
+   "title": "Gem Screener: SaucerSwap's chart is read on Base and USD AI's on Solana, while each row's pool and liquidity are on another chain, and nothing says so",
+   "filed_at": "2026-11-02T13:16:59+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "278": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-report-wording-on-chains-and-a-cut-sentence",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_a_report_reads_as_the_coin_it_is_on"
+   ],
+   "report_ids": [
+    279
+   ],
+   "title": "Gem Screener: a chain's Degen report says \"cheap for its revenue\" though chains are priced on adoption; Sudoswap's report stops at \"The sudoswap AMM is a minimal.\"",
+   "filed_at": "2026-11-02T13:17:13+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "279": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-float-tag-misses-rows-under-its-line",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_the_float_tag_follows_its_own_line"
+   ],
+   "report_ids": [
+    280
+   ],
+   "title": "Gem Screener: 8 apps show under 25 % of tokens out without the low-float tag whose line is 25 %, Hyperliquid and Stargate among them",
+   "filed_at": "2026-11-02T13:17:32+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "280": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-docs-do-not-name-what-is-served",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_the_docs_name_what_is_served"
+   ],
+   "report_ids": [
+    281
+   ],
+   "title": "Gem Screener docs: llms.txt says about 215 apps (236 are served), /api-docs has no row for /picks, and /page-extras is documented nowhere",
+   "filed_at": "2026-11-02T13:17:57+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "281": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "trailing-slash-redirect-leaves-https",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_a_trailing_slash_stays_on_https"
+   ],
+   "report_ids": [
+    282
+   ],
+   "title": "A trailing slash on an API route redirects to http: 307 to http://cymetica.com/api/v1/gem-screener/ranked",
+   "filed_at": "2026-11-02T13:18:32+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "282": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-small-sentences-against-their-data",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_one_word_means_one_number"
+   ],
+   "report_ids": [
+    283
+   ],
+   "title": "Gem Screener: five small statements against their data, among them \"52% on the old card\" (it reads 48), \"Hot right now\" naming 3 of 4, and two 30-day revenues for one sector",
+   "filed_at": "2026-11-02T13:19:03+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "283": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

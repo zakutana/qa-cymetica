@@ -49,6 +49,28 @@ It was the first pick in an older snapshot (read in the page at 08:38 UTC, "Upda
 | 272 | low | Tornado "burned"; its own source says no TORN is burned |
 | 273 | low | "Of the float" on two denominators (GAIB 19 % vs 24 %) |
 
+Filed the same day, all low except 274:
+
+| # | What |
+|---|---|
+| 274 | Dolomite "To holders: None" while its report says the share is unknown (medium) |
+| 275 | CoWSwap's 12-month dilution unknown on the card, no word in /picks |
+| 276 | Yield Basis Vetted with no level to read, at 6 % of its best |
+| 277 | BONK.fun's route quotes Bonkswap, 0.02 % of the money; "burned" against a split |
+| 278 | SaucerSwap and USD AI charts on another chain than the pool, unsaid |
+| 279 | Tron's report "cheap for its revenue"; Sudoswap's sentence cut short |
+| 280 | 8 apps under 25 % of tokens out without the float tag |
+| 281 | llms.txt "about 215 apps"; /picks and /page-extras undocumented |
+| 282 | A trailing slash redirects to http |
+| 283 | Five small statements against their data |
+
+## Not filed, on purpose
+
+- Run-rate "most cautious of three" on 6 sparse rows: the row's label says it is the 90-day figure, by design.
+- FDV basis label on rows: in the data only, shown nowhere.
+- "Uncategorized" as a raw word on one unlock: cosmetic.
+- /coins/up against /coins/UP, the picks log's refresh count, Stargate's "91% still to come", the two chain medians: could not be settled from what we can read.
+
 ## Not filed: ours
 
 ET-32311 is our own spec. It took the warnings off the pick card (item 14) and put the 24-hour volume in the "$10K buy" row (item 11). The exit-flag rule and the holders sentence shape are ours too. These are for our next request, not bugs.
