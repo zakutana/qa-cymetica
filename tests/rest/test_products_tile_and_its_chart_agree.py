@@ -7,10 +7,15 @@ visitors 94 and a `daily` list adding up to 22, with nothing before 2026-10-26. 
 page's move from /agent-tournaments to /agent-casino: the total kept the old path's days and the
 list did not. Likely only: nothing we can read names it.
 
-**The rule.** Over one response, a product's `visitors` equals the sum of its `daily`, within TOLERANCE.
+Their fix of 2026-11-02 (ET-33672) made `visitors` distinct people over the period and `daily` distinct people
+per day, and says "The days add up to more than the period's unique visitors when people return." Equal was
+the imagined fix; what any reading requires is narrower, and Agent Casino's 94 against 22 still breaks it.
 
-VERDICTS. failed: a product with visitors differs from its sum by more than TOLERANCE. passed: at least
-one product with visitors and none differs. inconclusive: a failed read, no product with visitors, or
+**The rule.** Over one response, a product's `visitors` is at least its busiest day and at most the sum of its
+`daily`, within TOLERANCE. A total equal to the sum (the old definition) fits too.
+
+VERDICTS. failed: a product with visitors outside those bounds by more than TOLERANCE. passed: at least
+one product with visitors and none outside. inconclusive: a failed read, no product with visitors, or
 any `daily` that is not a list of numbers.
 
 NOT asserted: which of the two is right, or that the daily figures count people rightly (see
@@ -29,10 +34,11 @@ TOLERANCE = 2
 
 
 def disagreeing(products: list[dict]) -> list[dict]:
-    """The products with visitors whose total is not the sum of their days."""
+    """The products with visitors whose total cannot be the distinct people of those days."""
     return [{"name": p.get("name"), "visitors": p["visitors"], "sum_of_daily": sum(p["daily"])}
             for p in products
-            if (p.get("visitors") or 0) > 0 and abs(p["visitors"] - sum(p["daily"])) > TOLERANCE]
+            if (p.get("visitors") or 0) > 0
+            and not max(p["daily"], default=0) - TOLERANCE <= p["visitors"] <= sum(p["daily"]) + TOLERANCE]
 
 
 @qa(component="rest.company", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM)
@@ -56,7 +62,7 @@ def test_products_tile_and_its_chart_agree(rest_trusted):
         verdict="failed" if off else "passed",
         reason=("; ".join(f"{r['name']}: the tile reads {r['visitors']} and its chart's days add up to "
                           f"{r['sum_of_daily']}" for r in off)
-                or f"all {len(with_visitors)} products add up"),
+                or f"all {len(with_visitors)} products' totals fit their days"),
         left={"disagreeing": len(off)},
         right={"disagreeing": 0},
         population={"products_with_visitors": len(with_visitors), "off": off},

@@ -7563,6 +7563,108 @@ reports:
       supposed to start a table with the table's capital ("On approval your bot gets the table's trading capital ... and starts trading", /rules). Our check reads every table our key
       sat at and fails while a round of ours is staked above 10 % of its table's capital, the top of the trade size their own settings allow. It passes when every stake is within 10 %,
       which needs either the stake taken from the capital or the bot funded to the capital at the seat, and it is inconclusive under 40 rounds with none over. GET requests only.
+  - key: traffic-mine-does-not-carry-the-products-figure
+    findings: [CYM-products-traffic-mine-same-figure]
+    check: tests/rest/test_products_one_figure.py::test_traffic_mine_carries_the_products_figure
+    severity: low
+    category: logic
+    url: https://cymetica.com/traffic/mine
+    title: >-
+      /traffic/mine shows Build a Company with 96 unique visitors and no uses, and Airdrop Farmer with 26; the Products tab
+      and /app-usage, which promise the same figure, read 130 and 23
+    expected: >
+      GET /api/v1/app-usage -> definitions.users says "The Products tab of /company and /traffic/mine show this same figure
+      for a product (ET-33672)", and the Products tab says "the same figure as on /app-usage and /traffic/mine". So a product's
+      row on /traffic/mine carries its Unique visitors and its Uses, as the rows of Gem Screener, Chart Analyzer and Agent Casino do.
+    actual: >
+      Read on 2026-11-02 at 07:12 UTC, 30 days. Build a Company: 130 unique visitors and 52 uses on /api/v1/company/products,
+      130 on /app-usage; on /api/v1/traffic/mine its row is kind feature_page ("Shipped page"), unique_visitors 96, no app_beacon,
+      so no "Product:" line and no uses. Airdrop Farmer: 23 and 28 uses on the Products tab; on /traffic/mine a feature_page row with
+      26 and no uses. The other seven products match exactly. Removing the second Build a Company row removed the row that was
+      kind app, so the row left is the one without the product's numbers.
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/products with an API key -> Build a Company unique_visitors 130, uses 52; Airdrop Farmer unique_visitors 23, uses 28'
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=30 with the same key -> path /company: kind feature_page, unique_visitors 96, no app_beacon; path /airdrop-farmer: kind feature_page, unique_visitors 26, no app_beacon'
+      - 'Open https://cymetica.com/traffic/mine signed in, 30 days -> both rows read "Shipped page" with no "Product: ... unique visitors ... uses" line'
+    body: >
+      An owner opening the two pages still gets two counts for one product, on the two products they are most likely to
+      compare. Our check reads the promise and both endpoints. It fails while a product's row differs by more than 5 % (at least
+      2 people) or has no uses; it passes when they match, or when /app-usage no longer promises the same figure there.
+      GET requests only.
+
+  - key: a-product-shows-another-products-people
+    findings: [CYM-products-have-their-own-people]
+    check: tests/rest/test_products_one_figure.py::test_a_product_has_its_own_people
+    severity: medium
+    category: logic
+    url: https://cymetica.com/company/app
+    title: >-
+      Products tab: Supply Analyzer shows Gem Screener's people (the same 195, the same 30 daily figures), and Team Dump
+      Radar shows the 433 of the "Crypto Radars" group on 31 page views
+    expected: >
+      Unique visitors is defined as "Distinct people who used the product in the period" (GET /api/v1/company/products ->
+      definitions.unique_visitors). So each product shows the people of that product, or says that the figure belongs to a group.
+    actual: >
+      Read on 2026-11-02 at 07:12 UTC, 30 days. Supply Analyzer and Gem Screener both read unique_visitors 195 with an identical
+      30-day daily list (sum 337), while their uses are 49 and 183 and their page views on /traffic/mine 74 and 705. Team Dump Radar
+      reads 433, which /app-usage lists at the same path under the name "Crypto Radars"; its row on /traffic/mine has 31 page
+      views and 11 uses over the same days. Over 14 days the page reads 338 unique for 18 page views, and Supply Analyzer 90 for 12.
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/products with an API key -> Gem Screener and Supply Analyzer: unique_visitors 195, the same daily list, uses 183 and 49; Team Dump Radar: unique_visitors 433, uses 11'
+      - 'GET https://cymetica.com/api/v1/app-usage -> humans: app "Crypto Radars", path /team-dump-radar, users 433'
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=30 with the key -> path /team-dump-radar visits 31; path /supply-analyzer visits 74'
+    body: >
+      The owner cannot see how many people use these two products, and the figure looks like success that belongs to another
+      page. It also matters if a product's people ever feed anything paid. Our check fails while two products share a daily list with
+      five or more active days, or while a product carries the figure of a differently named /app-usage row on its path at over twice
+      its page views. It passes when each product has its own count, or when the product takes the group's name. GET requests only.
+
+  - key: traffic-mine-a-row-is-over-the-unique-visitors-tile
+    findings: [CYM-traffic-mine-no-row-over-the-tile]
+    check: tests/rest/test_products_one_figure.py::test_no_row_is_over_the_unique_visitors_tile
+    severity: low
+    category: logic
+    url: https://cymetica.com/traffic/mine
+    title: >-
+      /traffic/mine: the tile says 214 unique visitors across everything you created, and a row under it says 338
+    expected: >
+      The tile UNIQUE VISITORS counts the distinct people across the pages listed under it, so it is at least as large as any
+      one row's Unique, or the page says the two count differently.
+    actual: >
+      Read on 2026-11-02 at 07:12 UTC. At 14 days, the range the page opens on: tile 214, while the column Unique reads
+      Team Dump Radar 338. At 30 days: tile 456, Build Usage 466. The rows of kind app now take their Unique from the product figure
+      (distinct people, by account or browser), and the tile did not change with them. Those rows can also read more people than
+      page views in the same row: Team Dump Radar 338 unique on 18 page views.
+    steps:
+      - 'Open https://cymetica.com/traffic/mine signed in, 14 days -> tile UNIQUE VISITORS 214; row Team Dump Radar: Page views 18, Unique 338'
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=30 with an API key -> totals.unique_visitors 456; item /usage unique_visitors 466'
+    body: >
+      The page's headline figure is below one of its own rows, so a reader cannot trust either. Our check fails while a row's
+      unique_visitors is over totals.unique_visitors by more than 2; it passes when the tile is recounted, or when the column
+      is the page's own count again and the product figure stays on its "Product:" line. GET requests only.
+
+  - key: infiltrator-has-uses-and-no-people
+    findings: [CYM-products-no-uses-without-people]
+    check: tests/rest/test_products_one_figure.py::test_no_product_has_uses_and_no_people
+    severity: low
+    category: logic
+    url: https://cymetica.com/company/app
+    title: "Products tab: Infiltrator reads 0 unique visitors and 18 uses"
+    expected: >
+      GET /api/v1/company/products defines uses as "Page loads in which the visitor clicked, typed or filled in the app" and
+      Unique visitors as the distinct people who used the product. A use has a visitor, so a product with uses has at least one.
+    actual: >
+      Read on 2026-11-02 at 07:12 UTC, 30 days: Infiltrator unique_visitors 0, every day of its daily list 0, uses 18, views 21. The
+      Products tab draws "0 unique visitors, 18 uses", and /traffic/mine has "Product: 0 unique visitors" with 16 page views in
+      the same row. Infiltrator is not on /app-usage.
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/products with an API key -> Infiltrator: unique_visitors 0, uses 18'
+      - 'Open https://cymetica.com/company/app signed in, tab Products -> the Infiltrator tile reads 0 UNIQUE VISITORS, 18 USES'
+    body: >
+      The tile counts real use but shows no people for it, the likely reason being that the product is not on the list the
+      people are read from (likely only: nothing we can read names it). Our check fails while a product has uses and no unique
+      visitors; it passes when the people are counted or the uses go. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

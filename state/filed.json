@@ -3486,12 +3486,18 @@
    ],
    "title": "Agent Casino: 94 on the Products tab, a sum of days, against 148 distinct people on /app-usage; Build a Company: 40 on the Products tab, a sum of days, against 126 distinct people on /app-usage",
    "filed_at": "2026-11-01T19:13:20+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 247,
+     "verdict": "pass",
+     "at": "2026-11-02T07:22:11+00:00"
+    }
+   ],
    "their_status": {
     "247": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-products-tile-and-its-chart-agree",
@@ -3503,12 +3509,18 @@
    ],
    "title": "Agent Casino: the tile reads 94 and its chart's days add up to 22",
    "filed_at": "2026-11-01T19:13:27+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 248,
+     "verdict": "pass",
+     "at": "2026-11-02T07:22:30+00:00"
+    }
+   ],
    "their_status": {
     "248": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-products-tile-people-are-people",
@@ -3520,12 +3532,18 @@
    ],
    "title": "The Products tab labels a.visitors \"people\", but /api/v1/build-it-better/apps/leaderboard defines the figure: \"Distinct daily visitors. A range is the sum of its days, so one person on three days counts three times.\" 8 of 9 products read visitors == sum(daily), e.g. Gem Screener: 247, so one person on three days is three \"people\"",
    "filed_at": "2026-11-01T18:54:36+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 244,
+     "verdict": "pass",
+     "at": "2026-11-02T07:21:38+00:00"
+    }
+   ],
    "their_status": {
     "244": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-published-openapi-documents-agree",
@@ -3722,12 +3740,18 @@
    ],
    "title": "/api/v1/company/14/season-breakdown says recomputed_hourly: true, and its count is from 2026-11-01T07:55:30Z, 11.3 hours before the response's Date header",
    "filed_at": "2026-11-01T19:13:11+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 246,
+     "verdict": "pass",
+     "at": "2026-11-02T07:21:44+00:00"
+    }
+   ],
    "their_status": {
     "246": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-skill_count",
@@ -4991,6 +5015,70 @@
    },
    "withdrawn": false,
    "last_check": "fail"
+  },
+  {
+   "key": "traffic-mine-does-not-carry-the-products-figure",
+   "nodeids": [
+    "tests/rest/test_products_one_figure.py::test_traffic_mine_carries_the_products_figure"
+   ],
+   "report_ids": [
+    250
+   ],
+   "title": "/traffic/mine shows Build a Company with 96 unique visitors and no uses, and Airdrop Farmer with 26; the Products tab and /app-usage, which promise the same figure, read 130 and 23",
+   "filed_at": "2026-11-02T07:20:09+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "250": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "traffic-mine-a-row-is-over-the-unique-visitors-tile",
+   "nodeids": [
+    "tests/rest/test_products_one_figure.py::test_no_row_is_over_the_unique_visitors_tile"
+   ],
+   "report_ids": [
+    251
+   ],
+   "title": "/traffic/mine: the tile says 214 unique visitors across everything you created, and a row under it says 338",
+   "filed_at": "2026-11-02T07:20:42+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "251": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "infiltrator-has-uses-and-no-people",
+   "nodeids": [
+    "tests/rest/test_products_one_figure.py::test_no_product_has_uses_and_no_people"
+   ],
+   "report_ids": [
+    252
+   ],
+   "title": "Products tab: Infiltrator reads 0 unique visitors and 18 uses",
+   "filed_at": "2026-11-02T07:20:54+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "252": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "a-product-shows-another-products-people",
+   "nodeids": [
+    "tests/rest/test_products_one_figure.py::test_a_product_has_its_own_people"
+   ],
+   "report_ids": [
+    253
+   ],
+   "title": "Products tab: Supply Analyzer shows Gem Screener's people (the same 195, the same 30 daily figures), and Team Dump Radar shows the 433 of the \"Crypto Radars\" group on 31 page views",
+   "filed_at": "2026-11-02T07:23:06+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "253": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
