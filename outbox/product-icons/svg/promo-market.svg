@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="18" y1="14" x2="110" y2="114">
+      <stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>
+    <radialGradient id="bg" cx=".5" cy=".42" r=".72">
+      <stop offset="0" stop-color="#10283a"/><stop offset=".62" stop-color="#0b1420"/><stop offset="1" stop-color="#0a0e17"/></radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="5"/></filter>
+    <filter id="led" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="2.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs><rect width="128" height="128" fill="url(#bg)"/><path d="M50 78 L78 78 L90 110 H38 Z" fill="#00cfff" fill-opacity=".2" filter="url(#soft)"/><ellipse cx="64" cy="110" rx="33" ry="6.5" fill="#00ff88" fill-opacity=".5" filter="url(#soft)"/><ellipse cx="64" cy="110" rx="23" ry="3.6" fill="#00ff88" fill-opacity=".85"/><path d="M64 12 L102 33 L64 54 L26 33 Z" fill="#00cfff" fill-opacity=".30"/><path d="M26 33 L64 54 V96 L26 75 Z" fill="#00cfff" fill-opacity=".12"/><path d="M102 33 L64 54 V96 L102 75 Z" fill="#00ff88" fill-opacity=".20"/><g filter="url(#soft)" opacity="0.6"><path d="M64 12 L102 33 V75 L64 96 L26 75 V33 Z M26 33 L64 54 L102 33 M64 54 V96" fill="none" stroke="url(#g)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/></g><path d="M64 12 L102 33 V75 L64 96 L26 75 V33 Z M26 33 L64 54 L102 33 M64 54 V96" fill="none" stroke="url(#g)" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="64" cy="54" r="6" fill="#e6edf7" filter="url(#led)"/></svg>
