@@ -24,15 +24,6 @@
     DEGEN.near = near.map(k => APPS.find(a => (a.key || a.slug) === k)).filter(Boolean)
       .sort((a, b) => (b.potential || 0) - (a.potential || 0)).slice(0, 6).map(a => a.key || a.slug);
   }
-  const oldStart = renderStart;
-  renderStart = function () {
-    oldStart();
-    const title = document.getElementById('startTitle');
-    if (title && left.length && !document.getElementById('saLeft')) {
-      const s = SA_MOCK.sources[left[0].slug];
-      title.insertAdjacentHTML('afterend', `<p class="gt-line" id="saLeft">${N(3)}<b>${esc(left[0].name)}</b> left the picks: +${s.pct}% new tokens in 12 months, over the ${LINE}% line. Schedule from ${esc(s.source)}, read ${esc(SA_MOCK.read)}.</p>`);
-    }
-  };
 
   // ---- 4-8 the Supply column
   const finished = e => {
@@ -49,6 +40,9 @@
     if (d) return oldCell(e);
     const done = finished(e), drop = SA_MOCK.dropstab[e.slug];
     let say, mark = 7;
+    if (done && Math.abs(done.none) === 0 && done.none !== null && done.none !== undefined) {
+      return `<span class="supcell v-good tipme"${tipAttrs('Dilution, 12 months: 0%', 'The published schedule finished in ' + done.when + ' and covered the whole supply.')}>${saPie(sp, 22)}<span class="spn">${N(6)}0%</span></span>`;
+    }
     if (done) {
       mark = 6;
       say = `The published schedule finished in ${done.when}.` + (done.none ? ` ${done.none}% of the supply never had one.` : '') + ' Nothing is assumed for the rest.';
@@ -95,7 +89,7 @@
   const STEPS = [
     [1, 'Column: Collector Crypt reads +39%', () => inApps('collector-crypt')],
     [2, 'Card: Next unlock names its source', () => { setView('start'); openPanel((APPS.find(a => a.slug === 'collector-crypt') || {}).key); setTimeout(() => flash(document.querySelector('#panel .sa-src')), 1500); }],
-    [3, 'Top Picks: Collector Crypt out, Rhea in', () => { closeIt(); setView('start'); setTimeout(() => flash(document.getElementById('saLeft')), 100); }],
+    [3, 'Top Picks: Collector Crypt out, Rhea in', () => { closeIt(); setView('start'); setTimeout(() => flash(document.getElementById('startNear')), 100); }],
     [4, 'Column: no figure, dashed ring', () => inApps(firstNone())],
     [5, 'Column: max supply reached, 0%', () => inApps(firstMax())],
     [6, 'Column: Jupiter, schedule finished', () => inApps('jupiter')],

@@ -4,19 +4,19 @@ MUST STAY AS DRAWN: the Supply column in picture 1, in the site's fonts and pale
 
 1. Where DeFiLlama has no schedule, the Supply Analyzer finds it in the other public places: the project's own vesting contracts (Streamflow and the like), Tokenomist, DropsTab. "One source per number" stays: each coin's schedule comes from one source, and DeFiLlama stays first.
 2. The Supply card's Next unlock row, the Supply Analyzer page and the column's tooltip name that source and when it was read.
-3. The Dilution gate reads these figures with no change to its rule, so a Degen pick can leave because of one. Collector Crypt is the case we know of; say in the picks log or the row why it left.
+3. The Dilution gate reads these figures with no change to its rule, so a Degen pick can leave because of one. Collector Crypt is the case we know of. Why it left shows on its near-miss card and in the row, never beside the Top Picks heading, which stays as it is.
 4. Supply column, no figure: a dashed empty ring and "n/a", grey, as in picture 1. A full cyan pie says "100% free to sell", and today it is drawn on rows whose vesting and staking are unknown. On those rows the pie, wherever it appears, draws only what is known.
 5. Supply column, max supply reached (circulating within 1% of max): "0%" in green, with the tooltip "Max supply is reached: no more tokens can come out."
-6. Supply column, a schedule that has finished: the tooltip says so and gives the share of supply that never had one (Jupiter: finished February 2026, 50.6% of supply has none), never "No vesting or unlock schedule on any feed we read". With supply outside the schedule it stays n/a.
+6. Supply column, a schedule that has finished: never "No vesting or unlock schedule on any feed we read". If it covered the whole supply, "0%" (Tornado Cash). If not, it stays n/a and the tooltip gives the date and the share that never had a schedule (Jupiter: finished February 2026, 50.6% of supply has none).
 7. Supply column, nothing found anywhere: the tooltip names where it looked: "No schedule found on DeFiLlama, the project's vesting contracts, Tokenomist or DropsTab. Nothing is assumed."
 8. Lombard reads its schedule. DeFiLlama holds it to 2029, about +67% in 12 months, and the row reads "ok" and "No unlock schedule on file".
 
 Done when:
 [ ] 1-2 Collector Crypt shows its figure, about +39%, with its source named in the tooltip and on the card; BTW, HYPER, DRV, RENDER and KNC, whose schedules are on DropsTab, each show a figure or say their schedule has finished.
 [ ] 1 The apps reading n/a fall from 143 of 236 to 110 or fewer.
-[ ] 3 Collector Crypt's Dilution gate reads that figure; the page says why a coin left the picks.
+[ ] 3 Collector Crypt's Dilution gate reads that figure; its near-miss card and row say why; the Top Picks heading has nothing beside it.
 [ ] 4 No row with an unknown schedule draws a full cyan pie; the column looks like picture 1 at 1440 and 1920 px.
-[ ] 5 The 18 apps at max supply with no schedule read 0%.
-[ ] 6 Jupiter, CoWSwap and Chainlink carry the finished-schedule tooltip.
+[ ] 5 The 19 apps at max supply with no schedule read 0%.
+[ ] 6 Tornado Cash, JustLend and Sun read 0%; Jupiter, CoWSwap and Chainlink carry the finished-schedule tooltip.
 [ ] 7 The sentence names the sources actually read.
 [ ] 8 Lombard's Dilution, Next unlock and column agree with the schedule.
