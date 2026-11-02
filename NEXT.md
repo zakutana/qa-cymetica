@@ -8,7 +8,7 @@ Co jsme se domluvili, že je další krok, a ještě to není hotové. Píše se
 
 ---
 
-- [ ] 2026-11-02  Gem Screener: mock 15 vylepšení z megachecku (outbox/gem-screener-trust, port 8803) čeká na skóre operátora; pak request.txt a obrázky, podat jen na jeho slovo. Bugy #255 až #273 hlídá sweep.
+- [ ] 2026-11-02  Gem Screener ET-33759 podán (10 bodů, C1), BB-ACCEPT čeká na operátora, až shipne verdikt jeho. Bugy #255 až #283 hlídá sweep.
 - [ ] 2026-11-01  Pitch Cards ET-33678 přijat, termín 2. 11. 20:33 UTC: real peníze? verdikt operátorův. Agent Casino do live stolů: `casino` přes /loop, bugy podat. ET-33648 přijat, termín 2. 11. 15:27 UTC. Round 3 řádky 2, 5, 6, verdikt jeho. ET-31263 6 řádků; ET-30773 (docs/et-30773-verification.md).
 - [ ] 2026-10-13  Requesty: ET-31278 Gem Screener 4-6 PASS, body 1-3 po snapshotu 14.10. (docs/et-31278-verification.md), pak loga; ET-31466 a ET-31459 dodány 15. 10. (docs/et-3146*-verification.md), ET-31459 body 5/9/10 po změně u stolu; ET-31300 1 FAIL live trades, verdikt jeho.
 - [ ] 2026-10-22  ET-32803 (kolo 4) Shipped, Fail čeká: zbývá I (hrad modrý, pyramida fialová i v 6adfa1b7), N (Products), C (engine vrstva není); zpráva k I neodeslána (outbox/company-spec-4/verdict-et-32803.md). Quant Lab hledání = ET-32976 (building): až shipped, verdikt náš.

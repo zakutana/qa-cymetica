@@ -176,6 +176,80 @@ def test_a_trailing_slash_stays_on_https(rest_anon):
     _verdict(breaches, 1, f"the answer stays on https ({response.status_code} {where})", {"route": "/api/v1/gem-screener/ranked/"})
 
 
+SUPPLY_BATCH = "/api/v1/supply-analyzer/batch/gem-screener"
+LLAMA_SCHEDULE = "https://defillama-datasets.llama.fi/emissions/{slug}"
+
+
+def _ahead_in_a_year(schedule: dict, now: float) -> float:
+    """Tokens DefiLlama's documented schedule still unlocks in the next 365 days."""
+    total = 0.0
+    for section in (schedule.get("documentedData") or {}).get("data") or []:
+        points = section.get("data") or []
+        before = [p.get("unlocked") or 0 for p in points if p.get("timestamp", 0) <= now]
+        after = [p.get("unlocked") or 0 for p in points if p.get("timestamp", 0) <= now + 365 * 86400]
+        if before and after:
+            total += max(0.0, after[-1] - before[-1])
+    return total
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_dilution_is_not_ok_on_a_coin_with_a_schedule_ahead(rest_anon):
+    """Named: Lombard's schedule runs to 2029 on DefiLlama. The row reads it, or stops saying there is none."""
+    snap, _ = read_page(rest_anon)
+    coin = _coin(rest_anon, "lombard")
+    app = next((a for a in snap["apps"] if a.get("slug") == "lombard"), {})
+    circ = (app.get("cg") or {}).get("circ")
+    source = build_source_client()
+    try:
+        ahead = _ahead_in_a_year(_source_json(source, LLAMA_SCHEDULE.format(slug="lombard")), snap.get("generated_at") or 0)
+    finally:
+        source.close()
+    if not circ:
+        raise Inconclusive("Lombard's circulating supply is not on the row today")
+    share = 100 * ahead / circ
+    dilution, nxt = coin.get("dilution") or {}, coin.get("next_unlock") or {}
+    breaches = []
+    if share > 5 and (nxt.get("kind") == "unknown" or dilution.get("flag") == "ok"):
+        breaches.append({"what": f"Lombard: dilution flag {dilution.get('flag')!r}, next_unlock {nxt.get('kind')!r}, {nxt.get('note')!r}; DefiLlama's schedule "
+                                 f"unlocks {ahead:,.0f} tokens in 12 months, {share:.0f}% of circulating"})
+    _verdict(breaches, 1, "the row agrees with the schedule on file", {"schedule": LLAMA_SCHEDULE.format(slug="lombard")})
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_no_schedule_on_any_feed_is_said_only_where_there_is_none(rest_anon):
+    """Named: 'No vesting or unlock schedule on any feed we read' on coins whose finished schedule is on DefiLlama."""
+    rows = {(r.get("token") or {}).get("slug"): r for r in _json(rest_anon, SUPPLY_BATCH).get("items") or []}
+    breaches, read = [], 0
+    source = build_source_client()
+    try:
+        for slug in ("jupiter", "cowswap", "chainlink", "tornado-cash"):
+            why = str(((rows.get(slug) or {}).get("next_unlock") or {}).get("why") or "")
+            schedule = _source_json(source, LLAMA_SCHEDULE.format(slug=slug))
+            sections = (schedule.get("documentedData") or {}).get("data") or []
+            read += 1
+            if "No vesting or unlock schedule on any feed" in why and sections:
+                breaches.append({"what": f"{slug}: {why!r}; DefiLlama holds {len(sections)} sections of its schedule"})
+    finally:
+        source.close()
+    _verdict(breaches, read, "the sentence is said only where no schedule is on file", {"batch": SUPPLY_BATCH})
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_the_supply_pie_does_not_say_free_to_sell_when_it_does_not_know(rest_anon):
+    """A pie that is 100 % 'Free to sell' on a coin whose vesting and staking are listed as unknown states what is not known."""
+    items = _json(rest_anon, SUPPLY_BATCH).get("items") or []
+    if not items:
+        raise Inconclusive("the batch is empty")
+    rows = []
+    for row in items:
+        free = next((s.get("share_pct") for s in row.get("slices_today") or [] if s.get("key") == "free"), 0) or 0
+        unknown = row.get("unknown_names") or []
+        if free >= 99.9 and "vesting schedule" in unknown and "staking" in unknown:
+            rows.append((row.get("token") or {}).get("symbol"))
+    breaches = [{"what": f"{len(rows)} of {len(items)} rows draw a pie 100% Free to sell with vesting and staking listed as unknown: {rows[:8]}"}] if rows else []
+    _verdict(breaches, len(items), "no pie states what the row does not know", {"batch": SUPPLY_BATCH})
+
+
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_to_holders_says_none_only_where_it_knows(rest_anon):
     """'None, no payouts, buybacks or burns found' is a finding. The report on the same coin saying its share is unknown

@@ -8321,6 +8321,63 @@ reports:
     body: >
       Our check reads the Location without following it. GET requests only.
 
+  - key: gem-screener-lombard-dilution-ok-with-a-schedule-ahead
+    findings: [CYM-dilution_is_not_ok_on_a_coin_with_a_schedule_ahead]
+    check: tests/rest/test_gem_screener_small_words.py::test_dilution_is_not_ok_on_a_coin_with_a_schedule_ahead
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/coins/lombard
+    title: "Gem Screener: Lombard reads dilution \"ok\" and \"No unlock schedule on file\"; DefiLlama's schedule runs to 2029 and unlocks about 67 % of its circulating supply in 12 months"
+    expected: >
+      A coin whose schedule is on the source the page reads shows that schedule. "Unknown, not zero" is right only where there is none, and "ok" is not unknown.
+    actual: >
+      Read on 2026-11-02. /coins/lombard: dilution flag "ok", "in line with the benchmark app", 0 % a week, basis "emissions of the last 30 days"; next_unlock kind "unknown", "No unlock schedule on file for this coin. Unknown,
+      not zero."; unlocks null. defillama-datasets.llama.fi/emissions/lombard: sections to 2029-09-18; over the next 12 months Ecosystem Development +62M, Liquid Bitcoin Foundation +52M, Early Investors +67M, Core Contributors +83M,
+      about 265M against 397M circulating. It fails other gates, so no pick changes. It is the one coin of the 143 shown as n/a where we found a large schedule ahead.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/lombard -> dilution.flag ok, next_unlock.kind unknown'
+      - 'GET https://defillama-datasets.llama.fi/emissions/lombard -> documentedData sections to 2029-09-18, Early Investors 8.4M now and 75M in 12 months'
+    body: >
+      Our check is on this coin by name and fails while the row disagrees with the schedule by over 5 % of circulating. GET requests only.
+
+  - key: supply-no-schedule-on-any-feed-where-one-is-on-file
+    findings: [CYM-no_schedule_on_any_feed_is_said_only_where_there_is_none]
+    check: tests/rest/test_gem_screener_small_words.py::test_no_schedule_on_any_feed_is_said_only_where_there_is_none
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener
+    title: "Supply Analyzer: \"No vesting or unlock schedule on any feed we read\" on Jupiter, CoWSwap, Chainlink and 13 more, whose finished schedules are on DefiLlama; the Supply column reads n/a"
+    expected: >
+      The sentence is said where no schedule exists. A schedule with nothing left is a different finding, which the batch already has words for: "The schedule on file has no tranche ahead."
+    actual: >
+      Read on 2026-11-02. Batch rows for Jupiter, CoWSwap, Chainlink and Tornado Cash: next_unlock.why "No vesting or unlock schedule on any feed we read: unknown, not none."; the column reads n/a. DefiLlama holds their schedules (Jupiter 8 sections
+      ending 2026-02-25, CoWSwap ending 2026-03-10, Chainlink ending 2026-10-09, Tornado ending 2025-11-23), and the same coins' Gem Screener rows read next_unlock kind "none". 16 of the 143 n/a rows are like this. Some still have supply outside
+      the schedule (Jupiter's unlocks.no_schedule is 50.6 %), so a plain 0 % would not be right for all of them either.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> slug jupiter: next_unlock.why as quoted, tiles.dilution_12m null'
+      - 'GET https://defillama-datasets.llama.fi/emissions/jupiter -> documentedData with 8 sections to 2026-02-25'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/jupiter -> next_unlock.kind none, unlocks.no_schedule 50.6'
+    body: >
+      Our check reads the four named coins and fails on that sentence beside a schedule on file. GET requests only.
+
+  - key: supply-pie-says-free-to-sell-when-unknown
+    findings: [CYM-the_supply_pie_does_not_say_free_to_sell_when_it_does_not_know]
+    check: tests/rest/test_gem_screener_small_words.py::test_the_supply_pie_does_not_say_free_to_sell_when_it_does_not_know
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: "Supply column: a pie 100 % \"Free to sell\" on rows whose own record lists vesting and staking as unknown"
+    expected: >
+      A pie says what is known. A row that does not know its vesting or its staking does not draw everything as free to sell.
+    actual: >
+      Read on 2026-11-02. Of 143 rows reading n/a in the Supply column, 108 draw a full cyan pie, whose slice is "Free to sell". Their records carry unknown_names with "vesting schedule", "staking" and more. Securitize: 18 % of tokens out, no schedule,
+      full pie. Where a row has no dilution figure at all the pie is the only picture on it, and it reads as the reassuring answer.
+    steps:
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> token Securitize: slices_today free share_pct 100, unknown_names ["vesting schedule", "emissions", "staking", "staking flow", "burns"]'
+      - 'Open https://cymetica.com/gem-screener/app?view=apps -> Securitize, Supply column: full cyan pie, n/a'
+    body: >
+      Our check fails while a row draws 100 % Free to sell with vesting and staking listed unknown. A grey or dashed pie, or none, clears it. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

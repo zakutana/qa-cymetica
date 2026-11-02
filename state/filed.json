@@ -5702,6 +5702,54 @@
     "283": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "gem-screener-lombard-dilution-ok-with-a-schedule-ahead",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_dilution_is_not_ok_on_a_coin_with_a_schedule_ahead"
+   ],
+   "report_ids": [
+    284
+   ],
+   "title": "Gem Screener: Lombard reads dilution \"ok\" and \"No unlock schedule on file\"; DefiLlama's schedule runs to 2029 and unlocks about 67 % of its circulating supply in 12 months",
+   "filed_at": "2026-11-02T13:38:11+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "284": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "supply-no-schedule-on-any-feed-where-one-is-on-file",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_no_schedule_on_any_feed_is_said_only_where_there_is_none"
+   ],
+   "report_ids": [
+    285
+   ],
+   "title": "Supply Analyzer: \"No vesting or unlock schedule on any feed we read\" on Jupiter, CoWSwap, Chainlink and 13 more, whose finished schedules are on DefiLlama; the Supply column reads n/a",
+   "filed_at": "2026-11-02T13:38:39+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "285": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "supply-pie-says-free-to-sell-when-unknown",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_the_supply_pie_does_not_say_free_to_sell_when_it_does_not_know"
+   ],
+   "report_ids": [
+    286
+   ],
+   "title": "Supply column: a pie 100 % \"Free to sell\" on rows whose own record lists vesting and staking as unknown",
+   "filed_at": "2026-11-02T13:39:46+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "286": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
