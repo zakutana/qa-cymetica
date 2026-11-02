@@ -10,6 +10,7 @@ MUST STAY AS DRAWN: the Supply column in picture 1, in the site's fonts and pale
 6. Supply column, a schedule that has finished: never "No vesting or unlock schedule on any feed we read". If it covered the whole supply, "0%" (Tornado Cash). If not, it stays n/a and the tooltip gives the date and the share that never had a schedule (Jupiter: finished February 2026, 50.6% of supply has none).
 7. Supply column, nothing found anywhere: the tooltip names where it looked: "No schedule found on DeFiLlama, the project's vesting contracts, Tokenomist or DropsTab. Nothing is assumed."
 8. Lombard reads its schedule. DeFiLlama holds it to 2029, about +67% in 12 months, and the row reads "ok" and "No unlock schedule on file".
+9. The column is renamed "Dilution 12M" on Apps and Chains, because that is what its number is: new tokens in the next 12 months over circulating. Its (i) says so and says what the pie shows. The Supply card in the coin panel keeps its name.
 
 Done when:
 [ ] 1-2 Collector Crypt shows its figure, about +39%, with its source named in the tooltip and on the card; BTW, HYPER, DRV, RENDER and KNC, whose schedules are on DropsTab, each show a figure or say their schedule has finished.
@@ -20,3 +21,4 @@ Done when:
 [ ] 6 Tornado Cash, JustLend and Sun read 0%; Jupiter, CoWSwap and Chainlink carry the finished-schedule tooltip.
 [ ] 7 The sentence names the sources actually read.
 [ ] 8 Lombard's Dilution, Next unlock and column agree with the schedule.
+[ ] 9 The column reads "Dilution 12M" on Apps and Chains, the table still fits as it does today, and the coin panel's card still reads Supply.

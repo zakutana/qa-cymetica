@@ -25,6 +25,9 @@
       .sort((a, b) => (b.potential || 0) - (a.potential || 0)).slice(0, 6).map(a => a.key || a.slug);
   }
 
+  // ---- 9 the column says what its number is; the panel's Supply card keeps its name, it holds the whole supply
+  [COLS_APPS, COLS_CHAINS].forEach(list => list.forEach(c => { if (c.key === 'supply') { c.label = 'Dilution 12M'; c.en = 'Dilution 12M'; } }));
+
   // ---- 4-8 the Supply column
   const finished = e => {
     const when = SA_MOCK.finished[e.slug];
