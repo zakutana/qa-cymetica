@@ -8,8 +8,8 @@ Asked for by the operator on 2026-11-02, in their words: *"podej to jako spec na
 
 | | |
 |---|---|
-| Ticket | see below once filed |
-| Filed | 2026-11-02 |
+| Ticket | not filed: 2026-11-02 14:32 UTC refused, HTTP 429 USAGE_LIMIT, session build limit, resets 18:11 UTC |
+| Filed | |
 | Accepted, deadline | |
 | Shipped | |
 | Verdict | |
