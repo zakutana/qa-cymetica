@@ -31,5 +31,12 @@ with sync_playwright() as p:
     t.mouse.move(2, 2)
     t.wait_for_timeout(1000)
     t.locator("#supplyCard").screenshot(path=str(HERE / "picture-2-supply-card.png"))
+
+    t.goto("http://127.0.0.1:8804/supply-analyzer?symbol=collector-crypt", wait_until="load", timeout=120000)
+    t.wait_for_selector("#saTiles .sa-pie", timeout=90000)
+    t.wait_for_timeout(2500)
+    head, foot = t.locator("#saHead").bounding_box(), t.locator(".sa-out").bounding_box()
+    t.screenshot(path=str(HERE / "picture-3-supply-analyzer.png"), full_page=True,
+                 clip={"x": max(0, head["x"] - 16), "y": head["y"] - 12, "width": head["width"] + 32, "height": foot["y"] + foot["height"] - head["y"] + 24})
     b.close()
 print("rendered")

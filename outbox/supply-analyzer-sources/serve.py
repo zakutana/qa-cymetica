@@ -90,6 +90,26 @@ def page(path: str) -> bytes:
     return html.replace(GO, code + "\n" + GO, 1).encode("utf-8")
 
 
+def supply_page(path: str) -> bytes:
+    """Their Supply Analyzer page, with our data and stylesheet; its script comes through supply_script()."""
+    status, _, body, _ = fetch(path)
+    if status != 200:
+        raise RuntimeError(f"{path} -> HTTP {status}")
+    v = str(int(time.time()))
+    head = f'<script>window.SA_MOCK = {json.dumps(DATA)};</script><link rel="stylesheet" href="/_sa/patch.css?v={v}">\n</head>'
+    return body.decode("utf-8").replace("</head>", head, 1).encode("utf-8")
+
+
+def supply_script(path: str) -> bytes:
+    """Their page script with patch_page.js inside it, before its first read."""
+    status, _, body, _ = fetch(path)
+    if status != 200:
+        raise RuntimeError(f"{path} -> HTTP {status}")
+    js = body.decode("utf-8")
+    at = js.rindex("boot();")
+    return (js[:at] + (HERE / "patch_page.js").read_text(encoding="utf-8") + "\n  " + js[at:]).encode("utf-8")
+
+
 class Handler(BaseHTTPRequestHandler):
     def send(self, code, ctype, body, headers=None):
         self.send_response(code)
@@ -113,6 +133,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         if bare == "/gem-screener/app":
             return self.send(200, "text/html; charset=utf-8", page(self.path))
+        if bare == "/supply-analyzer":
+            return self.send(200, "text/html; charset=utf-8", supply_page(self.path))
+        if bare == "/static/js/supply-analyzer.js":
+            return self.send(200, "text/javascript; charset=utf-8", supply_script(self.path))
         if bare.startswith("/_sa/") and bare[5:] in OWN:
             return self.send(200, OWN[bare[5:]], (HERE / bare[5:]).read_bytes())
         status, ctype, body, headers = fetch(self.path)

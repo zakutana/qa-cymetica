@@ -117,12 +117,12 @@
     const pct = typeof c.pct === 'number' ? c.pct : (whole ? 100 * out / whole : null);
     return pie(parts, pct === null ? esc(saTok(out)) : (pct >= 99.95 ? '100%' : pct.toFixed(1) + '%'), pct === null ? 'out' : 'is out', '', open ? 'No max supply: what is still to come cannot be drawn.' : '');
   }
-  function fdvPie(sp) {
+  // Market cap over FDV is circulating over the whole supply at one price: the same picture, so it is two lines under that pie
+  function fdvLines(sp) {
     const f = (sp.tiles || {}).fdv;
-    if (!f || !f.market_cap_usd || !f.fdv_usd) return pie([], 'n/a', '', 'v-na', 'No market cap stated.');
-    const cap = Math.min(f.market_cap_usd, f.fdv_usd), cls = saFdvCls(f.x);
-    return pie([{label: 'Market cap', v: cap, c: 'var(--accent)', shown: saUsd(f.market_cap_usd)},
-      {label: 'Rest of FDV', v: Math.max(f.fdv_usd - cap, 0), c: FILL[cls] || 'var(--line, #2a3648)', shown: saUsd(f.fdv_usd - cap)}], f.x.toFixed(1) + '×', 'FDV to cap', cls);
+    if (!f || !f.market_cap_usd || !f.fdv_usd) return '';
+    const cls = saFdvCls(f.x);
+    return `<div class="sa-fdv"><span>Market cap</span><b>${esc(saUsd(f.market_cap_usd))}</b><span>FDV</span><b class="${cls}">${esc(saUsd(f.fdv_usd))}${typeof f.x === 'number' ? ` · ${f.x.toFixed(1)}×` : ''}</b></div>`;
   }
   function dilPie(sp, e) {
     const d = saDil(sp), circ = ((sp.tiles || {}).circulating || {}).tokens, done = finished(e), drop = SA_MOCK.dropstab[e.slug];
@@ -154,10 +154,53 @@
       tile.classList.add('sa-pie');
       tile.insertAdjacentHTML('beforeend', inner + mark);
     };
-    fill('circ', circPie(sp), N(10));
-    fill('fdv', fdvPie(sp), '');
-    fill('dil', dilPie(sp, e), '');
+    // one pie: market cap over FDV is circulating over the whole supply, and dilution is the pie's red part over its blue
+    fill('circ', onePie(sp, e), N(10));
+    const head = box.querySelector('.satile[data-k="circ"] .sk');
+    if (head) head.textContent = 'Circulating, FDV, dilution';
+    ['fdv', 'dil'].forEach(k => { const t = box.querySelector(`.satile[data-k="${k}"]`); if (t) t.remove(); });
+    const wide = box.querySelector('.satile[data-k="circ"]');
+    if (wide) wide.classList.add('sa-wide');
+    const grid = box.querySelector('.satiles');
+    if (grid) { grid.classList.remove('n4'); grid.classList.add('sa-n' + grid.children.length); }
     return box.innerHTML;
+  };
+  function onePie(sp, e) {
+    const dil = dilPie(sp, e), note = (dil.match(/<p class="sa-note">([\s\S]*?)<\/p>/) || [])[1] || '';
+    const center = (dil.match(/<div class="sa-center ([^"]*)"><b>([^<]*)<\/b>/) || []);
+    const row = `<div class="sa-fdv"><span>Dilution, 12 months</span><b class="${center[1] || ''}">${center[2] || 'n/a'}</b></div>`;
+    const bits = circPie(sp).split('<ul class="sa-legend">');
+    return `<div class="sa-wrap">${bits[0]}<div class="sa-side"><ul class="sa-legend">${bits[1] || '</ul>'}${fdvLines(sp)}${row}${note ? `<p class="sa-note">${note}</p>` : ''}</div></div>`;
+  }
+
+  // ---- 4, 11 the pie moves to the Market Cap column; Dilution 12M is its number alone
+  const pieCell = supplyCell;
+  supplyCell = e => pieCell(e).replace(/<svg class="spie"[\s\S]*?<\/svg>/, '').replace('<span class="sa-ring" aria-hidden="true"></span>', '');
+  function miniPie(sp) {
+    const {parts} = donutParts(sp), total = parts.reduce((n, p) => n + p.v, 0), R = 8, C = 2 * Math.PI * R;
+    if (!total) return '';
+    let at = 0;
+    return `<svg class="sa-mini" viewBox="0 0 22 22" width="22" height="22" aria-hidden="true">` + parts.map(p => {
+      const len = C * p.v / total;
+      const dash = p.dashed ? 'style="stroke-dasharray:1.5 1.5;opacity:.6"' : `stroke-dasharray="${len.toFixed(2)} ${(C - len).toFixed(2)}"`;
+      const arc = `<circle cx="11" cy="11" r="${R}" fill="none" stroke="${p.c}" stroke-width="5" ${dash} stroke-dashoffset="${(-at).toFixed(2)}"/>`;
+      at += len;
+      return arc;
+    }).join('') + '</svg>';
+  }
+  const listWithoutPie = renderList;
+  renderList = function () {
+    listWithoutPie();
+    const at = cols().findIndex(c => c.key === 'mcap');
+    if (at < 0) return;
+    document.querySelectorAll(`#${isChainsView() ? 'tbl-chains' : 'tbl-apps'} tbody tr[data-id]`).forEach(tr => {
+      const e = findEntity(tr.dataset.id), sp = e && supplyOf(e), td = tr.children[at];
+      if (!sp || !td || td.querySelector('.sa-capcell')) return;
+      const c = (sp.tiles || {}).circulating || {}, f = (sp.tiles || {}).fdv || {};
+      const say = [typeof c.pct === 'number' ? (c.pct >= 99.95 ? '100' : c.pct.toFixed(1)) + '% of the supply is out.' : '',
+        f.fdv_usd ? `FDV ${saUsd(f.fdv_usd)}${typeof f.x === 'number' ? ', ' + f.x.toFixed(1) + '× the market cap' : ''}.` : ''].filter(Boolean).join(' ');
+      td.innerHTML = `<span class="sa-capcell tipme"${tipAttrs('Market cap ' + td.textContent.trim(), say || 'No supply figures.')}>${miniPie(sp)}<span>${td.innerHTML}${N(11)}</span></span>`;
+    });
   };
 
   // ---- the box: where each one is. Ours only, it never goes in a picture for them
@@ -187,7 +230,9 @@
     [6, 'Column: Jupiter, schedule finished', () => inApps('jupiter')],
     [7, 'Column: where it looked', () => inApps(firstNone())],
     [8, 'Column: Lombard reads its schedule', () => inApps('lombard')],
-    [10, 'Supply card: three pies in place of the tiles', () => { setView('start'); openPanel((APPS.find(a => a.slug === 'up') || {}).key); setTimeout(() => flash(document.querySelector('#panel #supplyCard')), 1500); }],
+    [11, 'Market Cap column: the same pie, small', () => { closeIt(); setView('apps'); setTimeout(() => flash(document.querySelector('.sa-capcell')), 300); }],
+    [12, 'The Supply Analyzer page itself', () => { location.href = '/supply-analyzer?symbol=collector-crypt'; }],
+    [10, 'Supply card: one pie in place of three tiles', () => { setView('start'); openPanel((APPS.find(a => a.slug === 'up') || {}).key); setTimeout(() => flash(document.querySelector('#panel #supplyCard')), 1500); }],
   ];
   setTimeout(() => {
     const box = document.createElement('aside');
