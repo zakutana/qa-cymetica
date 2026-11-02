@@ -85,6 +85,6 @@ Goals, for the next Build it Better request.
 10. A public picks log by name, so an exit can be dated.
 11. Near misses say how many are one gate away (6 shown of 38; StonkFun, ORE, GMX not among them).
 12. Six gate dots on each Apps row, sortable.
-13. Capped upside marked (17 rows at 50x, real up to 2,981x); the public page's first table is ten such micro-caps, with picks below it.
+13. Capped upside marked (17 rows at 50x, real up to 2,981x).
 14. The theme-lagging flag moves to one page line.
 15. Backtest shows its date (22 Sep, old gates) and the weeks of forward record.

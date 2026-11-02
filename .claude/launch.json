@@ -60,6 +60,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/pitch-cards/serve.py", "--quiet"],
       "port": 8802
+    },
+    {
+      "name": "gem-screener-trust",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/gem-screener-trust/serve.py", "--quiet"],
+      "port": 8803
     }
   ]
 }
