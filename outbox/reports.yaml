@@ -7702,6 +7702,440 @@ reports:
       other Vetted failure) is not young; it passes when StonkFun is young again, or when the limit is printed in
       vetted and the check can read it. GET requests only.
 
+  - key: gem-screener-exploit-under-its-own-name-denied
+    findings: [CYM-an_exploit_listed_under_the_apps_own_name_is_not_denied]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_an_exploit_listed_under_the_apps_own_name_is_not_denied
+    severity: high
+    category: logic
+    url: https://cymetica.com/gem-screener/app?coin=dolomite
+    title: "Gem Screener: exploits DefiLlama lists under the app's own name are called \"not tied to this protocol\" or \"No exploit listed\", on Degen pick Dolomite among others"
+    expected: >
+      When DefiLlama's hacks list names this app, the page does not deny it. It can say the entry has no protocol id and was
+      not verified, but "not tied to this protocol", "similar name" and "No exploit listed" are claims that it is not this app.
+    actual: >
+      Read on 2026-11-02. Dolomite (a Degen pick) shows "DefiLlama lists an exploit under a similar name (Dolomite, 2024-03-20),
+      not tied to this protocol". The name is identical, and DefiLlama's text is "An old Dolomite DEX contract on Ethereum
+      (deployed 2019) was exploited", $1.8M. The same sentence is on PancakeSwap (2021-04-12, $1.8M, insider with lottery admin
+      access), Origin Protocol (2020-11-17, $7.7M, OUSD VaultCore), Bankr (2026-07-25 $480K and 2026-05-19 $170K, inside the last
+      year), Zest (2024-04-12, $1M, Zest Protocol on Stacks) and BONK.fun (2026-03-11, $30K, its domain hijacked). Osmosis reads
+      "No exploit listed", verdict good, with the source "None on DefiLlama's list"; the list has Osmosis 2022-06-08, $5M. CoWSwap,
+      also a pick, reads "Old exploit" from its 2023 entry; "CoW Swap" 2026-04-14, $1.2M (cow.fi hijacked) is under a year old. All
+      of these DefiLlama entries have defillamaId null, which looks like the cause. Not every one is a contract flaw: Stargate's
+      (2023-12-04, a phishing proposal on its Snapshot) and Nexus Mutual's (2020-12-14, the founder's wallet) have the same sentence
+      and are arguable.
+    steps:
+      - 'GET https://api.llama.fi/hacks -> entries named Dolomite, PancakeSwap, Origin Protocol, Bankr, Zest, BONK Fun, Osmosis, each defillamaId null'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/dolomite/degen-report -> "DefiLlama lists an exploit under a similar name (Dolomite, 2024-03-20), not tied to this protocol."'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/osmosis-dex -> degen_level.checks[track_record]: verdict good, text "No exploit listed"'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/cowswap -> degen_level.checks[track_record]: text "Old exploit"'
+    body: >
+      This is the sentence a reader takes as clearing the coin, so it is the costliest place to be wrong. A join on protocol id
+      misses entries with no id, and the fallback then states the opposite of what it knows. Other similar names are rightly told
+      apart (Hyperliquid Malaysia, BlackHole Token on BSC), so the exact-name case can be separated from them. Our check fails
+      while an app whose exact name is on the list has the exploit denied, or called old with one under a year old. A wording that
+      says "listed, not verified" passes. GET requests only.
+
+  - key: gem-screener-picks-lists-ten-of-eleven
+    findings: [CYM-the_picks_route_says_when_it_lists_fewer_than_pass]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_picks_route_says_when_it_lists_fewer_than_pass
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/gem-screener/picks
+    title: "Gem Screener: \"11 of 236 apps pass all 6 gates\", 10 cards and 10 API picks; Rhea Finance passes and is on neither, and no text says the list stops at 10"
+    expected: >
+      The route describes itself as "apps passing all 6 degen gates" and the page's title counts 11, so a reader takes the list
+      to be all of them. A list capped at 10 says so.
+    actual: >
+      Read on 2026-11-02, snapshot 06:20 UTC. degen.n_ok 11, degen_gates.picks 11, degen_ok true on 11 rows, the page's title "11 of
+      236 apps pass all 6 gates", the gate strip "DEGEN PICKS 11 picks". GET /picks lists 10, /status counts.degen_picks is 10, the
+      Top Picks cards and tier S are 10. The 11th is Rhea Finance (RHEA, upside 2.54x, degen_fail empty, /coins/rhea-finance degen.ok
+      true), in tier C and not in Near misses. The only trace of the cap is degen.rules.shortlist 10 in the snapshot; nothing in the
+      page's text, llms.txt or the OpenAPI states it.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/picks -> 10 picks, no rhea-finance; what: "apps passing all 6 degen gates"'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/rhea-finance -> degen {ok: true, gates_failed: []}'
+      - 'Open https://cymetica.com/gem-screener/app, tab Top Picks -> "11 of 236 apps pass all 6 gates", 10 cards'
+    body: >
+      Our check fails while /picks lists fewer than pass and does not say so; it passes when it lists them all or states how many
+      pass. GET requests only.
+
+  - key: gem-screener-gate-text-omits-what-decides
+    findings: [CYM-each_gate_prints_what_decides_it]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_each_gate_prints_what_decides_it
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/gem-screener/app
+    title: "Gem Screener: the Growing and Vetted gate texts leave out what decides a row; 31 apps fail Growing above its printed floor, and StonkFun was in and out of the picks on a condition printed nowhere"
+    expected: >
+      A gate's rule_long lets a reader work out why a row passes or fails. This report replaces our #254, which we retracted: we
+      said StonkFun should pass, and it is not growing. What stands is that the rule deciding it is not written down.
+    actual: >
+      Read on 2026-11-02, snapshot 06:20 UTC, against all 236 rows. (1) Growing prints "Revenue still grows over six months. A bigger
+      business may slip: over $10M up to 5% a month, over $1M up to 2% a month." 31 apps fail with six-month growth above that floor,
+      all phase Declining or Flat (Tornado Cash +12.2 % a month, PancakeSwap +10.6, Alchemix +330.5). (2) Vetted prints "trend not
+      declining"; the cut is degen.rules.vetted.min_g6m -10, and 12 Vetted apps show phase Declining. (3) Vetted prints "Newer apps pass
+      at $1M+ a month and growing". StonkFun (98 days, $6,130,933 in 30 days, Growing passed at +367 % a month, market cap $94M) is young
+      false, and vetted.failed gives only "short history (under 180 days)". Its months are Aug $1.3M, Sep $28.7M, Oct $7.0M, so leaving it
+      out is reasonable, but the page does not say what did it. It was the first pick in an older snapshot (read in the page at 08:38 UTC
+      on 2 November, "Updated 33 h ago": S tier STONK 22x, first) although by DefiLlama's daily series its rev_falling has been true since
+      the 21 October data point, so the condition is not plainly the "no longer growing" flag either. No route names it.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app?view=apps, snapshot: degen_gates.gates[growing].rule_long, degen.rules.biz_tiers; apps[slug=tornado-cash]: growth6m.g 12.24, traj.phase flat, degen_fail has business_not_growing'
+      - 'Same snapshot: apps with reliable true and traj.phase declining -> CAKE, GAINS, JUP, XAUT, KNC, CFG and 6 more'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/stonkfun -> vetted {ok false, young false, failed ["short history (under 180 days)"]}, degen.gates_failed ["not vetted"]'
+    body: >
+      The row reasons do name the phase for Growing, so the information exists; the rule text and the row disagree. Our check fails
+      while a row the printed rule passes fails its gate and the text does not mention what decided it. It clears when the text
+      says so, when vetted.failed names the newer-app condition, or when those rows go. GET requests only.
+
+  - key: gem-screener-six-months-on-a-shorter-fit
+    findings: [CYM-a_six_month_figure_says_its_window]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_six_month_figure_says_its_window
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/coins/stonkfun/degen-report
+    title: "Gem Screener: \"+367% a month over 6 months\" on a coin with 98 days of data; 27 apps have growth called six-month on a 1 to 5 month fit, and the API drops the window"
+    expected: >
+      A growth figure says the window it was fitted on. The snapshot knows it (growth6m.label, growth6m.days), and the Apps table shows
+      it as a small tag.
+    actual: >
+      Read on 2026-11-02. The Degen report states "revenue +367% a month over 6 months" for StonkFun (98 days, label 3M), "-25% a month over
+      6 months" for Pons (112 days), "+2% a month over 6 months" for Nullmask (40 days), "+61%" for Stockereum (60 days). Tooltips print
+      "falling X% a month for six months", Sapling on 38 days. API growth_6m has only {value, unit "% per month"}, with no window, where
+      strength_3m has one. On StonkFun the +367 % is a log-linear slope through weekly sums starting at $255, and the last full month fell
+      75 %, so a reader cannot tell it is not six months of growth.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/stonkfun/degen-report -> "revenue +367% a month over 6 months"'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/stonkfun -> history 98 days; growth_6m {value 367.4, unit "% per month"}, no window'
+      - 'Open https://cymetica.com/gem-screener/app, snapshot apps[slug=stonkfun].growth6m -> {g 367.41, weeks 14, days 98, label "3M"}'
+    body: >
+      Our check reads the reports of up to eight apps with a fit under five months and fails on the words "over 6 months". Any other
+      wording passes. Report lines are cached, so a fix reaches them as they regenerate. GET requests only.
+
+  - key: gem-screener-level-vs-peak-is-not-the-1-year-high
+    findings: [CYM-the_level_against_the_peak_is_what_its_unit_says]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_level_against_the_peak_is_what_its_unit_says
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/gem-screener/coins/stonkfun
+    title: "Gem Screener: trajectory.level_vs_peak is labelled \"% of its 1-year high\"; it is last quarter against best quarter, so StonkFun reads 100 % with 30-day revenue at 20 % of its high"
+    expected: >
+      The unit names what the figure is. The Vetted rule calls the same figure "35%+ of its best quarter", which fits it.
+    actual: >
+      Read on 2026-11-02, snapshot 06:20 UTC. All 225 rows with the field carry the unit "% of its 1-year high". Against the snapshot's own
+      rev30d_vs_high, 66 rows are over 30 points apart: StonkFun 100 % vs 19.7 %, Pons 100 % vs 7.6 %, Raydium 100 % vs 26 %, Venus 100 % vs
+      18 %, and the picks Meteora 47 % vs 19.4 % and CoWSwap 36 % vs 20 %. Both numbers are right for what they measure; the label is wrong.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/stonkfun -> trajectory.level_vs_peak {value 100, unit "% of its 1-year high"}'
+      - 'Open https://cymetica.com/gem-screener/app, snapshot apps[slug=stonkfun] -> rev30d 6130933, rev30d_high_1y 31147884, rev30d_vs_high 0.197'
+    body: >
+      Our check fails while the unit says 1-year high and over 5 % of rows are more than 30 points from the 1-year-high ratio. Renaming the
+      unit clears it. GET requests only.
+
+  - key: gem-screener-chain-slug-opens-an-app
+    findings: [CYM-a_chain_rows_own_link_opens_that_chain]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_chain_rows_own_link_opens_that_chain
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/gem-screener/coins/sui
+    title: "Gem Screener: the chain rows Sui and Near open apps; their own links answer \"Sui Foundation\" (Canonical Bridge, upside 0.02x) and \"NEAR Protocol\" (Bridge, 0.10x)"
+    expected: >
+      The docs say the slug never confuses two coins, and a chain row's api_url and detail_url open that chain.
+    actual: >
+      Read on 2026-11-02. In /ranked?kind=chains, row slug "sui" (upside 2.27x) has api_url .../coins/sui, which answers kind "apps", slug
+      "sui-foundation", upside 0.021. Row slug "near" (0.725x) answers "near-protocol", upside 0.097. The same market cap makes the wrong
+      answer look plausible. The other 31 chain rows open themselves; the share link ?coin=sui is titled "Sui Foundation", and the two chain
+      records cannot be reached by the coin route.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/ranked?kind=chains&limit=100 -> row slug sui, api_url https://cymetica.com/api/v1/gem-screener/coins/sui, upside 2.27'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/sui -> kind apps, slug sui-foundation, category Canonical Bridge, upside 0.021'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/near -> kind apps, slug near-protocol, category Bridge, upside 0.097'
+    body: >
+      The likely cause is a ticker lookup that looks at apps first, the app's ticker being the chain's slug. Our check follows each chain
+      row's own api_url and fails unless it answers a chain, so a new url passes as well as a new lookup. GET requests only.
+
+  - key: gem-screener-dilution-text-is-not-what-applies
+    findings: [CYM-the_dilution_flag_says_what_decides_it]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_dilution_flag_says_what_decides_it
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/api/v1/gem-screener/coins/hyperliquid
+    title: "Gem Screener: Dilution's flag says \"more than 0.5 points a week over the benchmark\" on rows at or under the benchmark, and its rule names a formula 93 rows do not use"
+    expected: >
+      The flag's meaning and the gate's text describe what is applied. Their fix of our #182 moved the cuts to absolute lines, and the
+      row reason says so; this is what that left behind.
+    actual: >
+      Read on 2026-11-02, snapshot 06:20 UTC. dilution_meta.caution_line 0.5, red_line 1.0. The coin API's flag_meaning for a caution row is
+      "more than 0.5 points a week over the benchmark app", and the (i) card says the same. All 12 caution rows have over_bench_pts at or
+      below 0: Hyperliquid itself (the benchmark, over_benchmark 0), QuickSwap -0.27, Fluid -0.42. Separately, the gate prints "larger of 30d
+      paid out, 30d unlocking" while dilution_meta.from_supply_analyzer is 93: those rows use the Supply Analyzer's schedule. Aave's week_pct
+      0.0065 comes from usd30 574,066, not from its emissions 50,387 or unlocks 0.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/hyperliquid -> dilution {flag caution, flag_meaning "more than 0.5 points a week over the benchmark app", over_benchmark 0}'
+      - 'Open https://cymetica.com/gem-screener/app, snapshot: dilution_meta {caution_line 0.5, red_line 1, schedule_source supply_analyzer, from_supply_analyzer 93}; degen_gates.gates[dilution].rule_long'
+    body: >
+      No verdict changes: it is the words. Our check fails while the meaning says "over the benchmark" with caution rows at or under it, or
+      while the rule prints that formula and rows use another source. GET requests only.
+
+  - key: gem-screener-category-shares-over-100
+    findings: [CYM-category_shares_add_up_to_no_more_than_the_category]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_category_shares_add_up_to_no_more_than_the_category
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: "Gem Screener: \"share of its category\" adds up to 200 % in Liquidity Automation and over 100 % in 6 more categories, because double-counted apps carry a share of a total that excludes them"
+    expected: >
+      Shares of a category's revenue sum to at most 100 %. The excluded-apps note says double-counted apps are kept out of every sector
+      total and share.
+    actual: >
+      Read on 2026-11-02, snapshot 06:20 UTC. Liquidity Automation 200 % (What The Hook 100, Mosh 100), Leveraged Farming 179 %, AI Agents
+      172 %, Yield Aggregator 123 %, Interface 117 %, Launchpad 113 % (Pump 96, StonkFun 9, Pons 3), Liquidity Manager 107 %. Each has a row
+      with doublecounted true; categories without one sum to 100.0.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app?view=apps, snapshot: sum apps[].share["30"] by category -> Liquidity Automation 200, Leveraged Farming 179, AI Agents 172'
+    body: >
+      Our check fails while a category sums past 101.5 %. Dropping the share from double-counted rows, or including them in the
+      denominator, clears it. GET requests only.
+
+  - key: gem-screener-holders-line-is-an-old-window
+    findings: [CYM-the_holders_line_says_its_window]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_holders_line_says_its_window
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app?coin=lido
+    title: "Gem Screener: \"Holders get 20% of revenue, bought back\" on Degen pick Lido, whose last 30 days paid holders 0 %; the same for 8 more apps"
+    expected: >
+      The line reads as what holders get now. Where the figure is a 12-month share and the last 30 days paid nothing, it says so.
+    actual: >
+      Read on 2026-11-02, snapshot 06:20 UTC. Nine rows have holders_share 0 and a line carrying the 12-month share with no window: Lido "Holders
+      get 20% of revenue, bought back" (a pick), Aave 22 %, ether.fi 21 %, Balancer 39 % "paid to lockers", Hydration 63 % "burned", Renzo 34 %,
+      Fluid 34 %, DODO 19 %, Peapods 7.3 %. The coin API on Lido reads to_holders 0 and the check "0.0% of revenue to holders", bad, so the row
+      contradicts its own panel. Balancer's source note says the share ended 2026-04-23.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app, snapshot apps[slug=lido] -> holders_line "Holders get 20% of revenue, bought back", holders_share 0, holders_share_1y 0.2015'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/lido -> to_holders {value 0, unit "% of revenue"}'
+    body: >
+      Our check fails while a line starting "Holders get N%" sits on a 30-day share of 0 with no window in it. A line naming the window passes,
+      and so does a line that goes. GET requests only.
+
+  - key: gem-screener-fixed-sentences-out-of-date
+    findings: [CYM-what_the_page_says_of_itself_holds]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_what_the_page_says_of_itself_holds
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/gem-screener/app
+    title: "Gem Screener: five fixed sentences are false against the page's own data: chains \"context only\", SOLV's $20K pool, \"prices incomplete (523 of 523)\", Hyperliquid \"the most expensive\", \"the 18 checks\""
+    expected: >
+      Text fixed in the page stays true of the data beside it, or it goes.
+    actual: >
+      Read on 2026-11-02, snapshot 06:20 UTC. (1) About: "It does not price a chain on the money parked on it... Stablecoins and DEX volume are
+      shown as context only." The Chains tab's Adoption is the fourth root of users, DEX volume, TVL and stablecoins, and the price tag and Upside
+      are built on it. (2) About: "SOLV's deepest reachable pool holds about $20K"; its row's pool holds $3,202. The same sentence's "PUMP, KNC, FXN,
+      MNDE and EDGE have none right now" is fixed text saying "right now". (3) Sectors: "Prices of the moment were incomplete at this update (523 of
+      523 coins had one)". Every coin had one; the real cause is sector_stages.priced.lowest_basket, Prediction markets at 86 % of its weight against
+      a 95 % minimum. (4) Price vs revenue (i): "Hyperliquid, the most expensive large protocol with revenue" at 26.8x; with a market cap of $1B+ and a
+      higher multiple are Aave 35x, Uniswap 47x, Chainlink 150x, NEAR 276x and 6 more. (5) "the 18 checks", in About and the prompt the page hands
+      agents; a coin answers 14, and the page itself says they went from 18 to these 10.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app, About section -> "Stablecoins and DEX volume are shown as context only"; "SOLV''s deepest reachable pool holds about $20K"'
+      - 'Tab Sectors -> "Prices of the moment were incomplete at this update (523 of 523 coins had one)"'
+      - 'Snapshot apps with mcap >= 1e9 and ps > bench.mult (26.8) -> AAVE, UNI, LINK, NEAR, SUI, ENA, XAUT, JST, BTW, VVV'
+    body: >
+      One job, five sentences. Our check fails per sentence while it is on the page and its data disagrees; a sentence that goes clears its
+      part. GET requests only.
+
+  - key: gem-screener-phase-help-is-not-what-the-phase-is
+    findings: [CYM-a_phase_is_what_its_help_says]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_phase_is_what_its_help_says
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/gem-screener/app?coin=ethena
+    title: "Gem Screener: \"Accelerating: every quarter faster than the one before\" is true of 9 of the 68 apps in that phase; Ethena reads Accelerating at +121, -5, -75, +73 % with revenue at 11 % of its high"
+    expected: >
+      The phase help describes the rows carrying the word. The (i) card describes a score weighted on the last quarter, acceleration and closeness to
+      the high, so the help line is the part that differs.
+    actual: >
+      Read on 2026-11-02, snapshot 06:20 UTC. Of 68 Accelerating rows, 9 have strictly rising quarters. Ethena: quarters +121.01, -5.03, -75.01, +73.3 %,
+      six-month growth -34.9 % a month, 30-day revenue at 10.9 % of its high. Ignition's help says "Barely moved for a long time, now it has shot up";
+      most Ignition rows had an earlier quarter falling 10 % a month or more, a rebound rather than a flat stretch.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app, snapshot: apps with traj.phase accelerating and traj.periods p1 < p2 < p3 < p4 -> 9 of 68'
+      - 'Same snapshot apps[symbol=ENA] -> traj.periods {p1 121.01, p2 -5.03, p3 -75.01, p4 73.3}, growth6m.g -34.91, rev30d_vs_high 0.109'
+    body: >
+      Our check fails while the help line is on the page and holds on under half the rows. Rewording it, or a stricter phase, passes.
+      GET requests only.
+
+  - key: gem-screener-backtest-caveat-contradicts-h3
+    findings: [CYM-the_backtest_caveat_holds_for_every_hypothesis]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_backtest_caveat_holds_for_every_hypothesis
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/picks
+    title: "Gem Screener: the caveat agents are told to repeat says \"the estimates came out positive\"; the gate-passing coins' result is -23 % with an interval wholly below zero"
+    expected: >
+      The sentence summing up the backtest holds for each result in it. The word "inconclusive" is fine and we are not disputing it.
+    actual: >
+      Read on 2026-11-02. /picks caveats.backtest and backtest_summary.verdict_text: "The estimates came out positive, but the intervals do not exclude
+      zero: it cannot be said to work." backtest_summary.h3: diff_median -0.2317, ci90 [-0.6153, -0.115], 17 coins, wholly below zero, so that estimate is
+      negative and its interval does exclude zero. Without the theme gate: -0.2191, [-0.3322, -0.0849]. The page says the passing coins did 21 % worse, and
+      /status says they did worse, so only this sentence, the one agents repeat, drops it. backtest_summary.generated_at is 2026-09-22, on gates that have
+      since changed; Top Picks says "old gates", /status and the wrapper do not, and no screen gives the date.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/picks -> caveats.backtest "The estimates came out positive, but the intervals do not exclude zero: it cannot be said to work."'
+      - 'Open https://cymetica.com/gem-screener/app, snapshot backtest_summary.h3 -> diff_median -0.2317, ci90 [-0.6153, -0.115]'
+    body: >
+      Our check fails while the caveat says the estimates came out positive above an interval wholly below zero. GET requests only.
+
+  - key: gem-screener-tokenlon-fails-liquid-on-a-shallower-pool
+    findings: [CYM-a_coin_does_not_fail_liquid_on_a_shallower_pool_than_it_has]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_coin_does_not_fail_liquid_on_a_shallower_pool_than_it_has
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/coins/tokenlon
+    title: "Gem Screener: Tokenlon's \"Deepest DEX pool\" holds $130K and fails its only failed gate; its Uniswap v2 LON/WETH pool holds $1.6M and would pass"
+    expected: >
+      A pool the page calls the deepest is the deepest, and a coin that fails one gate fails it on that pool. "Main pool" is not defined anywhere.
+    actual: >
+      Read on 2026-11-02. /coins/tokenlon: liquidity Sushi LON/USDT, pool_liquidity $130,172, impact 15.4 %; "Bad: Way out... Deepest DEX pool";
+      degen.gates_failed ["thin liquidity"], its only failed gate, upside 4.03x. DexScreener's Uniswap v2 LON/WETH
+      0x7924a818013f39cf800F5589fF1f1f0DEF54F31F holds $1,597,206 (created 2020-12-21); the same formula gives 1.25 %, under the 3 % rule. Both pools trade
+      about $540 a day, so this was not picked by volume. Of the 9 apps failing only Liquid, this is the one that flips. Other rows show the same pick
+      without flipping: the page's "Its deepest DEX pair" link is Orca PUMP/SOL at $2.33M while PumpSwap PUMP/USDC holds $22.8M.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/tokenlon -> liquidity {dex sushiswap, quote USDT, pool_liquidity 130172, impact 15.4}, degen.gates_failed ["thin liquidity"]'
+      - 'GET https://api.dexscreener.com/token-pairs/v1/ethereum/0x0000000000095413afc295d19edeb1ad7b71c952 -> uniswap v2 LON/WETH, liquidity.usd 1597205'
+    body: >
+      Our check, on the apps failing only Liquid, fails where a v2 pool against a major would pass and the named pool is called the deepest. We keep it to
+      v2 because a v3 figure is not what the page's formula means. Using the deeper pool, or naming the rule by which the pool is chosen, clears it. GET
+      requests only.
+
+  - key: gem-screener-railgun-can-mint
+    findings: [CYM-no_power_to_mint_is_not_said_of_a_token_that_can_mint]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_no_power_to_mint_is_not_said_of_a_token_that_can_mint
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/coins/railgun
+    title: "Gem Screener: Railgun reads \"No power to mint, pause or upgrade\"; its verified token has an owner-only governanceMint, cap 100M against 60M supply, and the row says 100 % of tokens out"
+    expected: >
+      The Rug power sentence is true of the contract it cites.
+    actual: >
+      Read on 2026-11-02. /coins/railgun: control line "No power to mint, pause or upgrade", why "Good: Rug power. The admin key cannot change the token's
+      supply or code.", tokens_out 100 %. Verified source of 0xe76c6c83af64e4c60245d8c7de953df673a7a33d: "function governanceMint(address _account, uint256
+      _amount) external onlyOwner", with the comment "ONLY MINTABLE IF GOVERNANCE PROCESS PASSES, CANNOT MINT MORE THAN HARD CAP". cap() 100,000,000,
+      totalSupply() 60,000,000, owner() 0xb6d513f6222ee92fff975e901bd792e2513fb53b, a governance Delegator rather than a wallet, and not renounced. So 40M more
+      (+67 %) can be minted through governance. "Admin key" may mean a single wallet, in which case the wording needs that qualifier. A second case, less sure:
+      HyperSwap (SWAP) reads the same, with bytecode selectors for setLockTransfer(bool) and a single-key owner, its source unpublished; a read-only eth_call of
+      setLockTransfer(true) from the owner succeeds and from another address reverts.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/railgun -> degen_level.areas[control].line "No power to mint, pause or upgrade"'
+      - 'GET https://eth.blockscout.com/api/v2/smart-contracts/0xe76c6c83af64e4c60245d8c7de953df673a7a33d -> source has governanceMint ... onlyOwner'
+      - 'eth_call cap() 0x355274ea and totalSupply() 0x18160ddd on that address -> 100000000e18 and 60000000e18'
+    body: >
+      Our check is on Railgun by name, because reading every token's ABI is an audit rather than a check. It clears when the sentence changes. GET requests only.
+
+  - key: gem-screener-tornado-burned-against-its-own-source
+    findings: [CYM-the_holders_how_agrees_with_its_own_source]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_holders_how_agrees_with_its_own_source
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?coin=tornado-cash
+    title: "Gem Screener: Tornado Cash reads \"Holders get 100% of revenue, burned\"; the same row's source says \"no TORN is burned\""
+    expected: >
+      The label agrees with the source quoted for it.
+    actual: >
+      Read on 2026-11-02, snapshot 06:20 UTC. apps[slug=tornado-cash]: holders_how "burn", holders_line "Holders get 100% of revenue, burned", holders_how_src "TORN
+      deducted from relayer stakes on each relayed Ethereum withdrawal and distributed to TORN locked in governance (no TORN is burned)." It is the only such
+      contradiction among the 91 rows with a holders_how.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app, snapshot apps[slug=tornado-cash] -> holders_how, holders_line, holders_how_src as quoted'
+    body: >
+      Our check fails while a row labelled burn quotes a source saying nothing is burned. GET requests only.
+
+  - key: gem-screener-aerodrome-excluded-as-no-token
+    findings: [CYM-an_excluded_app_with_a_token_is_not_said_to_have_none]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_an_excluded_app_with_a_token_is_not_said_to_have_none
+    severity: high
+    category: logic
+    url: https://cymetica.com/gem-screener/app
+    title: "Gem Screener: Aerodrome and Velodrome, $7.4M of revenue in 30 days, are left out as \"no token, nothing to buy\"; AERO has a $502M market cap and no row"
+    expected: >
+      The reason given for leaving an app out is true, and a coin of this size is not silently missing from a screener of revenue coins.
+    actual: >
+      Read on 2026-11-02. In the excluded list with reason no_token, "No token of its own on DeFiLlama's record (an exchange front-end, a custodial wallet, a company
+      without a coin), so there is nothing to buy.": Aerodrome Slipstream $4,025,756, Aero Slipstream $2,146,706, Aerodrome V1 $821,896, Velodrome V3 $178,401, Aero
+      Basic $152,856, Velodrome V2 $85,246, together $7,410,861 in 30 days. DeFiLlama's record of each reads symbol "AERO", gecko_id null, parent parent#aero-protocol.
+      CoinGecko aerodrome-finance: market cap $502M, 24 h volume $18.3M. No row in apps has that gecko id. By $7.41M x 12.17 = $90M a year, market cap over revenue is about
+      5.6x against Hyperliquid's 26.8x, so about 4.8x upside; we have not run it through the other gates. The exclusion follows a rule (no gecko_id on the record), so it is the
+      stated reason that is false and the loss that is invisible. The chains note has a similar case: "World Mobile Token... no token of their own", with WMTX on CoinGecko at $15.5M.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/page-extras?g=<generated_at> -> excluded_apps: Aerodrome Slipstream, reason no_token, revenue_30d 4025756'
+      - 'GET https://api.llama.fi/protocol/aerodrome-slipstream -> symbol AERO, gecko_id null, parentProtocol parent#aero-protocol'
+      - 'GET https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=aerodrome-finance -> market_cap about 502M'
+    body: >
+      A reader finds a screener by what it finds; a token this size that is missing for a mapping reason is the costliest gap we saw. Our check fails while these rows are left out
+      with that reason and AERO has no row; listing it, or giving the true reason, clears it. GET requests only.
+
+  - key: gem-screener-report-good-outruns-its-checks
+    findings: [CYM-a_report_says_good_only_of_what_it_checked]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_report_says_good_only_of_what_it_checked
+    severity: medium
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/coins/gaib/degen-report
+    title: "Gem Screener: the Degen report says \"Good: 55% of revenue reaches holders\" with that check not run, and \"prints $0 in tokens, so +$33K real\" with new tokens of 6.5x revenue"
+    expected: >
+      A report's Good line and Real-or-printed line do not outrun the checks on the same coin.
+    actual: >
+      Read on 2026-11-02. "Good: N% of revenue reaches holders" on Railgun 55 %, The Index 100 %, Pear 70 %, Bordrless 50 %, where checks[reaches_you] is not_checked. The number equals
+      DefiLlama; whether it reaches holders is the unchecked part. "Real or printed: earns $33K, prints $0 in tokens, so +$33K real" on GAIB, whose real_yield check is bad, "0.2x its new
+      tokens", new_tokens_30d $213,620 against revenue $32,503. The same on SaucerSwap ($27K, new tokens $45,422) and USD AI ($272K, new tokens $974,584). emissions_30d 0 is right as
+      DefiLlama's incentive figure; the unlock streams are the part the sentence leaves out.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/railgun/degen-report -> "Good: 55% of revenue reaches holders"; /coins/railgun degen_level.checks[reaches_you].verdict not_checked'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/gaib/degen-report -> "earns $33K, prints $0 in tokens, so +$33K real"; /coins/gaib degen_level.checks[real_yield] verdict bad, "0.2x its new tokens"'
+    body: >
+      Our check reads the named coins and fails on either pair. Any wording that says the route is unchecked, or names unlocks beside emissions, passes. Lines are cached, so a fix reaches
+      them as they regenerate. GET requests only.
+
+  - key: gem-screener-supply-percent-of-the-wrong-supply
+    findings: [CYM-a_supply_percentage_is_of_what_it_says]
+    check: tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_supply_percentage_is_of_what_it_says
+    severity: low
+    category: logic
+    url: https://cymetica.com/api/v1/gem-screener/coins/gaib
+    title: "Gem Screener: \"19% of the float unlocks within 90 days\" while next_unlock says 24.1 % of it; unlock percentages use two denominators under one word"
+    expected: >
+      "Of the float" and "% of circulating supply" are of the circulating supply the row shows.
+    actual: >
+      Read on 2026-11-02. GAIB: "19% of the float unlocks within 90 days", unlocks.unlock_90d 18.8, next_unlock.total90_pct 24.06. 49,286,721 tokens over DeFiLlama's unlocked 262,138,445 is
+      18.80 %; over CoinGecko's circulating 204,831,667, which is behind the row's "20% of tokens out", it is 24.06 %. Lista: next_cliff.size 4.6 "% of circulating supply", next_unlock.pct_of_circ
+      5.886 for the same event. The unit of unlock_90d, "% more unlocked supply", is literally right; the sentence and the cliff unit are not.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/gaib -> unlocks.unlock_90d 18.8, next_unlock.total90_pct 24.0621; degen_level.areas[supply].why "19% of the float unlocks within 90 days"'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/lista-dao -> unlocks.next_cliff.size {4.6, "% of circulating supply"}, next_unlock.pct_of_circ 5.886'
+    body: >
+      Our check is on these two coins and fails while the labelled figures are over 10 % apart. Either denominator is fine if the word says which. GET requests only.
+
+  - key: gem-screener-socket-swaps-in-an-older-snapshot
+    findings: [CYM-gem-screener-socket-keeps-the-newest-snapshot]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app
+    title: "Gem Screener: after a server restart the page's socket replaced the current snapshot with one 33 hours old, so the picks flipped back (StonkFun first) until it was replaced again"
+    expected: >
+      A page holding a snapshot does not replace it with an older one.
+    actual: >
+      Seen once, 2026-11-02 about 08:38 UTC, while the site showed "Reconnecting to servers". The page reloaded with #snapshot-data generated_at 06:20 UTC (236 apps, picks CARDS first), yet rendered
+      "Updated 33 h ago, 235 apps, Live, collecting new data", altseason 29, "77 vetted apps", and S tier STONK 22x, CARDS 19x, SOLV 13x, PUMP 8.7x. Within about a minute it read "Updated 2 h ago, 236
+      apps" again. The page's code explains it. On hello or heartbeat: if (m.generated_at && m.generated_at !== DATA.generated_at) ws.send('{"type":"want"}'). applySnapshot only refuses the identical
+      snapshot, so any different one is taken, older included. After the restart 10 connections all said hello with 06:20, so we have not reproduced it and it needs a restart to see. The stamp was
+      honest ("33 h ago"), but the Degen picks a reader saw were not the current ones, and they changed twice with no action of theirs.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app and read the socket handler in the page: the !== test on generated_at, then applySnapshot(m.data)'
+      - 'Restart the service holding a stale snapshot, with a page open -> the page swaps to the older snapshot'
+    body: >
+      We hold no automated check for this one because it needs your restart; the figures are what we read at the time. A test of generated_at being newer in the page, and a restarted worker that
+      does not advertise an old snapshot, would each stop it. Read-only on our side: we opened the same socket the page opens and sent nothing beyond it.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

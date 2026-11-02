@@ -5240,6 +5240,308 @@
     "254": "pending"
    },
    "withdrawn": true
+  },
+  {
+   "key": "gem-screener-exploit-under-its-own-name-denied",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_an_exploit_listed_under_the_apps_own_name_is_not_denied"
+   ],
+   "report_ids": [
+    255
+   ],
+   "title": "Gem Screener: exploits DefiLlama lists under the app's own name are called \"not tied to this protocol\" or \"No exploit listed\", on Degen pick Dolomite among others",
+   "filed_at": "2026-11-02T09:22:17+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "255": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-aerodrome-excluded-as-no-token",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_an_excluded_app_with_a_token_is_not_said_to_have_none"
+   ],
+   "report_ids": [
+    256
+   ],
+   "title": "Gem Screener: Aerodrome and Velodrome, $7.4M of revenue in 30 days, are left out as \"no token, nothing to buy\"; AERO has a $502M market cap and no row",
+   "filed_at": "2026-11-02T09:22:30+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "256": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-picks-lists-ten-of-eleven",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_picks_route_says_when_it_lists_fewer_than_pass"
+   ],
+   "report_ids": [
+    257
+   ],
+   "title": "Gem Screener: \"11 of 236 apps pass all 6 gates\", 10 cards and 10 API picks; Rhea Finance passes and is on neither, and no text says the list stops at 10",
+   "filed_at": "2026-11-02T09:22:44+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "257": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-gate-text-omits-what-decides",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_each_gate_prints_what_decides_it"
+   ],
+   "report_ids": [
+    258
+   ],
+   "title": "Gem Screener: the Growing and Vetted gate texts leave out what decides a row; 31 apps fail Growing above its printed floor, and StonkFun was in and out of the picks on a condition printed nowhere",
+   "filed_at": "2026-11-02T09:22:56+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "258": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-six-months-on-a-shorter-fit",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_six_month_figure_says_its_window"
+   ],
+   "report_ids": [
+    259
+   ],
+   "title": "Gem Screener: \"+367% a month over 6 months\" on a coin with 98 days of data; 27 apps have growth called six-month on a 1 to 5 month fit, and the API drops the window",
+   "filed_at": "2026-11-02T09:23:29+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "259": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-level-vs-peak-is-not-the-1-year-high",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_level_against_the_peak_is_what_its_unit_says"
+   ],
+   "report_ids": [
+    260
+   ],
+   "title": "Gem Screener: trajectory.level_vs_peak is labelled \"% of its 1-year high\"; it is last quarter against best quarter, so StonkFun reads 100 % with 30-day revenue at 20 % of its high",
+   "filed_at": "2026-11-02T09:23:40+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "260": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-chain-slug-opens-an-app",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_chain_rows_own_link_opens_that_chain"
+   ],
+   "report_ids": [
+    261
+   ],
+   "title": "Gem Screener: the chain rows Sui and Near open apps; their own links answer \"Sui Foundation\" (Canonical Bridge, upside 0.02x) and \"NEAR Protocol\" (Bridge, 0.10x)",
+   "filed_at": "2026-11-02T09:24:38+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "261": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-dilution-text-is-not-what-applies",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_dilution_flag_says_what_decides_it"
+   ],
+   "report_ids": [
+    262
+   ],
+   "title": "Gem Screener: Dilution's flag says \"more than 0.5 points a week over the benchmark\" on rows at or under the benchmark, and its rule names a formula 93 rows do not use",
+   "filed_at": "2026-11-02T09:24:49+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "262": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-holders-line-is-an-old-window",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_holders_line_says_its_window"
+   ],
+   "report_ids": [
+    263
+   ],
+   "title": "Gem Screener: \"Holders get 20% of revenue, bought back\" on Degen pick Lido, whose last 30 days paid holders 0 %; the same for 8 more apps",
+   "filed_at": "2026-11-02T09:25:00+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "263": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-fixed-sentences-out-of-date",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_what_the_page_says_of_itself_holds"
+   ],
+   "report_ids": [
+    264
+   ],
+   "title": "Gem Screener: five fixed sentences are false against the page's own data: chains \"context only\", SOLV's $20K pool, \"prices incomplete (523 of 523)\", Hyperliquid \"the most expensive\", \"the 18 checks\"",
+   "filed_at": "2026-11-02T09:25:12+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "264": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-phase-help-is-not-what-the-phase-is",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_phase_is_what_its_help_says"
+   ],
+   "report_ids": [
+    265
+   ],
+   "title": "Gem Screener: \"Accelerating: every quarter faster than the one before\" is true of 9 of the 68 apps in that phase; Ethena reads Accelerating at +121, -5, -75, +73 % with revenue at 11 % of its high",
+   "filed_at": "2026-11-02T09:25:22+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "265": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-backtest-caveat-contradicts-h3",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_backtest_caveat_holds_for_every_hypothesis"
+   ],
+   "report_ids": [
+    266
+   ],
+   "title": "Gem Screener: the caveat agents are told to repeat says \"the estimates came out positive\"; the gate-passing coins' result is -23 % with an interval wholly below zero",
+   "filed_at": "2026-11-02T09:25:34+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "266": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-tokenlon-fails-liquid-on-a-shallower-pool",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_coin_does_not_fail_liquid_on_a_shallower_pool_than_it_has"
+   ],
+   "report_ids": [
+    267
+   ],
+   "title": "Gem Screener: Tokenlon's \"Deepest DEX pool\" holds $130K and fails its only failed gate; its Uniswap v2 LON/WETH pool holds $1.6M and would pass",
+   "filed_at": "2026-11-02T09:26:10+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "267": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-railgun-can-mint",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_no_power_to_mint_is_not_said_of_a_token_that_can_mint"
+   ],
+   "report_ids": [
+    268
+   ],
+   "title": "Gem Screener: Railgun reads \"No power to mint, pause or upgrade\"; its verified token has an owner-only governanceMint, cap 100M against 60M supply, and the row says 100 % of tokens out",
+   "filed_at": "2026-11-02T09:26:19+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "268": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-report-good-outruns-its-checks",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_report_says_good_only_of_what_it_checked"
+   ],
+   "report_ids": [
+    269
+   ],
+   "title": "Gem Screener: the Degen report says \"Good: 55% of revenue reaches holders\" with that check not run, and \"prints $0 in tokens, so +$33K real\" with new tokens of 6.5x revenue",
+   "filed_at": "2026-11-02T09:26:48+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "269": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-socket-swaps-in-an-older-snapshot",
+   "nodeids": [],
+   "report_ids": [
+    270
+   ],
+   "title": "Gem Screener: after a server restart the page's socket replaced the current snapshot with one 33 hours old, so the picks flipped back (StonkFun first) until it was replaced again",
+   "filed_at": "2026-11-02T09:26:53+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "270": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-category-shares-over-100",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_category_shares_add_up_to_no_more_than_the_category"
+   ],
+   "report_ids": [
+    271
+   ],
+   "title": "Gem Screener: \"share of its category\" adds up to 200 % in Liquidity Automation and over 100 % in 6 more categories, because double-counted apps carry a share of a total that excludes them",
+   "filed_at": "2026-11-02T09:27:05+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "271": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-tornado-burned-against-its-own-source",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_the_holders_how_agrees_with_its_own_source"
+   ],
+   "report_ids": [
+    272
+   ],
+   "title": "Gem Screener: Tornado Cash reads \"Holders get 100% of revenue, burned\"; the same row's source says \"no TORN is burned\"",
+   "filed_at": "2026-11-02T09:27:17+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "272": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-supply-percent-of-the-wrong-supply",
+   "nodeids": [
+    "tests/rest/test_gem_screener_says_only_what_is_true.py::test_a_supply_percentage_is_of_what_it_says"
+   ],
+   "report_ids": [
+    273
+   ],
+   "title": "Gem Screener: \"19% of the float unlocks within 90 days\" while next_unlock says 24.1 % of it; unlock percentages use two denominators under one word",
+   "filed_at": "2026-11-02T09:27:26+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "273": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

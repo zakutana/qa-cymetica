@@ -115,6 +115,16 @@ def read_everything() -> tuple[dict, dict]:
         inputs["snapshot"] = g.parse_snapshot(page.text)
         inputs["page_text"] = page.text  # the tooltips are in the same page: what each figure says it is
 
+        # The page keeps altseason_cycle.series out of its embedded copy; the API carries it. Without it the
+        # breadth mean was "not read" on every tick from the day they moved it (found 2026-11-02).
+        cycle = inputs["snapshot"].get("altseason_cycle") or {}
+        if not cycle.get("series"):
+            try:
+                whole = cymetica.get(g.SNAPSHOT_API).json()
+                cycle["series"] = (whole.get("altseason_cycle") or {}).get("series")
+            except (httpx.HTTPError, ValueError) as exc:
+                errors["altseason series"] = type(exc).__name__
+
         # R07, deep pass of 2026-09-30: a picks or coin read that stalls or
         # answers something that is not JSON is named under "not read"; it
         # never takes the rest of the audit down with it.
