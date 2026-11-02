@@ -6,7 +6,7 @@ Asked for by the operator on 2026-11-02, in their words: *"esce nez to podas vyt
 
 Their live page through a GET-only proxy, with `patch.js` inside their script and `patch.css` added, so every figure is their own. The box at the bottom right jumps to each improvement. The list is in `../gem-screener-degen-audit.md`.
 
-**request.txt:** not written yet; it follows the operator's score of this mock. Followed form: ET-32311.
+**request.txt:** a draft of the 10 kept after the operator's cut of 2 Nov; pictures 1-3 are rendered once they accept the mock. Followed form: ET-32311.
 
 | | |
 |---|---|

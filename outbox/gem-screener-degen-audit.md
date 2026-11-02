@@ -75,16 +75,13 @@ Goals, for the next Build it Better request.
 4. "Not growing" says why: "30-day revenue is 20 % of its best" (Meteora, CoWSwap).
 
 **Trust**
-5. The band word carries its range and unrun checks ("Blue chip. Boring on purpose." on StonkFun: range 1-6, 5 of 10 not run).
-6. A flag for a collapsed price (Bordrless -94.7 % in 7 days, -99.6 % from high, still 50x).
-7. Growth shows its window and how sure the fit is.
-8. Holders shows 30 days beside 12 months.
-9. Each on-chain sentence names its chain (Render, Pear, Stargate are read on another chain than the pool).
+5. Holders shows 30 days beside 12 months.
+6. Each on-chain sentence names its chain (Render, Pear, Stargate are read on another chain than the pool).
 
 **Finding a gem**
-10. A public picks log by name, so an exit can be dated.
-11. Near misses say how many are one gate away (6 shown of 38; StonkFun, ORE, GMX not among them).
-12. Six gate dots on each Apps row, sortable.
-13. Capped upside marked (17 rows at 50x, real up to 2,981x).
-14. The theme-lagging flag moves to one page line.
-15. Backtest shows its date (22 Sep, old gates) and the weeks of forward record.
+7. A public picks log by name, so an exit can be dated.
+8. Near misses say how many are one gate away (6 shown of 38; StonkFun, ORE, GMX not among them).
+9. Backtest shows its date (22 Sep, old gates) and the weeks of forward record.
+10. A near miss on hover shows the same card as a pick, with the gate it fails marked (the operator's, 2 Nov).
+
+Refused by the operator on 2 Nov, seen in the mock: the band word with its range, a flag for a collapsed price, growth with its window and fit, six gate dots on the Apps row, capped upside marked, the theme-lagging flag as one page line.
