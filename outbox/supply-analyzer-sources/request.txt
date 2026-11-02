@@ -1,6 +1,6 @@
 Follow-up to ET-31267: upgrade the live Supply Analyzer page and the Supply column in the Gem Screener themselves, not new pages beside them; they keep their names, logos and copy, and the template lines about rebuilding someone else's app do not apply. Goals, not methods: how you build it is your call.
 Why: 143 of the 236 apps read n/a in the Supply column, 4 of the 10 Degen picks among them, because the only source for a future schedule is DeFiLlama (our own line in ET-31267, which this replaces). Collector Crypt, the first pick, reads "dilution unknown" and passes the gate, while its public Streamflow dashboard shows 346.8M CARDS still locked in vesting, on a schedule to July 2027, against 885M circulating: about +39% in 12 months, over the gate's 25%.
-MUST STAY AS DRAWN: the Supply column in picture 1, in the site's fonts and palette.
+MUST STAY AS DRAWN: the column in picture 1 and the donut in picture 2, in the site's fonts and palette.
 
 1. Where DeFiLlama has no schedule, the Supply Analyzer finds it in the other public places: the project's own vesting contracts (Streamflow and the like), Tokenomist, DropsTab. "One source per number" stays: each coin's schedule comes from one source, and DeFiLlama stays first.
 2. The Supply card's Next unlock row, the Supply Analyzer page and the column's tooltip name that source and when it was read.
@@ -11,6 +11,7 @@ MUST STAY AS DRAWN: the Supply column in picture 1, in the site's fonts and pale
 7. Supply column, nothing found anywhere: the tooltip names where it looked: "No schedule found on DeFiLlama, the project's vesting contracts, Tokenomist or DropsTab. Nothing is assumed."
 8. Lombard reads its schedule. DeFiLlama holds it to 2029, about +67% in 12 months, and the row reads "ok" and "No unlock schedule on file".
 9. The column is renamed "Dilution 12M" on Apps and Chains, because that is what its number is: new tokens in the next 12 months over circulating. Its (i) says so and says what the pie shows. The Supply card in the coin panel keeps its name.
+10. Coin panel, Supply card: under the tiles, the whole supply as one donut with its legend, as in picture 2: in circulation (split into free to sell and staked where staking is known), coming in 12 months, after that or never issued; with no schedule the part not out yet is drawn dashed as "Not out yet, no schedule"; with no max supply only what is out is drawn, and it says so. The centre gives the share that is out. It uses the same figures as the tiles and the tiles stay.
 
 Done when:
 [ ] 1-2 Collector Crypt shows its figure, about +39%, with its source named in the tooltip and on the card; BTW, HYPER, DRV, RENDER and KNC, whose schedules are on DropsTab, each show a figure or say their schedule has finished.
@@ -22,3 +23,4 @@ Done when:
 [ ] 7 The sentence names the sources actually read.
 [ ] 8 Lombard's Dilution, Next unlock and column agree with the schedule.
 [ ] 9 The column reads "Dilution 12M" on Apps and Chains, the table still fits as it does today, and the coin panel's card still reads Supply.
+[ ] 10 The donut's parts add up to the whole supply, agree with the tiles beside it, and look like picture 2 at 1440 px and on a phone.

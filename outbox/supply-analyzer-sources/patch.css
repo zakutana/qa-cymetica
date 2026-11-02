@@ -4,6 +4,19 @@
 body.gt-clean .gt-n, body.gt-clean #gtTour { display: none !important; }
 .sa-ring { display: inline-block; width: 22px; height: 22px; border-radius: 50%; border: 1.5px dashed var(--muted, #7f93ad); box-sizing: border-box; vertical-align: middle; }
 .sa-src { display: block; margin-top: 4px; font-size: 12px; color: var(--muted); }
+.sa-donut { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px; margin: 14px 0 6px; padding: 14px 16px; border: 1px solid var(--line, rgba(255, 255, 255, .08)); border-radius: 10px; }
+.sa-ringbox { position: relative; width: 132px; height: 132px; flex: none; }
+.sa-ringbox svg { display: block; transform: rotate(-90deg); }
+.sa-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; pointer-events: none; }
+.sa-center b { font: 700 22px/1.1 var(--mono, monospace); color: var(--ink); }
+.sa-center span { font-size: 11px; color: var(--muted); }
+.sa-legend { flex: 1 1 240px; min-width: 0; list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; font-size: 13px; }
+.sa-legend li { display: grid; grid-template-columns: 11px minmax(0, 1fr) auto 46px; align-items: center; gap: 9px; color: var(--muted); }
+.sa-legend i { width: 11px; height: 11px; border-radius: 3px; }
+.sa-legend b { font: 600 13px/1 var(--mono, monospace); color: var(--ink); }
+.sa-legend em { font: 500 12px/1 var(--mono, monospace); font-style: normal; text-align: right; color: var(--muted); }
+.sa-note { flex-basis: 100%; margin: 0; font-size: 12px; color: var(--muted); }
+.sa-donut > .gt-n { position: absolute; top: 8px; right: 8px; }
 .gt-line { margin: 6px 0 12px; font-size: 13px; color: var(--muted); }
 .gt-line b { color: var(--ink); font-weight: 600; }
 #gtTour { position: fixed; right: 14px; bottom: 14px; z-index: 99999; width: 320px; max-height: 76vh; overflow: auto; background: #0a0e17; border: 1px solid rgba(0, 207, 255, .5);

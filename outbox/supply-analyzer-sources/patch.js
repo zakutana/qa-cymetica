@@ -71,6 +71,54 @@
     return swap(`No schedule found on ${SOURCES_READ}. Nothing is assumed.`);
   };
 
+  // ---- 10 the Supply card: the whole supply as one donut, from the figures the tiles already hold
+  function donutParts(sp) {
+    const T = (sp && sp.tiles) || {}, sl = saSlices(sp), whole = (T.circulating || {}).of, d = saDil(sp);
+    // What is out is the Circulating tile's figure. Their pie's vesting and paid-out slices are next year's tokens, not out yet,
+    // so they are counted once, under "coming in 12 months"; a burned token is not in the supply at all.
+    const out = (T.circulating || {}).tokens || (sl.free + sl.staked_free + sl.staked_locked);
+    const staked = Math.min(sl.staked_free + sl.staked_locked, out), kept = Math.min(sl.bb_kept, out - staked);
+    const parts = [
+      // "free to sell" is a claim about staking: where staking is unknown it says only what is known
+      {k: 'free', label: (sp.unknown_names || []).includes('staking') ? 'In circulation' : 'Free to sell', v: out - staked - kept, c: 'var(--accent)'},
+      {k: 'staked', label: 'Staked', v: staked, c: 'var(--band-blue)'},
+      {k: 'bought', label: 'Bought back, kept', v: kept, c: 'var(--good)'},
+    ].filter(p => p.v > 0);
+    if (!whole || whole <= out * 1.001) return {parts, out, whole: whole || null, open: !whole};
+    const rest = whole - out;
+    if (d) {
+      const soon = Math.min(d.new_tokens_12m || 0, rest);
+      if (soon > 0) parts.push({k: 'soon', label: 'Coming in 12 months', v: soon, c: 'var(--bad)'});
+      if (rest - soon > 0) parts.push({k: 'later', label: 'After that, or never issued', v: rest - soon, c: 'var(--line, #2a3648)', ghost: true});
+    } else {
+      parts.push({k: 'unknown', label: 'Not out yet, no schedule', v: rest, c: 'var(--muted)', dashed: true});
+    }
+    return {parts, out, whole};
+  }
+  function supplyDonut(sp, sym) {
+    const {parts, out, whole, open} = donutParts(sp);
+    if (!parts.length) return '';
+    const total = parts.reduce((n, p) => n + p.v, 0), R = 46, W = 15, C = 2 * Math.PI * R;
+    let at = 0;
+    const arcs = parts.map(p => {
+      const len = C * p.v / total, gap = parts.length > 1 ? Math.min(1.5, len / 3) : 0;
+      const a = `<circle cx="60" cy="60" r="${R}" fill="none" stroke="${p.c}" stroke-width="${W}" stroke-dasharray="${p.dashed ? '3 3' : (len - gap).toFixed(2) + ' ' + (C - len + gap).toFixed(2)}" stroke-dashoffset="${(-at).toFixed(2)}"${p.dashed ? ' class="sa-dashed" style="stroke-dasharray:3 3;opacity:.55"' : ''}${p.ghost ? ' style="opacity:.9"' : ''}/>`;
+      at += len;
+      return a;
+    }).join('');
+    const pctOut = whole ? Math.round(100 * out / whole) : null;
+    const center = pctOut === null ? `<b>${esc(saTok(out))}</b><span>${esc(sym || '')} out</span>` : `<b>${pctOut < 1 ? '<1' : pctOut}%</b><span>is out</span>`;
+    const rows = parts.map(p => `<li><i style="background:${p.c}${p.dashed ? ';opacity:.55' : ''}"></i><span>${esc(p.label)}</span><b>${esc(saTok(p.v))}</b><em>${(100 * p.v / total).toFixed(p.v / total < 0.01 ? 1 : 0)}%</em></li>`).join('');
+    return `<div class="sa-donut" id="saDonut"><div class="sa-ringbox"><svg viewBox="0 0 120 120" width="132" height="132" role="img" aria-label="Where the supply is">${arcs}</svg><div class="sa-center">${center}</div></div>
+      <ul class="sa-legend">${rows}</ul>${open ? `<p class="sa-note">No max supply: what is still to come cannot be drawn.</p>` : ''}${N(10)}</div>`;
+  }
+  const oldSupplyCard = supplyCard;
+  supplyCard = function (e) {
+    const html = oldSupplyCard(e), sp = supplyOf(e);
+    if (!sp || !sp.tiles) return html;
+    return html.replace('<div class="sanext">', supplyDonut(sp, e.symbol) + '<div class="sanext">');
+  };
+
   // ---- the box: where each one is. Ours only, it never goes in a picture for them
   function row(slug) { return document.querySelector(`#tbl-apps tbody tr[data-id="${(APPS.find(a => a.slug === slug) || {}).key}"]`); }
   function flash(el) {
@@ -98,6 +146,7 @@
     [6, 'Column: Jupiter, schedule finished', () => inApps('jupiter')],
     [7, 'Column: where it looked', () => inApps(firstNone())],
     [8, 'Column: Lombard reads its schedule', () => inApps('lombard')],
+    [10, 'Supply card: the whole supply as a donut', () => { setView('start'); openPanel((APPS.find(a => a.slug === 'up') || {}).key); setTimeout(() => flash(document.querySelector('#panel #saDonut')), 1500); }],
   ];
   setTimeout(() => {
     const box = document.createElement('aside');
