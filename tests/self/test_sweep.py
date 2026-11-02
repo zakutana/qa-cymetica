@@ -130,7 +130,7 @@ def test_a_read_that_failed_is_not_an_empty_read(sweep):
 
 
 def test_the_payload_carries_the_six_fields_and_no_promise_we_stopped_keeping(sweep):
-    payload = sweep.payload("fail", 7, ["tests/self/test_sweep.py::test_decide"],
+    payload = sweep.payload("fail", ["tests/self/test_sweep.py::test_decide"],
                             {"tests/self/test_sweep.py::test_decide": _reading("fail")}, "run-1.json")
     assert set(payload) == {"verdict", "test_run_id", "fingerprint", "tree_sha", "checked_at", "evidence"}
     assert payload["verdict"] == "fail" and payload["test_run_id"] == "run-1.json"
@@ -142,7 +142,7 @@ def test_the_payload_carries_the_six_fields_and_no_promise_we_stopped_keeping(sw
 
 def test_the_evidence_fits_their_field(sweep):
     huge = {"x": {"result": "fail", "reason": "z" * 20000, "left": "a" * 9000, "right": "b" * 9000}}
-    assert len(sweep.payload("fail", 7, ["x"], huge, "run")["evidence"]) <= sweep.EVIDENCE_LIMIT
+    assert len(sweep.payload("fail", ["x"], huge, "run")["evidence"]) <= sweep.EVIDENCE_LIMIT
 
 
 def test_sending_records_it_only_when_their_server_gave_an_id(sweep):
@@ -232,4 +232,184 @@ def test_the_tracker_status_is_written_back_to_filed(sweep):
     vendor = Vendor(reports=[{"id": 7, "status": "paid", "title": "t"}])
     _sweep_run(sweep, vendor, [_row(status="pending")], {"tests/rest/test_a.py::test_a": _reading("inconclusive")})
     assert load_filed()["rows"][0]["their_status"] == {"7": "paid"}
-    assert load_filed()["rows"][0]["last_check"] == "inconclusive"
+
+
+# -- what a verdict claims --------------------------------------------------------------------------
+def test_a_pass_says_only_what_we_know_about_the_check(sweep):
+    text = sweep.payload("pass", ["x"], {"x": _reading("pass")}, "run")["evidence"]
+    assert "the check that recorded this defect" not in text, "the current check may never have failed"
+    assert "identical test" in text
+
+
+def test_a_verdict_says_a_new_fingerprint_is_not_a_moved_check(sweep):
+    text = sweep.payload("fail", ["x"], {"x": _reading("fail")}, "run")["evidence"]
+    assert "FINGERPRINT" in text and "does not by itself mean" in text
+
+
+# -- what a row remembers ---------------------------------------------------------------------------
+NODE = "tests/rest/test_a.py::test_a"
+
+
+def test_an_inconclusive_read_does_not_forget_a_failure(sweep):
+    vendor = Vendor(reports=[{"id": 7, "status": "paid", "title": "t"}])
+    rows = [_row(status="paid", last_check="fail",
+                 verdicts_sent=[{"report_id": 7, "verdict": "pass", "at": "2026-10-02"}])]
+    _sweep_run(sweep, vendor, rows, {NODE: _reading("inconclusive")}, send=False)
+    row = load_filed()["rows"][0]
+    assert row["last_check"] == "fail"
+    assert sweep.open_rows([row]) == [row], "one 503 closed a row whose fail was never sent"
+
+
+def test_a_conclusive_read_is_remembered(sweep):
+    vendor = Vendor(reports=[{"id": 7, "status": "paid", "title": "t"}])
+    _sweep_run(sweep, vendor, [_row(status="paid", last_check="fail")], {NODE: _reading("pass")}, send=False)
+    assert load_filed()["rows"][0]["last_check"] == "pass"
+
+
+def test_a_row_written_during_the_checks_survives(sweep):
+    vendor = Vendor(reports=[{"id": 7, "status": "paid", "title": "t"}])
+    save_filed({"rows": [_row(status="paid")]})
+
+    def filing_meanwhile(nodeids):
+        filed = load_filed()
+        filed["rows"].append(_row("CYM-new", 8))
+        save_filed(filed)
+        return {n: _reading("fail") for n in nodeids}, "run"
+
+    sweep.run_sweep(_client(vendor), run_checks=filing_meanwhile)
+    assert [r["key"] for r in load_filed()["rows"]] == ["CYM-a", "CYM-new"]
+    assert load_filed()["rows"][0]["last_check"] == "fail"
+
+
+def test_what_their_server_holds_is_written_down_and_the_row_closes(sweep):
+    held = {7: [{"verdict": "pass", "created_at": "2026-10-03T00:00:00", "id": 5}]}
+    vendor = Vendor(reports=[{"id": 7, "status": "paid", "title": "t"}], verifications=held)
+    report, _ = _sweep_run(sweep, vendor, [_row(status="paid")], {NODE: _reading("pass")})
+    assert vendor.posts == [] and report["table"][0]["would_send"] is None
+    row = load_filed()["rows"][0]
+    assert row["verdicts_sent"][-1]["verdict"] == "pass"
+    assert sweep.open_rows([row]) == []
+
+
+def test_a_report_they_rejected_does_not_keep_its_row_open(sweep):
+    row = _row(report=52, status="paid", verdicts_sent=[{"report_id": 52, "verdict": "pass", "at": "t"}])
+    row["report_ids"] = [52, 62]
+    row["their_status"] = {"52": "paid", "62": "invalid"}
+    assert sweep.open_rows([row]) == []
+
+
+# -- which reports a verdict is about ---------------------------------------------------------------
+def test_a_pass_waits_for_every_check_of_its_report_the_closed_rows_too(sweep):
+    vendor = Vendor(reports=[{"id": 52, "status": "paid", "title": "t"}])
+    done = [{"report_id": 52, "verdict": "pass", "at": "2026-10-01"}]
+    rows = [_row("closed", 52, status="paid", nodeids=("c",), verdicts_sent=list(done), last_check="pass"),
+            _row("open", 52, status="paid", nodeids=("o",))]
+    report, calls = _sweep_run(sweep, vendor, rows, {"c": _reading("fail"), "o": _reading("pass")}, send=False)
+    assert sorted(calls[0]) == ["c", "o"], "the closed row's check was not run"
+    assert report["table"][0]["result"] == "fail"
+
+
+def test_only_posts_to_the_report_it_names(sweep):
+    vendor = Vendor(reports=[{"id": 10, "status": "paid", "title": "t"}, {"id": 11, "status": "paid", "title": "u"}])
+    row = _row("both", 10, status="paid", nodeids=("n",))
+    row["report_ids"] = [10, 11]
+    row["their_status"] = {"10": "paid", "11": "paid"}
+    save_filed({"rows": [row]})
+    report = sweep.run_sweep(_client(vendor), run_checks=lambda n: ({x: _reading("pass") for x in n}, "run"),
+                             send=True, only=[10])
+    assert [p[0] for p in vendor.posts] == ["/api/v1/bounty/reports/10/verification"]
+    assert [line["report"] for line in report["table"]] == [10]
+
+
+def test_only_can_name_a_report_we_closed(sweep):
+    vendor = Vendor(reports=[{"id": 7, "status": "paid", "title": "t"}])
+    row = _row(status="paid", verdicts_sent=[{"report_id": 7, "verdict": "pass", "at": "t"}], last_check="pass")
+    save_filed({"rows": [row]})
+    report = sweep.run_sweep(_client(vendor), run_checks=lambda n: ({x: _reading("pass") for x in n}, "run"), only=[7])
+    assert [line["report"] for line in report["table"]] == [7]
+
+
+# -- what stays with the operator -------------------------------------------------------------------
+def test_a_held_row_sends_nothing_and_says_why(sweep):
+    vendor = Vendor(reports=[{"id": 7, "status": "paid", "title": "t"}])
+    report, _ = _sweep_run(sweep, vendor, [_row(status="paid", hold="waits for his word")], {NODE: _reading("pass")})
+    assert vendor.posts == []
+    assert report["table"][0]["held"] == "waits for his word"
+
+
+# -- what nothing else lists ------------------------------------------------------------------------
+def test_all_also_runs_the_checks_no_row_holds_and_names_what_fails(sweep):
+    vendor = Vendor(reports=[{"id": 7, "status": "paid", "title": "t"}])
+    save_filed({"rows": [_row(status="paid")]})
+    table = {NODE: _reading("pass"), "new::fails": _reading("fail"), "new::passes": _reading("pass")}
+    report = sweep.run_sweep(_client(vendor), run_checks=lambda n: ({x: table[x] for x in n}, "run"),
+                             vendor_checks=lambda: sorted(table), everything=True)
+    assert report["unfiled"] == ["new::fails"]
+
+
+def test_a_plain_sweep_does_not_run_every_check(sweep):
+    vendor = Vendor(reports=[{"id": 7, "status": "paid", "title": "t"}])
+    save_filed({"rows": [_row(status="paid")]})
+    report = sweep.run_sweep(_client(vendor), run_checks=lambda n: ({x: _reading("pass") for x in n}, "run"),
+                             vendor_checks=lambda: pytest.fail("a plain sweep collected everything"))
+    assert report["unfiled"] == []
+
+
+def test_a_filing_whose_answer_was_lost_is_settled_from_their_tracker(sweep):
+    from qa.paths import append_event
+
+    append_event({"type": "filing_intent", "at": "t", "key": "lost", "title": "A lost report", "nodeids": ["n"]})
+    append_event({"type": "filing_outcome", "at": "t", "key": "lost", "outcome": "unknown", "http_status": 500})
+    append_event({"type": "filing_intent", "at": "t", "key": "gone", "title": "Not on their side", "nodeids": []})
+    append_event({"type": "filing_outcome", "at": "t", "key": "gone", "outcome": "unknown"})
+    vendor = Vendor(reports=[{"id": 31, "status": "pending", "title": "A lost report"}])
+    save_filed({"rows": []})
+    report = sweep.run_sweep(_client(vendor), run_checks=lambda n: ({x: _reading("fail") for x in n}, "run"))
+    rows = load_filed()["rows"]
+    assert [(r["key"], r["report_ids"], r["nodeids"]) for r in rows] == [("lost", [31], ["n"])]
+    assert report["unsettled"] == ["gone"]
+    settled = [e for e in read_events() if e.get("reconciled_from")]
+    assert [(e["key"], e["report_id"], e["outcome"]) for e in settled] == [("lost", 31, "accepted")]
+
+
+def test_a_filing_refused_or_accepted_needs_no_settling(sweep):
+    from qa.paths import append_event
+
+    append_event({"type": "filing_intent", "at": "t", "key": "no", "title": "Refused", "nodeids": []})
+    append_event({"type": "filing_outcome", "at": "t", "key": "no", "outcome": "rejected"})
+    append_event({"type": "filing_intent", "at": "t", "key": "yes", "title": "Accepted", "nodeids": []})
+    append_event({"type": "filing_outcome", "at": "t", "key": "yes", "outcome": "accepted", "report_id": 5})
+    vendor = Vendor(reports=[{"id": 5, "status": "pending", "title": "Accepted"}])
+    save_filed({"rows": []})
+    assert sweep.run_sweep(_client(vendor), run_checks=lambda n: ({}, ""))["unsettled"] == []
+
+
+# -- how it sends -----------------------------------------------------------------------------------
+def test_a_request_that_never_left_reads_not_sent(sweep):
+    save_filed({"rows": [_row()]})
+
+    def refused(request):
+        raise httpx.ConnectError("no route")
+
+    assert sweep.send_verdict(_client(refused), 7, "pass", ["x"], {"x": _reading("pass")}, "run") == "not_sent"
+    assert load_filed()["rows"][0]["verdicts_sent"] == []
+
+
+def test_a_read_only_sweep_holds_a_client_that_cannot_write(sweep):
+    client = sweep._client(write=False)
+    try:
+        assert client._transport.registry.mutate_enabled is False
+    finally:
+        client.close()
+    client = sweep._client(write=True)
+    try:
+        assert client._transport.registry.mutate_enabled is True
+    finally:
+        client.close()
+
+
+def test_a_capped_inbox_is_said(sweep, capsys):
+    report = {"tracker": "ok", "inbox": {"klass": "ok", "new": [], "full": True}, "table": [], "unread": [],
+              "by_hand": [], "sent": [], "held": [], "run": "", "unfiled": [], "unsettled": []}
+    sweep._print(report)
+    assert "older" in capsys.readouterr().out

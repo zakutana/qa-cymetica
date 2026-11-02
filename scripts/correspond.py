@@ -172,21 +172,19 @@ def _text_from(args) -> str:
 
 
 def cmd_sent(args) -> int:
-    events = read_events()
     text = _text_from(args)
     if not text.strip():
         raise SystemExit("refusing to record a message with no text.")
 
     event = {"type": "telegram_sent", "at": args.at or _now(), "by": "operator",
-             "source": SOURCE, "msg_id": next_msg_id(events, "MSG"),
-             "text": text, "origin": CHANNEL}
+             "source": SOURCE, "text": text, "origin": CHANNEL}
     if args.via:
         event["via"] = args.via
     if args.note:
         event["note"] = args.note
     if args.findings:
         event["findings"] = [f.strip() for f in args.findings.split(",") if f.strip()]
-    append_event(event)
+    append_event(event, make_id=lambda events: next_msg_id(events, "MSG"))
 
     print(f"recorded as {event['msg_id']}"
           + (f" (their ref {event['via']})" if event.get("via") else ""))
@@ -218,13 +216,12 @@ def cmd_reply(args) -> int:
         raise SystemExit("refusing to record a reply with no text.")
 
     event = {"type": "telegram_reply", "at": args.at or _now(), "by": "vendor",
-             "source": SOURCE, "msg_id": next_msg_id(events, "REPLY"),
-             "reply_to": args.to, "text": text, "origin": CHANNEL}
+             "source": SOURCE, "reply_to": args.to, "text": text, "origin": CHANNEL}
     if args.via:
         event["via"] = args.via
     if args.note:
         event["note"] = args.note
-    append_event(event)
+    append_event(event, make_id=lambda events: next_msg_id(events, "REPLY"))
 
     print(f"recorded as {event['msg_id']}, answering {args.to}")
     print(f"  journal  {journal_path()}")

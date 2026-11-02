@@ -149,12 +149,9 @@ def cmd_send(args) -> int:
         print("\n  send it with the same command plus --confirm")
         return 0
 
-    events = read_events()
-    msg_id = next_a2a_id(events)
-    at = _now()
-    append_event({"type": "a2a_intent", "at": at, "by": "operator",
-                  "source": SOURCE, "msg_id": msg_id, "text": text,
-                  "origin": CHANNEL})
+    intent = {"type": "a2a_intent", "at": _now(), "by": "operator", "source": SOURCE, "text": text, "origin": CHANNEL}
+    append_event(intent, make_id=next_a2a_id)
+    msg_id = intent["msg_id"]
 
     payload = {"from_agent_id": AGENT_ID, "content": text}
     client = _client_for()

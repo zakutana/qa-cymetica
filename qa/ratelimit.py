@@ -8,8 +8,8 @@ allow 30 a minute. Nothing read a 429 or its Retry-After, and the only brake,
 
 So the brake lives in the transport every client is built with
 (`qa/client.py` passes `shared()` to `SafetyTransport` for the real network),
-and its state lives in one file under `state_dir()`. The console's collectors,
-the lab tick and a sweep running at the same time share one minute:
+and its state lives in one file under `state_dir()`. Everything running at the
+same time shares one minute:
 
   * a host gets at most PER_MINUTE requests a minute, by reservation: each
     request takes the next free slot and sleeps until it;
@@ -19,10 +19,9 @@ the lab tick and a sweep running at the same time share one minute:
   * a 429 waits for Retry-After (at most MAX_RETRY_AFTER_S) and a READ is asked
     once more. A write is never sent twice: a POST answered 429 may have landed.
 
-The lock is held only while a slot is computed, never while sleeping: holding it
-through a long wait would stall every other process's timings write too
-(`qa/timings.py` shares `file_lock`). A file that cannot be locked or read does
-not stop a request; that request waits one host interval on its own instead.
+The lock is held only while a slot is computed, never while sleeping. A file that
+cannot be locked or read does not stop a request; that request waits one host
+interval on its own instead.
 """
 
 from __future__ import annotations
@@ -36,6 +35,7 @@ from qa.paths import file_lock, state_dir
 
 PER_MINUTE = 60
 MAX_RETRY_AFTER_S = 120.0
+MAX_RESET_S = 3600.0
 DEFAULT_RETRY_AFTER_S = 30.0
 RETRY_METHODS = frozenset({"GET", "HEAD"})
 
@@ -134,13 +134,14 @@ class Pacer:
             return
         route = f"route:{route_key(request.url)}"
         slower = 0 < limit < 60.0 / self.interval
-        exhausted = remaining is not None and remaining.strip() == "0" and reset > self.now()
+        # A reset further off than MAX_RESET_S is not a wait: milliseconds, or a day-long window, would hold every
+        # later request on this file, and a sleep that long raises OverflowError.
+        exhausted = (remaining is not None and remaining.strip() == "0"
+                     and self.now() < reset <= self.now() + MAX_RESET_S)
         if not (slower or exhausted):
             return
         if not exhausted and self._read().get("route_interval", {}).get(route) == 60.0 / limit:
             return  # already known: no lock, no write, on the busiest routes
-
-
 
         def note(state: dict) -> None:
             if slower:

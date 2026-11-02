@@ -6,7 +6,7 @@
     python scripts/bb.py change TICKET --text-file F [--confirm]         BB-CHANGE
     python scripts/bb.py verdict TICKET pass|fail [--note-file F] [--confirm]   BB-VERDICT
     python scripts/bb.py withdraw TICKET [--confirm]                     BB-WITHDRAW
-    python scripts/bb.py get TICKET     their record of one request (a read)
+    python scripts/bb.py get TICKET     their record of one request, with its text and spec (a read)
     python scripts/bb.py mine           our requests, from state/bb.jsonl: filed here, or filed on
                                         their form and acted on from here
 
@@ -195,7 +195,7 @@ def _append(record: dict) -> dict:
                     if isinstance(r.get("id"), str) and r["id"].startswith("BB-")]
             record["id"] = f"BB-{max(used, default=0) + 1:04d}"
         with open(target, "a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+            handle.write(json.dumps(record) + "\n")
     return record
 
 
@@ -431,6 +431,11 @@ def cmd_get(raw_ticket: str) -> int:
     messages = [m for m in record.get("messages") or [] if isinstance(m, dict)]
     print(f"{len(messages)} message(s): " + ", ".join(
         f"{m.get('kind')} {str(m.get('at'))[:16]}" for m in messages[-8:]))
+    if record.get("improvements"):
+        print(f"\nimprovements:\n{record['improvements']}")
+    specs = [m for m in messages if m.get("kind") == "BB-SPEC"]
+    if specs:
+        print(f"\nlatest BB-SPEC:\n{specs[-1].get('body') or ''}")
     return 0
 
 

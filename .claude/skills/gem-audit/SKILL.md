@@ -25,7 +25,7 @@ operator the moment it is seen.
 
 ## The spine
 
-0. **Memories.** `python scripts/memories.py --for sweep`, and one that belongs to
+0. **Memories.** `python scripts/memories.py --for bug`, and one that belongs to
    this work: *a ticker is not an identity* (two apps share EDGE; a dict keyed by
    symbol once turned one of them into the other and produced a contradiction that
    did not exist). Key by `key`, never by `symbol`.

@@ -65,7 +65,7 @@ def test_quant_search_rows_fit_the_list_grid(rest_trusted):
     assets = [a for a in _SRC.findall(page.text) if a.startswith("/static/company/") or "/static/company/" in a]
     texts = {}
     for a in assets:
-        r = rest_trusted.get(a if a.startswith("http") else a)
+        r = rest_trusted.get(a)
         if r.status_code != 200:
             raise Inconclusive(f"{a} answered HTTP {r.status_code}")
         texts[a.split("?")[0]] = r.text

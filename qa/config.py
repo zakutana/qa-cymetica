@@ -33,17 +33,11 @@ def load_dotenv(path: Path | None = None) -> None:
 
 @dataclass(frozen=True)
 class Identity:
-    """A way of presenting ourselves to the platform.
-
-    `scope` is enforced by the transport: a trade-scoped credential is refused
-    on any test that is not MUTATE tier. Today no trade-scoped key exists, and
-    that is the intended steady state.
-    """
+    """A way of presenting ourselves to the platform."""
 
     name: str
     header: str | None = None
     value: str | None = None
-    scope: str = "read"
     expected_trust: str = "unknown"
 
     @property
@@ -71,7 +65,6 @@ def identities() -> dict[str, Identity]:
             name="trusted",
             header="X-API-Key",
             value=os.environ.get("QA_TRUSTED_KEY") or None,
-            scope="read",
             # `allied`, not `trusted`: the identity is called trusted because
             # that is what it was in round one, and the server has served it as
             # the TOP rung since at least 2026-09-08 -- trust_score 10226,
@@ -84,7 +77,6 @@ def identities() -> dict[str, Identity]:
             name="recognized",
             header="X-API-Key",
             value=os.environ.get("QA_RECOGNIZED_KEY") or None,
-            scope="read",
             expected_trust="recognized",
         ),
     }

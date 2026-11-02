@@ -1,17 +1,7 @@
-# components.yaml -- SINGLE SOURCE OF TRUTH
+# components.yaml -- every endpoint rule and tool class the guard reads.
 #
-# Consumed by, established by grep on 2026-09-20 rather than by memory:
-#   qa/safety.py         -- endpoint rules, executable_params, probe_only floors
-#   qa/config.py         -- base_urls()
-#   qa/fingerprint.py    -- the discovery corpus (through registry.raw)
-#   qa/report_plugin.py  -- hashed into a run's tree fingerprint
-#   tests/conftest.py    -- collection-time tag validation
-#
-# This list said `qa/components.py -- the component registry the dashboard
-# renders` from the day it was written until 2026-09-20. No such module has
-# ever existed in this tree, and the two modules that do read the file were
-# not named. A header that invents its own consumer is the sharpest kind of
-# stale: it is the first thing a reader believes about the file.
+# Consumed by qa/safety.py (rules, probe_only floors, tool classes), qa/config.py (base_urls) and tests/conftest.py
+# (a check's component must be listed here).
 #
 # Rules of the file:
 #   * An endpoint with no rule is DENIED for any non-read method. Default-deny.
@@ -27,18 +17,6 @@ base_urls:
   mcp: https://cymetica.com/mcp/v1
   chain_rpc: https://rpc.mainnet.chain.robinhood.com
 
-# ---------------------------------------------------------------------------
-# Platform fingerprint corpus
-#
-# Cymetica exposes no build identifier: openapi.json pins info.version to a
-# static "0.1.0", /api/v1/build-stats returns aggregate telemetry rather than a
-# revision, and no response carries an x-build header. So we compute our own
-# fingerprint over the documents that DO change when they ship.
-#
-# Any change to this corpus demotes every GREEN component to AMBER. That is the
-# mechanism by which a silent deploy invalidates every prior verification
-# without anyone having to remember to do it.
-# ---------------------------------------------------------------------------
 components:
   meta.guard:
     title: Safety guard self-tests
@@ -229,10 +207,9 @@ components:
   rest.agent_tournaments:
     # A Build it Better app (ET-30773, shipped 2026-10-10): 10-seat, 7-day paper tables for
     # cloned bots (/api/v1/agent-tournaments/*). First check 2026-10-11: none of the seven
-    # routes llms.txt names is in the OpenAPI. One write since the laboratory's section 6
-    # (2026-10-11): the casino may ASK for a seat at a paper table (`agent_tournaments.seat`
-    # below); the owner approves it at their approve_url. Five more since 2026-11-01 for the casino
-    # department, on paper seats of ours (declared below); nothing else here is written.
+    # routes llms.txt names is in the OpenAPI. The casino may ASK for a seat at a paper table
+    # (`agent_tournaments.seat` below); the owner approves it at their approve_url. Five more
+    # writes for the casino, on paper seats of ours (declared below); nothing else here is written.
     title: Agent Tournaments (lobby, tables, seat prompts)
     surface: rest
     criticality: medium
@@ -457,93 +434,6 @@ endpoints:
     inert_params: [paper]
     required_flags: [paper]
 
-  # The GET is unregistered on purpose -- reads are default-allowed at SAFE,
-  # and this one moves no money at all ("no prizes are attached and nothing
-  # moves money").
-  #
-  # The POST was probe_only from 2026-09-13 morning until that afternoon,
-  # because its shape was undocumented and a wrong body their server happened
-  # to accept would lock a real week-long round on garbage picks -- "Each pick
-  # locks the stored close on the round day", with no way back before it
-  # scores. The operator relayed that gap to Cymetica (MSG-0011) and they
-  # published it the same day, in a new "Clone Tools & Tournaments" section:
-  #
-  #   POST /api/v1/universe/movers/tournament/enter
-  #   Body: {"symbols": ["AAPL", "NVDA"]} (1-5 symbols)
-  #   "Requires a session or API key. Unknown or unpriced symbols are
-  #    rejected with a plain 422 reason."
-  #
-  # Worth keeping: the path we had guessed was the tournament path itself, and
-  # it was wrong. The flag is what stopped that guess reaching a live round.
-  # Still MUTATE, so it needs --allow-mutate on purpose.
-  - id: movers.enter
-    path: /api/v1/universe/movers/tournament/enter
-    methods: [POST]
-    component: rest.movers
-    executable_params: [symbols]
-
-  # The creator dashboard's "Reply with this page" (2026-09-24): claims one
-  # lead in the reply queue and mints a tracked link for that one reply. No
-  # money moves and nothing is posted to X or Reddit -- the operator posts by
-  # hand. Closed body: ClaimBody in /openapi-public.json carries link_slug and
-  # nothing else. scripts/creator.py turns MUTATE on for their host and asks
-  # for confirm before the network.
-  # The site's NEXUS over REST (2026-10-02): "the NEXUS that acts on your account" --
-  # it places paper orders, clones bots and runs backtests from one sentence, with
-  # nothing to confirm (ET-28541). The only billed door; a paper-mode account is never
-  # charged. Closed body: ChatMessageRequest, message + session_id + current_page.
-  # scripts/chat.py checks confirm, the prompt, and that the account says paper twice
-  # BEFORE the request, and turns MUTATE on for their host only for that command.
-  - id: chat.stream
-    path: /api/v1/chat/stream
-    methods: [POST]
-    component: rest.chat
-    executable_params: [message, session_id, current_page]
-    closed_body: true
-
-  - id: creator.twitter_lead_reply
-    path: /api/v1/creator/twitter-leads/{lead_id}/reply
-    methods: [POST]
-    component: rest.creator
-    executable_params: [link_slug]
-    closed_body: true
-
-  - id: creator.reddit_lead_reply
-    path: /api/v1/creator/reddit-leads/{lead_id}/reply
-    methods: [POST]
-    component: rest.creator
-    executable_params: [link_slug]
-    closed_body: true
-
-  # Mark posted: records the link to the reply the operator posted by hand,
-  # which their checker verifies before crediting the reward. Closed body:
-  # PostedBody carries reply_url and nothing else; scripts/creator.py sends
-  # only a link to one post on that outlet, and only with confirm.
-  - id: creator.twitter_lead_posted
-    path: /api/v1/creator/twitter-leads/{lead_id}/posted
-    methods: [POST]
-    component: rest.creator
-    executable_params: [reply_url]
-    closed_body: true
-
-  - id: creator.reddit_lead_posted
-    path: /api/v1/creator/reddit-leads/{lead_id}/posted
-    methods: [POST]
-    component: rest.creator
-    executable_params: [reply_url]
-    closed_body: true
-
-  # A head-to-head matchup of two paper sides (cymetica.com/h2h). Nothing
-  # moves money; the one outward effect is `is_public`, default TRUE, which
-  # publishes a share card -- scripts/h2h.py always sends it false.
-  - id: head_to_head.create
-    path: /api/v1/head-to-head
-    methods: [POST]
-    component: rest.head_to_head
-    executable_params: [original, improved, title, days, start, symbols,
-                        is_public]
-    closed_body: true
-
   - id: arena.order
     path: /api/v1/arena/order
     methods: [POST]
@@ -607,83 +497,15 @@ endpoints:
     executable_params: [source_type, source_id, custom_name]
     required_flags: [paper]
 
-  # Funding a clone, and the one place on this surface where required_flags
-  # cannot be the floor: `FundBotRequest` has exactly one property, `amount`.
-  # There is no flag in the body to carry, because what makes the transfer
-  # harmless is a property of the INSTANCE -- a paper clone holds a practice
-  # balance -- and the transport can only read bodies.
-  #
-  # So this is declared with its executable param and the floor lives in
-  # scripts/clone.py, which reads the target's `is_paper` from THEM before
-  # every transfer and refuses on false, on null and on a body it could not
-  # read. Said plainly because it is weaker than the two floors above: a
-  # MUTATE test with --allow-mutate could reach this endpoint, and nothing at
-  # the transport would stop it. If a test ever needs to, give it a floor
-  # first -- their schema would have to publish something to hang it on.
-  - id: cloned_bots.fund
-    path: /api/v1/cloned-bots/{instance_id}/fund
-    methods: [POST]
-    component: rest.agents
-    executable_params: [amount]
-
-  # Starting and configuring a clone. Declared 2026-09-10 after they published
-  # the routes in response to #88 -- until then both were served and in no
-  # document, and default-deny was the only thing holding them.
-  #
-  # Same floor problem as fund, one step worse: neither request carries a
-  # paper flag, and toggle-trading takes no body at all -- `enabled` is a
-  # query parameter. So there is nothing for required_flags to read, and the
-  # floor is in scripts/clone.py, which asks THEM for the instance's
-  # `is_paper` AND `execution_class` before either call and refuses unless
-  # both say paper.
-  #
-  # Why that pair rather than is_paper alone: the toggle-trading description
-  # reads "When enabled, bot will trade 100% on-chain", with no paper caveat,
-  # while the instance carries onchain_pct 100 beside
-  # execution_class PAPER_SIMULATION. The description and the object appear
-  # to disagree and only the object is machine-readable, so the floor stands
-  # on the object and reads both of its fields.
+  # Starting a clone. Nothing here starts one any more, so it is probe_only: the request carries no paper
+  # flag (`enabled` is a query parameter), and its description reads "bot will trade 100% on-chain". The
+  # guard's tests use it as the subject of a query-string probe.
   - id: cloned_bots.toggle_trading
     path: /api/v1/cloned-bots/{instance_id}/toggle-trading
     methods: [POST]
     component: rest.agents
+    probe_only: true
     executable_params: [enabled]
-
-  # The settings PATCH (V5, 2026-09-23): the laboratory walks a grid of a
-  # species' settings on its one paper clone. Their UpdateSettingsRequest has
-  # 31 fields and rejects unknown ones by name, so there is no `paper` to
-  # require and required_flags has nothing to read. Two floors instead:
-  #
-  #   * closed_body -- at MUTATE the body may carry ONLY the fields below, so
-  #     is_trading (a start through a second door, past enable()'s floor),
-  #     onchain_pct, arb_strategy_enabled, strategy_override and the market
-  #     lists never reach them from any caller. These are exactly
-  #     scripts/clone.py's SAFE_SETTINGS, and a test holds the two equal;
-  #   * scripts/clone.py::settings -- our record says the instance is a paper
-  #     clone of ours, no room of ours is running on it, and THEIR row says
-  #     paper twice (is_paper and execution_class), read before the PATCH.
-  # Deleting a clone frees one of the five paper slots the platform allows.
-  # DELETE carries no body at all, so there is nothing for required_flags to
-  # read -- same shape as toggle-trading, one door further. The floor is in
-  # scripts/clone.py::release, which asks THEM for the instance's is_paper
-  # AND execution_class (startable, enable()'s floor) before every delete,
-  # and refuses on our own record or a running room first.
-  - id: cloned_bots.release
-    path: /api/v1/cloned-bots/{instance_id}
-    methods: [DELETE]
-    component: rest.agents
-    executable_params: []
-
-  - id: cloned_bots.settings
-    path: /api/v1/cloned-bots/{instance_id}/settings
-    methods: [PATCH]
-    component: rest.agents
-    executable_params: [stop_loss_pct, take_profit_pct, max_position_pct,
-                        max_open_positions, min_ai_confidence,
-                        event_card_trading_enabled, arena_trading_enabled,
-                        catalog_trading_enabled, tge_trading_enabled,
-                        perpetual_markets, custom_markets]
-    closed_body: true
 
   # Agent League, the two writes of [operator 2026-10-09] "Ucastni se". Neither moves money
   # (Phase 1: "no user deposits"; the prize is ET10 credited to the owner), so the floor is
@@ -754,14 +576,13 @@ endpoints:
     executable_params: []
     closed_body: true
 
-  # Agent Tournaments, the one write of the laboratory's section 6 (the outsider,
-  # scripts/casino.py seat). llms.txt: `POST /tables/{id}/seat` {"instance_id"} with
+  # Agent Tournaments, a seat (scripts/casino.py). llms.txt: `POST /tables/{id}/seat` {"instance_id"} with
   # X-API-Key, "the seat waits until the owner approves at the returned approve_url"; the
   # table's own clone prompt says the same body (read 2026-10-11). The request carries no
   # paper flag and no amount -- the buy-in is taken when the OWNER approves -- so there is
   # nothing for required_flags to read. Two floors instead: `closed_body` holds the body to
   # `instance_id`, whoever builds it; scripts/casino.py asks only where THEIR table reads
-  # mode "paper", open, at its tier's published buy-in, under rules whose paper mode is open
+  # mode "paper", currency USDC, open, at its tier's published buy-in, under rules whose paper mode is open
   # and whose paper_note says the buy-in is paper USDC, and only for a paper clone of ours.
   # `/seats/{id}/leave` is deliberately not declared and stays default-denied.
   - id: agent_tournaments.seat
@@ -802,13 +623,6 @@ endpoints:
     methods: [POST]
     component: rest.agent_tournaments
     executable_params: [stop_loss_pct, take_profit_pct, trade_size_pct]
-    closed_body: true
-
-  - id: agent_tournaments.pick
-    path: /api/v1/agent-tournaments/tables/{table_id}/pick
-    methods: [POST]
-    component: rest.agent_tournaments
-    executable_params: [seat_id, stake_usdc]
     closed_body: true
 
   # Build a Company (feature #911), the operator's word of 2026-10-13: "zaloz oddeleni pro testing",
@@ -871,12 +685,6 @@ endpoints:
     executable_params: []
     inert_params: [query, headline, text, limit]
 
-  - id: backtest.run
-    path: /api/v1/backtest/bots/{slug}/run-backtest
-    methods: [POST]
-    component: rest.backtest
-    executable_params: [start, end, capital, params]
-
   - id: support.ai_agent
     path: /api/v1/support/ai-agent
     methods: [POST]
@@ -900,8 +708,7 @@ endpoints:
   # The second write, added 2026-09-07 when they published the endpoint and
   # asked for the verifications we were holding. Not probe_only, for the same
   # reason as bounty.submit: recording our own re-check IS the intended action.
-  # It carries no figure of theirs and moves no money -- what it asserts is
-  # that a check of ours passes under the fingerprint it last failed under.
+  # It moves no money: it says what a check of ours reads now.
   #
   # Specificity 5, so it wins over any future /reports/{id} rule, and
   # bounty.submit's regex (^/api/v1/bounty/reports/?$) does not reach it.
@@ -913,38 +720,12 @@ endpoints:
       [verdict, evidence, test_run_id, fingerprint, tree_sha, checked_at]
     inert_params: []
 
-  - id: bounty.submit_with_screenshots
-    path: /api/v1/bounty/reports/with-screenshots
-    methods: [POST]
-    component: rest.support
-    executable_params:
-      [title, description, severity_reported, category, steps_to_reproduce,
-       expected_behavior, actual_behavior, url, browser, device, os,
-       hunter_name, wallet_address, screenshots]
-    inert_params: []
-
   - id: bounty.qa_ask
     path: /api/v1/bounty/qa-agent/ask
     methods: [POST]
     component: rest.support
     executable_params: []
     inert_params: [question, message, context]
-
-  # The async half of the same channel. agent-card.json publishes both as the
-  # way to ask a question the card does not already answer; the body carries a
-  # question and an agent id, and nothing it contains can execute anything.
-  # The a2a protocol endpoint agent-card.json publishes as THE cross-platform
-  # door to their agents ("Any AI agent can send structured messages to
-  # CyMetica AI agents", message_types chat / trade_signal / advice). Declared
-  # 2026-09-10 so its reachability can be measured rather than assumed: a GET
-  # answers 404 and no openapi path mentions it, and FastAPI answers 405 when
-  # a route exists under another method -- so a PROBE settles whether the
-  # route exists at all.
-  - id: a2a.message
-    path: /api/v1/a2a/message
-    methods: [POST]
-    component: rest.support
-    executable_params: [message, content, payload, type, message_type]
 
   - id: bounty.a2a_send
     path: /api/v1/bounty/a2a/send
@@ -1010,7 +791,7 @@ mcp_tools:
      # build slot and put a stranger's name on a request.
      bb_search_rebuilt_apps, bb_get_request,
      # Classified 2026-09-21, the read half of their Agent Returns Board, for
-     # the laboratory's study of the Hot headlines. Each carries
+     # the study of the Hot headlines. Each carries
      # readOnlyHint: true and takes a key, a query or a page. board_post,
      # board_revise, board_replicate, board_subscribe and board_flag write
      # under our name to a board other agents rank on, and stay in no list
@@ -1024,10 +805,9 @@ mcp_tools:
      # application and a bid under our name, and stay in no list.
      bb_app_stats, bb_startup_line, feature_bidding_rules,
      # Classified 2026-10-03, bot research. readOnlyHint: true, "Read one of YOUR
-     # clones' technical-indicator parameters (species defaults + your overrides)";
-     # it is how a change to a clone's algorithm is read back. Its write sibling
-     # update_bot_indicators (destructiveHint: true, no paper argument) stays in no
-     # list (tests/meta/test_pipeline_own_clone_write.py holds both halves).
+     # clones' technical-indicator parameters (species defaults + your overrides)".
+     # Its write sibling update_bot_indicators (destructiveHint: true, no paper
+     # argument) stays in no list.
      get_bot_indicators]
   contribute:
     [submit_observation, submit_feedback, request_feature, submit_signal]
@@ -1056,18 +836,6 @@ mcp_tools:
     trade_event_card: paper
     place_arena_order: {mode: paper}
 
-  # A write on one of OUR clones that moves no money and has no paper argument, so
-  # paper_gated cannot carry it (2026-10-03, bot research). Opened at MUTATE with exactly
-  # the arguments the tool documents -- no fourth, a documented indicator, a non-empty
-  # object of plain numbers. That the clone is a paper clone of ours is not in the call:
-  # it is the caller's floor, scripts/clone.py indicators(), as clone.settings() is for the
-  # settings PATCH. update_bot_indicators: "Override one indicator's parameters on one of
-  # YOUR clones (rsi/macd/ema/sma/bollinger/atr/stochastic)", destructiveHint: true.
-  # tests/meta/test_pipeline_own_clone_write.py holds the gate.
-  own_clone_write:
-    update_bot_indicators:
-      args: [instance_id, indicator_name, params]
-      indicator_name: [rsi, macd, ema, sma, bollinger, atr, stochastic]
   provision:
     [create_aib_fund, edit_aib_fund_basket, launchpad_launch_token,
      register_webhook, subscribe_prices]

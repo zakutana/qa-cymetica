@@ -173,7 +173,8 @@
     "134": "paid"
    },
    "withdrawn": false,
-   "last_check": "inconclusive"
+   "last_check": "inconclusive",
+   "hold": "NEXT.md: read whether reset or auto-resume first"
   },
   {
    "key": "CYM-a_build_ships_inside_the_24_hours_it_publishes",
@@ -213,7 +214,8 @@
     "136": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "fail",
+   "hold": "NEXT.md: wait for the word 'omez kontrolu'"
   },
   {
    "key": "CYM-a_card_index_moves_no_further_than_its_basket_can",
@@ -274,7 +276,8 @@
     "122": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass"
+   "last_check": "pass",
+   "hold": "NEXT.md: passes only with the US market open"
   },
   {
    "key": "CYM-a_card_keeps_what_its_company_spun_off",
@@ -288,7 +291,7 @@
    "filed_at": "2026-11-01T17:18:23+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "243": "pending"
+    "243": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -1208,7 +1211,8 @@
     "201": "paid"
    },
    "withdrawn": false,
-   "last_check": "inconclusive"
+   "last_check": "inconclusive",
+   "hold": "NEXT.md: read before a FAIL goes"
   },
   {
    "key": "CYM-agent-tournaments-spent-bot-does-not-read-as-trading",
@@ -1435,7 +1439,8 @@
     "46": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "fail",
+   "hold": "NEXT.md: their answer of 22.10., wait for the word '#46 jako dokumentace'"
   },
   {
    "key": "CYM-async-a2a-investigation-arrives",
@@ -1510,7 +1515,8 @@
     "137": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass"
+   "last_check": "pass",
+   "hold": "NEXT.md: their inbox is full, read on first"
   },
   {
    "key": "CYM-award-contradicts-its-own-tier",
@@ -2509,7 +2515,8 @@
     "93": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass"
+   "last_check": "pass",
+   "hold": "NEXT.md: wait for the word 'podej novy'"
   },
   {
    "key": "CYM-every_gem_screener_route_llms_txt_names_is_in_the_openapi",
@@ -2758,7 +2765,7 @@
    "filed_at": "2026-11-01T19:06:51+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "245": "pending"
+    "245": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -3481,7 +3488,7 @@
    "filed_at": "2026-11-01T19:13:20+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "247": "pending"
+    "247": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -3498,7 +3505,7 @@
    "filed_at": "2026-11-01T19:13:27+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "248": "pending"
+    "248": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -3515,7 +3522,7 @@
    "filed_at": "2026-11-01T18:54:36+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "244": "pending"
+    "244": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -3717,7 +3724,7 @@
    "filed_at": "2026-11-01T19:13:11+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "246": "pending"
+    "246": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"

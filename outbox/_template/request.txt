@@ -1,10 +1,12 @@
-TITLE: <the app, and what gets better in one line>
+<The app, and what gets better, in one plain sentence.>
+Why: <one or two sentences: what is wrong for the user today.>
+MUST STAY AS DRAWN: <what picture N shows that has to be built as drawn, if anything.>
 
-1. <Goal, as the user sees it. What is true when it is done, not how to build it.>
+1. <Goal, as the user sees it. What is true when it is done, not how to build it. Picture 1 shows it.>
 2. <Goal.>
 3. <Goal. Keep what stays true on the neighbouring screen.>
 
-PICTURES
-<raw.githubusercontent.com URL> : <what this picture shows>
-
-Done when: [ ] 1-3
+Done when:
+[ ] 1 <How we check goal 1, at 1440 and on a phone.>
+[ ] 2 <How we check goal 2.>
+[ ] 3 <How we check goal 3.>

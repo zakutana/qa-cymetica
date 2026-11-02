@@ -28,10 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
-import threading
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -43,6 +40,7 @@ import httpx  # noqa: E402
 from qa import gemaudit as g  # noqa: E402
 from qa.client import build_client, build_source_client, install_client_guard  # noqa: E402
 from qa.config import identities  # noqa: E402
+from qa.paths import atomic_write  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 
 NAME = "gem_audit"
@@ -66,20 +64,7 @@ def diary_path() -> Path:
     return state_dir() / f"{NAME}.jsonl"
 
 
-def _write_text(target: Path, text: str) -> None:
-    """Whole or not at all, whoever else is reading it."""
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_name(f"{target.name}.{os.getpid()}.{threading.get_ident()}.tmp")
-    tmp.write_text(text, encoding="utf-8")
-    for attempt in range(20):
-        try:
-            tmp.replace(target)
-            return
-        except PermissionError:
-            if attempt == 19:
-                tmp.unlink(missing_ok=True)
-                raise
-            time.sleep(0.05)
+_write_text = atomic_write
 
 
 def load_diary() -> list[dict]:
@@ -105,7 +90,7 @@ def append_diary(row: dict) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     with file_lock(target):
         with open(target, "a", encoding="utf-8") as fh:
-            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+            fh.write(json.dumps(row) + "\n")
 
 
 # -- reading ------------------------------------------------------------------

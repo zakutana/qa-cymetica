@@ -136,6 +136,7 @@ def pytest_runtest_makereport(item, call):
         "phase": report.when,
         "duration_ms": int(report.duration * 1000),
         "measurement": measurement.as_record() if measurement else None,
+        "volatile": item.get_closest_marker("qa_volatile") is not None,
         "exception": call.excinfo.typename if call.excinfo is not None else None,
         "reason": reason,
         "failure_repr": _trim(str(report.longrepr)) if kind in ("failed", "error") else None,
@@ -170,4 +171,4 @@ def pytest_sessionfinish(session, exitstatus):
         target = state_dir() / "runs" / f"{run['run_id']}.json"
     path = Path(target)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(run, indent=1, ensure_ascii=False), encoding="utf-8")
+    path.write_text(json.dumps(run, indent=1), encoding="utf-8")

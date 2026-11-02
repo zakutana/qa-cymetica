@@ -66,8 +66,7 @@ REPO = Path(__file__).resolve().parent.parent.parent
 REMEDY = (
     "Use the Write tool for a new file and the Edit tool to change one. "
     "A heredoc writes through the Linux sandbox onto a Windows workspace and "
-    "corrupts UTF-8 silently -- the shell still exits 0. See CLAUDE.md, "
-    "\"File writes on this workspace\".\n"
+    "corrupts UTF-8 silently -- the shell still exits 0.\n"
     "Heredocs that are CONSUMED are fine: git commit -F -, or python - <<EOF "
     "that only reads and prints.\n"
     "A throwaway script that has to write: put it in the scratchpad with the "

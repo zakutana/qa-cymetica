@@ -10,8 +10,8 @@ duplicate ticket is made (their own 409 on a duplicate title within 24 h only
 catches a retry that keeps the title).
 
 **What was seen.** Three of our submissions answered HTTP 500 and the report
-existed anyway, found only because `scripts/submit.py --reconcile` compares
-an unclear outcome against `GET /api/v1/bounty/my-reports`:
+existed anyway, found only because an unclear outcome is settled against
+`GET /api/v1/bounty/my-reports` (now by scripts/sweep.py or a re-run of submit.py):
 
     #110  build-stats-window                       2026-09-20 17:40 UTC
     #113  bb-building-tile                         2026-09-20 21:01 UTC

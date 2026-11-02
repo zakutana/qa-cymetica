@@ -73,6 +73,8 @@ def cmd_status(args) -> int:
         print(name.upper())
         print(f"  last heard from them  {channel.get('last_from_them') or 'never'}")
         print(f"  {side:20}  {len(waiting)}" + (f": {', '.join(str(w) for w in waiting[:8])}" if waiting else ""))
+        if channel.get("undelivered"):
+            print(f"  never confirmed sent  {', '.join(channel['undelivered'])}")
     return 0
 
 

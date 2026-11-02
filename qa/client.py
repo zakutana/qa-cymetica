@@ -79,6 +79,12 @@ def remove_client_guard() -> None:
     _GUARD_INSTALLED = False
 
 
+def never_left(exc: BaseException) -> bool:
+    """A write that raised cannot have reached them: our guard refused it, or no connection was made. Anything
+    else came after it went out, so it may have landed."""
+    return isinstance(exc, (SafetyViolation, httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout))
+
+
 class GuardBreached(RuntimeError):
     """The guard failed to refuse something it exists to refuse."""
 
@@ -86,6 +92,8 @@ class GuardBreached(RuntimeError):
 # The subject of layers 2 and 3: a declared, money-moving POST. Which endpoint
 # it is does not matter to them -- only that it is a write.
 WITHDRAW = "/api/v1/funding/withdraw"
+# A write open at MUTATE: only the tier checks stand between it and the transport.
+OPEN_WRITE = "/api/v1/bounty/reports"
 
 
 def _probe_only_path(registry: EndpointRegistry) -> str:
@@ -165,6 +173,11 @@ def assert_client_guard_blocks() -> None:
 
     registry = EndpointRegistry.load()
     anon = Identity(name="guard-self-check")
+    # A registry that would let the write through, and a write it would let through: on anything less the MUTATE
+    # branch refuses first, and layers 2 and 3 could come off unfelt.
+    mutating = EndpointRegistry.load()
+    mutating.mutate_enabled = True
+    mutating.mutate_allowed_hosts = frozenset({"cymetica.com"})
 
     def _refuses(path: str, tier: SafetyTier | None, layer: str, reg=registry):
         token = CURRENT_TIER.set(tier)
@@ -189,17 +202,14 @@ def assert_client_guard_blocks() -> None:
         )
 
     # 2 -- no tier in scope: a request from outside a test is nobody's.
-    _refuses(WITHDRAW, None, "layer 2: no safety tier in scope")
+    _refuses(OPEN_WRITE, None, "layer 2: no safety tier in scope", reg=mutating)
 
     # 3 -- the tier ladder: a SAFE test may not write.
-    _refuses(WITHDRAW, SafetyTier.SAFE, "layer 3: SAFE tier")
+    _refuses(OPEN_WRITE, SafetyTier.SAFE, "layer 3: SAFE tier", reg=mutating)
 
     # 4 -- the probe_only floor, which is the one that has actually come off.
     #      A private registry copy: the session's own must keep whatever
     #      --allow-mutate said.
-    mutating = EndpointRegistry.load()
-    mutating.mutate_enabled = True
-    mutating.mutate_allowed_hosts = frozenset({"cymetica.com"})
     _refuses(_probe_only_path(mutating), SafetyTier.MUTATE,
              "layer 4: probe_only floor", reg=mutating)
 
@@ -224,10 +234,6 @@ def build_client(
     """
     headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
     headers.update(identity.headers())
-    if identity.scope != "read":
-        # Read by the transport to refuse trade-scoped credentials on
-        # non-MUTATE tests.
-        headers["X-API-Key-Scope"] = identity.scope
 
     transport = SafetyTransport(
         inner=inner if inner is not None else httpx.HTTPTransport(retries=0),
@@ -306,7 +312,7 @@ def build_source_client(
     """
     transport = SafetyTransport(
         inner=inner if inner is not None else httpx.HTTPTransport(retries=0),
-        registry=EndpointRegistry.load(),
+        registry=EndpointRegistry({}),   # no rules: a write to any host, at any tier, matches nothing
         budget=None,
         pacer=ratelimit.shared() if inner is None else None,
     )

@@ -25,7 +25,6 @@ from qa.client import (  # noqa: E402
 )
 from qa.config import identities  # noqa: E402
 from qa.safety import (  # noqa: E402
-    CURRENT_NODEID,
     CURRENT_TIER,
     EndpointRegistry,
     RateLimitBudget,
@@ -143,12 +142,11 @@ def _tier_context(request):
     marker = request.node.get_closest_marker("qa_tier")
     tier = SafetyTier(marker.args[0]) if marker else None
 
-    tokens = (CURRENT_TIER.set(tier), CURRENT_NODEID.set(request.node.nodeid))
+    token = CURRENT_TIER.set(tier)
     try:
         yield
     finally:
-        CURRENT_NODEID.reset(tokens[1])
-        CURRENT_TIER.reset(tokens[0])
+        CURRENT_TIER.reset(token)
 
 
 # ---------------------------------------------------------------------------

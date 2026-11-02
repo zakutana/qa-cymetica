@@ -21,7 +21,7 @@ sys.path.insert(0, str(REPO_ROOT))
 from qa.client import build_client, install_client_guard  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
-from qa.paths import append_event, file_lock, read_events, state_dir  # noqa: E402
+from qa.paths import append_event, atomic_write, file_lock, read_events, state_dir  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 
 SOURCE = "scripts/bounty.py"
@@ -124,23 +124,23 @@ def fetch_our_reports(client=None, wallet: str | None = None, previous: dict | N
                         for r in sorted(rows, key=lambda r: r.get("id", 0))]}
 
 
+def _snapshot(out: Path) -> dict:
+    try:
+        return json.loads(out.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
 def refresh_our_reports(client=None) -> dict:
-    """Re-read our reports into state/bounty.json. A failed read keeps what the file held, marked stale."""
+    """Re-read our reports into state/bounty.json. A failed read keeps what the file held, marked stale.
+    The lock is taken for the write only: a read can take a minute, and a lock waits about ten seconds."""
     out = out_path()
-    out.parent.mkdir(parents=True, exist_ok=True)
+    ours = fetch_our_reports(client=client, previous=_snapshot(out).get("our_reports"))
     with file_lock(out):
-        data: dict = {}
-        if out.exists():
-            try:
-                data = json.loads(out.read_text(encoding="utf-8"))
-            except (OSError, ValueError):
-                data = {}
-        ours = fetch_our_reports(client=client, previous=data.get("our_reports"))
+        data = _snapshot(out)
         data["our_reports"] = ours
         data["our_reports_refreshed_at"] = _now()
-        tmp = out.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-        os.replace(tmp, out)
+        atomic_write(out, json.dumps(data, indent=2))
     return ours
 
 

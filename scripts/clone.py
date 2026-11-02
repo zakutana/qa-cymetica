@@ -88,7 +88,7 @@ def _append(record: dict) -> None:
     target.parent.mkdir(parents=True, exist_ok=True)
     with file_lock(target):
         with open(target, "a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+            handle.write(json.dumps(record) + "\n")
 
 
 def _next_id(rows: list[dict]) -> str:
@@ -106,7 +106,7 @@ def _append_intent(record: dict) -> dict:
     with file_lock(target):
         record["id"] = _next_id(load())
         with open(target, "a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+            handle.write(json.dumps(record) + "\n")
     return record
 
 

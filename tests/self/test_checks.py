@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
+import pytest
+
 from qa import checks
 
 
@@ -74,3 +78,46 @@ def test_a_real_pytest_run_is_recorded_with_its_outcomes(pytester, monkeypatch, 
     assert read["test_inner.py::test_red"]["reason"] == "two is not three"
     assert read["test_inner.py::test_unsure"]["result"] == "inconclusive"
     assert "did not answer" in read["test_inner.py::test_unsure"]["reason"]
+
+
+def test_the_reason_is_never_our_traceback():
+    repr_ = ("tests\\rest\\test_x.py:12: in test_x\n    assert helper(a) == 0\n"
+             "E   assert 5 == 0\nE    +  where 5 = helper('secret path')\n")
+    row = {**_result("a", "failed"), "exception": "AssertionError", "failure_repr": repr_, "measurement": None}
+    reason = checks.classify({"results": [row]}, ["a"])["a"]["reason"]
+    assert reason == "assert 5 == 0"
+
+
+def test_a_volatile_check_that_fails_is_inconclusive():
+    row = {**_result("a", "failed"), "exception": "AssertionError", "volatile": True}
+    assert checks.classify({"results": [row]}, ["a"])["a"]["result"] == "inconclusive"
+
+
+class _Done:
+    def __init__(self, code, out=""):
+        self.returncode, self.stdout, self.stderr = code, out, ""
+
+
+def test_a_pytest_that_could_not_start_says_so(monkeypatch):
+    monkeypatch.setattr(checks.subprocess, "run", lambda *a, **k: _Done(3, "SAFETY GUARD SELF-CHECK FAILED"))
+    monkeypatch.setattr(checks, "REPO_ROOT", checks.REPO_ROOT)
+    with pytest.raises(checks.CannotRun, match="SAFETY GUARD"):
+        checks.vendor_checks()
+
+
+def test_no_record_at_all_is_not_an_empty_run(monkeypatch):
+    monkeypatch.setattr(checks.subprocess, "run", lambda *a, **k: _Done(1, "boom"))
+    with pytest.raises(checks.CannotRun):
+        checks.vendor_checks()
+
+
+def test_a_collect_pass_leaves_no_run_record(monkeypatch):
+    from qa.paths import state_dir
+
+    def fake(argv, **kwargs):
+        Path(kwargs["env"]["QA_RUN_FILE"]).write_text('{"collected": ["a::b"]}', encoding="utf-8")
+        return _Done(0)
+
+    monkeypatch.setattr(checks.subprocess, "run", fake)
+    assert checks.vendor_checks() == ["a::b"]
+    assert list((state_dir() / "runs").glob("*.json")) == []

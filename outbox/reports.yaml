@@ -1,13 +1,11 @@
-# The findings as they will be filed, grouped one report per fix.
+# Every bug report we file, one report per fix: `python scripts/submit.py <key>`.
 #
-# 16 findings become 8 reports because a report is a unit of WORK, not a unit
-# of observation. Four disagreeing counts across four documents are one job --
-# reconcile the published figures -- and filing them separately would put four
-# tickets in front of someone who has to do one thing.
+# A report is a unit of WORK, not of observation: four disagreeing counts across
+# four documents are one job, and one report.
 #
-# `body` is editorial: the framing, the scope limit, the ask. Every NUMBER in
-# the filed description is injected from state/findings.json at send time, so a
-# figure can never go stale between measuring it and reporting it.
+# `body` is the framing and the ask. `check:` names the pytest check behind the
+# bug; what it reads goes under MEASURED VALUES at send time. A report with no
+# check carries the figures you typed, so read them from the live service first.
 #
 # severity uses THEIR enum: critical / high / medium / low / suggestion
 # category uses THEIR enum: security / smart_contract / api / ui_ux / logic /
@@ -7572,6 +7570,4 @@ footer: >
   orders, paper bot clones funded from the practice balance, and prompts
   sent to the site's own NEXUS chat on the paper account (which places paper
   orders). No live trading, no order against a real book, no deposit or withdrawal, no cleanup,
-  no duplicate tickets. Every figure above was
-  read from the live service at the time stated, and each finding ships with
-  the command that reproduces it.
+  no duplicate tickets. Figures are read from the live service, and each finding ships with how to reproduce it.

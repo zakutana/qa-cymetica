@@ -29,11 +29,13 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+import httpx
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from qa import casino  # noqa: E402
-from qa.client import build_client, install_client_guard  # noqa: E402
+from qa.client import build_client, install_client_guard, never_left  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
@@ -68,13 +70,16 @@ def load() -> list[dict]:
     return rows
 
 
-def _append(record: dict) -> dict:
+def _append(record: dict, seat_id: bool = False) -> dict:
+    """One row. `seat_id` takes the next SEAT id under the lock, in the step that writes it."""
     target = path()
     target.parent.mkdir(parents=True, exist_ok=True)
     record = {"at": _now().isoformat(timespec="seconds"), **record}
     with file_lock(target):
+        if seat_id:
+            record["id"] = _next_seat_id(load())
         with open(target, "a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+            handle.write(json.dumps(record) + "\n")
     return record
 
 
@@ -303,19 +308,17 @@ def _next_seat_id(rows: list[dict]) -> str:
 
 
 def _send_seat(client, url: str, body: dict, table_id: str, **fields) -> dict:
-    """The intent before the POST, the outcome after."""
-    import httpx
-
-    seat_id = _next_seat_id(load())
-    _append({"id": seat_id, "type": "intent", "kind": "seat", "url": url, "body": body, "table_id": table_id, **fields})
+    """The intent before the POST, the outcome after: always an outcome, or a refusal that never left would read as
+    a seat asked for and block that bot at that table for good."""
+    seat_id = _append({"type": "intent", "kind": "seat", "url": url, "body": body, "table_id": table_id, **fields},
+                      seat_id=True)["id"]
     token = CURRENT_TIER.set(SafetyTier.MUTATE)
     try:
         response = client.post(url, json=body)
-    except httpx.HTTPError as exc:
-        never_left = isinstance(exc, (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout))
-        _append({"id": seat_id, "type": "outcome", "kind": "seat", "table_id": table_id,
-                 "outcome": "not_sent" if never_left else "unknown", "error": f"{type(exc).__name__}: {exc}"[:300]})
-        raise
+    except Exception as exc:  # noqa: BLE001
+        return _append({"id": seat_id, "type": "outcome", "kind": "seat", "table_id": table_id,
+                        "outcome": "not_sent" if never_left(exc) else "unknown", "http_status": None,
+                        "error": f"{type(exc).__name__}: {exc}"[:300]})
     finally:
         CURRENT_TIER.reset(token)
     try:
@@ -357,7 +360,7 @@ def seat(table_id: str, instance_id: str, confirm: bool, client=None) -> int:
             return 1
         try:
             theirs = clone.instance(client, instance_id)
-        except SystemExit as exc:
+        except (SystemExit, httpx.HTTPError) as exc:
             print(f"refused: {exc}")
             return 1
         if not clone.startable(theirs):
@@ -394,20 +397,28 @@ def ask_next(client, rows: list[dict], tables_open: list[dict], my_seats: list[d
     bots = casino.for_the_casino((body or {}).get("bots") or [])
     if body is None:
         return 0
-    if not any(r.get("type") == "clone_refused" for r in rows):
-        offered = _read(client, "/api/v1/cloned-bots/available")
-        wanted = casino.next_species(clone.available_bots(offered) if offered is not None else [], (body.get("bots") or []))
-        if wanted:
-            name = f"casino {wanted.get('name')}"
-            try:
-                made = clone.clone(wanted["source_type"], wanted["id"], name, True)
-            except SystemExit as exc:
-                _append({"type": "clone_refused", "name": name, "why": str(exc)[:300]})
-                made = None
-            if made:
-                body = _read(client, f"{BASE}/my-bots") or body
-                bots = casino.for_the_casino(body.get("bots") or [])
-                print(f"  cloned {name}")
+    # A species they refused (at their cap, or already cloned) is not asked again, and the next one is tried.
+    refused = {r.get("source_id") for r in rows if r.get("type") == "clone_refused"}
+    offered = _read(client, "/api/v1/cloned-bots/available")
+    on_offer = [b for b in (clone.available_bots(offered) if offered is not None else []) if b.get("id") not in refused]
+    wanted = casino.next_species(on_offer, body.get("bots") or [])
+    if wanted:
+        name = f"casino {wanted.get('name')}"
+        try:
+            made = clone.clone(wanted["source_type"], wanted["id"], name, True)
+        except SystemExit as exc:
+            made = {"outcome": "rejected", "response": str(exc)}
+        except httpx.HTTPError as exc:
+            print(f"  {name}: {type(exc).__name__}: not known whether it was cloned; the next tick reads their list")
+            made = None
+        if made and made.get("outcome") == "accepted":
+            body = _read(client, f"{BASE}/my-bots") or body
+            bots = casino.for_the_casino(body.get("bots") or [])
+            print(f"  cloned {name}")
+        elif made:
+            _append({"type": "clone_refused", "name": name, "source_id": wanted["id"],
+                     "why": str(made.get("response"))[:300]})
+            print(f"  {name} refused (HTTP {made.get('http_status')})")
     seated = casino.seated_instances(my_seats)
     spent = {r.get("instance_id") for r in rows if r.get("type") == "spent"
              and str(r.get("at", ""))[:10] == _now().date().isoformat()}

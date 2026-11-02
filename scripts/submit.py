@@ -2,11 +2,12 @@
 
     python scripts/submit.py <key>              run its check, file it, record it
     python scripts/submit.py <key> --dry-run    show what would go; nothing is sent
-    python scripts/submit.py <key> --force      file even though the check passes or could not measure
+    python scripts/submit.py <key> --force      file even though the check passes, could not measure, or a report exists
 
 The bug is written in outbox/reports.yaml under `key`; `check:` names the pytest check behind it, if there is one.
 A check that passes stops the filing (the bug is gone), and so does one that could not measure: an inconclusive
-is never a defect. A bug already filed is not filed twice: a recurrence is reopened by a fail verdict from sweep.py.
+is never a defect. A bug already filed is not filed twice, by its key, its findings, its check, or a title on their
+tracker: a recurrence is reopened by a fail verdict from sweep.py. A report marked `withdrawn` stays withdrawn.
 
 Filing is anonymous by design; reading our own pending reports needs the key. Both reads check the status first:
 an unreadable tracker is byte for byte an empty one unless somebody looks at the status line.
@@ -28,11 +29,11 @@ import httpx  # noqa: E402
 import yaml  # noqa: E402
 
 from qa import checks  # noqa: E402
-from qa.client import build_client, install_client_guard  # noqa: E402
+from qa.client import build_client, install_client_guard, never_left  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
-from qa.paths import append_event, load_filed, save_filed  # noqa: E402
-from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier, SafetyViolation  # noqa: E402
+from qa.paths import append_event, load_filed, read_events, updating_filed  # noqa: E402
+from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 
 SPEC = REPO_ROOT / "outbox" / "reports.yaml"
 ENDPOINT = "/api/v1/bounty/reports"
@@ -49,7 +50,8 @@ def _now() -> str:
 
 def wrap(text: str, width: int = 78) -> str:
     """Collapse YAML folding, then rewrap. Their form is a plain textarea."""
-    return "\n".join(textwrap.fill(" ".join(para.split()), width) for para in text.strip().split("\n\n"))
+    return "\n".join(textwrap.fill(" ".join(para.split()), width, break_long_words=False, break_on_hyphens=False)
+                     for para in text.strip().split("\n\n"))
 
 
 def nodeids_of(report: dict, rows: list[dict]) -> list[str]:
@@ -62,9 +64,15 @@ def nodeids_of(report: dict, rows: list[dict]) -> list[str]:
 
 
 def already_filed(report: dict, rows: list[dict]) -> list:
-    """Report ids this bug already holds. [operator 2026-10-07] "mas otevrit stary bug kdyz je stejne"."""
+    """Report ids this bug already holds, by its key, its findings or its check: fresh wording on a check already
+    filed is the same bug. [operator 2026-10-07] "mas otevrit stary bug kdyz je stejne"."""
     wanted = {report.get("key"), *(report.get("findings") or [])}
-    return [i for row in rows if row.get("key") in wanted for i in row.get("report_ids") or []]
+    named = set(nodeids_of({"check": report.get("check")}, []))
+
+    def same(row: dict) -> bool:
+        return row.get("key") in wanted or (not row.get("withdrawn") and bool(named & set(row.get("nodeids") or [])))
+
+    return [i for row in rows if same(row) for i in row.get("report_ids") or []]
 
 
 def refusal(readings: dict, force: bool) -> str | None:
@@ -80,11 +88,13 @@ def refusal(readings: dict, force: bool) -> str | None:
 
 
 def compose(report: dict, footer: str, readings: dict) -> dict:
-    """Build one submission: what we wrote, and what the check read just now."""
+    """Build one submission: what we wrote, and what a failing check read just now. Only a failure is a reading:
+    a crash, a timeout or a gone check is ours, and is not called measured."""
     parts = [wrap(report["body"])]
-    if readings:
+    failing = {n: r for n, r in readings.items() if r.get("result") == "fail"}
+    if failing:
         parts.append("\nMEASURED VALUES (from the live service):")
-        for nodeid, reading in readings.items():
+        for nodeid, reading in failing.items():
             parts.append(f"\n  [{nodeid}] {reading.get('reason') or ''}")
             for key in ("left", "right"):
                 if reading.get(key) is not None:
@@ -125,7 +135,13 @@ def _rows(response, what: str) -> list:
     if response.status_code != 200:
         raise SystemExit(f"{what} answered HTTP {response.status_code}, so what is already filed cannot be "
                          f"known. Refusing to file blind: a read that failed is not a tracker that is empty.")
-    body = response.json()
+    try:
+        body = response.json()
+    except ValueError:
+        body = None
+    if not isinstance(body, dict) or not {"reports", "data"} & set(body):
+        raise SystemExit(f"{what} answered 200 with no list of reports, so what is already filed cannot be known. "
+                         f"Refusing to file blind.")
     return body.get("reports") or body.get("data") or []
 
 
@@ -143,12 +159,13 @@ def on_their_tracker(client) -> dict[str, object]:
     return {(r.get("title") or "").strip().lower(): r.get("id") for r in rows}
 
 
-def _record(report: dict, report_id, nodeids: list[str], status: str = "pending") -> None:
-    filed = load_filed()
-    filed["rows"].append({"key": report["key"], "nodeids": list(nodeids), "report_ids": [report_id],
-                          "title": report["title"].strip(), "filed_at": _now(), "verdicts_sent": [],
-                          "their_status": {str(report_id): status}, "withdrawn": False})
-    save_filed(filed)
+def _record(report: dict, report_id, nodeids: list[str]) -> None:
+    with updating_filed() as filed:
+        if any(report_id in (r.get("report_ids") or []) for r in filed["rows"]):
+            return
+        filed["rows"].append({"key": report["key"], "nodeids": list(nodeids), "report_ids": [report_id],
+                              "title": report["title"].strip(), "filed_at": _now(), "verdicts_sent": [],
+                              "their_status": {str(report_id): "pending"}, "withdrawn": False})
 
 
 def _report_id(body):
@@ -172,9 +189,16 @@ def file_report(client, report: dict, footer: str, nodeids: list[str], readings:
     payload = compose(report, footer, readings)
     validate(payload, key)
 
-    existing = on_their_tracker(reader or client).get(payload["title"].lower())
+    # An earlier try may have landed under the title it had then: their 409 only catches a retry that keeps it.
+    earlier = [str(e.get("title") or "").strip().lower() for e in read_events()
+               if e.get("type") == "filing_intent" and e.get("key") == key]
+    tracker = on_their_tracker(reader or client)
+    existing = next((tracker[t] for t in (payload["title"].lower(), *earlier) if t in tracker), None)
     if existing is not None:
         _record(report, existing, nodeids)   # a lost answer: their tracker holds it, so we hold it now too
+        if earlier:
+            append_event({"type": "filing_outcome", "at": _now(), "by": "agent", "source": SOURCE, "key": key,
+                          "outcome": "accepted", "report_id": existing, "reconciled_from": "my-reports"})
         return {"key": key, "outcome": "already filed", "report_id": existing}
 
     append_event({"type": "filing_intent", "at": _now(), "by": "agent", "source": SOURCE, "key": key,
@@ -184,8 +208,7 @@ def file_report(client, report: dict, footer: str, nodeids: list[str], readings:
         response = client.post(ENDPOINT, json=payload)
     except Exception as exc:  # noqa: BLE001
         # A timeout means we stopped listening, not that they refused. Only what cannot have left is not_sent.
-        never_left = isinstance(exc, (SafetyViolation, httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout))
-        outcome = "not_sent" if never_left else "unknown"
+        outcome = "not_sent" if never_left(exc) else "unknown"
         append_event({"type": "filing_outcome", "at": _now(), "by": "agent", "source": SOURCE, "key": key,
                       "outcome": outcome, "reason": f"{type(exc).__name__}: {exc}"})
         return {"key": key, "outcome": outcome, "report_id": None, "error": str(exc)}
@@ -222,7 +245,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="submit.py", description=__doc__)
     parser.add_argument("key", help="the report's key in outbox/reports.yaml")
     parser.add_argument("--dry-run", action="store_true", help="show what would go; nothing is sent")
-    parser.add_argument("--force", action="store_true", help="file even if the check passes or could not measure")
+    parser.add_argument("--force", action="store_true",
+                        help="file even if the check passes, could not measure, or a report already exists")
     args = parser.parse_args(argv)
 
     load_dotenv()
@@ -237,13 +261,21 @@ def main(argv: list[str] | None = None) -> int:
         print(compose(report, spec["footer"], {})["description"])
         print(f"\n{'already filed as ' + ', '.join(f'#{i}' for i in held) if held else 'not filed yet'}. Nothing sent.")
         return 0
-    if held:
+    if report.get("withdrawn") and not args.force:
+        print(f"not filed: this report is withdrawn ({report['withdrawn']}). --force overrides.")
+        return 0
+    if held and not args.force:
         print(f"already filed as {', '.join(f'#{i}' for i in held)}. A recurrence is reopened by a fail verdict "
-              f"(scripts/sweep.py --send), not by a new report.")
+              f"(scripts/sweep.py --send), not by a new report; --force files anew, for a row we withdrew or they "
+              f"rejected, where no verdict can go.")
         return 0
 
     nodeids = nodeids_of(report, rows)
-    readings = checks.run(nodeids)[0] if nodeids else {}
+    try:
+        readings = checks.run(nodeids)[0] if nodeids else {}
+    except checks.CannotRun as exc:
+        print(f"not filed: {exc}")
+        return 1
     why = refusal(readings, args.force)
     if why:
         print(f"not filed: {why}. --force overrides.")
@@ -256,6 +288,8 @@ def main(argv: list[str] | None = None) -> int:
         client.close()
         reader.close()
     print(f"{result['outcome']}: {args.key}" + (f" as #{result['report_id']}" if result.get("report_id") else ""))
+    if result["outcome"] == "unknown":
+        print("  it may have landed. Do not re-send blind: the next sweep settles it from their tracker.")
     return 0 if result["outcome"] in ("accepted", "already filed") else 1
 
 

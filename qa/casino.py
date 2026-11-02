@@ -568,9 +568,9 @@ def seat_refusal(table_id: str, table, rules, instance_id: str | None = None) ->
 
     Read off THEIR table (`GET /api/v1/agent-tournaments/tables/{id}`) and rules
     (`/rules`), never off the lobby -- `/lobby?mode=paper` is filtered by the very
-    thing being asked. Their table carries no field for the buy-in's currency: what says
-    the buy-in is paper is the table's own `mode: "paper"` together with the rules'
-    `paper_note` ("the buy-in comes from your paper USDC"). So both are required, the
+    thing being asked. What says the buy-in is paper is the table's `mode: "paper"` and
+    `currency: "USDC"` (a paper table can read ET10, and ET10 is real) together with the
+    rules' `paper_note` ("the buy-in comes from your paper USDC"). So all are required, the
     paper mode must be open, the table open with a free seat and none of ours, and its
     `buyin_usdc` the one its tier publishes."""
     if not isinstance(table, dict) or not isinstance(rules, dict):
@@ -580,6 +580,8 @@ def seat_refusal(table_id: str, table, rules, instance_id: str | None = None) ->
     if table.get("mode") != "paper":
         return (f"table {table_id} reads mode={table.get('mode')!r}; a seat is asked only "
                 f"where their table says paper")
+    if table.get("currency") != "USDC":
+        return f"table {table_id} is {table.get('currency')!r}; a seat is asked only at a paper USDC table"
     modes = rules.get("modes") if isinstance(rules.get("modes"), dict) else {}
     if modes.get("paper") != "open":
         return f"their rules say paper tables are {modes.get('paper')!r}, not open"

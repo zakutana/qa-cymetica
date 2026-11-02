@@ -92,7 +92,7 @@ def _append(record: dict) -> dict:
                     if isinstance(r.get("id"), str) and r["id"].startswith("LGE-")]
             record["id"] = f"LGE-{max(used, default=0) + 1:04d}"
         with open(target, "a", encoding="utf-8") as handle:
-            handle.write(json.dumps(record, ensure_ascii=False) + "\n")
+            handle.write(json.dumps(record) + "\n")
     return record
 
 

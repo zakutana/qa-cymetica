@@ -1,12 +1,15 @@
 """Where every bug we filed stands, and with --send tell them what our checks found.
 
-    python scripts/sweep.py            read their tracker and inbox, run the checks of open rows, print the table
-    python scripts/sweep.py --all      the same over every row, the ones we already passed included
-    python scripts/sweep.py --send     also post the verdicts
+    python scripts/sweep.py                 read their tracker and inbox, run the checks of open reports, print the table
+    python scripts/sweep.py --all           every report, and also every vendor check no filed bug holds
+    python scripts/sweep.py --send          also post the verdicts
+    python scripts/sweep.py --only 7        just these reports, closed or not; repeatable
 
-Open means: not withdrawn, not rejected by them, and we have not told them it passes. `pass` goes when every check
-of a report passes and our last word was not a pass. `fail` goes when a check fails and they claim a fix (their
-status says fixed or paid) or we told them it passed, unless our last fail is newer than their last claim.
+Open means: not withdrawn, not rejected by them, and we have not told them it passes (or it failed since). A verdict
+is per report and rests on every check of that report. `pass` goes when all of them pass and our last word was not a
+pass. `fail` goes when one fails and they claim a fix (their status says fixed or paid) or we told them it passed,
+unless our last fail is newer than their last claim. A row whose `hold` says why (the operator's word is awaited)
+sends nothing.
 
 Two old rules survive here because they stop false claims to the vendor. Rule 10: a check that could not measure
 is never a verdict. Rule 8: a read that failed is not an empty read, so nothing goes out on one. And the check is
@@ -29,10 +32,11 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from qa import checks  # noqa: E402
-from qa.client import build_client, install_client_guard  # noqa: E402
+from qa.channels import FIX_CLAIMED, REJECTED, decide, last_verdict  # noqa: E402,F401
+from qa.client import build_client, install_client_guard, never_left  # noqa: E402
 from qa.config import identities, load_dotenv  # noqa: E402
 from qa.console import printable  # noqa: E402
-from qa.paths import append_event, load_filed, save_filed  # noqa: E402
+from qa.paths import append_event, load_filed, read_events, updating_filed  # noqa: E402
 from qa.safety import CURRENT_TIER, EndpointRegistry, SafetyTier  # noqa: E402
 
 SOURCE = "scripts/sweep.py"
@@ -41,8 +45,6 @@ MAX_PER_RUN = 12
 PAUSE_SECONDS = 4
 # Their `evidence` field holds 8000 characters (422 on #130).
 EVIDENCE_LIMIT = 8000
-FIX_CLAIMED = {"fixed", "paid"}
-REJECTED = {"invalid", "duplicate", "wontfix"}
 
 
 class Unread(Exception):
@@ -63,20 +65,20 @@ def _bounty():
 # ---------------------------------------------------------------------------
 # Deciding
 # ---------------------------------------------------------------------------
-def _last_verdict(row: dict, report_id) -> str | None:
-    sent = [v for v in row.get("verdicts_sent") or [] if v.get("report_id") == report_id]
-    return sent[-1].get("verdict") if sent else None
+def _is_rejected(row: dict, report_id) -> bool:
+    return str((row.get("their_status") or {}).get(str(report_id)) or "").lower() in REJECTED
 
 
 def _closed(row: dict) -> bool:
-    """We told them it passes, and the last time we looked it still did."""
+    """We told them it passes (or they rejected the report), and the last time we looked it still did."""
     ids = row.get("report_ids") or []
-    return bool(ids) and row.get("last_check") != "fail" and all(_last_verdict(row, i) == "pass" for i in ids)
+    return (bool(ids) and row.get("last_check") != "fail"
+            and all(_is_rejected(row, i) or last_verdict(row, i) == "pass" for i in ids))
 
 
 def _rejected(row: dict) -> bool:
-    statuses = [str(s).lower() for s in (row.get("their_status") or {}).values()]
-    return bool(statuses) and all(s in REJECTED for s in statuses)
+    ids = row.get("report_ids") or []
+    return bool(ids) and all(_is_rejected(row, i) for i in ids)
 
 
 def open_rows(rows: list[dict], everything: bool = False) -> list[dict]:
@@ -84,15 +86,23 @@ def open_rows(rows: list[dict], everything: bool = False) -> list[dict]:
     return live if everything else [r for r in live if not _closed(r) and not _rejected(r)]
 
 
+def chosen(rows: list[dict], everything: bool, only: list | None) -> tuple[set, list[dict]]:
+    """Which reports this pass is about, and every live row of each: closed rows too, since a verdict is per
+    report and a pass may rest only on all of its checks."""
+    wanted = set(only) if only else {i for r in open_rows(rows, everything) for i in r.get("report_ids") or []}
+    return wanted, [r for r in rows if not r.get("withdrawn") and wanted & set(r.get("report_ids") or [])]
+
+
 def by_report(rows: list[dict], readings: dict[str, dict]) -> dict:
     """One result per report: several rows can share one, and it passes only when all of them do."""
     out: dict = {}
     for row in rows:
         for report_id in row.get("report_ids") or []:
-            entry = out.setdefault(report_id, {"nodeids": [], "rows": [], "by_hand": False})
+            entry = out.setdefault(report_id, {"nodeids": [], "rows": [], "by_hand": False, "hold": None})
             entry["rows"].append(row["key"])
             nodeids = row.get("nodeids") or []
             entry["nodeids"].extend(n for n in nodeids if n not in entry["nodeids"])
+            entry["hold"] = entry["hold"] or row.get("hold")
             if not nodeids:
                 entry["by_hand"] = True
     for entry in out.values():
@@ -101,21 +111,6 @@ def by_report(rows: list[dict], readings: dict[str, dict]) -> dict:
             found.append({"result": "inconclusive"})   # a row with no check cannot say it passes
         entry["result"] = checks.overall(found)
     return out
-
-
-def decide(result: str, status: str, newest: dict | None, fixed_at: str | None) -> str | None:
-    """Which verdict this report is owed, or None."""
-    status = str(status or "").lower()
-    last = (newest or {}).get("verdict")
-    if result == "inconclusive" or status in REJECTED:
-        return None
-    if result == "pass":
-        return None if last == "pass" else "pass"
-    if status not in FIX_CLAIMED and last != "pass":
-        return None   # filed and failing: we said that when we filed it
-    if last == "fail" and not (fixed_at and str(fixed_at) > str((newest or {}).get("at") or "")):
-        return None
-    return "fail"
 
 
 def their_last_word(client, report_id) -> dict | None:
@@ -171,9 +166,12 @@ def _shown(value) -> str:
 
 def _evidence(verdict: str, nodeids: list[str], readings: dict) -> str:
     """What we say: which check, and on a fail what it read. Their field holds EVIDENCE_LIMIT characters."""
-    head = ("VERDICT pass -- the check that recorded this defect now passes." if verdict == "pass" else
-            "VERDICT fail -- the check that recorded this defect fails. Our reading is below.")
-    checks_line = "CHECK(S):\n" + "\n".join(f"  {n}" for n in nodeids)
+    head = ("VERDICT pass -- the check we hold for this defect passes now. It may have been repaired since the defect "
+            "was recorded, so this does not say it is the identical test." if verdict == "pass" else
+            "VERDICT fail -- the check we hold for this defect fails. Our reading is below.")
+    tail = ("CHECK(S):\n" + "\n".join(f"  {n}" for n in nodeids) + "\n\nFINGERPRINT: a SHA-256 of the test file(s). "
+            "The formula changed on 2026-11-02, so a value that differs from one we sent before does not by itself "
+            "mean the check moved.")
 
     def text(cap: int) -> str:
         parts = ["Independent re-check by the QA agent for hunter expire76.", head]
@@ -187,7 +185,7 @@ def _evidence(verdict: str, nodeids: list[str], readings: dict) -> str:
                     reason = reason[:cap].rstrip() + " [...]"
                 parts.append(f"WHAT FAILED:\n  {nodeid}\n  expected: {_shown(reading.get('right'))}; "
                              f"read: {_shown(reading.get('left'))}\n  {reason}")
-        parts.append(checks_line)
+        parts.append(tail)
         return "\n\n".join(parts)
 
     for cap in (3000, 1500, 700, 300, 100, 0):
@@ -197,7 +195,7 @@ def _evidence(verdict: str, nodeids: list[str], readings: dict) -> str:
     return evidence[:EVIDENCE_LIMIT]
 
 
-def payload(verdict: str, report_id, nodeids: list[str], readings: dict, run_file: str) -> dict:
+def payload(verdict: str, nodeids: list[str], readings: dict, run_file: str) -> dict:
     return {"verdict": verdict, "test_run_id": run_file or "no-run", "fingerprint": _fingerprint(nodeids),
             "tree_sha": _head(), "checked_at": _now(), "evidence": _evidence(verdict, nodeids, readings)}
 
@@ -212,9 +210,17 @@ def _server_id(body) -> object:
     return body.get("verification_id") or body.get("id")
 
 
+def _remember(report_id, verdict: str, at: str) -> None:
+    """Into filed.json, on every row that holds the report."""
+    with updating_filed() as filed:
+        for row in filed["rows"]:
+            if report_id in (row.get("report_ids") or []) and last_verdict(row, report_id) != verdict:
+                row.setdefault("verdicts_sent", []).append({"report_id": report_id, "verdict": verdict, "at": at})
+
+
 def send_verdict(client, report_id, verdict: str, nodeids: list[str], readings: dict, run_file: str) -> str:
-    """POST one verdict. accepted / rejected / unknown; only accepted is written into filed.json."""
-    body = payload(verdict, report_id, nodeids, readings, run_file)
+    """POST one verdict. accepted / rejected / unknown / not_sent; only accepted is written into filed.json."""
+    body = payload(verdict, nodeids, readings, run_file)
     common = {"at": _now(), "by": "agent", "source": SOURCE, "report_id": report_id, "verdict": verdict,
               "run_id": run_file, "fingerprint": body["fingerprint"], "tree_sha": body["tree_sha"]}
     append_event({**common, "type": "verification_intent"})
@@ -222,9 +228,10 @@ def send_verdict(client, report_id, verdict: str, nodeids: list[str], readings: 
     try:
         response = client.post(f"/api/v1/bounty/reports/{report_id}/verification", json=body)
     except Exception as exc:  # noqa: BLE001
-        append_event({**common, "type": "verification_outcome", "at": _now(), "outcome": "unknown",
+        outcome = "not_sent" if never_left(exc) else "unknown"
+        append_event({**common, "type": "verification_outcome", "at": _now(), "outcome": outcome,
                       "reason": f"{type(exc).__name__}: {exc}"})
-        return "unknown"
+        return outcome
     finally:
         CURRENT_TIER.reset(token)
 
@@ -237,11 +244,7 @@ def send_verdict(client, report_id, verdict: str, nodeids: list[str], readings: 
                else "rejected" if 400 <= status < 500 else "unknown")
     append_event({**common, "type": "verification_outcome", "at": _now(), "outcome": outcome, "http_status": status})
     if outcome == "accepted":
-        filed = load_filed()
-        for row in filed["rows"]:
-            if report_id in (row.get("report_ids") or []):
-                row.setdefault("verdicts_sent", []).append({"report_id": report_id, "verdict": verdict, "at": _now()})
-        save_filed(filed)
+        _remember(report_id, verdict, _now())
     return outcome
 
 
@@ -249,7 +252,7 @@ def send_verdict(client, report_id, verdict: str, nodeids: list[str], readings: 
 # The pass
 # ---------------------------------------------------------------------------
 def _sync_status(rows: list[dict], reports: list[dict]) -> None:
-    """Their status into filed.json, and a row for nothing: a report we did not file through here stays out."""
+    """Their status into filed.json. A tracker report no row holds stays out: not every one was filed through here."""
     status = {r.get("id"): r.get("status") for r in reports}
     for row in rows:
         for report_id in row.get("report_ids") or []:
@@ -257,30 +260,59 @@ def _sync_status(rows: list[dict], reports: list[dict]) -> None:
                 row.setdefault("their_status", {})[str(report_id)] = status[report_id]
 
 
-def run_sweep(client, run_checks=checks.run, send: bool = False, everything: bool = False,
-              only: list | None = None) -> dict:
+def _settle_filings(rows: list[dict], reports: list[dict]) -> list[str]:
+    """A filing whose answer was lost: their tracker holding its title makes it a row. Returns the keys still
+    unknown, so nobody has to remember them."""
+    open_filings: dict = {}
+    for event in read_events():
+        if event.get("type") == "filing_intent":
+            open_filings[event.get("key")] = event
+        elif event.get("type") == "filing_outcome" and event.get("outcome") in ("accepted", "rejected", "not_sent"):
+            open_filings.pop(event.get("key"), None)
+    titles = {str(r.get("title") or "").strip().lower(): r for r in reports}
+    unsettled = []
+    for key, intent in open_filings.items():
+        report = titles.get(str(intent.get("title") or "").strip().lower())
+        if report is None:
+            unsettled.append(key)
+            continue
+        report_id = report.get("id")
+        if not any(report_id in (r.get("report_ids") or []) for r in rows):
+            rows.append({"key": key, "nodeids": list(intent.get("nodeids") or []), "report_ids": [report_id],
+                         "title": intent.get("title"), "filed_at": intent.get("at"), "verdicts_sent": [],
+                         "their_status": {str(report_id): report.get("status")}, "withdrawn": False})
+        append_event({"type": "filing_outcome", "at": _now(), "by": "agent", "source": SOURCE, "key": key,
+                      "outcome": "accepted", "report_id": report_id, "reconciled_from": "my-reports"})
+    return unsettled
+
+
+def run_sweep(client, run_checks=checks.run, vendor_checks=checks.vendor_checks, send: bool = False,
+              everything: bool = False, only: list | None = None) -> dict:
     bounty = _bounty()
     ours = bounty.refresh_our_reports(client=client)
     inbox = bounty.fetch_inbox(client=client)
     tracker = ours.get("klass")
     reports = {r.get("id"): r for r in ours.get("reports") or []}
 
-    filed = load_filed()
+    unsettled: list[str] = []
     if tracker == "ok":
-        _sync_status(filed["rows"], list(reports.values()))
-        save_filed(filed)
+        with updating_filed() as filed:
+            unsettled = _settle_filings(filed["rows"], list(reports.values()))
+            _sync_status(filed["rows"], list(reports.values()))
+    wanted, rows = chosen(load_filed()["rows"], everything, only)
 
-    rows = open_rows(filed["rows"], everything=everything)
-    if only:
-        rows = [r for r in rows if set(r.get("report_ids") or []) & set(only)]
     nodeids = sorted({n for r in rows for n in r.get("nodeids") or []})
-    readings, run_file = run_checks(nodeids) if nodeids else ({}, "")
-    grouped = by_report(rows, readings)
-    for row in rows:
-        found = [readings[n] for n in row.get("nodeids") or [] if n in readings]
-        if found:
-            row["last_check"] = checks.overall(found)
-    save_filed(filed)
+    extra = [n for n in vendor_checks() if n not in set(nodeids)] if everything and not only else []
+    readings, run_file = run_checks(nodeids + extra) if nodeids or extra else ({}, "")
+    grouped = {report_id: entry for report_id, entry in by_report(rows, readings).items() if report_id in wanted}
+
+    # The last conclusive word: one 503 must not make us forget a failure.
+    with updating_filed() as filed:
+        for row in filed["rows"]:
+            found = [readings[n] for n in row.get("nodeids") or [] if n in readings]
+            word = checks.overall(found)
+            if found and word != "inconclusive":
+                row["last_check"] = word
 
     table, due, unread = [], [], []
     for report_id, entry in sorted(grouped.items(), key=lambda kv: str(kv[0])):
@@ -288,8 +320,8 @@ def run_sweep(client, run_checks=checks.run, send: bool = False, everything: boo
             (r["their_status"].get(str(report_id)) for r in rows if report_id in (r.get("report_ids") or [])), None)
         fixed_at = (reports.get(report_id) or {}).get("fixed_at")
         line = {"report": report_id, "status": status, "result": entry["result"], "keys": entry["rows"],
-                "by_hand": entry["by_hand"], "would_send": None}
-        # What they hold is read only for what could go out, so a look at the table costs them nothing extra.
+                "by_hand": entry["by_hand"], "would_send": None, "held": entry["hold"]}
+        # What they hold is read only for what could go out, and it is the authority on what we told them.
         if entry["result"] != "inconclusive" and str(status or "").lower() not in REJECTED and tracker == "ok":
             try:
                 newest = their_last_word(client, report_id)
@@ -297,13 +329,18 @@ def run_sweep(client, run_checks=checks.run, send: bool = False, everything: boo
                 unread.append(report_id)
                 line["unread"] = str(exc)
             else:
-                line["would_send"] = decide(entry["result"], status, newest, fixed_at)
-                if line["would_send"]:
-                    due.append((report_id, line["would_send"], entry["nodeids"]))
+                if newest:
+                    _remember(report_id, newest["verdict"], newest["at"])
+                verdict = decide(entry["result"], status, newest, fixed_at)
+                if verdict and not entry["hold"]:
+                    line["would_send"] = verdict
+                    due.append((report_id, verdict, entry["nodeids"]))
         table.append(line)
 
     report = {"tracker": tracker, "inbox": inbox, "table": table, "unread": unread,
-              "by_hand": [r["report"] for r in table if r["by_hand"]], "sent": [], "held": [], "run": run_file}
+              "by_hand": [r["report"] for r in table if r["by_hand"]], "sent": [], "held": [], "run": run_file,
+              "unfiled": [n for n in extra if (readings.get(n) or {}).get("result") == "fail"],
+              "unsettled": unsettled}
     if not send or not due or tracker != "ok":
         return report
 
@@ -312,7 +349,7 @@ def run_sweep(client, run_checks=checks.run, send: bool = False, everything: boo
     again, again_file = run_checks(sorted({n for _, _, ns in batch for n in ns}))
     for index, (report_id, verdict, node_list) in enumerate(batch):
         now_word = checks.overall([again.get(n) or {"result": "inconclusive"} for n in node_list])
-        if {"pass": "pass", "fail": "fail"}.get(now_word) != verdict:
+        if now_word != verdict:
             report["held"].append({"report": report_id, "verdict": verdict, "now": now_word})
             continue
         outcome = send_verdict(client, report_id, verdict, node_list, again, again_file)
@@ -326,7 +363,8 @@ def run_sweep(client, run_checks=checks.run, send: bool = False, everything: boo
 def _print(report: dict) -> None:
     inbox = report["inbox"]
     print(f"tracker: {report['tracker']}   a2a inbox: {inbox.get('klass')}, "
-          f"{len([m for m in inbox.get('new') or [] if not m.get('auto')])} new from them")
+          f"{len([m for m in inbox.get('new') or [] if not m.get('auto')])} new from them"
+          + ("  (the page is full: older messages may not have been read)" if inbox.get("full") else ""))
     for message in inbox.get("new") or []:
         if not message.get("auto"):
             first = (message.get("text") or "").strip().splitlines()
@@ -338,26 +376,33 @@ def _print(report: dict) -> None:
             action = f"could not read what they hold ({line['unread']})"
         if line["by_hand"]:
             action = "no check: look by hand"
+        if line.get("held"):
+            action = f"held: {line['held']}"
         print(f"{'#' + str(line['report']):>7}  {str(line['status']):<12} {line['result']:<13} {action}")
     words = [line["result"] for line in report["table"]]
     print(f"\n{len(words)} reports: {words.count('fail')} fail, {words.count('pass')} pass, "
           f"{words.count('inconclusive')} inconclusive. Run: {report['run'] or 'none'}")
     if report["tracker"] != "ok":
         print("The tracker could not be read, which is not an empty tracker: nothing is sent on it.")
+    for nodeid in report.get("unfiled") or []:
+        print(f"  fails, and no filed bug holds it: {nodeid}")
+    for key in report.get("unsettled") or []:
+        print(f"  filing {key}: outcome unknown and not on their tracker; run scripts/submit.py {key} once it is clear")
     for item in report["sent"]:
-        print(f"  sent {item['verdict']} on #{item['report']}: {item['outcome']}")
+        print(f"  {item['verdict']} on #{item['report']}: {item['outcome']}")
     for item in report["held"]:
         print(f"  held {item['verdict']} on #{item['report']}: the re-check now says {item['now']}")
     if report.get("not_sent_this_run"):
         print(f"  {report['not_sent_this_run']} more owed: run --send again")
 
 
-def _client():
+def _client(write: bool = False):
     install_client_guard()
     load_dotenv()
     registry = EndpointRegistry.load()
-    registry.mutate_enabled = True
-    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    if write:
+        registry.mutate_enabled = True
+        registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
     return build_client(identities()["trusted"], registry, timeout=60.0)
 
 
@@ -365,12 +410,16 @@ def main(argv: list[str] | None = None) -> int:
     printable()
     parser = argparse.ArgumentParser(prog="sweep.py", description=__doc__)
     parser.add_argument("--send", action="store_true", help="post the verdicts that are owed")
-    parser.add_argument("--all", action="store_true", dest="everything", help="every row, not only the open ones")
+    parser.add_argument("--all", action="store_true", dest="everything",
+                        help="every report, and every vendor check no filed bug holds")
     parser.add_argument("--only", type=int, action="append", metavar="REPORT", help="one report id; repeatable")
     args = parser.parse_args(argv)
-    client = _client()
+    client = _client(write=args.send)
     try:
         report = run_sweep(client, send=args.send, everything=args.everything, only=args.only)
+    except checks.CannotRun as exc:
+        print(f"Nothing was measured and nothing sent. {exc}")
+        return 1
     finally:
         client.close()
     _print(report)

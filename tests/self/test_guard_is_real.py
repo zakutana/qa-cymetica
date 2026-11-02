@@ -1,8 +1,7 @@
 """Proof that the safety guard blocks.
 
-These run first and abort the session on failure. If the guard cannot be shown
-to stop a SAFE POST, a probe carrying executable parameters, and an ungated
-MUTATE, then zero live requests are issued for the rest of the run.
+qa/client.py::assert_client_guard_blocks proves the four layers at the start of
+every pytest; these prove them one by one, and what the floors under them refuse.
 
 Every test here asserts a REFUSAL, and nothing in this file reaches the
 network -- not because the violation is raised before the transport delegates,
@@ -961,3 +960,167 @@ def test_an_mcp_money_call_is_held_to_the_host_allowlist_too():
     finally:
         CURRENT_TIER.reset(token)
         client.http.close()
+
+
+# ---------------------------------------------------------------------------
+# What the self-check can feel, and the doors that stay shut
+# ---------------------------------------------------------------------------
+def _without_a_layer(monkeypatch, tier_in, tier_out):
+    """The transport with one tier check gone: a request at `tier_in` runs as `tier_out`."""
+    from qa.safety import SafetyTransport
+
+    real = SafetyTransport.handle_request
+
+    def handle(self, request):
+        if CURRENT_TIER.get() is tier_in:
+            token = CURRENT_TIER.set(tier_out)
+            try:
+                return real(self, request)
+            finally:
+                CURRENT_TIER.reset(token)
+        return real(self, request)
+
+    monkeypatch.setattr(SafetyTransport, "handle_request", handle)
+
+
+def test_the_self_check_is_green_on_the_real_guard():
+    from qa.client import assert_client_guard_blocks
+
+    assert_client_guard_blocks()
+
+
+@pytest.mark.parametrize("tier_in", [None, SafetyTier.SAFE], ids=["no-tier", "safe"])
+def test_the_self_check_feels_a_tier_layer_coming_off(monkeypatch, tier_in):
+    """Both used to POST on a registry with mutate off, so the MUTATE branch refused them instead."""
+    from qa.client import GuardBreached, assert_client_guard_blocks
+
+    _without_a_layer(monkeypatch, tier_in, SafetyTier.MUTATE)
+    with pytest.raises(GuardBreached):
+        assert_client_guard_blocks()
+
+
+@pytest.mark.parametrize("path", ["/api/v1/cloned-bots/x/fund", "/api/v1/cloned-bots/x/settings",
+                                  "/api/v1/chat/stream", "/api/v1/head-to-head", "/api/v1/backtest/run",
+                                  "/api/v1/a2a/message", "/api/v1/bounty/reports/with-screenshots"])
+def test_a_write_nothing_calls_has_no_door(path):
+    registry = EndpointRegistry.load()
+    assert registry.match(path, "POST") is None, f"{path} stays declared with no caller and no floor"
+    assert registry.match("/api/v1/cloned-bots/x", "DELETE") is None
+
+
+def test_update_bot_indicators_is_not_open_at_mutate():
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = _deaf_mcp_client(registry)
+    token = CURRENT_TIER.set(SafetyTier.MUTATE)
+    try:
+        with pytest.raises(SafetyViolation):
+            client.call("update_bot_indicators", {"instance_id": "x", "indicator_name": "rsi", "params": {"period": 3}})
+    finally:
+        CURRENT_TIER.reset(token)
+        client.http.close()
+
+
+def test_toggle_trading_is_probe_only():
+    assert EndpointRegistry.load().match("/api/v1/cloned-bots/x/toggle-trading", "POST").probe_only
+
+
+@pytest.mark.parametrize("path", ["/api/v1/build-it-better/requests/ET-1/accept",
+                                  "/api/v1/agent-tournaments/tables/1/fill-house"])
+def test_a_probe_with_an_empty_body_does_not_run_a_closed_write(path):
+    """Their bare request is the whole action, so an inert body proves nothing there."""
+    client = _deaf_client()
+    token = CURRENT_TIER.set(SafetyTier.PROBE)
+    try:
+        with pytest.raises(SafetyViolation, match="not probed"):
+            client.post(f"https://cymetica.com{path}")
+    finally:
+        CURRENT_TIER.reset(token)
+        client.close()
+
+
+def test_a_key_never_leaves_their_host():
+    from qa.config import Identity
+
+    keyed = Identity(name="trusted", header="X-API-Key", value="OUR-KEY")
+    client = build_client(keyed, EndpointRegistry.load(), inner=_Unsendable())
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        with pytest.raises(SafetyViolation, match="other.example"):
+            client.get("https://cdn.other.example/static/company/app.js")
+        with pytest.raises(AssertionError, match="LET IT THROUGH"):
+            client.get("https://cymetica.com/api/v1/x")
+    finally:
+        CURRENT_TIER.reset(token)
+        client.close()
+
+
+def test_the_source_client_cannot_write_at_any_tier():
+    from qa.client import build_source_client
+
+    client = build_source_client(inner=_Unsendable())
+    try:
+        for tier in (SafetyTier.SAFE, SafetyTier.PROBE, SafetyTier.MUTATE):
+            token = CURRENT_TIER.set(tier)
+            try:
+                for path in ("/api/v1/support/ai-agent", "/api/v1/funding/withdraw", "/mcp/v1"):
+                    with pytest.raises(SafetyViolation):
+                        client.post(f"https://api.coingecko.com{path}", json={})
+            finally:
+                CURRENT_TIER.reset(token)
+    finally:
+        client.close()
+
+
+def test_a_write_answered_429_holds_the_route_and_is_not_sent_twice():
+    import httpx
+
+    from qa.safety import SafetyTransport
+
+    class Pacer:
+        held = None
+
+        def wait(self, request):
+            pass
+
+        def learn(self, request, response):
+            pass
+
+        def hold(self, request, seconds):
+            self.held = seconds
+
+    class TooMany(httpx.BaseTransport):
+        sent = 0
+
+        def handle_request(self, request):
+            self.sent += 1
+            return httpx.Response(429, headers={"Retry-After": "60"}, request=request)
+
+    registry = EndpointRegistry.load()
+    pacer, inner = Pacer(), TooMany()
+    transport = SafetyTransport(inner, registry, pacer=pacer)
+    token = CURRENT_TIER.set(SafetyTier.PROBE)
+    try:
+        answer = transport.handle_request(httpx.Request("POST", "https://cymetica.com/api/v1/bounty/a2a/send",
+                                                        json={"from_agent_id": "a"}))
+    finally:
+        CURRENT_TIER.reset(token)
+    assert answer.status_code == 429 and inner.sent == 1
+    assert pacer.held == 60.0
+
+
+def test_close_reaches_the_transport_underneath():
+    import httpx
+
+    from qa.safety import SafetyTransport
+
+    class Inner(httpx.BaseTransport):
+        closed = False
+
+        def close(self):
+            self.closed = True
+
+    inner = Inner()
+    SafetyTransport(inner, EndpointRegistry.load()).close()
+    assert inner.closed

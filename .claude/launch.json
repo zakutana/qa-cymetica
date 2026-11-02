@@ -58,7 +58,7 @@
     {
       "name": "pitch-cards",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["scripts/serve_mock.py", "outbox/pitch-cards", "8802", "--quiet"],
+      "runtimeArgs": ["outbox/pitch-cards/serve.py", "--quiet"],
       "port": 8802
     }
   ]

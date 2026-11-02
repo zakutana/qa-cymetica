@@ -13,7 +13,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent / "start"
 # The order they are printed in, and the source of each. The one that reads the network goes last and each line
 # is flushed as it comes, so a stalled read past the hook's timeout costs only its own line.
-SOURCES = (("next_step", "summary"), ("open_threads", "lines"), ("memory_index", "lines"), ("verdict_owed", "lines"))
+SOURCES = (("next_step", "summary"), ("open_threads", "lines"), ("memory_index", "lines"), ("casino_quiet", "lines"),
+           ("verdict_owed", "lines"))
 
 
 def _part(name: str):

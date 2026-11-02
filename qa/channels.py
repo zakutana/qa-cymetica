@@ -15,7 +15,30 @@ from qa.paths import load_filed, read_events
 A2A = "a2a"
 TELEGRAM = "telegram"
 BUG = "bug"
+# In their report_status enum: a claim of a fix (paid is engaging with the report as fixed), and "they said no".
+FIX_CLAIMED = {"fixed", "paid"}
 REJECTED = {"invalid", "duplicate", "wontfix"}
+
+
+def last_verdict(row: dict, report_id) -> str | None:
+    """Our last word on this report, as filed.json holds it."""
+    sent = [v for v in row.get("verdicts_sent") or [] if v.get("report_id") == report_id]
+    return sent[-1].get("verdict") if sent else None
+
+
+def decide(result: str, status: str, newest: dict | None, fixed_at: str | None) -> str | None:
+    """Which verdict this report is owed, or None."""
+    status = str(status or "").lower()
+    last = (newest or {}).get("verdict")
+    if result == "inconclusive" or status in REJECTED:
+        return None
+    if result == "pass":
+        return None if last == "pass" else "pass"
+    if status not in FIX_CLAIMED and last != "pass":
+        return None   # filed and failing: we said that when we filed it
+    if last == "fail" and not (fixed_at and str(fixed_at) > str((newest or {}).get("at") or "")):
+        return None
+    return "fail"
 
 
 def _preview(text, width: int = 90) -> str:
@@ -84,20 +107,26 @@ def _telegram(events: list[dict]) -> dict:
 
 def _a2a(events: list[dict]) -> dict:
     rows = pairs(events)
-    return {"unanswered": [r["question_id"] for r in rows if not r["answered"]], "threads": len(rows)}
+    outcome = {e.get("msg_id"): e.get("outcome") for e in events if e.get("type") == "a2a_outcome"}
+    sent = [e.get("msg_id") for e in events if e.get("type") == "a2a_intent"]
+    return {"unanswered": [r["question_id"] for r in rows if not r["answered"]], "threads": len(rows),
+            "undelivered": [m for m in sent if outcome.get(m) != "accepted"]}
 
 
-def _bug() -> dict:
-    """Reports where they claim a fix and we have not said it holds."""
+def _bug(events: list[dict]) -> dict:
+    """Reports a verdict is owed on, by the status the journal last got and the check's last word. A row held for
+    the operator's word waits on him, not on us."""
+    status = {e.get("report_id"): e.get("status") for e in events if e.get("type") == "vendor_status"}
     owed, filed = [], 0
     for row in load_filed()["rows"]:
         if row.get("withdrawn"):
             continue
         for report_id in row.get("report_ids") or []:
             filed += 1
-            sent = [v for v in row.get("verdicts_sent") or [] if v.get("report_id") == report_id]
-            status = str((row.get("their_status") or {}).get(str(report_id)) or "").lower()
-            if status == "fixed" and not (sent and sent[-1].get("verdict") == "pass"):
+            now = status.get(report_id) or (row.get("their_status") or {}).get(str(report_id))
+            last = last_verdict(row, report_id)
+            if not row.get("hold") and decide(row.get("last_check") or "inconclusive", now,
+                                              {"verdict": last} if last else None, None):
                 owed.append(f"#{report_id}")
     return {"unanswered": sorted(set(owed)), "reports": filed}
 
@@ -109,7 +138,7 @@ def state(events: list[dict] | None = None) -> dict:
     last = {}
     for row in heard:
         last[row["channel"]] = row["at"]
-    out = {BUG: _bug(), TELEGRAM: _telegram(events), A2A: _a2a(events)}
+    out = {BUG: _bug(events), TELEGRAM: _telegram(events), A2A: _a2a(events)}
     waiting = {BUG: "us", TELEGRAM: "them", A2A: "them"}
     for name, channel in out.items():
         channel["last_from_them"] = last.get(name)
