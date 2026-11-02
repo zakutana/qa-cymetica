@@ -11,10 +11,12 @@ it is `et10_paid` status "capped" (tables 5 and 11, 600 each). Paid, by their ow
 645 agrees with the tables (745 less table 15's 100, which is ET10 under the field `prize_usdc`).
 
 **The rule.** `paid_et10` and `paid_usdc` equal the finished tables' prizes, leaving out what `et10_paid`
-records as capped.
+records as capped. The lobby lists only recent tables (24 of 37 on 2026-11-02) while the board is all time, so
+the tables are read by id up to the lobby's highest.
 
 NOT asserted: `pending` prizes (they may still be paid, so they count), the per-bot `won_et10` column,
-whether capped prizes should be shown somewhere else.
+whether capped prizes should be shown somewhere else, `tables_done` (it leaves out tables 6, 8 and 9, which
+paid nothing).
 
 SAFE: GETs only.
 """
@@ -31,23 +33,28 @@ CLAIM = "agent-tournaments-board-counts-what-was-paid"
 
 @qa(component="rest.agent_tournaments", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM)
 def test_agent_tournaments_board_counts_what_was_paid(rest_anon):
-    """The board's totals against every finished table in the lobby."""
+    """The board's totals against every finished table there is."""
     board = rest_anon.get(f"{PREFIX}/leaderboard", params={"window": "all"})
     if board.status_code != 200:
         raise Inconclusive(f"{PREFIX}/leaderboard answered HTTP {board.status_code}")
     lobby = rest_anon.get(f"{PREFIX}/lobby")
     if lobby.status_code != 200:
         raise Inconclusive(f"{PREFIX}/lobby answered HTTP {lobby.status_code}")
-    ids = [t.get("id") for t in (lobby.json() or {}).get("tables") or []
-           if isinstance(t, dict) and t.get("status") == "done"]
-    if not ids:
-        raise Inconclusive(f"{PREFIX}/lobby lists no finished table")
+    listed = [t.get("id") for t in (lobby.json() or {}).get("tables") or [] if isinstance(t, dict) and t.get("id")]
+    if not listed:
+        raise Inconclusive(f"{PREFIX}/lobby lists no table")
     tables = []
-    for table_id in ids:
+    for table_id in range(1, max(listed) + 1):
         r = rest_anon.get(f"{PREFIX}/tables/{table_id}")
+        if r.status_code == 404:
+            continue
         if r.status_code != 200:
             raise Inconclusive(f"{PREFIX}/tables/{table_id} answered HTTP {r.status_code}")
-        tables.append(r.json())
+        if r.json().get("status") == "done":
+            tables.append(r.json())
+    if not tables:
+        raise Inconclusive("no finished table")
+    ids = [t.get("id") for t in tables]
     body = board.json() or {}
     off = casino.leaderboard_vs_tables(body, tables)
     conclude(Measurement(

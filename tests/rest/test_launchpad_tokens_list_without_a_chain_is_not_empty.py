@@ -25,6 +25,12 @@ launches (any of them) or refuses with a 422 that names `chain_id`. A `200 []` i
 one answer that is neither; it reads as "there are no launches" to a caller that has
 no reason to suspect a missing parameter.
 
+**Their answer, as a reading (2026-11-02).** The schema's `chain_id` now says "A chain in config
+`paused_chain_ids` is unlisted: its tokens are left out of the default list and returned only when
+that chain_id is asked for explicitly". So an empty list passes when the schema says so and every
+chain that lists launches is paused. The screener names no chain then, so the chains come from that
+same description.
+
 **Measured twice, 20 seconds apart,** and counted only when both reads are empty
 (a rotating source is sampling, `a-check-on-a-rotating-population-is-sampling`).
 SAFE. GETs only, anonymous; the MCP read is context and cannot decide the verdict.
@@ -39,6 +45,9 @@ from qa.measure import Measurement, conclude
 
 TOKENS = "/api/v1/launchpad/onchain/tokens"
 SCREENER = "/api/v1/launchpad/onchain/screener"
+CONFIG = "/api/v1/launchpad/onchain/config"
+DOCUMENTED_CHAINS = [4663, 5042]   # the schema's chain_id: "4663 Robinhood Chain, 5042 Arc"
+LEFT_OUT = "left out of the default list"
 PAUSE_S = 1.2
 SECOND_LOOK_S = 20.0
 ROWS = 5
@@ -60,6 +69,17 @@ def empty_while_filtered_lists(status: int, body, per_chain: dict) -> bool | Non
     return len(body) == 0
 
 
+def explained_by_the_pause(schema_says: str, paused, per_chain: dict) -> bool:
+    """The schema says a paused chain is left out of the default list, and every chain that lists launches is paused."""
+    listing = [chain for chain, rows in per_chain.items() if rows]
+    return LEFT_OUT in schema_says and bool(listing) and all(chain in (paused or []) for chain in listing)
+
+
+def _chain_id_text(schema: dict) -> str:
+    get = ((schema.get("paths") or {}).get(TOKENS) or {}).get("get") or {}
+    return " ".join(str(p.get("description") or "") for p in get.get("parameters") or [] if p.get("name") == "chain_id")
+
+
 @qa(component="chain.launchpad", tier=SafetyTier.SAFE, surface="rest",
     claim="launchpad-tokens-without-a-chain-lists-launches")
 def test_the_token_list_without_a_chain_is_not_empty_while_a_chain_lists_launches(rest_anon, mcp_anon):
@@ -69,9 +89,7 @@ def test_the_token_list_without_a_chain_is_not_empty_while_a_chain_lists_launche
     if sc.status_code != 200 or not isinstance(sc.json(), list):
         raise Inconclusive(f"the screener (the chain list) answered HTTP {sc.status_code}")
     chains = sorted({r.get("chain_id") for r in sc.json()
-                     if isinstance(r, dict) and isinstance(r.get("chain_id"), int)})
-    if not chains:
-        raise Inconclusive("the unfiltered screener names no chain, so no chain is known to list launches")
+                     if isinstance(r, dict) and isinstance(r.get("chain_id"), int)}) or DOCUMENTED_CHAINS
 
     per_chain, unread = {}, []
     for chain in chains:
@@ -104,6 +122,15 @@ def test_the_token_list_without_a_chain_is_not_empty_while_a_chain_lists_launche
         raise Inconclusive(f"the unfiltered list could not be judged: first read HTTP {first[0]}, "
                            f"second {second[0] if second else 'not made'}")
     failed = bool(first_empty and second_empty)
+    paused, explained = None, False
+    if failed:
+        time.sleep(PAUSE_S)
+        config, schema = rest_anon.get(CONFIG), rest_anon.get("/openapi-public.json")
+        if config.status_code != 200 or schema.status_code != 200:
+            raise Inconclusive(f"{CONFIG} answered HTTP {config.status_code}, the schema HTTP {schema.status_code}")
+        paused = (config.json() or {}).get("paused_chain_ids")
+        explained = explained_by_the_pause(_chain_id_text(schema.json() or {}), paused, per_chain)
+        failed = not explained
 
     # Context, never the verdict: what the screener and the MCP twin answer with no chain named.
     time.sleep(PAUSE_S)
@@ -121,6 +148,10 @@ def test_the_token_list_without_a_chain_is_not_empty_while_a_chain_lists_launche
                 f"{len(sc.json())} rows over chains {chains} and launchpad_list_tokens with no arguments "
                 f"returns {mcp_rows} rows"
                 if failed else
+                f"GET {TOKENS} with no chain_id answers 200 with [], and the schema now says why: every chain that "
+                f"lists launches ({listed}) is in config paused_chain_ids {paused}, and such a chain is "
+                f"'{LEFT_OUT}'"
+                if explained else
                 f"the unfiltered token list answers HTTP {first[0]} with "
                 f"{len(first[1]) if isinstance(first[1], list) else 'a refusal'} rows "
                 f"({listed})"),
@@ -128,7 +159,7 @@ def test_the_token_list_without_a_chain_is_not_empty_while_a_chain_lists_launche
               "second_read_rows": len(second[1]) if second and isinstance(second[1], list) else None},
         right={"rows_where_a_chain_is_named": per_chain},
         population={"chains_in_screener": chains, "per_chain": per_chain, "unread": unread,
-                    "unfiltered_status": first[0], "screener_rows": len(sc.json()),
+                    "unfiltered_status": first[0], "screener_rows": len(sc.json()), "paused_chain_ids": paused,
                     "mcp_launchpad_list_tokens_no_args_rows": mcp_rows},
         sources={"contract": "openapi-public.json GET /api/v1/launchpad/onchain/tokens: chain_id "
                              "anyOf [integer, null], no default; /launchpad/robinhood/api: "

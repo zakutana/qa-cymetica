@@ -289,12 +289,18 @@
    ],
    "title": "basket ['CTVA'], current_index 14.17 on base 100, pw_index/pw_base 11.7/82.54; 2026-10-01T10:22 94.34 -> 2026-10-01T14:08 16.32. Corteva distributed one VYLR per share on 2026-10-01; the card neither holds it nor carried its value over",
    "filed_at": "2026-11-01T17:18:23+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 243,
+     "verdict": "pass",
+     "at": "2026-11-02T08:01:29+00:00"
+    }
+   ],
    "their_status": {
     "243": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_card_past_its_close_is_not_live",
@@ -306,7 +312,13 @@
    ],
    "title": "6 of 647 live cards closed more than 24 h ago and still read status live, the oldest closed 2026-08-15 (72.1 days): 17ffc5da closed 2026-08-15; 95a368ab closed 2026-08-16; ecffc892 closed 2026-08-22; 8395df1f closed 2026-09-02; 65bd2864 closed 2026-09-07; e1de450c closed 2026-09-15. llms.txt says a card is tradeable when status=live; these are past the close their own contract names and still sit in the list /events deals its deck from",
    "filed_at": "2026-10-26T13:42:38+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 229,
+     "verdict": "pass",
+     "at": "2026-11-02T08:00:47+00:00"
+    }
+   ],
    "their_status": {
     "229": "paid"
    },
@@ -752,6 +764,11 @@
      "report_id": 123,
      "verdict": "fail",
      "at": "2026-10-25T03:47:14+00:00"
+    },
+    {
+     "report_id": 123,
+     "verdict": "pass",
+     "at": "2026-11-02T08:00:14+00:00"
     }
    ],
    "their_status": {
@@ -941,7 +958,13 @@
    ],
    "title": "5 of 115 rows with new tokens in their next 12 months read 'N new X a month · ' with no source after the dot (kinds []), batch as_of 2026-10-18T08:48:04.967009+00:00: RNBW(rainbow) +64.35% from 115.8M new tokens, next 69.5M to Investors, Team; KNTQ(kinetiq) +45.11% from 142.1M new tokens, next 12.9M to Core Contributors, Investors; WET(humidifi) +167.39% from 385.0M new tokens, next 192.5M to Ecosystem, Foundation, Labs; LIT(lighter) +53.3% from 133.2M new tokens, next 8.2M to Investors, Team; EDGE(edgex) +4.17% from 14.6M new tokens, next 2.1M to Ecosystem & Community",
    "filed_at": "2026-10-18T08:49:23+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 215,
+     "verdict": "pass",
+     "at": "2026-11-02T08:00:29+00:00"
+    }
+   ],
    "their_status": {
     "215": "paid"
    },
@@ -1030,12 +1053,18 @@
    ],
    "title": "board says {'tables_done': 15, 'paid_usdc': 645.0, 'paid_et10': 1566.0}, its tables add up to {'tables_done': 15, 'paid_usdc': 645.0, 'paid_et10': 366.0} (1200 ET10 capped, not paid)",
    "filed_at": "2026-11-01T10:29:27+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 238,
+     "verdict": "pass",
+     "at": "2026-11-02T08:16:25+00:00"
+    }
+   ],
    "their_status": {
     "238": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-coach-runs-as-llms-txt-says",
@@ -1047,12 +1076,18 @@
    ],
    "title": "llms.txt says 'lock ET10 on your seat (`POST /api/v1/agent-tournaments/seats/{id}/nexus-lock` {\"amount_et10\"}; MCP agent_tournament_nexus_lock) and NEXUS tunes' but NEXUS tuned seats of ours with no ET10 locked: table 42 seat 154 ('casino RSI Sniper'): 3 NEXUS tunes, my_nexus_lock null, e.g. 'stop loss 8 → 7 % · rank 1 → 2'; table 41 seat 157 ('casino Trend Titan'): 2 NEXUS tunes, my_nexus_lock null, e.g. 'CLOB ETH/USDC on · no trade for 14 min (none yet)'; table 40 seat 143 ('casino Trend Titan'): 1 NEXUS tunes, my_nexus_lock null, e.g. 'PERP BTC off · 2 losses in a row on BTC: -15.25 USDC'; table 33 seat 134 ('tournament Perceptron Oracle'): 1 NEXUS tunes, my_nexus_lock null, e.g. 'take profit 15 → 10 % · no trade for 35 min (none yet)'",
    "filed_at": "2026-11-01T09:43:19+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 236,
+     "verdict": "pass",
+     "at": "2026-11-02T08:01:07+00:00"
+    }
+   ],
    "their_status": {
     "236": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-coach-tunes-as-it-says",
@@ -1081,12 +1116,18 @@
    ],
    "title": "/agent-casino/how says ['Every table runs one day', 'Flash tables run 1 day', 'TRADES 1 DAY', 'every table runs 1 day'] while the lobby offers Flash tables that do not run a day: [('fmicro1h', 1), ('fmicro5h', 5), ('fpro1h', 1), ('fpro5h', 5)] (tier, hours)",
    "filed_at": "2026-11-01T08:35:52+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 235,
+     "verdict": "pass",
+     "at": "2026-11-02T08:01:00+00:00"
+    }
+   ],
    "their_status": {
     "235": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-offers-only-bots-that-exist",
@@ -1121,12 +1162,18 @@
    ],
    "title": "10 of 12 tables say a pick closes later than it does: table 46: closes in 86046 s, the table ends in 3247 s; table 45: closes in 85940 s, the table ends in 3140 s; table 44: closes in 85155 s, the table ends in 2355 s; table 43: closes in 85937 s, the table ends in 17537 s; table 42: closed, and closes_in_s still counts 78265",
    "filed_at": "2026-11-01T10:29:34+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 239,
+     "verdict": "pass",
+     "at": "2026-11-02T08:01:16+00:00"
+    }
+   ],
    "their_status": {
     "239": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-risk-line-carries-its-level",
@@ -1138,12 +1185,18 @@
    ],
    "title": "6 of 7 running seats of ours claim a Risk level their numbers are not on: table 46: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0); table 45: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0); table 44: 'Risk reads 8: size 8 %, stop loss 4 %, take profit 32 %, as you set it.'; Risk 8 means (8.0, 8.0, 32.0); table 43: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 2.5 %, take profit 10 %.'; Risk 5 means (5.0, 5.0, 20.0); table 35: 'Risk reads 5 (the middle, where a bot starts): size 5 %, stop loss 4 %, take profit 20 %.'; Risk 5 means (5.0, 5.0, 20.0)",
    "filed_at": "2026-11-01T10:29:59+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 240,
+     "verdict": "pass",
+     "at": "2026-11-02T08:01:21+00:00"
+    }
+   ],
    "their_status": {
     "240": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-round-ended-inside-the-table-counts",
@@ -1211,7 +1264,7 @@
     "201": "paid"
    },
    "withdrawn": false,
-   "last_check": "inconclusive",
+   "last_check": "pass",
    "hold": "NEXT.md: read before a FAIL goes"
   },
   {
@@ -1308,6 +1361,11 @@
      "report_id": 52,
      "verdict": "pass",
      "at": "2026-09-07T13:33:53+00:00"
+    },
+    {
+     "report_id": 52,
+     "verdict": "fail",
+     "at": "2026-10-11T22:18:30.508396"
     }
    ],
    "their_status": {
@@ -1860,7 +1918,13 @@
    ],
    "title": "How many blockchains does the platform settle on or support?",
    "filed_at": "2026-09-04T12:04:15+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 52,
+     "verdict": "fail",
+     "at": "2026-10-11T22:18:30.508396"
+    }
+   ],
    "their_status": {
     "52": "paid"
    },
@@ -2390,7 +2454,13 @@
    ],
    "title": "dragging a card left shows the stamp 'SELL', but letting go runs animateSwipe 'skip' and opens no sheet: the card is skipped, nothing is sold. On /events a visitor who drags a card left reads 'SELL' on it and, letting go, has skipped the card instead",
    "filed_at": "2026-10-26T09:54:08+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 228,
+     "verdict": "pass",
+     "at": "2026-11-02T08:00:40+00:00"
+    }
+   ],
    "their_status": {
     "228": "paid"
    },
@@ -2763,12 +2833,18 @@
    ],
    "title": "The reason says \"over the line of 1.0%\" for every coin failing the gate, and 14 of 33 are at or under that line: HYPE 0.95% a week, 49.71% in 12 months; KNTQ 0.93% a week, 48.49% in 12 months; BLUE 0.92% a week, 43.72% in 12 months; MOR 0.91% a week, 47.69% in 12 months; IR 0.90% a week, 140.68% in 12 months. They fail the 12-month rule, which it does not name",
    "filed_at": "2026-11-01T19:06:51+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 245,
+     "verdict": "pass",
+     "at": "2026-11-02T08:16:32+00:00"
+    }
+   ],
    "their_status": {
     "245": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-gem-screener-chain-adoption-is-one-measure",
@@ -3088,12 +3164,18 @@
    ],
    "title": "GET /api/v1/launchpad/onchain/tokens with no chain_id answered 200 with [] on both reads, 20 seconds apart, while the same endpoint chain_id=4663 lists 1, chain_id=5042 lists 5+ (limit=5); the unfiltered screener lists 500 rows over chains [4663, 5042] and launchpad_list_tokens with no arguments returns 25 rows",
    "filed_at": "2026-10-11T05:49:08+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 186,
+     "verdict": "pass",
+     "at": "2026-11-02T08:15:58+00:00"
+    }
+   ],
    "their_status": {
     "186": "paid"
    },
    "withdrawn": false,
-   "last_check": "inconclusive"
+   "last_check": "pass"
   },
   {
    "key": "CYM-live-crypto-card-index-history-has-no-multi-day-hole",
@@ -3232,7 +3314,13 @@
    ],
    "title": "/movers ranks the 100 cards its script reads (/api/v1/event-cards/?limit=100) of the 641 the listing totals: 10 of the 10 biggest losers and 7 of the 10 biggest gainers are cards the page never reads. Biggest loser over every card: SAIB: CTVA — Corteva -83.92%; the page's: SAIB: TTD — Trade Desk (The) -19.17%. Biggest gainer over every card: Launch HN: Discovered Materials (YC P26) – AI agents to disc +101.96%; the page's: Launch HN: Discovered Materials (YC P26) – AI agents to disc +101.96%. /api/v1/event-cards/?limit=500 answers HTTP 422",
    "filed_at": "2026-10-11T12:20:59+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 189,
+     "verdict": "pass",
+     "at": "2026-11-02T08:00:20+00:00"
+    }
+   ],
    "their_status": {
     "189": "paid"
    },
@@ -3611,7 +3699,13 @@
    ],
    "title": "the last 3 searches of company 14 all failed before any job ran (#9 daily 2026-10-30, 0 jobs, never started, #7 daily 2026-10-29, 0 jobs, never started, #5 owner 2026-10-28, 0 jobs, never started), with the same error 'OperationalError: (psycopg2.OperationalError) server closed the connection unexpectedly'; the last search that completed is #3, finished 2026-10-27T14:01:08.817493Z, 72.4 h before this read (allowed 48 h, two daily passes)",
    "filed_at": "2026-10-30T14:25:45+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 231,
+     "verdict": "pass",
+     "at": "2026-11-02T08:16:15+00:00"
+    }
+   ],
    "their_status": {
     "231": "paid"
    },
@@ -3628,12 +3722,18 @@
    ],
    "title": "3 of 3 failed searches of company 14 (#9, #7, #5) answer the owner with an error naming a SQL statement, a database driver, an exception class (table company_quant_combos), 400 characters, starting 'OperationalError: (psycopg2.OperationalError) server closed the connection unexpectedly\\n\\tT'; the page prints it after 'The last search stopped: '",
    "filed_at": "2026-10-30T14:25:52+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 232,
+     "verdict": "pass",
+     "at": "2026-11-02T08:16:21+00:00"
+    }
+   ],
    "their_status": {
     "232": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-quant-lab-winner-text-agrees-with-how-it-fits",
@@ -3645,7 +3745,13 @@
    ],
    "title": "/how-it-fits.txt promises a winner's blank paper bot with the winning entry threshold and for every long rule, Blue and paid included, while company 14's Quant Lab says the opposite in 4 lines: A result that won with a changed entry threshold is reported only, not started as a paper bot: a paper bot cannot run a changed entry rule yet. | Cymetica bot set-ups as paper bots (cryptobull_blue, cryptobull_red, hybrid2_blue, hybrid2_red, stockbear_red, stockbull_blue): Not possible: they are backtest set-ups for Cymetica's own bots, not catalog models, so they can be searched but not equipped. | Premium models (prion, synapse, telomere): Not possible: the platform sells these, so the lab never equips them for you. | Starting a paper bot from a changed entry rule: Needs a medium build: a paper bot cannot run a changed entry rule yet, so such a result is reported only.",
    "filed_at": "2026-10-31T22:47:15+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 233,
+     "verdict": "pass",
+     "at": "2026-11-02T08:00:54+00:00"
+    }
+   ],
    "their_status": {
     "233": "paid"
    },
@@ -3778,6 +3884,11 @@
      "report_id": 51,
      "verdict": "pass",
      "at": "2026-10-01T07:37:18+00:00"
+    },
+    {
+     "report_id": 51,
+     "verdict": "fail",
+     "at": "2026-11-02T08:16:38+00:00"
     }
    ],
    "their_status": {
@@ -3811,6 +3922,11 @@
      "report_id": 51,
      "verdict": "pass",
      "at": "2026-10-01T07:37:21+00:00"
+    },
+    {
+     "report_id": 51,
+     "verdict": "fail",
+     "at": "2026-11-02T08:16:38+00:00"
     }
    ],
    "their_status": {
@@ -3844,6 +3960,11 @@
      "report_id": 56,
      "verdict": "pass",
      "at": "2026-10-01T07:37:24+00:00"
+    },
+    {
+     "report_id": 56,
+     "verdict": "fail",
+     "at": "2026-11-02T08:16:45+00:00"
     }
    ],
    "their_status": {
@@ -4241,12 +4362,18 @@
    ],
    "title": "https://cymetica.com/og/app/agent-tournaments.png?t=Agent%20Tournaments%3A%2010%20agents.%201%20table.%20Best%20ROI%20wins.&v=4 draws the same picture (76226 bytes) whatever t= says: with t='Agent Tournaments: 10 agents. 1 table. Best ROI wins.' and with t='QA sentinel title 7f3c' the bytes are identical, so the title the page passes is not the title shown",
    "filed_at": "2026-10-22T08:40:47+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 217,
+     "verdict": "pass",
+     "at": "2026-11-02T08:16:03+00:00"
+    }
+   ],
    "their_status": {
     "217": "paid"
    },
    "withdrawn": false,
-   "last_check": "inconclusive"
+   "last_check": "pass"
   },
   {
    "key": "CYM-the_altseason_panel_names_one_retail_figure",
@@ -4878,7 +5005,13 @@
    ],
    "title": "/traffic defines AI-agent visits as \"every request an agent makes (one crawler reading 300 pages is 300 visits).\" and the AI agents requests list as \"Every request, landings AND the pages and API calls after them, grouped by product area. These counts are larger than the landing counts above. Humans and AI agents are counted separately.\", but over the same 14 days (since 2026-10-11T07:00:00+00:00) the tile reads 115,550 and the list, 11 rows ending in \"Everything else\", adds up to 89,910: 25,640 requests (22%) are in one figure and not in the other",
    "filed_at": "2026-10-25T23:52:23+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 226,
+     "verdict": "pass",
+     "at": "2026-11-02T08:16:09+00:00"
+    }
+   ],
    "their_status": {
     "226": "paid"
    },
@@ -4958,7 +5091,13 @@
    ],
    "title": "2 of 2 date or time formatting calls use the browser's language: line 46 toLocaleString([]) in loc(). On /usage (<html lang='en'>) the script that draws the page formats dates with an empty locale list or none, which means the browser's language, so a visitor whose browser is not English reads weekday names, zone names and day-month order in that language on an English page",
    "filed_at": "2026-10-25T08:00:51+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 223,
+     "verdict": "pass",
+     "at": "2026-11-02T08:00:34+00:00"
+    }
+   ],
    "their_status": {
     "223": "paid"
    },

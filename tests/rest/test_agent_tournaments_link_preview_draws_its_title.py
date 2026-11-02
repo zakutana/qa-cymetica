@@ -35,13 +35,15 @@ from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 from tests.rest.test_gem_screener_numbers_match_their_sources import get_patiently
 
-PAGE = "/agent-tournaments"
+PAGE = "/agent-casino"   # /agent-tournaments answers 301 to it since the rename
 HOST = "cymetica.com"
 SENTINEL = "QA sentinel title 7f3c"
 # sha256 of the picture's bytes (of the file, not qa/evidence.py's content_id) -> the title read off it, and when
 LOOKED = {
     "1c683f1a1f919809203231f40fd1265b88493de0d021e080f80ff33c97911886":
         ("Agent Tournaments: 10 agents, 1 table, best ROI wins", "2026-10-23"),
+    "5fcc089cf9d1d0ae173dfa4d01bb4f00e219463dc2a2677503cde2669dcbf17e":
+        ("Agent Casino: 6 agents, 1 table, best ROI wins", "2026-11-02"),
 }
 
 

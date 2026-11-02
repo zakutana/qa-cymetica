@@ -373,8 +373,8 @@ def test_the_leaderboard_must_add_up_to_its_tables():
     assert casino.leaderboard_vs_tables({"tables_done": 2, "paid_usdc": 20.0, "paid_et10": 7.0}, tables) == []
     found = casino.leaderboard_vs_tables({"tables_done": 2, "paid_usdc": 25.0, "paid_et10": 7.0}, tables)
     assert [f["key"] for f in found] == ["leaderboard_vs_tables"]
-    found = casino.leaderboard_vs_tables({"tables_done": 3, "paid_usdc": 20.0, "paid_et10": 7.0}, tables)
-    assert [f["key"] for f in found] == ["leaderboard_vs_tables"]
+    # Tables 6, 8 and 9 paid nothing and the board does not count them: the count is not what was paid.
+    assert casino.leaderboard_vs_tables({"tables_done": 3, "paid_usdc": 20.0, "paid_et10": 7.0}, tables) == []
     # Table 15: an ET10 table's `prize_usdc` is ET10, in the board's ET10 and not its USDC.
     et10 = done_table(id=15, currency="ET10", results={"ranked": [{"seat_id": 87, "prize_usdc": 100.0, "prize_et10": 0}]})
     assert casino.leaderboard_vs_tables({"tables_done": 1, "paid_usdc": 0.0, "paid_et10": 100.0}, [et10]) == []
@@ -384,6 +384,16 @@ def test_the_leaderboard_must_add_up_to_its_tables():
     assert casino.leaderboard_vs_tables({"tables_done": 1, "paid_usdc": 80.0, "paid_et10": 0.0}, [capped]) == []
     found = casino.leaderboard_vs_tables({"tables_done": 1, "paid_usdc": 80.0, "paid_et10": 600.0}, [capped])
     assert [f["key"] for f in found] == ["leaderboard_vs_tables"]
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_only_a_table_after_the_release_can_measure_the_fix():
+    # Table 27: started before ed351dbc and ended after it. Table 51: over before it.
+    across = {"starts_at": "2026-11-01T10:18:52+00:00", "ends_at": "2026-11-02T10:18:52+00:00"}
+    before = {"starts_at": "2026-11-01T10:35:14+00:00", "ends_at": "2026-11-01T11:35:14+00:00"}
+    after = {"starts_at": "2026-11-02T08:00:00Z", "ends_at": "2026-11-02T09:00:00Z"}
+    assert [casino.settled_after_the_fix(t) for t in (across, before, after, {})] == [True, False, True, False]
+    assert [casino.played_after_the_fix(t) for t in (across, before, after, {})] == [False, False, True, False]
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")

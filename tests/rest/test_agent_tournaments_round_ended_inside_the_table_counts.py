@@ -14,8 +14,8 @@ $344.51 +37.81% ROI", "OPEN AT THE END 0". A bot leading by less than that round
 by the settler's timing; here second place was $8.27 behind.
 
 **The rule.** A seat's standings do not leave out a round of its bot whose `epoch_end` is inside the
-table and whose `closed_at` is after it. It reads the tables ended in the last three days only, so a fix
-from today clears, and judges by the newest such round. **Named fixes, as readings:** the table waits
+table and whose `closed_at` is after it. It reads only the tables that ended after their fix
+(`casino.FIX_RELEASED`): table 51 keeps what it was settled with. **Named fixes, as readings:** the table waits
 for its last rounds, so the newest such round is counted and this passes; or a bot opens nothing that
 cannot settle in time, so no such round appears, and this passes once `QUIET_SEATS` trading seats in the
 window show none (one of the seven trading seats read today had one). Fewer than that is inconclusive.
@@ -28,15 +28,12 @@ SAFE: GETs only, our own seats with our key.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-
 from qa import casino
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
 PREFIX = "/api/v1/agent-tournaments"
 CLAIM = "agent-tournaments-round-ended-inside-the-table-counts"
-WINDOW = timedelta(days=3)
 QUIET_SEATS = 40
 PAGES = 8
 
@@ -57,7 +54,7 @@ def feed_of(client, instance: str) -> list[dict]:
 
 @qa(component="rest.agent_tournaments", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM)
 def test_agent_tournaments_round_ended_inside_the_table_counts(rest_trusted):
-    """Every seat of ours at a table ended in the last three days: its standings against its bot's rounds."""
+    """Every seat of ours at a table ended after the fix: its standings against its bot's rounds."""
     lobby = rest_trusted.get(f"{PREFIX}/lobby")
     bots = rest_trusted.get(f"{PREFIX}/my-bots")
     if lobby.status_code != 200 or bots.status_code != 200:
@@ -65,7 +62,6 @@ def test_agent_tournaments_round_ended_inside_the_table_counts(rest_trusted):
     body = bots.json() or {}
     rows = body if isinstance(body, list) else body.get("bots") or body.get("items") or []
     instances = {b.get("name"): b.get("instance_id") for b in rows if isinstance(b, dict)}
-    now = datetime.now(timezone.utc)
     feeds: dict[str, list[dict]] = {}
     left_out, read = [], []
     for row in (lobby.json() or {}).get("tables") or []:
@@ -75,8 +71,7 @@ def test_agent_tournaments_round_ended_inside_the_table_counts(rest_trusted):
         if r.status_code != 200:
             raise Inconclusive(f"{PREFIX}/tables/{row.get('id')} answered HTTP {r.status_code}")
         table = r.json()
-        ended = casino._when(table.get("ends_at"))
-        if ended is None or now - ended > WINDOW:
+        if not casino.settled_after_the_fix(table):
             continue
         ranked = (table.get("results") or {}).get("ranked") or []
         for seat in table.get("my_seats") or [table.get("my_seat")]:
@@ -94,8 +89,8 @@ def test_agent_tournaments_round_ended_inside_the_table_counts(rest_trusted):
                                  "closed_at": item.get("closed_at"), "profit_usdc": item.get("profit_usdc"),
                                  "standings_pnl_usdc": standing.get("pnl_usdc")})
     if not left_out and len(read) < QUIET_SEATS:
-        raise Inconclusive(f"{len(read)} trading seats of ours at tables ended in the last three days and no round "
-                           f"left out; {QUIET_SEATS} would say the rounds are no longer left out")
+        raise Inconclusive(f"{len(read)} trading seats of ours at tables ended after the fix and no round left out; "
+                           f"{QUIET_SEATS} would say the rounds are no longer left out")
     named = "; ".join(f"table {d['table_id']} seat {d['seat_id']} ({d['bot']!r}): round ended {d['epoch_end']}, table "
                       f"ended {d['ends_at']}, settled {d['closed_at']}, {d['profit_usdc']} USDC left out of "
                       f"{d['standings_pnl_usdc']}" for d in left_out)
@@ -104,7 +99,7 @@ def test_agent_tournaments_round_ended_inside_the_table_counts(rest_trusted):
         reason=(f"{len(left_out)} round(s) that ended inside the table are left out of its standings because they "
                 f"settled after it: {named}"
                 if left_out else
-                f"none of {len(read)} trading seats at tables ended in the last three days leaves out such a round"),
+                f"none of {len(read)} trading seats at tables ended after the fix leaves out such a round"),
         left={"rounds_left_out": len(left_out)},
         right={"rounds_left_out": 0},
         population={"seats_read": read, "left_out": left_out},

@@ -15,7 +15,9 @@ rank, the prize and the capital paid back ($19.36) follow the first set; the tra
 
 **The rule.** For every finished table whose answer to our key names a seat of ours (`my_seat`) and
 lists at least one trade, the count, the volume and the profit of `your_trades` equal that seat's
-standings row: the same number of trades, volume and P&L within two cents.
+standings row: the same number of trades, volume and P&L within two cents. Only a table that ended after their
+fix (`casino.FIX_RELEASED`) is judged: tables 35, 40 and 51 keep what they were settled with, and sit in the
+population as history. None yet with a trade of ours is inconclusive.
 
 NOT asserted: which side is right, any table still running (trades there close while we read), a seat
 of ours that is not `my_seat` (the table lists the trades of one seat only), the page's wording.
@@ -25,6 +27,7 @@ SAFE: GETs only, our own seats with our key.
 
 from __future__ import annotations
 
+from qa import casino
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
 
@@ -68,7 +71,7 @@ def test_agent_tournaments_standings_agree_with_the_trade_list(rest_trusted):
                  if isinstance(t, dict) and t.get("status") == "done" and t.get("id") is not None)
     if not ids:
         raise Inconclusive(f"{PREFIX}/lobby lists no finished table")
-    off, read = [], []
+    off, read, before_the_fix = [], [], []
     for table_id in ids:
         r = rest_trusted.get(f"{PREFIX}/tables/{table_id}")
         if r.status_code != 200:
@@ -76,11 +79,14 @@ def test_agent_tournaments_standings_agree_with_the_trade_list(rest_trusted):
         table = r.json()
         if table.get("status") != "done" or not table.get("your_trades"):
             continue
+        if not casino.settled_after_the_fix(table):
+            before_the_fix.extend(disagreements(table))
+            continue
         read.append(table_id)
         off.extend(disagreements(table))
     if not read:
-        raise Inconclusive(f"none of the {len(ids)} finished tables lists a trade of ours "
-                           f"(tables {ids}); nothing to compare")
+        raise Inconclusive(f"none of the {len(ids)} finished tables that lists a trade of ours ended after the fix "
+                           f"({casino.FIX_RELEASED:%Y-%m-%d %H:%M} UTC); {len(before_the_fix)} from before it disagree")
     named = "; ".join(f"table {d['table_id']} seat {d['seat_id']} ({d['bot']!r}): standings "
                       f"{d['standings']}, trade list {d['trade_list']}" for d in off)
     conclude(Measurement(
@@ -91,7 +97,7 @@ def test_agent_tournaments_standings_agree_with_the_trade_list(rest_trusted):
                 f"on all {len(read)} finished tables the standings and the trade list agree"),
         left={"tables_disagreeing": len(off)},
         right={"tables_disagreeing": 0},
-        population={"finished_tables": ids, "tables_compared": read, "disagreeing": off},
+        population={"finished_tables": ids, "tables_compared": read, "disagreeing": off, "before_the_fix": before_the_fix},
         sources={"table": f"{PREFIX}/tables/{{id}} (results.ranked[], your_trades, my_seat)",
                  "lobby": f"{PREFIX}/lobby (tables[], status done)",
                  "claim": "the page: 'N counted trades · $V volume (the same counts as the standings)'"},

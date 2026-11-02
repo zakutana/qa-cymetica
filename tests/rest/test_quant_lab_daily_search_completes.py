@@ -24,8 +24,8 @@ still queued or running is not judged; nor is a company whose plan the lab is no
 
 NOT asserted: why it fails, how long a search takes, what it finds, the 10:09 hour, or the error's
 wording (that is the sibling check, `test_quant_lab_search_error_names_no_internals`). One failure
-the next pass recovers from passes, as their page promises. If the lab stops searching daily on
-purpose, the check is retired by an event, not left red.
+the next pass recovers from passes, as their page promises. A paused company (ours since 2026-11-01)
+gets no daily pass, so a stall there is inconclusive, never a fail.
 
 SAFE: three GETs of our own company.
 """
@@ -126,8 +126,12 @@ def test_quant_lab_daily_search_completes(rest_trusted):
         newest = max(searches, key=lambda s: _at(s.get("requested_at")) or now, default=None)
         raise Inconclusive(f"nothing to judge: {'no search yet' if not searches else 'the newest search is '}"
                            f"{(newest or {}).get('status') or ''} (company {cid})")
+    if out["verdict"] == "failed":
+        mine = _json(rest_trusted, MINE)
+        if (mine.get("company") if isinstance(mine.get("company"), dict) else mine).get("status") == "paused":
+            raise Inconclusive(f"company {cid} is paused, so no daily pass is owed")
     run, last = out["failed_in_a_row"], out["last_completed"]
-    errors = {str(s.get("error") or "").split("\n")[0][:120] for s in searches
+    errors ={str(s.get("error") or "").split("\n")[0][:120] for s in searches
               if s.get("id") in {r["id"] for r in run}}
     failed = out["verdict"] == "failed"
     conclude(Measurement(

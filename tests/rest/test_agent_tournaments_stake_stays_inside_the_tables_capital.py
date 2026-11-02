@@ -14,7 +14,8 @@ round it opened was a BTC sell of `amount_usdc` 21.389063, 85.6 % of the table's
 capital. The same bots on Pro tables (capital $250, balance near it) stake 4.5 to 8.7 %.
 
 **The rule.** No round of ours is staked above 10 % of its table's capital, the top of the trade size their
-own settings allow (1 to 10 %). Every table our key sat at, every round in `your_trades`.
+own settings allow (1 to 10 %). Every table our key sat at that started after their fix
+(`casino.FIX_RELEASED`), every round in `your_trades`: tables 40 and 62 stay as played, in the population.
 
 **Named fixes, as readings:** the bot's stake is taken from the table's capital, so every round is within
 10 % and this passes; or a bot is funded to the table's capital at the seat, so its balance is the capital
@@ -38,7 +39,7 @@ ROUNDS = 40
 
 @qa(component="rest.agent_tournaments", tier=SafetyTier.SAFE, surface="rest", claim=CLAIM)
 def test_agent_tournaments_stake_stays_inside_the_tables_capital(rest_trusted):
-    """Every round of ours on every table our key sat at, against that table's capital."""
+    """Every round of ours on every table our key sat at since the fix, against that table's capital."""
     lobby = rest_trusted.get(f"{PREFIX}/lobby")
     if lobby.status_code != 200:
         raise Inconclusive(f"{PREFIX}/lobby answered HTTP {lobby.status_code}")
@@ -46,7 +47,7 @@ def test_agent_tournaments_stake_stays_inside_the_tables_capital(rest_trusted):
                  if isinstance(t, dict) and t.get("id") is not None)
     if not ids:
         raise Inconclusive(f"{PREFIX}/lobby lists no table")
-    over, rounds, read = [], 0, []
+    over, rounds, read, before_the_fix = [], 0, [], []
     for table_id in ids:
         r = rest_trusted.get(f"{PREFIX}/tables/{table_id}")
         if r.status_code != 200:
@@ -55,12 +56,15 @@ def test_agent_tournaments_stake_stays_inside_the_tables_capital(rest_trusted):
         trades = table.get("your_trades")
         if table.get("currency") != "USDC" or not isinstance(trades, list) or not trades:
             continue
+        if not casino.played_after_the_fix(table):
+            before_the_fix.extend(casino.oversized_stakes(table))
+            continue
         read.append(table_id)
         rounds += len(trades)
         over.extend(casino.oversized_stakes(table))
     if not over and rounds < ROUNDS:
-        raise Inconclusive(f"{rounds} rounds of ours read on {len(read)} tables and none over; {ROUNDS} would say "
-                           f"the stakes stay inside the capital")
+        raise Inconclusive(f"{rounds} rounds of ours read on {len(read)} tables since the fix and none over; {ROUNDS} "
+                           f"would say the stakes stay inside the capital")
     named = "; ".join(f"table {d['table_id']}: {d['symbol']} round of {d['amount_usdc']} on a capital of "
                       f"{d['capital_usdc']:g} ({d['share_pct']:.1f} %)" for d in over)
     conclude(Measurement(
@@ -69,7 +73,7 @@ def test_agent_tournaments_stake_stays_inside_the_tables_capital(rest_trusted):
                 if over else f"none of {rounds} rounds on {len(read)} tables was staked above 10 % of its capital"),
         left={"rounds_over_a_tenth": len(over)},
         right={"rounds_over_a_tenth": 0},
-        population={"tables_read": read, "rounds": rounds, "over": over},
+        population={"tables_read": read, "rounds": rounds, "over": over, "before_the_fix": before_the_fix},
         sources={"table": f"{PREFIX}/tables/{{id}} (capital_usdc, your_trades[].amount_usdc)",
                  "range": "my_bot_settings.ranges.trade_size_pct [1, 10], fixed.max_position_pct",
                  "claim": "the page: '$25 capital' under every seat, ROI against it"},

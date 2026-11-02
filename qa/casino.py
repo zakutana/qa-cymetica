@@ -27,6 +27,9 @@ CADENCE_MAX_MIN = 25
 ET10_PENDING_HOURS = 6
 FIVE_RULE = "tunes once the bot has 5 closed trades"
 FIVE = 5
+# Release ed351dbc: their tracker reads #234 to #242 and #249 fixed at 21:40 UTC. A table settled before it keeps
+# what it was settled with, so it measures the old code (REPLY-0242).
+FIX_RELEASED = datetime(2026, 11, 1, 21, 41, tzinfo=timezone.utc)
 
 # One of ours to a table (the operator's own rule, MSG-0293), at most this many tables at once.
 MAX_RUNNING = 6
@@ -50,6 +53,16 @@ def _when(value) -> datetime | None:
     except ValueError:
         return None
     return at if at.tzinfo else at.replace(tzinfo=timezone.utc)
+
+
+def settled_after_the_fix(table: dict) -> bool:
+    ended = _when(table.get("ends_at"))
+    return ended is not None and ended > FIX_RELEASED
+
+
+def played_after_the_fix(table: dict) -> bool:
+    started = _when(table.get("starts_at"))
+    return started is not None and started > FIX_RELEASED
 
 
 def _number(value) -> float | None:
@@ -409,7 +422,8 @@ def stale_asks(my_seats: list[dict], my_agents: dict | None) -> list[dict]:
 def leaderboard_vs_tables(board: dict, tables: list[dict]) -> list[dict]:
     """The board's "paid to winners" against the sum of its finished tables. On an ET10 table
     `prize_usdc` holds ET10 (table 15: 100, its buy-in back, in the board's ET10). A prize recorded as
-    `capped` "is not paid out" (their words, llms.txt), so it is not in what was paid."""
+    `capped` "is not paid out" (their words, llms.txt), so it is not in what was paid. `tables_done` is not
+    compared: the board leaves out tables 6, 8 and 9, which paid nothing, and this is about what was paid."""
     done = [t for t in tables if isinstance(t, dict) and t.get("status") == "done"]
     usdc = et10 = capped = 0.0
     for table in done:
@@ -422,7 +436,7 @@ def leaderboard_vs_tables(board: dict, tables: list[dict]) -> list[dict]:
                       if isinstance(r, dict) and r.get("status") == "capped")
     theirs = {"tables_done": board.get("tables_done"), "paid_usdc": board.get("paid_usdc"), "paid_et10": board.get("paid_et10")}
     ours = {"tables_done": len(done), "paid_usdc": round(usdc, 2), "paid_et10": round(et10 - capped, 2)}
-    if all(_number(theirs[k]) is not None and abs(theirs[k] - ours[k]) <= CENTS for k in ours):
+    if all(_number(theirs[k]) is not None and abs(theirs[k] - ours[k]) <= CENTS for k in ("paid_usdc", "paid_et10")):
         return []
     return [{"key": "leaderboard_vs_tables", "table_id": None,
              "what": f"board says {theirs}, its tables add up to {ours} ({capped:g} ET10 capped, not paid)"}]

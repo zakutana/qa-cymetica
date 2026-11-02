@@ -18,8 +18,9 @@ exception, the database driver, a table and three of its columns, as the owner's
 `SELECT ... FROM`, `INSERT INTO`, `UPDATE ... SET`, `DELETE FROM`, upper case as an ORM writes
 them), a database driver or ORM (psycopg, SQLAlchemy, asyncpg), an exception class at the start of
 the text (`OperationalError:`), or a Python traceback. A null `error` passes (the page then says
-"no reason recorded"), and so does any sentence written for a person, whatever it says. No failed
-search in the list is nothing to judge.
+"no reason recorded"), and so does any sentence written for a person, whatever it says. Only a search
+requested after their fix (`FIXED_AT`, their tracker) is judged: #9, #7 and #5 keep the text they were stored
+with, the reason says so, and the page prints only the newest. No failed search since is nothing to judge.
 
 NOT asserted: the failure itself (the sibling check, `test_quant_lab_daily_search_completes`), the
 wording of a reason, whether the page shows one, or anything the owner's screen does with the
@@ -33,12 +34,14 @@ SAFE: three GETs of our own company.
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 
 from qa.marks import Inconclusive, SafetyTier, qa
 from qa.measure import Measurement, conclude
-from tests.rest.test_quant_lab_daily_search_completes import LIMIT, read_searches
+from tests.rest.test_quant_lab_daily_search_completes import LIMIT, _at, read_searches
 
 CLAIM = "quant-lab-search-error-names-no-internals"
+FIXED_AT = datetime(2026, 10, 30, 15, 7, 33, tzinfo=timezone.utc)
 
 # Case-sensitive on purpose: an ORM writes SQL keywords in capitals, and "select a market from the
 # list" is a sentence for a person.
@@ -62,10 +65,12 @@ def internals(text) -> list[str]:
 def test_quant_lab_search_error_names_no_internals(rest_trusted):
     """Every failed search's `error` in our company's search status and history."""
     cid, _status, searches = read_searches(rest_trusted)
-    failed = [s for s in searches if isinstance(s, dict) and s.get("status") == "failed"]
+    every_failed = [s for s in searches if isinstance(s, dict) and s.get("status") == "failed"]
+    failed = [s for s in every_failed if (_at(s.get("requested_at")) or FIXED_AT) > FIXED_AT]
     if not failed:
-        raise Inconclusive(f"no failed search in the {len(searches)} listed for company {cid}; "
+        raise Inconclusive(f"no search of the {len(searches)} listed for company {cid} failed since the fix; "
                            f"no error to read")
+    older = [f"#{s.get('id')}" for s in every_failed if s not in failed and internals(s.get("error"))]
     named = {s.get("id"): internals(s.get("error")) for s in failed}
     leaking = [s for s in failed if named[s.get("id")]]
     sample = (leaking[0].get("error") or "") if leaking else ""
@@ -81,11 +86,14 @@ def test_quant_lab_search_error_names_no_internals(rest_trusted):
                 + f", {len(sample)} characters, starting {sample[:90]!r}; the page prints it after "
                   f"'The last search stopped: '"
                 if leaking else
-                f"none of the {len(failed)} failed searches of company {cid} names an SQL statement, a "
-                f"database driver, an exception class or a traceback in its error"),
+                f"none of the {len(failed)} searches of company {cid} that failed since the fix names an SQL "
+                f"statement, a database driver, an exception class or a traceback in its error"
+                + (f"; {', '.join(older)}, from before the fix, keep their old text in the history list"
+                   if older else "")),
         left={"failed_searches_naming_internals": len(leaking)},
         right={"allowed": 0, "failed_searches": len(failed)},
-        population={"named": {f"#{k}": v for k, v in named.items()}, "error_sample": sample[:600]},
+        population={"named": {f"#{k}": v for k, v in named.items()}, "error_sample": sample[:600],
+                    "before_the_fix": older},
         sources={"status": f"/api/v1/company/{cid}/quant-lab/search (search.error)",
                  "history": f"/api/v1/company/{cid}/quant-lab/search/results?limit={LIMIT} (searches[].error)",
                  "page": "/static/company/quantsearch.js line(): 'The last search stopped: ' + esc(s.error)"},
