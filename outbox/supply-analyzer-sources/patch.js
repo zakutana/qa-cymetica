@@ -91,32 +91,73 @@
       if (soon > 0) parts.push({k: 'soon', label: 'Coming in 12 months', v: soon, c: 'var(--bad)'});
       if (rest - soon > 0) parts.push({k: 'later', label: 'After that, or never issued', v: rest - soon, c: 'var(--line, #2a3648)', ghost: true});
     } else {
-      parts.push({k: 'unknown', label: 'Not out yet, no schedule', v: rest, c: 'var(--muted)', dashed: true});
+      const ended = SA_MOCK.finished[((sp && sp.token) || {}).slug];
+      parts.push({k: 'unknown', label: ended ? 'Not out, schedule finished' : 'Not out yet, no schedule', v: rest, c: 'var(--muted)', dashed: true});
     }
     return {parts, out, whole};
   }
-  function supplyDonut(sp, sym) {
-    const {parts, out, whole, open} = donutParts(sp);
-    if (!parts.length) return '';
-    const total = parts.reduce((n, p) => n + p.v, 0), R = 46, W = 15, C = 2 * Math.PI * R;
+  // One pie in a tile: the ring, its figure in the centre, the legend under it. Each part is {label, v, c, shown?, dashed?}.
+  function pie(parts, center, sub, tone, note) {
+    const total = parts.reduce((n, p) => n + p.v, 0), R = 44, W = 15, C = 2 * Math.PI * R;
     let at = 0;
-    const arcs = parts.map(p => {
+    const arcs = !total ? `<circle cx="60" cy="60" r="${R}" fill="none" stroke="var(--muted)" stroke-width="${W}" style="stroke-dasharray:3 3;opacity:.55"/>` : parts.map(p => {
       const len = C * p.v / total, gap = parts.length > 1 ? Math.min(1.5, len / 3) : 0;
-      const a = `<circle cx="60" cy="60" r="${R}" fill="none" stroke="${p.c}" stroke-width="${W}" stroke-dasharray="${p.dashed ? '3 3' : (len - gap).toFixed(2) + ' ' + (C - len + gap).toFixed(2)}" stroke-dashoffset="${(-at).toFixed(2)}"${p.dashed ? ' class="sa-dashed" style="stroke-dasharray:3 3;opacity:.55"' : ''}${p.ghost ? ' style="opacity:.9"' : ''}/>`;
+      const dash = p.dashed ? 'style="stroke-dasharray:3 3;opacity:.55"' : `stroke-dasharray="${(len - gap).toFixed(2)} ${(C - len + gap).toFixed(2)}"`;
+      const arc = `<circle cx="60" cy="60" r="${R}" fill="none" stroke="${p.c}" stroke-width="${W}" ${dash} stroke-dashoffset="${(-at).toFixed(2)}"/>`;
       at += len;
-      return a;
+      return arc;
     }).join('');
-    const pctOut = whole ? Math.round(100 * out / whole) : null;
-    const center = pctOut === null ? `<b>${esc(saTok(out))}</b><span>${esc(sym || '')} out</span>` : `<b>${pctOut < 1 ? '<1' : pctOut}%</b><span>is out</span>`;
-    const rows = parts.map(p => `<li><i style="background:${p.c}${p.dashed ? ';opacity:.55' : ''}"></i><span>${esc(p.label)}</span><b>${esc(saTok(p.v))}</b><em>${(100 * p.v / total).toFixed(p.v / total < 0.01 ? 1 : 0)}%</em></li>`).join('');
-    return `<div class="sa-donut" id="saDonut"><div class="sa-ringbox"><svg viewBox="0 0 120 120" width="132" height="132" role="img" aria-label="Where the supply is">${arcs}</svg><div class="sa-center">${center}</div></div>
-      <ul class="sa-legend">${rows}</ul>${open ? `<p class="sa-note">No max supply: what is still to come cannot be drawn.</p>` : ''}${N(10)}</div>`;
+    const rows = parts.map(p => `<li><i style="background:${p.c}${p.dashed ? ';opacity:.55' : ''}"></i><span>${esc(p.label)}</span><b>${esc(p.shown || saTok(p.v))}</b></li>`).join('');
+    return `<div class="sa-ringbox"><svg viewBox="0 0 120 120" role="img">${arcs}</svg><div class="sa-center ${tone || ''}"><b>${center}</b>${sub ? `<span>${esc(sub)}</span>` : ''}</div></div><ul class="sa-legend">${rows}</ul>${note ? `<p class="sa-note">${esc(note)}</p>` : ''}`;
+  }
+  const FILL = {'v-bad': 'var(--bad)', 'v-good': 'var(--good)', 'v-caution': 'var(--band-blue)'};
+  function circPie(sp) {
+    const {parts, out, whole, open} = donutParts(sp), c = (sp.tiles || {}).circulating || {};
+    if (!parts.length) return pie([], 'n/a', '', 'v-na', 'No circulating supply on any feed we read.');
+    const pct = typeof c.pct === 'number' ? c.pct : (whole ? 100 * out / whole : null);
+    return pie(parts, pct === null ? esc(saTok(out)) : (pct >= 99.95 ? '100%' : pct.toFixed(1) + '%'), pct === null ? 'out' : 'is out', '', open ? 'No max supply: what is still to come cannot be drawn.' : '');
+  }
+  function fdvPie(sp) {
+    const f = (sp.tiles || {}).fdv;
+    if (!f || !f.market_cap_usd || !f.fdv_usd) return pie([], 'n/a', '', 'v-na', 'No market cap stated.');
+    const cap = Math.min(f.market_cap_usd, f.fdv_usd), cls = saFdvCls(f.x);
+    return pie([{label: 'Market cap', v: cap, c: 'var(--accent)', shown: saUsd(f.market_cap_usd)},
+      {label: 'Rest of FDV', v: Math.max(f.fdv_usd - cap, 0), c: FILL[cls] || 'var(--line, #2a3648)', shown: saUsd(f.fdv_usd - cap)}], f.x.toFixed(1) + '×', 'FDV to cap', cls);
+  }
+  function dilPie(sp, e) {
+    const d = saDil(sp), circ = ((sp.tiles || {}).circulating || {}).tokens, done = finished(e), drop = SA_MOCK.dropstab[e.slug];
+    const here = [{label: 'In circulation now', v: circ || 0, c: 'var(--accent)'}];
+    if (!d && done && done.none !== null && done.none !== undefined && Math.abs(done.none) === 0) {
+      return pie(here, '0%', '12 months', 'v-good', `The published schedule finished in ${done.when} and covered the whole supply.`);
+    }
+    if (!d) {
+      const say = done ? `The published schedule finished in ${done.when}.` + (done.none ? ` ${done.none}% of the supply never had one.` : '')
+        : drop ? 'Schedule found on DropsTab; the figure comes with the build.' : 'No schedule found on any source. Nothing is assumed.';
+      return pie([], 'n/a', '', 'v-na', say);
+    }
+    const cls = saDilCls(d.pct), fresh = d.new_tokens_12m || (circ ? circ * d.pct / 100 : 0), parts = here.slice();
+    if (fresh > 0) parts.push({label: 'New in 12 months', v: fresh, c: FILL[cls] || 'var(--bad)'});
+    return pie(parts, d.at_max ? '0%' : saColPct(d.pct), '12 months', cls, d.at_max ? 'Max supply is reached.' : saDilLine(sp, e.symbol));
   }
   const oldSupplyCard = supplyCard;
   supplyCard = function (e) {
     const html = oldSupplyCard(e), sp = supplyOf(e);
     if (!sp || !sp.tiles) return html;
-    return html.replace('<div class="sanext">', supplyDonut(sp, e.symbol) + '<div class="sanext">');
+    const box = document.createElement('div');
+    box.innerHTML = html;
+    const fill = (key, inner, mark) => {
+      const tile = box.querySelector(`.satile[data-k="${key}"]`);
+      if (!tile) return;
+      const head = tile.querySelector('.sk');
+      tile.innerHTML = '';
+      tile.appendChild(head);
+      tile.classList.add('sa-pie');
+      tile.insertAdjacentHTML('beforeend', inner + mark);
+    };
+    fill('circ', circPie(sp), N(10));
+    fill('fdv', fdvPie(sp), '');
+    fill('dil', dilPie(sp, e), '');
+    return box.innerHTML;
   };
 
   // ---- the box: where each one is. Ours only, it never goes in a picture for them
@@ -146,7 +187,7 @@
     [6, 'Column: Jupiter, schedule finished', () => inApps('jupiter')],
     [7, 'Column: where it looked', () => inApps(firstNone())],
     [8, 'Column: Lombard reads its schedule', () => inApps('lombard')],
-    [10, 'Supply card: the whole supply as a donut', () => { setView('start'); openPanel((APPS.find(a => a.slug === 'up') || {}).key); setTimeout(() => flash(document.querySelector('#panel #saDonut')), 1500); }],
+    [10, 'Supply card: three pies in place of the tiles', () => { setView('start'); openPanel((APPS.find(a => a.slug === 'up') || {}).key); setTimeout(() => flash(document.querySelector('#panel #supplyCard')), 1500); }],
   ];
   setTimeout(() => {
     const box = document.createElement('aside');

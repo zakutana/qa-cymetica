@@ -24,14 +24,12 @@ with sync_playwright() as p:
     print(t.evaluate("[document.getElementById('tbl-apps').scrollWidth, document.getElementById('tbl-apps').parentElement.clientWidth, [...document.querySelectorAll('#tbl-apps thead th')].map(h => h.innerText.replace(/\\s+/g, ' ').trim() + ' ' + Math.round(h.getBoundingClientRect().width)).join(' | ')]"))
 
     t.goto("http://127.0.0.1:8804/gem-screener/app?coin=up", wait_until="load", timeout=120000)
-    t.wait_for_selector("#panel #saDonut", timeout=90000)
+    t.wait_for_selector("#panel .sa-pie", timeout=90000)
     t.wait_for_timeout(1500)
     t.add_style_tag(content=".stickytop { position: static !important; }")
     t.evaluate("document.body.classList.add('gt-clean'); document.querySelector('#supplyCard').scrollIntoView({block: 'center'})")
     t.mouse.move(2, 2)
     t.wait_for_timeout(1000)
     t.locator("#supplyCard").screenshot(path=str(HERE / "picture-2-supply-card.png"))
-    for slug in ("bonk.fun", "syrup", "collector-crypt", "hyperliquid"):
-        pass
     b.close()
 print("rendered")
