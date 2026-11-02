@@ -6,12 +6,15 @@ it (`vetted.young_min_rev30`, `vetted.min_days`, `vetted.min_mcap`,
 `vetted.max_lag_days`), and each row carries `young` and `reliable_fail`.
 
 An app under `min_days` of history, with 30-day revenue at or over
-`young_min_rev30`, a growing six-month fit, a market cap over `min_mcap`, data
-no older than `max_lag_days`, and no other reason to fail Vetted, must be
-`young` -- or it is out of the Degen picks for a reason the page does not print.
-2026-11-02: StonkFun, 98 days, $6.1M a month, +367 % a month, market cap $94M,
-`reliable_fail: ["short_history"]` only, `young: false` -- it left the picks
-where it had been first the day before. MASK, 40 days, $1.04M, +6 %, is young.
+`young_min_rev30`, revenue not falling (`rev_falling`), a market cap over
+`min_mcap`, data no older than `max_lag_days`, and no other reason to fail
+Vetted, must be `young` -- or it is out of the Degen picks for a reason the page
+does not print. MASK, 40 days, $1.04M, not falling, is young.
+
+2026-11-02, our own error, filed and retracted as #254: this check read "growing"
+as the `growth6m` fit and called StonkFun a defect (98 days, $6.1M, fit +367 % a
+month). Its months are Aug $1.3M, Sep $28.7M, Oct $7.0M and `rev_falling` is true:
+`young: false` is the rule working.
 
 NOT asserted: that the 180-day rule or the $1M floor is right, or that a young
 app belongs in the picks. A row that lacks a field the rule reads is skipped,
@@ -58,10 +61,10 @@ def test_an_app_the_new_app_rule_admits_is_young(rest_anon):
     for a in apps:
         days, rev = a.get("hist_days"), a.get("rev30d")
         mcap, lag = a.get("mcap"), a.get("lag_days")
-        growth = (a.get("growth6m") or {}).get("g")
-        if None in (days, rev, mcap, lag, growth) or days >= vetted["min_days"]:
+        falling = a.get("rev_falling")
+        if None in (days, rev, mcap, lag, falling) or days >= vetted["min_days"]:
             continue
-        if (rev < vetted["young_min_rev30"] or growth <= 0 or mcap < vetted["min_mcap"]
+        if (rev < vetted["young_min_rev30"] or falling or mcap < vetted["min_mcap"]
                 or lag > vetted["max_lag_days"]):
             continue
         if set(a.get("reliable_fail") or []) - {"short_history"}:
@@ -71,15 +74,15 @@ def test_an_app_the_new_app_rule_admits_is_young(rest_anon):
             flagged += 1
         else:
             missed.append({"symbol": a.get("symbol"), "slug": a.get("slug"), "hist_days": days,
-                           "rev30d": rev, "growth_pct_a_month": growth, "mcap": mcap,
-                           "young": a.get("young"), "degen_fail": a.get("degen_fail")})
+                           "rev30d": rev, "mcap": mcap, "young": a.get("young"),
+                           "degen_fail": a.get("degen_fail")})
     if not any(a.get("young") for a in apps):
         raise Inconclusive("no app in the snapshot is flagged young, so the flag cannot be read")
     conclude(Measurement(
         verdict="failed" if missed else "passed",
         reason=(f"{len(missed)} of {admitted} apps the rule for newer apps admits are not young: "
-                + "; ".join(f"{m['symbol']} ({m['hist_days']} days, ${m['rev30d']:,.0f} a month, "
-                            f"{m['growth_pct_a_month']:+.0f} % a month)" for m in missed[:5])
+                + "; ".join(f"{m['symbol']} ({m['hist_days']} days, ${m['rev30d']:,.0f} a month)"
+                            for m in missed[:5])
                 if missed else
                 f"all {admitted} apps under {vetted['min_days']:.0f} days that meet the printed rule are young"),
         left={"admitted": admitted, "young": flagged},

@@ -5229,11 +5229,17 @@
    ],
    "title": "Gem Screener: StonkFun (98 days, $6.1M a month, growing) fails Vetted on history although the gate says newer apps pass at $1M+ a month and growing",
    "filed_at": "2026-11-02T08:24:24+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 254,
+     "verdict": "pass",
+     "at": "2026-11-02T08:37:10+00:00"
+    }
+   ],
    "their_status": {
     "254": "pending"
    },
-   "withdrawn": false
+   "withdrawn": true
   }
  ]
 }

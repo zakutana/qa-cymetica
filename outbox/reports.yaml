@@ -7667,6 +7667,11 @@ reports:
 
   - key: gem-screener-new-app-rule-not-applied
     findings: [CYM-an_app_the_new_app_rule_admits_is_young]
+    withdrawn: >
+      2026-11-02. Ours, not theirs. We read "growing" off the growth_6m fit (+367 % a month) and not the row beside it:
+      monthly revenue Aug $1.3M, Sep $28.7M, Oct $7.0M, rev_falling true. Their young: false is the printed rule working.
+      Retracted on the report's own verification the same day. The entry stays because the page reads our side of every
+      thread from this file.
     check: tests/rest/test_gem_screener_new_app_rule_is_applied.py::test_an_app_the_new_app_rule_admits_is_young
     severity: medium
     category: logic
