@@ -1,0 +1,238 @@
+{
+ "read": "2 Nov 2026",
+ "sources": {
+  "collector-crypt": {
+   "source": "Streamflow",
+   "pct": 39.2,
+   "new_tokens_12m": 346800000.0,
+   "month_tokens": 44600000.0,
+   "kinds": [
+    "vesting"
+   ],
+   "next": {
+    "ts": 1795910400,
+    "tokens": 44590000.0,
+    "recipients": [
+     {
+      "who": "Team",
+      "tokens": 32870000.0
+     },
+     {
+      "who": "Advisors",
+      "tokens": 6790000.0
+     },
+     {
+      "who": "Seed",
+      "tokens": 4930000.0
+     }
+    ]
+   },
+   "until": "July 2027"
+  },
+  "lombard": {
+   "source": "DeFiLlama",
+   "pct": 66.7,
+   "new_tokens_12m": 264585785.17148608,
+   "month_tokens": 22484814.01859818,
+   "kinds": [
+    "vesting"
+   ],
+   "next": {
+    "ts": 1796223174,
+    "tokens": 22484814.01859818,
+    "recipients": [
+     {
+      "who": "Ecosystem Development",
+      "tokens": 5856164.38356176
+     },
+     {
+      "who": "Liquid Bitcoin Foundation",
+      "tokens": 4311131.38686128
+     },
+     {
+      "who": "Early Investors",
+      "tokens": 5474452.554744501
+     },
+     {
+      "who": "Core Contributors",
+      "tokens": 6843065.69343064
+     }
+    ]
+   },
+   "until": "September 2029"
+  }
+ },
+ "finished": {
+  "tornado-cash": "November 2025",
+  "yearn": "August 2024",
+  "dodo": "August 2023",
+  "justlend": "May 2023",
+  "maple-finance": "September 2026",
+  "velora": "November 2025",
+  "vvs-finance": "November 2025",
+  "jupiter": "February 2026",
+  "ens": "November 2025",
+  "cowswap": "March 2026",
+  "sun": "September 2024",
+  "lfj": "February 2024",
+  "chainflip": "November 2026",
+  "chainlink": "October 2026",
+  "virtuals-protocol": "December 2023"
+ },
+ "dropstab": {
+  "sudoswap": {
+   "gecko": "sudoswap",
+   "next": null
+  },
+  "symbiosis": {
+   "gecko": "symbiosis-finance",
+   "next": {
+    "ts": 1793577600,
+    "tokens": 123962.5,
+    "who": "Node Runners Reward",
+    "type": "LINEAR"
+   }
+  },
+  "origin-protocol": {
+   "gecko": "origin-protocol",
+   "next": {
+    "ts": 1799452800,
+    "tokens": 6228252.083333334,
+    "who": "Foundation Reserve",
+    "type": "LINEAR"
+   }
+  },
+  "turbos": {
+   "gecko": "turbos-finance",
+   "next": null
+  },
+  "haedal": {
+   "gecko": "haedal",
+   "next": {
+    "ts": 1795910400,
+    "tokens": 8000000,
+    "who": "Team & Advisors",
+    "type": "LINEAR"
+   }
+  },
+  "zerolend": {
+   "gecko": "zerolend",
+   "next": {
+    "ts": 1793923200,
+    "tokens": 102041666.66666666,
+    "who": "Team",
+    "type": "LINEAR"
+   }
+  },
+  "hydration-dex": {
+   "gecko": "hydradx",
+   "next": null
+  },
+  "aark-digital": {
+   "gecko": "aark-digital",
+   "next": {
+    "ts": 1794268800,
+    "tokens": 133043.47826086957,
+    "who": "Core Contributors",
+    "type": "LINEAR"
+   }
+  },
+  "veranta": {
+   "gecko": "avantis",
+   "next": {
+    "ts": 1793577600,
+    "tokens": 54717.80821917808,
+    "who": "Foundation",
+    "type": "LINEAR"
+   }
+  },
+  "storm-trade": {
+   "gecko": "storm-trade",
+   "next": {
+    "ts": 1794787200,
+    "tokens": 7458073.913043478,
+    "who": "Investors",
+    "type": "LINEAR"
+   }
+  },
+  "bonk.fun": {
+   "gecko": "bonk",
+   "next": null
+  },
+  "arcadia-finance": {
+   "gecko": "arcadia",
+   "next": {
+    "ts": 1794268800,
+    "tokens": 800000,
+    "who": "Core Team",
+    "type": "LINEAR"
+   }
+  },
+  "kyberswap": {
+   "gecko": "kyber-network-crystal",
+   "next": null
+  },
+  "derive": {
+   "gecko": "derive",
+   "next": {
+    "ts": 1793577600,
+    "tokens": 32786.65207877461,
+    "who": "Team",
+    "type": "LINEAR"
+   }
+  },
+  "livepeer": {
+   "gecko": "livepeer",
+   "next": null
+  },
+  "tria": {
+   "gecko": "tria",
+   "next": {
+    "ts": 1793577600,
+    "tokens": 2992250.3649635036,
+    "who": "Community",
+    "type": "LINEAR"
+   }
+  },
+  "bitway-earn": {
+   "gecko": "bitway",
+   "next": {
+    "ts": 1793577600,
+    "tokens": 60237804.87804877,
+    "who": "Community",
+    "type": "LINEAR"
+   }
+  },
+  "hyperlane": {
+   "gecko": "hyperlane",
+   "next": {
+    "ts": 1795305600,
+    "tokens": 2293449,
+    "who": "Foundation Treasury",
+    "type": "LINEAR"
+   }
+  },
+  "alchemix": {
+   "gecko": "alchemix",
+   "next": {
+    "ts": 1794096000,
+    "tokens": 1832.9307272727272,
+    "who": "Tail emissions",
+    "type": "LINEAR"
+   }
+  },
+  "render-network-bme": {
+   "gecko": "render-token",
+   "next": {
+    "ts": 1796083200,
+    "tokens": 999178.1236759636,
+    "who": "Inflation Amount",
+    "type": "LINEAR"
+   }
+  },
+  "1inch": {
+   "gecko": "1inch",
+   "next": null
+  }
+ }
+}

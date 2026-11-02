@@ -66,6 +66,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/gem-screener-trust/serve.py", "--quiet"],
       "port": 8803
+    },
+    {
+      "name": "supply-analyzer-sources",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/supply-analyzer-sources/serve.py", "--quiet"],
+      "port": 8804
     }
   ]
 }
