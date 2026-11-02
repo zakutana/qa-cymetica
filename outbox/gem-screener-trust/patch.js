@@ -137,6 +137,8 @@
     const tile = [...panel.querySelectorAll('[class*=tile]')].find(t => /^\s*To holders/i.test(t.textContent));
     if (tile && !panel.querySelector('.gt-hold') && (e.holders_share_1y > 0 || e.holders_share > 0)) {
       const s30 = e.holders_share || 0, s1y = e.holders_share_1y || 0;
+      // their tile says "None, no payouts found" where only the last 30 days paid nothing
+      if (s30 === 0) [...tile.children].forEach(c => { if (/^(None|no payouts, buybacks or burns found)$/.test(c.textContent.trim())) c.remove(); });
       tile.insertAdjacentHTML('beforeend', `<p class="gt-note gt-hold">${N(5)}last 30 days <b${s30 === 0 ? ' class="weak"' : ''}>${pct(100 * s30)}</b> · 12 months <b>${pct(100 * s1y)}</b></p>`);
     }
     const rug = ((e.dlevel || {}).checks || []).find(c => c.id === 'rug_power');
@@ -144,7 +146,11 @@
     if (rug && guard && !guard.querySelector('.gt-chain')) {
       const chain = chainOf(rug.source_url), pool = (e.liq || {}).chain;
       const addr = (String(rug.source_url || '').match(/([0-9a-zA-Z]{32,})\/?$/) || [])[1] || '';
-      if (chain) guard.insertAdjacentHTML('beforeend', `<p class="gt-note gt-chain">${N(6)}Rug power read on <b>${esc(chain)}</b>${addr ? ' (' + esc(addr.slice(0, 6) + '…' + addr.slice(-4)) + ')' : ''}${pool && norm(pool) !== norm(chain) ? `; the pool it trades in is on <b class="weak">${esc(cap(pool))}</b>` : ''}.</p>`);
+      // under the guardians' icons, not at the foot of the section: the Degen report sits in it too
+      const after = [...guard.querySelectorAll('details')].find(d => /What changed in the meter/.test(d.textContent));
+      const line = `<p class="gt-note gt-chain">${N(6)}Rug power read on <b>${esc(chain)}</b>${addr ? ' (' + esc(addr.slice(0, 6) + '…' + addr.slice(-4)) + ')' : ''}${pool && norm(pool) !== norm(chain) ? `; the pool it trades in is on <b class="weak">${esc(cap(pool))}</b>` : ''}.</p>`;
+      if (chain && after) after.insertAdjacentHTML('beforebegin', line);
+      else if (chain) guard.insertAdjacentHTML('beforeend', line);
     }
     gtObserver.observe(panel, {childList: true, subtree: true});
   }
