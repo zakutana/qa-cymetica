@@ -19,3 +19,4 @@ Co jsme se domluvili, že je další krok, a ještě to není hotové. Píše se
 - [ ] 2026-10-18  Dluh k #156: a2a k MSG-0156 a komentář na reportu; potvrdit REPLY-0169/0170.
 - [ ] 2026-11-01  Po předělání: 16 řádků ve filed.json nemá kontrolu (šla s laborkou); běžný sweep vypíše k ruční kontrole 2, `--all` všech 16. Smazat `.claude/hooks/protect_state.py` (prázdný), až žádná session nedrží starý seznam hooků.
 - [ ] 2026-11-02  Prošvihlý bug: `test_a_spec_written_after_their_fix_keeps_every_line_and_change` padá od 15. 10. a nikdy nebyl podán (143 řádků žádosti, ET-32483 ztracen). Posoudit, čí je, a podat přes submit.py. První `sweep --all` projede i dalších 36 kontrol bez řádku.
+- [ ] 2026-11-02  Sezónní body: od 5. 11. přečíst /api/v1/company/14/season-breakdown. Gem Screener má 5 až 25 lidí denně; zůstane-li active_users a visitors 0 i po 3 dnech sezóny, napsat kontrolu a podat bug.
