@@ -109,8 +109,8 @@ def _arb(puzzle: dict) -> tuple[float, dict]:
         "data_used": ["cex_px", "dex_px", "gas_gwei", "eth_usd", "gas_units", "notional_usd",
                       "bridge_cost_usd"],
         "factors": [
-            {"name": f"price gap, (DEX - CEX) / CEX in bps: {snap['dex_px']:.4f} against "
-                     f"{snap['cex_px']:.4f} is {gap:.2f} bps", "weight": 0.7},
+            {"name": f"price gap: DEX {snap['dex_px']:.4f} against CEX {snap['cex_px']:.4f}, "
+                     f"(DEX - CEX) / CEX is {gap:.2f} bps", "weight": 0.7},
             {"name": f"gas: {snap['gas_gwei']:g} gwei x {snap['gas_units']:g} units x ETH "
                      f"{snap['eth_usd']:.2f} is {gas:.2f} bps of the {snap['notional_usd']:g} USD "
                      f"notional", "weight": 0.25},
