@@ -5218,6 +5218,22 @@
     "253": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "gem-screener-new-app-rule-not-applied",
+   "nodeids": [
+    "tests/rest/test_gem_screener_new_app_rule_is_applied.py::test_an_app_the_new_app_rule_admits_is_young"
+   ],
+   "report_ids": [
+    254
+   ],
+   "title": "Gem Screener: StonkFun (98 days, $6.1M a month, growing) fails Vetted on history although the gate says newer apps pass at $1M+ a month and growing",
+   "filed_at": "2026-11-02T08:24:24+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "254": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

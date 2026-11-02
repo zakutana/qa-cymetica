@@ -7665,6 +7665,38 @@ reports:
       people are read from (likely only: nothing we can read names it). Our check fails while a product has uses and no unique
       visitors; it passes when the people are counted or the uses go. GET requests only.
 
+  - key: gem-screener-new-app-rule-not-applied
+    findings: [CYM-an_app_the_new_app_rule_admits_is_young]
+    check: tests/rest/test_gem_screener_new_app_rule_is_applied.py::test_an_app_the_new_app_rule_admits_is_young
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: "Gem Screener: StonkFun (98 days, $6.1M a month, growing) fails Vetted on history although the gate says newer apps pass at $1M+ a month and growing"
+    expected: >
+      The Vetted gate's rule_long reads "at least 180 days of history... Newer apps pass at $1M+ a month and growing."
+      The snapshot publishes the numbers behind it (vetted.min_days 180, vetted.young_min_rev30 1,000,000). An app under 180
+      days with 30-day revenue over $1M, a growing six-month fit, a market cap over $3M and fresh data should be flagged
+      `young` and stay in the Degen picks, with the gold "young" tag.
+    actual: >
+      Read on 2026-11-02 at 06:20 UTC: StonkFun (STONK) has history 98 days, revenue 30d $6,130,933, growth6m +367 % a
+      month, market cap $94.4M, lag 2.3 days. Its only failed Vetted reason is `short_history`, and `young` is false, so
+      `degen_ok` is false (`degen_fail: ["not_vetted"]`) and it is not in GET /api/v1/gem-screener/picks. MASK (40 days,
+      $1.04M, +6 % a month) is young under the same rule, and it is the only young app of the 31 under 180 days. StonkFun
+      was among the Degen picks on 2026-10-10 (when it had about 75 days) and, as far as the operator saw, until 1 November. Nothing printed on the page or in /api-docs gives a limit on how many days a newer
+      app may have, so a reader sees the best-earning new app dropped with no stated reason.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/stonkfun -> history 98 days, revenue_30d 6130933, growth_6m +367.4 %/month, vetted {ok false, young false, failed ["short history (under 180 days)"]}'
+      - 'GET https://cymetica.com/api/v1/gem-screener/picks -> 10 picks, StonkFun is not one of them'
+      - 'Open https://cymetica.com/gem-screener/app?view=apps, read the JSON snapshot: vetted {min_days 180, young_min_rev30 1000000}; app stonkfun young false, reliable_fail ["short_history"]; app MASK young true'
+    body: >
+      Either the newer-app rule has a second limit the page does not state (a maximum number of days, a minimum number of
+      weeks of fit, or a size), in which case the gate text and the snapshot's vetted block should print it, or the rule is
+      not applied to StonkFun and it is a defect in the flag. A user who followed StonkFun as a top pick sees it vanish with the
+      reason "short history", which is the opposite of what "newer apps pass" says.
+      Our check fails while an app under min_days that meets every printed number (revenue, growth, market cap, lag, and no
+      other Vetted failure) is not young; it passes when StonkFun is young again, or when the limit is printed in
+      vetted and the check can read it. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
