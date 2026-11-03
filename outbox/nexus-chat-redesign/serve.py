@@ -30,7 +30,7 @@ DROP = {"content-security-policy", "content-security-policy-report-only", "conte
         "cross-origin-resource-policy", "x-frame-options", "cache-control", "pragma", "etag", "last-modified"}
 OWN = {"nexus-chat.css": "text/css; charset=utf-8", "demo.js": "text/javascript; charset=utf-8"}
 
-MARK = ('<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.8 17.4V6.6L17.2 17.4V6.6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+MARK = (HERE / "logos" / "01.svg").read_text(encoding="utf-8").strip()  # the operator picks from logos/ in the demo bar
 WELCOME = (f'<div class="nexus-welcome"><span class="nx-logo nx-logo-hero">{MARK}</span>'
            '<strong>Ask NEXUS anything</strong>'
            '<span>Type, attach a file or point at anything on this page.</span></div>')
@@ -314,6 +314,9 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(200, "text/javascript; charset=utf-8", patched_js())
         if bare.startswith("/_nx/") and bare[5:] in OWN:
             return self.send(200, OWN[bare[5:]], (HERE / bare[5:]).read_bytes())
+        if re.fullmatch(r"/_nx/logos/(\d\d\.svg|logos\.json)", bare):
+            kind = "application/json" if bare.endswith("json") else "image/svg+xml"
+            return self.send(200, kind + "; charset=utf-8", (HERE / bare[5:]).read_bytes())
         if bare == "/static/sw.js":
             return self.send(404, "text/plain", b"")
         if bare == "/api/v1/nexus/enabled":
