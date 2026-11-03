@@ -271,8 +271,8 @@ now (the fifteenth take); that folder is Antigravity's and is not written to fro
 
 - "Breed your hero agent" is the operator's wording. On 2026-10-28 Nexus said the lab-to-bot bridge was not built yet
   (ET-33133).
-- The prize, 500,000 / 250,000 / 100,000 ET10, is the operator's figure (uv-data.js `CO.SEASON`); Cymetica has not
-  confirmed it. So are the points for your products' use and your agent's trades (2026-10-31).
+- The prize, 50,000 / 30,000 / 10,000 ET10 a month, is Cymetica's own (`GET /api/v1/company/season`, `prizes_et10`,
+  season 2026-11, read 2026-11-03; it replaced our earlier 500,000 / 250,000 / 100,000). So are the points for your products' use and your agent's trades (2026-10-31).
 - What each department does is the live builder's own words: Development "drafts a Build it Better request" (it does
   not build; the pipeline does), Marketing "write briefs for my own Build it Better apps", the Quant Lab "keeps
   searching for a profitable agent", the Trading desk drafts "a seat at an Agent Casino table".

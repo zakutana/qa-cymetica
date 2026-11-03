@@ -6,9 +6,9 @@
   'use strict';
 
   var Q = window.QUEST = {
-    // The monthly prize (the operator, 2026-10-29: "kept at 500k / 250k / 100k"), as in our Universe mock's leaderboard
-    // (outbox/company-live/uv-data.js CO.SEASON.prizes). Cymetica has not confirmed it.
-    prizes: [500000, 250000, 100000],
+    // The monthly prize as Cymetica's own season API pays it (GET /api/v1/company/season, prizes_et10, season 2026-11,
+    // read 2026-11-03; the operator, 2026-11-03: "podle opravdovych cen zive"). Before that 500k / 250k / 100k, our own figure.
+    prizes: [50000, 30000, 10000],
     unit: 'ET10',
     slots: 3,
     // the live builder's pre-build (builder.js PRE, data.js TEMPLATES, read again 2026-10-31): four departments (Cymetica
