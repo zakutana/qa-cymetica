@@ -3,7 +3,6 @@
    site's cyan and green. Under every heading the words are small ("to co je pod hlavnim napisem musi byt mensi
    mnohem") and no point stands on a tile ("ty ikonky vsude ... jsou to vsude takove stejne kostky"). Cymetica's
    palette: green on the prize and the call, cyan for the way, blue for the third place, red only for a loss. */
-body { visibility: visible; }   /* index.html hides the body until this file is here */
 :root {
   --bg: #05070c; --deep: #06090f; --line: #1e3050; --text: #eef6fa; --dim: #a9bfcd; --mute: #7f93ad;
   --green: #00ff88; --cyan: #00cfff; --blue: #3b82f6; --red: #ff4444;

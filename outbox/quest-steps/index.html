@@ -6,8 +6,8 @@
 <title>The Cymetica Quest</title>
 <meta name="description" content="Join the Cymetica Quest: earn points, climb the leaderboard and earn up to 50,000 ET10 every month.">
 <link rel="alternate" type="text/markdown" href="llms.txt" title="The Quest, for AI agents">
-<!-- until quest.css has arrived the page is a dark blank, never unstyled (its first rule shows the body): a slow or failed stylesheet once left the logo's svg as big as the window -->
-<style>html { background: #05070c; } body { visibility: hidden; }</style>
+<!-- a dark ground and sized icons (width/height on each svg) before quest.css arrives: a slow stylesheet once showed the mark as big as the window. Nothing here depends on quest.css, so an old cached copy of either file still works with a new one -->
+<style>html { background: #05070c; }</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
@@ -30,7 +30,7 @@
 <div id="sky" aria-hidden="true"><canvas id="twinkle"></canvas></div>
 <header id="bar">
   <a class="brand" href="#hero" aria-label="The Cymetica Quest">
-    <svg viewBox="0 0 64 64" aria-hidden="true">
+    <svg width="46" height="46" viewBox="0 0 64 64" aria-hidden="true">
       <defs>
         <radialGradient id="qb-core" cx="36%" cy="26%" r="74%">
           <stop offset="0" stop-color="#142b44"/>
@@ -81,8 +81,8 @@
       <div class="words">
         <h1><span class="g">Cymetica Quest.</span><br>Join. Earn points.<br>Climb the leaderboard.<br>Earn up to <span class="g"><b data-figure="prizes.0"></b> <span data-figure="unit"></span></span><br>every month.</h1>
         <div class="hero-cta">
-          <a class="btn-go" data-link="builder"><span>Start a company</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
-          <a class="btn-how" href="#s1"><span>See the 5 steps</span><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
+          <a class="btn-go" data-link="builder"><span>Start a company</span><svg width="19" height="19" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></a>
+          <a class="btn-how" href="#s1"><span>See the 5 steps</span><svg width="19" height="19" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M5 11l5 5 5-5"/></svg></a>
         </div>
       </div>
       <div class="board-wrap">
@@ -216,11 +216,11 @@
     <div class="doors rv">
       <a class="door go" data-link="builder">
         <span class="art"><span class="door-tag"><i></i>Company Builder</span><span class="clip xf" data-anim="door-hq" data-loop-from="1" data-key><video muted playsinline preload="none" poster="pics/office.webp" width="1500" height="1132"><source src="clips/office.mp4" type="video/mp4"><source src="clips/office.webm" type="video/webm"></video></span></span>
-        <span class="cta"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+        <span class="cta"><span class="t">Start a company</span><i class="ray"></i><span class="arr"><svg width="46" height="46" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
       </a>
       <a class="door uv" data-link="universe">
         <span class="art"><span class="door-tag"><i></i>Live Ecosystem</span><span class="clip xf" data-anim="door-universe" data-key="glow"><video muted playsinline preload="none" poster="pics/universe.webp" width="1778" height="958"><source src="clips/universe.mp4" type="video/mp4"><source src="clips/universe.webm" type="video/webm"></video></span><span class="sun" aria-hidden="true"><img src="pics/sun.webp" alt=""></span></span>
-        <span class="cta"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
+        <span class="cta"><span class="t">Explore<br><span>the Universe</span></span><i class="ray"></i><span class="arr"><svg width="46" height="46" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></span>
       </a>
     </div>
   </section>
