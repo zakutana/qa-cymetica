@@ -180,7 +180,9 @@ def accounts(table: dict) -> list[dict]:
         if row.get("house") and (_number(row.get("prize_usdc")) or 0) > 0:
             out.append(_found("house_paid", table, f"house seat {row.get('seat_id')} was paid "
                                                    f"{row.get('prize_usdc')}", seat_id=row.get("seat_id")))
-    order = sorted((r for r in ranked if _number(r.get("rank")) is not None), key=lambda r: r["rank"])
+    # their rule since ET-33648: a seat flagged no_trades ranks under every seat that traded
+    order = sorted((r for r in ranked if _number(r.get("rank")) is not None and not r.get("no_trades")),
+                   key=lambda r: r["rank"])
     rois = [_number(r.get("roi_pct")) for r in order]
     if any(a is not None and b is not None and a < b for a, b in zip(rois, rois[1:])):
         out.append(_found("rank_vs_roi", table, f"rank order reads ROI {rois}"))

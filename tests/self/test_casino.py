@@ -120,6 +120,17 @@ def test_the_accounts_of_a_finished_table_must_close():
 
 
 @qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
+def test_a_seat_with_no_trades_ranks_under_every_seat_that_traded_by_their_rule():
+    """ET-33648 item 8: NO TRADES ranks last whatever its 0 % reads against a losing seat (table 68)."""
+    table = done_table()
+    ranked = table["results"]["ranked"]
+    ranked[-1].update(roi_pct=0.0, pnl_usdc=0.0, no_trades=True, trades=0)
+    ranked[-2]["roi_pct"] = -5.0
+    ranked[-2]["pnl_usdc"] = -5.0 * table["capital_usdc"] / 100
+    assert "rank_vs_roi" not in keys(casino.contradictions(table))
+
+
+@qa(component="meta.pipeline", tier=SafetyTier.SAFE, surface="meta")
 def test_a_tune_must_be_in_the_public_feed_and_a_feed_row_in_the_log():
     tune = {"at": "2026-11-01T08:42:39+00:00", "kind": "TUNED", "by": "NEXUS",
             "text": "stop loss 7 → 5 % · rank 1 → 2"}
