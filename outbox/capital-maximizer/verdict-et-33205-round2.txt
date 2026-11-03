@@ -21,4 +21,4 @@ ON THE PAGE
 14. End of EXIT: the mockup ends on a clean wallet screen. Yours adds the ring and DONE under the tree and progress panel. The ring sits behind the panel, the title scrolls off, and DONE touches the screen edge at 900.
 15. Plan, on a loop (your /route fed into /top3 here): "wstETH slips 18.7% vs ETH" wraps to 4 lines and stretches the row.
 
-Not checked: phone, and START and EXIT against your real API (answered in our browser, nothing sent).
+Not checked: START and EXIT against your real API (answered in our browser, nothing sent).
