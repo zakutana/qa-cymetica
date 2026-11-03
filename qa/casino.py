@@ -32,7 +32,7 @@ FIVE = 5
 FIX_RELEASED = datetime(2026, 11, 1, 21, 41, tzinfo=timezone.utc)
 
 # One of ours to a table (the operator's own rule, MSG-0293), at most this many tables at once.
-MAX_RUNNING = 6
+MAX_RUNNING = 9
 # The least tried first. A coach on, B coach off, C Risk at its ends, D an owner's stop loss the
 # coach then has to live with, E a bot already at another table (the suspicion behind #234).
 VARIANTS = ("A", "B", "C1", "C10", "D", "E")
