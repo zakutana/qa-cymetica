@@ -16,11 +16,8 @@ This folder is the finished page, complete. Nothing else is needed.
 
 Fonts come from Google Fonts (Archivo Black, Inter, JetBrains Mono, Rajdhani); nothing else is fetched from outside.
 
-**What to change when you build it in (and only this):**
+**What to change when you build it in: nothing in the page.** It is final as it runs here, with no live data on purpose: the prizes (50,000 / 30,000 / 10,000 ET10), the pool (90,000), the top bar's "up to" figure and the step 5 board's companies and points are fixed in `quest.js` (`QUEST.prizes`, `QUEST.pool`, `QUEST.board`; the board is an example). Only `llms.txt` points agents at the live season API (`GET /api/v1/company/season`) and should be kept in step with it.
 
-1. The three prizes, the pool, the top bar's "up to" figure and the step 5 board's rows come from `GET /api/v1/company/season` (`prizes_et10`, `rows`) instead of the numbers in `quest.js` (`QUEST.prizes`, `QUEST.pool`, `QUEST.board`). The board's companies and points in the file are placeholders.
-2. Keep `llms.txt`'s figures in step with the same API.
-
-**What not to change:** the look, the type, the colours, the motion, the order, the words. The page was judged by eye at 1920 px, 1440, 1280, 1024 and on a phone (390), in Firefox and Chrome. It loads 1.9 MB first; the clips load as their steps come near and are fetched in the background after that (about 30 MB in all, one format each).
+**What not to change:** the look, the type, the colours, the motion, the order, the words, the figures. The page was judged by eye at 1920 px, 1440, 1280, 1024 and on a phone (390), in Firefox and Chrome. It loads 1.9 MB first; the clips load as their steps come near and are fetched in the background after that (about 30 MB in all, one format each).
 
 Source of the clips: `record.py` films them from the live pages; `slim.py` and `keycheck.py` shrink them without a visible loss. You do not need them to run the page.
