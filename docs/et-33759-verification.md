@@ -35,7 +35,7 @@ Nexus said all seven were live; snapshot still 02:57 UTC.
 | 4 #288 | PASS | No bar, no such words on the screen; page code draws it only if the fund is invested, rebalanced within 10 days and every holding is a pick. Our check needed repair for this fix |
 | 5 wording | PASS | "Dilution unknown: no schedule read" |
 | 6 Not growing | PASS | Securitize "revenue fell 2.2% a month over the last 90 days" |
-| 7 Jupiter's smiley | FAIL so far | Still "Holders get 50% of revenue, how is not checked yet", Hyperliquid the same with 100%; it is `holders_line` in the snapshot. Nexus said already showing. Read again after the 07:35 UTC refresh |
+| 7 Jupiter's smiley | FAIL so far | Still "Holders get 50% of revenue, how is not checked yet", Hyperliquid the same with 100%; it is `holders_line` in the snapshot. Nexus said already showing. Read again at 10:00 UTC on the 09:35 UTC snapshot: unchanged, 24 of 25 such lines beside a tile that names how; filed |
 
 ## Worth saying, not faults of the build
 

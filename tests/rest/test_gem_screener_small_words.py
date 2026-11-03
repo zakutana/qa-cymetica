@@ -283,6 +283,24 @@ def test_a_pick_card_says_the_exploit_its_guardian_lists(rest_anon):
 
 
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_the_smiley_says_how_where_the_panel_does(rest_anon):
+    """The smiley's 'how is not checked yet' beside a To holders tile that names how: one of the two is wrong. Either the
+    line naming it or the tile dropping it clears this."""
+    snap, _ = read_page(rest_anon)
+    tiles = {(row.get("token") or {}).get("key"): (row.get("tiles") or {}).get("to_holders") or {}
+             for row in _json(rest_anon, SUPPLY_BATCH).get("items") or []}
+    if not tiles:
+        raise Inconclusive("the batch is empty")
+    rows = [a for a in snap.get("apps") or [] if "not checked" in (a.get("holders_line") or "")]
+    breaches = []
+    for app in rows:
+        how = tiles.get(app.get("key"), {}).get("how")
+        if how:
+            breaches.append({"what": f"{app.get('symbol')}: smiley \"{app['holders_line']}\"; To holders \"{how}\""})
+    _verdict(breaches, len(rows), "no smiley says 'not checked' where the panel names how")
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_the_top_picks_fund_bar_is_rebalanced_as_often_as_it_says(rest_anon):
     """The bar says 'rebalanced weekly'. A last rebalance over two weeks old makes that false. A rebalance, other words or no
     bar clears it. Since their fix the words stay in the page's script behind topPicksFundOpen, which draws no bar on a fund

@@ -8620,6 +8620,26 @@ reports:
     body: >
       We have no check for this: the sentence changes between passes. Handing NEXUS the holdings of what it pitches, and not only the label and the returns, would prevent it. GET requests only.
 
+  - key: gem-screener-smiley-says-not-checked-where-panel-says-how
+    findings: [CYM-the_smiley_says_how_where_the_panel_does]
+    check: tests/rest/test_gem_screener_small_words.py::test_the_smiley_says_how_where_the_panel_does
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=apps
+    title: "Gem Screener: the smiley says \"how is not checked yet\" on 24 apps whose To holders tile names how, Jupiter and Hyperliquid among them; the fix was reported live"
+    expected: >
+      The smiley's line and the panel's To holders tile say the same thing. Nexus reported on 2026-11-03: "Jupiter: the smiley now says what the panel says (bought back and paid to stakers in fees), not 'how is not checked yet'", and "Everything above is already showing".
+    actual: >
+      Read on 2026-11-03 10:00 UTC, snapshot 09:35 UTC, after the refresh Nexus named. Jupiter's smiley, as drawn: "Holders get 50% of revenue, how is not checked yet"; its panel: "$1.8M a month, 50.0% of revenue · bought back (3.7M JUP) and paid to stakers in fees".
+      Hyperliquid's smiley: "Holders get 100% of revenue, how is not checked yet"; its panel: "$63.9M a month, 100% of revenue · bought back and burned (745K HYPE)". Of 25 apps whose holders_line says "not checked", 24 have a To holders tile that names how.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app?view=apps -> Jupiter row, smiley: data-tip as quoted'
+      - 'Open https://cymetica.com/gem-screener/app?coin=jupiter -> To holders as quoted'
+      - 'Same page snapshot apps[slug=jupiter].holders_line -> "Holders get 50% of revenue, how is not checked yet"'
+      - 'GET https://cymetica.com/api/v1/supply-analyzer/batch/gem-screener -> token.slug jupiter: tiles.to_holders.how "bought back (3.7M JUP) and paid to stakers in fees"'
+    body: >
+      Our check reads every app whose line says "not checked" and fails where the tile names how. The line naming it, or the tile dropping it, clears it. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

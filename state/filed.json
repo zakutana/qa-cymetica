@@ -6217,6 +6217,22 @@
     "299": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "gem-screener-smiley-says-not-checked-where-panel-says-how",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_the_smiley_says_how_where_the_panel_does"
+   ],
+   "report_ids": [
+    300
+   ],
+   "title": "Gem Screener: the smiley says \"how is not checked yet\" on 24 apps whose To holders tile names how, Jupiter and Hyperliquid among them; the fix was reported live",
+   "filed_at": "2026-11-03T10:08:11+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "300": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
