@@ -97,11 +97,12 @@ main { position: relative; z-index: 2; }
 .pill { position: relative; flex: none; display: inline-flex; align-items: center; gap: 8px; font: 700 12px 'JetBrains Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--text); white-space: nowrap; }
 .pill i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: live-pulse 2s var(--ease) infinite; }
 @keyframes live-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .48; transform: scale(.86); } }
-.pill b { font: 400 18px/1 'Archivo Black', sans-serif; letter-spacing: 0; color: var(--green); padding: 7px 12px; border-radius: 12px; text-shadow: 0 0 10px rgba(0, 255, 136, .5);
-  background: linear-gradient(113deg, rgba(255, 255, 255, 0) 71%, rgba(255, 255, 255, .085) 71.6%, rgba(255, 255, 255, .012) 90%, rgba(255, 255, 255, 0) 100%),
-    radial-gradient(74% 90% at 50% 50%, rgba(0, 255, 136, .12), rgba(0, 255, 136, 0) 100%),
-    linear-gradient(180deg, #111926 0%, #05080e 56%, #060a11 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), inset 0 0 0 1px rgba(255, 255, 255, .07), inset 0 -1px 0 rgba(0, 255, 136, .34), 0 0 0 1px rgba(0, 0, 0, .7), 0 10px 22px -12px rgba(0, 255, 136, .55); }
+/* ("a tady to taky zmen na zelenou hned"): green at rest, the same fill as the green keys */
+.pill b { font: 400 18px/1 'Archivo Black', sans-serif; letter-spacing: 0; color: #03140c; padding: 7px 12px; border-radius: 12px;
+  background: linear-gradient(113deg, rgba(255, 255, 255, 0) 71%, rgba(255, 255, 255, .2) 71.6%, rgba(255, 255, 255, .03) 92%, rgba(255, 255, 255, 0) 100%),
+    radial-gradient(130% 120% at 30% -30%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, #00ff88, #00ff88);
+  box-shadow: inset 0 1.5px 0 #ffffff, inset 0 -1px 0 rgba(0, 0, 0, .28), 0 0 0 1px rgba(0, 255, 136, .4), 0 10px 22px -10px rgba(0, 255, 136, .8); }
 
 /* ---- type: the heading big (the start page's .lp-h1), everything under it small */
 .kick { font: 800 18px 'JetBrains Mono'; letter-spacing: .26em; text-transform: uppercase; color: var(--cyan); text-shadow: 0 0 12px rgba(0, 207, 255, .6); }
