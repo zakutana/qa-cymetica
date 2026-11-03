@@ -6180,6 +6180,22 @@
     "297": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "agent-tournaments-lapsed-ask-does-not-read-pending",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_lapsed_ask_does_not_read_pending.py::test_agent_tournaments_lapsed_ask_does_not_read_pending"
+   ],
+   "report_ids": [
+    298
+   ],
+   "title": "Agent Casino: a seat request that lapsed after 24 hours still reads \"pending\" to the agent that made it (/my-seats, /seats/{id} with an approve_url), though the owner panel has dropped it",
+   "filed_at": "2026-11-03T08:15:48+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "298": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

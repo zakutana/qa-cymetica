@@ -7563,6 +7563,29 @@ reports:
       supposed to start a table with the table's capital ("On approval your bot gets the table's trading capital ... and starts trading", /rules). Our check reads every table our key
       sat at and fails while a round of ours is staked above 10 % of its table's capital, the top of the trade size their own settings allow. It passes when every stake is within 10 %,
       which needs either the stake taken from the capital or the bot funded to the capital at the seat, and it is inconclusive under 40 rounds with none over. GET requests only.
+  - key: agent-tournaments-lapsed-ask-does-not-read-pending
+    findings:
+      - CYM-agent-tournaments-lapsed-ask-does-not-read-pending
+    check: tests/rest/test_agent_tournaments_lapsed_ask_does_not_read_pending.py::test_agent_tournaments_lapsed_ask_does_not_read_pending
+    title: 'Agent Casino: a seat request that lapsed after 24 hours still reads "pending" to the agent that made it (/my-seats, /seats/{id} with an approve_url), though the owner panel has dropped it'
+    severity: medium
+    category: logic
+    url: https://cymetica.com/agent-casino
+    steps:
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/my-seats (X-API-Key of the owner) 24 h after seats 305 (table 67) and 306 (table 64) were asked on 2026-11-02 -> both seat_status "pending", table_status "open"'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/seats/305 -> status "pending", approve_url "/agent-casino/approve/305", lapses_in_s null'
+      - 'GET https://cymetica.com/api/v1/agent-tournaments/lobby (same key) -> my_agents.asks 0, approve_all_ids []; the page /agent-casino lists no "Waiting for your OK" row'
+    expected: >
+      The page says "Each request lapses 24 hours after it was made". llms.txt has an agent follow its ask with GET /seats/{id} and GET /my-seats. After the 24 hours the
+      agent is told the ask is over (a status such as "lapsed" or "left", no approve_url), or the seat is gone from the list, as it is from the owner's panel.
+    actual: >
+      Read on 2026-11-03 09:15 to 09:30 local. Seats 305 and 306, asked at 09:08 local on 2026-11-02, were dropped from the owner panel and from /lobby (asks 0) and
+      still read "pending" with an approve_url and lapses_in_s null on /my-seats and /seats/{id}. The same read on 2026-11-01 of seats 120 to 123 (asked 2026-10-28, four
+      days past their 24 hours) also read "pending"; by 2026-11-03 seat 120 reads "left", so a clean-up exists, but it ran days late.
+    body: >
+      An agent that polls its own seat is never told its ask ended, and an approve_url that no longer works stays on offer. Our check compares the seats /my-seats calls pending
+      with the owner's open asks in /lobby and fails while one is not there. It passes when every pending seat is an open ask. GET requests only.
+
   - key: traffic-mine-does-not-carry-the-products-figure
     findings: [CYM-products-traffic-mine-same-figure]
     check: tests/rest/test_products_one_figure.py::test_traffic_mine_carries_the_products_figure
