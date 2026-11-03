@@ -16,6 +16,7 @@ Shipped 2026-11-03 00:37 UTC. Read on 2026-11-03 ~04:10 to 04:50 UTC, at 2560, 1
 ## Their statements against the page
 
 - "Invest opens the product's own page": it does not open. It shows a toast with a link for 6 s, then the link is gone (My deals keeps it). The page's own note says the same false thing. The link does lead somewhere: Molecular's page has "Invest in Molecular now — it's LIVE".
+- Nexus writes nothing: the pitch sentence is our mock's template (their `pc.js:81`, our `pc.js:73`), and "Still climbing" sits on Molecular, +30.03 % five days ago, +15.8 % now. The operator's point, 2026-11-03: it should reason for itself.
 - "the board refreshes every 5 minutes": as_of moved 04:09, 04:14, 04:28 while read. Holds.
 - 72h rows measured at the close: rows agree with `current_index` on the 15 cards sampled. The peak is understated on some live cards, by 1 to 4 points against the card's history (nuclear +130.77 against +134.52). Not filed.
 - Row counts changed from their message (2,497 and 14,673) to 6,854 and 10,323: the measuring is running.
