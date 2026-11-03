@@ -117,6 +117,31 @@ def infiltrator() -> str:
             + f'<circle cx="64" cy="55" r="6.5" fill="{INK}"/><circle cx="69" cy="50" r="3" fill="{WHITE}"/></g>')
 
 
+def pitch_cards() -> str:
+    """Nexus pitches, you swipe: a card with a rising line, the card behind it, and the swipe to the right."""
+    back = (f'<g transform="rotate(-13 52 66)"><rect x="24" y="22" width="52" height="76" rx="10" fill="{GLASS}" '
+            f'stroke="{CYAN}" stroke-opacity=".55" stroke-width="4.5"/></g>')
+    line = "M41 88 L52 78 L60 83 L74 56"
+    front = (f'<g transform="rotate(7 58 64)">'
+             f'<rect x="30" y="24" width="56" height="80" rx="10" fill="{GLASS}" stroke="url(#g)" stroke-width="6"/>'
+             f'<rect x="40" y="35" width="22" height="5" rx="2.5" fill="{WHITE}" fill-opacity=".85"/>'
+             f'<path d="{line}" fill="none" stroke="{GREEN}" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round" filter="url(#led)"/>'
+             f'<circle cx="74" cy="56" r="5.5" fill="{WHITE}" filter="url(#led)"/>'
+             f'<rect x="40" y="94" width="36" height="3.5" rx="1.75" fill="{CYAN}" fill-opacity=".5"/></g>')
+    swipe = (f'<path d="M86 64 H112 M101 52 L113 64 L101 76" fill="none" stroke="{GREEN}" stroke-width="7" '
+             f'stroke-linecap="round" stroke-linejoin="round"/>')
+    cards = back + lit(front, .4)
+    return f'<g transform="translate(46 64) scale(.84) translate(-58 -64)">{cards}</g><g filter="url(#led)">{swipe}</g>'
+
+
+def capital_maximizer() -> str:
+    """The product's own mark, logo-12 (Hologram Dollar), the one its spec and its page header use, in the 128 frame."""
+    import re
+    svg = (HERE.parent / "capital-maximizer" / "logos" / "logo-12.svg").read_text(encoding="utf-8")
+    inner = re.sub(r"^\s*<svg[^>]*>|</svg>\s*$", "", svg.strip())
+    return f'<g transform="translate(64 64) scale(1.78) translate(-32 -32)">{inner}</g>'
+
+
 # --- the marks their live pages already show ------------------------------------------------------------------------
 
 def gem_screener() -> str:
@@ -172,7 +197,9 @@ ICONS = [("team-dump-radar", "Team Dump Radar", "/team-dump-radar", team_dump_ra
          ("chart-analyzer", "Chart Analyzer", "/chart-analyzer", chart_analyzer, 121, 303),
          ("promo-market", "Promo Market", "/creator-dashboard", promo_market, 32, 2),
          ("airdrop-farmer", "Airdrop Farmer", "Deposit USDC and do nothing", airdrop_farmer, 23, 28),
-         ("infiltrator", "Infiltrator", "/infiltrator", infiltrator, 0, 18)]
+         ("infiltrator", "Infiltrator", "/infiltrator", infiltrator, 0, 18),
+         ("pitch-cards", "Pitch Cards", "/pitch-cards", pitch_cards, 0, 3),
+         ("capital-maximizer", "Capital Maximizer", "/capital-maximizer", capital_maximizer, 0, 4)]
 
 
 def svg_of(draw) -> str:
