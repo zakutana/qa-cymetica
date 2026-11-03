@@ -4,7 +4,7 @@ Asked for by the operator on 2026-11-03: *"ok vse pushni a priprav spec"*, then,
 
 The page is our mock `outbox/quest-steps` (http://127.0.0.1:8800/ from the `quest-steps 8800` terminal), 16 takes, the pictures are shot from it. The form follows ET-33759 (Gem Screener, 2026-11-02, accepted and shipped, verdict pass): a plain first line, Why, MUST STAY AS DRAWN, numbered goals that name their picture, Done when with `[ ]` lines, the pictures as design URLs.
 
-**request.txt:** 5,056 of 8,000 characters, 26 of 40 lines, 5 of 6 pictures.
+**request.txt:** 5,824 of 8,000 characters, 27 of 40 lines, 5 of 6 pictures. Its SOURCE line hands over the whole finished page (`outbox/quest-steps`, with HANDOVER.md, the six clips and llms.txt); the operator, 2026-11-03: *"to je finalni edice"*. Nothing of it reaches them until it is pushed.
 
 | Picture | Shows |
 |---|---|
