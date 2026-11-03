@@ -262,3 +262,20 @@ def test_to_holders_says_none_only_where_it_knows(rest_anon):
         if "holders' share unknown" in report and (coin.get("to_holders") or {}).get("value") in (None, 0):
             breaches.append({"what": "Dolomite: the panel's To holders reads None, 'no payouts, buybacks or burns found'; its report reads \"holders' share unknown\" and \"DefiLlama's fee page could not be read\""})
     _verdict(breaches, 1, "None is said only where it is known", {"coin": "/api/v1/gem-screener/coins/dolomite"})
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_a_pick_card_says_the_exploit_its_guardian_lists(rest_anon):
+    """ET-33759 item 1: the card reads the exploit from the check the Guardians use. A check reading 'Exploit in the last
+    year' beside a card field with none leaves a pick looking clean. Either side moving clears it: the card saying it, or
+    the check no longer listing it."""
+    snap, _ = read_page(rest_anon)
+    passing = [a for a in snap.get("apps") or [] if a.get("degen_ok")]
+    if not passing:
+        raise Inconclusive("no app passes the gates on this snapshot")
+    breaches = []
+    for app in passing:
+        check = _check(_coin(rest_anon, app["slug"]), "track_record")
+        if check.get("verdict") == "bad" and not (app.get("dlevel") or {}).get("exploit_1y"):
+            breaches.append({"what": f"{app.get('symbol')}: check says \"{check.get('context')}\"; dlevel.exploit_1y is empty, the card shows no exploit"})
+    _verdict(breaches, len(passing), "every pick whose check lists an exploit in the last year carries it to the card")

@@ -5167,7 +5167,7 @@
    "filed_at": "2026-11-02T07:20:09+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "250": "pending"
+    "250": "fixed"
    },
    "withdrawn": false
   },
@@ -5183,7 +5183,7 @@
    "filed_at": "2026-11-02T07:20:42+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "251": "pending"
+    "251": "fixed"
    },
    "withdrawn": false
   },
@@ -5199,7 +5199,7 @@
    "filed_at": "2026-11-02T07:20:54+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "252": "pending"
+    "252": "fixed"
    },
    "withdrawn": false
   },
@@ -5215,7 +5215,7 @@
    "filed_at": "2026-11-02T07:23:06+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "253": "pending"
+    "253": "fixed"
    },
    "withdrawn": false
   },
@@ -5237,7 +5237,7 @@
     }
    ],
    "their_status": {
-    "254": "pending"
+    "254": "fixed"
    },
    "withdrawn": true
   },
@@ -5253,7 +5253,7 @@
    "filed_at": "2026-11-02T09:22:17+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "255": "pending"
+    "255": "fixed"
    },
    "withdrawn": false
   },
@@ -5269,7 +5269,7 @@
    "filed_at": "2026-11-02T09:22:30+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "256": "pending"
+    "256": "fixed"
    },
    "withdrawn": false
   },
@@ -5285,7 +5285,7 @@
    "filed_at": "2026-11-02T09:22:44+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "257": "pending"
+    "257": "fixed"
    },
    "withdrawn": false
   },
@@ -5301,7 +5301,7 @@
    "filed_at": "2026-11-02T09:22:56+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "258": "pending"
+    "258": "fixed"
    },
    "withdrawn": false
   },
@@ -5317,7 +5317,7 @@
    "filed_at": "2026-11-02T09:23:29+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "259": "pending"
+    "259": "fixed"
    },
    "withdrawn": false
   },
@@ -5333,7 +5333,7 @@
    "filed_at": "2026-11-02T09:23:40+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "260": "pending"
+    "260": "fixed"
    },
    "withdrawn": false
   },
@@ -5349,7 +5349,7 @@
    "filed_at": "2026-11-02T09:24:38+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "261": "pending"
+    "261": "fixed"
    },
    "withdrawn": false
   },
@@ -5365,7 +5365,7 @@
    "filed_at": "2026-11-02T09:24:49+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "262": "pending"
+    "262": "fixed"
    },
    "withdrawn": false
   },
@@ -5381,7 +5381,7 @@
    "filed_at": "2026-11-02T09:25:00+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "263": "pending"
+    "263": "fixed"
    },
    "withdrawn": false
   },
@@ -5397,7 +5397,7 @@
    "filed_at": "2026-11-02T09:25:12+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "264": "pending"
+    "264": "fixed"
    },
    "withdrawn": false
   },
@@ -5413,7 +5413,7 @@
    "filed_at": "2026-11-02T09:25:22+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "265": "pending"
+    "265": "fixed"
    },
    "withdrawn": false
   },
@@ -5429,7 +5429,7 @@
    "filed_at": "2026-11-02T09:25:34+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "266": "pending"
+    "266": "fixed"
    },
    "withdrawn": false
   },
@@ -5445,7 +5445,7 @@
    "filed_at": "2026-11-02T09:26:10+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "267": "pending"
+    "267": "fixed"
    },
    "withdrawn": false
   },
@@ -5461,7 +5461,7 @@
    "filed_at": "2026-11-02T09:26:19+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "268": "pending"
+    "268": "fixed"
    },
    "withdrawn": false
   },
@@ -5477,7 +5477,7 @@
    "filed_at": "2026-11-02T09:26:48+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "269": "pending"
+    "269": "fixed"
    },
    "withdrawn": false
   },
@@ -5491,7 +5491,7 @@
    "filed_at": "2026-11-02T09:26:53+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "270": "pending"
+    "270": "fixed"
    },
    "withdrawn": false
   },
@@ -5507,7 +5507,7 @@
    "filed_at": "2026-11-02T09:27:05+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "271": "pending"
+    "271": "fixed"
    },
    "withdrawn": false
   },
@@ -5523,7 +5523,7 @@
    "filed_at": "2026-11-02T09:27:17+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "272": "pending"
+    "272": "fixed"
    },
    "withdrawn": false
   },
@@ -5539,7 +5539,7 @@
    "filed_at": "2026-11-02T09:27:26+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "273": "pending"
+    "273": "fixed"
    },
    "withdrawn": false
   },
@@ -5555,7 +5555,7 @@
    "filed_at": "2026-11-02T13:16:12+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "274": "pending"
+    "274": "fixed"
    },
    "withdrawn": false
   },
@@ -5571,7 +5571,7 @@
    "filed_at": "2026-11-02T13:16:24+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "275": "pending"
+    "275": "fixed"
    },
    "withdrawn": false
   },
@@ -5587,7 +5587,7 @@
    "filed_at": "2026-11-02T13:16:35+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "276": "pending"
+    "276": "fixed"
    },
    "withdrawn": false
   },
@@ -5603,7 +5603,7 @@
    "filed_at": "2026-11-02T13:16:48+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "277": "pending"
+    "277": "fixed"
    },
    "withdrawn": false
   },
@@ -5619,7 +5619,7 @@
    "filed_at": "2026-11-02T13:16:59+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "278": "pending"
+    "278": "fixed"
    },
    "withdrawn": false
   },
@@ -5635,7 +5635,7 @@
    "filed_at": "2026-11-02T13:17:13+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "279": "pending"
+    "279": "fixed"
    },
    "withdrawn": false
   },
@@ -5651,7 +5651,7 @@
    "filed_at": "2026-11-02T13:17:32+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "280": "pending"
+    "280": "fixed"
    },
    "withdrawn": false
   },
@@ -5667,7 +5667,7 @@
    "filed_at": "2026-11-02T13:17:57+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "281": "pending"
+    "281": "fixed"
    },
    "withdrawn": false
   },
@@ -5683,7 +5683,7 @@
    "filed_at": "2026-11-02T13:18:32+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "282": "pending"
+    "282": "paid"
    },
    "withdrawn": false
   },
@@ -5699,7 +5699,7 @@
    "filed_at": "2026-11-02T13:19:03+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "283": "pending"
+    "283": "fixed"
    },
    "withdrawn": false
   },
@@ -5715,7 +5715,7 @@
    "filed_at": "2026-11-02T13:38:11+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "284": "pending"
+    "284": "fixed"
    },
    "withdrawn": false
   },
@@ -5731,7 +5731,7 @@
    "filed_at": "2026-11-02T13:38:39+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "285": "pending"
+    "285": "fixed"
    },
    "withdrawn": false
   },
@@ -5747,7 +5747,23 @@
    "filed_at": "2026-11-02T13:39:46+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "286": "pending"
+    "286": "fixed"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-card-omits-exploit-its-guardian-lists",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_a_pick_card_says_the_exploit_its_guardian_lists"
+   ],
+   "report_ids": [
+    287
+   ],
+   "title": "Top Picks (ET-33759 item 1): the cards of Aero and CoWSwap show no exploit, while their own track-record check reads \"Exploit in the last year\"",
+   "filed_at": "2026-11-03T04:29:15+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "287": "pending"
    },
    "withdrawn": false
   }

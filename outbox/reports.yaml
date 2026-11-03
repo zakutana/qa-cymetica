@@ -8378,6 +8378,27 @@ reports:
     body: >
       Our check fails while a row draws 100 % Free to sell with vesting and staking listed unknown. A grey or dashed pie, or none, clears it. GET requests only.
 
+  - key: gem-screener-card-omits-exploit-its-guardian-lists
+    findings: [CYM-a_pick_card_says_the_exploit_its_guardian_lists]
+    check: tests/rest/test_gem_screener_small_words.py::test_a_pick_card_says_the_exploit_its_guardian_lists
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=start
+    title: "Top Picks (ET-33759 item 1): the cards of Aero and CoWSwap show no exploit, while their own track-record check reads \"Exploit in the last year\""
+    expected: >
+      ET-33759 item 1: a pick with an exploit in the last year says so on the card, with the amount and the date, read from the same check the Guardians use. Meteora and Trust Wallet do.
+    actual: >
+      Read on 2026-11-03, snapshot 02:57 UTC. Of the 10 cards shown, Aero and CoWSwap have no exploit line. Aero: track_record verdict bad, "DefiLlama: exploit on 2025-11-21, $700K, no returned funds listed."; the card's Watch out holds only
+      "Not growing" and "Dilution unknown", cyan. CoWSwap: track_record verdict bad, "DefiLlama: exploit on 2026-04-14, $1.2M, no returned funds listed (2 exploits listed). Listed under its name (CoW Swap) without a protocol id; not verified beyond the name."; its Degen report reads "Hacks: Exploit in the last year", and its card
+      holds only the same two lines, cyan. In the snapshot both have no dlevel.exploit_1y, which the card reads. DefiLlama's hacks list has both: Aerodrome V1, 21 Nov 2025, $700K, DNS hijack; CoW Swap, 14 Apr 2026, $1.2M, DNS hijack. BONK, a near miss, has the same gap.
+    steps:
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/aero -> degen_level.checks[id=track_record]: verdict bad, text "Exploit in the last year", $700K on 2025-11-21'
+      - 'GET https://cymetica.com/api/v1/gem-screener/coins/cowswap -> the same check: verdict bad, $1.2M on 2026-04-14'
+      - 'Open https://cymetica.com/gem-screener/app?view=start -> cards Aero and CoWSwap: no exploit line, Watch out cyan; snapshot apps[slug=aero, cowswap].dlevel has no exploit_1y'
+      - 'GET https://api.llama.fi/hacks -> Aerodrome V1 2025-11-21 700000; CoW Swap 2026-04-14 1200000'
+    body: >
+      Our check reads the 13 apps passing all gates and fails where the check reads bad and dlevel.exploit_1y is empty. If a name-only listing is meant to stay off the card, the check and the Degen report should not call it an exploit either; either way the card and its Guardian must agree. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
