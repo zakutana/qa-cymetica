@@ -1,0 +1,32 @@
+diff --git a/outbox/quest-steps/quest.js b/outbox/quest-steps/quest.js
+index b8c9b5cb..1ca1bcbd 100644
+--- a/outbox/quest-steps/quest.js
++++ b/outbox/quest-steps/quest.js
+@@ -82,7 +82,26 @@
+         '<span class="pay"><b data-figure="prizes.' + i + '"></b><span data-figure="unit"></span></span></div>';
+     }).join('');
+   });
+-  document.querySelectorAll('[data-figure]').forEach(function (el) { el.textContent = fmt(get(el.dataset.figure)); });
++  function fillFigures() { document.querySelectorAll('[data-figure]').forEach(function (el) { el.textContent = fmt(get(el.dataset.figure)); }); }
++  fillFigures();
++  // ("vsechny ty odmeny by mely byt brany z api ale jen ty cisla ... kdyby zvedly ceny, at se to promitne i questu"): the
++  // three prizes are the season API's own once it answers, and only they: the pool, the headline, the bar and the board's
++  // paid places all follow. Until then, or if it does not answer (or answers with anything but three prizes), the figures
++  // above stand and nothing on the page shows a gap. Same origin on cymetica.com; elsewhere (our mock) the browser may
++  // refuse the call, which is the same as no answer.
++  (function liveFigures() {
++    if (!window.fetch) return;
++    var url = /(^|\.)cymetica\.com$/.test(location.hostname) ? '/api/v1/company/season' : 'https://cymetica.com/api/v1/company/season';
++    fetch(url, { headers: { Accept: 'application/json' } }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
++      var p = j && j.prizes_et10;
++      if (!Array.isArray(p) || p.length !== Q.prizes.length || !p.every(function (n) { return typeof n === 'number' && isFinite(n) && n > 0; })) return;
++      if (p.every(function (n, i) { return n === Q.prizes[i]; })) return;
++      Q.prizes = p;
++      Q.pool = p.reduce(function (a, b) { return a + b; }, 0);
++      S.livePrizes = true;
++      fillFigures();
++    }).catch(function () {});
++  })();
+   document.querySelectorAll('[data-link]').forEach(function (a) { a.href = Q.links[a.dataset.link]; a.target = '_blank'; a.rel = 'noopener'; });
+   // ---- the rail: the quest's track: a round light a step with its number in it (no hexagon: "nelibi se mi ten
+   // hexagon co pouzivas v logu a stepech"), the lines between them filling as you read down the page (a spark at the

@@ -8,6 +8,8 @@ Co jsme se domluvili, že je další krok, a ještě to není hotové. Píše se
 
 ---
 
+- [ ] 2026-11-03  Quest ET-33881 (accepted 07:56 UTC, deadline 2026-11-04 07:56 UTC): až dodají, otestovat každý řádek Done when (`docs/et-33881-verification.md`), verdikt jeho; pak jako další změnu podat ceny z API (jen čtyři místa s čísly cen, hotový patch `outbox/quest-request/followup-live-prizes.patch`, stránka se při chybě API vrací k pevným číslům).
+
 - [ ] 2026-11-02  Supply Analyzer request hotový (outbox/supply-analyzer-sources), podání odmítnuto: limit buildů do 18:11 UTC. Operátor řekl podat, po 18:11 UTC znovu `bb.py file` s jeho obrázkem; připomenout.
 - [ ] 2026-11-03  Gem Screener ET-33759: pass poslán na slovo operátora (04:39 UTC), v poznámce #287 a karta near miss pod obrazovkou. Sedm bodů z MSG-0302 přečteno v 05:55 UTC: 6 sedí; smajlík u Jupiteru a Hyperliquidu pořád "how is not checked yet", přečíst znovu po refreshi v 07:35 UTC, když nesedí, podat bug. Tokenizace je jeho. Bugy #255 až #288 hlídá sweep.
 - [ ] 2026-11-01  Pitch Cards ET-33678: druhá stavba 3. 11., verdikt operátorův (návrh FAIL, outbox/pitch-cards/1-build-it-better/verdict-fail-2.txt: pitche nedělá Nexus, real peníze, odkazy, řazení, graf). Ověření docs/et-33678-verification.md. Agent Casino do live stolů: `casino` přes /loop, bugy podat. ET-33648 přijat, termín 2. 11. 15:27 UTC. Round 3 řádky 2, 5, 6, verdikt jeho. ET-31263 6 řádků; ET-30773 (docs/et-30773-verification.md).
