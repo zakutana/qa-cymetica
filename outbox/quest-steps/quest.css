@@ -98,7 +98,7 @@ main { position: relative; z-index: 2; }
 .pill i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 10px var(--green); animation: live-pulse 2s var(--ease) infinite; }
 @keyframes live-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .48; transform: scale(.86); } }
 /* ("a tady to taky zmen na zelenou hned"): green at rest, the same fill as the green keys */
-.pill b { font: 400 18px/1 'Archivo Black', sans-serif; letter-spacing: 0; color: #03140c; padding: 7px 12px; border-radius: 12px;
+.pill b { font: 800 13px/1 'JetBrains Mono', monospace; letter-spacing: .04em; color: #03140c; padding: 5px 9px; border-radius: 9px;
   background: linear-gradient(113deg, rgba(255, 255, 255, 0) 71%, rgba(255, 255, 255, .2) 71.6%, rgba(255, 255, 255, .03) 92%, rgba(255, 255, 255, 0) 100%),
     radial-gradient(130% 120% at 30% -30%, rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 62%),
     linear-gradient(180deg, #00ff88, #00ff88);
