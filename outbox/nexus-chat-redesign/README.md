@@ -9,7 +9,7 @@ exchange calls are answered locally, replies are scripted, the table's figures a
 
 | Today | Now |
 |---|---|
-| Bar across the bottom, badge | Green N button in the corner (`#00ff88`, ink `#06090f`, the Universe button's), opens the window; red dot on a new reply; no page space reserved |
+| Bar across the bottom, badge | Their E badge as an N in the corner (same gradient, border, `#60a5fa`, JetBrains Mono), opens the window; red dot on a new reply; no page space reserved |
 | Enable switch, enable prompt | **Removed.** The first message already turned Nexus on (`Be`); the price stays on the plan chip |
 | Title, status dot | N and title (`NEXUS AI — bot` on a clone page) |
 | Subscription button and panel, all plans | Plan chip, sheet over the thread; subscribe, cancel with an inline second click |
@@ -34,4 +34,4 @@ Also changed: clicking the page no longer closes the window (Esc and X do); IBM 
 pages load only Inter and JetBrains Mono while the tokens name Plex.
 
 Exceptions to `tokens.css` a spec has to name: accent also on the window's lit top edge, the price's gradient and the
-active mic (rule 1); `#00ff88` on the N and the resize grips, `--pos` on the picked element's flash (rule 2, the hex list).
+active mic (rule 1); `#00ff88` on the Premium card, `--pos` on the picked element's flash (rule 2, the hex list).
