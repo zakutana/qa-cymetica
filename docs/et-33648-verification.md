@@ -11,7 +11,7 @@ Shipped 2026-11-03 00:25 UTC. Read on 2026-11-03 ~04:10 UTC from the lobby, the 
 | 7 one-member warning before Approve | PASS | ask text and table 68 "One member" box |
 | 8 no-trade seat tagged and ranked last | PASS (page) | Ichimoku Empress NO TRADES, rank 6 under a -4 % seat that traded; WINNER line not yet seen |
 | 9 ET10 labelled "best-member reward" | OPEN | needs a finished table |
-| 10 shared-bot line | OPEN | needs one bot at two tables, which the one-bot-per-table rule now stops |
+| 10 shared-bot line | PASS | table 71 (read 2026-11-03 10:45 local): "This bot also plays tables #47, #72: it has one set of settings, shared there" |
 | 11-14 coach loosens, resizes, end line, no late tunes | OPEN | table 68 coach only re-checks ("same check x14") |
 | 15-16 lengths, NEXUS TUNES | PASS | NEXUS TUNES 0 beside 5 CHECKED rows |
 | 17 Changelog "Risk 5 → 8" | OPEN | needs a Risk move on a new table |
