@@ -47,7 +47,7 @@
       bib: 'https://cymetica.com/build-it-better',
       promo: 'https://cymetica.com/promo-market',
       casino: 'https://cymetica.com/agent-casino',
-      gem: 'https://cymetica.com/gem-screener',
+      gem: 'https://cymetica.com/gem-screener/app',
       farmer: 'https://cymetica.com/airdrop-farmer'
     }
   };
