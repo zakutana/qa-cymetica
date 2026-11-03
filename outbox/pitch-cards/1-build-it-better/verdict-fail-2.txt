@@ -4,3 +4,4 @@ Thank you: the board's losers, the missing fund, the 72h peak days, the flat cha
 3. Pitches do not reach every user: nothing links to the page yet. Please say what ends the freeze for it.
 4. Profit Board columns sort one way only. A second click on a header should reverse the order. That was in our mock too; please add it.
 5. The chart on a card ends far from its big number: report #297.
+6. The date under the name became 2026-08-22; the drawing has 22 Aug.
