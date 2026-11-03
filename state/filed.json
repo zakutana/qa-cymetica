@@ -6233,6 +6233,34 @@
     "300": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "nexus-select-on-page-button-turns-itself-off",
+   "nodeids": [],
+   "report_ids": [
+    301
+   ],
+   "title": "NEXUS chat: with the panel open, the \"Select on page\" button turns select mode on and off in the same click, so nothing can be picked",
+   "filed_at": "2026-11-03T11:31:48+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "301": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "nexus-cost-line-removed-when-the-reply-ends",
+   "nodeids": [],
+   "report_ids": [
+    302
+   ],
+   "title": "NEXUS chat: the \"Cost: $... USDC | Balance: $...\" line and billing warnings are removed from the reply as soon as its stream closes",
+   "filed_at": "2026-11-03T11:31:56+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "302": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

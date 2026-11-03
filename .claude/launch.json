@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "nexus-chat-mock",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/nexus-chat-redesign/serve.py", "--quiet"],
+      "port": 8830
+    },
+    {
       "name": "company-mock",
       "runtimeExecutable": "python",
       "runtimeArgs": ["scripts/serve_mock.py", "outbox/company-live", "8793", "--quiet"],

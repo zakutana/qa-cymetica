@@ -8640,6 +8640,36 @@ reports:
     body: >
       Our check reads every app whose line says "not checked" and fails where the tile names how. The line naming it, or the tile dropping it, clears it. GET requests only.
 
+  - key: nexus-select-on-page-button-turns-itself-off
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/gem-screener
+    title: "NEXUS chat: with the panel open, the \"Select on page\" button turns select mode on and off in the same click, so nothing can be picked"
+    expected: >
+      One click on the button (title "Select something on this page to ask NEXUS about it") starts select mode: the crosshair, the overlay, and a click on the page picks that element.
+    actual: >
+      Read on 2026-11-03 on https://cymetica.com/gem-screener, nexus-chat.js?v=20261027-1. With the panel open, one click flips body.nexus-select-mode true and then false again; afterwards it is false and aria-pressed is "false". Two listeners toggle on the same button: nexus-chat.js adds one that calls z().then(toggleSelectionMode), and opening the panel loads nexus-page-context.js, whose mount() adds a second that calls toggleSelectionMode. stopPropagation does not stop a second listener on the same element. Clicking the button with the panel closed works only until the first open has mounted the second listener.
+    steps:
+      - 'Open https://cymetica.com/gem-screener and open the NEXUS panel'
+      - 'Watch document.body class with a MutationObserver and click .nexus-btn-select once -> nexus-select-mode added, then removed: flips [true, false], final false'
+    body: >
+      Calling toggleSelectionMode from only one of the two listeners fixes it, for example skipping the one in nexus-chat.js when the button has __nexusCtxBound set. We ran that one-line change on a local copy and select mode stays on and picks an element. No message was sent to NEXUS for this.
+
+  - key: nexus-cost-line-removed-when-the-reply-ends
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/gem-screener
+    title: "NEXUS chat: the \"Cost: $... USDC | Balance: $...\" line and billing warnings are removed from the reply as soon as its stream closes"
+    expected: >
+      After a billed reply the widget keeps showing what the message cost and the balance left, and a billing warning such as "Your covered interactions are used up" stays readable.
+    actual: >
+      In nexus-chat.js?v=20261027-1 the done event appends .nexus-msg-cost and .nexus-billing-warning to the reply, then the end of the stream runs ke(p, h), which sets e.innerHTML = Le(n) and removes both. The .nexus-degraded-badge goes the same way on the next text chunk. Measured on 2026-11-03 with their unchanged script against a scripted local stream (a done event with cost_usd 0.01): the cost line entered the DOM and was gone when the reply finished. We did not send a paid message, so this is the client's behaviour on that event and not a reading of a live bill.
+    steps:
+      - 'Read /static/js/nexus-chat.js?v=20261027-1: case "done" appends the cost line; after the read loop, ke(p,h) rewrites the same element'
+      - 'Serve that script a stream ending in event done with cost_usd 0.01 and look under the finished reply -> no cost line. On a pay-per-use account a billed message should show the same; we have not run that one'
+    body: >
+      Keeping those three elements across the final render fixes it; we ran that on a local copy and the line stays. No live message or payment was made for this report.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
