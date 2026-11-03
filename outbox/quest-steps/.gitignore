@@ -1,6 +1,11 @@
 # made by capture.py and record.py. The page's own pictures and the clips' posters (pics/*.webp) are kept: they are
-# what it loads first. The clips themselves (~45 MB) are not: record.py makes them again.
-clips/
+# what it loads first. The six clips the page plays are kept too, slimmed (clips/*.mp4 and *.webm, about 60 MB, so Cymetica
+# can run the page as it is: 2026-11-03, "uplne vsechny materialy jim musis dat aby to jen spustili"); the raw
+# recordings, the four it does not play and the slimming scratch are not.
+clips/orig/
+clips/door-*.webm
+clips/farmer.webm
+clips/promo-cube.webm
 slim/
 img/
 __pycache__/
