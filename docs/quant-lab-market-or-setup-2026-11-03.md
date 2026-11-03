@@ -59,6 +59,18 @@ In #15, mean search return by rule: stockbull_blue +9.14 (50% max exposure, 118 
 2. A winning short rule starts no bot (the spot lane is long-only).
 3. The grid tunes stop, take-profit and entry, which barely move the result. What moves it (direction, exposure, market state) cannot be tuned.
 
+## Nexus's advice (REPLY-0248) held against these rows
+
+| His point | Measured here | Stand |
+|---|---|---|
+| Rolling windows, several search and held-back pairs | Agrees with the one-turn finding. But a 90-day history holds one turn: the window has to get longer too. "Enough history" is his claim; the run pins 90 days and we cannot see further back on their side (Binance has years) | Take, with a longer history |
+| Grade against holding the coins at equal weight | Rising periods: 0 of 11,232 beat their own coin (best +29.6%, coin +45%). Falling blind periods: 15 of 15 beat it and 0 made money. A bot that never trades scores 0.00 and beats it by 14.5 to 17.8 points; 396 combinations in #15 made no trade | Change: the grade must also adjust for how much was held, and a win must make money |
+| Fix stop-loss and take-profit at the values that ever helped | All 15 blind rows carry take-profit 30, all chosen in the same rising market | Only after rolling windows |
+| Memory: skip failed setups, neighbours of past winners first | 0 winners so far, and settings do not persist (+0.05). A setup that failed in a fall may suit a rise | Skip per kind of market, not for good |
+| Regime read, written before the held-back replay | Matches what was measured; his honesty rule (c) holds | Take |
+| Short rules on the same footing, may start a bot | Matches the structural point; the spot lane is long-only today | Take, needs a build |
+| "Items 2 and 3 are already in ET-33846" | /api/v1/build-it-better/requests/ET-33846 answers 404 with our key, same as ET-33142 | Cannot check: ask him what it holds |
+
 ## Open
 
 * CIRCADIAN's entry per /how-it-fits needs a Bollinger width "in price" below 500. On a coin under a few hundred dollars that is always true. Not checked against a replay.
