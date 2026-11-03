@@ -3894,6 +3894,11 @@
      "report_id": 51,
      "verdict": "fail",
      "at": "2026-11-02T08:16:38+00:00"
+    },
+    {
+     "report_id": 51,
+     "verdict": "pass",
+     "at": "2026-11-03T05:10:04+00:00"
     }
    ],
    "their_status": {
@@ -3932,6 +3937,11 @@
      "report_id": 51,
      "verdict": "fail",
      "at": "2026-11-02T08:16:38+00:00"
+    },
+    {
+     "report_id": 51,
+     "verdict": "pass",
+     "at": "2026-11-03T05:10:04+00:00"
     }
    ],
    "their_status": {
@@ -3970,6 +3980,11 @@
      "report_id": 56,
      "verdict": "fail",
      "at": "2026-11-02T08:16:45+00:00"
+    },
+    {
+     "report_id": 56,
+     "verdict": "pass",
+     "at": "2026-11-03T05:10:10+00:00"
     }
    ],
    "their_status": {
@@ -5170,9 +5185,15 @@
    ],
    "title": "/traffic/mine shows Build a Company with 96 unique visitors and no uses, and Airdrop Farmer with 26; the Products tab and /app-usage, which promise the same figure, read 130 and 23",
    "filed_at": "2026-11-02T07:20:09+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 250,
+     "verdict": "pass",
+     "at": "2026-11-03T05:03:35+00:00"
+    }
+   ],
    "their_status": {
-    "250": "fixed"
+    "250": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5187,9 +5208,15 @@
    ],
    "title": "/traffic/mine: the tile says 214 unique visitors across everything you created, and a row under it says 338",
    "filed_at": "2026-11-02T07:20:42+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 251,
+     "verdict": "pass",
+     "at": "2026-11-03T05:03:40+00:00"
+    }
+   ],
    "their_status": {
-    "251": "fixed"
+    "251": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5206,7 +5233,7 @@
    "filed_at": "2026-11-02T07:20:54+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "252": "fixed"
+    "252": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -5221,9 +5248,15 @@
    ],
    "title": "Products tab: Supply Analyzer shows Gem Screener's people (the same 195, the same 30 daily figures), and Team Dump Radar shows the 433 of the \"Crypto Radars\" group on 31 page views",
    "filed_at": "2026-11-02T07:23:06+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 253,
+     "verdict": "pass",
+     "at": "2026-11-03T05:13:57+00:00"
+    }
+   ],
    "their_status": {
-    "253": "fixed"
+    "253": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5246,7 +5279,7 @@
     }
    ],
    "their_status": {
-    "254": "fixed"
+    "254": "paid"
    },
    "withdrawn": true
   },
@@ -5262,7 +5295,7 @@
    "filed_at": "2026-11-02T09:22:17+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "255": "fixed"
+    "255": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -5277,9 +5310,15 @@
    ],
    "title": "Gem Screener: Aerodrome and Velodrome, $7.4M of revenue in 30 days, are left out as \"no token, nothing to buy\"; AERO has a $502M market cap and no row",
    "filed_at": "2026-11-02T09:22:30+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 256,
+     "verdict": "pass",
+     "at": "2026-11-03T05:03:46+00:00"
+    }
+   ],
    "their_status": {
-    "256": "fixed"
+    "256": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5294,9 +5333,15 @@
    ],
    "title": "Gem Screener: \"11 of 236 apps pass all 6 gates\", 10 cards and 10 API picks; Rhea Finance passes and is on neither, and no text says the list stops at 10",
    "filed_at": "2026-11-02T09:22:44+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 257,
+     "verdict": "pass",
+     "at": "2026-11-03T05:03:58+00:00"
+    }
+   ],
    "their_status": {
-    "257": "fixed"
+    "257": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5311,9 +5356,15 @@
    ],
    "title": "Gem Screener: the Growing and Vetted gate texts leave out what decides a row; 31 apps fail Growing above its printed floor, and StonkFun was in and out of the picks on a condition printed nowhere",
    "filed_at": "2026-11-02T09:22:56+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 258,
+     "verdict": "pass",
+     "at": "2026-11-03T05:04:02+00:00"
+    }
+   ],
    "their_status": {
-    "258": "fixed"
+    "258": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5328,9 +5379,15 @@
    ],
    "title": "Gem Screener: \"+367% a month over 6 months\" on a coin with 98 days of data; 27 apps have growth called six-month on a 1 to 5 month fit, and the API drops the window",
    "filed_at": "2026-11-02T09:23:29+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 259,
+     "verdict": "pass",
+     "at": "2026-11-03T05:14:09+00:00"
+    }
+   ],
    "their_status": {
-    "259": "fixed"
+    "259": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5345,9 +5402,15 @@
    ],
    "title": "Gem Screener: trajectory.level_vs_peak is labelled \"% of its 1-year high\"; it is last quarter against best quarter, so StonkFun reads 100 % with 30-day revenue at 20 % of its high",
    "filed_at": "2026-11-02T09:23:40+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 260,
+     "verdict": "pass",
+     "at": "2026-11-03T05:04:12+00:00"
+    }
+   ],
    "their_status": {
-    "260": "fixed"
+    "260": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5362,9 +5425,15 @@
    ],
    "title": "Gem Screener: the chain rows Sui and Near open apps; their own links answer \"Sui Foundation\" (Canonical Bridge, upside 0.02x) and \"NEAR Protocol\" (Bridge, 0.10x)",
    "filed_at": "2026-11-02T09:24:38+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 261,
+     "verdict": "pass",
+     "at": "2026-11-03T05:04:19+00:00"
+    }
+   ],
    "their_status": {
-    "261": "fixed"
+    "261": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5379,9 +5448,15 @@
    ],
    "title": "Gem Screener: Dilution's flag says \"more than 0.5 points a week over the benchmark\" on rows at or under the benchmark, and its rule names a formula 93 rows do not use",
    "filed_at": "2026-11-02T09:24:49+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 262,
+     "verdict": "pass",
+     "at": "2026-11-03T05:04:29+00:00"
+    }
+   ],
    "their_status": {
-    "262": "fixed"
+    "262": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5396,9 +5471,15 @@
    ],
    "title": "Gem Screener: \"Holders get 20% of revenue, bought back\" on Degen pick Lido, whose last 30 days paid holders 0 %; the same for 8 more apps",
    "filed_at": "2026-11-02T09:25:00+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 263,
+     "verdict": "pass",
+     "at": "2026-11-03T05:04:34+00:00"
+    }
+   ],
    "their_status": {
-    "263": "fixed"
+    "263": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5415,7 +5496,7 @@
    "filed_at": "2026-11-02T09:25:12+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "264": "fixed"
+    "264": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -5430,9 +5511,15 @@
    ],
    "title": "Gem Screener: \"Accelerating: every quarter faster than the one before\" is true of 9 of the 68 apps in that phase; Ethena reads Accelerating at +121, -5, -75, +73 % with revenue at 11 % of its high",
    "filed_at": "2026-11-02T09:25:22+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 265,
+     "verdict": "pass",
+     "at": "2026-11-03T05:04:38+00:00"
+    }
+   ],
    "their_status": {
-    "265": "fixed"
+    "265": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5447,9 +5534,15 @@
    ],
    "title": "Gem Screener: the caveat agents are told to repeat says \"the estimates came out positive\"; the gate-passing coins' result is -23 % with an interval wholly below zero",
    "filed_at": "2026-11-02T09:25:34+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 266,
+     "verdict": "pass",
+     "at": "2026-11-03T05:07:59+00:00"
+    }
+   ],
    "their_status": {
-    "266": "fixed"
+    "266": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5464,9 +5557,15 @@
    ],
    "title": "Gem Screener: Tokenlon's \"Deepest DEX pool\" holds $130K and fails its only failed gate; its Uniswap v2 LON/WETH pool holds $1.6M and would pass",
    "filed_at": "2026-11-02T09:26:10+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 267,
+     "verdict": "pass",
+     "at": "2026-11-03T05:08:04+00:00"
+    }
+   ],
    "their_status": {
-    "267": "fixed"
+    "267": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5481,9 +5580,15 @@
    ],
    "title": "Gem Screener: Railgun reads \"No power to mint, pause or upgrade\"; its verified token has an owner-only governanceMint, cap 100M against 60M supply, and the row says 100 % of tokens out",
    "filed_at": "2026-11-02T09:26:19+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 268,
+     "verdict": "pass",
+     "at": "2026-11-03T05:08:10+00:00"
+    }
+   ],
    "their_status": {
-    "268": "fixed"
+    "268": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5498,9 +5603,15 @@
    ],
    "title": "Gem Screener: the Degen report says \"Good: 55% of revenue reaches holders\" with that check not run, and \"prints $0 in tokens, so +$33K real\" with new tokens of 6.5x revenue",
    "filed_at": "2026-11-02T09:26:48+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 269,
+     "verdict": "pass",
+     "at": "2026-11-03T05:08:15+00:00"
+    }
+   ],
    "their_status": {
-    "269": "fixed"
+    "269": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5515,7 +5626,7 @@
    "filed_at": "2026-11-02T09:26:53+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "270": "fixed"
+    "270": "paid"
    },
    "withdrawn": false
   },
@@ -5529,9 +5640,15 @@
    ],
    "title": "Gem Screener: \"share of its category\" adds up to 200 % in Liquidity Automation and over 100 % in 6 more categories, because double-counted apps carry a share of a total that excludes them",
    "filed_at": "2026-11-02T09:27:05+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 271,
+     "verdict": "pass",
+     "at": "2026-11-03T05:08:20+00:00"
+    }
+   ],
    "their_status": {
-    "271": "fixed"
+    "271": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5546,9 +5663,15 @@
    ],
    "title": "Gem Screener: Tornado Cash reads \"Holders get 100% of revenue, burned\"; the same row's source says \"no TORN is burned\"",
    "filed_at": "2026-11-02T09:27:17+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 272,
+     "verdict": "pass",
+     "at": "2026-11-03T05:08:26+00:00"
+    }
+   ],
    "their_status": {
-    "272": "fixed"
+    "272": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5565,7 +5688,7 @@
    "filed_at": "2026-11-02T09:27:26+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "273": "fixed"
+    "273": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -5582,7 +5705,7 @@
    "filed_at": "2026-11-02T13:16:12+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "274": "fixed"
+    "274": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -5597,9 +5720,15 @@
    ],
    "title": "Gem Screener: CoWSwap's card shows 12-month dilution \"unknown\"; /picks, whose warnings agents are told to repeat, does not mention it",
    "filed_at": "2026-11-02T13:16:24+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 275,
+     "verdict": "pass",
+     "at": "2026-11-03T05:08:33+00:00"
+    }
+   ],
    "their_status": {
-    "275": "fixed"
+    "275": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5614,9 +5743,15 @@
    ],
    "title": "Gem Screener: Yield Basis is Vetted with no reading of \"35%+ of its best quarter\", at 6 % of its best 30 days",
    "filed_at": "2026-11-02T13:16:35+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 276,
+     "verdict": "pass",
+     "at": "2026-11-03T05:08:50+00:00"
+    }
+   ],
    "their_status": {
-    "276": "fixed"
+    "276": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5631,9 +5766,15 @@
    ],
    "title": "Gem Screener: BONK.fun's \"Directly\" quotes Bonkswap, 0.02 % of the family's holders revenue, and \"94% of revenue, burned\" against a source that splits it",
    "filed_at": "2026-11-02T13:16:48+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 277,
+     "verdict": "pass",
+     "at": "2026-11-03T05:08:59+00:00"
+    }
+   ],
    "their_status": {
-    "277": "fixed"
+    "277": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5650,7 +5791,7 @@
    "filed_at": "2026-11-02T13:16:59+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "278": "fixed"
+    "278": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -5665,9 +5806,15 @@
    ],
    "title": "Gem Screener: a chain's Degen report says \"cheap for its revenue\" though chains are priced on adoption; Sudoswap's report stops at \"The sudoswap AMM is a minimal.\"",
    "filed_at": "2026-11-02T13:17:13+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 279,
+     "verdict": "pass",
+     "at": "2026-11-03T05:09:03+00:00"
+    }
+   ],
    "their_status": {
-    "279": "fixed"
+    "279": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5682,9 +5829,15 @@
    ],
    "title": "Gem Screener: 8 apps show under 25 % of tokens out without the low-float tag whose line is 25 %, Hyperliquid and Stargate among them",
    "filed_at": "2026-11-02T13:17:32+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 280,
+     "verdict": "pass",
+     "at": "2026-11-03T05:09:09+00:00"
+    }
+   ],
    "their_status": {
-    "280": "fixed"
+    "280": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5699,9 +5852,15 @@
    ],
    "title": "Gem Screener docs: llms.txt says about 215 apps (236 are served), /api-docs has no row for /picks, and /page-extras is documented nowhere",
    "filed_at": "2026-11-02T13:17:57+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 281,
+     "verdict": "pass",
+     "at": "2026-11-03T05:09:13+00:00"
+    }
+   ],
    "their_status": {
-    "281": "fixed"
+    "281": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5716,7 +5875,13 @@
    ],
    "title": "A trailing slash on an API route redirects to http: 307 to http://cymetica.com/api/v1/gem-screener/ranked",
    "filed_at": "2026-11-02T13:18:32+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 282,
+     "verdict": "pass",
+     "at": "2026-11-03T05:09:53+00:00"
+    }
+   ],
    "their_status": {
     "282": "paid"
    },
@@ -5735,7 +5900,7 @@
    "filed_at": "2026-11-02T13:19:03+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "283": "fixed"
+    "283": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -5750,9 +5915,15 @@
    ],
    "title": "Gem Screener: Lombard reads dilution \"ok\" and \"No unlock schedule on file\"; DefiLlama's schedule runs to 2029 and unlocks about 67 % of its circulating supply in 12 months",
    "filed_at": "2026-11-02T13:38:11+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 284,
+     "verdict": "pass",
+     "at": "2026-11-03T05:09:58+00:00"
+    }
+   ],
    "their_status": {
-    "284": "fixed"
+    "284": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -5769,7 +5940,7 @@
    "filed_at": "2026-11-02T13:38:39+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "285": "fixed"
+    "285": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -5786,7 +5957,7 @@
    "filed_at": "2026-11-02T13:39:46+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "286": "fixed"
+    "286": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
