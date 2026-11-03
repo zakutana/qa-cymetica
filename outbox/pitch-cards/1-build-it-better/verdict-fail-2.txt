@@ -3,4 +3,4 @@ Thank you: the board's losers, the missing fund, the 72h peak days, the flat cha
 2. C1, real money from day one, is still not built and still has no ticket or date. Please name them.
 3. Pitches do not reach every user: nothing links to the page yet. Please say what ends the freeze for it.
 4. Profit Board columns sort one way only. A second click on a header should reverse the order. That was in our mock too; please add it.
-5. The chart on a card ends far from its big number: the report filed today.
+5. The chart on a card ends far from its big number: report #297.

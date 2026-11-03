@@ -6164,6 +6164,22 @@
     "296": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "pitch-chart-ends-away-from-big-number",
+   "nodeids": [
+    "tests/rest/test_profit_board.py::test_a_pitch_chart_ends_where_its_big_number_does"
+   ],
+   "report_ids": [
+    297
+   ],
+   "title": "Pitch Cards (ET-33678): the green line ends far from the big number on the card: Retail stores e-commerce +26.33 % over a line ending at +1.80 %",
+   "filed_at": "2026-11-03T07:50:36+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "297": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
