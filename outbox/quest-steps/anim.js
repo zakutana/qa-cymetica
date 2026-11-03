@@ -136,8 +136,10 @@
   // and fades in, so the loop has no seam
   var XF = 0.9;
   document.querySelectorAll('.clip').forEach(function (box) {
-    var a = box.querySelector('video'), from = +box.dataset.loopFrom || 0, srcEl = a.querySelector('source'), url = srcEl ? srcEl.getAttribute('src') : a.getAttribute('src');
-    if (srcEl) srcEl.remove();                       // nothing loads until the step is near
+    var a = box.querySelector('video'), from = +box.dataset.loopFrom || 0, srcEls = [].slice.call(a.querySelectorAll('source')), url = a.getAttribute('src');
+    // the first <source> this browser can play, in the page's order (H.264 first: every phone and laptop decodes it in hardware; WebM VP9 after it)
+    for (var si = 0; si < srcEls.length; si++) { var st = srcEls[si].getAttribute('type'); if (!st || a.canPlayType(st)) { url = srcEls[si].getAttribute('src'); break; } }
+    srcEls.forEach(function (s) { s.remove(); });    // nothing loads until the step is near
     a.removeAttribute('src'); a.preload = 'none';
     var vids = [a];
     if (box.classList.contains('xf')) { var b = a.cloneNode(true); b.classList.add('b'); box.appendChild(b); vids.push(b); }

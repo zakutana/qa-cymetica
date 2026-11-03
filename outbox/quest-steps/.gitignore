@@ -1,6 +1,7 @@
 # made by capture.py and record.py. The page's own pictures and the clips' posters (pics/*.webp) are kept: they are
 # what it loads first. The clips themselves (~45 MB) are not: record.py makes them again.
 clips/
+slim/
 img/
 __pycache__/
 *.png

@@ -273,6 +273,14 @@ now (the fifteenth take); that folder is Antigravity's and is not written to fro
   (ET-33133).
 - The prize, 50,000 / 30,000 / 10,000 ET10 a month, is Cymetica's own (`GET /api/v1/company/season`, `prizes_et10`,
   season 2026-11, read 2026-11-03; it replaced our earlier 500,000 / 250,000 / 100,000). So are the points for your products' use and your agent's trades (2026-10-31).
+- **Weight (2026-11-03, "zlehci to vse ale ne na ukor kvality"):** record.py films at 7 to 18 Mbit/s (the six clips
+  the page uses were 151 MB). `slim.py all <name>` re-encodes a clip from `clips/orig/` to VP9 `.webm` and H.264
+  `.mp4` (same size, same frame times), at the first crf whose luma SSIM stays >= 0.985 mean / 0.97 worst frame, and
+  `keycheck.py` repeats the test after the page's key (black to clear, the dark haze is where a codec bands first).
+  Now 30 MB for the six, each about 1 to 8 MB; the page takes the first `<source>` the browser can play (anim.js),
+  mp4 first. Needs the imageio-ffmpeg wheel (`pip install imageio-ffmpeg`; Playwright's own ffmpeg is VP8 only), whose
+  path is set at the top of slim.py. After a new recording: copy it to `clips/orig/`, run both, copy `slim/final/`
+  into `clips/`. Originals stay in `clips/orig/` (not in git).
 - What each department does is the live builder's own words: Development "drafts a Build it Better request" (it does
   not build; the pipeline does), Marketing "write briefs for my own Build it Better apps", the Quant Lab "keeps
   searching for a profitable agent", the Trading desk drafts "a seat at an Agent Casino table".
