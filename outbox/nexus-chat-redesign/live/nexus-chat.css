@@ -1,0 +1,1819 @@
+/* EventTrader NEXUS AI — Sticky Bottom Chat Bar
+   Dark theme, blue accents (NO purple), bottom-docked layout.
+   z-index: var(--z-chat) — below modals, above regular content */
+
+/* ========== Container & Collapsed Bar ========== */
+
+#nexus-chat-widget {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-chat);
+    font-family: var(--font-mono);
+    pointer-events: none;
+}
+
+#nexus-chat-widget * {
+    box-sizing: border-box;
+}
+
+.nexus-hidden {
+    display: none !important;
+}
+
+#nexus-chat-widget .nexus-bar {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    background: rgba(10, 14, 20, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(59, 130, 246, 0.2);
+    transition: border-color 0.2s ease;
+}
+
+#nexus-chat-widget .nexus-bar:hover {
+    border-top-color: rgba(59, 130, 246, 0.4);
+}
+
+/* NEXUS icon/badge */
+#nexus-chat-widget .nexus-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2));
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Input field in collapsed bar */
+#nexus-chat-widget .nexus-input-wrap {
+    flex: 1;
+    position: relative;
+}
+
+#nexus-chat-widget .nexus-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s ease, background 0.2s ease;
+    /* ET-15554: textarea now — grows with the message (JS caps at 96px) so
+       mobile users can see what they typed instead of a scrolled-off tail. */
+    resize: none;
+    overflow-y: auto;
+    max-height: 96px;
+    line-height: 1.4;
+    display: block;
+}
+
+#nexus-chat-widget .nexus-input::placeholder {
+    color: rgba(148, 163, 184, 0.6);
+    /* one line, ellipsised: a wrapped placeholder in the 1-row textarea is clipped half a line (phone) */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#nexus-chat-widget .nexus-input:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* Buttons */
+#nexus-chat-widget .nexus-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: #8899aa;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    padding: 0;
+}
+
+#nexus-chat-widget .nexus-btn:hover {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+}
+
+#nexus-chat-widget .nexus-btn-send {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+#nexus-chat-widget .nexus-btn-send:hover {
+    background: rgba(59, 130, 246, 0.35);
+    color: #93c5fd;
+}
+
+#nexus-chat-widget .nexus-btn-send:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* ========== Expanded Panel ========== */
+
+#nexus-chat-widget .nexus-panel {
+    pointer-events: auto;
+    flex-direction: column;
+    background: rgba(10, 14, 20, 0.98);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(59, 130, 246, 0.2);
+    display: none;
+    overflow: hidden;
+}
+
+#nexus-chat-widget .nexus-enable-prompt {
+    display: none;
+}
+
+/* Drag-to-resize handle at top of panel */
+#nexus-chat-widget .nexus-resize-handle {
+    height: 6px;
+    cursor: ns-resize;
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+#nexus-chat-widget .nexus-resize-handle::after {
+    content: '';
+    width: 40px;
+    height: 3px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.15);
+    transition: background 0.2s;
+}
+#nexus-chat-widget .nexus-resize-handle:hover::after {
+    background: rgba(59, 130, 246, 0.5);
+}
+/* CentCom 31874/31876: dragging the panel on a phone must not scroll the page behind it, and a
+   scrollable panel scrolled to its end must not chain to the page (all viewports, not just mobile) */
+#nexus-chat-widget .nexus-resize-handle,
+#nexus-chat-widget.nexus-pinned .nexus-resize-handle,
+#nexus-chat-widget .nexus-panel-header {
+    touch-action: none;
+}
+#nexus-chat-widget .nexus-panel-header .nexus-btn { touch-action: manipulation; }
+#nexus-chat-widget .nexus-messages,
+#nexus-chat-widget .nexus-panel,
+#nexus-chat-widget .nexus-input,
+.nexus-exchange-steps,
+.nexus-sub-panel {
+    overscroll-behavior: contain;
+}
+
+#nexus-chat-widget.nexus-expanded .nexus-panel {
+    display: flex;
+    max-height: 80vh;
+    max-height: 80dvh;
+    min-height: 200px;
+    height: 400px;
+    overflow: hidden;
+}
+
+/* Panel header */
+#nexus-chat-widget .nexus-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    position: relative;
+    z-index: 10;
+    pointer-events: auto; /* Ensure header buttons receive clicks in all modes */
+    /* EVE-226: isolation creates a stacking context so child z-index works
+       correctly in Firefox when parent has backdrop-filter */
+    isolation: isolate;
+    flex-shrink: 0;
+}
+
+#nexus-chat-widget .nexus-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #60a5fa;
+    letter-spacing: 0.5px;
+}
+
+#nexus-chat-widget .nexus-panel-title .nexus-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22d3ee;
+    box-shadow: 0 0 6px rgba(34, 211, 238, 0.5);
+}
+
+#nexus-chat-widget .nexus-panel-actions {
+    display: flex;
+    gap: 4px;
+    position: relative;
+    z-index: 20;
+    pointer-events: auto;
+}
+
+/* EVE-226: Ensure each action button is individually clickable in Firefox
+   when inside a backdrop-filter compositing layer (pinned mode) */
+#nexus-chat-widget .nexus-panel-actions .nexus-btn {
+    position: relative;
+    z-index: 21;
+    pointer-events: auto;
+}
+
+/* Messages area */
+#nexus-chat-widget .nexus-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#nexus-chat-widget .nexus-messages::-webkit-scrollbar {
+    width: 4px;
+}
+
+#nexus-chat-widget .nexus-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#nexus-chat-widget .nexus-messages::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 2px;
+}
+
+/* Message bubbles */
+#nexus-chat-widget .nexus-msg {
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: var(--panel-radius);
+    font-size: 13px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+#nexus-chat-widget .nexus-msg-user {
+    align-self: flex-end;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    color: #e2e8f0;
+}
+
+#nexus-chat-widget .nexus-msg-assistant {
+    align-self: flex-start;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: #cbd5e1;
+    position: relative;
+}
+
+/* Copy button */
+#nexus-chat-widget .nexus-copy-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: rgba(0,207,255,0.72);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+#nexus-chat-widget .nexus-msg-assistant:hover .nexus-copy-btn {
+    opacity: 1;
+}
+#nexus-chat-widget .nexus-copy-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #00cfff;
+}
+#nexus-chat-widget .nexus-copy-btn.nexus-copy-ok {
+    color: #00ff88;
+    opacity: 1;
+}
+#nexus-chat-widget .nexus-btn-share.nexus-share-ok {
+    color: #00ff88;
+    opacity: 1;
+}
+#nexus-chat-widget .nexus-btn-share.nexus-share-err {
+    color: #ff4444;
+    opacity: 1;
+}
+
+/* Thinking indicator (shown before first text chunk) */
+#nexus-chat-widget .nexus-thinking {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    color: #60a5fa;
+    font-size: 13px;
+    font-style: italic;
+    opacity: 0.85;
+}
+#nexus-chat-widget .nexus-thinking-text {
+    margin-right: 1px;
+}
+#nexus-chat-widget .nexus-thinking-dots span {
+    display: inline-block;
+    animation: nexusThinkDot 1.4s infinite;
+    opacity: 0;
+}
+#nexus-chat-widget .nexus-thinking-dots span:nth-child(1) { animation-delay: 0s; }
+#nexus-chat-widget .nexus-thinking-dots span:nth-child(2) { animation-delay: 0.3s; }
+#nexus-chat-widget .nexus-thinking-dots span:nth-child(3) { animation-delay: 0.6s; }
+@keyframes nexusThinkDot {
+    0%, 80%, 100% { opacity: 0; }
+    40% { opacity: 1; }
+}
+
+/* Streaming indicator */
+#nexus-chat-widget .nexus-msg-assistant .nexus-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 14px;
+    background: #60a5fa;
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: nexusBlink 0.8s step-end infinite;
+}
+
+@keyframes nexusBlink {
+    50% { opacity: 0; }
+}
+
+/* Typing indicator */
+#nexus-chat-widget .nexus-typing {
+    display: flex;
+    gap: 4px;
+    padding: 10px 14px;
+    align-self: flex-start;
+}
+
+#nexus-chat-widget .nexus-typing-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(59, 130, 246, 0.5);
+    animation: nexusTyping 1.2s infinite;
+}
+
+#nexus-chat-widget .nexus-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+#nexus-chat-widget .nexus-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes nexusTyping {
+    0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+    30% { opacity: 1; transform: translateY(-4px); }
+}
+
+/* Welcome message */
+#nexus-chat-widget .nexus-welcome {
+    text-align: center;
+    padding: 32px 20px;
+    color: #64748b;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+#nexus-chat-widget .nexus-welcome strong {
+    color: #60a5fa;
+    font-weight: 600;
+}
+
+#nexus-chat-widget .nexus-welcome-billing {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #475569;
+    line-height: 1.4;
+}
+
+/* Markdown support inside messages */
+#nexus-chat-widget .nexus-msg-assistant strong {
+    color: #93c5fd;
+    font-weight: 600;
+}
+
+#nexus-chat-widget .nexus-msg-assistant code {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+#nexus-chat-widget .nexus-msg-assistant pre {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    margin: 8px 0;
+    font-size: 12px;
+}
+
+#nexus-chat-widget .nexus-msg-assistant pre code {
+    background: none;
+    padding: 0;
+}
+
+#nexus-chat-widget .nexus-msg-assistant ul,
+#nexus-chat-widget .nexus-msg-assistant ol {
+    padding-left: 20px;
+    margin: 6px 0;
+}
+
+#nexus-chat-widget .nexus-msg-assistant h3,
+#nexus-chat-widget .nexus-msg-assistant h4 {
+    color: #93c5fd;
+    margin: 8px 0 4px;
+    font-size: 13px;
+}
+
+#nexus-chat-widget .nexus-msg-assistant table {
+    border-collapse: collapse;
+    margin: 8px 0;
+    font-size: 12px;
+    width: 100%;
+}
+
+#nexus-chat-widget .nexus-msg-assistant th,
+#nexus-chat-widget .nexus-msg-assistant td {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4px 8px;
+    text-align: left;
+}
+
+#nexus-chat-widget .nexus-msg-assistant th {
+    background: rgba(59, 130, 246, 0.1);
+    color: #93c5fd;
+}
+
+/* ========== Mobile Responsive ========== */
+
+@media (max-width: 768px) {
+    #nexus-chat-widget.nexus-expanded .nexus-panel {
+        /* ET-15557 follow-up ("top still cut off"): 60vh is measured against
+           the LARGE viewport — with browser chrome/keyboard visible the panel
+           overflows the visible area and its top clips. dvh tracks the
+           dynamic viewport; the cap keeps the panel + input bar inside it. */
+        height: 60vh; /* fallback for browsers without dvh */
+        height: 60dvh;
+        /* ET-31846 item 6: --nx-vvh is the VISUAL viewport height (nexus-chat.js, kept in sync
+           with the on-screen keyboard); without it, dvh. The reserve below uses the same unit. */
+        max-height: calc(100dvh - 110px);
+        max-height: calc(var(--nx-vvh, 100dvh) - 110px);
+    }
+
+    #nexus-chat-widget .nexus-msg {
+        max-width: 92%;
+    }
+
+    #nexus-chat-widget .nexus-bar {
+        padding: 6px 10px;
+        padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    }
+
+    #nexus-chat-widget .nexus-input {
+        font-size: 16px; /* Prevent iOS zoom */
+    }
+}
+
+/* Landscape mobile: minimize nexus bar to free vertical space */
+@media (max-height: 500px) and (orientation: landscape) {
+    #nexus-chat-widget .nexus-bar {
+        padding: 4px 10px;
+        padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
+    }
+
+    #nexus-chat-widget .nexus-bar .nexus-btn-attach,
+    #nexus-chat-widget .nexus-bar .nexus-btn-mic {
+        display: none;
+    }
+
+    #nexus-chat-widget .nexus-input {
+        font-size: 16px; /* Prevent iOS zoom in landscape too (TASK 31) */
+        padding: 4px 8px;
+    }
+
+    body.nexus-active {
+        padding-bottom: 40px;
+    }
+}
+
+/* Hide on /chat page (full chat already there) */
+body.page-chat #nexus-chat-widget {
+    display: none !important;
+}
+
+/* Extra bottom padding so scrollable content clears nexus bar.
+   The collapsed nexus bar is ~40-50px, so all pages need clearance.
+   Pages with footer-bar already have 80px padding — this is a safe minimum. */
+body.nexus-active {
+    padding-bottom: 60px;
+}
+
+body.nexus-active.nexus-panel-open {
+    padding-bottom: 400px; /* 400px panel */
+}
+
+@media (max-width: 768px) {
+    body.nexus-active.nexus-panel-open {
+        padding-bottom: 60vh; /* fallback for browsers without dvh */
+        padding-bottom: min(60dvh, calc(var(--nx-vvh, 100dvh) - 110px));
+        /* ET-31846 item 6: same unit as the panel (dvh), and capped the same way, so the reserve
+           always equals the panel's real height — no over-padding with the address bar showing.
+           ET-15556/15557: with the panel open the PAGE kept scrolling under
+           it — the header scrolled out of view ("top of the screen is cut
+           off") and content visibly moved behind the panel. Lock the page;
+           the panel keeps its own internal scroll. */
+        overflow: hidden;
+        height: 100dvh;
+    }
+    #nexus-chat-widget .nexus-messages,
+    #nexus-chat-widget .nexus-panel {
+        overscroll-behavior: contain;
+    }
+}
+
+/* ========== Light Theme ========== */
+[data-theme="light"] #nexus-chat-widget .nexus-bar {
+    background: rgba(255, 255, 255, 0.97);
+    border-top: 1px solid rgba(0, 80, 160, 0.08);
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
+}
+[data-theme="light"] #nexus-chat-widget .nexus-bar:hover {
+    border-top-color: rgba(3, 105, 161, 0.25);
+}
+[data-theme="light"] #nexus-chat-widget .nexus-badge {
+    background: rgba(3, 105, 161, 0.08);
+    border-color: rgba(3, 105, 161, 0.20);
+    color: #0369a1;
+}
+[data-theme="light"] #nexus-chat-widget .nexus-input {
+    background: rgba(0, 80, 160, 0.04);
+    border-color: rgba(0, 80, 160, 0.10);
+    color: #0f172a;
+}
+[data-theme="light"] #nexus-chat-widget .nexus-input::placeholder {
+    color: #8899aa;
+}
+[data-theme="light"] #nexus-chat-widget .nexus-input:focus {
+    border-color: rgba(3, 105, 161, 0.30);
+    background: rgba(255, 255, 255, 0.8);
+}
+[data-theme="light"] #nexus-chat-widget .nexus-send {
+    color: #475569;
+}
+[data-theme="light"] #nexus-chat-widget .nexus-send:hover {
+    color: #0369a1;
+}
+[data-theme="light"] #nexus-chat-widget .nexus-panel {
+    background: rgba(255, 255, 255, 0.98);
+    border-top: 1px solid rgba(0, 80, 160, 0.08);
+}
+[data-theme="light"] #nexus-chat-widget .nexus-message.assistant {
+    background: rgba(3, 105, 161, 0.05);
+    border-color: rgba(3, 105, 161, 0.10);
+    color: #0f172a;
+}
+[data-theme="light"] #nexus-chat-widget .nexus-message.user {
+    background: rgba(0, 80, 160, 0.04);
+    color: #0f172a;
+}
+
+/* ========== Token Launch Confirmation Card ========== */
+
+.nexus-launch-card {
+    margin: 8px 12px;
+    padding: 12px 14px;
+    background: rgba(17, 26, 40, 0.9);
+    border: 1px solid rgba(0, 207, 255, 0.25);
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+}
+
+.nexus-launch-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: #00cfff;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(0, 207, 255, 0.15);
+}
+
+.nexus-launch-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.nexus-launch-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+}
+
+.nexus-launch-label {
+    color: rgba(0,207,255,0.72);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nexus-launch-value {
+    color: #FFFFFF;
+    font-weight: 500;
+}
+
+.nexus-launch-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.nexus-launch-confirm {
+    padding: 6px 16px;
+    min-height: 44px;
+    background: rgba(0, 207, 255, 0.15);
+    border: 1px solid rgba(0, 207, 255, 0.4);
+    border-radius: 6px;
+    color: #00cfff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, opacity 0.2s, transform 0.2s;
+
+}
+
+.nexus-launch-confirm:hover {
+    background: rgba(0, 207, 255, 0.25);
+    border-color: #00cfff;
+}
+
+.nexus-launch-cancel {
+    padding: 6px 16px;
+    min-height: 44px;
+    background: transparent;
+    border: 1px solid rgba(157, 163, 168, 0.3);
+    border-radius: 6px;
+    color: rgba(0,207,255,0.72);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, opacity 0.2s, transform 0.2s;
+
+}
+
+.nexus-launch-cancel:hover {
+    border-color: rgba(255, 68, 68, 0.5);
+    color: #ff4444;
+}
+
+[data-theme="light"] .nexus-launch-card {
+    background: rgba(248, 250, 252, 0.95);
+    border-color: rgba(3, 105, 161, 0.2);
+}
+[data-theme="light"] .nexus-launch-header {
+    color: #0070b0;
+    border-bottom-color: rgba(3, 105, 161, 0.1);
+}
+[data-theme="light"] .nexus-launch-label { color: rgba(0,207,255,0.72); }
+[data-theme="light"] .nexus-launch-value { color: #0f172a; }
+[data-theme="light"] .nexus-launch-confirm {
+    background: rgba(3, 105, 161, 0.08);
+    border-color: rgba(3, 105, 161, 0.3);
+    color: #0070b0;
+}
+[data-theme="light"] .nexus-launch-cancel {
+    color: rgba(0,207,255,0.72);
+    border-color: rgba(107, 114, 128, 0.3);
+}
+
+/* ========== Exchange Connection Card ========== */
+
+.nexus-exchange-card {
+    margin: 8px 0;
+    padding: 12px 14px;
+    background: rgba(17, 26, 40, 0.9);
+    border: 1px solid rgba(0, 207, 255, 0.25);
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    max-width: 100%;
+    width: 100%;
+}
+
+.nexus-exchange-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: #00cfff;
+    margin-bottom: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(0, 207, 255, 0.15);
+}
+
+.nexus-exchange-warning {
+    color: #00cfff;
+    font-size: 12px;
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    background: rgba(0, 207, 255, 0.08);
+    border: 1px solid var(--panel-border-hover);
+    border-radius: 6px;
+}
+
+/* Exchange picker grid */
+.nexus-exchange-picker {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.nexus-exchange-pick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 10px 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s, opacity 0.15s;
+    position: relative;
+}
+
+.nexus-exchange-pick-btn:hover {
+    background: rgba(0, 207, 255, 0.08);
+    border-color: rgba(0, 207, 255, 0.3);
+}
+
+.nexus-exchange-pick-btn.nexus-exchange-coming-soon {
+    opacity: 0.55;
+}
+
+.nexus-exchange-pick-name {
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.nexus-exchange-pick-type {
+    font-size: 12px;
+    color: rgba(0,207,255,0.72);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nexus-exchange-pick-soon {
+    position: absolute;
+    top: 3px;
+    right: 4px;
+    font-size: 12px;
+    color: #00cfff;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Setup instructions */
+.nexus-exchange-steps {
+    margin-bottom: 10px;
+    max-height: 120px;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    padding: 6px 4px 6px 0;
+}
+
+.nexus-exchange-steps ol {
+    margin: 0;
+    padding-left: 22px;
+    color: rgba(0,207,255,0.72);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.nexus-exchange-steps li {
+    margin-bottom: 2px;
+}
+
+.nexus-exchange-setup-link {
+    display: inline-block;
+    margin: 4px 0 6px;
+    color: #00cfff;
+    font-size: 12px;
+    text-decoration: none;
+}
+
+.nexus-exchange-setup-link:hover {
+    text-decoration: underline;
+}
+
+/* Security notice */
+.nexus-exchange-security {
+    color: #00ff88;
+    font-size: 12px;
+    margin-bottom: 6px;
+    padding: 4px 8px;
+    background: rgba(0, 255, 136, 0.06);
+    border: 1px solid rgba(0, 255, 136, 0.15);
+    border-radius: 6px;
+}
+
+/* Form fields */
+.nexus-exchange-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.nexus-exchange-field label {
+    display: block;
+    font-size: 12px;
+    color: rgba(0,207,255,0.72);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+}
+
+.nexus-exchange-field input[type="password"],
+.nexus-exchange-field input[type="text"] {
+    width: 100%;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    color: #e2e8f0;
+    font-family: inherit;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.nexus-exchange-field input[type="password"]:focus,
+.nexus-exchange-field input[type="text"]:focus {
+    border-color: rgba(0, 207, 255, 0.4);
+}
+
+.nexus-exchange-field input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.nexus-exchange-checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: rgba(0,207,255,0.72);
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+}
+
+.nexus-exchange-checkbox input[type="checkbox"] {
+    accent-color: #00cfff;
+    width: 14px;
+    height: 14px;
+}
+
+/* Action buttons */
+.nexus-exchange-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.nexus-exchange-submit {
+    padding: 6px 16px;
+    min-height: 44px;
+    background: rgba(0, 207, 255, 0.15);
+    border: 1px solid rgba(0, 207, 255, 0.4);
+    border-radius: 6px;
+    color: #00cfff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, opacity 0.2s, transform 0.2s;
+
+}
+
+.nexus-exchange-submit:hover {
+    background: rgba(0, 207, 255, 0.25);
+    border-color: #00cfff;
+}
+
+.nexus-exchange-cancel-btn {
+    padding: 6px 16px;
+    min-height: 44px;
+    background: transparent;
+    border: 1px solid rgba(157, 163, 168, 0.3);
+    border-radius: 6px;
+    color: rgba(0,207,255,0.72);
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, opacity 0.2s, transform 0.2s;
+
+}
+
+.nexus-exchange-cancel-btn:hover {
+    border-color: rgba(255, 68, 68, 0.5);
+    color: #ff4444;
+}
+
+.nexus-exchange-status {
+    padding: 8px 0;
+    font-size: 12px;
+}
+
+/* Mobile: 2-column picker grid */
+@media (max-width: 480px) {
+    .nexus-exchange-picker {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Light theme overrides */
+[data-theme="light"] .nexus-exchange-card {
+    background: rgba(248, 250, 252, 0.95);
+    border-color: rgba(3, 105, 161, 0.2);
+}
+[data-theme="light"] .nexus-exchange-header {
+    color: #0070b0;
+    border-bottom-color: rgba(3, 105, 161, 0.1);
+}
+[data-theme="light"] .nexus-exchange-pick-btn {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.1);
+    color: #0f172a;
+}
+[data-theme="light"] .nexus-exchange-pick-btn:hover {
+    background: rgba(3, 105, 161, 0.06);
+    border-color: rgba(3, 105, 161, 0.3);
+}
+[data-theme="light"] .nexus-exchange-steps ol { color: rgba(0,207,255,0.72); }
+[data-theme="light"] .nexus-exchange-setup-link { color: #0070b0; }
+[data-theme="light"] .nexus-exchange-security {
+    color: #059669;
+    background: rgba(5, 150, 105, 0.06);
+    border-color: rgba(5, 150, 105, 0.15);
+}
+[data-theme="light"] .nexus-exchange-field label { color: rgba(0,207,255,0.72); }
+[data-theme="light"] .nexus-exchange-field input[type="password"],
+[data-theme="light"] .nexus-exchange-field input[type="text"] {
+    background: rgba(0, 0, 0, 0.03);
+    border-color: rgba(0, 0, 0, 0.12);
+    color: #0f172a;
+}
+[data-theme="light"] .nexus-exchange-submit {
+    background: rgba(3, 105, 161, 0.08);
+    border-color: rgba(3, 105, 161, 0.3);
+    color: #0070b0;
+}
+[data-theme="light"] .nexus-exchange-cancel-btn {
+    color: rgba(0,207,255,0.72);
+    border-color: rgba(107, 114, 128, 0.3);
+}
+[data-theme="light"] .nexus-exchange-warning {
+    color: #00cfff;
+    background: rgba(0, 207, 255, 0.06);
+    border-color: rgba(0, 207, 255, 0.15);
+}
+
+/* ========== Chat billing cost label ========== */
+.nexus-msg-cost {
+    font-size: 12px;
+    color: rgba(0,207,255,0.72);
+    margin-top: 6px;
+    text-align: right;
+    opacity: 0.85;
+    cursor: default;
+    background: rgba(255, 68, 68, 0.08);
+    border-radius: 4px;
+    padding: 2px 6px;
+}
+.nexus-msg-covered {
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--blue-status, #3b82f6);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 12px;
+    word-break: break-word;
+}
+@media (max-width: 480px) {
+    .nexus-msg-covered {
+        font-size: 11px;
+        padding: 3px 6px;
+    }
+}
+.nexus-billing-warning {
+    font-size: 12px;
+    color: #00cfff;
+    margin-top: 4px;
+    text-align: right;
+}
+[data-theme="light"] .nexus-msg-cost {
+    color: rgba(0,207,255,0.72);
+}
+[data-theme="light"] .nexus-billing-warning {
+    color: #00cfff;
+}
+
+/* ========== Media Attachments ========== */
+
+#nexus-chat-widget .nexus-btn-attach {
+    flex-shrink: 0;
+    color: rgba(0,207,255,0.72);
+    transition: color 0.15s;
+}
+#nexus-chat-widget .nexus-btn-attach:hover {
+    color: #00cfff;
+}
+
+/* Feature #210 — Selection Mode (ask NEXUS about what you see) */
+#nexus-chat-widget .nexus-btn-select {
+    flex-shrink: 0;
+    color: rgba(0,207,255,0.72);
+    transition: color 0.15s, background 0.15s;
+}
+#nexus-chat-widget .nexus-btn-select:hover {
+    color: #00cfff;
+}
+#nexus-chat-widget .nexus-btn-select.active {
+    color: #0a0e17;
+    background: #00cfff;
+    border-radius: 6px;
+}
+#nexus-chat-widget .nexus-selection-chip {
+    pointer-events: auto;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: #00cfff;
+    background: rgba(10, 14, 20, 0.97);
+    border-top: 1px solid var(--panel-border);
+}
+#nexus-chat-widget .nexus-selection-chip-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#nexus-chat-widget .nexus-selection-chip-x {
+    background: none;
+    border: 1px solid rgba(0,150,255,0.25);
+    border-radius: 4px;
+    color: rgba(0,207,255,0.8);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 1px 6px;
+}
+#nexus-chat-widget .nexus-selection-chip-x:hover {
+    color: #ff4444;
+    border-color: rgba(255,68,68,0.5);
+}
+body.nexus-select-mode,
+body.nexus-select-mode * {
+    cursor: crosshair !important;
+}
+.nexus-select-overlay {
+    position: absolute;
+    display: none;
+    z-index: 2147483000;
+    pointer-events: none;
+    border: 2px solid #00cfff;
+    border-radius: 4px;
+    background: rgba(0, 207, 255, 0.10);
+    box-shadow: 0 0 0 1px rgba(10,14,23,0.6), 0 0 14px rgba(0,207,255,0.35);
+    transition: top 0.06s, left 0.06s, width 0.06s, height 0.06s;
+}
+.nexus-select-overlay .nexus-select-tip {
+    position: absolute;
+    top: -26px;
+    left: -2px;
+    white-space: nowrap;
+    font: 11px/1 var(--font-mono, monospace);
+    color: #0a0e17;
+    background: #00cfff;
+    padding: 5px 8px;
+    border-radius: 4px 4px 4px 0;
+}
+.nexus-selected-flash {
+    outline: 2px solid #00ff88 !important;
+    outline-offset: 2px;
+    transition: outline-color 0.8s;
+}
+
+#nexus-chat-widget .nexus-attachments-preview {
+    display: none;
+    pointer-events: auto;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 16px 0;
+    background: rgba(10, 14, 20, 0.97);
+    border-top: 1px solid var(--panel-border);
+}
+
+#nexus-chat-widget .nexus-att-thumb {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 6px;
+    overflow: visible;
+    border: 1px solid rgba(0, 207, 255, 0.2);
+    background: rgba(17, 26, 40, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+#nexus-chat-widget .nexus-att-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+#nexus-chat-widget .nexus-att-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+#nexus-chat-widget .nexus-att-name {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    font-size: 12px;
+    padding: 1px 2px;
+    background: rgba(0, 0, 0, 0.7);
+    color: rgba(0,207,255,0.72);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#nexus-chat-widget .nexus-att-remove {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ff4444;
+    color: #fff;
+    border: none;
+    font-size: 13px;
+    line-height: 24px;
+    text-align: center;
+    cursor: pointer;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.15s;
+
+}
+
+#nexus-chat-widget .nexus-att-thumb:hover .nexus-att-remove {
+    opacity: 1;
+}
+
+/* Drag-and-drop overlay */
+#nexus-chat-widget .nexus-messages.nexus-dragover {
+    outline: 2px dashed #00cfff;
+    outline-offset: -4px;
+    background: rgba(0, 207, 255, 0.03);
+}
+
+/* Image thumbnails in user messages */
+#nexus-chat-widget .nexus-msg-images {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+}
+
+#nexus-chat-widget .nexus-msg-images img {
+    max-width: 80px;
+    max-height: 60px;
+    border-radius: 4px;
+    object-fit: cover;
+    border: 1px solid var(--panel-border);
+}
+
+#nexus-chat-widget .nexus-msg-video-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    font-size: 12px;
+    background: rgba(0, 207, 255, 0.1);
+    border: 1px solid rgba(0, 207, 255, 0.2);
+    border-radius: 4px;
+    color: #00cfff;
+}
+
+/* Light mode */
+[data-theme="light"] #nexus-chat-widget .nexus-attachments-preview {
+    background: rgba(255, 255, 255, 0.97);
+    border-top-color: rgba(0, 0, 0, 0.08);
+}
+[data-theme="light"] #nexus-chat-widget .nexus-att-thumb {
+    border-color: rgba(0, 0, 0, 0.12);
+    background: rgba(245, 245, 245, 0.8);
+}
+[data-theme="light"] #nexus-chat-widget .nexus-selection-chip {
+    background: rgba(255, 255, 255, 0.97);
+    border-top-color: rgba(0, 0, 0, 0.08);
+    color: #0077aa;
+}
+[data-theme="light"] #nexus-chat-widget .nexus-btn-select {
+    color: rgba(0,120,170,0.85);
+}
+[data-theme="light"] #nexus-chat-widget .nexus-btn-select.active {
+    color: #ffffff;
+    background: #0077aa;
+}
+[data-theme="light"] .nexus-select-overlay .nexus-select-tip {
+    color: #ffffff;
+    background: #0077aa;
+}
+[data-theme="light"] #nexus-chat-widget .nexus-btn-attach {
+    color: rgba(0,207,255,0.72);
+}
+[data-theme="light"] #nexus-chat-widget .nexus-btn-attach:hover {
+    color: #0088cc;
+}
+
+/* Voice input mic button — hidden by default, shown via JS when speech API available */
+#nexus-chat-widget .nexus-btn-mic {
+    display: none;
+    flex-shrink: 0;
+    color: rgba(0,207,255,0.72);
+    transition: color 0.15s;
+}
+#nexus-chat-widget .nexus-btn-mic:hover {
+    color: #00cfff;
+}
+#nexus-chat-widget .nexus-btn-mic.nexus-mic-active {
+    color: #ff4444;
+    animation: nexusMicPulse 1.2s ease-in-out infinite;
+}
+#nexus-chat-widget .nexus-btn-speak { display: none; flex-shrink: 0; color: rgba(0,207,255,0.45); transition: color 0.15s; }
+#nexus-chat-widget .nexus-btn-speak:hover { color: #00cfff; }
+#nexus-chat-widget .nexus-btn-speak.nexus-speak-on { color: rgba(0,207,255,0.9); }
+#nexus-chat-widget .nexus-btn-speak.nexus-speaking { color: #00cfff; animation: nexusMicPulse 1.2s ease-in-out infinite; }
+@keyframes nexusMicPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+[data-theme="light"] #nexus-chat-widget .nexus-btn-mic {
+    color: rgba(0,207,255,0.72);
+}
+[data-theme="light"] #nexus-chat-widget .nexus-btn-mic:hover {
+    color: #0088cc;
+}
+[data-theme="light"] #nexus-chat-widget .nexus-btn-mic.nexus-mic-active {
+    color: #ff4444;
+}
+@media (max-width: 768px) {
+    #nexus-chat-widget .nexus-btn-mic {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+    }
+}
+
+/* ── Pinned Sidebar Mode ─────────────────────────────────────── */
+body.nexus-sidebar-pinned {
+    margin-right: 380px;
+    transition: margin-right 0.3s ease;
+}
+
+/* EVE-14117: Pinned chat positioned below header with overflow clipping
+   to prevent any child elements from overlapping the fixed header */
+#nexus-chat-widget.nexus-pinned {
+    position: fixed;
+    right: 0;
+    top: var(--site-header-h, 0px); /* TASK 79: set by partials/chat-header.html */
+    bottom: 0;
+    left: auto;
+    width: 380px;
+    z-index: var(--z-chat);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    pointer-events: auto;
+}
+
+#nexus-chat-widget.nexus-pinned .nexus-panel {
+    display: flex !important;
+    overflow: hidden;
+    flex: 1;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    border-radius: 0;
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    pointer-events: auto;
+    position: relative;
+}
+
+#nexus-chat-widget.nexus-pinned .nexus-bar {
+    border-radius: 0;
+    border-right: none;
+    border-bottom: none;
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+}
+#nexus-chat-widget.nexus-pinned .nexus-bar .nexus-btn,
+#nexus-chat-widget.nexus-pinned .nexus-bar .nexus-btn-toggle {
+    pointer-events: auto;
+    cursor: pointer;
+    position: relative;
+    z-index: 20;
+}
+
+/* EVE-226 Bug 2: Ensure panel header buttons (maximize, minimize, close) are
+   always clickable in pinned mode. The panel's overflow:hidden + backdrop-filter
+   can create a stacking context that traps pointer events. Explicit z-index and
+   pointer-events on the header and its children fixes this. */
+#nexus-chat-widget.nexus-pinned .nexus-panel-header {
+    position: relative;
+    z-index: 10;
+    pointer-events: auto;
+    isolation: isolate; /* Break out of backdrop-filter stacking context (Firefox) */
+}
+#nexus-chat-widget.nexus-pinned .nexus-panel-actions {
+    position: relative;
+    z-index: 20;
+    pointer-events: auto;
+    isolation: isolate;
+}
+#nexus-chat-widget.nexus-pinned .nexus-panel-actions .nexus-btn {
+    pointer-events: auto !important;
+    cursor: pointer;
+    position: relative;
+    z-index: 25;
+}
+
+#nexus-chat-widget.nexus-pinned .nexus-resize-handle {
+    /* Horizontal resize on left edge */
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    height: auto;
+    cursor: ew-resize;
+    z-index: 1;
+}
+
+/* ── Pinned Left Sidebar Mode ─────────────────────────────── */
+body.nexus-sidebar-pinned-left {
+    margin-left: 380px;
+    margin-right: 0;
+    transition: margin-left 0.3s ease;
+}
+
+#nexus-chat-widget.nexus-pinned.nexus-pinned-left {
+    right: auto;
+    left: 0;
+}
+
+#nexus-chat-widget.nexus-pinned.nexus-pinned-left .nexus-resize-handle {
+    left: auto;
+    right: 0;
+}
+
+#nexus-chat-widget.nexus-pinned.nexus-pinned-left .nexus-panel {
+    border-left: none;
+}
+
+#nexus-chat-widget.nexus-pinned.nexus-pinned-left .nexus-bar {
+    border-left: none;
+}
+
+/* Hide pin on mobile — !important overrides inline styles set by JS applyPinState() */
+@media (max-width: 768px) {
+    .nexus-btn-pin { display: none !important; }
+    body.nexus-sidebar-pinned { margin-right: 0 !important; }
+    body.nexus-sidebar-pinned-left { margin-left: 0 !important; }
+    #nexus-chat-widget.nexus-pinned {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        top: 0;
+        width: 100%;
+        /* 2026-09-21 (WS8 8.5, mobile-web audit section 4): every other 100vh
+           in the shared layout already has this 100dvh companion (later
+           declaration wins where dvh is supported; 100vh is the fallback) —
+           this pinned/expanded NEXUS sidebar was the one gap, so on mobile
+           Safari it visibly jumped/clipped as the address bar showed/hid. */
+        height: 100vh;
+        height: 100dvh;
+        max-height: 100vh;
+        max-height: 100dvh;
+    }
+    /* Mobile touch targets — min 44x44px per Apple HIG */
+    #nexus-chat-widget .nexus-btn {
+        min-width: 44px;
+        min-height: 44px;
+        width: 44px;
+        height: 44px;
+    }
+}
+
+/* ========== Nexus Enable/Disable Toggle Switch ========== */
+
+.nexus-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    min-width: 44px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.nexus-toggle-checkbox {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.nexus-toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--panel-radius);
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.nexus-toggle-slider::before {
+    content: '';
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 2px;
+    bottom: 2px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.nexus-toggle-checkbox:checked + .nexus-toggle-slider {
+    background: rgba(0, 207, 255, 0.25);
+    border-color: rgba(0, 207, 255, 0.5);
+}
+
+.nexus-toggle-checkbox:checked + .nexus-toggle-slider::before {
+    transform: translateX(20px);
+    background: #00cfff;
+}
+
+/* ========== Nexus Subscription Panel ========== */
+#nexus-chat-widget .nexus-btn-sub svg { width: 14px; height: 14px; }
+#nexus-chat-widget .nexus-sub-label { color: inherit; font-weight: 600; }
+#nexus-chat-widget .nexus-sub-panel { position: absolute; top: 40px; right: 8px; left: 8px; width: auto; background: rgba(10, 14, 23, 0.97); border: 1px solid rgba(0, 207, 255, 0.2); border-radius: var(--panel-radius); z-index: var(--z-max); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); backdrop-filter: blur(20px); overflow: hidden; }
+#nexus-chat-widget .nexus-sub-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--panel-border); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; color: #00cfff; text-transform: uppercase; letter-spacing: 0.05em; }
+#nexus-chat-widget .nexus-sub-close { background: none; border: none; color: rgba(0,207,255,0.72); font-size: 18px; cursor: pointer; padding: 0; line-height: 1; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+#nexus-chat-widget .nexus-sub-close:hover { color: #fff; }
+#nexus-chat-widget .nexus-sub-panel-body { padding: 16px; }
+#nexus-chat-widget .nexus-sub-info { display: flex; flex-direction: column; gap: 10px; }
+#nexus-chat-widget .nexus-sub-tier-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-align: center; }
+#nexus-chat-widget .nexus-sub-tier-badge.premium { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.2); }
+#nexus-chat-widget .nexus-sub-tier-badge.payperuse { background: rgba(0, 207, 255, 0.1); color: #00cfff; border: 1px solid rgba(0, 207, 255, 0.2); }
+#nexus-chat-widget .nexus-sub-tier-badge.free { background: rgba(155, 163, 168, 0.1); color: rgba(0,207,255,0.72); border: 1px solid rgba(155, 163, 168, 0.2); }
+#nexus-chat-widget .nexus-sub-tier-badge.covered { background: rgba(59, 130, 246, 0.1); color: var(--blue-status, #3b82f6); border: 1px solid rgba(59, 130, 246, 0.2); }
+#nexus-chat-widget .nexus-sub-detail { display: flex; justify-content: space-between; font-size: 13px; color: rgba(0,207,255,0.72); font-family: 'JetBrains Mono', monospace; }
+#nexus-chat-widget .nexus-sub-detail span:last-child { color: #f9fafb; font-weight: 500; }
+#nexus-chat-widget .nexus-sub-note { font-size: 12px; color: rgba(0,207,255,0.72); line-height: 1.5; margin: 4px 0 0; }
+#nexus-chat-widget .nexus-sub-upgrade { margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--panel-border); display: flex; flex-direction: column; gap: 8px; }
+#nexus-chat-widget .nexus-sub-price { font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700; color: #00ff88; text-align: center; margin: 4px 0; }
+#nexus-chat-widget .nexus-sub-price span { font-size: 14px; color: rgba(0,207,255,0.72); font-weight: 400; }
+#nexus-chat-widget .nexus-sub-features { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+#nexus-chat-widget .nexus-sub-features li { font-size: 12px; color: rgba(0,207,255,0.72); padding-left: 18px; position: relative; }
+#nexus-chat-widget .nexus-sub-features li::before { content: '\2713'; position: absolute; left: 0; color: #00ff88; font-weight: 700; }
+#nexus-chat-widget .nexus-sub-action-btn { display: block; width: 100%; padding: 10px; border: none; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, opacity 0.2s; }
+#nexus-chat-widget .nexus-sub-action-btn.subscribe { background: #00ff88; color: #000; }
+#nexus-chat-widget .nexus-sub-action-btn.subscribe:hover { background: #00e67a; box-shadow: 0 0 16px rgba(0, 255, 136, 0.3); }
+#nexus-chat-widget .nexus-sub-action-btn.subscribe:disabled { opacity: 0.5; cursor: not-allowed; }
+#nexus-chat-widget .nexus-sub-action-btn.cancel { background: transparent; color: #ff4444; border: 1px solid rgba(255, 68, 68, 0.3); margin-top: 4px; }
+#nexus-chat-widget .nexus-sub-action-btn.cancel:hover { background: rgba(255, 68, 68, 0.1); }
+#nexus-chat-widget .nexus-sub-warn { font-size: 12px; color: #ff4444; text-align: center; margin: 4px 0 0; }
+#nexus-chat-widget .nexus-sub-error { font-size: 12px; color: #ff4444; background: rgba(255, 68, 68, 0.08); border: 1px solid rgba(255, 68, 68, 0.2); border-radius: 6px; padding: 8px 10px; margin-top: 8px; text-align: center; }
+#nexus-chat-widget .nexus-sub-loading { text-align: center; color: rgba(0,207,255,0.72); font-size: 13px; padding: 20px 0; }
+
+/* ========== Nexus Disabled State ========== */
+
+#nexus-chat-widget.nexus-disabled .nexus-input {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+#nexus-chat-widget.nexus-disabled .nexus-btn-send {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+#nexus-chat-widget.nexus-disabled .nexus-badge {
+    opacity: 0.4;
+}
+
+#nexus-chat-widget.nexus-disabled .nexus-panel .nexus-messages {
+    display: none;
+}
+
+#nexus-chat-widget.nexus-disabled .nexus-panel .nexus-enable-prompt {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 12px;
+    padding: 24px;
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    font-size: 14px;
+}
+
+#nexus-chat-widget.nexus-disabled .nexus-panel .nexus-enable-prompt .nexus-enable-icon {
+    font-size: 32px;
+    opacity: 0.6;
+}
+
+#nexus-chat-widget.nexus-disabled .nexus-panel .nexus-enable-prompt .nexus-enable-btn {
+    margin-top: 4px;
+    padding: 8px 20px;
+    background: rgba(0,207,255,0.15);
+    border: 1px solid rgba(0,207,255,0.4);
+    border-radius: 6px;
+    color: #00cfff;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+#nexus-chat-widget.nexus-disabled .nexus-panel .nexus-enable-prompt .nexus-enable-btn:hover {
+    background: rgba(0,207,255,0.25);
+}
+
+#nexus-chat-widget.nexus-disabled .nexus-btn-toggle {
+    opacity: 0.7;
+    cursor: pointer;
+}
+
+#nexus-chat-widget.nexus-disabled .nexus-btn-newchat,
+#nexus-chat-widget.nexus-disabled .nexus-btn-pin,
+#nexus-chat-widget.nexus-disabled .nexus-btn-maximize,
+#nexus-chat-widget.nexus-disabled .nexus-btn-sub {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* ========== Quick Reply Buttons ========== */
+
+#nexus-chat-widget .nexus-quick-replies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(0, 207, 255, 0.1);
+}
+
+#nexus-chat-widget .nexus-quick-reply-btn {
+    background: rgba(0, 207, 255, 0.08);
+    border: 1px solid rgba(0, 207, 255, 0.3);
+    color: #00cfff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+    text-align: left;
+    line-height: 1.3;
+    max-width: 100%;
+}
+
+@media (hover: hover) {
+    #nexus-chat-widget .nexus-quick-reply-btn:hover {
+        background: rgba(0, 207, 255, 0.18);
+        border-color: rgba(0, 207, 255, 0.6);
+        transform: translateY(-1px);
+    }
+}
+
+#nexus-chat-widget .nexus-quick-reply-btn:active {
+    transform: translateY(0);
+}
+
+#nexus-chat-widget .nexus-quick-reply-btn.nexus-qr-selected {
+    background: rgba(0, 207, 255, 0.25);
+    border-color: #00cfff;
+    color: #fff;
+}
+
+#nexus-chat-widget .nexus-quick-reply-btn.nexus-qr-used {
+    opacity: 0.4;
+    cursor: default;
+    pointer-events: none;
+}
+
+#nexus-chat-widget .nexus-quick-reply-btn.nexus-qr-used.nexus-qr-selected {
+    opacity: 0.7;
+}
+
+/* v2 design overrides */
+.nexus-exchange-warning { border-color: var(--panel-border); }
+#nexus-chat-widget .nexus-attachments-preview { border-color: var(--panel-border); }
+#nexus-chat-widget .nexus-sub-panel-header { border-bottom-color: var(--panel-border); }
+#nexus-chat-widget .nexus-sub-upgrade { border-top-color: var(--panel-border); }
+
+@media (prefers-reduced-motion: reduce) {
+  #nexus-chat-widget *, #nexus-chat-widget *::before, #nexus-chat-widget *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Markdown tables + headers in assistant messages (renderMarkdown) */
+#nexus-chat-widget .nexus-md-table {
+    border-collapse: collapse;
+    margin: 8px 0;
+    width: 100%;
+    font-size: 12px;
+}
+#nexus-chat-widget .nexus-md-table th,
+#nexus-chat-widget .nexus-md-table td {
+    border: 1px solid rgba(0, 150, 255, 0.15);
+    padding: 4px 8px;
+    text-align: left;
+}
+#nexus-chat-widget .nexus-md-table th {
+    background: rgba(17, 24, 39, 0.6);
+    color: #00cfff;
+    font-weight: 600;
+}
+#nexus-chat-widget .nexus-msg h2,
+#nexus-chat-widget .nexus-msg h3,
+#nexus-chat-widget .nexus-msg h4 {
+    margin: 10px 0 6px;
+    color: var(--text-heading, #e2e8f0);
+}
+#nexus-chat-widget .nexus-msg h2 { font-size: 15px; }
+#nexus-chat-widget .nexus-msg h3 { font-size: 14px; }
+#nexus-chat-widget .nexus-msg h4 { font-size: 13px; }
+#nexus-chat-widget .nexus-msg ol,
+#nexus-chat-widget .nexus-msg ul {
+    margin: 6px 0;
+    padding-left: 20px;
+}
+#nexus-chat-widget .nexus-msg hr {
+    border: none;
+    border-top: 1px solid rgba(0, 150, 255, 0.15);
+    margin: 10px 0;
+}
+
+/* ========== Narrow-phone containment (QA 2026-10-18; user report: "close button doesn't work") ==========
+   Every NEXUS control must stay inside the viewport at 320px wide and on short heights.
+   The bar row used to sum to >320px (input could not shrink below its intrinsic cols width, so Send sat at
+   x326-370), and the panel header's eight 44px actions pushed Close past the clipped right edge, so a tap
+   never reached it. Flex items default to min-width:auto, hence the explicit min-width:0. */
+#nexus-chat-widget .nexus-input-wrap,
+#nexus-chat-widget .nexus-input {
+    min-width: 0;
+}
+#nexus-chat-widget .nexus-bar,
+#nexus-chat-widget .nexus-panel-header {
+    max-width: 100%;
+}
+#nexus-chat-widget .nexus-panel-title {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+#nexus-chat-widget .nexus-panel-title #nexusPanelTitleText {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#nexus-chat-widget .nexus-panel-actions {
+    flex: 0 1 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    /* Pin-as-sidebar and maximize do nothing on a phone (the panel already spans the screen). */
+    #nexus-chat-widget .nexus-panel-actions .nexus-btn-pin,
+    #nexus-chat-widget .nexus-panel-actions .nexus-btn-maximize {
+        display: none;
+    }
+    #nexus-chat-widget .nexus-panel-header {
+        flex-wrap: wrap;
+        padding: 6px 10px;
+        gap: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    #nexus-chat-widget .nexus-bar {
+        gap: 4px;
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+    #nexus-chat-widget .nexus-bar .nexus-btn {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+    }
+    #nexus-chat-widget .nexus-bar .nexus-toggle-switch {
+        flex-shrink: 0;
+    }
+    /* The badge duplicates the expand button, and page-select is a desktop helper: drop both so the
+       input keeps a usable width at 320px. */
+    #nexus-chat-widget .nexus-bar .nexus-badge,
+    #nexus-chat-widget .nexus-bar .nexus-btn-select {
+        display: none;
+    }
+    #nexus-chat-widget .nexus-panel-actions .nexus-btn {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+    }
+}
+
+/* 2026-10-20 QA (/station, 1440x480): the open panel (400px / 80dvh / 100dvh-110px) plus the ~56px
+   bar is taller than a short viewport minus the fixed global header, so its top, with the Close
+   button, slid under .chat-header and a normal click hit the header. Cap the panel so it ALWAYS
+   starts below the header, and let the cap beat the 200px min-height. Pinned mode is untouched
+   (it is already top:var(--site-header-h)). */
+#nexus-chat-widget.nexus-expanded:not(.nexus-pinned) .nexus-panel {
+    max-height: calc(100vh - var(--site-header-h, 88px) - 60px);
+    max-height: calc(var(--nx-vvh, 100dvh) - var(--site-header-h, 88px) - 60px);
+    min-height: min(200px, calc(100vh - var(--site-header-h, 88px) - 60px));
+}

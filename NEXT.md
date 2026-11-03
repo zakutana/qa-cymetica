@@ -8,7 +8,7 @@ Co jsme se domluvili, že je další krok, a ještě to není hotové. Píše se
 
 ---
 
-- [ ] 2026-11-03  Redesign chatu NEXUS: mock `outbox/nexus-chat-redesign` (preview `nexus-chat-mock`, http://127.0.0.1:8830/gem-screener) čeká na jeho verdikt; spec jen na jeho slovo.
+- [ ] 2026-11-03  Chat NEXUS: mock `outbox/nexus-chat-redesign` (preview `nexus-chat-mock`, http://127.0.0.1:8830/eventtrader): jejich vzhled jen přesunutý do rohu a okna (jeho přání), plný redesign přepínatelný v demo panelu. Čeká na jeho verdikt; spec jen na jeho slovo.
 - [ ] 2026-11-03  Quest ET-33881 (accepted 07:56 UTC, deadline 2026-11-04 07:56 UTC): až dodají, otestovat každý řádek Done when (`docs/et-33881-verification.md`), verdikt jeho; pak jako další změnu podat ceny z API (jen čtyři místa s čísly cen, hotový patch `outbox/quest-request/followup-live-prizes.patch`, stránka se při chybě API vrací k pevným číslům).
 
 - [ ] 2026-11-03  Capital Maximizer ET-33205: třetí build 12 z 15 oprav. Verdikt držíme, dokud nepůjdou vklady (C1.1): Nexus REPLY-0255 bez termínu a bez jména, jen bid, a na žebříčku pro ně není položka. Až přistanou, projít znovu s boty; zbývá stUSDS smyčka, Base, Kamino Commodity (přístup, fronta). OG s pákou a ±20 %: ET-33904 podle Nexu (REPLY-0258), bez termínu; bb.py na něj vrací 404, na žebříčku je jen #1089 "reviewing". Tokenizace je jeho.

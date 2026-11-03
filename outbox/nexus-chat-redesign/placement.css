@@ -1,0 +1,112 @@
+/* Their look, moved. Loaded after their own nexus-chat.css, which stays as it is: only the place changes, from a bar across
+   the bottom to a corner button that opens a window. Their colours, font, header and one-row composer are untouched. */
+:root { --nexus-bar-height: 0px !important; }
+body.nexus-active, body.nexus-active.nexus-panel-open { padding-bottom: 0 !important; }
+
+#nexus-chat-widget { left: auto; top: auto; right: 24px; bottom: 24px; width: 0; height: 0; z-index: 100002; --nx-spring: cubic-bezier(.2, .9, .25, 1.04); }
+
+/* ---- The button: their badge's tile with an N, green on dark glass ---- */
+#nexus-chat-widget .nx-fab { position: absolute; right: 0; bottom: 0; pointer-events: auto; transition: transform .24s var(--nx-spring), opacity .16s ease; }
+#nexus-chat-widget .nx-fab .nexus-badge {
+    all: unset; position: relative; display: block; cursor: pointer; border-radius: 10px; -webkit-tap-highlight-color: transparent;
+    box-shadow: 0 10px 30px rgba(4, 8, 12, .6), 0 0 26px rgba(0, 255, 136, .3); transition: box-shadow .2s ease, transform .2s var(--nx-spring);
+}
+#nexus-chat-widget .nx-fab .nexus-badge:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(4, 8, 12, .6), 0 0 36px rgba(0, 255, 136, .48); }
+#nexus-chat-widget .nx-fab .nexus-badge:focus-visible { outline: 2px solid #00FF88; outline-offset: 3px; }
+#nexus-chat-widget .nx-logo {
+    display: grid; place-items: center; width: 52px; height: 52px; border-radius: 10px; border: 1px solid rgba(0, 255, 136, .55); color: #00FF88;
+    background: linear-gradient(160deg, rgba(0, 255, 136, .2), rgba(0, 255, 136, .05)), #0D141C; font: 700 20px/1 var(--font-mono, "JetBrains Mono", monospace); letter-spacing: -.5px;
+}
+#nexus-chat-widget .nexus-notif-dot { top: -4px !important; right: -4px !important; width: 13px !important; height: 13px !important; z-index: 2; }
+#nexus-chat-widget.nexus-expanded .nx-fab { transform: scale(.5); opacity: 0; pointer-events: none; }
+
+/* ---- The window: their panel and their bar together ---- */
+#nexus-chat-widget:not(.nexus-expanded) .nexus-panel { display: none !important; }
+#nexus-chat-widget.nexus-expanded:not(.nexus-pinned) .nexus-panel {
+    position: absolute; right: 0; bottom: 0; display: flex; flex-direction: column; overflow: visible; pointer-events: auto;
+    width: 480px; height: min(720px, calc(var(--nx-vvh, 100dvh) - 48px)); min-height: 0; max-width: calc(100vw - 48px); max-height: calc(var(--nx-vvh, 100dvh) - 48px);
+    border: 1px solid rgba(59, 130, 246, .3); border-radius: 14px; box-shadow: 0 24px 70px rgba(4, 8, 12, .7);
+    transform-origin: bottom right; animation: nx-open .26s var(--nx-spring);
+}
+@keyframes nx-open { from { transform: translateY(14px) scale(.94); opacity: 0; } }
+#nexus-chat-widget.nx-max:not(.nexus-pinned) .nexus-panel { width: min(860px, calc(100vw - 48px)); height: calc(var(--nx-vvh, 100dvh) - 48px); }
+#nexus-chat-widget .nexus-panel-header { flex: none; padding: 8px 8px 8px 14px; border-radius: 14px 14px 0 0; }
+#nexus-chat-widget #nexusPanelTitleText { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#nexus-chat-widget .nexus-panel-title { min-width: 0; }
+#nexus-chat-widget .nexus-panel-header { flex-wrap: nowrap; }
+#nexus-chat-widget .nexus-panel-title { flex: 0 1 auto; }
+#nexus-chat-widget .nexus-panel-actions { flex: none; gap: 0; align-items: center; }
+#nexus-chat-widget .nexus-panel-actions .nexus-btn:not(.nexus-btn-sub) { width: 32px; min-width: 32px; height: 32px; }
+#nexus-chat-widget .nexus-panel-actions .nexus-btn-sub { margin-right: 6px; }
+#nexus-chat-widget.nexus-pinned .nexus-panel-actions .nexus-btn:not(.nexus-btn-sub):not(.nexus-btn-pin) { width: 26px; min-width: 26px; }
+#nexus-chat-widget.nexus-pinned .nexus-panel-header { padding-left: 10px; padding-right: 4px; }
+#nexus-chat-widget .nexus-messages { flex: 1; min-height: 0; }
+#nexus-chat-widget .nexus-msg a { color: #60A5FA; }
+#nexus-chat-widget .nexus-bar { flex: none; gap: 2px; padding: 8px 10px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); border-radius: 0 0 13px 13px; }
+#nexus-chat-widget .nexus-bar .nexus-btn { width: 34px; min-width: 34px; height: 34px; }
+#nexus-chat-widget .nexus-bar .nexus-input-wrap { margin: 0 4px; min-width: 0; }
+#nexus-chat-widget .nexus-btn-toggle { display: none !important; }
+#nexus-chat-widget .nexus-sub-panel { top: 61px; left: 8px; right: 8px; max-height: calc(100% - 70px); }
+
+/* ---- Grips: the corner and both free edges; nothing animates while one is held ---- */
+#nexus-chat-widget .nexus-resize-handle, #nexus-chat-widget .nx-rz { position: absolute; z-index: 30; pointer-events: auto; touch-action: none; }
+#nexus-chat-widget .nexus-resize-handle { top: -8px; left: -8px; right: auto; bottom: auto; width: 30px; height: 30px; cursor: nwse-resize; background: none; border: 0; opacity: 1; }
+#nexus-chat-widget .nx-rz-t { top: -6px; left: 22px; right: 22px; height: 12px; cursor: ns-resize; }
+#nexus-chat-widget .nx-rz-l { left: -6px; top: 22px; bottom: 22px; width: 12px; cursor: ew-resize; }
+#nexus-chat-widget .nexus-resize-handle::after, #nexus-chat-widget .nx-rz::after { content: ""; position: absolute; opacity: 0; transition: opacity .12s ease; pointer-events: none; }
+#nexus-chat-widget .nexus-resize-handle::after { top: 7px; left: 7px; width: 20px; height: 20px; border: 2px solid #60A5FA; border-right: 0; border-bottom: 0; border-top-left-radius: 14px; }
+#nexus-chat-widget .nx-rz-t::after { top: 5px; left: 0; right: 0; height: 2px; background: #60A5FA; }
+#nexus-chat-widget .nx-rz-l::after { left: 5px; top: 0; bottom: 0; width: 2px; background: #60A5FA; }
+#nexus-chat-widget .nexus-resize-handle:hover::after, #nexus-chat-widget .nx-rz:hover::after { opacity: .8; }
+#nexus-chat-widget.nx-resizing .nexus-panel { transition: none !important; }
+html.nx-resizing-doc, html.nx-resizing-doc * { -webkit-user-select: none !important; user-select: none !important; }
+html.nx-resizing-doc body { transition: none !important; }
+html.nx-resizing-doc iframe { pointer-events: none; }
+
+/* ---- Pinned: their rail, as today, and it lets go of the page when minimized ---- */
+#nexus-chat-widget.nexus-pinned:not(.nexus-expanded) { position: fixed; left: auto; top: auto; right: 24px; bottom: 24px; width: 0 !important; height: 0; overflow: visible; display: block; }
+#nexus-chat-widget.nexus-pinned.nexus-expanded { position: fixed; left: auto; right: 0; top: var(--site-header-h, 0px); bottom: 0; width: 380px; height: auto; overflow: visible; display: block; pointer-events: auto; }
+#nexus-chat-widget.nexus-pinned.nexus-pinned-left.nexus-expanded { left: 0; right: auto; }
+#nexus-chat-widget.nexus-pinned.nexus-expanded .nexus-panel { position: absolute !important; inset: 0; display: flex !important; flex-direction: column; width: 100%; height: 100%; overflow: visible; border-radius: 0; }
+#nexus-chat-widget.nexus-pinned .nx-rz { display: none; }
+#nexus-chat-widget.nexus-pinned .nexus-resize-handle { top: 0; left: -6px; right: auto; bottom: auto; width: 12px; height: 100%; cursor: ew-resize; }
+#nexus-chat-widget.nexus-pinned.nexus-pinned-left .nexus-resize-handle { left: auto; right: -6px; }
+#nexus-chat-widget.nexus-pinned .nexus-resize-handle::after { top: 0; left: 5px; width: 2px; height: 100%; border: 0; border-radius: 0; background: #60A5FA; }
+#nexus-chat-widget.nexus-pinned .nexus-bar, #nexus-chat-widget.nexus-pinned .nexus-panel-header { border-radius: 0; }
+body.nexus-sidebar-pinned:not(.nexus-panel-open) { margin-right: 0 !important; margin-left: 0 !important; }
+
+#nexus-chat-widget .nx-toast { position: absolute; left: 50%; bottom: 66px; z-index: 40; max-width: 88%; padding: 7px 12px; border-radius: 8px; font-size: 12px; color: #E9EFF5; background: #121C26; border: 1px solid rgba(59, 130, 246, .3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transform: translate(-50%, 8px); opacity: 0; pointer-events: none; transition: transform .2s ease, opacity .15s ease; }
+#nexus-chat-widget .nx-toast.nx-on { transform: translate(-50%, 0); opacity: 1; }
+
+/* ---- The subscription figures he asked for, in their panel ---- */
+#nexus-chat-widget .nx-plan { position: relative; padding: 16px; border-radius: 10px; background: rgba(17, 26, 40, .8); border: 1px solid rgba(59, 130, 246, .25); overflow: hidden; }
+#nexus-chat-widget .nx-plan-on { border-color: rgba(0, 255, 136, .34); }
+#nexus-chat-widget .nx-plan-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+#nexus-chat-widget .nx-plan-name { font: 400 19px/1.1 var(--font-display, "Archivo Black", sans-serif); color: #E9EFF5; }
+#nexus-chat-widget .nx-plan-state { padding: 3px 9px; border-radius: 10px; font-size: 11.5px; font-weight: 600; color: #E9EFF5; border: 1px solid rgba(59, 130, 246, .3); white-space: nowrap; }
+#nexus-chat-widget .nx-plan-on .nx-plan-state:not(.nx-off) { color: #06090F; background: #00FF88; border-color: #00FF88; }
+#nexus-chat-widget .nx-plan-big { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 10px; margin-top: 14px; font: 400 46px/1 var(--font-display, "Archivo Black", sans-serif); }
+#nexus-chat-widget .nx-plan-big em { font-style: normal; color: #00FF88; }
+#nexus-chat-widget .nx-plan-big span { font: 500 13px/1.3 var(--font-mono, monospace); color: #A4B3C2; }
+#nexus-chat-widget .nx-plan-bar { height: 6px; margin-top: 12px; border-radius: 3px; overflow: hidden; background: rgba(59, 130, 246, .16); }
+#nexus-chat-widget .nx-plan-bar i { display: block; height: 100%; border-radius: 3px; background: #00FF88; }
+#nexus-chat-widget .nx-plan-sub { margin-top: 10px; font-size: 12.5px; color: #A4B3C2; }
+#nexus-chat-widget .nx-tiles { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 10px; }
+#nexus-chat-widget .nx-tile { min-width: 0; padding: 12px 14px; border-radius: 10px; background: rgba(17, 26, 40, .8); border: 1px solid rgba(59, 130, 246, .18); }
+#nexus-chat-widget .nx-tile b { display: block; font: 700 22px/1.1 var(--font-mono, monospace); color: #E9EFF5; white-space: nowrap; }
+#nexus-chat-widget .nx-tile span { display: block; margin-top: 5px; font-size: 11.5px; line-height: 1.3; color: #7E90A1; }
+#nexus-chat-widget .nexus-sub-action-btn.cancel { background: none; border: 0; color: #7E90A1; font-size: 12.5px; }
+#nexus-chat-widget .nexus-sub-action-btn.cancel:hover { color: #E9EFF5; background: none; }
+#nexus-chat-widget .nexus-sub-action-btn.cancel.nx-armed { color: #E9EFF5; border: 1px solid #7E90A1; }
+
+/* ---- Phone: the whole screen, above the keyboard (ET-31846's --nx-vvh) ---- */
+@media (max-width: 768px) {
+    #nexus-chat-widget { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+    #nexus-chat-widget.nexus-expanded:not(.nexus-pinned) .nexus-panel, #nexus-chat-widget.nx-max:not(.nexus-pinned) .nexus-panel, #nexus-chat-widget.nexus-pinned.nexus-expanded .nexus-panel {
+        position: fixed !important; inset: 0 0 auto 0; width: 100% !important; max-width: none; height: var(--nx-vvh, 100dvh) !important; max-height: none; border: 0; border-radius: 0;
+    }
+    #nexus-chat-widget .nexus-resize-handle, #nexus-chat-widget .nx-rz { display: none !important; }
+    #nexus-chat-widget .nexus-bar, #nexus-chat-widget .nexus-panel-header { border-radius: 0; }
+    body.nexus-sidebar-pinned, body.nexus-sidebar-pinned-left { margin-right: 0 !important; margin-left: 0 !important; }
+    html:has(body.nexus-panel-open), body.nexus-active.nexus-panel-open { overflow: hidden; overscroll-behavior: none; }
+}

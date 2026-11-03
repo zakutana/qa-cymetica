@@ -45,21 +45,20 @@ DESIGN = [
      'a&&a.addEventListener("click",function(e){e.preventDefault(),e.stopPropagation(),a.__nexusCtxBound||z().then(function(e){e&&e.toggleSelectionMode()})})'),
     # Send stays idle while there is nothing to send
     ('n&&(n.disabled=!1)', 'n&&(n.disabled=!e.value.trim()&&!E.length)', 2),
-    # the welcome after New Chat
-    ('n.innerHTML=\'<div class="nexus-welcome"><strong>EventTrader NEXUS AI</strong></div>\'', "n.innerHTML=" + json.dumps(WELCOME)),
     # the panel stays open while you read the page; Esc and the X close it
     ('document.addEventListener("click",function(e){y&&(w||o.contains(e.target)||G())}),', ''),
     # the menu, and a toast instead of feedback hidden in a tooltip
     ('function T(){try{return localStorage',
+     'function nxLabel(e,t){e.title=t;var n=e.querySelector("span");n&&(n.textContent=t)}'
      'function nxMenu(){var b=o.querySelector(".nx-more"),m=o.querySelector(".nx-menu");function s(v){m.hidden=!v,b.setAttribute("aria-expanded",v?"true":"false")}'
-     'b.addEventListener("click",function(e){e.stopPropagation(),s(m.hidden)}),document.addEventListener("click",function(e){m.hidden||m.contains(e.target)||b.contains(e.target)||s(!1)}),'
-     'm.addEventListener("click",function(e){e.target.closest(".nx-mi")&&s(!1)}),document.addEventListener("keydown",function(e){"Escape"!==e.key||m.hidden||(e.stopPropagation(),s(!1))},!0);'
-     'if("1"===r("nexus_panel_max")){o.classList.add("nx-max");var x=o.querySelector(".nexus-btn-maximize");x.title="Restore",x.querySelector("span").textContent="Restore"}}'
+     'if(b&&m){b.addEventListener("click",function(e){e.stopPropagation(),s(m.hidden)}),document.addEventListener("click",function(e){m.hidden||m.contains(e.target)||b.contains(e.target)||s(!1)}),'
+     'm.addEventListener("click",function(e){e.target.closest(".nx-mi")&&s(!1)}),document.addEventListener("keydown",function(e){"Escape"!==e.key||m.hidden||(e.stopPropagation(),s(!1))},!0)}'
+     'if("1"===r("nexus_panel_max")){o.classList.add("nx-max"),nxLabel(o.querySelector(".nexus-btn-maximize"),"Restore")}}'
      # pointer capture: the window follows the cursor over anything, iframes included, and always lets go
      'function nxResize(){var p=o.querySelector(".nexus-panel"),c=function(v,a,b){return Math.max(a,Math.min(v,b))};'
      'o.querySelectorAll(".nexus-resize-handle,.nx-rz").forEach(function(h){var on=!1,sx=0,sy=0,sw=0,sh=0,ax="1"===h.dataset.x,ay="1"===h.dataset.y;'
      'h.addEventListener("pointerdown",function(e){if(0===e.button){e.preventDefault(),e.stopPropagation();'
-     'if(!w&&o.classList.contains("nx-max")){var q=p.getBoundingClientRect(),m=o.querySelector(".nexus-btn-maximize");p.style.width=q.width+"px",p.style.height=q.height+"px",o.classList.remove("nx-max"),localStorage.setItem("nexus_panel_max","0"),m.title="Maximize",m.querySelector("span").textContent="Maximize"}'
+     'if(!w&&o.classList.contains("nx-max")){var q=p.getBoundingClientRect(),m=o.querySelector(".nexus-btn-maximize");p.style.width=q.width+"px",p.style.height=q.height+"px",o.classList.remove("nx-max"),localStorage.setItem("nexus_panel_max","0"),nxLabel(m,"Maximize")}'
      'on=!0,sx=e.clientX,sy=e.clientY,sw=w?o.offsetWidth:p.offsetWidth,sh=p.offsetHeight;try{h.setPointerCapture(e.pointerId)}catch(e){}'
      'o.classList.add("nx-resizing"),document.documentElement.classList.add("nx-resizing-doc")}});'
      'h.addEventListener("pointermove",function(e){if(on){var dx=e.clientX-sx,dy=e.clientY-sy;'
@@ -73,15 +72,11 @@ DESIGN = [
      'function T(){try{return localStorage'),
     ('document.body.appendChild(o),e=function(){', 'document.body.appendChild(o),nxMenu(),e=function(){'),
     ('e.setAttribute("title",t),e.classList.toggle("nexus-share-ok"', 'e.setAttribute("title",t),nxToast(t),e.classList.toggle("nexus-share-ok"'),
-    # Pin keeps its three steps (right, left, off); it now labels a menu row instead of a glyph
-    ('e&&(e.textContent="right"===S?"⊟→":"⊟←",e.title="right"===S?"Move to left side":"Unpin sidebar")',
-     'e&&(e.title="right"===S?"Move to left side":"Unpin sidebar",e.querySelector("span").textContent=e.title)'),
-    ('e&&(e.textContent="⊞",e.title="Pin as sidebar")', 'e&&(e.title="Pin as sidebar",e.querySelector("span").textContent=e.title)'),
     # Maximize: a large window; pinned, a wider rail, as today
     ('var e=parseInt(o.style.width||"380",10);return o.style.width=e>=550?"380px":"600px",void(O.title=e>=550?"Maximize":"Restore")',
-     'var e=parseInt(o.style.width||"420",10);return o.style.width=e>=550?"420px":"600px",O.title=e>=550?"Maximize":"Restore",void(O.querySelector("span").textContent=O.title)'),
+     'var e=parseInt(o.style.width||"420",10);return o.style.width=e>=550?"420px":"600px",void nxLabel(O,e>=550?"Maximize":"Restore")'),
     ('var t="80vh"===n.style.height;n.style.height=t?"400px":"80vh",O.title=t?"Maximize":"Restore",localStorage.setItem("nexus_panel_height",n.style.height)',
-     'var t=o.classList.toggle("nx-max");n.style.height="",n.style.width="",O.title=t?"Restore":"Maximize",O.querySelector("span").textContent=O.title,localStorage.removeItem("nexus_panel_height"),localStorage.removeItem("nexus_panel_width"),localStorage.setItem("nexus_panel_max",t?"1":"0")'),
+     'var t=o.classList.toggle("nx-max");n.style.height="",n.style.width="",nxLabel(O,t?"Restore":"Maximize"),localStorage.removeItem("nexus_panel_height"),localStorage.removeItem("nexus_panel_width"),localStorage.setItem("nexus_panel_max",t?"1":"0")'),
     # resizing is rewritten in nxResize (their mouse and touch block is cut in patched_js)
     ('var r=localStorage.getItem("nexus_panel_height");r&&(s.style.height=r)', 'var r=localStorage.getItem("nexus_panel_height");r&&(s.style.height=r);var nw=localStorage.getItem("nexus_panel_width");s.style.width=nw||""'),
     ('if(e&&(e.style.height=""),w)return', 'if(e&&(e.style.height="",e.style.width=""),w)return'),
@@ -104,6 +99,16 @@ DESIGN = [
      '''n.innerHTML='<div class="nexus-sub-info"><div class="nx-plan"><div class="nx-plan-top"><span class="nx-plan-name">Free</span><span class="nx-plan-state">Paper Mode</span></div></div>'''),
 ]
 
+# Only the full redesign (template.html, nexus-chat.css), not the one that keeps their look.
+REDESIGN = [
+    # the welcome after New Chat
+    ('n.innerHTML=\'<div class="nexus-welcome"><strong>EventTrader NEXUS AI</strong></div>\'', "n.innerHTML=" + json.dumps(WELCOME)),
+    # Pin keeps its three steps (right, left, off); it now labels a menu row instead of a glyph
+    ('e&&(e.textContent="right"===S?"⊟→":"⊟←",e.title="right"===S?"Move to left side":"Unpin sidebar")',
+     'e&&(e.title="right"===S?"Move to left side":"Unpin sidebar",e.querySelector("span").textContent=e.title)'),
+    ('e&&(e.textContent="⊞",e.title="Pin as sidebar")', 'e&&(e.title="Pin as sidebar",e.querySelector("span").textContent=e.title)'),
+]
+
 # Only for this demo: nobody is signed in on a copy, so the chat behaves as signed in when the demo bar says so.
 DEMO = [
     ('function q(){var e=window.hasSession;', 'function q(){if(window.__NX_DEMO)return window.__NX_DEMO.in;var e=window.hasSession;'),
@@ -111,14 +116,34 @@ DEMO = [
 ]
 
 
-def patched_js() -> bytes:
+def their_markup(t: str) -> str:
+    """Their own markup, moved: the badge becomes the corner button, the bar goes inside the window, the switch is gone."""
+    t, n = re.subn(r'<label class="nexus-toggle-switch".*?</label>\s*', "", t, flags=re.S)
+    t, m = re.subn(r'<div class="nexus-enable-prompt">.*?<button class="nexus-enable-btn">Enable NEXUS AI</button>(?:\\n|\s)*</div>', "", t, flags=re.S)
+    badge = '<div class="nexus-badge" title="EventTrader NEXUS AI">E</div>'
+    grip = '<div class="nexus-resize-handle" title="Drag to resize"></div>'
+    if (n, m, t.count(badge), t.count(grip)) != (1, 1, 1, 1):
+        raise RuntimeError(f"their markup moved: {n, m, t.count(badge), t.count(grip)}")
+    t = t.replace('<span id="nexusPanelTitleText">EventTrader NEXUS AI</span>', '<span id="nexusPanelTitleText">NEXUS AI</span>')  # a window has no room for the bar's long title
+    t = t.replace(badge, "").replace(grip,'<div class="nexus-resize-handle" data-x="1" data-y="1" title="Drag to resize"></div><div class="nx-rz nx-rz-t" data-y="1"></div><div class="nx-rz nx-rz-l" data-x="1"></div>')
+    bar = t.index('<div class="nexus-attachments-preview">')
+    close = t.rindex("</div>", 0, bar)
+    t = t[:close] + t[bar:] + "</div>"
+    return f'<div class="nx-fab"><button type="button" class="nexus-badge" title="Ask NEXUS" aria-label="Open NEXUS chat"><span class="nx-logo">{MARK}</span></button></div>' + t
+
+
+def patched_js(kind: str) -> bytes:
     s = (HERE / "live" / "nexus-chat.js").read_text(encoding="utf-8")
     start = s.index("o.innerHTML=`") + len("o.innerHTML=`")
     end = s.index("`,document.body.appendChild(o)", start)
-    s = s[:start] + (HERE / "template.html").read_text(encoding="utf-8").replace("NX_WELCOME_HTML", WELCOME).replace("NX_MARK", MARK) + s[end:]
+    if kind == "redesign":
+        markup = (HERE / "template.html").read_text(encoding="utf-8").replace("NX_WELCOME_HTML", WELCOME).replace("NX_MARK", MARK)
+    else:
+        markup = their_markup(s[start:end])
+    s = s[:start] + markup + s[end:]
     start = s.index('var V=o.querySelector(".nexus-resize-handle");')
     s = s[:start] + "nxResize();" + s[s.index("var ne=localStorage.getItem(i);", start):]
-    for entry in DESIGN + DEMO:
+    for entry in DESIGN + (REDESIGN if kind == "redesign" else []) + DEMO:
         old, new = entry[0], entry[1]
         want = entry[2] if len(entry) > 2 else 1
         if s.count(old) != want:
@@ -129,6 +154,7 @@ def patched_js() -> bytes:
 
 _cache: dict[str, tuple[float, tuple]] = {}
 _client: httpx.Client | None = None
+look = "theirs"  # "theirs": their look, only moved. "redesign": the full redesign.
 plan = "premium"
 pending = 0
 links: dict[str, dict] = {}
@@ -320,7 +346,9 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         if bare == "/_nx/nexus-chat.js":
-            return self.send(200, "text/javascript; charset=utf-8", patched_js())
+            return self.send(200, "text/javascript; charset=utf-8", patched_js(look))
+        if bare == "/_nx/nexus-chat.css" and look == "theirs":
+            return self.send(200, OWN["nexus-chat.css"], (HERE / "live" / "nexus-chat.css").read_bytes() + b"\n" + (HERE / "placement.css").read_bytes())
         if bare.startswith("/_nx/") and bare[5:] in OWN:
             return self.send(200, OWN[bare[5:]], (HERE / bare[5:]).read_bytes())
         if bare == "/static/sw.js":
@@ -346,9 +374,12 @@ class Handler(BaseHTTPRequestHandler):
     do_HEAD = do_GET
 
     def do_POST(self):
-        global plan, pending
+        global plan, pending, look
         bare = self.path.split("?")[0]
         raw = self.body()
+        if bare == "/__demo/look":
+            look = json.loads(raw)["look"]
+            return self.js({"look": look})
         if bare == "/__demo/plan":
             plan = json.loads(raw)["plan"]
             return self.js({"plan": plan})
@@ -417,7 +448,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    patched_js()
+    patched_js("theirs"), patched_js("redesign")
     threading.Thread(target=warm, daemon=True).start()
     print(f"NEXUS chat on their page: http://127.0.0.1:{PORT}/gem-screener  (Ctrl+C stops it)")
     ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

@@ -10,7 +10,16 @@
       });
     };
   };
+  var look = function (l) {
+    return function () {
+      fetch('/__demo/look', { method: 'POST', body: JSON.stringify({ look: l }) }).then(function () { location.reload(); });
+    };
+  };
   var groups = [
+    ['Look', [
+      ['Their look, moved', look('theirs')],
+      ['Our redesign', look('redesign')]
+    ]],
     ['Replies', [
       ['Full answer', send('Show the top apps by upside')],
       ['Options', send('Give me options')],

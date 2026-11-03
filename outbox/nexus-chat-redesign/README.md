@@ -1,5 +1,9 @@
 # NEXUS chat redesign
 
+**The operator's choice so far (2026-11-03): their look, only moved.** `placement.css` on top of their own `nexus-chat.css`, and
+their markup moved by `their_markup` in `serve.py`: a green N in the corner opens a window, the enable switch is gone, the
+subscription sheet leads with its figures. The full redesign below stays one click away in the demo bar (Look).
+
 `python outbox/nexus-chat-redesign/serve.py`, then http://127.0.0.1:8830/gem-screener (any page of theirs works).
 
 Their pages, read anonymously, with `nexus-chat.css` replaced and `nexus-chat.js` patched: `template.html` is the new
