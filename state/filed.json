@@ -5980,7 +5980,7 @@
     }
    ],
    "their_status": {
-    "287": "fixed"
+    "287": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -6003,7 +6003,7 @@
     }
    ],
    "their_status": {
-    "288": "fixed"
+    "288": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -6018,11 +6018,18 @@
    ],
    "title": "Profit Board (ET-33678): Quantum Frontier Index reads +7.25 % and Project Omega +5.09 %, both about -25 % and -28 % on their own cards",
    "filed_at": "2026-11-03T04:58:30+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 289,
+     "verdict": "pass",
+     "at": "2026-11-03T07:47:19+00:00"
+    }
+   ],
    "their_status": {
-    "289": "pending"
+    "289": "paid"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "profit-board-losing-short-fund-shown-up",
@@ -6034,11 +6041,18 @@
    ],
    "title": "Profit Board (ET-33678): DeFi Undercurrent Short is number 6 at +60.56 %, while the short fund of that name has lost about 60 %",
    "filed_at": "2026-11-03T04:58:45+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 290,
+     "verdict": "pass",
+     "at": "2026-11-03T07:47:25+00:00"
+    }
+   ],
    "their_status": {
-    "290": "pending"
+    "290": "paid"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "profit-board-misses-a-live-fund",
@@ -6050,11 +6064,18 @@
    ],
    "title": "Profit Board (ET-33678): FTA Fund — Cryptos, live and up on /fund-performance, is not on the board",
    "filed_at": "2026-11-03T04:59:00+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 291,
+     "verdict": "pass",
+     "at": "2026-11-03T07:48:49+00:00"
+    }
+   ],
    "their_status": {
-    "291": "pending"
+    "291": "paid"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "profit-board-72h-peak-day-after-close",
@@ -6066,11 +6087,18 @@
    ],
    "title": "Profit Board (ET-33678): 2,774 of 6,482 72h cards show their peak on the day they are read, weeks after they closed",
    "filed_at": "2026-11-03T04:59:12+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 292,
+     "verdict": "pass",
+     "at": "2026-11-03T07:47:32+00:00"
+    }
+   ],
    "their_status": {
-    "292": "pending"
+    "292": "paid"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "pitch-chart-flattened-by-one-bad-reading",
@@ -6082,11 +6110,18 @@
    ],
    "title": "Pitch Cards (ET-33678): one reading of DeFi Undercurrent Short at 30.97 between 8.58 and 8.42 draws Molecular's pitch chart flat",
    "filed_at": "2026-11-03T04:59:24+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 293,
+     "verdict": "pass",
+     "at": "2026-11-03T07:47:43+00:00"
+    }
+   ],
    "their_status": {
-    "293": "pending"
+    "293": "paid"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "hunters-leaderboard-bugs-fixed-21-of-253",

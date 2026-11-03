@@ -1,0 +1,6 @@
+Thank you: the board's losers, the missing fund, the 72h peak days, the flat chart and the Invest link are all fixed, and themes on the board are a good call. Failing it on what is left:
+1. The pitches are not Nexus pitching. Each one comes from a rule over what has already risen ("a live event or company card that is up since it was minted..."), and its sentence only repeats that card's returns: MRNA, 58 days old and +51 %, "Want a piece?". A pitch should be a considered proposal from the Nexus agent itself, not something weeks old that has already gone up 50 %. Choosing the idea and arguing for it is Nexus's job.
+2. C1, real money from day one, is still not built and still has no ticket or date. Please name them.
+3. Pitches do not reach every user: nothing links to the page yet. Please say what ends the freeze for it.
+4. Profit Board columns sort one way only. A second click on a header should reverse the order. That was in our mock too; please add it.
+5. The chart on a card ends far from its big number: the report filed today.

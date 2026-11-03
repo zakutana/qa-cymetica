@@ -22,6 +22,20 @@ Shipped 2026-11-03 00:37 UTC. Read on 2026-11-03 ~04:10 to 04:50 UTC, at 2560, 1
 - 72h rows measured at the close: rows agree with `current_index` on the 15 cards sampled. The peak is understated on some live cards, by 1 to 4 points against the card's history (nuclear +130.77 against +134.52). Not filed.
 - Row counts changed from their message (2,497 and 14,673) to 6,854 and 10,323: the measuring is running.
 
+## Second build (shipped 2026-11-03 07:26 UTC, read 07:33 to 07:50)
+
+| Point of the FAIL | Result | Evidence |
+|---|---|---|
+| 1 real money | NOT BUILT | the page's note is unchanged; no ticket or date |
+| 2 reach | NOT DONE | no link from /, /agent-casino, /fund-performance, /events/universe/movers |
+| 3 board #289-#292 | FIXED | checks pass, passes sent; 484 rows: 318 company, 100 72h (best 100), 43 event, 12 themes, 11 funds |
+| 4 #293 | FIXED | the reading is gone from the fund's page |
+| 5 Invest opens the page | FIXED | navigates to the product in Firefox and Chromium; MRNA's page has Buy |
+| 6 Nexus writes | NOT FIXED | sentences vary between reads and match their numbers, but only repeat the returns; "Want a piece?" remains. Whether a model writes them is not visible from here |
+| 7 their own choice | PARTLY | themes and M&A deals added, pitch bar changed (`bar.rule`), still "what is up". Other things on the platform not added; theirs to decide |
+
+New: the line on a card ends far from its big number (`test_a_pitch_chart_ends_where_its_big_number_does`). Header sort goes one way only; our mock's code too (`pc.js:350`).
+
 ## Not checked
 
 The /ws/pitch-cards push in a held-open tab. The card going behind Nexus frame by frame: stills and the unchanged code only.

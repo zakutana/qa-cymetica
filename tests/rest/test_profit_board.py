@@ -28,6 +28,7 @@ OFF_BY = 10.0       # percentage points between a row and its card: the board re
 LAST_72H_DAY = 4    # a 72-hour card closes on its third day; one day of slack for a day boundary
 SPIKE = 100.0       # percentage points a lone reading stands off both neighbours, while they agree within NEIGHBOURS
 NEIGHBOURS = 10.0
+LINE_OFF_BY = 2.0   # percentage points between a pitch's line and its big number: the line is thinned, not re-read
 
 
 def _verdict(breaches: list, checked, passed: str, sources: dict) -> None:
@@ -125,6 +126,23 @@ def test_a_72h_cards_peak_day_is_inside_its_72_hours(rest_anon):
     breaches = [{"what": f"{len(late)} of {len(rows)} 72h cards show a peak day after their 72 hours, "
                          f"e.g. {r['n'][:40]}: {r['days']} / {r['days'] - r['dp']}", "url": r["u"]} for r in late[:5]]
     _verdict(breaches, len(rows), "every 72h card's peak day is inside its 72 hours", {"board": DATA})
+
+
+@qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
+def test_a_pitch_chart_ends_where_its_big_number_does(rest_anon):
+    """The card's line is the result so far, so it ends at the big number. A line that does, or a card that says what
+    else its line is, clears it. FTA Fund -- Cryptos, 2026-11-03: +7.45 % over a two-point line ending at +1.52 %, and
+    "flat this week" with ret5 empty."""
+    pitches = _data(rest_anon).get("pitches") or []
+    breaches = []
+    for pitch in pitches:
+        line, ret = pitch.get("line") or [], pitch.get("ret")
+        if line and isinstance(ret, (int, float)) and abs(line[-1][1] - ret) > LINE_OFF_BY:
+            breaches.append({"what": f"{pitch['name']}: big number {ret:+.2f} %, its line ends at {line[-1][1]:+.2f} % "
+                                     f"after {len(line)} points", "url": pitch.get("href")})
+    if not pitches:
+        raise Inconclusive(f"{DATA}: no pitches")
+    _verdict(breaches, len(pitches), "every pitch's line ends at its big number", {"board": DATA})
 
 
 @qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
