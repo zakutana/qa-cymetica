@@ -5972,11 +5972,18 @@
    ],
    "title": "Top Picks (ET-33759 item 1): the cards of Aero and CoWSwap show no exploit, while their own track-record check reads \"Exploit in the last year\"",
    "filed_at": "2026-11-03T04:29:15+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 287,
+     "verdict": "pass",
+     "at": "2026-11-03T05:57:47+00:00"
+    }
+   ],
    "their_status": {
-    "287": "pending"
+    "287": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-fund-bar-rebalanced-weekly-is-false",
@@ -5988,11 +5995,18 @@
    ],
    "title": "Top Picks fund bar: \"the Degen picks at equal weight, rebalanced weekly\", last rebalance 5 Oct; 4 of its 7 holdings are not picks today",
    "filed_at": "2026-11-03T04:44:25+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 288,
+     "verdict": "pass",
+     "at": "2026-11-03T05:57:52+00:00"
+    }
+   ],
    "their_status": {
-    "288": "pending"
+    "288": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "profit-board-card-rows-stale",

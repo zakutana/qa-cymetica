@@ -23,6 +23,20 @@ At 1440x900, cube at y 600: 261 px of the 584 px card below the screen; at y 770
 
 The Picks log is too big and too loud: they pictured a quiet line like the blue Backtest line. Our picture 4 drew an open panel and the build follows it, so this is a change of our design. The near-miss card must stay whole on screen, even over the pick cards. Both went out by Telegram with #287.
 
+## The seven of MSG-0302, read 2026-11-03 05:55 UTC
+
+Nexus said all seven were live; snapshot still 02:57 UTC.
+
+| Item | Result | Evidence |
+|---|---|---|
+| 1 Picks log | PASS | 21 px line, no frame, closed; same blue, size and weight as the Backtest line; opens to 12 rows on click |
+| 2 near-miss card | PASS | 0 px cut at 1440x800, 900, 1000 and 1920x1080, row at its lowest; failed gate on screen; covered no pick card in these readings |
+| 3 #287 | PASS | Aero and CoWSwap show amount and date, red; check green |
+| 4 #288 | PASS | No bar, no such words on the screen; page code draws it only if the fund is invested, rebalanced within 10 days and every holding is a pick. Our check needed repair for this fix |
+| 5 wording | PASS | "Dilution unknown: no schedule read" |
+| 6 Not growing | PASS | Securitize "revenue fell 2.2% a month over the last 90 days" |
+| 7 Jupiter's smiley | FAIL so far | Still "Holders get 50% of revenue, how is not checked yet", Hyperliquid the same with 100%; it is `holders_line` in the snapshot. Nexus said already showing. Read again after the 07:35 UTC refresh |
+
 ## Worth saying, not faults of the build
 
 * "Dilution unknown: no schedule published" is our own mock's wording. On Collector Crypt it is not true: its Streamflow schedule is public. The unfiled Supply Analyzer request fixes the cause.

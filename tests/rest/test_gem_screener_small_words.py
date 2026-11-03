@@ -285,11 +285,12 @@ def test_a_pick_card_says_the_exploit_its_guardian_lists(rest_anon):
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_the_top_picks_fund_bar_is_rebalanced_as_often_as_it_says(rest_anon):
     """The bar says 'rebalanced weekly'. A last rebalance over two weeks old makes that false. A rebalance, other words or no
-    bar clears it."""
+    bar clears it. Since their fix the words stay in the page's script behind topPicksFundOpen, which draws no bar on a fund
+    that holds nothing or rebalanced over 10 days ago, so words behind that gate are not on the screen."""
     _, html = read_page(rest_anon)
     fund = _json(rest_anon, "/api/v1/gem-screener/funds").get("top_picks")
     breaches = []
-    if fund and "rebalanced weekly" in html:
+    if fund and "rebalanced weekly" in html and "function topPicksFundOpen" not in html:
         last = datetime.fromisoformat(fund["rebalanced_at"])
         age = (datetime.now(timezone.utc) - last).days
         if age > 14:
