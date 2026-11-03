@@ -305,6 +305,16 @@ h1 b { font-weight: 400; }
   box-shadow: 0 0 12px 3px rgba(0, 255, 136, .85); animation: conduit-drop 1.8s var(--ease) infinite; }
 @keyframes conduit-drop { 0% { top: -2px; opacity: 0; } 25% { opacity: 1; } 100% { top: 38px; opacity: 0; } }
 .step.build .machine { grid-column: 1 / -1; grid-row: 3; margin-top: 10px; }
+/* ("neni 2 step na sebe vse namackane moc? ... u jinych stepu jsou tam vetsi mezery"): not one window any more but the other
+   steps' own padding, the words airier, and the pipeline set well below the forge, the conduit running down to it */
+@media (min-width: 901px) {
+  .step.build { min-height: 0; padding-top: 130px; padding-bottom: 150px; }
+  .step.build .pts { margin-top: 36px; gap: 26px; }
+  .step.build .machine { margin-top: 72px; }
+  .step.build .conduit { height: 100px; }
+  .step.build .conduit i { animation-name: conduit-drop-long; }
+}
+@keyframes conduit-drop-long { 0% { top: -2px; opacity: 0; } 25% { opacity: 1; } 100% { top: 96px; opacity: 0; } }
 /* the ring of products already built: their live pages as holograms over a projector of light */
 .ring { position: relative; height: 266px; cursor: grab; touch-action: pan-y; user-select: none; }
 .ring.grab { cursor: grabbing; }
@@ -775,6 +785,29 @@ h1 b { font-weight: 400; }
   #rail a .sh { display: inline; font: 600 15px Inter, sans-serif; }
   #rail i { width: clamp(18px, 2vw, 40px); margin: 0 10px; }
   .pill { letter-spacing: .04em; }
+  /* a laptop: the pipeline's box gets what the idea and the product window did not need (at 1280 its chambers read "Desig", "Secur") */
+  .machine { grid-template-columns: 200px minmax(0, 1fr) 380px; gap: 22px; }
+  .ch b { font-size: 14px; }
+}
+/* a small laptop or a tablet on its side (1024): the prize board's fixed type was wider than its column, the bar ran off
+   the edge, and the pipeline's chambers were cut ("Spe", "Desi") */
+@media (min-width: 901px) and (max-width: 1180px) {
+  .brand .wm { display: none; }
+  #bar { gap: 16px; }
+  .hero-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 3vw; }
+  .board { padding: 26px 24px 20px; }
+  .seat { grid-template-columns: 46px minmax(0, 1fr) auto; gap: 12px; }
+  .rk { font-size: 46px; }
+  .who b { font-size: 21px; } .who span { font-size: 13px; }
+  .pay b { font-size: 33px; } .pay span { font-size: 14px; }
+  .machine { grid-template-columns: 1fr; gap: 16px; }
+  .inlet::after, .outlet::before { display: none; }
+  #s5 .pts { max-width: 330px; }
+  .door .arr { width: 74px; height: 74px; border-radius: 22px; }
+  .door .arr svg { width: 34px; height: 34px; }
+  .door .cta .ray { margin-right: -16px; }
+  .door .cta { gap: 14px; padding: 0 22px 24px 24px; }
+  .door .cta .t { font-size: 24px; }
 }
 /* ---- a phone: the bar is the mark and the rail, the words above every picture, nothing clipped */
 @media (max-width: 900px) {
@@ -790,7 +823,8 @@ h1 b { font-weight: 400; }
   #rail a.on .sh { display: inline; margin-left: 6px; font-size: 14px; }
   #hero { min-height: 0; padding: 214px 0 52px; }
   #sun { left: 50%; top: 116px; width: 224px; }
-  .hero-in { width: calc(100% - 32px); display: flex; flex-direction: column-reverse; gap: 22px; }
+  /* the headline and the green key first, the prizes under them (the board used to lead and push both below the fold) */
+  .hero-in { width: calc(100% - 32px); display: flex; flex-direction: column; gap: 28px; }
   .hero-in h1 { font-size: clamp(29px, 8vw, 38px); line-height: 1.1; white-space: normal; }
   .hero-cta { margin-top: 24px; gap: 10px; }
   .btn-go, .btn-how { width: 100%; padding: 16px 20px; font-size: 14px; }
