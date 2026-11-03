@@ -135,11 +135,51 @@
   // .clip.xf: a second copy of the video under the first; near the end the other one starts (from data-loop-from)
   // and fades in, so the loop has no seam
   var XF = 0.9;
+  // ("snad at se to vse stahne naraz ... jak nekde doscroluju a nebude tam video spsuiteno"): once the page has loaded,
+  // every clip is fetched in the background, two at a time in the page's order, and kept in memory; a clip that comes on
+  // screen then starts from memory, whatever the line. One that is reached first streams from the network as before.
+  // Not on a saved-data or 2G line.
+  var clipUrls = [], CLIPBLOB = {}, STREAM = {}, streamers = [], PQ = [], INFLIGHT = null, PF = false;
+  // one background fetch at a time (two would each be half as fast and neither ready), each time the clip nearest below
+  // where the visitor is; what they have scrolled past comes last. A clip that has to stream now (reached before its turn)
+  // gets the whole line: the fetch in flight is dropped and queued again, and none starts while one is still buffering.
+  function streamStalled() { return streamers.some(function (v) { return v.getAttribute('src') && v.readyState < 3 && v.networkState === 2; }); }
+  function prefetchNext() {
+    if (!PF || INFLIGHT || !PQ.length) return;
+    if (streamStalled()) { setTimeout(prefetchNext, 500); return; }
+    var vh = innerHeight, bi = -1, bd = 1e9;
+    PQ.forEach(function (it, i) {
+      if (STREAM[it.url]) return;                         // already coming down on its own: not twice
+      var d = 1e8;
+      it.boxes.forEach(function (bx) {
+        var r = bx.getBoundingClientRect();
+        d = Math.min(d, r.top > vh ? r.top - vh : r.bottom < 0 ? 3 * vh - r.bottom : 0);
+      });
+      if (d < bd) { bd = d; bi = i; }
+    });
+    if (bi < 0) return;
+    var it = PQ.splice(bi, 1)[0], ctrl = window.AbortController ? new AbortController() : null;
+    INFLIGHT = { it: it, ctrl: ctrl };
+    fetch(it.url, ctrl ? { signal: ctrl.signal } : undefined).then(function (r) { return r.ok ? r.blob() : null; })
+      .then(function (b) { if (b) CLIPBLOB[it.url] = URL.createObjectURL(b); })
+      .catch(function (e) { if (e && e.name === 'AbortError') PQ.push(it); })
+      .then(function () { INFLIGHT = null; prefetchNext(); });
+  }
+  function prefetchClips() {
+    var cn = navigator.connection;
+    if (reduce || !window.fetch || !window.URL || (cn && (cn.saveData || /2g/.test(cn.effectiveType || '')))) return;
+    PF = true; PQ = clipUrls.slice(); prefetchNext();
+  }
   document.querySelectorAll('.clip').forEach(function (box) {
     var a = box.querySelector('video'), from = +box.dataset.loopFrom || 0, srcEls = [].slice.call(a.querySelectorAll('source')), url = a.getAttribute('src');
     // the first <source> this browser can play, in the page's order (H.264 first: every phone and laptop decodes it in hardware; WebM VP9 after it)
     for (var si = 0; si < srcEls.length; si++) { var st = srcEls[si].getAttribute('type'); if (!st || a.canPlayType(st)) { url = srcEls[si].getAttribute('src'); break; } }
     srcEls.forEach(function (s) { s.remove(); });    // nothing loads until the step is near
+    if (url) {
+      var cu = clipUrls.filter(function (x) { return x.url === url; })[0];
+      if (!cu) clipUrls.push(cu = { url: url, boxes: [] });
+      cu.boxes.push(box);
+    }
     a.removeAttribute('src'); a.preload = 'none';
     var vids = [a];
     if (box.classList.contains('xf')) { var b = a.cloneNode(true); b.classList.add('b'); box.appendChild(b); vids.push(b); }
@@ -158,7 +198,12 @@
     var cur = 0, on = false, raf = 0, started = false;
     box.clipNow = function () { return vids[cur]; };
     function play(v) { if (!v.getAttribute('src')) attach(v); var p = v.play(); if (p && p.catch) p.catch(function () {}); }
-    function attach(v) { if (v.getAttribute('src')) return; v.preload = 'auto'; v.src = url; }
+    function attach(v) { if (v.getAttribute('src')) return; v.preload = 'auto';
+      if (!CLIPBLOB[url]) {
+        STREAM[url] = 1; if (streamers.indexOf(v) < 0) streamers.push(v);
+        if (INFLIGHT && INFLIGHT.it.url !== url && INFLIGHT.ctrl) INFLIGHT.ctrl.abort();
+      }
+      v.src = CLIPBLOB[url] || url; }
     function detach() {
       vids.forEach(function (v) { v.pause(); if (v.getAttribute('src')) { v.removeAttribute('src'); v.load(); } v.style.opacity = ''; });
       cur = 0; started = false;
@@ -195,6 +240,8 @@
       else if (!vis && on) { on = false; cancelAnimationFrame(raf); vids.forEach(function (v) { v.pause(); }); }
     }, birth ? 0.45 : 0.04);
   });
+  if (document.readyState === 'complete') setTimeout(prefetchClips, 600);
+  else window.addEventListener('load', function () { setTimeout(prefetchClips, 600); });
 
   /* ---------------- step 2: the Cymetica pipeline, an idea in and a product out ---------------- */
   // ("musi to byt viditelne ze je to cymetica pipeline a ze dovnitr vchazi idea a vystupuje moje apka"): in step with

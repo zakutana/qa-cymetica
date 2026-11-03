@@ -46,6 +46,7 @@
       universe: 'https://cymetica.com/company/app#universe',
       bib: 'https://cymetica.com/build-it-better',
       promo: 'https://cymetica.com/promo-market',
+      lab: 'https://cymetica.com/company/app/experiments',
       casino: 'https://cymetica.com/agent-casino',
       gem: 'https://cymetica.com/gem-screener/app',
       farmer: 'https://cymetica.com/airdrop-farmer'
