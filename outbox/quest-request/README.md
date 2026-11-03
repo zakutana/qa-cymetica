@@ -26,8 +26,8 @@ python scripts/bb.py file --app-url https://cymetica.com/quest --app-name "Cymet
 
 | | |
 |---|---|
-| Ticket | ET-xxxxx (not filed yet) |
-| Filed | |
+| Ticket | ET-33881 (BB-0019), filed as an idea, by name. The first try, BB-0018 with `--app-url https://cymetica.com/quest`, was refused: "That is our own product -- send us someone else's." |
+| Filed | 2026-11-03 07:50 UTC; BB-SPEC proposed, awaiting BB-ACCEPT (the operator's word) |
 | Accepted, deadline | |
 | Shipped | |
 | Verdict | |
