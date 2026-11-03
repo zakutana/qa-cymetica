@@ -8603,6 +8603,23 @@ reports:
     body: >
       Our check fails where a pitch's line ends over 2 points from its big number. Lines measured like the number clear it. The deck rotates between reads, so some cards may be out of it when you look. GET requests only.
 
+  - key: pitch-reason-not-in-the-basket
+    findings: [CYM-a_pitch_argues_from_what_its_basket_holds]
+    severity: medium
+    category: logic
+    url: https://cymetica.com/pitch-cards
+    title: "Pitch Cards (ET-33678): NEXUS argues \"pairing automation with premium brands\" for a basket of hotels, coatings and carpets, reading the theme's label instead of its holdings"
+    expected: >
+      A pitch asks a user for money, so its reason is true of what it pitches. `by: nexus` and the page's rule say NEXUS argues each pick in its own words.
+    actual: >
+      Read on 2026-11-03 09:46 UTC, third build. Pick 2, by nexus, theme robotics › luxury goods: "This robotics-into-luxury-goods basket climbed 6 percent this week to its best level, pairing automation with premium brands as both run hot."
+      The basket on /themes/performance is ten legs at 10 % each: MAR, Axalta Coating Systems, Mohawk Industries, ZGN, InterContinental Hotels (ICHGF and IHG), MPX, Hyatt, Dixie Group, HTHT. We found no automation or robotics holding in it by name; four or five are hotels. The sentence reads as built from the words of the label.
+    steps:
+      - 'GET https://cymetica.com/api/v1/pitch-cards -> pitches[pick 2]: by nexus, the sentence above'
+      - 'Open https://cymetica.com/themes/performance, row robotics › luxury goods, Show the basket -> the ten legs above'
+    body: >
+      We have no check for this: the sentence changes between passes. Handing NEXUS the holdings of what it pitches, and not only the label and the returns, would prevent it. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

@@ -36,6 +36,21 @@ Shipped 2026-11-03 00:37 UTC. Read on 2026-11-03 ~04:10 to 04:50 UTC, at 2560, 1
 
 New: the line on a card ends far from its big number (`test_a_pitch_chart_ends_where_its_big_number_does`). Header sort goes one way only; our mock's code too (`pc.js:350`).
 
+## Third build (shipped 2026-11-03 09:36 UTC, read 09:39 to 10:00)
+
+| Point of the second FAIL | Result | Evidence |
+|---|---|---|
+| 1 Nexus pitches | PARTLY | `picked_by: nexus`, `by: nexus`, 4 picks from what rose this week, each argued. That Nexus really wrote them is their label; from here it cannot be proved. One reason is false of its basket (luxury goods); installment loans' "steady demand" has no source on the page |
+| 2 real money | NOT BUILT | note unchanged, third time no ticket or date |
+| 3 reach | NOT DONE | no link from /, /agent-casino, /fund-performance, /events/universe/movers, /build-it-better |
+| 4 sort both ways | FIXED | all three headers reverse on a second click |
+| 5 chart #297 | FIXED | check passes, lines end at the big number |
+| 6 date | FIXED | "since it went live, 22 Aug" |
+
+Invest on a theme lands on a row with "Hold this basket with your own funds" (checked, there is a way in). Six checks pass.
+
+New, the operator's: a click on the card's name, number, chart or sentence does nothing, and the card has no links. Not in our mock or spec either.
+
 ## Not checked
 
 The /ws/pitch-cards push in a held-open tab. The card going behind Nexus frame by frame: stills and the unchanged code only.

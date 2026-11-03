@@ -6133,7 +6133,7 @@
    "filed_at": "2026-11-03T05:36:50+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "294": "pending"
+    "294": "paid"
    },
    "withdrawn": false
   },
@@ -6147,7 +6147,7 @@
    "filed_at": "2026-11-03T05:37:23+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "295": "pending"
+    "295": "paid"
    },
    "withdrawn": false
   },
@@ -6161,7 +6161,7 @@
    "filed_at": "2026-11-03T05:43:01+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "296": "pending"
+    "296": "paid"
    },
    "withdrawn": false
   },
@@ -6175,11 +6175,18 @@
    ],
    "title": "Pitch Cards (ET-33678): the green line ends far from the big number on the card: Retail stores e-commerce +26.33 % over a line ending at +1.80 %",
    "filed_at": "2026-11-03T07:50:36+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 297,
+     "verdict": "pass",
+     "at": "2026-11-03T09:50:51+00:00"
+    }
+   ],
    "their_status": {
-    "297": "pending"
+    "297": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "agent-tournaments-lapsed-ask-does-not-read-pending",
@@ -6193,7 +6200,21 @@
    "filed_at": "2026-11-03T08:15:48+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "298": "pending"
+    "298": "paid"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "pitch-reason-not-in-the-basket",
+   "nodeids": [],
+   "report_ids": [
+    299
+   ],
+   "title": "Pitch Cards (ET-33678): NEXUS argues \"pairing automation with premium brands\" for a basket of hotels, coatings and carpets, reading the theme's label instead of its holdings",
+   "filed_at": "2026-11-03T09:50:33+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "299": "pending"
    },
    "withdrawn": false
   }
