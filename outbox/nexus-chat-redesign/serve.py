@@ -140,13 +140,22 @@ def fetch(path: str) -> tuple[int, str, bytes, dict]:
     """One anonymous GET to their platform; the only call here that leaves this machine."""
     global _client
     hit = _cache.get(path)
-    if hit and time.time() - hit[0] < TTL:
+    if hit:
+        # never wait on their server twice: a browser queues the chat's own calls behind six slow page requests
+        if time.time() - hit[0] >= TTL:
+            _cache[path] = (time.time(), hit[1])
+            threading.Thread(target=refresh, args=(path,), daemon=True).start()
         return hit[1]
+    return refresh(path)
+
+
+def refresh(path: str) -> tuple[int, str, bytes, dict]:
+    global _client
     if _client is None:
         _client = httpx.Client(timeout=60, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 (qa-cymetica nexus-chat mock)"})
     r = _client.get(UPSTREAM + path)
     out = (r.status_code, r.headers.get("content-type", "application/octet-stream"), r.content, dict(r.headers))
-    if r.status_code == 200:
+    if r.status_code < 500:
         _cache[path] = (time.time(), out)
     return out
 
