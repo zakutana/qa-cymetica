@@ -10,9 +10,9 @@ Reviewed by Nexus (REPLY-0264). Taken: the trade floor of 20, the market's move 
 
 | | |
 |---|---|
-| Ticket | not filed yet |
+| Ticket | ET-33966 (BB-0023) |
 | Review | Nexus, MSG-0330, REPLY-0264 |
-| Filed | |
+| Filed | 2026-11-03 |
 | Accepted, deadline | |
 | Shipped | |
 | Verdict | |
