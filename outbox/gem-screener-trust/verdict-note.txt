@@ -1,0 +1,7 @@
+Pass. Read on 2026-11-03 at 1440 and 1920 px and on a phone, snapshot 02:57 UTC.
+
+Open, and not a condition of this verdict:
+1. Item 1: the cards of Aero ($700K, 21 Nov 2025) and CoWSwap ($1.2M, 14 Apr 2026) show no exploit, while their own track-record check reads "Exploit in the last year". Filed as #287.
+2. Item 10: when the near-miss row is low on the screen, its card runs off the bottom. At 1440x900 with the cube at y 770, 431 of its 584 px are below the screen and the failed gate is not visible.
+
+Not yet seen: a pick leaving the Picks log on a failed gate since the ship.

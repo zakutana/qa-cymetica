@@ -12,6 +12,6 @@ Their live page through a GET-only proxy, with `patch.js` inside their script an
 |---|---|
 | Ticket | ET-33759 |
 | Filed | 2026-11-02 |
-| Accepted, deadline | |
-| Shipped | |
-| Verdict | |
+| Accepted, deadline | 2026-11-02 13:31 UTC, 2026-11-03 13:31 UTC |
+| Shipped | 2026-11-02 23:48 UTC, `docs/et-33759-verification.md` |
+| Verdict | pass, the operator's word, 2026-11-03 04:39 UTC, `verdict-note.txt` |

@@ -1,6 +1,6 @@
 # ET-33759 (Gem Screener: what a reader needs to trust a pick): verification
 
-Shipped 2026-11-02 23:48 UTC. Read on 2026-11-03 from a browser at 1440 and 1920 px and on a phone, snapshot 02:57 UTC; the numbers below are from the page unless the line says otherwise.
+Verdict: pass, the operator's word, sent 2026-11-03 04:39 UTC, with the two faults below in its note. Shipped 2026-11-02 23:48 UTC. Read on 2026-11-03 from a browser at 1440 and 1920 px and on a phone, snapshot 02:57 UTC; the numbers below are from the page unless the line says otherwise.
 
 | Done when | Result | Evidence |
 |---|---|---|
