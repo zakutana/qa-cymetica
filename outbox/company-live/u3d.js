@@ -1902,7 +1902,7 @@ function jetTex() {
 // the dust of faint ones costs no geometry and stays sharp and steady while the camera turns. Against the flyer at 1x the old
 // skies had a third of its stars at low contrast and 25 to 70 times its bright ones, which is what "tecky" were.
 // view: the first look's camera and the height in px of its stage at his screen, which the star sizes are read against.
-const SKY = { clouds: 0.42, dustGap: 10.5, dustShare: 0.66, dustPow: 2.6, dustLo: 0.007, dustHi: 0.07, dustSize: 0.74, clearGap: 36, clearLo: 0.055, clearHi: 0.14, clearSize: 0.82, spikeGap: 350, spikeArm: 0.16, spikeCore: 0.7 };
+const SKY = { clouds: 0.36, dustGap: 22, dustShare: 0.6, dustPow: 2.6, dustLo: 0.007, dustHi: 0.07, dustSize: 0.74, clearGap: 27, clearLo: 0.06, clearHi: 0.15, clearSize: 0.82, spikeGap: 350, spikeArm: 0.16, spikeCore: 0.7 };
 function deepSky(view, D, expo) {
   const g = new THREE.Group(), T = TSL, fovR = THREE.MathUtils.degToRad(view.fov), radPx = fovR / view.px, zoom = 25 / view.fov;
   const cam = new THREE.Vector3().setFromSpherical(new THREE.Spherical(1, view.polar, view.az)).negate();

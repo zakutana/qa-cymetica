@@ -8,6 +8,12 @@
       "port": 8793
     },
     {
+      "name": "company-universe",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/company-live", "8805", "--quiet"],
+      "port": 8805
+    },
+    {
       "name": "my-agents-mock",
       "runtimeExecutable": "python",
       "runtimeArgs": ["scripts/serve_mock.py", "outbox/my-agents-redesign", "8794", "--quiet"],
