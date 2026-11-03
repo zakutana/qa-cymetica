@@ -28,9 +28,10 @@ TTL = 900.0
 DROP = {"content-security-policy", "content-security-policy-report-only", "content-encoding", "content-length",
         "transfer-encoding", "connection", "set-cookie", "strict-transport-security", "cross-origin-opener-policy",
         "cross-origin-resource-policy", "x-frame-options", "cache-control", "pragma", "etag", "last-modified"}
-OWN = {"nexus-chat.css": "text/css; charset=utf-8", "demo.js": "text/javascript; charset=utf-8", "nexus-head.webp": "image/webp"}
+OWN = {"nexus-chat.css": "text/css; charset=utf-8", "demo.js": "text/javascript; charset=utf-8"}
 
-WELCOME = ('<div class="nexus-welcome"><span class="nx-face nx-face-hero"><i></i><i></i></span>'
+MARK = ('<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.8 17.4V6.6L17.2 17.4V6.6" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>')
+WELCOME = (f'<div class="nexus-welcome"><span class="nx-logo nx-logo-hero">{MARK}</span>'
            '<strong>Ask NEXUS anything</strong>'
            '<span>Type, attach a file or point at anything on this page.</span></div>')
 
@@ -53,7 +54,20 @@ DESIGN = [
      'function nxMenu(){var b=o.querySelector(".nx-more"),m=o.querySelector(".nx-menu");function s(v){m.hidden=!v,b.setAttribute("aria-expanded",v?"true":"false")}'
      'b.addEventListener("click",function(e){e.stopPropagation(),s(m.hidden)}),document.addEventListener("click",function(e){m.hidden||m.contains(e.target)||b.contains(e.target)||s(!1)}),'
      'm.addEventListener("click",function(e){e.target.closest(".nx-mi")&&s(!1)}),document.addEventListener("keydown",function(e){"Escape"!==e.key||m.hidden||(e.stopPropagation(),s(!1))},!0);'
-     'if("1"===r("nexus_panel_max"))o.classList.add("nx-max")}'
+     'if("1"===r("nexus_panel_max")){o.classList.add("nx-max");var x=o.querySelector(".nexus-btn-maximize");x.title="Restore",x.querySelector("span").textContent="Restore"}}'
+     # pointer capture: the window follows the cursor over anything, iframes included, and always lets go
+     'function nxResize(){var p=o.querySelector(".nexus-panel"),c=function(v,a,b){return Math.max(a,Math.min(v,b))};'
+     'o.querySelectorAll(".nexus-resize-handle,.nx-rz").forEach(function(h){var on=!1,sx=0,sy=0,sw=0,sh=0,ax="1"===h.dataset.x,ay="1"===h.dataset.y;'
+     'h.addEventListener("pointerdown",function(e){if(0===e.button){e.preventDefault(),e.stopPropagation();'
+     'if(!w&&o.classList.contains("nx-max")){var q=p.getBoundingClientRect(),m=o.querySelector(".nexus-btn-maximize");p.style.width=q.width+"px",p.style.height=q.height+"px",o.classList.remove("nx-max"),localStorage.setItem("nexus_panel_max","0"),m.title="Maximize",m.querySelector("span").textContent="Maximize"}'
+     'on=!0,sx=e.clientX,sy=e.clientY,sw=w?o.offsetWidth:p.offsetWidth,sh=p.offsetHeight;try{h.setPointerCapture(e.pointerId)}catch(e){}'
+     'o.classList.add("nx-resizing"),document.documentElement.classList.add("nx-resizing-doc")}});'
+     'h.addEventListener("pointermove",function(e){if(on){var dx=e.clientX-sx,dy=e.clientY-sy;'
+     'if(w){var t=Math.round(c("left"===S?sw+dx:sw-dx,320,.5*window.innerWidth));o.style.width=t+"px","left"===S?document.body.style.marginLeft=t+"px":document.body.style.marginRight=t+"px"}'
+     'else{ax&&(p.style.width=Math.round(c(sw-dx,360,window.innerWidth-48))+"px"),ay&&(p.style.height=Math.round(c(sh-dy,360,window.innerHeight-48))+"px")}}});'
+     'var end=function(){if(on){on=!1,o.classList.remove("nx-resizing"),document.documentElement.classList.remove("nx-resizing-doc");'
+     'w?localStorage.setItem("nexus_pinned_width",o.style.width):(localStorage.setItem("nexus_panel_height",p.style.height),localStorage.setItem("nexus_panel_width",p.style.width))}};'
+     'h.addEventListener("pointerup",end),h.addEventListener("pointercancel",end),h.addEventListener("lostpointercapture",end)})}'
      'function nxToast(t){var e=o&&o.querySelector(".nexus-panel");if(e){var n=e.querySelector(".nx-toast");n||((n=document.createElement("div")).className="nx-toast",n.setAttribute("role","status"),e.appendChild(n)),'
      'n.textContent=t,n.classList.add("nx-on"),clearTimeout(n._t),n._t=setTimeout(function(){n.classList.remove("nx-on")},2600)}}'
      'function T(){try{return localStorage'),
@@ -68,14 +82,7 @@ DESIGN = [
      'var e=parseInt(o.style.width||"420",10);return o.style.width=e>=550?"420px":"600px",O.title=e>=550?"Maximize":"Restore",void(O.querySelector("span").textContent=O.title)'),
     ('var t="80vh"===n.style.height;n.style.height=t?"400px":"80vh",O.title=t?"Maximize":"Restore",localStorage.setItem("nexus_panel_height",n.style.height)',
      'var t=o.classList.toggle("nx-max");n.style.height="",n.style.width="",O.title=t?"Restore":"Maximize",O.querySelector("span").textContent=O.title,localStorage.removeItem("nexus_panel_height"),localStorage.removeItem("nexus_panel_width"),localStorage.setItem("nexus_panel_max",t?"1":"0")'),
-    # the corner grip resizes both ways (it was height only)
-    ('Q=!0,X=e.clientY,J=n.offsetHeight}e.preventDefault()', 'Q=!0,X=e.clientY,J=n.offsetHeight,n._sx=e.clientX,n._sw=n.offsetWidth}e.preventDefault()'),
-    ('Q=!0,X=e.touches[0].clientY,J=n.offsetHeight}', 'Q=!0,X=e.touches[0].clientY,J=n.offsetHeight,n._sx=e.touches[0].clientX,n._sw=n.offsetWidth}'),
-    ('var i=J-(e.clientY-X);i=Math.max(200,Math.min(i,.8*window.innerHeight)),a.style.height=i+"px"',
-     'var i=J-(e.clientY-X);i=Math.max(360,Math.min(i,window.innerHeight-40)),a.style.height=i+"px",a.style.width=Math.max(360,Math.min(a._sw-(e.clientX-a._sx),window.innerWidth-40))+"px"'),
-    ('var i=J-(e.touches[0].clientY-X);i=Math.max(200,Math.min(i,.8*window.innerHeight)),a.style.height=i+"px"',
-     'var i=J-(e.touches[0].clientY-X);i=Math.max(360,Math.min(i,window.innerHeight-40)),a.style.height=i+"px",a.style.width=Math.max(360,Math.min(a._sw-(e.touches[0].clientX-a._sx),window.innerWidth-40))+"px"'),
-    ('e&&localStorage.setItem("nexus_panel_height",e.style.height)', 'e&&(localStorage.setItem("nexus_panel_height",e.style.height),localStorage.setItem("nexus_panel_width",e.style.width))', 2),
+    # resizing is rewritten in nxResize (their mouse and touch block is cut in patched_js)
     ('var r=localStorage.getItem("nexus_panel_height");r&&(s.style.height=r)', 'var r=localStorage.getItem("nexus_panel_height");r&&(s.style.height=r);var nw=localStorage.getItem("nexus_panel_width");s.style.width=nw||""'),
     ('if(e&&(e.style.height=""),w)return', 'if(e&&(e.style.height="",e.style.width=""),w)return'),
     # the composer grows further
@@ -101,7 +108,9 @@ def patched_js() -> bytes:
     s = (HERE / "live" / "nexus-chat.js").read_text(encoding="utf-8")
     start = s.index("o.innerHTML=`") + len("o.innerHTML=`")
     end = s.index("`,document.body.appendChild(o)", start)
-    s = s[:start] + (HERE / "template.html").read_text(encoding="utf-8").replace("NX_WELCOME_HTML", WELCOME) + s[end:]
+    s = s[:start] + (HERE / "template.html").read_text(encoding="utf-8").replace("NX_WELCOME_HTML", WELCOME).replace("NX_MARK", MARK) + s[end:]
+    start = s.index('var V=o.querySelector(".nexus-resize-handle");')
+    s = s[:start] + "nxResize();" + s[s.index("var ne=localStorage.getItem(i);", start):]
     for entry in DESIGN + DEMO:
         old, new = entry[0], entry[1]
         want = entry[2] if len(entry) > 2 else 1
