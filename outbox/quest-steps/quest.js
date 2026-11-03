@@ -51,7 +51,9 @@
       farmer: 'https://cymetica.com/airdrop-farmer'
     }
   };
-  var S = window.QUEST_STATE = { ready: false, active: 0, frames: {} };
+  // the month's whole pool is the three prizes added up, so it can never disagree with them
+  Q.pool = Q.prizes.reduce(function (a, b) { return a + b; }, 0);
+  var S = window.QUEST_STATE ={ ready: false, active: 0, frames: {} };
 
   // line icons on a 20 x 20 grid, for the pipeline's chambers (the company's own department icons among them,
   // outbox/company-live/data.js DEPT_ICON)
