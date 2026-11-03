@@ -19,6 +19,10 @@ Verdict: pass, the operator's word, sent 2026-11-03 04:39 UTC, with the two faul
 
 At 1440x900, cube at y 600: 261 px of the 584 px card below the screen; at y 770: 431 px, only the name and upside visible, failed gate not. The same at 800 and 1000 px tall. Scrolling down from the picks, this is where the row first appears. It follows our own line "does not cover the pick cards", which leaves no room upward, so this goes in the verdict note and not in a bug.
 
+## The operator's look, after the verdict
+
+The Picks log is too big and too loud: they pictured a quiet line like the blue Backtest line. Our picture 4 drew an open panel and the build follows it, so this is a change of our design. The near-miss card must stay whole on screen, even over the pick cards. Both went out by Telegram with #287.
+
 ## Worth saying, not faults of the build
 
 * "Dilution unknown: no schedule published" is our own mock's wording. On Collector Crypt it is not true: its Streamflow schedule is public. The unfiled Supply Analyzer request fixes the cause.
