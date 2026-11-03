@@ -8560,6 +8560,26 @@ reports:
     body: >
       The timeframe changes the order and nothing else. Counting reports, earnings and score inside the window clears it. GET requests only.
 
+  - key: pitch-chart-ends-away-from-big-number
+    findings: [CYM-a_pitch_chart_ends_where_its_big_number_does]
+    check: tests/rest/test_profit_board.py::test_a_pitch_chart_ends_where_its_big_number_does
+    severity: medium
+    category: logic
+    url: https://cymetica.com/pitch-cards
+    title: "Pitch Cards (ET-33678): the green line ends far from the big number on the card: Retail stores e-commerce +26.33 % over a line ending at +1.80 %"
+    expected: >
+      A card holds the result as the big number and the chart of that result (ET-33678 item 5). The line ends where the number stands, or the card says what else the line is.
+    actual: >
+      Read on 2026-11-03, second build. Theme retail › stores e-commerce: big number +26.33 %, "over the last 30 days", a line of 4 points ending at +1.80 %, which is about its 5-day figure (ret5 1.83). FTA Fund — Cryptos: big number +7.45 %, "since it went live", a line of 2 points ending at +1.52 %, its 30-day figure (ret30 1.52).
+      MRNA Moderna: big number +51.27 %, line ending at +42.94 %: 151.27 against the first published index point of 105.83, not against the base of 100 the number uses. ACN Accenture: big number +33.82 %, line ending at +43.94 %, above the +34.35 % peak the board gives it.
+      On the FTA card the sentence also said "it has been flat this week" while the same pitch's ret5 was empty.
+    steps:
+      - 'GET https://cymetica.com/api/v1/pitch-cards -> pitches[]: compare ret with the last value of line'
+      - 'GET https://cymetica.com/api/v1/event-cards/28a1c3df-f29d-4790-abc9-047e244a671e/index-history?interval=all -> first point index 105.83; index_base 100'
+      - 'Open https://cymetica.com/pitch-cards -> the cards above'
+    body: >
+      Our check fails where a pitch's line ends over 2 points from its big number. Lines measured like the number clear it. The deck rotates between reads, so some cards may be out of it when you look. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
