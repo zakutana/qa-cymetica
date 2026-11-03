@@ -1,0 +1,6 @@
+The look and the motion are right, thank you: entry screen, swipe, flip and phone all match. Failing it on what is left:
+1. C1, real money from day one, was accepted and is not built. Please name the ticket and the date for the human-reviewed build.
+2. Pitches do not reach every user: the page has no link from anywhere yet. Please say what ends the freeze for it.
+3. The Profit Board shows losers as up and misses a live fund: reports #289, #290, #291. Its 72h peak days are wrong on 2,774 rows: #292.
+4. One bad reading draws the first pitch's chart flat: #293.
+5. "Invest opens the product's own page" is on the page and it does not: Invest shows a link for 6 seconds. Open the page, or change the words.

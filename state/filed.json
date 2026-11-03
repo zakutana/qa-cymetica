@@ -3900,7 +3900,7 @@
     "51": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-skill_ids",
@@ -3938,7 +3938,7 @@
     "51": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-skills_subset",
@@ -3976,7 +3976,7 @@
     "56": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-supply-analyzer-a-pile-cannot-grow-past-its-max-supply",
@@ -5174,7 +5174,8 @@
    "their_status": {
     "250": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "traffic-mine-a-row-is-over-the-unique-visitors-tile",
@@ -5190,7 +5191,8 @@
    "their_status": {
     "251": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "infiltrator-has-uses-and-no-people",
@@ -5206,7 +5208,8 @@
    "their_status": {
     "252": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "a-product-shows-another-products-people",
@@ -5222,7 +5225,8 @@
    "their_status": {
     "253": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-new-app-rule-not-applied",
@@ -5260,7 +5264,8 @@
    "their_status": {
     "255": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "gem-screener-aerodrome-excluded-as-no-token",
@@ -5276,7 +5281,8 @@
    "their_status": {
     "256": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-picks-lists-ten-of-eleven",
@@ -5292,7 +5298,8 @@
    "their_status": {
     "257": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-gate-text-omits-what-decides",
@@ -5308,7 +5315,8 @@
    "their_status": {
     "258": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-six-months-on-a-shorter-fit",
@@ -5324,7 +5332,8 @@
    "their_status": {
     "259": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-level-vs-peak-is-not-the-1-year-high",
@@ -5340,7 +5349,8 @@
    "their_status": {
     "260": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-chain-slug-opens-an-app",
@@ -5356,7 +5366,8 @@
    "their_status": {
     "261": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-dilution-text-is-not-what-applies",
@@ -5372,7 +5383,8 @@
    "their_status": {
     "262": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-holders-line-is-an-old-window",
@@ -5388,7 +5400,8 @@
    "their_status": {
     "263": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-fixed-sentences-out-of-date",
@@ -5404,7 +5417,8 @@
    "their_status": {
     "264": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "gem-screener-phase-help-is-not-what-the-phase-is",
@@ -5420,7 +5434,8 @@
    "their_status": {
     "265": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-backtest-caveat-contradicts-h3",
@@ -5436,7 +5451,8 @@
    "their_status": {
     "266": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-tokenlon-fails-liquid-on-a-shallower-pool",
@@ -5452,7 +5468,8 @@
    "their_status": {
     "267": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-railgun-can-mint",
@@ -5468,7 +5485,8 @@
    "their_status": {
     "268": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-report-good-outruns-its-checks",
@@ -5484,7 +5502,8 @@
    "their_status": {
     "269": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-socket-swaps-in-an-older-snapshot",
@@ -5514,7 +5533,8 @@
    "their_status": {
     "271": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-tornado-burned-against-its-own-source",
@@ -5530,7 +5550,8 @@
    "their_status": {
     "272": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-supply-percent-of-the-wrong-supply",
@@ -5546,7 +5567,8 @@
    "their_status": {
     "273": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "gem-screener-to-holders-none-where-unknown",
@@ -5562,7 +5584,8 @@
    "their_status": {
     "274": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "gem-screener-picks-route-misses-a-cards-unknown",
@@ -5578,7 +5601,8 @@
    "their_status": {
     "275": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-vetted-without-its-level",
@@ -5594,7 +5618,8 @@
    "their_status": {
     "276": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-bonk-fun-route-from-another-product",
@@ -5610,7 +5635,8 @@
    "their_status": {
     "277": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-chart-on-another-market",
@@ -5626,7 +5652,8 @@
    "their_status": {
     "278": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "gem-screener-report-wording-on-chains-and-a-cut-sentence",
@@ -5642,7 +5669,8 @@
    "their_status": {
     "279": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-float-tag-misses-rows-under-its-line",
@@ -5658,7 +5686,8 @@
    "their_status": {
     "280": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-docs-do-not-name-what-is-served",
@@ -5674,7 +5703,8 @@
    "their_status": {
     "281": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "trailing-slash-redirect-leaves-https",
@@ -5690,7 +5720,8 @@
    "their_status": {
     "282": "paid"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-small-sentences-against-their-data",
@@ -5706,7 +5737,8 @@
    "their_status": {
     "283": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "gem-screener-lombard-dilution-ok-with-a-schedule-ahead",
@@ -5722,7 +5754,8 @@
    "their_status": {
     "284": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "supply-no-schedule-on-any-feed-where-one-is-on-file",
@@ -5738,7 +5771,8 @@
    "their_status": {
     "285": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "supply-pie-says-free-to-sell-when-unknown",
@@ -5754,7 +5788,8 @@
    "their_status": {
     "286": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "gem-screener-card-omits-exploit-its-guardian-lists",
@@ -5785,6 +5820,86 @@
    "verdicts_sent": [],
    "their_status": {
     "288": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "profit-board-card-rows-stale",
+   "nodeids": [
+    "tests/rest/test_profit_board.py::test_the_profit_board_reads_each_event_card_as_it_is_now"
+   ],
+   "report_ids": [
+    289
+   ],
+   "title": "Profit Board (ET-33678): Quantum Frontier Index reads +7.25 % and Project Omega +5.09 %, both about -25 % and -28 % on their own cards",
+   "filed_at": "2026-11-03T04:58:30+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "289": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "profit-board-losing-short-fund-shown-up",
+   "nodeids": [
+    "tests/rest/test_profit_board.py::test_a_losing_short_fund_is_not_on_the_profit_board_as_up"
+   ],
+   "report_ids": [
+    290
+   ],
+   "title": "Profit Board (ET-33678): DeFi Undercurrent Short is number 6 at +60.56 %, while the short fund of that name has lost about 60 %",
+   "filed_at": "2026-11-03T04:58:45+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "290": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "profit-board-misses-a-live-fund",
+   "nodeids": [
+    "tests/rest/test_profit_board.py::test_every_live_fund_that_is_up_is_on_the_profit_board"
+   ],
+   "report_ids": [
+    291
+   ],
+   "title": "Profit Board (ET-33678): FTA Fund — Cryptos, live and up on /fund-performance, is not on the board",
+   "filed_at": "2026-11-03T04:59:00+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "291": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "profit-board-72h-peak-day-after-close",
+   "nodeids": [
+    "tests/rest/test_profit_board.py::test_a_72h_cards_peak_day_is_inside_its_72_hours"
+   ],
+   "report_ids": [
+    292
+   ],
+   "title": "Profit Board (ET-33678): 2,774 of 6,482 72h cards show their peak on the day they are read, weeks after they closed",
+   "filed_at": "2026-11-03T04:59:12+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "292": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "pitch-chart-flattened-by-one-bad-reading",
+   "nodeids": [
+    "tests/rest/test_profit_board.py::test_a_pitch_chart_is_not_drawn_around_one_bad_reading"
+   ],
+   "report_ids": [
+    293
+   ],
+   "title": "Pitch Cards (ET-33678): one reading of DeFi Undercurrent Short at 30.97 between 8.58 and 8.42 draws Molecular's pitch chart flat",
+   "filed_at": "2026-11-03T04:59:24+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "293": "pending"
    },
    "withdrawn": false
   }
