@@ -9,6 +9,7 @@ NOT asserted: the design of a screen, or that a coin is worth anything. SAFE: GE
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 
 import httpx
 
@@ -279,3 +280,18 @@ def test_a_pick_card_says_the_exploit_its_guardian_lists(rest_anon):
         if check.get("verdict") == "bad" and not (app.get("dlevel") or {}).get("exploit_1y"):
             breaches.append({"what": f"{app.get('symbol')}: check says \"{check.get('context')}\"; dlevel.exploit_1y is empty, the card shows no exploit"})
     _verdict(breaches, len(passing), "every pick whose check lists an exploit in the last year carries it to the card")
+
+
+@qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
+def test_the_top_picks_fund_bar_is_rebalanced_as_often_as_it_says(rest_anon):
+    """The bar says 'rebalanced weekly'. A last rebalance over two weeks old makes that false. A rebalance, other words or no
+    bar clears it."""
+    _, html = read_page(rest_anon)
+    fund = _json(rest_anon, "/api/v1/gem-screener/funds").get("top_picks")
+    breaches = []
+    if fund and "rebalanced weekly" in html:
+        last = datetime.fromisoformat(fund["rebalanced_at"])
+        age = (datetime.now(timezone.utc) - last).days
+        if age > 14:
+            breaches.append({"what": f"the bar says 'rebalanced weekly'; last rebalance {last.date()}, {age} days ago; last attempt: {fund.get('last_attempt')}"})
+    _verdict(breaches, 1, "the bar's 'rebalanced weekly' holds", {"funds": "/api/v1/gem-screener/funds"})

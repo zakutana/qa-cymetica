@@ -5766,6 +5766,22 @@
     "287": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "gem-screener-fund-bar-rebalanced-weekly-is-false",
+   "nodeids": [
+    "tests/rest/test_gem_screener_small_words.py::test_the_top_picks_fund_bar_is_rebalanced_as_often_as_it_says"
+   ],
+   "report_ids": [
+    288
+   ],
+   "title": "Top Picks fund bar: \"the Degen picks at equal weight, rebalanced weekly\", last rebalance 5 Oct; 4 of its 7 holdings are not picks today",
+   "filed_at": "2026-11-03T04:44:25+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "288": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

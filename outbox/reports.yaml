@@ -8399,6 +8399,26 @@ reports:
     body: >
       Our check reads the 13 apps passing all gates and fails where the check reads bad and dlevel.exploit_1y is empty. If a name-only listing is meant to stay off the card, the check and the Degen report should not call it an exploit either; either way the card and its Guardian must agree. GET requests only.
 
+  - key: gem-screener-fund-bar-rebalanced-weekly-is-false
+    findings: [CYM-the_top_picks_fund_bar_is_rebalanced_as_often_as_it_says]
+    check: tests/rest/test_gem_screener_small_words.py::test_the_top_picks_fund_bar_is_rebalanced_as_often_as_it_says
+    severity: medium
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=start
+    title: "Top Picks fund bar: \"the Degen picks at equal weight, rebalanced weekly\", last rebalance 5 Oct; 4 of its 7 holdings are not picks today"
+    expected: >
+      The bar states what the fund does: its holdings are the Degen picks, rebalanced each week. ET-31278 item 4: the bar is on the page only once the fund is open to buy.
+    actual: >
+      Read on 2026-11-03. The bar reads "the Degen picks at equal weight · rebalanced weekly · last rebalance Oct 5, next Nov 9", "not invested yet". /funds: rebalanced_at 2026-10-05, 29 days ago; last_attempt 2026-11-03 ok false, "a leg was refused — kept the current holdings"; custody not_yet_purchased; invested false.
+      Holdings CARDS, SOLV, MNDE, O, GMX, EDGE, MET; of these SOLV, MNDE, O and EDGE do not pass the gates on today's snapshot. The fund page says "This fund has not bought its assets yet" above a link "Invest in ... now — it's LIVE", and its terminal reads "no book", "No trades yet".
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app?view=start -> the bar above, with Fund performance'
+      - 'GET https://cymetica.com/api/v1/gem-screener/funds -> top_picks.rebalanced_at, last_attempt, custody, invested, holdings'
+      - 'GET https://cymetica.com/api/v1/gem-screener/picks -> CARDS, PUMP, GMX, MET, DOLO, COW, AERO, LON, LDO, TWT'
+      - 'Open https://cymetica.com/fund-performance/aib-gs-picks and https://cymetica.com/exchange/aib-gs-picks-pro -> the words quoted'
+    body: >
+      Our check fails while the page says "rebalanced weekly" and the last rebalance is over two weeks old. A rebalance, other words or no bar clears it. GET requests only; we did not try to invest.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
