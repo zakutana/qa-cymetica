@@ -31,5 +31,5 @@ python scripts/bb.py file --app-url https://cymetica.com/quest --app-name "Cymet
 | Ticket | ET-33881 (BB-0019), filed as an idea, by name. The first try, BB-0018 with `--app-url https://cymetica.com/quest`, was refused: "That is our own product -- send us someone else's." |
 | Filed | 2026-11-03 07:50 UTC |
 | Accepted, deadline | accepted by the operator 2026-11-03 07:56 UTC (stage funded); their 24 hours end 2026-11-04 07:56 UTC |
-| Shipped | |
-| Verdict | |
+| Shipped | 2026-11-03 12:55 UTC at https://cymetica.com/quest/ |
+| Verdict | fail, 2026-11-03 (BB-0022), the operator's word: the clips are dead on the live page. The cause is our own anim.js (blob: URLs, refused by their CSP `default-src 'self'`); the fix, 9c436dd8, was pushed and the Telegram message MSG-0325 asks them to replace anim.js, index.html and quest.css. Their `clips/workshop.webm` also answered 502. Test every Done-when line again once they say it is replaced. |
