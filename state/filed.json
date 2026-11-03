@@ -6101,6 +6101,20 @@
     "295": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "hunters-leaderboard-monthly-weekly-are-all-time",
+   "nodeids": [],
+   "report_ids": [
+    296
+   ],
+   "title": "Bug Bounty Leaderboard: Monthly and Weekly return the all-time valid_reports and total_earned (expire76 232 / 228,000 ET10 in all three), only the order changes",
+   "filed_at": "2026-11-03T05:43:01+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "296": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

@@ -8544,6 +8544,22 @@ reports:
     body: >
       The table describes a payout that is not live. Stating the flat ET10 award, or removing the table, clears it. GET requests only.
 
+  - key: hunters-leaderboard-monthly-weekly-are-all-time
+    severity: medium
+    category: logic
+    url: https://cymetica.com/leaderboard/hunters
+    title: "Bug Bounty Leaderboard: Monthly and Weekly return the all-time valid_reports and total_earned (expire76 232 / 228,000 ET10 in all three), only the order changes"
+    expected: >
+      Monthly and Weekly count the reports and ET10 of that period. /api/v1/bounty/stats says reports_this_month 143, so no hunter has 232 valid reports in a month.
+    actual: >
+      Read on 2026-11-03. GET /api/v1/bounty/leaderboard?timeframe=all, monthly and weekly each return the same four hunters with the same values: expire76 valid_reports 232, total_earned 228000.0, total_score 2125; Crypto42day 2, 2000.0, 40. Only the order differs: in monthly and weekly Crypto42day (score 40) is rank 1 above expire76 (score 2125). The page's Monthly and Weekly tabs show the all-time figures under a different title.
+    steps:
+      - 'GET https://cymetica.com/api/v1/bounty/leaderboard?timeframe=monthly -> entries[1] expire76 valid_reports 232, total_earned 228000.0'
+      - 'GET https://cymetica.com/api/v1/bounty/leaderboard?timeframe=weekly -> the same values'
+      - 'GET https://cymetica.com/api/v1/bounty/stats -> reports_this_month 143'
+    body: >
+      The timeframe changes the order and nothing else. Counting reports, earnings and score inside the window clears it. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

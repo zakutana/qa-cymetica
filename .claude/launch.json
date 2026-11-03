@@ -32,6 +32,12 @@
       "port": 8796
     },
     {
+      "name": "hunters-leaderboard",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/hunters-leaderboard", "8806", "--quiet"],
+      "port": 8806
+    },
+    {
       "name": "quest",
       "runtimeExecutable": "python",
       "runtimeArgs": ["scripts/serve_mock.py", "outbox/quest", "8797", "--quiet"],
