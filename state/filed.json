@@ -6073,6 +6073,34 @@
     "293": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "hunters-leaderboard-bugs-fixed-21-of-253",
+   "nodeids": [],
+   "report_ids": [
+    294
+   ],
+   "title": "Bug Bounty Leaderboard: Bugs Fixed 21 and Fix Rate 8%, while /api/v1/bounty/stats counts 253 bugs fixed of 270 reports",
+   "filed_at": "2026-11-03T05:36:50+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "294": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "hunters-leaderboard-reward-table-in-dollars",
+   "nodeids": [],
+   "report_ids": [
+    295
+   ],
+   "title": "Bug Bounty Leaderboard: reward table lists USD bands (Critical $500 - $5,000 ... Low $5 - $25), the programme pays a flat ET10 per verified bug",
+   "filed_at": "2026-11-03T05:37:23+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "295": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

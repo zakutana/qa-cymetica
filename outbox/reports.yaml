@@ -8512,6 +8512,38 @@ reports:
     body: >
       Our check fails on a peer reading over 100 points off both neighbours when they agree within 10. The reading corrected at the source, or left out of the pitch's lines, clears it. GET requests only.
 
+  - key: hunters-leaderboard-bugs-fixed-21-of-253
+    severity: medium
+    category: logic
+    url: https://cymetica.com/leaderboard/hunters
+    title: "Bug Bounty Leaderboard: Bugs Fixed 21 and Fix Rate 8%, while /api/v1/bounty/stats counts 253 bugs fixed of 270 reports"
+    expected: >
+      The header of the leaderboard agrees with the programme's own stats: bugs fixed 253 of 270 reports, a fix rate of 94%.
+    actual: >
+      Read on 2026-11-03. The page shows TOTAL REPORTS 270, BUGS FIXED 21, ACTIVE HUNTERS 4, FIX RATE 8%. The same page ships stats {"fixed_reports": 21, "total_hunters": 4, "total_reports": 270} in its inline script. GET /api/v1/bounty/stats on the same day: total_reports 270, valid_reports 253, bugs_fixed 253. The rank 1 row alone lists 232 valid reports. A hunter reading the board sees a programme that fixes 8% of what is reported.
+    steps:
+      - 'Open https://cymetica.com/leaderboard/hunters -> BUGS FIXED 21, FIX RATE 8%'
+      - 'GET https://cymetica.com/api/v1/bounty/stats -> bugs_fixed 253, total_reports 270'
+      - 'GET https://cymetica.com/api/v1/bounty/leaderboard -> entries[0] expire76 valid_reports 232'
+    body: >
+      Found while looking for a public board of the programme. The page's fixed_reports is not the stats endpoint's bugs_fixed. Drawing both from one source clears it. GET requests only.
+
+  - key: hunters-leaderboard-reward-table-in-dollars
+    severity: low
+    category: documentation
+    url: https://cymetica.com/leaderboard/hunters
+    title: "Bug Bounty Leaderboard: reward table lists USD bands (Critical $500 - $5,000 ... Low $5 - $25), the programme pays a flat ET10 per verified bug"
+    expected: >
+      The reward table on the page states what the programme pays.
+    actual: >
+      Read on 2026-11-03. The page lists Critical $500 - $5,000, High $100 - $500, Medium $25 - $100, Low $5 - $25. /llms.txt says the live programme pays a flat ET10 award per verified non-duplicate bug and that severity-banded tiers are a planned programme that is not live. GET /api/v1/bounty/stats: reward_currency ET10, awards_recorded_total 249000.0 over 249 awards. The leaderboard rows carry total_earned in ET10 and the page shows no such column.
+    steps:
+      - 'Open https://cymetica.com/leaderboard/hunters -> section Bug Bounty Rewards, four USD bands'
+      - 'GET https://cymetica.com/llms.txt -> section REST API - Bug Bounty: a flat ET10 award per verified non-duplicate bug'
+      - 'GET https://cymetica.com/api/v1/bounty/stats -> reward_currency ET10'
+    body: >
+      The table describes a payout that is not live. Stating the flat ET10 award, or removing the table, clears it. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
