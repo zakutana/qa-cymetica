@@ -1,30 +1,30 @@
-Change to ET-33966, on top of the FAIL of 4 Nov: make the Quant Lab's result honest and readable. Search #19 made the page 22,052 px long (18 screens at 1235 x 1206): 94 blind-test rows take 19,357 px, the first winner is row 32, 7 screens down, and the bots start 18 screens down.
-Why: an owner wants to see in one look who won, on which market periods, and whether the bot is running. Today the winners are buried and the stages cannot be read.
-Everything is at https://github.com/zakutana/qa-cymetica/tree/main/outbox/quant-lab-v3: a working mock on your live page with search #19's data (python serve.py, then http://127.0.0.1:8807/company/app/experiments), and pics/ with the target for the page (1-page.png), BLIND (2-blind.png), THE BAR (3-bar.png) and FOUND (4-found.png). q3.js and q3.css are your quant-lab.js and quant-lab.css changes; take them as they are. In the mock the numbers are search #19's as served, so it still shows the 4 winners that points 1 and 9b would change. Build the look as drawn.
+Change to ET-33966, on top of the FAIL of 4 Nov: make the Quant Lab's result honest and readable. Search #19 made the page 22,052 px long: 94 blind-test rows take 19,357 px, the first winner is row 32, the bots start 18 screens down.
+Materials: https://github.com/zakutana/qa-cymetica/tree/main/outbox/quant-lab-v3 . A working mock on your live page with search #19's data (python serve.py, then http://127.0.0.1:8807/company/app/experiments); pics/ holds the target for the page, BLIND, THE BAR and FOUND; q3.js and q3.css are the changes to your quant-lab.js and .css, take them as they are. Its numbers are #19's as served, so it still shows the 4 winners that points 1 and 5 would change. Build the look as drawn.
 
 Method:
-1. Blind means blind (the FAIL). A setup is counted only on windows that start at or after the end of the search period it was chosen from, or the shortlist is chosen once from the data before the first window. Today 71 of 94 rows and all 4 winners count windows they were chosen on.
-2. A window counts as "made money" only with at least 5 closed trades. Today +0.54% on 2 trades counts as a won window.
-3. The effective number of tries from the market correlation, as Nexus agreed in his answer of 3 Nov: a market counts as a try only as far as it moves differently from the others.
-3b. Search on the 3 or 4 coins least like each other, not all 12, then replay each finalist on all 12 and show the result per coin. Our replay of the enzyme winner (rsi_14 < 25, SL 8, TP 10, Binance closes; AVAX came out at +9.96% against your +11.08%): 9 of 12 coins made money, mean +2.07%. So the kind of rule carries to other coins, its size does not, and only the other coins show that. A paper bot starts on the coins where the finalist held up.
+1. Blind means blind (the FAIL). Count a setup only on windows that start at or after the end of the search period it was chosen from, or choose the shortlist once from the data before the first window. Today 71 of 94 rows and all 4 winners count windows they were chosen on.
+2. A window counts as "made money" only with at least 5 closed trades. Today +0.54% on 2 trades counts.
+3. The effective number of tries from the market correlation, as Nexus agreed on 3 Nov.
+4. Search on the 3 or 4 coins least like each other, not all 12, then replay each finalist on all 12 and show the result per coin. Our replay of the enzyme winner (rsi_14 < 25, SL 8, TP 10, Binance closes; AVAX +9.96% against your +11.08%): 9 of 12 coins made money, mean +2.07%. The kind of rule carries over, its size does not, and only the other coins show that. A paper bot starts on the coins where the finalist held up.
+5. One model on one coin passes as one agent, with its best settings. #19's two CryptoBull Blue winners on AVAX are nearly one bot: every entry of "rsi_14 < 25, volume > 1.8" is also an entry of "rsi_14 < 30, volume > 1.5".
 
 Page:
-4. Under the reactor, in this order: WINNERS, BOTS, then RUNS. A winner row is one line: model, coin, settings, four small window results, pooled against the bar, trades. Everything else goes in a tooltip.
-5. Thrown-out rows are closed behind one line ("90 thrown out"). Opened, they show the 10 nearest misses and a button for 10 more; none takes more than one line.
-6. RUNS shows the last 5 runs, one line each (44 px at most), the models as a count with the names in a tooltip; older runs behind one button. Clicking a run behaves as today.
-7. BLIND shows the four windows on one time line, falling red and rising green, with the winners and the 5 nearest misses stepping through. It no longer says "60% SEEN", "24H" or "90 DAYS": a search no longer works that way.
-8. THE BAR draws the winners and the 10 nearest misses with readable labels, "+80 more" as a count. Nothing overlaps.
-9. FOUND is one animation that ends with every agent found on one screen: a card each (coin, name, settings, pooled result, trades, its result on each window), with one line when they share a coin ("one market's result"). A card says QUEUED until the bot has really started, and RUNNING with a return only when it runs. If the company is paused, the page says so and that the owner must resume.
-9b. One model on one coin passes as one agent, with its best settings: search #19's two CryptoBull Blue winners on AVAX are nearly one bot, since every entry of "rsi_14 < 25, volume > 1.8" is also an entry of "rsi_14 < 30, volume > 1.5". The other settings that passed go in its tooltip.
-10. An idea card under Approvals that nothing executes (`executable: false`) does not offer Approve as if it did something: it says what the click does. A card goes away when its problem no longer holds: "Price history for LINK" and "for BTC, ATOM" still wait, though search #19 loaded all 12 markets.
-Keep what stays true: the tiles, the reactor's look and every number's source stay as they are; the API keeps every field.
+6. Under the reactor: WINNERS, BOTS, RUNS, in that order. A winner row is one line: model, coin, settings, its result on each window (the windows are the columns, with the 12-coin move in the header), pooled, bar, trades. A window it was chosen on reads "seen".
+7. Thrown-out rows close behind one line ("90 thrown out"). Opened: the 10 nearest misses and a button for 10 more, one line each.
+8. RUNS: the last 5, one line each (44 px at most), the models as a count with names in a tooltip; older runs behind one button.
+9. BLIND shows the four windows, falling red and rising green, with the winners and nearest misses stepping through. No "60% SEEN", "24H" or "90 DAYS": a search no longer works that way.
+10. THE BAR draws the winners and the nearest misses that fit, "+N more" as a count. Nothing overlaps.
+11. FOUND is one animation ending with every agent found on one screen: a card each (coin, name, settings, pooled, trades, its window results), one line when they share a coin. A card says QUEUED until the bot has started, RUNNING and a return only when it runs. A paused company is said on the page.
+12. An idea card under Approvals that nothing executes (executable: false) says what the click does, and goes away when its problem no longer holds: "Price history for LINK" and "for BTC, ATOM" still wait though #19 loaded all 12 markets.
+Keep: the tiles, the reactor's look, every number's source and every API field.
 
 Done when:
-[ ] 1 No passed setup counts a window that overlaps the search period it was chosen from; the run record shows it.
-[ ] 2 A window with under 5 trades never reads as made money.
-[ ] 3 The run shows the raw and the effective number of tries, and the bar uses the effective one.
-[ ] 4-6 With a run of 94 shortlisted the page is under 3,500 px at 1440 wide; the first winner is visible within 2 screens.
-[ ] 7-8 No text overlaps in BLIND or THE BAR with 94 shortlisted; no "60% SEEN", "24H" or "90 DAYS" anywhere.
-[ ] 9 FOUND shows all winners on one screen in one animation; a queued bot never reads LIVE or 0.00%.
-[ ] 3b A finalist's row shows its result on all 12 coins.
-[ ] 10 No idea card waits for a problem the latest search no longer has; a card that executes nothing says so.
+[ ] 1 No passed setup counts a window overlapping the search period it was chosen from.
+[ ] 2 A window under 5 trades never reads as made money.
+[ ] 3 A run shows raw and effective tries; the bar uses the effective one.
+[ ] 4 A finalist's row shows its result on all 12 coins.
+[ ] 5 One model on one coin is one agent.
+[ ] 6-8 With 94 shortlisted the page is under 3,500 px at 1440 wide; the first winner shows within 2 screens.
+[ ] 9-10 No overlap in BLIND or THE BAR with 94 shortlisted; none of the old labels anywhere.
+[ ] 11 FOUND shows all winners on one screen; a queued bot never reads LIVE or 0.00%.
+[ ] 12 No idea card waits for a problem the latest search no longer has.
