@@ -28,27 +28,35 @@ from collections import defaultdict
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-CHAIN_NAMES = {"Polygon": "Polygon PoS", "Optimism": "OP Mainnet", "Hyperliquid L1": "HyperEVM", "Xlayer": "X Layer", "World Chain": "World Chain"}
+CHAIN_NAMES = {"Polygon": "Polygon PoS", "Optimism": "OP Mainnet", "Hyperliquid L1": "HyperEVM", "Xlayer": "X Layer", "World Chain": "World Chain", "Arbitrum One": "Arbitrum",
+               "Polygon PoS": "Polygon PoS", "OP Mainnet": "OP Mainnet", "HyperEVM": "HyperEVM"}
 USDC = {"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
         "0x0b2c639c533813f4aa9d7837caf62653d097ff85", "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359", "0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e",
         "epjfwdd5aufqssqem2qn1xzybapc8g4wegghkzwytdt1v"}
 DOLLAR = re.compile(r"USD|DAI|GHO|FRAX|DOLA|BOLD|FXSAVE|MIM|USR")
-ETHISH = re.compile(r"(^|[^A-Z])(W?ETH|STETH|WSTETH|WEETH|EETH|RETH|OSETH|CBETH|EZETH|METH|ETHX|TETH|RSETH|SFRXETH|LSETH|ETH\+)($|[^A-Z])")
+ETHISH = re.compile(r"(^|[^A-Z])(W?ETH|STETH|WSTETH|WEETH|EETH|RETH|OSETH|CBETH|EZETH|METH|ETHX|TETH|RSETH|SFRXETH|FRXETH|OETH|ALETH|MSETH|LSETH|ETH\+)($|[^A-Z])")
 BTCISH = re.compile(r"(W?BTC|CBBTC|LBTC|TBTC|SOLVBTC|EBTC|BTC\.B|XBTC|UBTC)")
-SOLISH = re.compile(r"(^|[^A-Z])(W?SOL|JITOSOL|MSOL|BSOL|JUPSOL|SSOL|INF)($|[^A-Z])")
-# a staked or savings token and the DefiLlama row that says what it earns
-ALIAS = {"WSTETH": "STETH", "WEETH": "WEETH", "SDAI": "SDAI", "SUSDS": "SUSDS", "STUSDS": "STUSDS", "SUSDE": "SUSDE", "SCRVUSD": "SCRVUSD"}
+SOLISH = re.compile(r"(^|[^A-Z])(W?SOL|JITOSOL|MSOL|BSOL|JUPSOL|SSOL|PSOL|DSOL|HSOL|DFDVSOL|INF)($|[^A-Z])")
+AVAXISH = re.compile(r"(^|[^A-Z])(W?AVAX|SAVAX)($|[^A-Z])")
+HYPEISH = re.compile(r"(^|[^A-Z])(W?HYPE|KHYPE|WSTHYPE|BEHYPE)($|[^A-Z])")
+# a token and the issuer whose DefiLlama row says what it earns. Only these earn on their own: a symbol alone lied in 93 routes (AUSD 6.55 from Accountable, USDG 3.76 from Spark, xBTC 9.20 from Liminal)
+ISSUER = {"STETH": "lido", "WSTETH": "lido", "WEETH": "ether.fi-stake", "RETH": "rocket-pool", "OSETH": "stakewise-v3", "ETHX": "stader", "EZETH": "renzo",
+          "JITOSOL": "jito-liquid-staking", "MSOL": "marinade-liquid-staking", "SAVAX": "benqi-staked-avax", "KHYPE": "kinetiq-khype", "SUSDS": "sky-lending", "STUSDS": "sky-lending",
+          "SDAI": "sky-lending", "SUSDE": "ethena-usde", "SUSDAI": "usd-ai", "STCUSD": "cap", "SCRVUSD": "crvusd", "CBETH": "coinbase-wrapped-staked-eth", "SFRXUSD": "frax", "SIUSD": "infinifi"}
+ALIAS = {"WSTETH": "STETH"}
+PT_ISSUER = {**ISSUER, "USD3": "3jane-lending", "AUSD": "agora", "USDAT": "saturn", "SUSDX": "axis", "STRUSD": "strata", "APYUSD": "apyx-protocol", "APXUSD": "apyx-protocol"}
 SKY_ONE_TO_ONE = {"STUSDS", "SUSDS", "USDS"}  # USDC to USDS is Sky's 1:1 window, and staking it is a mint: Cymetica charges 0
 SWAP = {"sky": 0, "stable": 10, "volatile": 10, "mint": 1, "pt": 10, "lp": 30}  # round trip, basis points: their $15 on $5,000 for a pool
 GAS_UNITS = {"lend": 1.0, "lp": 2.0, "loop": 4.25, "away": 0.65}  # off their own costs at two minutes: 0.46/0.91/1.95 and 2.78/5.47/11.73; any route off Ethereum 1.79
 MAJORS = {"WETH", "WSTETH", "WEETH", "RETH", "CBETH", "WBTC", "CBBTC", "TBTC"}
-LENDERISH = re.compile(r"aave|compound|morpho|euler|spark|fluid|kamino|venus|radiant|silo|maple|benqi|dolomite|lend|gearbox|pendle|convex|beefy|yearn|concentrator|stake-dao")
-PLAIN = {"USDC", "USDT", "USDS", "DAI", "WETH", "ETH", "WBTC", "CBBTC", "SOL", "WSOL", "AVAX", "WAVAX", "HYPE", "WHYPE", "USDE", "USDC.E", "GHO", "FRAX", "CRVUSD", "PYUSD"}  # earn only where they are lent
+NOT_SKY = {"USDT", "USDT0", "USD\u20ae0", "PYUSD", "AUSD", "USDE", "GHO", "USDG"}  # a loan in these must be swapped: Sky's 1:1 window is USDC and USDS only
 POOLED_LENDERS = {"sparklend", "benqi-lending", "hyperlend-pooled", "kamino-lend", "dolomite"}  # one market: any collateral against any loan
 
 
 def base_of(symbol: str) -> str:
     up = symbol.upper().replace("PT-", "")
+    if "EUR" in up:
+        return "other"
     if DOLLAR.search(up):
         return "dollar"
     if ETHISH.search(up):
@@ -57,13 +65,18 @@ def base_of(symbol: str) -> str:
         return "btc"
     if SOLISH.search(up):
         return "sol"
+    if AVAXISH.search(up):
+        return "avax"
+    if HYPEISH.search(up):
+        return "hype"
     return "other"
 
 
 def rate_of(p: dict) -> float | None:
     if p.get("apyBase") is None:
         return None
-    return min(v for v in (p.get("apyBase"), p.get("apyBase7d"), p.get("apyMean30d")) if v is not None)
+    week = p.get("apyBase7d")
+    return min(v for v in (p.get("apyBase"), week if week else None, p.get("apyMean30d")) if v is not None)
 
 
 class Data:
@@ -80,6 +93,7 @@ class Data:
         self.pendle = read("pendle")
         self.fluid = read("fluid")
         self.lasting = read("lasting") if (folder / "lasting.json").exists() else {}
+        self.refused_list = [x for f in sorted((HERE / "refused").glob("*.json")) if (HERE / "refused").exists() for x in json.loads(f.read_text(encoding="utf-8"))]
         self.top3 = {t: read(f"cm_top3_{t}") for t in ("conservative", "medium", "high", "og")}
         self.cm_tiers = read("cm_tiers")
         self.passed = {x["slug"] for x in self.platforms if x["passed"]}
@@ -90,6 +104,8 @@ class Data:
         self.gas_unit = self._gas_unit()
         self.gates = self._gates()
         self.yields = self._yields()
+        self.usdc = set(USDC) | {u.lower() for p in self.pools if p["symbol"].upper() == "USDC" and p.get("exposure") == "single" and p["project"] in ("aave-v3", "compound-v3", "fluid-lending")
+                                 for u in (p.get("underlyingTokens") or [])}
         self.books = self._books()
 
     def _gas_unit(self) -> float:
@@ -122,41 +138,38 @@ class Data:
         for v in self.vaults_v1:
             alloc = ((v.get("state") or {}).get("allocation") or [])
             pairs = [((a["market"]["collateralAsset"] or {}).get("symbol"), a.get("supplyAssetsUsd") or 0) for a in alloc if a["market"].get("collateralAsset")]
-            out[(v["chain"]["network"].lower(), (v.get("symbol") or "").upper())] = share(pairs)
+            key = (v["chain"]["network"].lower(), (v.get("symbol") or "").upper())
+            out[key] = min(out.get(key, 1.0), share(pairs))
         for v in self.vaults_v2:
             pairs = []
             for ad in v.get("book") or []:
                 for it in (ad.get("positions") or {}).get("items", []):
                     pairs.append((((it.get("market") or {}).get("collateralAsset") or {}).get("symbol"), (it.get("state") or {}).get("supplyAssetsUsd") or 0))
             if pairs:
-                out[(v["chain"]["network"].lower(), (v.get("symbol") or "").upper())] = share(pairs)
+                key = (v["chain"]["network"].lower(), (v.get("symbol") or "").upper())
+                out[key] = min(out.get(key, 1.0), share(pairs))
         return out
 
     def _yields(self) -> dict:
-        """What a token earns on its own: symbol to the biggest row of a project that issues it."""
+        """What a token earns on its own: the biggest row of its named issuer."""
         out: dict[str, dict] = {}
         for p in self.pools:
-            if p.get("exposure") != "single" or rate_of(p) is None or p["tvlUsd"] < 1e6:
+            sym = p["symbol"].upper()
+            if p["project"] != ISSUER.get(sym) and p["project"] != ISSUER.get(next((k for k, v in ALIAS.items() if v == sym), "")):
                 continue
-            kind = self.kind.get(p["project"])
-            if kind in ("lending", "dex", "yield", "perps") or (kind is None and LENDERISH.search(p["project"])):
-                continue  # a row about holding the token in some venue is not what the token itself earns
-            s = p["symbol"].upper()
-            if s in PLAIN:
+            if rate_of(p) is None or p.get("exposure") != "single":
                 continue
-            if s not in out or p["tvlUsd"] > out[s]["tvlUsd"]:
-                out[s] = p
+            if sym not in out or p["tvlUsd"] > out[sym]["tvlUsd"]:
+                out[sym] = p
         return out
 
     def token_yield(self, symbol: str) -> dict | None:
         s = symbol.upper()
         return self.yields.get(ALIAS.get(s, s))
 
-    def pt_issuer(self, m: dict) -> dict | None:
-        """A PT's issuer by the address of what it wraps: a symbol alone calls 3Jane's USD3 Reserve's USD3."""
-        under = (m.get("underlyingAsset") or "").split("-", 1)[-1].lower()
-        y = self.token_yield(m["name"])
-        return y if y and under in {u.lower() for u in (y.get("underlyingTokens") or [])} else None
+    def pt_issuer(self, m: dict) -> str:
+        """The slug that issues what a PT wraps; unlisted:<name> when nobody has named it."""
+        return PT_ISSUER.get(m["name"].upper(), f"unlisted:{m['name']}")
 
 
 def chain_ok(data: Data, chain: str) -> str | None:
@@ -171,25 +184,26 @@ def hold_routes(data: Data) -> list[dict]:
         if rate is None or rate <= 0 or not chain:
             continue
         slug, sym = p["project"], p["symbol"].upper()
-        if slug not in data.kind or slug == "pendle-v2":  # Pendle is read from Pendle: its rows here carry no issuer
+        if slug not in data.kind or slug in ("pendle-v2", "fluid-dex"):  # Pendle is read from Pendle; DefiLlama's Fluid DEX row is fees only, its real rate is a hunter's sum
             continue
         meta = p.get("poolMeta") or ""
         under = {u.lower() for u in (p.get("underlyingTokens") or [])}
         kind = data.kind[slug]
-        single = p.get("exposure") == "single"
+        one_usdc = len(under) == 1 and bool(under & data.usdc)
+        single = p.get("exposure") == "single" or (kind == "lending" and one_usdc)
         family, first = None, SWAP["stable"]
-        if single and (sym == "USDC" or under & USDC) and kind == "lending":
+        if single and (sym == "USDC" or under & data.usdc) and kind == "lending":
             family, first = ("usd_lend" if sym == "USDC" else "usd_vault"), 0
         elif single and p.get("stablecoin"):
             family = "savings" if kind in ("stable", "savings") else "usd_vault"
-            first = SWAP["sky"] if sym in SKY_ONE_TO_ONE else SWAP["stable"]
+            first = 0 if under & data.usdc else SWAP["sky"] if sym in SKY_ONE_TO_ONE else SWAP["stable"]
         elif single and kind in ("lst", "restaking"):
             family, first = "stake_hold", SWAP["volatile"]
         elif kind == "perps":
             family, first = "perps_lp", SWAP["stable"]
         elif p.get("exposure") == "multi" or kind == "dex":
             bases = {base_of(t) for t in re.split(r"[-/]", sym) if t}
-            if p.get("stablecoin") or bases == {"dollar"}:
+            if bases == {"dollar"}:
                 family = "lp_stable"
             elif len(bases) == 1 and "other" not in bases:
                 family = "lp_correlated"
@@ -199,10 +213,16 @@ def hold_routes(data: Data) -> list[dict]:
         if not family:
             continue
         rows.append({"id": f"hold:{p['pool']}", "name": f"{p['symbol']}{' ' + meta if meta else ''}", "family": family, "platforms": [slug], "issuers": [],
-                     "chain": chain, "rate": rate, "tvl": p["tvlUsd"], "pool": p["pool"], "max_l": 1.0, "borrow": None, "free": None, "lltv": None,
+                     "chain": chain, "rate": rate, "tvl": _size(data, p), "pool": p["pool"], "max_l": 1.0, "borrow": None, "free": None, "lltv": None,
                      "first_bps": first, "loop_bps": 0, "gas": GAS_UNITS["lp" if family.startswith("lp") else "lend"], "meta": meta,
                      "flags": _rate_flags(p), "symbol": sym, "gate": data.gates.get((p["chain"].lower(), sym))})
     return rows
+
+
+def _size(data: Data, p: dict) -> float:
+    """DefiLlama's tvlUsd on a lending row is supply minus borrow: Benqi USDC with $16.3M supplied read $1.5M. On Morpho rows totalSupplyUsd is the collateral, so it stays out."""
+    x = data.lendborrow.get(p["pool"]) or {}
+    return p["tvlUsd"] if p["project"].startswith("morpho") else max(p["tvlUsd"], x.get("totalSupplyUsd") or 0)
 
 
 def _rate_flags(p: dict) -> list[str]:
@@ -238,11 +258,12 @@ def loop_route(data: Data, step: float, *, venue: str, chain: str, collateral: s
     family = "loop_dollar" if cb == lb == "dollar" else "loop_correlated" if cb == lb and cb != "other" else "loop_volatile"
     up = collateral.upper()
     if family == "loop_dollar":
-        first = loop_bps = SWAP["sky"] if up in SKY_ONE_TO_ONE else SWAP["stable"]
+        first = SWAP["sky"] if up in SKY_ONE_TO_ONE else SWAP["stable"]
+        loop_bps = SWAP["stable"] if loan.upper() in NOT_SKY or first else SWAP["sky"]
     elif up.startswith("PT-"):
         first, loop_bps = SWAP["pt"], SWAP["pt"]
     else:
-        first, loop_bps = SWAP["volatile"], SWAP["mint"] if chain == "Ethereum" else SWAP["volatile"]
+        first, loop_bps = SWAP["volatile"], SWAP["mint"] if chain == "Ethereum" and cb == lb else SWAP["volatile"]
     issuers = [y["project"]] if y else []
     return {"id": ident, "name": f"{collateral} / {loan} loop", "family": family, "platforms": [venue], "issuers": issuers + list(extra_issuers), "chain": chain,
             "rate": rate, "tvl": market_size or y_tvl, "pool": y["pool"] if y else None, "max_l": max_lever(limit, step), "borrow": bor, "free": free, "lltv": liq_limit or limit,
@@ -272,8 +293,7 @@ def morpho_loops(data: Data, step: float) -> list[dict]:
             days = _days_to(pt["expiry"], data.taken_at)
             if days < 7:
                 continue
-            y_row = data.pt_issuer(pt)
-            issuers = ["pendle-v2"] + ([y_row["project"]] if y_row else [f"unlisted:{pt['name']}"])
+            issuers = ["pendle-v2", data.pt_issuer(pt)]
             r = loop_route(data, step, y=None, y_rate=pt["details"]["impliedApy"] * 100, y_tvl=pt["details"]["liquidity"], extra_issuers=issuers, **common)
             if r:
                 r["flags"].append(f"PT matures in {days:.0f} days")
@@ -390,10 +410,9 @@ def pendle_holds(data: Data) -> list[dict]:
         days = _days_to(m["expiry"], data.taken_at)
         if days < 7 or m["details"]["liquidity"] < 1e6:
             continue
-        y = data.pt_issuer(m)
         dollar = base_of(m["name"]) == "dollar"
         rows.append({"id": f"pendle:{m['pt']}", "name": f"PT-{m['name']} {m['expiry'][:10]}", "family": "pt_hold_dollar" if dollar else "pt_hold_other", "platforms": ["pendle-v2"],
-                     "issuers": [y["project"]] if y else [f"unlisted:{m['name']}"], "chain": m["chain"], "rate": m["details"]["impliedApy"] * 100, "tvl": m["details"]["liquidity"],
+                     "issuers": [data.pt_issuer(m)], "chain": m["chain"], "rate": m["details"]["impliedApy"] * 100, "tvl": m["details"]["liquidity"],
                      "pool": m["pt"], "max_l": 1.0, "borrow": None, "free": None, "lltv": None, "first_bps": SWAP["pt"], "loop_bps": 0, "gas": GAS_UNITS["lend"], "meta": "",
                      "flags": [f"PT matures in {days:.0f} days"], "symbol": f"PT-{m['name']}".upper(), "gate": None})
     return rows
@@ -409,12 +428,24 @@ def load_candidates(step: float) -> list[dict]:
             r.setdefault("gate", None)
             r.setdefault("meta", "")
             r["hunter"] = f.stem
+            days = next((re.search(r"matures in (\d+)", x) for x in r["flags"] if "matures in" in x), None)
+            if days and "matures_days" not in r:
+                r["matures_days"] = int(days.group(1))
             rows.append(r)
     return rows
 
 
+def month_rate(route: dict, rate: float) -> float:
+    """A PT that matures inside the month earns its fixed rate only until it does, then what its token earns."""
+    left = route.get("matures_days")
+    if left is not None and left < 30:
+        return (left * rate + (30 - left) * (route.get("after_rate") or 0)) / 30
+    return rate
+
+
 def price(route: dict, leverage: float, amount: float, gas_unit: float) -> dict:
-    net = leverage * route["rate"] - (leverage - 1) * (route.get("borrow") or 0)
+    rate = month_rate(route, route["rate"])
+    net = leverage * rate - (leverage - 1) * (route.get("borrow") or 0)
     gross = amount * ((1 + net / 100) ** (30 / 365) - 1) if net > -100 else -amount  # a carry worse than -100% loses everything
     swap =amount * route["first_bps"] / 1e4 + amount * (leverage - 1) * route["loop_bps"] / 1e4
     gas = (route["gas"] if route["chain"] == "Ethereum" else GAS_UNITS["away"]) * gas_unit
@@ -428,12 +459,14 @@ def price(route: dict, leverage: float, amount: float, gas_unit: float) -> dict:
 
 
 def lp_share(cfg: dict, route: dict) -> float:
-    """What a pool's LPs keep of the fee DefiLlama counts: read on-chain per pool by the pilot, 1.0 where nobody has read it."""
+    """What a pool's LPs keep of the fee DefiLlama counts: read on-chain per tier and chain by the hunters, 1.0 where nobody read it."""
     if not route["family"].startswith("lp_"):
         return 1.0
     table = cfg["lp_fee_share"].get(route["platforms"][0], {})
+    if route["chain"] in table.get("off_on", []) or (table.get("only_on") and route["chain"] not in table["only_on"]):
+        return 1.0
     meta = route.get("meta") or ""
-    return next((v for k, v in table.items() if k == "*" or k == meta), 1.0)
+    return next((v for k, v in table.items() if k in ("*", meta) and isinstance(v, float)), 1.0)
 
 
 def lasting(data: Data, cfg: dict, route: dict, leverage: float, amount: float, q: dict) -> float | None:
@@ -442,7 +475,7 @@ def lasting(data: Data, cfg: dict, route: dict, leverage: float, amount: float, 
     row = data.lasting.get(route.get("pool") or "")
     if not row and not fixed:
         return None
-    rate = route["rate"] if fixed else min(route["rate"], row["median"]) * lp_share(cfg, route)
+    rate = month_rate(route, route["rate"]) if fixed else min(route["rate"], row["median"]) * lp_share(cfg, route)
     bor = max(route.get("borrow") or 0, route.get("borrow_week") or 0)
     net = leverage * rate - (leverage - 1) * bor
     gross = amount * ((1 + net / 100) ** (30 / 365) - 1) if net > -100 else -amount
@@ -450,11 +483,14 @@ def lasting(data: Data, cfg: dict, route: dict, leverage: float, amount: float, 
 
 
 def refused(data: Data, cfg: dict, route: dict, amount: float, q: dict) -> str | None:
+    for item in data.refused_list:
+        if item["match"].lower() in f"{route.get('id')} {route.get('name')} {route.get('pool')}".lower():
+            return item["reason"]
     if route.get("gate"):
         return f"deposit gate {route['gate']}"
-    token = (route.get("symbol") or "").upper().replace("PT-", "")
-    if any(token.startswith(k) for k in cfg["kyc_refused_tokens"]):
-        return f"KYC token {token}"
+    for token in re.split(r"[-/ ]", (route.get("symbol") or "").upper().replace("PT-", "")):
+        if token in cfg["kyc_refused_tokens"] or token.startswith("SYRUP"):
+            return f"KYC token {token}"
     for slug in list(route["platforms"]) + list(route.get("issuers") or []):
         if "identity" in data.failed.get(slug, "").lower() or "kyc" in data.failed.get(slug, "").lower():
             return f"KYC platform {slug}"
@@ -497,13 +533,13 @@ def score(data: Data, cfg: dict, routes: list[dict], amount: float, by: str = "r
             lev = min(top, cap) if cap else top
             q = price(route, lev, amount, data.gas_unit)
             if lev > 1:
-                # a lever that does not pay is not used: compare with the same route unlevered
-                flat = price(route, 1.0, amount, data.gas_unit)
-                if route.get("borrow") is not None and route["rate"] <= route["borrow"]:
-                    q = flat
-                    lev = 1.0
-                    if route["family"].startswith("loop"):
-                        continue
+                if route.get("borrow") is not None and route["rate"] <= route["borrow"] and route["family"].startswith(("loop", "stack")):
+                    continue  # a lever that loses is not a route
+                # the best lever under the cap, on the grid: costs can make a lower one pay more
+                grid = [1 + i * cfg["lever_step"] for i in range(1, int((lev - 1) / cfg["lever_step"]) + 1)]
+                best = max((price(route, x, amount, data.gas_unit) for x in grid), key=lambda z: z["profit"], default=q)
+                if best["profit"] > q["profit"]:
+                    q, lev = best, best["leverage"]
             q["lasting"] = lasting(data, cfg, route, lev, amount, q)
             why = refused(data, cfg, route, amount, q)
             row = {**{k: route.get(k) for k in ("id", "name", "family", "platforms", "issuers", "chain", "rate", "borrow", "borrow_week", "tvl", "free", "lltv", "pool", "flags", "meta", "hunter", "source", "symbol")}, **q}
@@ -584,7 +620,13 @@ def main() -> None:
     cfg = json.loads((HERE / "tiers.json").read_text(encoding="utf-8"))
     data = Data(Path(a.data))
     step = cfg["lever_step"]
-    routes = hold_routes(data) + morpho_loops(data, step) + aave_loops(data, step) + fluid_loops(data, step) + generic_loops(data, step) + pendle_holds(data) + load_candidates(step)
+    hunted = load_candidates(step)
+    gone = {m for c in hunted for f in c["flags"] + [c.get("replaces") or ""] for m in re.findall(r"hold:[0-9a-f-]{36}", f)}
+    same = {c["pool"] for c in hunted if c.get("pool")}
+    has_pendle = any(c["hunter"] == "pendle" for c in hunted)
+    built = hold_routes(data) + morpho_loops(data, step) + aave_loops(data, step) + fluid_loops(data, step) + generic_loops(data, step) + ([] if has_pendle else pendle_holds(data))
+    built = [r for r in built if r["id"] not in gone and not (r["id"].startswith("hold:") and r["pool"] in same) and not (has_pendle and r["symbol"].startswith("PT-"))]
+    routes = built + hunted
     seen, unique = set(), []
     for r in routes:  # one market listed twice is one route
         key = (r["platforms"][0], r["chain"], r["name"], round(r["rate"], 3), round(r.get("borrow") or 0, 3), r.get("max_l"))
@@ -592,6 +634,14 @@ def main() -> None:
             seen.add(key)
             unique.append(r)
     routes = unique
+    for r in routes:  # after a PT matures its money earns what the token earns, or nothing
+        if r.get("matures_days") is None and str(r.get("symbol", "")).startswith("PT-"):
+            found = next((re.search(r"matures in (\\d+)", x) for x in r["flags"] if "matures in" in x), None)
+            r["matures_days"] = int(found.group(1)) if found else None
+        if r.get("matures_days") is not None and r.get("after_rate") is None:
+            token = re.split(r"[-/ ]", str(r.get("symbol", "")).upper().replace("PT-", ""))[0]
+            y = data.token_yield(token)
+            r["after_rate"] = rate_of(y) if y else 0
     for r in routes:  # the main market of a big venue, or a Morpho vault lending 90% against majors, is what Conservative may hold
         if r["family"] == "usd_lend":
             r["family"] = "usd_lend_main" if r["platforms"][0] in cfg["conservative_venues"] else "usd_lend"

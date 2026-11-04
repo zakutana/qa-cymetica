@@ -1,0 +1,1139 @@
+[
+ {
+  "id": "lending:compound-base",
+  "name": "USDC Compound V3 market (Base)",
+  "family": "usd_lend",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [],
+  "chain": "Base",
+  "rate": 5.13,
+  "tvl": 9144066,
+  "pool": "0c8567f8-ba5b-41ad-80de-00a71895eb19",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 774063,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "USDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 8.15; 30d 5.13; 7d 5.74 (https://defillama.com/yields/pool/0c8567f8-ba5b-41ad-80de-00a71895eb19; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; comet 0xb125E6687d4313864e53df431d5425969c15Eb2F read 2026-11-04: supply $9.19M, 91.9% used, isSupplyPaused false. A base supply has no cap."
+ },
+ {
+  "id": "lending:compound-arb",
+  "name": "USDC Compound V3 market (Arbitrum)",
+  "family": "usd_lend",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [],
+  "chain": "Arbitrum",
+  "rate": 3.086,
+  "tvl": 14820786,
+  "pool": "d9c395b9-00d0-4426-a6b3-572a6dd68e54",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 2114058,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "USDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 3.09; 30d 3.11; 7d 3.13 (https://defillama.com/yields/pool/d9c395b9-00d0-4426-a6b3-572a6dd68e54; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; comet 0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf: supply $14.82M, not paused."
+ },
+ {
+  "id": "lending:aave-op",
+  "name": "USDC Aave V3 market (OP Mainnet)",
+  "family": "usd_lend",
+  "platforms": [
+   "aave-v3"
+  ],
+  "issuers": [],
+  "chain": "OP Mainnet",
+  "rate": 4.928,
+  "tvl": 10105761,
+  "pool": "0758c3b8-4ffb-4176-b0a9-f446e367db46",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 723262,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "USDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 5.72; 30d 4.93; 7d 7.35 (https://defillama.com/yields/pool/0758c3b8-4ffb-4176-b0a9-f446e367db46; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.v3.aave.com/graphql: size $10.07M, cap $28M not reached, not frozen."
+ },
+ {
+  "id": "lending:benqi-usdc",
+  "name": "USDC Benqi market (Avalanche)",
+  "family": "usd_lend",
+  "platforms": [
+   "benqi-lending"
+  ],
+  "issuers": [],
+  "chain": "Avalanche",
+  "rate": 7.084,
+  "tvl": 16331935,
+  "pool": "ff59b165-64e0-4868-a6db-6049b5135358",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 1510364,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "USDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 7.08; 30d 9.05; 7d 9.10 (https://defillama.com/yields/pool/ff59b165-64e0-4868-a6db-6049b5135358; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow"
+ },
+ {
+  "id": "lending:dolomite-arb",
+  "name": "USDC Dolomite market (Arbitrum)",
+  "family": "usd_lend",
+  "platforms": [
+   "dolomite"
+  ],
+  "issuers": [],
+  "chain": "Arbitrum",
+  "rate": 4.065,
+  "tvl": 4048856,
+  "pool": "d0e11625-79b9-40e3-b01f-a473af961995",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 1345980,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "USDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 4.06; 30d 4.88; 7d 4.75 (https://defillama.com/yields/pool/d0e11625-79b9-40e3-b01f-a473af961995; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow"
+ },
+ {
+  "id": "lending:euler-eusdc12",
+  "name": "USDC eUSDC-12 Euler vault (Monad)",
+  "family": "usd_lend",
+  "platforms": [
+   "euler-v2"
+  ],
+  "issuers": [],
+  "chain": "Monad",
+  "rate": 6.962,
+  "tvl": 3378241,
+  "pool": "b3836ef0-a38f-4ee0-bdf1-bb697477ac06",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 236764,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "USDC",
+  "flags": [
+   "1 collateral only: borrower book not read"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 6.96; 30d 7.18; 7d 8.26 (https://defillama.com/yields/pool/b3836ef0-a38f-4ee0-bdf1-bb697477ac06; 7d = mean of the chart's last 7 days). tvl = totalAssets() of 0x1905eddf5943ef6c92ccf1469bd40fc2cb4a77b0 on Monad, read 2026-11-04: $3.38M, borrowed $3.14M; interestRate() and interestFee() give 6.96% to a lender, the row's own figure; maxDeposit(0x..dEaD) > 0, no hooked op on deposit."
+ },
+ {
+  "id": "lending:euler-eusdc17",
+  "name": "USDC eUSDC-17 Euler vault (Monad)",
+  "family": "usd_lend",
+  "platforms": [
+   "euler-v2"
+  ],
+  "issuers": [],
+  "chain": "Monad",
+  "rate": 6.647,
+  "tvl": 9129077,
+  "pool": "17aa6528-e589-5db2-9d85-930b8ea63f36",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 806405,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "USDC",
+  "flags": [
+   "1 collateral only: borrower book not read"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 6.65; 30d 7.55; 7d 8.49 (https://defillama.com/yields/pool/17aa6528-e589-5db2-9d85-930b8ea63f36; 7d = mean of the chart's last 7 days). tvl = totalAssets() of 0x06047833d9aac144f7f4e9b8234d2c7dda1a8baf on Monad, read 2026-11-04: $9.13M, borrowed $8.32M; interestRate() and interestFee() give 6.64% to a lender, the row's own figure; maxDeposit(0x..dEaD) > 0, no hooked op on deposit."
+ },
+ {
+  "id": "lending:euler-eusdc15",
+  "name": "USDC eUSDC-15 Euler vault (Monad)",
+  "family": "usd_lend",
+  "platforms": [
+   "euler-v2"
+  ],
+  "issuers": [],
+  "chain": "Monad",
+  "rate": 4.615,
+  "tvl": 4202977,
+  "pool": "6cc57c9a-b81a-4089-ab38-06810344ba18",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 335004,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "USDC",
+  "flags": [
+   "1 collateral only: borrower book not read"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 4.62; 30d 6.06; 7d 4.61 (https://defillama.com/yields/pool/6cc57c9a-b81a-4089-ab38-06810344ba18; 7d = mean of the chart's last 7 days). tvl = totalAssets() of 0xa3b64e2674463c98cbd21807055d8c1e008b6e79 on Monad, read 2026-11-04: $4.20M, borrowed $3.87M; interestRate() and interestFee() give 4.61% to a lender, the row's own figure; maxDeposit(0x..dEaD) > 0, no hooked op on deposit."
+ },
+ {
+  "id": "lending:euler-eausd16",
+  "name": "AUSD eAUSD-16 Euler vault (Monad)",
+  "family": "usd_vault",
+  "platforms": [
+   "euler-v2"
+  ],
+  "issuers": [],
+  "chain": "Monad",
+  "rate": 9.289,
+  "tvl": 17783778,
+  "pool": "e150c112-d6f3-42f5-8c8d-78580058e1fd",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 1566428,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "AUSD",
+  "flags": [
+   "1 collateral only: borrower book not read"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 9.29; 30d 10.21; 7d 9.30 (https://defillama.com/yields/pool/e150c112-d6f3-42f5-8c8d-78580058e1fd; 7d = mean of the chart's last 7 days). tvl = totalAssets() of 0x9e3500649e16ebe295277ec030e42fabacfa870e on Monad, read 2026-11-04: $17.78M, borrowed $16.22M; interestRate() and interestFee() give 9.28% to a lender, the row's own figure; maxDeposit(0x..dEaD) > 0, no hooked op on deposit."
+ },
+ {
+  "id": "lending:euler-eausd17",
+  "name": "AUSD eAUSD-17 Euler vault (Monad)",
+  "family": "usd_vault",
+  "platforms": [
+   "euler-v2"
+  ],
+  "issuers": [],
+  "chain": "Monad",
+  "rate": 5.824,
+  "tvl": 15922479,
+  "pool": "34320b49-244c-5594-a5b7-053e4ca5339b",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 1427197,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "AUSD",
+  "flags": [
+   "1 collateral only: borrower book not read"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 5.82; 30d 7.48; 7d 5.82 (https://defillama.com/yields/pool/34320b49-244c-5594-a5b7-053e4ca5339b; 7d = mean of the chart's last 7 days). tvl = totalAssets() of 0x4a798ef3a5846af8e04de317dd7f3612a47ffa99 on Monad, read 2026-11-04: $15.92M, borrowed $14.50M; interestRate() and interestFee() give 5.82% to a lender, the row's own figure; maxDeposit(0x..dEaD) > 0, no hooked op on deposit."
+ },
+ {
+  "id": "lending:kamino-auto",
+  "name": "USDC AUTO Market reserve (Kamino)",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 6.957,
+  "tvl": 4161111,
+  "pool": "6cbcccd4-f405-58d4-ac95-0847df57b5c1",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 562,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "market reserve, RWA or non-major collateral",
+  "symbol": "USDC",
+  "flags": [
+   "reserve deposit limit not read: Kamino's API does not give it"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 8.48; 30d 6.96; 7d 7.32 (https://defillama.com/yields/pool/6cbcccd4-f405-58d4-ac95-0847df57b5c1; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.kamino.finance/kamino-market/<market>/reserves/metrics agrees on supply and rate. usd_vault, not usd_lend: its book is not majors."
+ },
+ {
+  "id": "lending:kamino-huma",
+  "name": "USDC Huma Market reserve (Kamino)",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 5.709,
+  "tvl": 17755296,
+  "pool": "8a6cf606-e8e5-412f-9aad-da512327582a",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 956789,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "market reserve, RWA or non-major collateral",
+  "symbol": "USDC",
+  "flags": [
+   "reserve deposit limit not read: Kamino's API does not give it"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 6.66; 30d 5.71; 7d 6.26 (https://defillama.com/yields/pool/8a6cf606-e8e5-412f-9aad-da512327582a; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.kamino.finance/kamino-market/<market>/reserves/metrics agrees on supply and rate. usd_vault, not usd_lend: its book is not majors."
+ },
+ {
+  "id": "lending:kamino-obligate",
+  "name": "USDC Obligate Market reserve (Kamino)",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 5.436,
+  "tvl": 4588022,
+  "pool": "6a1895e9-5512-5629-b344-22d0c9ac1ed2",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 179938,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "market reserve, RWA or non-major collateral",
+  "symbol": "USDC",
+  "flags": [
+   "reserve deposit limit not read: Kamino's API does not give it"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 10.03; 30d 5.44; 7d 6.06 (https://defillama.com/yields/pool/6a1895e9-5512-5629-b344-22d0c9ac1ed2; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.kamino.finance/kamino-market/<market>/reserves/metrics agrees on supply and rate. usd_vault, not usd_lend: its book is not majors."
+ },
+ {
+  "id": "lending:kamino-xstocks",
+  "name": "USDC xStocks Market reserve (Kamino)",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 5.006,
+  "tvl": 5756313,
+  "pool": "571311bf-7da7-4f3c-b181-43119070bffc",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 610458,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "market reserve, RWA or non-major collateral",
+  "symbol": "USDC",
+  "flags": [
+   "reserve deposit limit not read: Kamino's API does not give it"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 5.01; 30d 5.45; 7d 5.29 (https://defillama.com/yields/pool/571311bf-7da7-4f3c-b181-43119070bffc; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.kamino.finance/kamino-market/<market>/reserves/metrics agrees on supply and rate. usd_vault, not usd_lend: its book is not majors."
+ },
+ {
+  "id": "lending:kamino-figure",
+  "name": "USDC Figure Market reserve (Kamino)",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 4.824,
+  "tvl": 31543995,
+  "pool": "3cb152e8-1de7-4a2b-8510-f04014c5fe82",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 1521376,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "market reserve, RWA or non-major collateral",
+  "symbol": "USDC",
+  "flags": [
+   "reserve deposit limit not read: Kamino's API does not give it"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 4.82; 30d 4.84; 7d 4.92 (https://defillama.com/yields/pool/3cb152e8-1de7-4a2b-8510-f04014c5fe82; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.kamino.finance/kamino-market/<market>/reserves/metrics agrees on supply and rate. usd_vault, not usd_lend: its book is not majors."
+ },
+ {
+  "id": "lending:kamino-susdai",
+  "name": "USDC sUSDai Market reserve (Kamino)",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 4.535,
+  "tvl": 4177792,
+  "pool": "b6a0429a-54c2-57ef-b9c4-11a348f6d148",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 494506,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "market reserve, RWA or non-major collateral",
+  "symbol": "USDC",
+  "flags": [
+   "reserve deposit limit not read: Kamino's API does not give it"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 4.54; 30d 6.79; 7d 7.33 (https://defillama.com/yields/pool/b6a0429a-54c2-57ef-b9c4-11a348f6d148; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.kamino.finance/kamino-market/<market>/reserves/metrics agrees on supply and rate. usd_vault, not usd_lend: its book is not majors."
+ },
+ {
+  "id": "lending:kamino-onre-usdg",
+  "name": "USDG OnRe Market reserve (Kamino)",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 7.843,
+  "tvl": 20397515,
+  "pool": "d43d4478-f785-41ab-9bd0-6d48f75c84a1",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 8457,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "market reserve, RWA or non-major collateral",
+  "symbol": "USDG",
+  "flags": [
+   "reserve deposit limit not read: Kamino's API does not give it"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 12.51; 30d 7.84; 7d 9.32 (https://defillama.com/yields/pool/d43d4478-f785-41ab-9bd0-6d48f75c84a1; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.kamino.finance/kamino-market/<market>/reserves/metrics agrees on supply and rate. usd_vault, not usd_lend: its book is not majors."
+ },
+ {
+  "id": "lending:kamino-solbtc-usdt",
+  "name": "USDT SOL/BTC Market reserve (Kamino)",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 4.987,
+  "tvl": 9073795,
+  "pool": "546b3c0c-138d-4190-b46b-efa1765f1dd3",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 239856,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "market reserve, RWA or non-major collateral",
+  "symbol": "USDT",
+  "flags": [
+   "spike: today over twice the 30-day mean",
+   "reserve deposit limit not read: Kamino's API does not give it"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 19.20; 30d 4.99; 7d 9.45 (https://defillama.com/yields/pool/546b3c0c-138d-4190-b46b-efa1765f1dd3; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.kamino.finance/kamino-market/<market>/reserves/metrics agrees on supply and rate. usd_vault, not usd_lend: its book is not majors."
+ },
+ {
+  "id": "lending:kamino-solbtc-usdg",
+  "name": "USDG SOL/BTC Market reserve (Kamino)",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 4.803,
+  "tvl": 38510158,
+  "pool": "0cdd7f84-711e-4cd4-916d-da318857559a",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 183134,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "market reserve, RWA or non-major collateral",
+  "symbol": "USDG",
+  "flags": [
+   "spike: today over twice the 30-day mean",
+   "reserve deposit limit not read: Kamino's API does not give it"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 34.88; 30d 4.80; 7d 7.86 (https://defillama.com/yields/pool/0cdd7f84-711e-4cd4-916d-da318857559a; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.kamino.finance/kamino-market/<market>/reserves/metrics agrees on supply and rate. usd_vault, not usd_lend: its book is not majors."
+ },
+ {
+  "id": "lending:kamino-huma-pyusd",
+  "name": "PYUSD Sentora Huma PST Market reserve (Kamino)",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 5.149,
+  "tvl": 4745941,
+  "pool": "9db5e743-5926-50ad-ab26-9a314b078be5",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 414329,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "market reserve, RWA or non-major collateral",
+  "symbol": "PYUSD",
+  "flags": [
+   "only 9 days of history",
+   "reserve deposit limit not read: Kamino's API does not give it"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 5.61; 30d 5.15; 7d 5.30 (https://defillama.com/yields/pool/9db5e743-5926-50ad-ab26-9a314b078be5; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.kamino.finance/kamino-market/<market>/reserves/metrics agrees on supply and rate. usd_vault, not usd_lend: its book is not majors."
+ },
+ {
+  "id": "lending:kamino-auto-pyusd",
+  "name": "PYUSD AUTO Market reserve (Kamino)",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 5.145,
+  "tvl": 3885855,
+  "pool": "e09caefd-6ec3-5e4b-bbb7-9c7c3b752483",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": 322577,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "market reserve, RWA or non-major collateral",
+  "symbol": "PYUSD",
+  "flags": [
+   "reserve deposit limit not read: Kamino's API does not give it"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 5.14; 30d 5.28; 7d 6.08 (https://defillama.com/yields/pool/e09caefd-6ec3-5e4b-bbb7-9c7c3b752483; 7d = mean of the chart's last 7 days). DefiLlama tvlUsd here is idle cash, not the market: the scorer refuses it under $3M. tvl = totalSupplyUsd from https://yields.llama.fi/lendBorrow; https://api.kamino.finance/kamino-market/<market>/reserves/metrics agrees on supply and rate. usd_vault, not usd_lend: its book is not majors."
+ },
+ {
+  "id": "lending:grove-steak-base",
+  "name": "grove-steakUSDC Morpho vault (Base)",
+  "family": "usd_lend",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Base",
+  "rate": 5.067,
+  "tvl": 542970838,
+  "pool": "28470287-2c5b-5744-bc13-b9f1c0190b7b",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "majors book",
+  "symbol": "GROVE-STEAKUSDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 5.08; 30d 5.07; 7d 5.99; Morpho now 5.32 (https://defillama.com/yields/pool/28470287-2c5b-5744-bc13-b9f1c0190b7b; 7d = mean of the chart's last 7 days). DefiLlama marks this exposure=multi for the hyphen in its symbol; it has one underlying token and is a Morpho vault. score.py line 190 prices it as lp_volatile. Vault 0xbeef0786756810478b88982de00f3cd7fdb8e7c7 chain 8453: https://api.morpho.org/graphql read 2026-11-04: totalAssets $543.0M, no reward now 5.32, 7d 6.08, 30d 5.01; no gate of the four; share against WETH, wstETH, WBTC, cbBTC 1.0; biggest [['cbBTC', 495.26], ['WETH', 47.71]]."
+ },
+ {
+  "id": "lending:grove-bbq-eth",
+  "name": "grove-bbqUSDC Morpho vault (Ethereum)",
+  "family": "usd_lend",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 4.531,
+  "tvl": 42925818,
+  "pool": "02db57d9-3ba8-40b9-9ae5-557a4da4b3df",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "majors book",
+  "symbol": "GROVE-BBQUSDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 5.08; 30d 4.63; 7d 5.18; Morpho now 4.53 (https://defillama.com/yields/pool/02db57d9-3ba8-40b9-9ae5-557a4da4b3df; 7d = mean of the chart's last 7 days). DefiLlama marks this exposure=multi for the hyphen in its symbol; it has one underlying token and is a Morpho vault. score.py line 190 prices it as lp_volatile. Vault 0xbeeff08df54897e7544ab01d0e86f013da354111 chain 1: https://api.morpho.org/graphql read 2026-11-04: totalAssets $42.9M, no reward now 4.53, 7d 5.16, 30d 4.64; no gate of the four; share against WETH, wstETH, WBTC, cbBTC 1.0; biggest [['cbBTC', 40.42], ['WBTC', 2.08], ['wstETH', 0.21]]."
+ },
+ {
+  "id": "lending:kpk-prime",
+  "name": "KPK USDC Prime Morpho vault (Ethereum)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 4.759,
+  "tvl": 31174977,
+  "pool": "052e3f85-e489-4bee-9e34-c7898ef1d449",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "KPK_USDC_PRIME",
+  "flags": [
+   "against majors: 0.815 on WETH, wstETH, WBTC, cbBTC; 0.915 on the scorer's eight (line 44), which is what puts it in Conservative"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 5.22; 30d 4.76; 7d 5.31; Morpho now 4.79 (https://defillama.com/yields/pool/052e3f85-e489-4bee-9e34-c7898ef1d449; 7d = mean of the chart's last 7 days). DefiLlama marks this exposure=multi for the hyphen in its symbol; it has one underlying token and is a Morpho vault. score.py line 190 prices it as lp_volatile. Vault 0x4ef53d2caa51c447fdfeeedee8f07fd1962c9ee6 chain 1: https://api.morpho.org/graphql read 2026-11-04: totalAssets $31.2M, no reward now 4.79, 7d 5.30, 30d 4.77; no gate of the four; share against WETH, wstETH, WBTC, cbBTC 0.815; biggest [['cbBTC', 14.14], ['WBTC', 7.71], ['rETH', 3.13]]."
+ },
+ {
+  "id": "lending:kpk-yield-eth",
+  "name": "KPK USDC Yield Morpho vault (Ethereum)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 6.248,
+  "tvl": 16662397,
+  "pool": "4c1b8c3d-3b3d-4dac-b334-49c405d9bf8f",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "KPK_USDC_YIELD",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 6.71; 30d 6.67; 7d 6.51; Morpho now 6.25 (https://defillama.com/yields/pool/4c1b8c3d-3b3d-4dac-b334-49c405d9bf8f; 7d = mean of the chart's last 7 days). DefiLlama marks this exposure=multi for the hyphen in its symbol; it has one underlying token and is a Morpho vault. score.py line 190 prices it as lp_volatile. Vault 0xd5cce260e7a755ddf0fb9cdf06443d593aaeaa13 chain 1: https://api.morpho.org/graphql read 2026-11-04: totalAssets $16.7M, no reward now 6.25, 7d 6.49, 30d 6.52; no gate of the four; share against WETH, wstETH, WBTC, cbBTC 0.0; biggest [['savUSD', 7.67], ['PT-siUSD-7JAN2027', 3.6], ['USD3', 2.99]]."
+ },
+ {
+  "id": "lending:kpk-yield-base",
+  "name": "KPK USDC Yield Morpho vault (Base)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Base",
+  "rate": 5.846,
+  "tvl": 4591700,
+  "pool": "9552e250-19fd-595b-85bd-f76ae0e1b2b6",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "KPK_USDC_YIELD",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 5.85; 30d 7.13; 7d 7.44; Morpho now 6.35 (https://defillama.com/yields/pool/9552e250-19fd-595b-85bd-f76ae0e1b2b6; 7d = mean of the chart's last 7 days). DefiLlama marks this exposure=multi for the hyphen in its symbol; it has one underlying token and is a Morpho vault. score.py line 190 prices it as lp_volatile. Vault 0x392b3ccf36c8adb8094f45573346b457414cd752 chain 8453: https://api.morpho.org/graphql read 2026-11-04: totalAssets $4.6M, no reward now 6.35, 7d 7.63, 30d 6.42; no gate of the four; share against WETH, wstETH, WBTC, cbBTC 0.01; biggest [['savUSD', 3.64], ['mGLO', 0.91], ['cbBTC', 0.05]]."
+ },
+ {
+  "id": "lending:3f-steak",
+  "name": "3F steakUSDC Morpho vault (Ethereum)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 4.788,
+  "tvl": 15865444,
+  "pool": "775d91ae-e10e-4bd9-a444-9caf0d18d85d",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "3F-STEAKUSDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 4.91; 30d 4.79; 7d 5.46; Morpho now 4.81 (https://defillama.com/yields/pool/775d91ae-e10e-4bd9-a444-9caf0d18d85d; 7d = mean of the chart's last 7 days). DefiLlama marks this exposure=multi for the hyphen in its symbol; it has one underlying token and is a Morpho vault. score.py line 190 prices it as lp_volatile. Vault 0xbeef3f3a04e28895f3d5163d910474901981183d chain 1: https://api.morpho.org/graphql read 2026-11-04: totalAssets $15.9M, no reward now 4.81, 7d 5.46, 30d 4.80; no gate of the four; share against WETH, wstETH, WBTC, cbBTC 0.0; biggest [['wFalconX', 7.14], ['wUSCC', 6.36], ['wJAAA', 2.22]]."
+ },
+ {
+  "id": "lending:ymvog",
+  "name": "ymvOG-USDC Morpho vault (Ethereum)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 5.989,
+  "tvl": 10256708,
+  "pool": "0b5fa01f-9759-4401-b15b-f9ed6fd06e2b",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "YMVOG-USDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 7.18; 30d 7.27; 7d 8.54; Morpho now 5.99 (https://defillama.com/yields/pool/0b5fa01f-9759-4401-b15b-f9ed6fd06e2b; 7d = mean of the chart's last 7 days). DefiLlama marks this exposure=multi for the hyphen in its symbol; it has one underlying token and is a Morpho vault. score.py line 190 prices it as lp_volatile. Vault 0xf9bddd4a9b3a45f980e11fdde96e16364ddbec49 chain 1: https://api.morpho.org/graphql read 2026-11-04: totalAssets $10.3M, no reward now 5.99, 7d 8.46, 30d 6.89; no gate of the four; share against WETH, wstETH, WBTC, cbBTC 0.196; biggest [['PT-USD3-17DEC2026', 3.06], ['siUSD', 2.55], ['cbBTC', 2.01]]."
+ },
+ {
+  "id": "lending:api3-dcomp",
+  "name": "Api3 dCOMP USDC Morpho vault (Ethereum)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 12.507,
+  "tvl": 9229450,
+  "pool": "58c04b13-6220-4122-9fa9-6845058f1d71",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "API3-DCOMP-USDC",
+  "flags": [
+   "30-day mean 17.64 rests on spikes: median 7.29",
+   "rate swings: Morpho 7-day 47%, DefiLlama today 31.7%"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 31.70; 30d 16.87; 7d 51.92; Morpho now 12.51 (https://defillama.com/yields/pool/58c04b13-6220-4122-9fa9-6845058f1d71; 7d = mean of the chart's last 7 days). DefiLlama marks this exposure=multi for the hyphen in its symbol; it has one underlying token and is a Morpho vault. score.py line 190 prices it as lp_volatile. Vault 0x36cfe1568461e499391ef0a555300f1ae2da2439 chain 1: https://api.morpho.org/graphql read 2026-11-04: totalAssets $9.2M, no reward now 12.51, 7d 47.00, 30d 15.40; no gate of the four; share against WETH, wstETH, WBTC, cbBTC 0.0; biggest [['dCOMP', 9.23], ['wstETH', 0.0], ['cbBTC', 0.0]]."
+ },
+ {
+  "id": "lending:tori-ausd",
+  "name": "sbAUSD-Tori Morpho vault (Monad)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Monad",
+  "rate": 5.446,
+  "tvl": 7202497,
+  "pool": "01af270b-f10c-57b4-8ae2-34c9c6f085ad",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "SBAUSD-TORI-MON",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 5.94; 30d 11.45; 7d 8.36; Morpho now 5.45 (https://defillama.com/yields/pool/01af270b-f10c-57b4-8ae2-34c9c6f085ad; 7d = mean of the chart's last 7 days). DefiLlama marks this exposure=multi for the hyphen in its symbol; it has one underlying token and is a Morpho vault. score.py line 190 prices it as lp_volatile. Vault 0x790e4f829fe865d432c4ea83b8b15f8871415b6c chain 143: https://api.morpho.org/graphql read 2026-11-04: totalAssets $7.2M, no reward now 5.45, 7d 8.39, 30d 7.78; no gate of the four; share against WETH, wstETH, WBTC, cbBTC 0.0; biggest [['strUSD', 7.1], ['PT-strUSD-4FEB2027', 0.1]]."
+ },
+ {
+  "id": "lending:spark-base",
+  "name": "sparkUSDC Morpho vault (Base)",
+  "family": "usd_lend",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Base",
+  "rate": 4.491,
+  "tvl": 496502023,
+  "pool": "a5fab52f-73fa-4f44-9c09-9af1eb20996c",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "majors book",
+  "symbol": "SPARKUSDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 4.56; 30d 4.49; 7d 5.37; Morpho now 4.78 (https://defillama.com/yields/pool/a5fab52f-73fa-4f44-9c09-9af1eb20996c; 7d = mean of the chart's last 7 days). Vault 0x7BfA7C4f149E7415b73bdeDfe609237e29CBF34A: book [['cbBTC', 496.5], ['WETH', 0.0]], 100% cbBTC and WETH. score.py line 125 gives 0.0 because two empty vaults with the same symbol on Base (0x32ed54E2, 0x305E03Ed) overwrite the key after it. Morpho API read 2026-11-04."
+ },
+ {
+  "id": "lending:direct-ec6a71a7",
+  "name": "HYPERUSDCA Morpho vault, direct USDC (Monad)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Monad",
+  "rate": 7.837,
+  "tvl": 40976509,
+  "pool": "ec6a71a7-41ae-4e72-942f-b4bc99c3b3cb",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "HYPERUSDCA",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 7.84; 30d 8.20; 7d 9.58 (https://defillama.com/yields/pool/ec6a71a7-41ae-4e72-942f-b4bc99c3b3cb; 7d = mean of the chart's last 7 days). Underlying is Monad native USDC 0x754704bc059f8c67012fed69bc8a327a5aafb603: a deposit swaps nothing. score.py line 32 does not hold this address, so its own row carries first_bps 10, $5.00 on $5,000."
+ },
+ {
+  "id": "lending:direct-0b033747",
+  "name": "AUGUSTUSDCV2 Morpho vault, direct USDC (Monad)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Monad",
+  "rate": 6.849,
+  "tvl": 10529521,
+  "pool": "0b033747-3a22-486b-a600-9958b878bef7",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "AUGUSTUSDCV2",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 6.85; 30d 9.50; 7d 7.19 (https://defillama.com/yields/pool/0b033747-3a22-486b-a600-9958b878bef7; 7d = mean of the chart's last 7 days). Underlying is Monad native USDC 0x754704bc059f8c67012fed69bc8a327a5aafb603: a deposit swaps nothing. score.py line 32 does not hold this address, so its own row carries first_bps 10, $5.00 on $5,000."
+ },
+ {
+  "id": "lending:direct-e6cd1ce0",
+  "name": "SATUSDC Morpho vault, direct USDC (Monad)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Monad",
+  "rate": 7.25,
+  "tvl": 9434266,
+  "pool": "e6cd1ce0-d34b-5c5f-86f1-26dedf428fa7",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "SATUSDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 7.25; 30d 8.52; 7d 9.09 (https://defillama.com/yields/pool/e6cd1ce0-d34b-5c5f-86f1-26dedf428fa7; 7d = mean of the chart's last 7 days). Underlying is Monad native USDC 0x754704bc059f8c67012fed69bc8a327a5aafb603: a deposit swaps nothing. score.py line 32 does not hold this address, so its own row carries first_bps 10, $5.00 on $5,000."
+ },
+ {
+  "id": "lending:direct-8622e84a",
+  "name": "FEUSDC Morpho vault, direct USDC (HyperEVM)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "HyperEVM",
+  "rate": 4.969,
+  "tvl": 3232582,
+  "pool": "8622e84a-794b-4b68-aad2-a6a2e0e0d2c7",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "FEUSDC",
+  "flags": [],
+  "gate": null,
+  "source": "rate: lowest of now 5.42; 30d 4.97; 7d 6.24 (https://defillama.com/yields/pool/8622e84a-794b-4b68-aad2-a6a2e0e0d2c7; 7d = mean of the chart's last 7 days). Underlying is Hyperliquid L1 native USDC 0xb88339cb7199b77e23db6e890353e22632ba630f: a deposit swaps nothing. score.py line 32 does not hold this address, so its own row carries first_bps 10, $5.00 on $5,000."
+ },
+ {
+  "id": "lending:fe-usdt0-v2",
+  "name": "Felix feUSDT0 v2 Morpho vault (HyperEVM)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "HyperEVM",
+  "rate": 7.164,
+  "tvl": 4882768,
+  "pool": "0x6fF35ae1BAD0Edc0Cf354E0cd64f10e4D1726f57",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "FEUSDT0V2",
+  "flags": [
+   "not listed on Morpho's own app: deposit through the contract or the curator's site"
+  ],
+  "gate": null,
+  "source": "No DefiLlama row. https://api.morpho.org/graphql vault 0x6fF35ae1BAD0Edc0Cf354E0cd64f10e4D1726f57 read 2026-11-04: no-reward now 9.45, 7d 8.79, 30d 7.16; gatesConfig all four empty; $4.9M."
+ },
+ {
+  "id": "lending:fe-usdc-v2",
+  "name": "Felix feUSDC v2 Morpho vault (HyperEVM)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "HyperEVM",
+  "rate": 5.022,
+  "tvl": 7443148,
+  "pool": "0x51254785367d73A10a2Ea7d44B8e97b749BfbE8b",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "FEUSDCV2",
+  "flags": [
+   "not listed on Morpho's own app: deposit through the contract or the curator's site"
+  ],
+  "gate": null,
+  "source": "No DefiLlama row. https://api.morpho.org/graphql vault 0x51254785367d73A10a2Ea7d44B8e97b749BfbE8b read 2026-11-04: no-reward now 7.08, 7d 6.33, 30d 5.02; gatesConfig all four empty; $7.4M."
+ },
+ {
+  "id": "lending:utorg-yield",
+  "name": "utorg Yield USDC Morpho vault (Ethereum)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 6.006,
+  "tvl": 7170395,
+  "pool": "0xE48fc1A3fD6C3Da483FB587d6C24151E402BE02c",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "UTORGYIELDUSDC",
+  "flags": [
+   "not listed on Morpho's own app: deposit through the contract or the curator's site",
+   "wraps roxUSDCy"
+  ],
+  "gate": null,
+  "source": "No DefiLlama row. https://api.morpho.org/graphql vault 0xE48fc1A3fD6C3Da483FB587d6C24151E402BE02c read 2026-11-04: no-reward now 6.01, 7d 10.65, 30d 7.67; gatesConfig all four empty; $7.2M."
+ },
+ {
+  "id": "lending:fluidkey-y",
+  "name": "Fluidkey USDCy Morpho vault (Base)",
+  "family": "usd_vault",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [],
+  "chain": "Base",
+  "rate": 5.288,
+  "tvl": 3659471,
+  "pool": "0x7C29B2699a508831D444730cD34d99e0aD2D2624",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "FLUIDKEYUSDCY",
+  "flags": [
+   "not listed on Morpho's own app: deposit through the contract or the curator's site",
+   "wraps a Morpho vault"
+  ],
+  "gate": null,
+  "source": "No DefiLlama row. https://api.morpho.org/graphql vault 0x7C29B2699a508831D444730cD34d99e0aD2D2624 read 2026-11-04: no-reward now 5.29, 7d 6.56, 30d 5.36; gatesConfig all four empty; $3.7M."
+ },
+ {
+  "id": "lending:kamino-elemental-turbo",
+  "name": "Elemental USDC Turbo Kamino vault",
+  "family": "usd_vault",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 7.653,
+  "tvl": 3370887,
+  "pool": "3041157b-9715-5afc-b1a8-737d31e8bbed",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "OnRe, private commodity reserve",
+  "symbol": "USDC",
+  "flags": [
+   "DefiLlama row of the same vault (old name Elemental USDC Optimizer) reads 6.47 on its 30-day mean"
+  ],
+  "gate": null,
+  "source": "https://api.kamino.finance/kvaults/vaults/A3hTCWdnfV6uiQLxRmnv17EpiEtmc93v1AGQnWy44Mup/metrics read 2026-11-04: apy 7.65, 7d 8.20, 30d 7.74, from share price, reward rates separate and 0.07 at most. Total $3.37M. Row: https://defillama.com/yields/pool/3041157b-9715-5afc-b1a8-737d31e8bbed"
+ },
+ {
+  "id": "lending:yearn-og",
+  "name": "Yearn OG USDC Compounder (Ethereum)",
+  "family": "usd_vault",
+  "platforms": [
+   "yearn-finance"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 7.105,
+  "tvl": 7470462,
+  "pool": "90cb9575-6a55-4900-9536-ead80c7dfa6c",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "YSUSDC",
+  "flags": [
+   "wraps ymvOG-USDC on Morpho",
+   "off their list"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 7.36; 30d 7.11; 7d 7.28 (https://defillama.com/yields/pool/90cb9575-6a55-4900-9536-ead80c7dfa6c; 7d = mean of the chart's last 7 days). Vault 0x0e297dE4005883C757c9F09fdF7cF1363C20e626: https://ydaemon.yearn.fi/1/vaults/all, net 7.36 month, 9.10 week, $7.47M. Yearn V3 deposit is open."
+ },
+ {
+  "id": "lending:upshift-x",
+  "name": "Upshift xUPUSDC vault (Ethereum)",
+  "family": "usd_vault",
+  "platforms": [
+   "upshift"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 13.15,
+  "tvl": 15176744,
+  "pool": "8768d803-b5a8-40a7-a67f-501108e9cb8a",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "XUPUSDC",
+  "flags": [
+   "this vault's own gate not read: Upshift contracts accept any account, partners may add KYC",
+   "same rate every day, a published figure",
+   "off their list"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 13.15; 30d 13.15; 7d 13.15 (https://defillama.com/yields/pool/8768d803-b5a8-40a7-a67f-501108e9cb8a; 7d = mean of the chart's last 7 days). https://web3-ethereum-defi.readthedocs.io/vaults/upshift/index.html, https://docs.upshift.finance/faq"
+ },
+ {
+  "id": "lending:sentora-usd",
+  "name": "Sentora USD Earn on Upshift (Ethereum)",
+  "family": "usd_vault",
+  "platforms": [
+   "sentora-curator"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 7.478,
+  "tvl": 112899316,
+  "pool": "f4200c7d-d3fd-5b88-9398-ba66eac63a03",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "SENTUSD",
+  "flags": [
+   "this vault's own gate not read",
+   "off their list"
+  ],
+  "gate": null,
+  "source": "rate: lowest of now 7.48; 30d 7.54; 7d 7.53 (https://defillama.com/yields/pool/f4200c7d-d3fd-5b88-9398-ba66eac63a03; 7d = mean of the chart's last 7 days). https://tradingstrategy.ai/vaults/sentora-usd-earn"
+ }
+]

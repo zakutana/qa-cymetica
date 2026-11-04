@@ -1,0 +1,2318 @@
+[
+ {
+  "id": "pendle:hold:1:0x3428088226",
+  "name": "PT-wstETH 2027-12-30 hold (quoted)",
+  "family": "pt_hold_other",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.3092,
+  "tvl": 5083511.569381355,
+  "pool": "1-0xb253eff1104802b97ac7e3ac9fdd73aece295a2c",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 14.1,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-WSTETH",
+  "flags": [
+   "PT matures in 420 days",
+   "Pendle fee 5.0 bp a year x 420/365 = 5.76 bp",
+   "Pendle AMM $5.08M",
+   "Lido wstETH",
+   "at $100,000 entry costs 26 bp (AMM 75.6, aggregator -1.7)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x34280882267ffa6383b363e278b027be083bbe3b/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 5.75 + AMM 8.32 + aggregator 4.48 bp; all-in against implied mid -35.4 in, 17.3 out = 14.1 bp; https://app.pendle.finance/trade/markets/0x34280882267ffa6383b363e278b027be083bbe3b?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x9c560ebaf7",
+  "name": "PT-sUSDS 2026-11-26 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "sky-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 6.031,
+  "tvl": 3700181.169760673,
+  "pool": "1-0xdc169abe56461a2e0c034da431ac2a3ebf596094",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 1.5,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-SUSDS",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 11.3 bp a year x 21/365 = 0.66 bp",
+   "Pendle AMM $3.70M",
+   "Sky \"Savings USDS\" (asset USDS), no gate",
+   "matures inside the month: after 21 days the position is DefiLlama sky-lending SUSDS at 3.79%; held, the month's blended rate is 5.38%",
+   "at $100,000 entry costs 1 bp (AMM 1.1, aggregator -1.0)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x9c560ebaf78e596cbcc27411d633a74d628dd7dc/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 0.66 + AMM 0.80 + aggregator -0.96 bp; all-in against implied mid 1.0 in, -0.8 out = 1.5 bp; https://app.pendle.finance/trade/markets/0x9c560ebaf78e596cbcc27411d633a74d628dd7dc?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x4a5067c3ff",
+  "name": "PT-USD3 2026-12-17 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "3jane-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 15.543,
+  "tvl": 6063138.890794869,
+  "pool": "1-0x7f47c3e6b2c00fc4eb4d5ae50d0ab0ab6888eb4d",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 14.7,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-USD3",
+  "flags": [
+   "PT matures in 42 days",
+   "Pendle fee 28.6 bp a year x 42/365 = 3.32 bp",
+   "Pendle AMM $6.06M",
+   "3Jane USD3 (ERC-4626 on USDC), not Reserve USD3; no KYC per rwa.xyz and Yearn; $80M supply cap full: maxDeposit(any)=0 on chain, so only bought on a DEX; redeem atomic from idle",
+   "Pendle prices this PT's asset at $1.0077, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 8.11%",
+   "at $100,000 entry costs 36 bp (AMM 4.0, aggregator 29.9)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x4a5067c3ff1abb7449244025b0e37feaf77d8e3e/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 3.31 + AMM 2.74 + aggregator 8.53 bp; all-in against implied mid 12.9 in, 1.8 out = 14.7 bp; https://app.pendle.finance/trade/markets/0x4a5067c3ff1abb7449244025b0e37feaf77d8e3e?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x13285bcbc2",
+  "name": "PT-reUSD 2026-12-10 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "re"
+  ],
+  "chain": "Ethereum",
+  "rate": 11.8175,
+  "tvl": 13036853.301114846,
+  "pool": "1-0xecfafdc7741323a945a163ed068b5a3c43483957",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 4.0,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-REUSD",
+  "flags": [
+   "PT matures in 35 days",
+   "Pendle fee 22.1 bp a year x 35/365 = 2.14 bp",
+   "Pendle AMM $13.04M",
+   "Re Protocol Deposit Token: mint and redeem ask KYC/KYB (docs.re.xyz)",
+   "at $100,000 entry costs 7 bp (AMM 2.4, aggregator 3.8)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x13285bcbc27f92b47b4edb99d744c07b48c977c0/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 2.14 + AMM 1.89 + aggregator 3.58 bp; all-in against implied mid 6.8 in, -3.2 out = 4.0 bp; https://app.pendle.finance/trade/markets/0x13285bcbc27f92b47b4edb99d744c07b48c977c0?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x90b70c407f",
+  "name": "PT-reUSDe 2026-12-10 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "re"
+  ],
+  "chain": "Ethereum",
+  "rate": 18.2826,
+  "tvl": 4602783.676340786,
+  "pool": "1-0x2ae4f59e500b6ddeb88c480edf277eda54a00205",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 55.5,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-REUSDE",
+  "flags": [
+   "PT matures in 35 days",
+   "Pendle fee 34.0 bp a year x 35/365 = 3.29 bp",
+   "Pendle AMM $4.60M",
+   "Re reUSDe: mint and redeem ask KYC/KYB (docs.re.xyz)",
+   "at $100,000 entry costs 135 bp (AMM 5.8, aggregator 127.1)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x90b70c407f1077f8eb92bf423b44cd92329b737a/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 3.27 + AMM 3.50 + aggregator 24.37 bp; all-in against implied mid 29.9 in, 25.7 out = 55.5 bp; https://app.pendle.finance/trade/markets/0x90b70c407f1077f8eb92bf423b44cd92329b737a?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x7972de1c2f",
+  "name": "PT-sUSD3 2026-12-17 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "3jane-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 26.3528,
+  "tvl": 1212231.466599893,
+  "pool": "1-0x41f45d21502bde8211e94d94ef2eeebcfc48a6ac",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 18.6,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-SUSD3",
+  "flags": [
+   "PT matures in 42 days",
+   "Pendle fee 45.6 bp a year x 42/365 = 5.28 bp",
+   "Pendle AMM $1.21M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "3Jane sUSD3 junior tranche, one-month lock",
+   "Pendle prices this PT's asset at $1.0077, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 18.22%",
+   "at $100,000 entry costs 67 bp (AMM 9.9, aggregator 55.1)",
+   "no exit quote: exit taken as redemption at par at maturity"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x7972de1c2f9f11f622a188fbae8c0a943880424f/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 5.26 + AMM 8.33 + aggregator 8.36 bp; all-in against implied mid 18.6 in, 0.0 out = 18.6 bp; https://app.pendle.finance/trade/markets/0x7972de1c2f9f11f622a188fbae8c0a943880424f?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0xac028348c4",
+  "name": "PT-strUSD 2026-11-26 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "tori-finance"
+  ],
+  "chain": "Ethereum",
+  "rate": 12.4005,
+  "tvl": 4475067.633692481,
+  "pool": "1-0x74299580811e1c3c1a2831db079ba0a8f513998f",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 3.7,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-STRUSD",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 22.1 bp a year x 21/365 = 1.29 bp",
+   "Pendle AMM $4.48M",
+   "Tori \"Staked trUSD\"; direct mint asks KYC, swap on Curve or in their app asks none (IQ.wiki); 7-day cooldown",
+   "matures inside the month: after 21 days the position is DefiLlama tori-finance STRUSD at 9.95%; held, the month's blended rate is 11.69%",
+   "at $100,000 entry costs 7 bp (AMM 2.8, aggregator 2.9)",
+   "DEX cannot carry the exit at $5,000 (external -3896 bp): exit by the issuer's redemption after its wait"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0xac028348c46d3455899a2b9b50077c11960eaddb/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 1.29 + AMM 1.46 + aggregator 0.95 bp; all-in against implied mid 3.7 in, 0.0 out = 3.7 bp; https://app.pendle.finance/trade/markets/0xac028348c46d3455899a2b9b50077c11960eaddb?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x16d3126ee8",
+  "name": "PT-sUSN 2027-07-22 hold (quoted)",
+  "family": "pt_hold_other",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "noon"
+  ],
+  "chain": "Ethereum",
+  "rate": 8.6075,
+  "tvl": 1194526.8021016938,
+  "pool": "1-0x6a0efc272e8dd4fc5affea17376dcf107cbcbc0f",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 22.9,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-SUSN",
+  "flags": [
+   "PT matures in 259 days",
+   "Pendle fee 16.6 bp a year x 259/365 = 11.77 bp",
+   "Pendle AMM $1.19M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Noon sUSN (asset USN); KYC not read",
+   "at $100,000 entry costs 83 bp (AMM 61.5, aggregator 22.1)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x16d3126ee82ee36816499fb9db6f647c6addd09c/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 11.74 + AMM 11.16 + aggregator 2.47 bp; all-in against implied mid 13.7 in, -7.2 out = 22.9 bp; https://app.pendle.finance/trade/markets/0x16d3126ee82ee36816499fb9db6f647c6addd09c?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x4ccf6deb3d",
+  "name": "PT-USDat 2027-01-14 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "saturn"
+  ],
+  "chain": "Ethereum",
+  "rate": 7.7822,
+  "tvl": 1462090.629516526,
+  "pool": "1-0xba96292ee7673e3b546cc90db6d97111cd9a314f",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 6.6,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-USDAT",
+  "flags": [
+   "PT matures in 70 days",
+   "Pendle fee 14.6 bp a year x 70/365 = 2.81 bp",
+   "Pendle AMM $1.46M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Saturn USDat: mint and redeem for KYC-onboarded addresses only",
+   "at $100,000 entry costs 12 bp (AMM 6.8, aggregator 4.3)"
+  ],
+  "gate": "KYC: USDat mint and redeem for KYC-onboarded addresses only (stablecoin-dashboard, Yearn report on Saturn)",
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x4ccf6deb3d1895373f604b418ff55d8adae8b846/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 2.81 + AMM 3.81 + aggregator 2.26 bp; all-in against implied mid 7.4 in, -3.9 out = 6.6 bp; https://app.pendle.finance/trade/markets/0x4ccf6deb3d1895373f604b418ff55d8adae8b846?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0xb6fe0f0811",
+  "name": "PT-sUSDat 2027-01-14 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "saturn"
+  ],
+  "chain": "Ethereum",
+  "rate": 14.1322,
+  "tvl": 1388491.1750527213,
+  "pool": "1-0x0b985c624bb2949432cce77cfd246f01390a0517",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 38.0,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-SUSDAT",
+  "flags": [
+   "PT matures in 70 days",
+   "Pendle fee 27.4 bp a year x 70/365 = 5.27 bp",
+   "Pendle AMM $1.39M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Saturn sUSDat (asset USDat), queued redemption",
+   "Pendle prices this PT's asset at $0.9968, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 15.90%",
+   "at $100,000 entry costs -2 bp (AMM 18.6, aggregator 43.1)"
+  ],
+  "gate": "KYC: USDat mint and redeem for KYC-onboarded addresses only (stablecoin-dashboard, Yearn report on Saturn)",
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0xb6fe0f0811931a38aa97534bac3c147437223e38/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 5.25 + AMM 7.24 + aggregator 25.22 bp; all-in against implied mid -31.0 in, 69.0 out = 38.0 bp; https://app.pendle.finance/trade/markets/0xb6fe0f0811931a38aa97534bac3c147437223e38?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x47ad2cd1dd",
+  "name": "PT-sUSDe 2026-11-26 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 4.8449,
+  "tvl": 5059451.181176796,
+  "pool": "1-0xb195b618ea52b77cb2a58846f452f59f8dfa9390",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 2.3,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-SUSDE",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 9.8 bp a year x 21/365 = 0.57 bp",
+   "Pendle AMM $5.06M",
+   "Ethena sUSDe \"Staked USDe\" (asset USDe); staking open, 7-day cooldown",
+   "matures inside the month: after 21 days the position is DefiLlama ethena-usde SUSDE at 4.99%; held, the month's blended rate is 4.89%",
+   "at $100,000 entry costs 2 bp (AMM 1.3, aggregator -0.8)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x47ad2cd1dd15739a7a035b9d3b7828d916fef77e/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 0.57 + AMM 0.68 + aggregator -1.05 bp; all-in against implied mid 1.5 in, 0.7 out = 2.3 bp; https://app.pendle.finance/trade/markets/0x47ad2cd1dd15739a7a035b9d3b7828d916fef77e?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0xbeab098b51",
+  "name": "PT-sUSDD 2026-11-26 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "usdd"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.4127,
+  "tvl": 5139795.405474857,
+  "pool": "1-0x459bcab2490843ad1fe1e4feff7f7ea16a14408b",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 1.3,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-SUSDD",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 10.1 bp a year x 21/365 = 0.59 bp",
+   "Pendle AMM $5.14M",
+   "TRON DAO Reserve \"Savings USDD\" (asset USDD)",
+   "Pendle prices this PT's asset at $0.9962, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 12.60%",
+   "matures inside the month: after 21 days the position is Pendle underlyingApy at 4.00%; held, the month's blended rate is 5.01%",
+   "at $100,000 entry costs 31 bp (AMM 1.0, aggregator 28.3)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0xbeab098b510f758cd35122ee345957b8eccbb322/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 0.59 + AMM 0.70 + aggregator 28.45 bp; all-in against implied mid 30.6 in, -30.6 out = 1.3 bp; https://app.pendle.finance/trade/markets/0xbeab098b510f758cd35122ee345957b8eccbb322?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x0bef762d20",
+  "name": "PT-USDx 2026-12-03 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "axis"
+  ],
+  "chain": "Ethereum",
+  "rate": 12.557,
+  "tvl": 1812947.6803102184,
+  "pool": "1-0xa4b3a2eec53863fe2c9ab0041d480cf964942e84",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 3.9,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-USDX",
+  "flags": [
+   "PT matures in 28 days",
+   "Pendle fee 22.3 bp a year x 28/365 = 1.73 bp",
+   "Pendle AMM $1.81M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Axis USDx, mint by approved counterparties",
+   "matures inside the month: after 28 days the position is Pendle underlyingApy at 0.00%; held, the month's blended rate is 11.86%",
+   "at $100,000 entry costs 2 bp (AMM 7.2, aggregator -6.5)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x0bef762d2094ac80821c657dea6783fc43435292/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 1.73 + AMM 2.20 + aggregator -7.19 bp; all-in against implied mid -3.7 in, 6.3 out = 3.9 bp; https://app.pendle.finance/trade/markets/0x0bef762d2094ac80821c657dea6783fc43435292?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x5e572498e9",
+  "name": "PT-sUSDx 2026-12-03 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "axis"
+  ],
+  "chain": "Ethereum",
+  "rate": 16.9614,
+  "tvl": 7040533.180011124,
+  "pool": "1-0x06ebad062fd573ca31a72d6dfb0f425da2153985",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 4.9,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-SUSDX",
+  "flags": [
+   "PT matures in 28 days",
+   "Pendle fee 30.5 bp a year x 28/365 = 2.37 bp",
+   "Pendle AMM $7.04M",
+   "Axis USD sUSDx (asset USDx 0xa1fa7777), not Stables Labs USDX; mint by approved counterparties, 7-day cooldown",
+   "matures inside the month: after 28 days the position is DefiLlama axis SUSDX at 15.54%; held, the month's blended rate is 16.88%",
+   "at $100,000 entry costs -2 bp (AMM 3.3, aggregator -6.6)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x5e572498e9f83650f0ff24194999bddb4b390928/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 2.36 + AMM 2.54 + aggregator -10.75 bp; all-in against implied mid -6.9 in, 7.8 out = 4.9 bp; https://app.pendle.finance/trade/markets/0x5e572498e9f83650f0ff24194999bddb4b390928?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0xd44f263026",
+  "name": "PT-siUSD 2027-01-07 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "infinifi"
+  ],
+  "chain": "Ethereum",
+  "rate": 9.3086,
+  "tvl": 17286884.467191424,
+  "pool": "1-0x76543ac61ba84c6feeee76c6a918127bf0ca5fd1",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 6.2,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-SIUSD",
+  "flags": [
+   "PT matures in 63 days",
+   "Pendle fee 17.5 bp a year x 63/365 = 3.05 bp",
+   "Pendle AMM $17.29M",
+   "infiniFi \"Staked iUSD\" siUSD, permissionless per Yield.xyz docs",
+   "at $100,000 entry costs 5 bp (AMM 3.3, aggregator -0.0)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0xd44f2630260ff3805d7cb317d4f6740b0044c408/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 3.04 + AMM 3.17 + aggregator -0.00 bp; all-in against implied mid 4.5 in, -3.6 out = 6.2 bp; https://app.pendle.finance/trade/markets/0xd44f2630260ff3805d7cb317d4f6740b0044c408?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0xb8858f53f7",
+  "name": "PT-mAPOLLO 2027-03-18 hold (quoted)",
+  "family": "pt_hold_other",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "midas-rwa"
+  ],
+  "chain": "Ethereum",
+  "rate": 7.0437,
+  "tvl": 2899766.0392542263,
+  "pool": "1-0xd9fa32c4a0d9d58d1e75e8159b9c4b1c545143d8",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10.6,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-MAPOLLO",
+  "flags": [
+   "PT matures in 133 days",
+   "Pendle fee 13.5 bp a year x 133/365 = 4.95 bp",
+   "Pendle AMM $2.90M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Midas mAPOLLO; KYC not read",
+   "at $100,000 entry costs 11 bp (AMM 10.1, aggregator -0.0)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0xb8858f53f71a127a7a6e2d015c722bfbeb1810c3/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 4.94 + AMM 5.65 + aggregator -0.00 bp; all-in against implied mid 6.9 in, -6.1 out = 10.6 bp; https://app.pendle.finance/trade/markets/0xb8858f53f71a127a7a6e2d015c722bfbeb1810c3?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x687dedecd5",
+  "name": "PT-sUSDfr 2027-01-28 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "forest-road"
+  ],
+  "chain": "Ethereum",
+  "rate": 26.5487,
+  "tvl": 6310977.510972395,
+  "pool": "1-0xdbd5fb715b833fbea448ab756f02c7617ecb97be",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 23.0,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-SUSDFR",
+  "flags": [
+   "PT matures in 84 days",
+   "Pendle fee 48.7 bp a year x 84/365 = 11.25 bp",
+   "Pendle AMM $6.31M",
+   "Forest Road sUSDfr (asset USDfr): one aggregator calls it a KYC-gated credit protocol, no primary source read; Pendle quotes no USDC route out of it",
+   "at $100,000 entry costs 33 bp (AMM 20.4, aggregator 11.0)",
+   "no exit quote: exit taken as redemption at par at maturity"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x687dedecd5d2899ef497b3ff13af066ac3d152b0/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 11.21 + AMM 11.76 + aggregator 5.06 bp; all-in against implied mid 18.2 in, 0.0 out = 23.0 bp; https://app.pendle.finance/trade/markets/0x687dedecd5d2899ef497b3ff13af066ac3d152b0?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x313826e702",
+  "name": "PT-apyUSD 2027-02-11 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "apyx-protocol"
+  ],
+  "chain": "Ethereum",
+  "rate": 15.9343,
+  "tvl": 1014871.3600979802,
+  "pool": "1-0x60b1e75ede859e496c281d308bc94b6965ac4847",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 44.1,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-APYUSD",
+  "flags": [
+   "PT matures in 98 days",
+   "Pendle fee 30.1 bp a year x 98/365 = 8.11 bp",
+   "Pendle AMM $1.01M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Apyx apyUSD (asset apxUSD); primary mint whitelisted, 30-day redemption cooldown",
+   "Pendle prices this PT's asset at $0.9751, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 27.31%",
+   "at $100,000 entry costs 72 bp (AMM 15.2, aggregator 55.5)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x313826e7029fdf742f3076741ed220e0e7b4968d/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 8.05 + AMM 9.66 + aggregator 48.09 bp; all-in against implied mid 59.1 in, -14.9 out = 44.1 bp; https://app.pendle.finance/trade/markets/0x313826e7029fdf742f3076741ed220e0e7b4968d?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:1:0x9df10b8c99",
+  "name": "PT-fxSAVE 2027-04-29 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "fx-protocol"
+  ],
+  "chain": "Ethereum",
+  "rate": 7.6462,
+  "tvl": 1568268.94334749,
+  "pool": "1-0xc1ea9419dd1dab4dd54aa13b13a766e4de22ebc3",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 12.2,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-FXSAVE",
+  "flags": [
+   "PT matures in 175 days",
+   "Pendle fee 15.0 bp a year x 175/365 = 7.22 bp",
+   "Pendle AMM $1.57M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "f(x) \"f(x) USD Saving\" fxSAVE",
+   "Pendle prices this PT's asset at $1.0102, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 5.40%",
+   "at $100,000 entry costs 13 bp (AMM 9.3, aggregator 2.1)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/1/markets/0x9df10b8c99dc1a48dd7048a9a524bff9b54a0a30/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 7.21 + AMM 4.94 + aggregator 1.68 bp; all-in against implied mid 7.9 in, 1.3 out = 12.2 bp; https://app.pendle.finance/trade/markets/0x9df10b8c99dc1a48dd7048a9a524bff9b54a0a30?chain=ethereum"
+ },
+ {
+  "id": "pendle:hold:42161:0xf86119a39f",
+  "name": "PT-sUSDai 2027-02-25 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Arbitrum",
+  "rate": 9.5078,
+  "tvl": 5371854.406462225,
+  "pool": "42161-0xe9d07c2a3588b9a25edd55664be44ecfe5f92fce",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 12.4,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-SUSDAI",
+  "flags": [
+   "PT matures in 112 days",
+   "Pendle fee 19.6 bp a year x 112/365 = 6.04 bp",
+   "Pendle AMM $5.37M",
+   "USD.AI \"Staked USDai\" (asset USDai)",
+   "at $100,000 entry costs -16 bp (AMM 8.7, aggregator -26.4)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/42161/markets/0xf86119a39f8654f38acbbd5488bd83f3f51983c8/data and /core/v2/sdk/42161/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 6.05 + AMM 6.39 + aggregator -26.68 bp; all-in against implied mid -18.9 in, 21.3 out = 12.4 bp; https://app.pendle.finance/trade/markets/0xf86119a39f8654f38acbbd5488bd83f3f51983c8?chain=arbitrum"
+ },
+ {
+  "id": "pendle:hold:999:0xfc93d1ada3",
+  "name": "PT-limUSD 2026-11-26 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "liminal"
+  ],
+  "chain": "HyperEVM",
+  "rate": 8.364,
+  "tvl": 1230873.237484192,
+  "pool": "999-0x6b7cea9d070bbffd8205f256897319139cdef399",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 2.6,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-LIMUSD",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 16.3 bp a year x 21/365 = 0.95 bp",
+   "Pendle AMM $1.23M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "limUSD; KYC not read",
+   "matures inside the month: after 21 days the position is Pendle underlyingApy at 6.94%; held, the month's blended rate is 7.95%",
+   "at $100,000 entry costs 10 bp (AMM 8.2, aggregator -0.0)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/999/markets/0xfc93d1ada3277e6274c3905db0a2c81ac1252025/data and /core/v2/sdk/999/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 0.95 + AMM 1.68 + aggregator -0.00 bp; all-in against implied mid 3.0 in, -2.3 out = 2.6 bp; https://app.pendle.finance/trade/markets/0xfc93d1ada3277e6274c3905db0a2c81ac1252025?chain=hyperevm"
+ },
+ {
+  "id": "pendle:hold:999:0x350f588903",
+  "name": "PT-stHYPE 2027-01-28 hold (quoted)",
+  "family": "pt_hold_other",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "valantis-sthype"
+  ],
+  "chain": "HyperEVM",
+  "rate": 2.112,
+  "tvl": 1039585.1427938885,
+  "pool": "999-0xdb2921f8e92f9be500b8cb75f07fd9e857776ade",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 21.4,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-STHYPE",
+  "flags": [
+   "PT matures in 84 days",
+   "Pendle fee 4.1 bp a year x 84/365 = 0.96 bp",
+   "Pendle AMM $1.04M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "stHYPE; KYC not read",
+   "at $100,000 entry costs -39 bp (AMM 9.6, aggregator 13.3)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/999/markets/0x350f58890323c71348a7c58335154938aaf9fdca/data and /core/v2/sdk/999/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 0.95 + AMM 1.59 + aggregator 14.22 bp; all-in against implied mid -49.3 in, 70.7 out = 21.4 bp; https://app.pendle.finance/trade/markets/0x350f58890323c71348a7c58335154938aaf9fdca?chain=hyperevm"
+ },
+ {
+  "id": "pendle:hold:999:0x697dd29eed",
+  "name": "PT-kHYPE 2027-03-25 hold (quoted)",
+  "family": "pt_hold_other",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "kinetiq-khype"
+  ],
+  "chain": "HyperEVM",
+  "rate": 1.9118,
+  "tvl": 1906778.0254242683,
+  "pool": "999-0x9ccac9566fba516a5df00a23e81801b1f1cb57a8",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 3.6,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-KHYPE",
+  "flags": [
+   "PT matures in 140 days",
+   "Pendle fee 3.6 bp a year x 140/365 = 1.38 bp",
+   "Pendle AMM $1.91M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Kinetiq kHYPE",
+   "at $100,000 entry costs -80 bp (AMM 5.5, aggregator 1.4)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/999/markets/0x697dd29eed8e926205a08400a60d1578154c1a60/data and /core/v2/sdk/999/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 1.38 + AMM 2.19 + aggregator -5.80 bp; all-in against implied mid -90.1 in, 78.3 out = 3.6 bp; https://app.pendle.finance/trade/markets/0x697dd29eed8e926205a08400a60d1578154c1a60?chain=hyperevm"
+ },
+ {
+  "id": "pendle:hold:143:0x88c5d8a908",
+  "name": "PT-USDat 2027-01-14 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "saturn"
+  ],
+  "chain": "Monad",
+  "rate": 8.1259,
+  "tvl": 1334522.3414178025,
+  "pool": "143-0xa08a69ab9dd3b04d0992bc7afb2c0b907bbdc147",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 6.8,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-USDAT",
+  "flags": [
+   "PT matures in 70 days",
+   "Pendle fee 15.2 bp a year x 70/365 = 2.93 bp",
+   "Pendle AMM $1.33M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Saturn USDat, bridged",
+   "at $100,000 entry costs 12 bp (AMM 5.4, aggregator 5.0)"
+  ],
+  "gate": "KYC: USDat mint and redeem for KYC-onboarded addresses only (stablecoin-dashboard, Yearn report on Saturn)",
+  "source": "impliedApy Pendle api-v2 /core/v2/143/markets/0x88c5d8a908834e44b421cb67aec9a931782f9538/data and /core/v2/sdk/143/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 2.92 + AMM 3.87 + aggregator 3.29 bp; all-in against implied mid 8.5 in, -5.5 out = 6.8 bp; https://app.pendle.finance/trade/markets/0x88c5d8a908834e44b421cb67aec9a931782f9538?chain=monad"
+ },
+ {
+  "id": "pendle:hold:143:0x9cbc42eff2",
+  "name": "PT-AUSD 2026-12-17 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "agora"
+  ],
+  "chain": "Monad",
+  "rate": 5.4935,
+  "tvl": 2357925.728720286,
+  "pool": "143-0x8b562578b2f9aa8c14ccda3c5d6cbcead3b06a57",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 3.1,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-AUSD",
+  "flags": [
+   "PT matures in 42 days",
+   "Pendle fee 10.5 bp a year x 42/365 = 1.22 bp",
+   "Pendle AMM $2.36M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Agora AUSD (the DefiLlama row is Accountable vaults, not the issuer); mint by approved parties, held freely",
+   "at $100,000 entry costs 2 bp (AMM 1.8, aggregator -1.6)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/143/markets/0x9cbc42eff240ad2e43bbdc3c0562a9b4ce842a5a/data and /core/v2/sdk/143/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 1.22 + AMM 1.87 + aggregator -1.64 bp; all-in against implied mid 2.1 in, -0.7 out = 3.1 bp; https://app.pendle.finance/trade/markets/0x9cbc42eff240ad2e43bbdc3c0562a9b4ce842a5a?chain=monad"
+ },
+ {
+  "id": "pendle:hold:143:0xa9983573da",
+  "name": "PT-strUSD 2027-02-04 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "tori-finance"
+  ],
+  "chain": "Monad",
+  "rate": 11.4583,
+  "tvl": 1826190.4688479113,
+  "pool": "143-0x49a27506a607658956afb03ecbbf803a7075ea83",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 11.5,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-STRUSD",
+  "flags": [
+   "PT matures in 91 days",
+   "Pendle fee 21.8 bp a year x 91/365 = 5.45 bp",
+   "Pendle AMM $1.83M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Tori strUSD, bridged to Monad",
+   "at $100,000 entry costs 101 bp (AMM 7.8, aggregator 91.6)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/143/markets/0xa9983573da171b910ba48dd5372a0ad60f737096/data and /core/v2/sdk/143/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 5.41 + AMM 6.12 + aggregator 63.62 bp; all-in against implied mid 71.1 in, -62.1 out = 11.5 bp; https://app.pendle.finance/trade/markets/0xa9983573da171b910ba48dd5372a0ad60f737096?chain=monad"
+ },
+ {
+  "id": "pendle:hold:9745:0xdb96b529d1",
+  "name": "PT-sUSDe 2027-01-28 hold (quoted)",
+  "family": "pt_hold_dollar",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Plasma",
+  "rate": 4.3565,
+  "tvl": 1019840.9957519401,
+  "pool": "9745-0x257561233419039bec3a28be717d14b4f490883d",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 4.9,
+  "loop_bps": 0,
+  "gas": 1.0,
+  "meta": "",
+  "symbol": "PT-SUSDE",
+  "flags": [
+   "PT matures in 84 days",
+   "Pendle fee 9.0 bp a year x 84/365 = 2.08 bp",
+   "Pendle AMM $1.02M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Ethena sUSDe, bridged",
+   "at $100,000 entry costs 18 bp (AMM 6.0, aggregator -0.3)"
+  ],
+  "gate": null,
+  "source": "impliedApy Pendle api-v2 /core/v2/9745/markets/0xdb96b529d19ff4a7d711e6e082172c77cfe88ed8/data and /core/v2/sdk/9745/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 2.08 + AMM 2.84 + aggregator -4.47 bp; all-in against implied mid 10.3 in, -5.4 out = 4.9 bp; https://app.pendle.finance/trade/markets/0xdb96b529d19ff4a7d711e6e082172c77cfe88ed8?chain=plasma"
+ },
+ {
+  "id": "pendle:loop:morpho:0xfa7453a6a911",
+  "name": "PT-sUSDD-26NOV2026 / USDC loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "usdd"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.4127,
+  "tvl": 721662.3950592759,
+  "pool": "1-0x459bcab2490843ad1fe1e4feff7f7ea16a14408b",
+  "max_l": 11.75,
+  "borrow": 5.1362,
+  "borrow_week": 5.0611,
+  "free": 69955.293705971,
+  "lltv": 0.915,
+  "first_bps": 1.6,
+  "loop_bps": 1.6,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-SUSDD-26NOV2026",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 10.1 bp a year x 21/365 = 0.59 bp",
+   "Pendle AMM $5.14M",
+   "TRON DAO Reserve \"Savings USDD\" (asset USDD)",
+   "Pendle prices this PT's asset at $0.9962, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 12.60%",
+   "matures inside the month: after 21 days the position is Pendle underlyingApy at 4.00%; held, the month's blended rate is 5.01%",
+   "at $100,000 x 11.75 entry costs 31 bp (AMM 1.2, aggregator 28.5)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0xfa7453a6a9112c96e71e2042fbdc84d537fc8f4ac0ca11e8b0c31b17eacd56bc (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0xbeab098b510f758cd35122ee345957b8eccbb322/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 0.59 + AMM 1.01 + aggregator 28.32 bp; all-in against implied mid 30.9 in, -30.7 out = 1.6 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0xf8c5aa31ea6b",
+  "name": "PT-USD3-17DEC2026 / USDC loop 0.860 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "3jane-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 15.543,
+  "tvl": 19473712.37041639,
+  "pool": "1-0x7f47c3e6b2c00fc4eb4d5ae50d0ab0ab6888eb4d",
+  "max_l": 7.0,
+  "borrow": 8.9518,
+  "borrow_week": 13.2767,
+  "free": 2084032.5816669909,
+  "lltv": 0.86,
+  "first_bps": 38.7,
+  "loop_bps": 38.7,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-USD3-17DEC2026",
+  "flags": [
+   "PT matures in 42 days",
+   "Pendle fee 28.6 bp a year x 42/365 = 3.32 bp",
+   "Pendle AMM $6.06M",
+   "3Jane USD3 (ERC-4626 on USDC), not Reserve USD3; no KYC per rwa.xyz and Yearn; $80M supply cap full: maxDeposit(any)=0 on chain, so only bought on a DEX; redeem atomic from idle",
+   "Pendle prices this PT's asset at $1.0077, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 8.11%",
+   "at $100,000 x 7.0 the entry loses 6190 bp: the route does not carry that size",
+   "USD3 DEX depth from USDC: $58,750 costs 30 bp, $150,000 107, $300,000 1,463, $1,175,000 7,723: entry carries about $150,000 of position whatever the lender has free; NAV $1.1875, DEX 0.8% over it because the mint is full"
+  ],
+  "gate": null,
+  "source": "Morpho market 0xf8c5aa31ea6b2a068a9eddb46dd110cae57bf0f12be9583a3f9a818effecba89 (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x4a5067c3ff1abb7449244025b0e37feaf77d8e3e/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $35,000: Pendle fee 3.30 + AMM 3.24 + aggregator 19.28 bp; all-in against implied mid 24.2 in, 14.5 out = 38.7 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0xf062a110320d",
+  "name": "PT-strUSD-26NOV2026 / USDC loop 0.860 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "tori-finance"
+  ],
+  "chain": "Ethereum",
+  "rate": 12.4005,
+  "tvl": 768773.227129285,
+  "pool": "1-0x74299580811e1c3c1a2831db079ba0a8f513998f",
+  "max_l": 7.0,
+  "borrow": 9.1718,
+  "borrow_week": 13.969,
+  "free": 88514.83491669726,
+  "lltv": 0.86,
+  "first_bps": 5.4,
+  "loop_bps": 5.4,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-STRUSD-26NOV2026",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 22.1 bp a year x 21/365 = 1.29 bp",
+   "Pendle AMM $4.48M",
+   "Tori \"Staked trUSD\"; direct mint asks KYC, swap on Curve or in their app asks none (IQ.wiki); 7-day cooldown",
+   "matures inside the month: after 21 days the position is DefiLlama tori-finance STRUSD at 9.95%; held, the month's blended rate is 11.69%",
+   "at $100,000 x 7.0 entry costs 10 bp (AMM 3.6, aggregator 5.0)",
+   "no exit quote: exit taken as redemption at par at maturity",
+   "borrow was 13.97% over the week"
+  ],
+  "gate": null,
+  "source": "Morpho market 0xf062a110320da27e0e7e7d9e1bdf458dd51e2d2089e55f63ff9fd54f415ce35d (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0xac028348c46d3455899a2b9b50077c11960eaddb/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $35,000: Pendle fee 1.29 + AMM 2.52 + aggregator 1.52 bp; all-in against implied mid 5.4 in, 0.0 out = 5.4 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0xecabc12c73a9",
+  "name": "PT-USD3-17DEC2026 / USDC loop 0.860 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "3jane-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 15.543,
+  "tvl": 15514125.729891602,
+  "pool": "1-0x7f47c3e6b2c00fc4eb4d5ae50d0ab0ab6888eb4d",
+  "max_l": 7.0,
+  "borrow": 11.5297,
+  "borrow_week": 10.5283,
+  "free": 1141941.4077900453,
+  "lltv": 0.86,
+  "first_bps": 38.7,
+  "loop_bps": 38.7,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-USD3-17DEC2026",
+  "flags": [
+   "PT matures in 42 days",
+   "Pendle fee 28.6 bp a year x 42/365 = 3.32 bp",
+   "Pendle AMM $6.06M",
+   "3Jane USD3 (ERC-4626 on USDC), not Reserve USD3; no KYC per rwa.xyz and Yearn; $80M supply cap full: maxDeposit(any)=0 on chain, so only bought on a DEX; redeem atomic from idle",
+   "Pendle prices this PT's asset at $1.0077, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 8.11%",
+   "at $100,000 x 7.0 the entry loses 6190 bp: the route does not carry that size",
+   "USD3 DEX depth from USDC: $58,750 costs 30 bp, $150,000 107, $300,000 1,463, $1,175,000 7,723: entry carries about $150,000 of position whatever the lender has free; NAV $1.1875, DEX 0.8% over it because the mint is full"
+  ],
+  "gate": null,
+  "source": "Morpho market 0xecabc12c73a97c766d0c6aeb4c15c635630d78158b2ac8370455a09efcc50837 (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x4a5067c3ff1abb7449244025b0e37feaf77d8e3e/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $35,000: Pendle fee 3.30 + AMM 3.24 + aggregator 19.28 bp; all-in against implied mid 24.2 in, 14.5 out = 38.7 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0xd8dd3e1d051e",
+  "name": "PT-USDat-14JAN2027 / USDT loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "saturn"
+  ],
+  "chain": "Ethereum",
+  "rate": 7.7822,
+  "tvl": 10624060.898596847,
+  "pool": "1-0xba96292ee7673e3b546cc90db6d97111cd9a314f",
+  "max_l": 11.75,
+  "borrow": 6.1055,
+  "borrow_week": 10.1956,
+  "free": 1942304.9228275106,
+  "lltv": 0.915,
+  "first_bps": 10.9,
+  "loop_bps": 10.9,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-USDAT-14JAN2027",
+  "flags": [
+   "PT matures in 70 days",
+   "Pendle fee 14.6 bp a year x 70/365 = 2.81 bp",
+   "Pendle AMM $1.46M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Saturn USDat: mint and redeem for KYC-onboarded addresses only",
+   "at $100,000 x 11.75 entry costs 12 bp (AMM 6.8, aggregator 4.3)",
+   "borrow was 10.20% over the week"
+  ],
+  "gate": "KYC: USDat mint and redeem for KYC-onboarded addresses only (stablecoin-dashboard, Yearn report on Saturn)",
+  "source": "Morpho market 0xd8dd3e1d051eee97d1353a113982afac90612c775f393edea45ef7f20caec489 (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x4ccf6deb3d1895373f604b418ff55d8adae8b846/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 2.81 + AMM 6.78 + aggregator 4.28 bp; all-in against implied mid 12.4 in, -1.5 out = 10.9 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0xd21bbc238918",
+  "name": "PT-trUSD-26NOV2026 / USDC loop 0.945 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "tori-finance"
+  ],
+  "chain": "Ethereum",
+  "rate": 11.3798,
+  "tvl": 2018831.834721714,
+  "pool": "1-0x7191878f1fe834b28f4d0cead0e4375b814c4abb",
+  "max_l": 18.0,
+  "borrow": 9.6201,
+  "borrow_week": 12.5567,
+  "free": 220602.7674716129,
+  "lltv": 0.945,
+  "first_bps": 4.0,
+  "loop_bps": 4.0,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-TRUSD-26NOV2026",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 20.9 bp a year x 21/365 = 1.22 bp",
+   "Pendle AMM $0.80M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Tori trUSD; direct mint asks KYC, swap asks none (IQ.wiki)",
+   "matures inside the month: after 21 days the position is Pendle underlyingApy at 0.00%; held, the month's blended rate is 8.10%",
+   "at $100,000 x 18.0 entry costs 7 bp (AMM 2.7, aggregator 3.2)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0xd21bbc238918855461d943753ac4c90d103888e5661fd78f3378294c45f7d8df (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0xfcf009cb3135da12a6eb1f73f3ee05392a7bc947/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $90,000: Pendle fee 1.22 + AMM 2.68 + aggregator 3.15 bp; all-in against implied mid 7.2 in, -3.2 out = 4.0 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0xcbc07d381ec8",
+  "name": "PT-apyUSD-11FEB2027 / USDC loop 0.860 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "apyx-protocol"
+  ],
+  "chain": "Ethereum",
+  "rate": 15.9343,
+  "tvl": 512286.09856484446,
+  "pool": "1-0x60b1e75ede859e496c281d308bc94b6965ac4847",
+  "max_l": 7.0,
+  "borrow": 3.8573,
+  "borrow_week": 4.443,
+  "free": 91650.02054630226,
+  "lltv": 0.86,
+  "first_bps": 63.1,
+  "loop_bps": 63.1,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-APYUSD-11FEB2027",
+  "flags": [
+   "PT matures in 98 days",
+   "Pendle fee 30.1 bp a year x 98/365 = 8.11 bp",
+   "Pendle AMM $1.01M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Apyx apyUSD (asset apxUSD); primary mint whitelisted, 30-day redemption cooldown",
+   "Pendle prices this PT's asset at $0.9751, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 27.31%",
+   "at $100,000 x 7.0 entry costs 87 bp (AMM 16.0, aggregator 69.5)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0xcbc07d381ec87f070af7d94be1569458af6a95066933bb3f8f821a415ef88055 (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x313826e7029fdf742f3076741ed220e0e7b4968d/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $35,000: Pendle fee 8.04 + AMM 14.61 + aggregator 54.62 bp; all-in against implied mid 70.5 in, -7.5 out = 63.1 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0xc7e49dd40482",
+  "name": "PT-USDat-14JAN2027 / USDC loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "saturn"
+  ],
+  "chain": "Ethereum",
+  "rate": 7.7822,
+  "tvl": 8150881.060118287,
+  "pool": "1-0xba96292ee7673e3b546cc90db6d97111cd9a314f",
+  "max_l": 11.75,
+  "borrow": 7.1719,
+  "borrow_week": 12.0352,
+  "free": 1047533.0849584951,
+  "lltv": 0.915,
+  "first_bps": 10.9,
+  "loop_bps": 10.9,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-USDAT-14JAN2027",
+  "flags": [
+   "PT matures in 70 days",
+   "Pendle fee 14.6 bp a year x 70/365 = 2.81 bp",
+   "Pendle AMM $1.46M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Saturn USDat: mint and redeem for KYC-onboarded addresses only",
+   "at $100,000 x 11.75 entry costs 12 bp (AMM 6.8, aggregator 4.3)",
+   "borrow was 12.04% over the week"
+  ],
+  "gate": "KYC: USDat mint and redeem for KYC-onboarded addresses only (stablecoin-dashboard, Yearn report on Saturn)",
+  "source": "Morpho market 0xc7e49dd404825da16988955201ed22ecf8a7b25f0337db8a698d70d7a9f343ea (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x4ccf6deb3d1895373f604b418ff55d8adae8b846/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 2.81 + AMM 6.78 + aggregator 4.28 bp; all-in against implied mid 12.4 in, -1.5 out = 10.9 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0xbcdb9e4b0488",
+  "name": "PT-apyUSD-11FEB2027 / apxUSD loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "apyx-protocol"
+  ],
+  "chain": "Ethereum",
+  "rate": 15.9343,
+  "tvl": 349526.2483009784,
+  "pool": "1-0x60b1e75ede859e496c281d308bc94b6965ac4847",
+  "max_l": 11.75,
+  "borrow": 11.7277,
+  "borrow_week": 12.6693,
+  "free": 29804.50983989189,
+  "lltv": 0.915,
+  "first_bps": 64.5,
+  "loop_bps": 64.5,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-APYUSD-11FEB2027",
+  "flags": [
+   "PT matures in 98 days",
+   "Pendle fee 30.1 bp a year x 98/365 = 8.11 bp",
+   "Pendle AMM $1.01M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Apyx apyUSD (asset apxUSD); primary mint whitelisted, 30-day redemption cooldown",
+   "Pendle prices this PT's asset at $0.9751, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 27.31%",
+   "at $100,000 x 11.75 entry costs 105 bp (AMM 16.1, aggregator 87.2)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0xbcdb9e4b0488c72c3596d00671a0877c6b9cc39e3ab8fb0df0f4240acfa01d8a (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x313826e7029fdf742f3076741ed220e0e7b4968d/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 8.04 + AMM 15.20 + aggregator 55.51 bp; all-in against implied mid 72.0 in, -7.5 out = 64.5 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0xb25c41cd266f",
+  "name": "PT-apxUSD-11FEB2027 / USDC loop 0.860 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "apyx-protocol"
+  ],
+  "chain": "Ethereum",
+  "rate": 14.1027,
+  "tvl": 713381.3322149342,
+  "pool": "1-0x70a3b0fd5d7781b759a60398a1e9edb465aa420e",
+  "max_l": 7.0,
+  "borrow": 4.9214,
+  "borrow_week": 5.8403,
+  "free": 94795.27167652542,
+  "lltv": 0.86,
+  "first_bps": 35.6,
+  "loop_bps": 35.6,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-APXUSD-11FEB2027",
+  "flags": [
+   "PT matures in 98 days",
+   "Pendle fee 25.8 bp a year x 98/365 = 6.94 bp",
+   "Pendle AMM $0.25M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Apyx apxUSD; primary mint whitelisted",
+   "Pendle prices this PT's asset at $0.9942, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 16.61%",
+   "at $100,000 x 7.0 entry costs 154 bp (AMM 117.3, aggregator 35.9)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0xb25c41cd266fa6cb9c581d526ac9d8c0137c92cd06847f7e1ee511764ee3d42f (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x99f8c4d0038cda3adcbcd78eb37fcb5916d23e7a/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $5,000: Pendle fee 6.92 + AMM 14.79 + aggregator 15.91 bp; all-in against implied mid 32.1 in, 3.5 out = 35.6 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0xa81671bb2b0b",
+  "name": "PT-apxUSD-11FEB2027 / apxUSD loop 0.945 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "apyx-protocol"
+  ],
+  "chain": "Ethereum",
+  "rate": 14.1027,
+  "tvl": 1184409.7257314185,
+  "pool": "1-0x70a3b0fd5d7781b759a60398a1e9edb465aa420e",
+  "max_l": 18.0,
+  "borrow": 13.6215,
+  "borrow_week": 14.0635,
+  "free": 95946.453900047,
+  "lltv": 0.945,
+  "first_bps": 163.9,
+  "loop_bps": 163.9,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-APXUSD-11FEB2027",
+  "flags": [
+   "PT matures in 98 days",
+   "Pendle fee 25.8 bp a year x 98/365 = 6.94 bp",
+   "Pendle AMM $0.25M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Apyx apxUSD; primary mint whitelisted",
+   "Pendle prices this PT's asset at $0.9942, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 16.61%",
+   "at $100,000 x 18.0 entry costs 154 bp (AMM 117.3, aggregator 35.9)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0xa81671bb2b0b56c04a318b7e1a3699b02508f8494e2113357a50eccb6bef4b34 (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x99f8c4d0038cda3adcbcd78eb37fcb5916d23e7a/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $90,000: Pendle fee 6.90 + AMM 117.33 + aggregator 35.90 bp; all-in against implied mid 154.2 in, 9.7 out = 163.9 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0x9a8dab6de105",
+  "name": "PT-sUSDS-26NOV2026 / USDS loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "sky-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 6.031,
+  "tvl": 4300958.685059485,
+  "pool": "1-0xdc169abe56461a2e0c034da431ac2a3ebf596094",
+  "max_l": 11.75,
+  "borrow": 3.9712,
+  "borrow_week": 4.2178,
+  "free": 452786.0944306099,
+  "lltv": 0.915,
+  "first_bps": 1.7,
+  "loop_bps": 1.7,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-SUSDS-26NOV2026",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 11.3 bp a year x 21/365 = 0.66 bp",
+   "Pendle AMM $3.70M",
+   "Sky \"Savings USDS\" (asset USDS), no gate",
+   "matures inside the month: after 21 days the position is DefiLlama sky-lending SUSDS at 3.79%; held, the month's blended rate is 5.38%",
+   "at $100,000 x 11.75 entry costs 1 bp (AMM 1.1, aggregator -1.0)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x9a8dab6de1059e6dc66c34b358764b70effb289e514e237f3161ffb09eaaf24f (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x9c560ebaf78e596cbcc27411d633a74d628dd7dc/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 0.66 + AMM 1.06 + aggregator -0.96 bp; all-in against implied mid 1.2 in, -0.8 out = 1.7 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0x86f37ab4c094",
+  "name": "PT-fxSAVE-29APR2027 / USDC loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "fx-protocol"
+  ],
+  "chain": "Ethereum",
+  "rate": 7.6462,
+  "tvl": 499933.67094849836,
+  "pool": "1-0xc1ea9419dd1dab4dd54aa13b13a766e4de22ebc3",
+  "max_l": 11.75,
+  "borrow": 2.1451,
+  "borrow_week": null,
+  "free": 247006.49000709312,
+  "lltv": 0.915,
+  "first_bps": 47.3,
+  "loop_bps": 47.3,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-FXSAVE-29APR2027",
+  "flags": [
+   "PT matures in 175 days",
+   "Pendle fee 15.0 bp a year x 175/365 = 7.22 bp",
+   "Pendle AMM $1.57M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "f(x) \"f(x) USD Saving\" fxSAVE",
+   "Pendle prices this PT's asset at $1.0102, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 5.40%",
+   "at $100,000 x 11.75 entry costs 18 bp (AMM 17.1, aggregator -0.0)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x86f37ab4c094c768b48eab7bce8d478daf52a5c1f5be4e3abd0bdd501f02c09e (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x9df10b8c99dc1a48dd7048a9a524bff9b54a0a30/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 7.21 + AMM 9.33 + aggregator 2.14 bp; all-in against implied mid 12.8 in, 34.5 out = 47.3 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0x8171ad336199",
+  "name": "PT-strUSD-4FEB2027 / AUSD loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "tori-finance"
+  ],
+  "chain": "Monad",
+  "rate": 11.4583,
+  "tvl": 100001.35425136855,
+  "pool": "143-0x49a27506a607658956afb03ecbbf803a7075ea83",
+  "max_l": 11.75,
+  "borrow": 2.8467,
+  "borrow_week": 4.2423,
+  "free": 50595.266188477246,
+  "lltv": 0.915,
+  "first_bps": 55.3,
+  "loop_bps": 55.3,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-STRUSD-4FEB2027",
+  "flags": [
+   "PT matures in 91 days",
+   "Pendle fee 21.8 bp a year x 91/365 = 5.45 bp",
+   "Pendle AMM $1.83M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Tori strUSD, bridged to Monad",
+   "at $100,000 x 11.75 the entry loses 8342 bp: the route does not carry that size"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x8171ad336199f18d1ea0b6a8bbc1a0ba5c88bbbc063d39a0cba6ba2d03c681d1 (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/143/markets/0xa9983573da171b910ba48dd5372a0ad60f737096/data and /core/v2/sdk/143/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 5.39 + AMM 7.76 + aggregator 91.57 bp; all-in against implied mid 100.6 in, -45.3 out = 55.3 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0x7fb1a1db36cc",
+  "name": "PT-sUSDat-14JAN2027 / USDC loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "saturn"
+  ],
+  "chain": "Ethereum",
+  "rate": 14.1322,
+  "tvl": 79682.44283161843,
+  "pool": "1-0x0b985c624bb2949432cce77cfd246f01390a0517",
+  "max_l": 11.75,
+  "borrow": 5.3547,
+  "borrow_week": 12.8231,
+  "free": 16479.97513342451,
+  "lltv": 0.915,
+  "first_bps": 23.9,
+  "loop_bps": 23.9,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-SUSDAT-14JAN2027",
+  "flags": [
+   "PT matures in 70 days",
+   "Pendle fee 27.4 bp a year x 70/365 = 5.27 bp",
+   "Pendle AMM $1.39M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Saturn sUSDat (asset USDat), queued redemption",
+   "Pendle prices this PT's asset at $0.9968, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 15.90%",
+   "at $100,000 x 11.75 entry costs -2 bp (AMM 18.6, aggregator 43.1)",
+   "DEX cannot carry the exit at $58,750 (external -2807 bp): exit by the issuer's redemption after its wait",
+   "borrow was 12.82% over the week"
+  ],
+  "gate": "KYC: USDat mint and redeem for KYC-onboarded addresses only (stablecoin-dashboard, Yearn report on Saturn)",
+  "source": "Morpho market 0x7fb1a1db36cc77c1488cd79915ce05ee56c8d256515c20caae926ba74edc4687 (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0xb6fe0f0811931a38aa97534bac3c147437223e38/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 5.24 + AMM 18.64 + aggregator 43.12 bp; all-in against implied mid -1.6 in, 0.0 out = 23.9 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0x6acd18854e43",
+  "name": "PT-reUSD-10DEC2026 / USDT loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "re"
+  ],
+  "chain": "Ethereum",
+  "rate": 11.8175,
+  "tvl": 17362565.600842226,
+  "pool": "1-0xecfafdc7741323a945a163ed068b5a3c43483957",
+  "max_l": 11.75,
+  "borrow": 8.1329,
+  "borrow_week": 10.0905,
+  "free": 1799484.5808402454,
+  "lltv": 0.915,
+  "first_bps": 4.5,
+  "loop_bps": 4.5,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-REUSD-10DEC2026",
+  "flags": [
+   "PT matures in 35 days",
+   "Pendle fee 22.1 bp a year x 35/365 = 2.14 bp",
+   "Pendle AMM $13.04M",
+   "Re Protocol Deposit Token: mint and redeem ask KYC/KYB (docs.re.xyz)",
+   "at $100,000 x 11.75 entry costs 9 bp (AMM 2.8, aggregator 4.9)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x6acd18854e43f93f5a90446004c35c72a68af1ad99f08cb247782ce6457914ca (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x13285bcbc27f92b47b4edb99d744c07b48c977c0/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 2.14 + AMM 2.36 + aggregator 3.81 bp; all-in against implied mid 7.5 in, -3.1 out = 4.5 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0x5613b170ded2",
+  "name": "PT-sUSDE-26NOV2026 / USDC loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 4.8449,
+  "tvl": 5247617.933984209,
+  "pool": "1-0xb195b618ea52b77cb2a58846f452f59f8dfa9390",
+  "max_l": 11.75,
+  "borrow": 4.2978,
+  "borrow_week": 4.51,
+  "free": 509354.44664084556,
+  "lltv": 0.915,
+  "first_bps": 3.2,
+  "loop_bps": 3.2,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-SUSDE-26NOV2026",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 9.8 bp a year x 21/365 = 0.57 bp",
+   "Pendle AMM $5.06M",
+   "Ethena sUSDe \"Staked USDe\" (asset USDe); staking open, 7-day cooldown",
+   "matures inside the month: after 21 days the position is DefiLlama ethena-usde SUSDE at 4.99%; held, the month's blended rate is 4.89%",
+   "at $100,000 x 11.75 entry costs 4 bp (AMM 1.6, aggregator 0.8)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x5613b170ded221c588b6e9637b910f49e5508680ceede207f44aa72e5c46cb05 (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x47ad2cd1dd15739a7a035b9d3b7828d916fef77e/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 0.57 + AMM 1.28 + aggregator -0.78 bp; all-in against implied mid 2.4 in, 0.9 out = 3.2 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0x37a584c981f6",
+  "name": "PT-USD3-17DEC2026 / USDT loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "3jane-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 15.543,
+  "tvl": 12550119.89631694,
+  "pool": "1-0x7f47c3e6b2c00fc4eb4d5ae50d0ab0ab6888eb4d",
+  "max_l": 11.75,
+  "borrow": 3.2207,
+  "borrow_week": 5.4063,
+  "free": 1168200.6503458524,
+  "lltv": 0.915,
+  "first_bps": 50.1,
+  "loop_bps": 46.8,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-USD3-17DEC2026",
+  "flags": [
+   "PT matures in 42 days",
+   "Pendle fee 28.6 bp a year x 42/365 = 3.32 bp",
+   "Pendle AMM $6.06M",
+   "3Jane USD3 (ERC-4626 on USDC), not Reserve USD3; no KYC per rwa.xyz and Yearn; $80M supply cap full: maxDeposit(any)=0 on chain, so only bought on a DEX; redeem atomic from idle",
+   "Pendle prices this PT's asset at $1.0077, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 8.11%",
+   "at $100,000 x 11.75 the entry loses 7725 bp: the route does not carry that size",
+   "borrow was 5.41% over the week",
+   "USD3 DEX depth from USDC: $58,750 costs 30 bp, $150,000 107, $300,000 1,463, $1,175,000 7,723: entry carries about $150,000 of position whatever the lender has free; NAV $1.1875, DEX 0.8% over it because the mint is full"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x37a584c981f6f59f7532ae5565732ee54647773d425978eb94d4cd29c21ff53b (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x4a5067c3ff1abb7449244025b0e37feaf77d8e3e/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 3.30 + AMM 4.02 + aggregator 29.92 bp; all-in against implied mid 35.6 in, 14.5 out = 50.1 bp; both first and loop dollars cost the same swap, held to maturity; borrowed USDT to PT and back at $53,750: 41.7 in, 5.0 out = 46.8 bp"
+ },
+ {
+  "id": "pendle:loop:morpho:0x22fe4c688161",
+  "name": "PT-sUSDS-26NOV2026 / USDC loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "sky-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 6.031,
+  "tvl": 9506599.77745951,
+  "pool": "1-0xdc169abe56461a2e0c034da431ac2a3ebf596094",
+  "max_l": 11.75,
+  "borrow": 4.934,
+  "borrow_week": 5.6607,
+  "free": 950659.5906205333,
+  "lltv": 0.915,
+  "first_bps": 1.7,
+  "loop_bps": 1.7,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-SUSDS-26NOV2026",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 11.3 bp a year x 21/365 = 0.66 bp",
+   "Pendle AMM $3.70M",
+   "Sky \"Savings USDS\" (asset USDS), no gate",
+   "matures inside the month: after 21 days the position is DefiLlama sky-lending SUSDS at 3.79%; held, the month's blended rate is 5.38%",
+   "at $100,000 x 11.75 entry costs 1 bp (AMM 1.1, aggregator -1.0)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x22fe4c688161863c73571a2b8db65cc11a4a6bceee4f0dea4aa83e4b784f1bd9 (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x9c560ebaf78e596cbcc27411d633a74d628dd7dc/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 0.66 + AMM 1.06 + aggregator -0.96 bp; all-in against implied mid 1.2 in, -0.8 out = 1.7 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0x1e9d614631a7",
+  "name": "PT-reUSD-10DEC2026 / USDC loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "re"
+  ],
+  "chain": "Ethereum",
+  "rate": 11.8175,
+  "tvl": 152065037.78794459,
+  "pool": "1-0xecfafdc7741323a945a163ed068b5a3c43483957",
+  "max_l": 11.75,
+  "borrow": 9.1485,
+  "borrow_week": 12.4499,
+  "free": 21545240.45011842,
+  "lltv": 0.915,
+  "first_bps": 4.5,
+  "loop_bps": 4.5,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-REUSD-10DEC2026",
+  "flags": [
+   "PT matures in 35 days",
+   "Pendle fee 22.1 bp a year x 35/365 = 2.14 bp",
+   "Pendle AMM $13.04M",
+   "Re Protocol Deposit Token: mint and redeem ask KYC/KYB (docs.re.xyz)",
+   "at $100,000 x 11.75 entry costs 9 bp (AMM 2.8, aggregator 4.9)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x1e9d614631a7df0ec07fb05b2c8cb2491575fd1a63a33bf187a6afb295a4fc64 (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x13285bcbc27f92b47b4edb99d744c07b48c977c0/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 2.14 + AMM 2.36 + aggregator 3.81 bp; all-in against implied mid 7.5 in, -3.1 out = 4.5 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0x0c93c623fd2a",
+  "name": "PT-siUSD-7JAN2027 / USDC loop 0.860 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "infinifi"
+  ],
+  "chain": "Ethereum",
+  "rate": 9.3086,
+  "tvl": 5004561.104469437,
+  "pool": "1-0x76543ac61ba84c6feeee76c6a918127bf0ca5fd1",
+  "max_l": 7.0,
+  "borrow": 8.8784,
+  "borrow_week": 9.3625,
+  "free": 445974.39053485246,
+  "lltv": 0.86,
+  "first_bps": 6.4,
+  "loop_bps": 6.4,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-SIUSD-7JAN2027",
+  "flags": [
+   "PT matures in 63 days",
+   "Pendle fee 17.5 bp a year x 63/365 = 3.05 bp",
+   "Pendle AMM $17.29M",
+   "infiniFi \"Staked iUSD\" siUSD, permissionless per Yield.xyz docs",
+   "at $100,000 x 7.0 entry costs 8 bp (AMM 6.9, aggregator -0.0)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x0c93c623fd2a78a2ffa36b019f74c400c3f3d81fcb22851c88e0c96e510f9689 (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0xd44f2630260ff3805d7cb317d4f6740b0044c408/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $35,000: Pendle fee 3.04 + AMM 3.32 + aggregator -0.00 bp; all-in against implied mid 4.6 in, -3.6 out = 6.4 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0x0367161b7cb2",
+  "name": "PT-sUSDS-26NOV2026 / USDT loop 0.915 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "sky-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 6.031,
+  "tvl": 1649741.405186106,
+  "pool": "1-0xdc169abe56461a2e0c034da431ac2a3ebf596094",
+  "max_l": 11.75,
+  "borrow": 4.8959,
+  "borrow_week": 6.1547,
+  "free": 245264.5635734577,
+  "lltv": 0.915,
+  "first_bps": 1.7,
+  "loop_bps": 1.7,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-SUSDS-26NOV2026",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 11.3 bp a year x 21/365 = 0.66 bp",
+   "Pendle AMM $3.70M",
+   "Sky \"Savings USDS\" (asset USDS), no gate",
+   "matures inside the month: after 21 days the position is DefiLlama sky-lending SUSDS at 3.79%; held, the month's blended rate is 5.38%",
+   "at $100,000 x 11.75 entry costs 1 bp (AMM 1.1, aggregator -1.0)"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x0367161b7cb23dfd03747dd3815d1c445b0437b648a6d50346249c6e7b92ff1b (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x9c560ebaf78e596cbcc27411d633a74d628dd7dc/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 0.66 + AMM 1.06 + aggregator -0.96 bp; all-in against implied mid 1.2 in, -0.8 out = 1.7 bp; both first and loop dollars cost the same swap, held to maturity"
+ },
+ {
+  "id": "pendle:loop:morpho:0x37a584c981f6:nav",
+  "name": "PT-USD3-17DEC2026 / USDT loop 0.915, if USD3 redeems at $1 (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "morpho-blue",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "3jane-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 8.1091,
+  "tvl": 12550119.89631694,
+  "pool": "1-0x7f47c3e6b2c00fc4eb4d5ae50d0ab0ab6888eb4d",
+  "max_l": 11.75,
+  "borrow": 3.2207,
+  "borrow_week": 5.4063,
+  "free": 1168200.6503458524,
+  "lltv": 0.915,
+  "first_bps": 35.6,
+  "loop_bps": 41.7,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "PT-USD3-17DEC2026",
+  "flags": [
+   "the same loop if USD3 is redeemed at $1 at maturity instead of sold at the DEX price $1.0077: pays $0.99100 a PT, gets $1 in 42 days, 8.11% a year; entry cost only, redemption free",
+   "PT matures in 42 days",
+   "Pendle fee 28.6 bp a year x 42/365 = 3.32 bp",
+   "Pendle AMM $6.06M",
+   "3Jane USD3 (ERC-4626 on USDC), not Reserve USD3; no KYC per rwa.xyz and Yearn; $80M supply cap full: maxDeposit(any)=0 on chain, so only bought on a DEX; redeem atomic from idle",
+   "Pendle prices this PT's asset at $1.0077, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 8.11%",
+   "at $100,000 x 11.75 the entry loses 7725 bp: the route does not carry that size",
+   "borrow was 5.41% over the week",
+   "USD3 DEX depth from USDC: $58,750 costs 30 bp, $150,000 107, $300,000 1,463, $1,175,000 7,723: entry carries about $150,000 of position whatever the lender has free; NAV $1.1875, DEX 0.8% over it because the mint is full"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x37a584c981f6f59f7532ae5565732ee54647773d425978eb94d4cd29c21ff53b (api.morpho.org, app.morpho.org); impliedApy and quote from Pendle api-v2 /core/v2/1/markets/0x4a5067c3ff1abb7449244025b0e37feaf77d8e3e/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); $58,750: Pendle fee 3.30 + AMM 4.02 + aggregator 29.92 bp; all-in against implied mid 35.6 in, 14.5 out = 50.1 bp; both first and loop dollars cost the same swap, held to maturity; borrowed USDT to PT and back at $53,750: 41.7 in, 5.0 out = 46.8 bp; rate (1/0.99100)^(365/42.3)-1 = 8.11%; entry only: 35.6 bp first, 41.7 bp borrowed"
+ },
+ {
+  "id": "pendle:loop:aave-monad:GHO",
+  "name": "PT-AUSD-17DEC2026 / GHO loop Aave Monad e-mode (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "aave-v3",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "agora"
+  ],
+  "chain": "Monad",
+  "rate": 5.4935,
+  "tvl": 43669353,
+  "pool": "143-0x8b562578b2f9aa8c14ccda3c5d6cbcead3b06a57",
+  "max_l": 14.25,
+  "borrow": 4.8344,
+  "free": 1215558.0556293968,
+  "lltv": 0.95,
+  "first_bps": 2.9,
+  "loop_bps": 3.7,
+  "gas": 4.25,
+  "meta": "PT_AUSD_17DEC2026__Stablecoins",
+  "symbol": "PT-AUSD-17DEC2026",
+  "flags": [
+   "PT matures in 42 days",
+   "Pendle fee 10.5 bp a year x 42/365 = 1.22 bp",
+   "Pendle AMM $2.36M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Agora AUSD (the DefiLlama row is Accountable vaults, not the issuer); mint by approved parties, held freely",
+   "Aave e-mode PT_AUSD_17DEC2026__Stablecoins: LTV 0.93, liquidation 0.95; PT supply 43.7M of a 60M cap",
+   "at $100,000 x 14.25 entry costs 4 bp (AMM 1.8, aggregator 2.1)"
+  ],
+  "gate": null,
+  "source": "api.v3.aave.com GraphQL market AaveV3Monad (e-mode, apy, availableLiquidity, supplyCap); implied and quote from Pendle api-v2 /core/v2/143/markets/0x9cbc42eff240ad2e43bbdc3c0562a9b4ce842a5a/data and /core/v2/sdk/143/convert (read 2026-11-04 16:20-17:00 UTC); first dollar $71,250: Pendle fee 1.22 + AMM 1.70 + aggregator 0.49 bp; all-in against implied mid 2.0 in, -0.5 out = 2.9 bp; borrowed dollars GHO to PT and back at $66,250: 14.0 in, -10.3 out = 3.7 bp"
+ },
+ {
+  "id": "pendle:loop:aave-monad:mUSD",
+  "name": "PT-AUSD-17DEC2026 / mUSD loop Aave Monad e-mode (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "aave-v3",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "agora"
+  ],
+  "chain": "Monad",
+  "rate": 5.4935,
+  "tvl": 43669353,
+  "pool": "143-0x8b562578b2f9aa8c14ccda3c5d6cbcead3b06a57",
+  "max_l": 14.25,
+  "borrow": 4.813,
+  "free": 10184536.676765,
+  "lltv": 0.95,
+  "first_bps": 2.9,
+  "loop_bps": 2.9,
+  "gas": 4.25,
+  "meta": "PT_AUSD_17DEC2026__Stablecoins",
+  "symbol": "PT-AUSD-17DEC2026",
+  "flags": [
+   "PT matures in 42 days",
+   "Pendle fee 10.5 bp a year x 42/365 = 1.22 bp",
+   "Pendle AMM $2.36M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Agora AUSD (the DefiLlama row is Accountable vaults, not the issuer); mint by approved parties, held freely",
+   "Aave e-mode PT_AUSD_17DEC2026__Stablecoins: LTV 0.93, liquidation 0.95; PT supply 43.7M of a 60M cap",
+   "at $100,000 x 14.25 entry costs 4 bp (AMM 1.8, aggregator 2.1)"
+  ],
+  "gate": null,
+  "source": "api.v3.aave.com GraphQL market AaveV3Monad (e-mode, apy, availableLiquidity, supplyCap); implied and quote from Pendle api-v2 /core/v2/143/markets/0x9cbc42eff240ad2e43bbdc3c0562a9b4ce842a5a/data and /core/v2/sdk/143/convert (read 2026-11-04 16:20-17:00 UTC); first dollar $71,250: Pendle fee 1.22 + AMM 1.70 + aggregator 0.49 bp; all-in against implied mid 2.0 in, -0.5 out = 2.9 bp; borrowed dollars mUSD to PT and back at $66,250: 1.7 in, -0.3 out = 2.9 bp"
+ },
+ {
+  "id": "pendle:loop:aave-monad:USDT0",
+  "name": "PT-AUSD-17DEC2026 / USDT0 loop Aave Monad e-mode (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "aave-v3",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "agora"
+  ],
+  "chain": "Monad",
+  "rate": 5.4935,
+  "tvl": 43669353,
+  "pool": "143-0x8b562578b2f9aa8c14ccda3c5d6cbcead3b06a57",
+  "max_l": 14.25,
+  "borrow": 5.1081,
+  "free": 5307580.327642105,
+  "lltv": 0.95,
+  "first_bps": 2.9,
+  "loop_bps": 4.0,
+  "gas": 4.25,
+  "meta": "PT_AUSD_17DEC2026__Stablecoins",
+  "symbol": "PT-AUSD-17DEC2026",
+  "flags": [
+   "PT matures in 42 days",
+   "Pendle fee 10.5 bp a year x 42/365 = 1.22 bp",
+   "Pendle AMM $2.36M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Agora AUSD (the DefiLlama row is Accountable vaults, not the issuer); mint by approved parties, held freely",
+   "Aave e-mode PT_AUSD_17DEC2026__Stablecoins: LTV 0.93, liquidation 0.95; PT supply 43.7M of a 60M cap",
+   "at $100,000 x 14.25 entry costs 4 bp (AMM 1.8, aggregator 2.1)"
+  ],
+  "gate": null,
+  "source": "api.v3.aave.com GraphQL market AaveV3Monad (e-mode, apy, availableLiquidity, supplyCap); implied and quote from Pendle api-v2 /core/v2/143/markets/0x9cbc42eff240ad2e43bbdc3c0562a9b4ce842a5a/data and /core/v2/sdk/143/convert (read 2026-11-04 16:20-17:00 UTC); first dollar $71,250: Pendle fee 1.22 + AMM 1.70 + aggregator 0.49 bp; all-in against implied mid 2.0 in, -0.5 out = 2.9 bp; borrowed dollars USDT0 to PT and back at $66,250: 12.9 in, -8.9 out = 4.0 bp"
+ },
+ {
+  "id": "pendle:loop:curvance-monad:AUSD",
+  "name": "PT-AUSD-17DEC2026 / AUSD loop Curvance Monad (quoted)",
+  "family": "loop_dollar",
+  "platforms": [
+   "curvance",
+   "pendle-v2"
+  ],
+  "issuers": [
+   "agora"
+  ],
+  "chain": "Monad",
+  "rate": 5.4935,
+  "tvl": 4498193,
+  "pool": "143-0x8b562578b2f9aa8c14ccda3c5d6cbcead3b06a57",
+  "max_l": 19.75,
+  "borrow": 4.16857,
+  "free": 555233,
+  "lltv": 0.95,
+  "first_bps": 3.0,
+  "loop_bps": 3.0,
+  "gas": 4.25,
+  "meta": "PT-AUSD-17DEC2026/AUSD",
+  "symbol": "PT-AUSD-17DEC2026",
+  "flags": [
+   "PT matures in 42 days",
+   "Pendle fee 10.5 bp a year x 42/365 = 1.22 bp",
+   "Pendle AMM $2.36M",
+   "the Pendle AMM it swaps in is under the $3M floor",
+   "Agora AUSD (the DefiLlama row is Accountable vaults, not the issuer); mint by approved parties, held freely",
+   "Curvance's own limit 0.95 read from DefiLlama lendBorrow, not from Curvance",
+   "at $100,000 x 19.75 the entry loses 1085 bp: the route does not carry that size"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/97a66f9e-c184-581f-813e-5e8e2c89f21d (ltv, apyBaseBorrow) and pool 8c00fa3e-91be-579a-b2d1-96c025dc5e2c (AUSD free = its tvlUsd); implied and quote from Pendle api-v2 /core/v2/143/markets/0x9cbc42eff240ad2e43bbdc3c0562a9b4ce842a5a/data and /core/v2/sdk/143/convert (read 2026-11-04 16:20-17:00 UTC); $98,750: Pendle fee 1.22 + AMM 1.79 + aggregator 0.47 bp; all-in against implied mid 2.0 in, -0.5 out = 3.0 bp"
+ },
+ {
+  "id": "pendle:lp:1:0xd44f263026",
+  "name": "Pendle LP siUSD 2027-01-07 no PENDLE (quoted)",
+  "family": "lp_stable",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "infinifi"
+  ],
+  "chain": "Ethereum",
+  "rate": 8.3235,
+  "tvl": 17285766,
+  "pool": "562f454d-ec4f-5a54-b469-fb3e18315f31",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 2.7,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "SIUSD",
+  "flags": [
+   "PT matures in 63 days",
+   "Pendle fee 17.5 bp a year x 63/365 = 3.05 bp",
+   "Pendle AMM $17.29M",
+   "infiniFi \"Staked iUSD\" siUSD, permissionless per Yield.xyz docs",
+   "LP rate: lowest of DefiLlama apyBase 8.32955, 30-day 8.76581, Pendle aggregated minus PENDLE 8.32; less 0.00 of other reward tokens; PT share earns fixed, the rest floats"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/562f454d-ec4f-5a54-b469-fb3e18315f31; Pendle api-v2 /core/v2/1/markets/0xd44f2630260ff3805d7cb317d4f6740b0044c408/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 1.35 AMM 1.38 aggregator -0.00 bp, all-in against LP price 3.2 in, -3.6 out = 2.7 bp"
+ },
+ {
+  "id": "pendle:lp:1:0x13285bcbc2",
+  "name": "Pendle LP reUSD 2026-12-10 no PENDLE (quoted)",
+  "family": "lp_stable",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "re"
+  ],
+  "chain": "Ethereum",
+  "rate": 9.5377,
+  "tvl": 13035711,
+  "pool": "346fecdb-9749-4b75-9366-38bc24134e6f",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 2.9,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "REUSD",
+  "flags": [
+   "PT matures in 35 days",
+   "Pendle fee 22.1 bp a year x 35/365 = 2.14 bp",
+   "Pendle AMM $13.04M",
+   "Re Protocol Deposit Token: mint and redeem ask KYC/KYB (docs.re.xyz)",
+   "LP rate: lowest of DefiLlama apyBase 9.56231, 30-day 9.94416, Pendle aggregated minus PENDLE 9.54; less 0.00 of other reward tokens; PT share earns fixed, the rest floats"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/346fecdb-9749-4b75-9366-38bc24134e6f; Pendle api-v2 /core/v2/1/markets/0x13285bcbc27f92b47b4edb99d744c07b48c977c0/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 0.94 AMM 0.98 aggregator 3.58 bp, all-in against LP price 6.1 in, -3.2 out = 2.9 bp"
+ },
+ {
+  "id": "pendle:lp:1:0x5e572498e9",
+  "name": "Pendle LP sUSDx 2026-12-03 no PENDLE (quoted)",
+  "family": "lp_stable",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "axis"
+  ],
+  "chain": "Ethereum",
+  "rate": 16.2168,
+  "tvl": 7040033,
+  "pool": "49844303-a0aa-5918-8b82-7ab917924ef4",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 13.8,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "SUSDX",
+  "flags": [
+   "PT matures in 28 days",
+   "Pendle fee 30.5 bp a year x 28/365 = 2.37 bp",
+   "Pendle AMM $7.04M",
+   "Axis USD sUSDx (asset USDx 0xa1fa7777), not Stables Labs USDX; mint by approved counterparties, 7-day cooldown",
+   "matures inside the month: after 28 days the position is DefiLlama axis SUSDX at 15.54%; held, the month's blended rate is 16.88%",
+   "LP rate: lowest of DefiLlama apyBase 16.21776, 30-day 17.7358, Pendle aggregated minus PENDLE 16.22; less 0.00 of other reward tokens; PT share earns fixed, the rest floats"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/49844303-a0aa-5918-8b82-7ab917924ef4; Pendle api-v2 /core/v2/1/markets/0x5e572498e9f83650f0ff24194999bddb4b390928/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 0.97 AMM 12.80 aggregator -23.02 bp, all-in against LP price -8.7 in, 7.8 out = 13.8 bp"
+ },
+ {
+  "id": "pendle:lp:1:0x687dedecd5",
+  "name": "Pendle LP sUSDfr 2027-01-28 no PENDLE (quoted)",
+  "family": "lp_stable",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "forest-road"
+  ],
+  "chain": "Ethereum",
+  "rate": 23.0241,
+  "tvl": 6310497,
+  "pool": "503c86b9-ac8d-5fdf-992c-8655699454ee",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 13.5,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "SUSDFR",
+  "flags": [
+   "PT matures in 84 days",
+   "Pendle fee 48.7 bp a year x 84/365 = 11.25 bp",
+   "Pendle AMM $6.31M",
+   "Forest Road sUSDfr (asset USDfr): one aggregator calls it a KYC-gated credit protocol, no primary source read; Pendle quotes no USDC route out of it",
+   "LP rate: lowest of DefiLlama apyBase 23.02407, 30-day 28.69032, Pendle aggregated minus PENDLE 23.03; less 0.00 of other reward tokens; PT share earns fixed, the rest floats"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/503c86b9-ac8d-5fdf-992c-8655699454ee; Pendle api-v2 /core/v2/1/markets/0x687dedecd5d2899ef497b3ff13af066ac3d152b0/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 6.64 AMM 6.82 aggregator 5.06 bp, all-in against LP price 13.4 in, 0.0 out = 13.5 bp"
+ },
+ {
+  "id": "pendle:lp:1:0x4a5067c3ff",
+  "name": "Pendle LP USD3 2026-12-17 no PENDLE (quoted)",
+  "family": "lp_stable",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "3jane-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 13.1934,
+  "tvl": 6063229,
+  "pool": "0e594c5e-79e3-4ce8-85aa-661dfd9e8ed8",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 13.9,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "USD3",
+  "flags": [
+   "PT matures in 42 days",
+   "Pendle fee 28.6 bp a year x 42/365 = 3.32 bp",
+   "Pendle AMM $6.06M",
+   "3Jane USD3 (ERC-4626 on USDC), not Reserve USD3; no KYC per rwa.xyz and Yearn; $80M supply cap full: maxDeposit(any)=0 on chain, so only bought on a DEX; redeem atomic from idle",
+   "Pendle prices this PT's asset at $1.0077, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 8.11%",
+   "LP rate: lowest of DefiLlama apyBase 13.24235, 30-day 13.19337, Pendle aggregated minus PENDLE 13.20; less 0.00 of other reward tokens; PT share earns fixed, the rest floats"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/0e594c5e-79e3-4ce8-85aa-661dfd9e8ed8; Pendle api-v2 /core/v2/1/markets/0x4a5067c3ff1abb7449244025b0e37feaf77d8e3e/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 2.38 AMM 2.16 aggregator 8.54 bp, all-in against LP price 12.1 in, 1.8 out = 13.9 bp"
+ },
+ {
+  "id": "pendle:lp:42161:0xf86119a39f",
+  "name": "Pendle LP sUSDai 2027-02-25 no PENDLE (quoted)",
+  "family": "lp_stable",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Arbitrum",
+  "rate": 8.8516,
+  "tvl": 5370510,
+  "pool": "0ab4e683-9d5b-43d3-aeb8-98dd1da1a694",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 8.0,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "SUSDAI",
+  "flags": [
+   "PT matures in 112 days",
+   "Pendle fee 19.6 bp a year x 112/365 = 6.04 bp",
+   "Pendle AMM $5.37M",
+   "USD.AI \"Staked USDai\" (asset USDai)",
+   "LP rate: lowest of DefiLlama apyBase 10.65518, 30-day 9.61285, Pendle aggregated minus PENDLE 10.66; less 0.00 of other reward tokens; PT share earns fixed, the rest floats",
+   "Pendle counts sUSDai at 11.69%, DefiLlama's usd-ai row at 6.53%: rate rebuilt 0.65 x implied 9.51 + 0.35 x 6.53 + swap fee 0.38 = 8.85"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/0ab4e683-9d5b-43d3-aeb8-98dd1da1a694; Pendle api-v2 /core/v2/42161/markets/0xf86119a39f8654f38acbbd5488bd83f3f51983c8/data and /core/v2/sdk/42161/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 3.93 AMM 4.05 aggregator -26.68 bp, all-in against LP price -21.1 in, 21.3 out = 8.0 bp"
+ },
+ {
+  "id": "pendle:lp:1:0xbeab098b51",
+  "name": "Pendle LP sUSDD 2026-11-26 no PENDLE (quoted)",
+  "family": "lp_stable",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "usdd"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.9696,
+  "tvl": 5152152,
+  "pool": "e54bdf25-c4f0-5409-a917-c916421a092a",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0.5,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "SUSDD",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 10.1 bp a year x 21/365 = 0.59 bp",
+   "Pendle AMM $5.14M",
+   "TRON DAO Reserve \"Savings USDD\" (asset USDD)",
+   "Pendle prices this PT's asset at $0.9962, not $1: the implied rate holds only if the exit sells at that price; redeemed at $1 the fixed rate is 12.60%",
+   "matures inside the month: after 21 days the position is Pendle underlyingApy at 4.00%; held, the month's blended rate is 5.01%",
+   "LP rate: lowest of DefiLlama apyBase 5.96958, 30-day 6.1222, Pendle aggregated minus PENDLE 5.97; less 0.00 of other reward tokens; PT share earns fixed, the rest floats"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/e54bdf25-c4f0-5409-a917-c916421a092a; Pendle api-v2 /core/v2/1/markets/0xbeab098b510f758cd35122ee345957b8eccbb322/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 0.23 AMM 0.29 aggregator 28.23 bp, all-in against LP price 30.1 in, -30.6 out = 0.5 bp"
+ },
+ {
+  "id": "pendle:lp:1:0x47ad2cd1dd",
+  "name": "Pendle LP sUSDe 2026-11-26 no PENDLE (quoted)",
+  "family": "lp_stable",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.0354,
+  "tvl": 5057139,
+  "pool": "afdef3b3-8c37-5156-9c39-c2849e20f7a8",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 2.0,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "SUSDE",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 9.8 bp a year x 21/365 = 0.57 bp",
+   "Pendle AMM $5.06M",
+   "Ethena sUSDe \"Staked USDe\" (asset USDe); staking open, 7-day cooldown",
+   "matures inside the month: after 21 days the position is DefiLlama ethena-usde SUSDE at 4.99%; held, the month's blended rate is 4.89%",
+   "LP rate: lowest of DefiLlama apyBase 5.03541, 30-day 5.09001, Pendle aggregated minus PENDLE 5.04; less 0.00 of other reward tokens; PT share earns fixed, the rest floats"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/afdef3b3-8c37-5156-9c39-c2849e20f7a8; Pendle api-v2 /core/v2/1/markets/0x47ad2cd1dd15739a7a035b9d3b7828d916fef77e/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 0.13 AMM 0.15 aggregator -1.02 bp, all-in against LP price 1.3 in, 0.7 out = 2.0 bp"
+ },
+ {
+  "id": "pendle:lp:1:0x3428088226",
+  "name": "Pendle LP wstETH 2027-12-30 no PENDLE (quoted)",
+  "family": "lp_correlated",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.7111,
+  "tvl": 4968191,
+  "pool": "66329c23-3419-48cf-82ea-f0a058e899a4",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 18.8,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "WSTETH",
+  "flags": [
+   "PT matures in 420 days",
+   "Pendle fee 5.0 bp a year x 420/365 = 5.76 bp",
+   "Pendle AMM $5.08M",
+   "Lido wstETH",
+   "LP rate: lowest of DefiLlama apyBase 4.24393, 30-day 2.7111, Pendle aggregated minus PENDLE 4.24; less 0.00 of other reward tokens; PT share earns fixed, the rest floats"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/66329c23-3419-48cf-82ea-f0a058e899a4; Pendle api-v2 /core/v2/1/markets/0x34280882267ffa6383b363e278b027be083bbe3b/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 0.31 AMM 0.32 aggregator 12.83 bp, all-in against LP price 1.5 in, 17.3 out = 18.8 bp"
+ },
+ {
+  "id": "pendle:lp:1:0x90b70c407f",
+  "name": "Pendle LP reUSDe 2026-12-10 no PENDLE (quoted)",
+  "family": "lp_stable",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "re"
+  ],
+  "chain": "Ethereum",
+  "rate": 16.9476,
+  "tvl": 4600630,
+  "pool": "bfb4d5f7-8479-4695-bb29-1c72b2407333",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 54.7,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "REUSDE",
+  "flags": [
+   "PT matures in 35 days",
+   "Pendle fee 34.0 bp a year x 35/365 = 3.29 bp",
+   "Pendle AMM $4.60M",
+   "Re reUSDe: mint and redeem ask KYC/KYB (docs.re.xyz)",
+   "LP rate: lowest of DefiLlama apyBase 16.94872, 30-day 17.85987, Pendle aggregated minus PENDLE 16.95; less 0.00 of other reward tokens; PT share earns fixed, the rest floats"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/bfb4d5f7-8479-4695-bb29-1c72b2407333; Pendle api-v2 /core/v2/1/markets/0x90b70c407f1077f8eb92bf423b44cd92329b737a/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 2.48 AMM 2.58 aggregator 24.26 bp, all-in against LP price 29.0 in, 25.7 out = 54.7 bp"
+ },
+ {
+  "id": "pendle:lp:1:0xac028348c4",
+  "name": "Pendle LP strUSD 2026-11-26 no PENDLE (quoted)",
+  "family": "lp_stable",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "tori-finance"
+  ],
+  "chain": "Ethereum",
+  "rate": 10.4737,
+  "tvl": 4474768,
+  "pool": "6dfc3f02-ff4e-5a75-bff0-6865cf9f200f",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 2.8,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "STRUSD",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 22.1 bp a year x 21/365 = 1.29 bp",
+   "Pendle AMM $4.48M",
+   "Tori \"Staked trUSD\"; direct mint asks KYC, swap on Curve or in their app asks none (IQ.wiki); 7-day cooldown",
+   "matures inside the month: after 21 days the position is DefiLlama tori-finance STRUSD at 9.95%; held, the month's blended rate is 11.69%",
+   "LP rate: lowest of DefiLlama apyBase 10.72231, 30-day 10.47374, Pendle aggregated minus PENDLE 10.72; less 0.00 of other reward tokens; PT share earns fixed, the rest floats"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/6dfc3f02-ff4e-5a75-bff0-6865cf9f200f; Pendle api-v2 /core/v2/1/markets/0xac028348c46d3455899a2b9b50077c11960eaddb/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 0.34 AMM 0.37 aggregator 0.95 bp, all-in against LP price 2.8 in, 0.0 out = 2.8 bp"
+ },
+ {
+  "id": "pendle:lp:1:0x9c560ebaf7",
+  "name": "Pendle LP sUSDS 2026-11-26 no PENDLE (quoted)",
+  "family": "lp_stable",
+  "platforms": [
+   "pendle-v2"
+  ],
+  "issuers": [
+   "sky-lending"
+  ],
+  "chain": "Ethereum",
+  "rate": 4.5398,
+  "tvl": 3700042,
+  "pool": "8e9f65c8-8cd7-44a5-9363-36d4017f46ec",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0.4,
+  "loop_bps": 0,
+  "gas": 2.0,
+  "meta": "",
+  "symbol": "SUSDS",
+  "flags": [
+   "PT matures in 21 days",
+   "Pendle fee 11.3 bp a year x 21/365 = 0.66 bp",
+   "Pendle AMM $3.70M",
+   "Sky \"Savings USDS\" (asset USDS), no gate",
+   "matures inside the month: after 21 days the position is DefiLlama sky-lending SUSDS at 3.79%; held, the month's blended rate is 5.38%",
+   "LP rate: lowest of DefiLlama apyBase 4.58279, 30-day 4.53981, Pendle aggregated minus PENDLE 4.58; less 0.00 of other reward tokens; PT share earns fixed, the rest floats"
+  ],
+  "gate": null,
+  "source": "https://defillama.com/yields/pool/8e9f65c8-8cd7-44a5-9363-36d4017f46ec; Pendle api-v2 /core/v2/1/markets/0x9c560ebaf78e596cbcc27411d633a74d628dd7dc/data and /core/v2/sdk/1/convert (read 2026-11-04 16:20-17:00 UTC); zap $5,000 fee 0.21 AMM 0.23 aggregator -1.66 bp, all-in against LP price -0.1 in, -0.8 out = 0.4 bp"
+ }
+]

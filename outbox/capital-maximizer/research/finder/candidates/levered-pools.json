@@ -1,0 +1,3321 @@
+[
+ {
+  "id": "fluid-smart:1:44",
+  "name": "Fluid T4 wstETH-ETH / wstETH-ETH #44",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Ethereum",
+  "rate": 1.985,
+  "tvl": 84010737,
+  "pool": "0x528CF7DBBff878e02e48E83De5097F8071af768D",
+  "max_l": 19.75,
+  "borrow": 2.106,
+  "free": 1008985,
+  "lltv": 0.97,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T4 #44",
+  "symbol": "WSTETH/ETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/44 and https://api.fluid.instadapp.io/v2/1/vaults/44. rate+borrow: trading 0.27 (Fluid 0.74; Llama now/7d/30d 0.26567/2.98158/0.52321) + 0.120 x (wstETH lent 0.03 + own 2.27) + 0.880 x (ETH lent 1.64 + own 0.00); debt: 0.880 x (wstETH 0.13 + grows 2.27) + 0.120 x (ETH 2.13 + grows 0.00) - trading 0.27 (Fluid 0.74; Llama 0.26567/2.98158/0.52321) + vault 0.00. Limit collateralFactor 0.95. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:45",
+  "name": "Fluid T3 ETH / USDC-USDT #45",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 1.64,
+  "tvl": 882235,
+  "pool": "0x3E11B9aEb9C7dBbda4DD41477223Cc2f3f24b9d7",
+  "max_l": 6.5,
+  "borrow": 5.283,
+  "free": 8210513,
+  "lltv": 0.88,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #45",
+  "symbol": "ETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/45 and https://api.fluid.instadapp.io/v2/1/vaults/45. rate+borrow: ETH own 0.00 + vault supply 1.64; debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.85. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:46",
+  "name": "Fluid T3 wstETH / USDC-USDT #46",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.304,
+  "tvl": 392718,
+  "pool": "0x221E35b5655A1eEB3C42c4DeFc39648531f6C9CF",
+  "max_l": 5.5,
+  "borrow": 5.283,
+  "free": 8347123,
+  "lltv": 0.85,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #46",
+  "symbol": "WSTETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/46 and https://api.fluid.instadapp.io/v2/1/vaults/46. rate+borrow: wstETH own 2.27 + vault supply 0.03; debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.82. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:47",
+  "name": "Fluid T3 weETH / USDC-USDT #47",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ether.fi-stake"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.341,
+  "tvl": 1859317,
+  "pool": "0x01F0D07fdE184614216e76782c6b7dF663F5375e",
+  "max_l": 3.75,
+  "borrow": 5.283,
+  "free": 1937593,
+  "lltv": 0.8,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #47",
+  "symbol": "WEETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/47 and https://api.fluid.instadapp.io/v2/1/vaults/47. rate+borrow: weETH own 2.34 + vault supply 0.00; debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.75. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:48",
+  "name": "Fluid T3 WBTC / USDC-USDT #48",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 0.09,
+  "tvl": 65258,
+  "pool": "0x59fa2F51F5c8fFfceB538180EC47A869eC3DBd4a",
+  "max_l": 4.75,
+  "borrow": 5.283,
+  "free": 8481421,
+  "lltv": 0.85,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #48",
+  "symbol": "WBTC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/48 and https://api.fluid.instadapp.io/v2/1/vaults/48. rate+borrow: WBTC own 0.00 + vault supply 0.09; debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.8. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:49",
+  "name": "Fluid T3 cbBTC / USDC-USDT #49",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 0.04,
+  "tvl": 898691,
+  "pool": "0x47b6e2c8a0cB072198f17ccC6C7634dCc7126c3E",
+  "max_l": 4.75,
+  "borrow": 5.283,
+  "free": 8329726,
+  "lltv": 0.85,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #49",
+  "symbol": "CBBTC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/49 and https://api.fluid.instadapp.io/v2/1/vaults/49. rate+borrow: cbBTC own 0.00 + vault supply 0.04; debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.8. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:50",
+  "name": "Fluid T3 sUSDe / USDC-USDT #50",
+  "family": "loop_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 4.991,
+  "tvl": 2309,
+  "pool": "0xe210d8ded13Abe836a10E8Aa956dd424658d0034",
+  "max_l": 12.25,
+  "borrow": 5.283,
+  "free": 2553851,
+  "lltv": 0.94,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #50",
+  "symbol": "SUSDE",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/50 and https://api.fluid.instadapp.io/v2/1/vaults/50. rate+borrow: sUSDe own 4.99 + vault supply 0.00; debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.92. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:51",
+  "name": "Fluid T4 WBTC-cbBTC / WBTC-cbBTC #51",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 0.312,
+  "tvl": 18486127,
+  "pool": "0xDCe03288F9A109150f314ED0Ca9b59a690300d9d",
+  "max_l": 19.75,
+  "borrow": 0.118,
+  "free": 3770506,
+  "lltv": 0.97,
+  "first_bps": 10.45,
+  "loop_bps": 0.45,
+  "gas": 4.25,
+  "meta": "T4 #51",
+  "symbol": "WBTC/CBBTC",
+  "flags": [
+   "Fluid's own debt net today -0.67%, the lowest-fee reading used here"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/51 and https://api.fluid.instadapp.io/v2/1/vaults/51. rate+borrow: trading 0.26 (Fluid 1.05; Llama now/7d/30d 0.25745/1.62015/0.94593) + 0.289 x (WBTC lent 0.09 + own 0.00) + 0.711 x (cbBTC lent 0.04 + own 0.00); debt: 0.711 x (WBTC 0.41 + grows 0.00) + 0.289 x (cbBTC 0.29 + grows 0.00) - trading 0.26 (Fluid 1.05; Llama 0.25745/1.62015/0.94593) + vault 0.00. Limit collateralFactor 0.95. Costs: pool fee 0.45 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:52",
+  "name": "Fluid T2 WBTC-cbBTC / USDC #52",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 0.312,
+  "tvl": 18486127,
+  "pool": "0x4e564A29c1FC18ed9b66e5754A37fCa0C8a980ff",
+  "max_l": 4.75,
+  "borrow": 5.92,
+  "free": 8430597,
+  "lltv": 0.85,
+  "first_bps": 10.45,
+  "loop_bps": 10.45,
+  "gas": 4.25,
+  "meta": "T2 #52",
+  "symbol": "WBTC/CBBTC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/52 and https://api.fluid.instadapp.io/v2/1/vaults/52. rate+borrow: trading 0.26 (Fluid 1.05; Llama now/7d/30d 0.25745/1.62015/0.94593) + 0.289 x (WBTC lent 0.09 + own 0.00) + 0.711 x (cbBTC lent 0.04 + own 0.00); debt: USDC vault 5.92 + grows 0.00. Limit collateralFactor 0.8. Costs: pool fee 0.45 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:53",
+  "name": "Fluid T2 WBTC-cbBTC / USDT #53",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 0.312,
+  "tvl": 18486127,
+  "pool": "0xf7FA55D14C71241e3c970E30C509Ff58b5f5D557",
+  "max_l": 4.75,
+  "borrow": 5.91,
+  "free": 8280249,
+  "lltv": 0.85,
+  "first_bps": 10.45,
+  "loop_bps": 10.45,
+  "gas": 4.25,
+  "meta": "T2 #53",
+  "symbol": "WBTC/CBBTC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/53 and https://api.fluid.instadapp.io/v2/1/vaults/53. rate+borrow: trading 0.26 (Fluid 1.05; Llama now/7d/30d 0.25745/1.62015/0.94593) + 0.289 x (WBTC lent 0.09 + own 0.00) + 0.711 x (cbBTC lent 0.04 + own 0.00); debt: USDT vault 5.91 + grows 0.00. Limit collateralFactor 0.8. Costs: pool fee 0.45 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:61",
+  "name": "Fluid T4 GHO-USDC / GHO-USDC #61",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 4.505,
+  "tvl": 18376703,
+  "pool": "0x20b32C597633f12B44CFAFe0ab27408028CA0f6A",
+  "max_l": 12.25,
+  "borrow": 5.935,
+  "free": 852727,
+  "lltv": 0.95,
+  "first_bps": 1.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T4 #61",
+  "symbol": "GHO/USDC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/61 and https://api.fluid.instadapp.io/v2/1/vaults/61. rate+borrow: trading 0.01 (Fluid 0.23; Llama now/7d/30d 0.00853/0.22881/0.14684) + 0.910 x (GHO lent 4.50 + own 0.00) + 0.090 x (USDC lent 4.46 + own 0.00); debt: 0.090 x (GHO 6.18 + grows 0.00) + 0.910 x (USDC 5.92 + grows 0.00) - trading 0.01 (Fluid 0.23; Llama 0.00853/0.22881/0.14684) + vault 0.00. Limit collateralFactor 0.92. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:74",
+  "name": "Fluid T2 weETH-ETH / wstETH #74",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ether.fi-stake",
+   "lido"
+  ],
+  "chain": "Ethereum",
+  "rate": 1.689,
+  "tvl": 11904879,
+  "pool": "0xb4a15526d427f4d20b0dAdaF3baB4177C85A699A",
+  "max_l": 16.5,
+  "borrow": 2.404,
+  "free": 513893,
+  "lltv": 0.96,
+  "first_bps": 10.75,
+  "loop_bps": 10.75,
+  "gas": 4.25,
+  "meta": "T2 #74",
+  "symbol": "WEETH/ETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/74 and https://api.fluid.instadapp.io/v2/1/vaults/74. rate+borrow: trading 0.00 (Fluid 1.08; Llama now/7d/30d 0/0.81433/0.39755) + 0.069 x (weETH lent 0.00 + own 2.34) + 0.931 x (ETH lent 1.64 + own 0.00); debt: wstETH vault 0.13 + grows 2.27. Limit collateralFactor 0.94. Costs: pool fee 0.75 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:77",
+  "name": "Fluid T4 USDC-ETH / USDC-ETH #77",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 15.819,
+  "tvl": 6374435,
+  "pool": "0x469D8c7990b9072EEF05d6349224621a71176213",
+  "max_l": 4.75,
+  "borrow": -7.609,
+  "free": 0,
+  "lltv": 0.88,
+  "first_bps": 10.0,
+  "loop_bps": 10.0,
+  "gas": 4.25,
+  "meta": "T4 #77",
+  "symbol": "USDC/ETH",
+  "flags": [
+   "collateral pool 12 is over its maxShares on-chain (3,641,622 against 500,000): no new deposit",
+   "debt pool 12 is over its maxShares on-chain: no new smart debt",
+   "net debt rate is negative: trading fees pay the debt",
+   "Fluid's own debt net today -42.98%, the lowest-fee reading used here",
+   "pool 12 winding down: maxShares cut from 30M to 0.5M, shares flat at 3,641,622 for a week at 7,200-block and 50,000-block reads (eth_getStorageAt slot 2 and 4), and fluid.io warns of the share capacity on this vault; a deposit was not simulated. Fee 30-day median 13.61"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/77 and https://api.fluid.instadapp.io/v2/1/vaults/77. rate+borrow: trading 12.57 (Fluid 51.82; Llama now/7d/30d 12.57342/45.58263/28.69971) + 0.569 x (USDC lent 4.46 + own 0.00) + 0.431 x (ETH lent 1.64 + own 0.00); debt: 0.420 x (USDC 5.92 + grows 0.00) + 0.580 x (ETH 2.13 + grows 0.00) - trading 11.33 (Fluid 46.70; Llama 12.57342/45.58263/28.69971) + vault 0.00. Limit collateralFactor 0.8. Costs: pool fee 10.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:92",
+  "name": "Fluid T2 sUSDe-USDT / USDT #92",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.373,
+  "tvl": 441660,
+  "pool": "0x7503b58Bb29937e7E2980f70D3FD021B7ebeA6d0",
+  "max_l": 12.25,
+  "borrow": 5.91,
+  "free": 2393708,
+  "lltv": 0.94,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #92",
+  "symbol": "SUSDE/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/92 and https://api.fluid.instadapp.io/v2/1/vaults/92. rate+borrow: trading 0.81 (Fluid 0.97; Llama now/7d/30d 0.80671/3.22087/3.07974) + 0.200 x (sUSDe lent 0.00 + own 4.99) + 0.800 x (USDT lent 4.46 + own 0.00); debt: USDT vault 5.91 + grows 0.00. Limit collateralFactor 0.92. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:93",
+  "name": "Fluid T2 USDe-USDT / USDT #93",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 4.014,
+  "tvl": 1674015,
+  "pool": "0x989a44CB4dBb7eBe20e0aBf3C1E1d727BF90F881",
+  "max_l": 16.5,
+  "borrow": 5.91,
+  "free": 2432688,
+  "lltv": 0.95,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T2 #93",
+  "symbol": "USDE/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/93 and https://api.fluid.instadapp.io/v2/1/vaults/93. rate+borrow: trading 0.56 (Fluid 2.41; Llama now/7d/30d 0.5604/2.30649/1.4616) + 0.226 x (USDe lent 0.00 + own 0.00) + 0.774 x (USDT lent 4.46 + own 0.00); debt: USDT vault 5.91 + grows 0.00. Limit collateralFactor 0.94. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:96",
+  "name": "Fluid T2 eBTC-cbBTC / WBTC #96",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:eBTC"
+  ],
+  "chain": "Ethereum",
+  "rate": 0.086,
+  "tvl": 4026208,
+  "pool": "0x43d1cA906c72f09D96291B4913D7255E241F428d",
+  "max_l": 11.0,
+  "borrow": 0.41,
+  "free": 0,
+  "lltv": 0.93,
+  "first_bps": 15.0,
+  "loop_bps": 15.0,
+  "gas": 4.25,
+  "meta": "T2 #96",
+  "symbol": "EBTC/CBBTC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/96 and https://api.fluid.instadapp.io/v2/1/vaults/96. rate+borrow: trading 0.00 (Fluid 0.89; Llama now/7d/30d 0/0.42946/0.1993) + 0.392 x (eBTC lent 0.00 + own 0.16) + 0.608 x (cbBTC lent 0.04 + own 0.00); debt: WBTC vault 0.41 + grows 0.00. Limit collateralFactor 0.91. Costs: pool fee 5.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:97",
+  "name": "Fluid T2 LBTC-cbBTC / WBTC #97",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "lombard-lbtc"
+  ],
+  "chain": "Ethereum",
+  "rate": 0.426,
+  "tvl": 893077,
+  "pool": "0x96B2A29823d475468eE6f15e07878adf79E8199b",
+  "max_l": 11.0,
+  "borrow": 0.41,
+  "free": 1254504,
+  "lltv": 0.93,
+  "first_bps": 11.0,
+  "loop_bps": 11.0,
+  "gas": 4.25,
+  "meta": "T2 #97",
+  "symbol": "LBTC/CBBTC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/97 and https://api.fluid.instadapp.io/v2/1/vaults/97. rate+borrow: trading 0.31 (Fluid 3.20; Llama now/7d/30d 0.30666/2.05462/3.13159) + 0.129 x (LBTC lent 0.00 + own 0.66) + 0.871 x (cbBTC lent 0.04 + own 0.00); debt: WBTC vault 0.41 + grows 0.00. Limit collateralFactor 0.91. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:98",
+  "name": "Fluid T4 sUSDe-USDT / USDC-USDT #98",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.373,
+  "tvl": 441660,
+  "pool": "0xB170B94BeFe21098966aa9905Da6a2F569463A21",
+  "max_l": 12.25,
+  "borrow": 5.283,
+  "free": 2340612,
+  "lltv": 0.94,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T4 #98",
+  "symbol": "SUSDE/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/98 and https://api.fluid.instadapp.io/v2/1/vaults/98. rate+borrow: trading 0.81 (Fluid 0.97; Llama now/7d/30d 0.80671/3.22087/3.07974) + 0.200 x (sUSDe lent 0.00 + own 4.99) + 0.800 x (USDT lent 4.46 + own 0.00); debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.92. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:99",
+  "name": "Fluid T4 USDe-USDT / USDC-USDT #99",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 4.014,
+  "tvl": 1674015,
+  "pool": "0xaEac94D417BF8d8bb3A44507100Ab8c0D3b12cA1",
+  "max_l": 16.5,
+  "borrow": 5.283,
+  "free": 1284025,
+  "lltv": 0.95,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T4 #99",
+  "symbol": "USDE/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/99 and https://api.fluid.instadapp.io/v2/1/vaults/99. rate+borrow: trading 0.56 (Fluid 2.41; Llama now/7d/30d 0.5604/2.30649/1.4616) + 0.226 x (USDe lent 0.00 + own 0.00) + 0.774 x (USDT lent 4.46 + own 0.00); debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.94. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:114",
+  "name": "Fluid T2 LBTC-cbBTC / cbBTC #114",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "lombard-lbtc"
+  ],
+  "chain": "Ethereum",
+  "rate": 0.426,
+  "tvl": 893077,
+  "pool": "0x9f1F074EB64470f804b34E6948132b8aAE17028F",
+  "max_l": 11.0,
+  "borrow": 0.29,
+  "free": 502928,
+  "lltv": 0.93,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T2 #114",
+  "symbol": "LBTC/CBBTC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/114 and https://api.fluid.instadapp.io/v2/1/vaults/114. rate+borrow: trading 0.31 (Fluid 3.20; Llama now/7d/30d 0.30666/2.05462/3.13159) + 0.129 x (LBTC lent 0.00 + own 0.66) + 0.871 x (cbBTC lent 0.04 + own 0.00); debt: cbBTC vault 0.29 + grows 0.00. Limit collateralFactor 0.91. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:115",
+  "name": "Fluid T2 WBTC-LBTC / WBTC #115",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "lombard-lbtc"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.675,
+  "tvl": 1682869,
+  "pool": "0x57A9f4e109EcEF8990BC794df0D159fb29861f2A",
+  "max_l": 11.0,
+  "borrow": 0.41,
+  "free": 560,
+  "lltv": 0.93,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T2 #115",
+  "symbol": "LBTC/WBTC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/115 and https://api.fluid.instadapp.io/v2/1/vaults/115. rate+borrow: trading 2.14 (Fluid 2.59; Llama now/7d/30d 2.14426/5.76058/3.62235) + 0.224 x (WBTC lent 0.09 + own 0.00) + 0.776 x (LBTC lent 0.00 + own 0.66); debt: WBTC vault 0.41 + grows 0.00. Limit collateralFactor 0.91. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:122",
+  "name": "Fluid T2 PAXG-XAUt / USDC #122",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:PAXG",
+   "unlisted:XAUt"
+  ],
+  "chain": "Ethereum",
+  "rate": 0.253,
+  "tvl": 2227408,
+  "pool": "0x87882Fb36C59344798D4cAC68396A9BAFa60131D",
+  "max_l": 3.75,
+  "borrow": 5.92,
+  "free": 925687,
+  "lltv": 0.8,
+  "first_bps": 12.0,
+  "loop_bps": 12.0,
+  "gas": 4.25,
+  "meta": "T2 #122",
+  "symbol": "PAXG/XAUT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/122 and https://api.fluid.instadapp.io/v2/1/vaults/122. rate+borrow: trading 0.25 (Fluid 0.82; Llama now/7d/30d 0.25302/0.83647/0.631) + 0.258 x (PAXG lent 0.00 + own 0.00) + 0.742 x (XAUt lent 0.00 + own 0.00); debt: USDC vault 5.92 + grows 0.00. Limit collateralFactor 0.75. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:123",
+  "name": "Fluid T2 PAXG-XAUt / USDT #123",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:PAXG",
+   "unlisted:XAUt"
+  ],
+  "chain": "Ethereum",
+  "rate": 0.253,
+  "tvl": 2227408,
+  "pool": "0x78Ec4dFb48f9DEe98a1793854E94b5eaF4305516",
+  "max_l": 3.75,
+  "borrow": 5.91,
+  "free": 1571977,
+  "lltv": 0.8,
+  "first_bps": 12.0,
+  "loop_bps": 12.0,
+  "gas": 4.25,
+  "meta": "T2 #123",
+  "symbol": "PAXG/XAUT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/123 and https://api.fluid.instadapp.io/v2/1/vaults/123. rate+borrow: trading 0.25 (Fluid 0.82; Llama now/7d/30d 0.25302/0.83647/0.631) + 0.258 x (PAXG lent 0.00 + own 0.00) + 0.742 x (XAUt lent 0.00 + own 0.00); debt: USDT vault 5.91 + grows 0.00. Limit collateralFactor 0.75. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:124",
+  "name": "Fluid T2 PAXG-XAUt / GHO #124",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:PAXG",
+   "unlisted:XAUt"
+  ],
+  "chain": "Ethereum",
+  "rate": 0.253,
+  "tvl": 2227408,
+  "pool": "0x9683c81850B725AB73fcAA0DdA7Eb5749D11EDF7",
+  "max_l": 3.75,
+  "borrow": 6.18,
+  "free": 1017723,
+  "lltv": 0.8,
+  "first_bps": 12.0,
+  "loop_bps": 12.0,
+  "gas": 4.25,
+  "meta": "T2 #124",
+  "symbol": "PAXG/XAUT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/124 and https://api.fluid.instadapp.io/v2/1/vaults/124. rate+borrow: trading 0.25 (Fluid 0.82; Llama now/7d/30d 0.25302/0.83647/0.631) + 0.258 x (PAXG lent 0.00 + own 0.00) + 0.742 x (XAUt lent 0.00 + own 0.00); debt: GHO vault 6.18 + grows 0.00. Limit collateralFactor 0.75. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:125",
+  "name": "Fluid T4 GHO-sUSDe / GHO-USDC #125",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.105,
+  "tvl": 983652,
+  "pool": "0x0a90ED6964f6bA56902fD35EE11857A810Dd5543",
+  "max_l": 12.25,
+  "borrow": 5.935,
+  "free": 208927,
+  "lltv": 0.94,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T4 #125",
+  "symbol": "GHO/SUSDE",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/125 and https://api.fluid.instadapp.io/v2/1/vaults/125. rate+borrow: trading 0.37 (Fluid 0.67; Llama now/7d/30d 0.37187/1.37178/0.97151) + 0.527 x (GHO lent 4.50 + own 0.00) + 0.473 x (sUSDe lent 0.00 + own 4.99); debt: 0.090 x (GHO 6.18 + grows 0.00) + 0.910 x (USDC 5.92 + grows 0.00) - trading 0.01 (Fluid 0.23; Llama 0.00853/0.22881/0.14684) + vault 0.00. Limit collateralFactor 0.92. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:126",
+  "name": "Fluid T4 sUSDe-USDT / USDC-USDT #126",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.373,
+  "tvl": 441660,
+  "pool": "0x91D5884a57E4A3718654B462B32cC628b2c6A39A",
+  "max_l": 12.25,
+  "borrow": 5.92,
+  "free": 2560580,
+  "lltv": 0.94,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T4 #126",
+  "symbol": "SUSDE/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/126 and https://api.fluid.instadapp.io/v2/1/vaults/126. rate+borrow: trading 0.81 (Fluid 0.97; Llama now/7d/30d 0.80671/3.22087/3.07974) + 0.200 x (sUSDe lent 0.00 + own 4.99) + 0.800 x (USDT lent 4.46 + own 0.00); debt: 1.000 x (USDC 5.92 + grows 0.00) + 0.000 x (USDT 5.91 + grows 0.00) - trading 0.00 (Fluid 0.00; Llama 0/0.00029/0.04897) + vault 0.00. Limit collateralFactor 0.92. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:127",
+  "name": "Fluid T4 USDe-USDT / USDC-USDT #127",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 4.014,
+  "tvl": 1674015,
+  "pool": "0x4B5fa15996C2E23b35E64f0ca62d30c4945E53Cb",
+  "max_l": 16.5,
+  "borrow": 5.92,
+  "free": 2560584,
+  "lltv": 0.95,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T4 #127",
+  "symbol": "USDE/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/127 and https://api.fluid.instadapp.io/v2/1/vaults/127. rate+borrow: trading 0.56 (Fluid 2.41; Llama now/7d/30d 0.5604/2.30649/1.4616) + 0.226 x (USDe lent 0.00 + own 0.00) + 0.774 x (USDT lent 4.46 + own 0.00); debt: 1.000 x (USDC 5.92 + grows 0.00) + 0.000 x (USDT 5.91 + grows 0.00) - trading 0.00 (Fluid 0.00; Llama 0/0.00029/0.04897) + vault 0.00. Limit collateralFactor 0.94. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:137",
+  "name": "Fluid T2 USDe-USDtb / USDT #137",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.315,
+  "tvl": 164545,
+  "pool": "0x5668c53C6188BA0a311E28b54D7822771D9BDeea",
+  "max_l": 9.75,
+  "borrow": 5.91,
+  "free": 872464,
+  "lltv": 0.92,
+  "first_bps": 11.0,
+  "loop_bps": 11.0,
+  "gas": 4.25,
+  "meta": "T2 #137",
+  "symbol": "USDE/USDTB",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/137 and https://api.fluid.instadapp.io/v2/1/vaults/137. rate+borrow: trading 0.41 (Fluid 0.84; Llama now/7d/30d 0.82097/1.57796/0.4054) + 0.535 x (USDe lent 0.00 + own 0.00) + 0.465 x (USDtb lent 4.11 + own 0.00); debt: USDT vault 5.91 + grows 0.00. Limit collateralFactor 0.9. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:138",
+  "name": "Fluid T2 USDe-USDtb / USDC #138",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.315,
+  "tvl": 164545,
+  "pool": "0x71a3bD2B2214E51e33144590948aA88beAfF2E44",
+  "max_l": 9.75,
+  "borrow": 5.92,
+  "free": 1022076,
+  "lltv": 0.92,
+  "first_bps": 11.0,
+  "loop_bps": 11.0,
+  "gas": 4.25,
+  "meta": "T2 #138",
+  "symbol": "USDE/USDTB",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/138 and https://api.fluid.instadapp.io/v2/1/vaults/138. rate+borrow: trading 0.41 (Fluid 0.84; Llama now/7d/30d 0.82097/1.57796/0.4054) + 0.535 x (USDe lent 0.00 + own 0.00) + 0.465 x (USDtb lent 4.11 + own 0.00); debt: USDC vault 5.92 + grows 0.00. Limit collateralFactor 0.9. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:140",
+  "name": "Fluid T2 USDe-USDtb / GHO #140",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.315,
+  "tvl": 164545,
+  "pool": "0x1e6ce96d65901E0779C17E83258e07D2f8962fa4",
+  "max_l": 9.75,
+  "borrow": 6.18,
+  "free": 1017654,
+  "lltv": 0.92,
+  "first_bps": 11.0,
+  "loop_bps": 11.0,
+  "gas": 4.25,
+  "meta": "T2 #140",
+  "symbol": "USDE/USDTB",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/140 and https://api.fluid.instadapp.io/v2/1/vaults/140. rate+borrow: trading 0.41 (Fluid 0.84; Llama now/7d/30d 0.82097/1.57796/0.4054) + 0.535 x (USDe lent 0.00 + own 0.00) + 0.465 x (USDtb lent 4.11 + own 0.00); debt: GHO vault 6.18 + grows 0.00. Limit collateralFactor 0.9. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:139",
+  "name": "Fluid T4 GHO-USDe / GHO-USDC #139",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.231,
+  "tvl": 385,
+  "pool": "0xe3Cac7cC6b0EeD28e16331F08be7948BbfcB5acC",
+  "max_l": 9.75,
+  "borrow": 5.935,
+  "free": 1022457,
+  "lltv": 0.92,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T4 #139",
+  "symbol": "GHO/USDE",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/139 and https://api.fluid.instadapp.io/v2/1/vaults/139. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.496 x (GHO lent 4.50 + own 0.00) + 0.504 x (USDe lent 0.00 + own 0.00); debt: 0.090 x (GHO 6.18 + grows 0.00) + 0.910 x (USDC 5.92 + grows 0.00) - trading 0.01 (Fluid 0.23; Llama 0.00853/0.22881/0.14684) + vault 0.00. Limit collateralFactor 0.9. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:141",
+  "name": "Fluid T2 GHO-USDe / GHO #141",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.231,
+  "tvl": 385,
+  "pool": "0x4095a3A8efe779D283102377669778900212D856",
+  "max_l": 14.25,
+  "borrow": 6.18,
+  "free": 1017615,
+  "lltv": 0.95,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T2 #141",
+  "symbol": "GHO/USDE",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/141 and https://api.fluid.instadapp.io/v2/1/vaults/141. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.496 x (GHO lent 4.50 + own 0.00) + 0.504 x (USDe lent 0.00 + own 0.00); debt: GHO vault 6.18 + grows 0.00. Limit collateralFactor 0.93. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:145",
+  "name": "Fluid T2 syrupUSDC-USDC / USDC #145",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "maple"
+  ],
+  "chain": "Ethereum",
+  "rate": 4.374,
+  "tvl": 479550,
+  "pool": "0x01510793Df6aD5C1a8Ae592158713176Cbd17a62",
+  "max_l": 9.75,
+  "borrow": 5.92,
+  "free": 2149537,
+  "lltv": 0.92,
+  "first_bps": 5.0,
+  "loop_bps": 5.0,
+  "gas": 4.25,
+  "meta": "T2 #145",
+  "symbol": "SYRUPUSDC/USDC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/145 and https://api.fluid.instadapp.io/v2/1/vaults/145. rate+borrow: trading 0.05 (Fluid 4.78; Llama now/7d/30d 0.04989/10.24736/2.61509) + 0.122 x (syrupUSDC lent 0.00 + own 3.35) + 0.878 x (USDC lent 4.46 + own 0.00); debt: USDC vault 5.92 + grows 0.00. Limit collateralFactor 0.9. Costs: pool fee 5.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:149",
+  "name": "Fluid T2 syrupUSDT-USDT / USDT #149",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "maple"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.98,
+  "tvl": 103,
+  "pool": "0x5f36cDFeb6a37F22D71D57fc4E7a0a0EeDC70208",
+  "max_l": 9.75,
+  "borrow": 5.91,
+  "free": 2550476,
+  "lltv": 0.92,
+  "first_bps": 15.0,
+  "loop_bps": 5.0,
+  "gas": 4.25,
+  "meta": "T2 #149",
+  "symbol": "SYRUPUSDT/USDT",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/149 and https://api.fluid.instadapp.io/v2/1/vaults/149. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.332 x (syrupUSDT lent 0.00 + own 0.00) + 0.668 x (USDT lent 4.46 + own 0.00); debt: USDT vault 5.91 + grows 0.00. Limit collateralFactor 0.9. Costs: pool fee 5.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:159",
+  "name": "Fluid T2 ETH-osETH / wstETH #159",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "stakewise-v3",
+   "lido"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.026,
+  "tvl": 14748631,
+  "pool": "0x40D0aA5041D4C591D26A5CE59Fb62629d0C23b8D",
+  "max_l": 16.5,
+  "borrow": 2.404,
+  "free": 1406215,
+  "lltv": 0.96,
+  "first_bps": 13.0,
+  "loop_bps": 13.0,
+  "gas": 4.25,
+  "meta": "T2 #159",
+  "symbol": "ETH/OSETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/159 and https://api.fluid.instadapp.io/v2/1/vaults/159. rate+borrow: trading 0.01 (Fluid 0.01; Llama now/7d/30d 0.46998/0.16669/0.12023) + 0.394 x (ETH lent 1.64 + own 0.00) + 0.606 x (osETH lent 0.00 + own 2.26); debt: wstETH vault 0.13 + grows 2.27. Limit collateralFactor 0.94. Costs: pool fee 3.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:163",
+  "name": "Fluid T3 reUSD / USDC-USDT #163",
+  "family": "loop_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:reUSD"
+  ],
+  "chain": "Ethereum",
+  "rate": 6.879,
+  "tvl": 2892709,
+  "pool": "0xC8c9EF21613eB49F6959252154eE8632E40A67Ce",
+  "max_l": 7.5,
+  "borrow": 5.283,
+  "free": 249176,
+  "lltv": 0.9,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #163",
+  "symbol": "REUSD",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/163 and https://api.fluid.instadapp.io/v2/1/vaults/163. rate+borrow: reUSD own 6.88 + vault supply 0.00; debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.87. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:164",
+  "name": "Fluid T2 reUSD-USDT / USDT #164",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:reUSD"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.536,
+  "tvl": 25133293,
+  "pool": "0x57EF7CdCdb639742Fcd4FF88Edb00BbDad1929F9",
+  "max_l": 7.5,
+  "borrow": 5.91,
+  "free": 68,
+  "lltv": 0.9,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #164",
+  "symbol": "REUSD/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/164 and https://api.fluid.instadapp.io/v2/1/vaults/164. rate+borrow: trading 0.72 (Fluid 1.14; Llama now/7d/30d 0.72242/1.52248/1.05525) + 0.146 x (reUSD lent 0.00 + own 6.88) + 0.854 x (USDT lent 4.46 + own 0.00); debt: USDT vault 5.91 + grows 0.00. Limit collateralFactor 0.87. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:168",
+  "name": "Fluid T3 PST / USDC-USDT #168",
+  "family": "loop_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:PST"
+  ],
+  "chain": "Ethereum",
+  "rate": 8.0,
+  "tvl": 8904475,
+  "pool": "0x56a25029b116a7AA329d5e6357E8679E824F6c83",
+  "max_l": 6.5,
+  "borrow": 5.283,
+  "free": 2136821,
+  "lltv": 0.87,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #168",
+  "symbol": "PST",
+  "flags": [
+   "PST 8.00 is Fluid's stakingApr, one reading; DefiLlama has no issuer row for Huma's PST"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/168 and https://api.fluid.instadapp.io/v2/1/vaults/168. rate+borrow: PST own 8.00 + vault supply 0.00; debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.85. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:169",
+  "name": "Fluid T4 PST-USDC / USDC-USDT #169",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:PST"
+  ],
+  "chain": "Ethereum",
+  "rate": 6.44,
+  "tvl": 5137256,
+  "pool": "0x04F461756D3799Bfa05f1a367c41FaBa09743791",
+  "max_l": 6.5,
+  "borrow": 5.283,
+  "free": 1568735,
+  "lltv": 0.87,
+  "first_bps": 2.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T4 #169",
+  "symbol": "PST/USDC",
+  "flags": [
+   "PST 8.00 is Fluid's stakingApr, one reading; DefiLlama has no issuer row for Huma's PST"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/169 and https://api.fluid.instadapp.io/v2/1/vaults/169. rate+borrow: trading 0.00 (Fluid 0.03; Llama now/7d/30d 0/0.0383/0.06298) + 0.559 x (PST lent 0.00 + own 8.00) + 0.441 x (USDC lent 4.46 + own 0.00); debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.85. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:170",
+  "name": "Fluid T4 reUSD-USDT / USDC-USDT #170",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:reUSD"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.536,
+  "tvl": 25133293,
+  "pool": "0x18aEcd810742a6aE160F4C641fBbb14f15b7ED55",
+  "max_l": 7.5,
+  "borrow": 5.283,
+  "free": 68,
+  "lltv": 0.9,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T4 #170",
+  "symbol": "REUSD/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/170 and https://api.fluid.instadapp.io/v2/1/vaults/170. rate+borrow: trading 0.72 (Fluid 1.14; Llama now/7d/30d 0.72242/1.52248/1.05525) + 0.146 x (reUSD lent 0.00 + own 6.88) + 0.854 x (USDT lent 4.46 + own 0.00); debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.87. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:181",
+  "name": "Fluid T3 reUSD / GHO-USDC #181",
+  "family": "loop_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:reUSD"
+  ],
+  "chain": "Ethereum",
+  "rate": 6.879,
+  "tvl": 36977,
+  "pool": "0x1e3a423bBD2820B08a7Dca2E5D683C143BB11c53",
+  "max_l": 7.5,
+  "borrow": 5.935,
+  "free": 5669458,
+  "lltv": 0.9,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #181",
+  "symbol": "REUSD",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/181 and https://api.fluid.instadapp.io/v2/1/vaults/181. rate+borrow: reUSD own 6.88 + vault supply 0.00; debt: 0.090 x (GHO 6.18 + grows 0.00) + 0.910 x (USDC 5.92 + grows 0.00) - trading 0.01 (Fluid 0.23; Llama 0.00853/0.22881/0.14684) + vault 0.00. Limit collateralFactor 0.87. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:173",
+  "name": "Fluid T3 sUSDai / USDC-USDT #173",
+  "family": "loop_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Ethereum",
+  "rate": 6.532,
+  "tvl": 16069114,
+  "pool": "0x1d3FADD621946c104d72bc2D01A79acdf9719EBa",
+  "max_l": 8.25,
+  "borrow": 5.283,
+  "free": 1178046,
+  "lltv": 0.9,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #173",
+  "symbol": "SUSDAI",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/173 and https://api.fluid.instadapp.io/v2/1/vaults/173. rate+borrow: sUSDai own 6.53 + vault supply 0.00; debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.88. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:175",
+  "name": "Fluid T4 sUSDai-USDC / USDC-USDT #175",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Ethereum",
+  "rate": 6.258,
+  "tvl": 15084753,
+  "pool": "0x26A5F44Aac931f2aBc1C89236a6DfdE3ebeEd997",
+  "max_l": 8.25,
+  "borrow": 5.283,
+  "free": 8164507,
+  "lltv": 0.9,
+  "first_bps": 2.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T4 #175",
+  "symbol": "SUSDAI/USDC",
+  "flags": [
+   "trading rests on few days: 30-day median of the fee 0.21 on the collateral pool (DefiLlama 195030f8)"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/175 and https://api.fluid.instadapp.io/v2/1/vaults/175. rate+borrow: trading 0.14 (Fluid 0.58; Llama now/7d/30d 0.14108/0.8159/0.44174) + 0.800 x (sUSDai lent 0.00 + own 6.53) + 0.200 x (USDC lent 4.46 + own 0.00); debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.88. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:176",
+  "name": "Fluid T4 sUSDai-USDT / USDC-USDT #176",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.695,
+  "tvl": 15285312,
+  "pool": "0xc16f5c0996B80a4Ae4F75652bBE684b6F6b808eB",
+  "max_l": 8.25,
+  "borrow": 5.283,
+  "free": 8164507,
+  "lltv": 0.9,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T4 #176",
+  "symbol": "SUSDAI/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/176 and https://api.fluid.instadapp.io/v2/1/vaults/176. rate+borrow: trading 0.00 (Fluid 0.57; Llama now/7d/30d 0/0.92737/0.51741) + 0.596 x (sUSDai lent 0.00 + own 6.53) + 0.404 x (USDT lent 4.46 + own 0.00); debt: 0.801 x (USDC 5.92 + grows 0.00) + 0.199 x (USDT 5.91 + grows 0.00) - trading 0.63 (Fluid 0.95; Llama 0.66001/1.53597/0.63476) + vault 0.00. Limit collateralFactor 0.88. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:177",
+  "name": "Fluid T2 sUSDai-USDT / USDT #177",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.695,
+  "tvl": 15285312,
+  "pool": "0x0FAA99E9662d5b6000f525b830CA2d054cDB8339",
+  "max_l": 8.25,
+  "borrow": 5.91,
+  "free": 4000079,
+  "lltv": 0.9,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #177",
+  "symbol": "SUSDAI/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/177 and https://api.fluid.instadapp.io/v2/1/vaults/177. rate+borrow: trading 0.00 (Fluid 0.57; Llama now/7d/30d 0/0.92737/0.51741) + 0.596 x (sUSDai lent 0.00 + own 6.53) + 0.404 x (USDT lent 4.46 + own 0.00); debt: USDT vault 5.91 + grows 0.00. Limit collateralFactor 0.88. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:178",
+  "name": "Fluid T2 sUSDai-USDC / USDC #178",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Ethereum",
+  "rate": 6.258,
+  "tvl": 15084753,
+  "pool": "0x7e1874Cdc9195163c23A1bb38B83E136B0b1D8E5",
+  "max_l": 8.25,
+  "borrow": 5.92,
+  "free": 3959451,
+  "lltv": 0.9,
+  "first_bps": 2.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #178",
+  "symbol": "SUSDAI/USDC",
+  "flags": [
+   "trading rests on few days: 30-day median of the fee 0.21 (DefiLlama 195030f8)"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/178 and https://api.fluid.instadapp.io/v2/1/vaults/178. rate+borrow: trading 0.14 (Fluid 0.58; Llama now/7d/30d 0.14108/0.8159/0.44174) + 0.800 x (sUSDai lent 0.00 + own 6.53) + 0.200 x (USDC lent 4.46 + own 0.00); debt: USDC vault 5.92 + grows 0.00. Limit collateralFactor 0.88. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:1:180",
+  "name": "Fluid T2 USDai-USDC / USDC #180",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Ethereum",
+  "rate": 4.394,
+  "tvl": 51,
+  "pool": "0x1449Fa85260fd18Edb742F9e2dfB2f2BaDE65C84",
+  "max_l": 14.25,
+  "borrow": 5.92,
+  "free": 5113334,
+  "lltv": 0.94,
+  "first_bps": 2.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #180",
+  "symbol": "USDAI/USDC",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/1/borrowing/vaults/180 and https://api.fluid.instadapp.io/v2/1/vaults/180. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.015 x (USDai lent 0.00 + own 0.00) + 0.985 x (USDC lent 4.46 + own 0.00); debt: USDC vault 5.92 + grows 0.00. Limit collateralFactor 0.93. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:16",
+  "name": "Fluid T4 wstETH-ETH / wstETH-ETH #16",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Arbitrum",
+  "rate": 1.054,
+  "tvl": 1855878,
+  "pool": "0xeAEf563015634a9d0EE6CF1357A3b205C35e028D",
+  "max_l": 19.75,
+  "borrow": 2.28,
+  "free": 612436,
+  "lltv": 0.97,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T4 #16",
+  "symbol": "WSTETH/ETH",
+  "flags": [
+   "Fluid's own debt net today 1.66%, the lowest-fee reading used here"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/16 and https://api.fluid.instadapp.io/v2/42161/vaults/16. rate+borrow: trading 0.05 (Fluid 0.67; Llama now/7d/30d 0.05397/0.63854/0.62135) + 0.000 x (wstETH lent 0.00 + own 2.27) + 1.000 x (ETH lent 1.00 + own 0.00); debt: 1.000 x (wstETH 0.06 + grows 2.27) + 0.000 x (ETH 1.93 + grows 0.00) - trading 0.05 (Fluid 0.67; Llama 0.05397/0.63854/0.62135) + vault 0.00. Limit collateralFactor 0.95. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:17",
+  "name": "Fluid T2 weETH-ETH / wstETH #17",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ether.fi-stake",
+   "lido"
+  ],
+  "chain": "Arbitrum",
+  "rate": 2.031,
+  "tvl": 179925,
+  "pool": "0x3996464c0fCCa8183e13ea5E5e74375e2c8744Dd",
+  "max_l": 16.5,
+  "borrow": 2.334,
+  "free": 2439009,
+  "lltv": 0.96,
+  "first_bps": 12.0,
+  "loop_bps": 12.0,
+  "gas": 4.25,
+  "meta": "T2 #17",
+  "symbol": "WEETH/ETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/17 and https://api.fluid.instadapp.io/v2/42161/vaults/17. rate+borrow: trading 0.85 (Fluid 2.71; Llama now/7d/30d 0.84837/3.20879/4.51176) + 0.136 x (weETH lent 0.00 + own 2.34) + 0.864 x (ETH lent 1.00 + own 0.00); debt: wstETH vault 0.06 + grows 2.27. Limit collateralFactor 0.94. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:22",
+  "name": "Fluid T4 USDC-ETH / USDC-ETH #22",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Arbitrum",
+  "rate": 16.585,
+  "tvl": 29897,
+  "pool": "0x3A0b7c8840D74D39552EF53F586dD8c3d1234C40",
+  "max_l": 3.75,
+  "borrow": -8.835,
+  "free": 3984618,
+  "lltv": 0.85,
+  "first_bps": 5.0,
+  "loop_bps": 5.0,
+  "gas": 4.25,
+  "meta": "T4 #22",
+  "symbol": "USDC/ETH",
+  "flags": [
+   "net debt rate is negative: trading fees pay the debt",
+   "Fluid's own debt net today -13.96%, the lowest-fee reading used here"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/22 and https://api.fluid.instadapp.io/v2/42161/vaults/22. rate+borrow: trading 13.74 (Fluid 19.42; Llama now/7d/30d 13.74126/15.26397/15.40015) + 0.565 x (USDC lent 4.26 + own 0.00) + 0.435 x (ETH lent 1.00 + own 0.00); debt: 0.424 x (USDC 5.78 + grows 0.00) + 0.576 x (ETH 1.93 + grows 0.00) - trading 12.40 (Fluid 17.52; Llama 13.74126/15.26397/15.40015) + vault 0.00. Limit collateralFactor 0.75. Costs: pool fee 5.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:23",
+  "name": "Fluid T3 ETH / USDC-USDT #23",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Arbitrum",
+  "rate": 1.0,
+  "tvl": 265458,
+  "pool": "0xaD439b9D61b25af1ca4Cd211E3eCb9AfBaAEd84a",
+  "max_l": 7.5,
+  "borrow": 5.275,
+  "free": 3159127,
+  "lltv": 0.92,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #23",
+  "symbol": "ETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/23 and https://api.fluid.instadapp.io/v2/42161/vaults/23. rate+borrow: ETH own 0.00 + vault supply 1.00; debt: 0.791 x (USDC 5.78 + grows 0.00) + 0.209 x (USDT 5.95 + grows 0.00) - trading 0.54 (Fluid 0.54; Llama 0.68912/0.93302/0.63853) + vault 0.00. Limit collateralFactor 0.87. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:24",
+  "name": "Fluid T3 wstETH / USDC-USDT #24",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Arbitrum",
+  "rate": 2.274,
+  "tvl": 163384,
+  "pool": "0x991416539E9DA46db233bCcbaEA38C4f852776D4",
+  "max_l": 5.5,
+  "borrow": 5.275,
+  "free": 3172558,
+  "lltv": 0.88,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #24",
+  "symbol": "WSTETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/24 and https://api.fluid.instadapp.io/v2/42161/vaults/24. rate+borrow: wstETH own 2.27 + vault supply 0.00; debt: 0.791 x (USDC 5.78 + grows 0.00) + 0.209 x (USDT 5.95 + grows 0.00) - trading 0.54 (Fluid 0.54; Llama 0.68912/0.93302/0.63853) + vault 0.00. Limit collateralFactor 0.82. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:25",
+  "name": "Fluid T3 weETH / USDC-USDT #25",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ether.fi-stake"
+  ],
+  "chain": "Arbitrum",
+  "rate": 2.341,
+  "tvl": 23489,
+  "pool": "0x03271C337c86a6Fd89625A2820e48621DC2a128b",
+  "max_l": 3.75,
+  "borrow": 5.275,
+  "free": 97685,
+  "lltv": 0.8,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #25",
+  "symbol": "WEETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/25 and https://api.fluid.instadapp.io/v2/42161/vaults/25. rate+borrow: weETH own 2.34 + vault supply 0.00; debt: 0.791 x (USDC 5.78 + grows 0.00) + 0.209 x (USDT 5.95 + grows 0.00) - trading 0.54 (Fluid 0.54; Llama 0.68912/0.93302/0.63853) + vault 0.00. Limit collateralFactor 0.75. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:26",
+  "name": "Fluid T3 WBTC / USDC-USDT #26",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Arbitrum",
+  "rate": 0.02,
+  "tvl": 222726,
+  "pool": "0xF74cb9D69ada3559903149CFD60fD57cEAF95F30",
+  "max_l": 4.75,
+  "borrow": 5.275,
+  "free": 3140840,
+  "lltv": 0.85,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #26",
+  "symbol": "WBTC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/26 and https://api.fluid.instadapp.io/v2/42161/vaults/26. rate+borrow: WBTC own 0.00 + vault supply 0.02; debt: 0.791 x (USDC 5.78 + grows 0.00) + 0.209 x (USDT 5.95 + grows 0.00) - trading 0.54 (Fluid 0.54; Llama 0.68912/0.93302/0.63853) + vault 0.00. Limit collateralFactor 0.8. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:40",
+  "name": "Fluid T3 USDai / USDC-USDT #40",
+  "family": "loop_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Arbitrum",
+  "rate": 0.0,
+  "tvl": 40,
+  "pool": "0x274D1171F06E976a4f545E6d4bf017bEDC51F752",
+  "max_l": 7.5,
+  "borrow": 5.275,
+  "free": 102870,
+  "lltv": 0.9,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #40",
+  "symbol": "USDAI",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/40 and https://api.fluid.instadapp.io/v2/42161/vaults/40. rate+borrow: USDai own 0.00 + vault supply 0.00; debt: 0.791 x (USDC 5.78 + grows 0.00) + 0.209 x (USDT 5.95 + grows 0.00) - trading 0.54 (Fluid 0.54; Llama 0.68912/0.93302/0.63853) + vault 0.00. Limit collateralFactor 0.87. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:41",
+  "name": "Fluid T2 USDai-USDC / USDC #41",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Arbitrum",
+  "rate": 4.018,
+  "tvl": 88399,
+  "pool": "0x97950bF81f5605d2d0be37f28a33A752D6f16BDF",
+  "max_l": 14.25,
+  "borrow": 5.78,
+  "free": 1133835,
+  "lltv": 0.94,
+  "first_bps": 2.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #41",
+  "symbol": "USDAI/USDC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/41 and https://api.fluid.instadapp.io/v2/42161/vaults/41. rate+borrow: trading 1.11 (Fluid 26.87; Llama now/7d/30d 1.10964/15.6745/29.29217) + 0.317 x (USDai lent 0.00 + own 0.00) + 0.683 x (USDC lent 4.26 + own 0.00); debt: USDC vault 5.78 + grows 0.00. Limit collateralFactor 0.93. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:42",
+  "name": "Fluid T2 USDai-USDC / USDT #42",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Arbitrum",
+  "rate": 4.018,
+  "tvl": 88399,
+  "pool": "0x5eb4ba0C320B59f825cc8D2291f672247Aa5D06F",
+  "max_l": 14.25,
+  "borrow": 5.95,
+  "free": 94343,
+  "lltv": 0.94,
+  "first_bps": 2.0,
+  "loop_bps": 12.0,
+  "gas": 4.25,
+  "meta": "T2 #42",
+  "symbol": "USDAI/USDC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/42 and https://api.fluid.instadapp.io/v2/42161/vaults/42. rate+borrow: trading 1.11 (Fluid 26.87; Llama now/7d/30d 1.10964/15.6745/29.29217) + 0.317 x (USDai lent 0.00 + own 0.00) + 0.683 x (USDC lent 4.26 + own 0.00); debt: USDT vault 5.95 + grows 0.00. Limit collateralFactor 0.93. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:43",
+  "name": "Fluid T2 USDai-USDC / GHO #43",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Arbitrum",
+  "rate": 4.018,
+  "tvl": 88399,
+  "pool": "0xD173A445Fa0584eC76ac4abab50FfA39ABa5448C",
+  "max_l": 14.25,
+  "borrow": 5.99,
+  "free": 107241,
+  "lltv": 0.94,
+  "first_bps": 2.0,
+  "loop_bps": 12.0,
+  "gas": 4.25,
+  "meta": "T2 #43",
+  "symbol": "USDAI/USDC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/43 and https://api.fluid.instadapp.io/v2/42161/vaults/43. rate+borrow: trading 1.11 (Fluid 26.87; Llama now/7d/30d 1.10964/15.6745/29.29217) + 0.317 x (USDai lent 0.00 + own 0.00) + 0.683 x (USDC lent 4.26 + own 0.00); debt: GHO vault 5.99 + grows 0.00. Limit collateralFactor 0.93. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:44",
+  "name": "Fluid T4 USDai-USDC / USDC-USDT #44",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Arbitrum",
+  "rate": 4.018,
+  "tvl": 88399,
+  "pool": "0x528CF7DBBff878e02e48E83De5097F8071af768D",
+  "max_l": 14.25,
+  "borrow": 5.275,
+  "free": 102763,
+  "lltv": 0.94,
+  "first_bps": 2.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T4 #44",
+  "symbol": "USDAI/USDC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/44 and https://api.fluid.instadapp.io/v2/42161/vaults/44. rate+borrow: trading 1.11 (Fluid 26.87; Llama now/7d/30d 1.10964/15.6745/29.29217) + 0.317 x (USDai lent 0.00 + own 0.00) + 0.683 x (USDC lent 4.26 + own 0.00); debt: 0.791 x (USDC 5.78 + grows 0.00) + 0.209 x (USDT 5.95 + grows 0.00) - trading 0.54 (Fluid 0.54; Llama 0.68912/0.93302/0.63853) + vault 0.00. Limit collateralFactor 0.93. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:50",
+  "name": "Fluid T2 syrupUSDC-USDC / USDC #50",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "maple"
+  ],
+  "chain": "Arbitrum",
+  "rate": 3.756,
+  "tvl": 9306,
+  "pool": "0xe210d8ded13Abe836a10E8Aa956dd424658d0034",
+  "max_l": 9.75,
+  "borrow": 5.78,
+  "free": 1131665,
+  "lltv": 0.92,
+  "first_bps": 5.0,
+  "loop_bps": 5.0,
+  "gas": 4.25,
+  "meta": "T2 #50",
+  "symbol": "SYRUPUSDC/USDC",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/50 and https://api.fluid.instadapp.io/v2/42161/vaults/50. rate+borrow: trading 0.01 (Fluid 0.01; Llama now/7d/30d None/None/None) + 0.563 x (syrupUSDC lent 0.00 + own 3.35) + 0.437 x (USDC lent 4.26 + own 0.00); debt: USDC vault 5.78 + grows 0.00. Limit collateralFactor 0.9. Costs: pool fee 5.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:54",
+  "name": "Fluid T2 USDe-USDT / USDT #54",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Arbitrum",
+  "rate": 5.117,
+  "tvl": 17812,
+  "pool": "0xD9A7Dcdc57C6e44f00740dC73664fA456B983669",
+  "max_l": 14.25,
+  "borrow": 5.95,
+  "free": 96297,
+  "lltv": 0.95,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T2 #54",
+  "symbol": "USDE/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/54 and https://api.fluid.instadapp.io/v2/42161/vaults/54. rate+borrow: trading 2.34 (Fluid 4.25; Llama now/7d/30d 2.60686/3.24795/2.33807) + 0.385 x (USDe lent 0.00 + own 0.00) + 0.615 x (USDT lent 4.52 + own 0.00); debt: USDT vault 5.95 + grows 0.00. Limit collateralFactor 0.93. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:55",
+  "name": "Fluid T4 USDe-USDT / USDC-USDT #55",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Arbitrum",
+  "rate": 5.117,
+  "tvl": 17812,
+  "pool": "0xB0F2B58af3F17F1A3377c37F6E85eA41c369D1C7",
+  "max_l": 14.25,
+  "borrow": 5.275,
+  "free": 102760,
+  "lltv": 0.95,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T4 #55",
+  "symbol": "USDE/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/55 and https://api.fluid.instadapp.io/v2/42161/vaults/55. rate+borrow: trading 2.34 (Fluid 4.25; Llama now/7d/30d 2.60686/3.24795/2.33807) + 0.385 x (USDe lent 0.00 + own 0.00) + 0.615 x (USDT lent 4.52 + own 0.00); debt: 0.791 x (USDC 5.78 + grows 0.00) + 0.209 x (USDT 5.95 + grows 0.00) - trading 0.54 (Fluid 0.54; Llama 0.68912/0.93302/0.63853) + vault 0.00. Limit collateralFactor 0.93. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:59",
+  "name": "Fluid T3 sUSDe / USDC-USDT #59",
+  "family": "loop_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Arbitrum",
+  "rate": 4.991,
+  "tvl": 7432,
+  "pool": "0xe58Ed61ff0C9db46c8772FF7286B6B187D4fe68f",
+  "max_l": 12.25,
+  "borrow": 5.275,
+  "free": 97756,
+  "lltv": 0.94,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #59",
+  "symbol": "SUSDE",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/59 and https://api.fluid.instadapp.io/v2/42161/vaults/59. rate+borrow: sUSDe own 4.99 + vault supply 0.00; debt: 0.791 x (USDC 5.78 + grows 0.00) + 0.209 x (USDT 5.95 + grows 0.00) - trading 0.54 (Fluid 0.54; Llama 0.68912/0.93302/0.63853) + vault 0.00. Limit collateralFactor 0.92. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:60",
+  "name": "Fluid T2 sUSDe-USDT / USDT #60",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Arbitrum",
+  "rate": 4.677,
+  "tvl": 975684,
+  "pool": "0x81A0dD6c5DDB8474b483c31309b66d7173263CbB",
+  "max_l": 12.25,
+  "borrow": 5.95,
+  "free": 48992,
+  "lltv": 0.94,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #60",
+  "symbol": "SUSDE/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/60 and https://api.fluid.instadapp.io/v2/42161/vaults/60. rate+borrow: trading 0.00 (Fluid 0.05; Llama now/7d/30d 0/0.006/0.06954) + 0.332 x (sUSDe lent 0.00 + own 4.99) + 0.668 x (USDT lent 4.52 + own 0.00); debt: USDT vault 5.95 + grows 0.00. Limit collateralFactor 0.92. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:61",
+  "name": "Fluid T4 sUSDe-USDT / USDC-USDT #61",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Arbitrum",
+  "rate": 4.677,
+  "tvl": 975684,
+  "pool": "0x20b32C597633f12B44CFAFe0ab27408028CA0f6A",
+  "max_l": 12.25,
+  "borrow": 5.275,
+  "free": 1750670,
+  "lltv": 0.94,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T4 #61",
+  "symbol": "SUSDE/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/61 and https://api.fluid.instadapp.io/v2/42161/vaults/61. rate+borrow: trading 0.00 (Fluid 0.05; Llama now/7d/30d 0/0.006/0.06954) + 0.332 x (sUSDe lent 0.00 + own 4.99) + 0.668 x (USDT lent 4.52 + own 0.00); debt: 0.791 x (USDC 5.78 + grows 0.00) + 0.209 x (USDT 5.95 + grows 0.00) - trading 0.54 (Fluid 0.54; Llama 0.68912/0.93302/0.63853) + vault 0.00. Limit collateralFactor 0.92. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:62",
+  "name": "Fluid T2 USDe-GHO / GHO #62",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Arbitrum",
+  "rate": 4.017,
+  "tvl": 63362,
+  "pool": "0xAF861f04304216A0CeeA709D87556C826109E7F3",
+  "max_l": 14.25,
+  "borrow": 5.99,
+  "free": 47499,
+  "lltv": 0.95,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T2 #62",
+  "symbol": "USDE/GHO",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/62 and https://api.fluid.instadapp.io/v2/42161/vaults/62. rate+borrow: trading 1.15 (Fluid 3.21; Llama now/7d/30d 2.50058/1.14687/1.86958) + 0.372 x (USDe lent 0.00 + own 0.00) + 0.628 x (GHO lent 4.57 + own 0.00); debt: GHO vault 5.99 + grows 0.00. Limit collateralFactor 0.93. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:64",
+  "name": "Fluid T2 USDai-USDT / USDT #64",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Arbitrum",
+  "rate": 2.649,
+  "tvl": 43,
+  "pool": "0x73fc4272c310CF52e0b69B363c33911380B41987",
+  "max_l": 14.25,
+  "borrow": 5.95,
+  "free": 112561,
+  "lltv": 0.94,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #64",
+  "symbol": "USDAI/USDT",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/64 and https://api.fluid.instadapp.io/v2/42161/vaults/64. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.414 x (USDai lent 0.00 + own 0.00) + 0.586 x (USDT lent 4.52 + own 0.00); debt: USDT vault 5.95 + grows 0.00. Limit collateralFactor 0.93. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:67",
+  "name": "Fluid T2 sUSDai-USDC / USDC #67",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Arbitrum",
+  "rate": 7.061,
+  "tvl": 9291747,
+  "pool": "0x8FB5c0896C70B0056A09249EcEF7E7Ee01f037AF",
+  "max_l": 8.25,
+  "borrow": 5.78,
+  "free": 2424779,
+  "lltv": 0.9,
+  "first_bps": 2.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #67",
+  "symbol": "SUSDAI/USDC",
+  "flags": [
+   "trading rests on few days: 30-day median of the fee 0.25 (DefiLlama 8e68dfc4), so the position earns 6.29 on the median against 7.06 by the rule"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/67 and https://api.fluid.instadapp.io/v2/42161/vaults/67. rate+borrow: trading 1.02 (Fluid 1.02; Llama now/7d/30d 1.08041/1.30245/1.53824) + 0.784 x (sUSDai lent 0.00 + own 6.53) + 0.216 x (USDC lent 4.26 + own 0.00); debt: USDC vault 5.78 + grows 0.00. Limit collateralFactor 0.88. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:68",
+  "name": "Fluid T3 sUSDai / USDC-USDT #68",
+  "family": "loop_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Arbitrum",
+  "rate": 6.532,
+  "tvl": 12309278,
+  "pool": "0x75580D4be33C61700969583fDAeC566Ca84e5B69",
+  "max_l": 8.25,
+  "borrow": 5.275,
+  "free": 46049,
+  "lltv": 0.9,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #68",
+  "symbol": "SUSDAI",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/68 and https://api.fluid.instadapp.io/v2/42161/vaults/68. rate+borrow: sUSDai own 6.53 + vault supply 0.00; debt: 0.791 x (USDC 5.78 + grows 0.00) + 0.209 x (USDT 5.95 + grows 0.00) - trading 0.54 (Fluid 0.54; Llama 0.68912/0.93302/0.63853) + vault 0.00. Limit collateralFactor 0.88. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:69",
+  "name": "Fluid T2 sUSDai-USDT / USDT #69",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Arbitrum",
+  "rate": 5.802,
+  "tvl": 7336451,
+  "pool": "0x2f6c2A725EA6c4304cdC92B49F637a7735362EF5",
+  "max_l": 8.25,
+  "borrow": 5.95,
+  "free": 2773550,
+  "lltv": 0.9,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #69",
+  "symbol": "SUSDAI/USDT",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/69 and https://api.fluid.instadapp.io/v2/42161/vaults/69. rate+borrow: trading 0.07 (Fluid 1.89; Llama now/7d/30d 0.07239/0.85271/3.8075) + 0.601 x (sUSDai lent 0.00 + own 6.53) + 0.399 x (USDT lent 4.52 + own 0.00); debt: USDT vault 5.95 + grows 0.00. Limit collateralFactor 0.88. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:94",
+  "name": "Fluid T2 reUSD-USDC / USDC #94",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:reUSD"
+  ],
+  "chain": "Arbitrum",
+  "rate": 5.443,
+  "tvl": 3491467,
+  "pool": "0xEc57933D49A55b644837A3c7Bf98ebB8ad780191",
+  "max_l": 7.5,
+  "borrow": 5.78,
+  "free": 2594,
+  "lltv": 0.9,
+  "first_bps": 2.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #94",
+  "symbol": "REUSD/USDC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/94 and https://api.fluid.instadapp.io/v2/42161/vaults/94. rate+borrow: trading 0.10 (Fluid 0.28; Llama now/7d/30d 0.4181/0.23453/0.09516) + 0.415 x (reUSD lent 0.00 + own 6.88) + 0.585 x (USDC lent 4.26 + own 0.00); debt: USDC vault 5.78 + grows 0.00. Limit collateralFactor 0.87. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:42161:93",
+  "name": "Fluid T2 USDG-USDC / USDC #93",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "unlisted:USDG"
+  ],
+  "chain": "Arbitrum",
+  "rate": 4.042,
+  "tvl": 5017681,
+  "pool": "0x989a44CB4dBb7eBe20e0aBf3C1E1d727BF90F881",
+  "max_l": 12.25,
+  "borrow": 5.78,
+  "free": 4037118,
+  "lltv": 0.94,
+  "first_bps": 0.1,
+  "loop_bps": 0.1,
+  "gas": 4.25,
+  "meta": "T2 #93",
+  "symbol": "USDG/USDC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/42161/borrowing/vaults/93 and https://api.fluid.instadapp.io/v2/42161/vaults/93. rate+borrow: trading 0.03 (Fluid 0.06; Llama now/7d/30d 0.11353/0.02621/0.20344) + 0.490 x (USDG lent 0.00 + own 3.76) + 0.510 x (USDC lent 4.26 + own 0.00); debt: USDC vault 5.78 + grows 0.00. Limit collateralFactor 0.92. Costs: pool fee 0.1 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:8453:29",
+  "name": "Fluid T4 wstETH-ETH / wstETH-ETH #29",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Base",
+  "rate": 1.224,
+  "tvl": 2697424,
+  "pool": "0x01c7c1c41dea58b043e700eFb23Dc077F12a125e",
+  "max_l": 19.75,
+  "borrow": 2.297,
+  "free": 36882,
+  "lltv": 0.97,
+  "first_bps": 10.5,
+  "loop_bps": 0.5,
+  "gas": 4.25,
+  "meta": "T4 #29",
+  "symbol": "WSTETH/ETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/8453/borrowing/vaults/29 and https://api.fluid.instadapp.io/v2/8453/vaults/29. rate+borrow: trading 0.11 (Fluid 0.36; Llama now/7d/30d 0.10976/0.31389/0.22922) + 0.126 x (wstETH lent 0.05 + own 2.27) + 0.874 x (ETH lent 0.94 + own 0.00); debt: 0.874 x (wstETH 0.21 + grows 2.27) + 0.126 x (ETH 1.87 + grows 0.00) - trading 0.11 (Fluid 0.36; Llama 0.10976/0.31389/0.22922) + vault 0.00. Limit collateralFactor 0.95. Costs: pool fee 0.5 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:8453:30",
+  "name": "Fluid T2 weETH-ETH / wstETH #30",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ether.fi-stake",
+   "lido"
+  ],
+  "chain": "Base",
+  "rate": 1.134,
+  "tvl": 1639892,
+  "pool": "0xE6b5D1CdC4935295c84772C4700932b4BFC93274",
+  "max_l": 16.5,
+  "borrow": 2.484,
+  "free": 1175593,
+  "lltv": 0.96,
+  "first_bps": 11.0,
+  "loop_bps": 11.0,
+  "gas": 4.25,
+  "meta": "T2 #30",
+  "symbol": "WEETH/ETH",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/8453/borrowing/vaults/30 and https://api.fluid.instadapp.io/v2/8453/vaults/30. rate+borrow: trading 0.00 (Fluid 0.31; Llama now/7d/30d 0.00214/0.3084/0.12402) + 0.137 x (weETH lent 0.00 + own 2.34) + 0.863 x (ETH lent 0.94 + own 0.00); debt: wstETH vault 0.21 + grows 2.27. Limit collateralFactor 0.94. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:8453:36",
+  "name": "Fluid T2 syrupUSDC-USDC / USDC #36",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "maple"
+  ],
+  "chain": "Base",
+  "rate": 4.291,
+  "tvl": 4020,
+  "pool": "0xA9FF23CfF9439c418DA08CE7954a92E46311761e",
+  "max_l": 8.25,
+  "borrow": 7.05,
+  "free": 102062,
+  "lltv": 0.9,
+  "first_bps": 5.0,
+  "loop_bps": 5.0,
+  "gas": 4.25,
+  "meta": "T2 #36",
+  "symbol": "SYRUPUSDC/USDC",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/8453/borrowing/vaults/36 and https://api.fluid.instadapp.io/v2/8453/vaults/36. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.604 x (syrupUSDC lent 0.00 + own 3.35) + 0.396 x (USDC lent 5.73 + own 0.00); debt: USDC vault 7.05 + grows 0.00. Limit collateralFactor 0.88. Costs: pool fee 5.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:8453:46",
+  "name": "Fluid T2 USDai-USDC / USDC #46",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Base",
+  "rate": 2.424,
+  "tvl": 210,
+  "pool": "0x221E35b5655A1eEB3C42c4DeFc39648531f6C9CF",
+  "max_l": 14.25,
+  "borrow": 7.05,
+  "free": 102979,
+  "lltv": 0.94,
+  "first_bps": 2.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #46",
+  "symbol": "USDAI/USDC",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/8453/borrowing/vaults/46 and https://api.fluid.instadapp.io/v2/8453/vaults/46. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.577 x (USDai lent 0.00 + own 0.00) + 0.423 x (USDC lent 5.73 + own 0.00); debt: USDC vault 7.05 + grows 0.00. Limit collateralFactor 0.93. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:8453:48",
+  "name": "Fluid T2 sUSDai-USDC / USDC #48",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Base",
+  "rate": 6.387,
+  "tvl": 336440,
+  "pool": "0x59fa2F51F5c8fFfceB538180EC47A869eC3DBd4a",
+  "max_l": 8.25,
+  "borrow": 7.05,
+  "free": 626625,
+  "lltv": 0.9,
+  "first_bps": 2.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #48",
+  "symbol": "SUSDAI/USDC",
+  "flags": [],
+  "gate": null,
+  "source": "https://fluid.io/8453/borrowing/vaults/48 and https://api.fluid.instadapp.io/v2/8453/vaults/48. rate+borrow: trading 0.00 (Fluid 0.44; Llama now/7d/30d 0/0.83261/0.49973) + 0.820 x (sUSDai lent 0.00 + own 6.53) + 0.180 x (USDC lent 5.73 + own 0.00); debt: USDC vault 7.05 + grows 0.00. Limit collateralFactor 0.88. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:137:17",
+  "name": "Fluid T3 POL / USDC-USDT #17",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Polygon PoS",
+  "rate": 0.0,
+  "tvl": 1264,
+  "pool": "0x3996464c0fCCa8183e13ea5E5e74375e2c8744Dd",
+  "max_l": 3.0,
+  "borrow": 4.216,
+  "free": 1538301,
+  "lltv": 0.73,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #17",
+  "symbol": "POL",
+  "flags": [
+   "Fluid's own debt net today 1.66%, the lowest-fee reading used here"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/137/borrowing/vaults/17 and https://api.fluid.instadapp.io/v2/137/vaults/17. rate+borrow: POL own 0.00 + vault supply 0.00; debt: 0.817 x (USDC 5.38 + grows 0.00) + 0.183 x (USDT 4.75 + grows 0.00) - trading 1.05 (Fluid 3.60; Llama 1.04923/3.66968/1.73198) + vault 0.00. Limit collateralFactor 0.68. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:137:18",
+  "name": "Fluid T3 WBTC / USDC-USDT #18",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Polygon PoS",
+  "rate": 0.0,
+  "tvl": 94026,
+  "pool": "0xBc345229C1b52e4c30530C614BB487323BA38Da5",
+  "max_l": 3.75,
+  "borrow": 4.216,
+  "free": 1505742,
+  "lltv": 0.78,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #18",
+  "symbol": "WBTC",
+  "flags": [
+   "Fluid's own debt net today 1.66%, the lowest-fee reading used here"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/137/borrowing/vaults/18 and https://api.fluid.instadapp.io/v2/137/vaults/18. rate+borrow: WBTC own 0.00 + vault supply 0.00; debt: 0.817 x (USDC 5.38 + grows 0.00) + 0.183 x (USDT 4.75 + grows 0.00) - trading 1.05 (Fluid 3.60; Llama 1.04923/3.66968/1.73198) + vault 0.00. Limit collateralFactor 0.75. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:137:19",
+  "name": "Fluid T3 WETH / USDC-USDT #19",
+  "family": "loop_volatile",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Polygon PoS",
+  "rate": 0.89,
+  "tvl": 46602,
+  "pool": "0xF2c8F54447cbd591C396b0Dd7ac15FAF552d0FA4",
+  "max_l": 4.75,
+  "borrow": 4.216,
+  "free": 1516205,
+  "lltv": 0.83,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "T3 #19",
+  "symbol": "WETH",
+  "flags": [
+   "Fluid's own debt net today 1.66%, the lowest-fee reading used here"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/137/borrowing/vaults/19 and https://api.fluid.instadapp.io/v2/137/vaults/19. rate+borrow: WETH own 0.00 + vault supply 0.89; debt: 0.817 x (USDC 5.38 + grows 0.00) + 0.183 x (USDT 4.75 + grows 0.00) - trading 1.05 (Fluid 3.60; Llama 1.04923/3.66968/1.73198) + vault 0.00. Limit collateralFactor 0.8. Costs: pool fee None bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:137:26",
+  "name": "Fluid T2 USDC.e-USDC / USDC #26",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Polygon PoS",
+  "rate": 6.664,
+  "tvl": 1310,
+  "pool": "0xF74cb9D69ada3559903149CFD60fD57cEAF95F30",
+  "max_l": 49.75,
+  "borrow": 5.38,
+  "free": 65590,
+  "lltv": 0.985,
+  "first_bps": 1.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T2 #26",
+  "symbol": "USDC.E/USDC",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/137/borrowing/vaults/26 and https://api.fluid.instadapp.io/v2/137/vaults/26. rate+borrow: trading 4.17 (Fluid 4.17; Llama now/7d/30d None/None/None) + 0.429 x (USDC.e lent 0.00 + own 0.00) + 0.571 x (USDC lent 4.37 + own 0.00); debt: USDC vault 5.38 + grows 0.00. Limit collateralFactor 0.98. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:9745:11",
+  "name": "Fluid T2 WETH-weETH / WETH #11",
+  "family": "lp_levered",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ether.fi-stake"
+  ],
+  "chain": "Plasma",
+  "rate": 0.584,
+  "tvl": 440824,
+  "pool": "0x0C8C77B7FF4c2aF7F6CEBbe67350A490E3DD6cB3",
+  "max_l": 12.25,
+  "borrow": 1.45,
+  "free": 85197,
+  "lltv": 0.95,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T2 #11",
+  "symbol": "WETH/WEETH",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/9745/borrowing/vaults/11 and https://api.fluid.instadapp.io/v2/9745/vaults/11. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.954 x (WETH lent 0.50 + own 0.00) + 0.046 x (weETH lent 0.00 + own 2.34); debt: WETH vault 1.45 + grows 0.00. Limit collateralFactor 0.92. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:9745:12",
+  "name": "Fluid T2 sUSDe-USDT0 / USDT0 #12",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Plasma",
+  "rate": 5.1,
+  "tvl": 68,
+  "pool": "0xE16A6f5359ABB1f61cE71e25dD0932e3E00B00eB",
+  "max_l": 12.25,
+  "borrow": 7.18,
+  "free": 100360,
+  "lltv": 0.94,
+  "first_bps": 13.0,
+  "loop_bps": 3.0,
+  "gas": 4.25,
+  "meta": "T2 #12",
+  "symbol": "SUSDE/USDT0",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/9745/borrowing/vaults/12 and https://api.fluid.instadapp.io/v2/9745/vaults/12. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.317 x (sUSDe lent 0.00 + own 4.99) + 0.683 x (USDT0 lent 3.37 + own 1.78); debt: USDT0 vault 5.40 + grows 1.78. Limit collateralFactor 0.92. Costs: pool fee 3.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:9745:13",
+  "name": "Fluid T2 USDe-USDT0 / USDT0 #13",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Plasma",
+  "rate": 6.695,
+  "tvl": 128,
+  "pool": "0x82B27fA821419F5689381b565a8B0786aA2548De",
+  "max_l": 16.5,
+  "borrow": 7.18,
+  "free": 100294,
+  "lltv": 0.96,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #13",
+  "symbol": "USDE/USDT0",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/9745/borrowing/vaults/13 and https://api.fluid.instadapp.io/v2/9745/vaults/13. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.345 x (USDe lent 9.63 + own 0.00) + 0.655 x (USDT0 lent 3.37 + own 1.78); debt: USDT0 vault 5.40 + grows 1.78. Limit collateralFactor 0.94. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:9745:14",
+  "name": "Fluid T2 USDai-USDT0 / USDT0 #14",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Plasma",
+  "rate": 5.159,
+  "tvl": 506,
+  "pool": "0x1982CC7b1570C2503282d0A0B41F69b3B28fdcc3",
+  "max_l": 14.25,
+  "borrow": 7.18,
+  "free": 102931,
+  "lltv": 0.94,
+  "first_bps": 15.0,
+  "loop_bps": 5.0,
+  "gas": 4.25,
+  "meta": "T2 #14",
+  "symbol": "USDAI/USDT0",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/9745/borrowing/vaults/14 and https://api.fluid.instadapp.io/v2/9745/vaults/14. rate+borrow: trading 0.01 (Fluid 0.01; Llama now/7d/30d None/None/None) + 0.000 x (USDai lent 0.00 + own 0.00) + 1.000 x (USDT0 lent 3.37 + own 1.78); debt: USDT0 vault 5.40 + grows 1.78. Limit collateralFactor 0.93. Costs: pool fee 5.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:9745:15",
+  "name": "Fluid T2 USDT0-syrupUSDT / USDT0 #15",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "maple"
+  ],
+  "chain": "Plasma",
+  "rate": 3.252,
+  "tvl": 1369,
+  "pool": "0xb4F3bf2d96139563777C0231899cE06EE95Cc946",
+  "max_l": 9.75,
+  "borrow": 7.18,
+  "free": 99318,
+  "lltv": 0.92,
+  "first_bps": 18.0,
+  "loop_bps": 8.0,
+  "gas": 4.25,
+  "meta": "T2 #15",
+  "symbol": "SYRUPUSDT/USDT0",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/9745/borrowing/vaults/15 and https://api.fluid.instadapp.io/v2/9745/vaults/15. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.631 x (USDT0 lent 3.37 + own 1.78) + 0.369 x (syrupUSDT lent 0.00 + own 0.00); debt: USDT0 vault 5.40 + grows 1.78. Limit collateralFactor 0.9. Costs: pool fee 8.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:9745:29",
+  "name": "Fluid T2 sUSDe-GHO / GHO #29",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Plasma",
+  "rate": 7.268,
+  "tvl": 29,
+  "pool": "0x01c7c1c41dea58b043e700eFb23Dc077F12a125e",
+  "max_l": 12.25,
+  "borrow": 10.15,
+  "free": 100684,
+  "lltv": 0.94,
+  "first_bps": 13.0,
+  "loop_bps": 3.0,
+  "gas": 4.25,
+  "meta": "T2 #29",
+  "symbol": "SUSDE/GHO",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/9745/borrowing/vaults/29 and https://api.fluid.instadapp.io/v2/9745/vaults/29. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.360 x (sUSDe lent 0.00 + own 4.99) + 0.640 x (GHO lent 8.55 + own 0.00); debt: GHO vault 10.15 + grows 0.00. Limit collateralFactor 0.92. Costs: pool fee 3.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:9745:30",
+  "name": "Fluid T2 GHO-syrupUSDT / GHO #30",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "maple"
+  ],
+  "chain": "Plasma",
+  "rate": 3.578,
+  "tvl": 24,
+  "pool": "0xE6b5D1CdC4935295c84772C4700932b4BFC93274",
+  "max_l": 9.75,
+  "borrow": 10.15,
+  "free": 100686,
+  "lltv": 0.92,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #30",
+  "symbol": "SYRUPUSDT/GHO",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/9745/borrowing/vaults/30 and https://api.fluid.instadapp.io/v2/9745/vaults/30. rate+borrow: trading 0.00 (Fluid 0.00; Llama now/7d/30d None/None/None) + 0.418 x (GHO lent 8.55 + own 0.00) + 0.582 x (syrupUSDT lent 0.00 + own 0.00); debt: GHO vault 10.15 + grows 0.00. Limit collateralFactor 0.9. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:9745:31",
+  "name": "Fluid T2 USDe-GHO / GHO #31",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "ethena-usde"
+  ],
+  "chain": "Plasma",
+  "rate": 9.116,
+  "tvl": 27,
+  "pool": "0x69deb634Edc47A35B7b05056768d957F029Cbc0A",
+  "max_l": 16.5,
+  "borrow": 10.15,
+  "free": 100685,
+  "lltv": 0.96,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #31",
+  "symbol": "USDE/GHO",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/9745/borrowing/vaults/31 and https://api.fluid.instadapp.io/v2/9745/vaults/31. rate+borrow: trading 0.14 (Fluid 0.14; Llama now/7d/30d None/None/None) + 0.395 x (USDe lent 9.63 + own 0.00) + 0.605 x (GHO lent 8.55 + own 0.00); debt: GHO vault 10.15 + grows 0.00. Limit collateralFactor 0.94. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:9745:33",
+  "name": "Fluid T4 GHO-USDT0 / GHO-USDT0 #33",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [],
+  "chain": "Plasma",
+  "rate": 5.443,
+  "tvl": 3854130,
+  "pool": "0x6E0cDB09eb33cD3894C905E0DFF9289b95a86FFF",
+  "max_l": 12.25,
+  "borrow": 9.857,
+  "free": 457304,
+  "lltv": 0.95,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "T4 #33",
+  "symbol": "GHO/USDT0",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/9745/borrowing/vaults/33 and https://api.fluid.instadapp.io/v2/9745/vaults/33. rate+borrow: trading 0.29 (Fluid 0.29; Llama now/7d/30d None/None/None) + 0.001 x (GHO lent 8.55 + own 0.00) + 0.999 x (USDT0 lent 3.37 + own 1.78); debt: 0.999 x (GHO 10.15 + grows 0.00) + 0.001 x (USDT0 5.40 + grows 1.78) - trading 0.29 (Fluid 0.29; Llama None/None/None) + vault 0.00. Limit collateralFactor 0.92. Costs: pool fee 1.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "fluid-smart:9745:37",
+  "name": "Fluid T2 sUSDai-USDT0 / USDT0 #37",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "fluid-lending",
+   "fluid-dex"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Plasma",
+  "rate": 7.532,
+  "tvl": 515440,
+  "pool": "0xB9Bb0b2354884B4B9dBDDaeb01feEcf507695e33",
+  "max_l": 8.25,
+  "borrow": 7.72,
+  "free": 5019875,
+  "lltv": 0.9,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T2 #37",
+  "symbol": "SUSDAI/USDT0",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading"
+  ],
+  "gate": null,
+  "source": "https://fluid.io/9745/borrowing/vaults/37 and https://api.fluid.instadapp.io/v2/9745/vaults/37. rate+borrow: trading 1.61 (Fluid 1.61; Llama now/7d/30d None/None/None) + 0.559 x (sUSDai lent 0.00 + own 6.53) + 0.441 x (USDT0 lent 3.37 + own 1.78); debt: USDT0 vault 5.94 + grows 1.78. Limit collateralFactor 0.88. Costs: pool fee 2.0 bps round trip one-sided (fee field), plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "jup-smart:90",
+  "name": "Jupiter T2 syrupUSDC-USDC / USDC #90",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "maple"
+  ],
+  "chain": "Solana",
+  "rate": 5.237,
+  "tvl": 5719,
+  "pool": "8bJpago2ju98eRqB3Q34CFNfZM3qJwB32myKqPV1eaPb",
+  "max_l": 9.75,
+  "borrow": 6.59,
+  "free": 5316071,
+  "lltv": 0.92,
+  "first_bps": 1.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "smart T2",
+  "symbol": "SYRUPUSDC/USDC",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading",
+   "Solana API read at 16:20 UTC, an hour after the snapshot"
+  ],
+  "gate": null,
+  "source": "https://jup.ag/lend/borrow/smart/90/deposit and https://api.solana.fluid.io/v2/main/borrowing/vaults. trading 0.30 (Fluid's one reading, no DefiLlama row) + 0.244 x (syrupUSDC lent 0.00 + own 3.35) + 0.756 x (USDC lent 5.45 + own 0.00); debt 6.59. Costs: pool fee, one-sided, plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "jup-smart:91",
+  "name": "Jupiter T3 PST / JupUSD-USDC #91",
+  "family": "loop_dollar",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "unlisted:PST",
+   "unlisted:JupUSD"
+  ],
+  "chain": "Solana",
+  "rate": 8.0,
+  "tvl": 464249,
+  "pool": "5ECnwJCg93EfmejR9TDt7HiABzYMq6wNonrJgj6AM1Ye",
+  "max_l": 7.5,
+  "borrow": 6.37,
+  "free": 0,
+  "lltv": 0.9,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "smart T3",
+  "symbol": "PST",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading",
+   "Solana API read at 16:20 UTC, an hour after the snapshot",
+   "PST 8.00 is Fluid's stakingApr, one reading; DefiLlama has no issuer row for Huma's PST"
+  ],
+  "gate": null,
+  "source": "https://jup.ag/lend/borrow/smart/91/deposit and https://api.solana.fluid.io/v2/main/borrowing/vaults. PST own 8.00; debt 0.555 x 6.50 + 0.445 x 6.59 - trading 0.17. Costs: pool fee, one-sided, plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "jup-smart:92",
+  "name": "Jupiter T2 WSOL-JitoSOL / WSOL #92",
+  "family": "lp_levered",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "jito-liquid-staking"
+  ],
+  "chain": "Solana",
+  "rate": 4.826,
+  "tvl": 126888,
+  "pool": "E6bBQPfnGtZWjyNjRcGwkLMfPbvFBVeDcabr6ZYXn5Qw",
+  "max_l": 9.75,
+  "borrow": 4.97,
+  "free": 6911344,
+  "lltv": 0.92,
+  "first_bps": 10.5,
+  "loop_bps": 0.5,
+  "gas": 4.25,
+  "meta": "smart T2",
+  "symbol": "WSOL/JITOSOL",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading",
+   "Solana API read at 16:20 UTC, an hour after the snapshot"
+  ],
+  "gate": null,
+  "source": "https://jup.ag/lend/borrow/smart/92/deposit and https://api.solana.fluid.io/v2/main/borrowing/vaults. trading 0.77 (Fluid's one reading, no DefiLlama row) + 0.673 x (WSOL lent 3.71 + own 0.00) + 0.327 x (JitoSOL lent 0.00 + own 4.77); debt 4.97. Costs: pool fee, one-sided, plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "jup-smart:93",
+  "name": "Jupiter T2 PST-USDC / JupUSD #93",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "unlisted:PST",
+   "unlisted:JupUSD"
+  ],
+  "chain": "Solana",
+  "rate": 6.413,
+  "tvl": 5051594,
+  "pool": "7RfAgrcfYbd21kxukAXjUPVmwKbkzfU5FC91dq3aM7fU",
+  "max_l": 7.5,
+  "borrow": 6.5,
+  "free": 1148903,
+  "lltv": 0.9,
+  "first_bps": 1.0,
+  "loop_bps": 11.0,
+  "gas": 4.25,
+  "meta": "smart T2",
+  "symbol": "PST/USDC",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading",
+   "Solana API read at 16:20 UTC, an hour after the snapshot",
+   "PST 8.00 is Fluid's stakingApr, one reading; DefiLlama has no issuer row for Huma's PST"
+  ],
+  "gate": null,
+  "source": "https://jup.ag/lend/borrow/smart/93/deposit and https://api.solana.fluid.io/v2/main/borrowing/vaults. trading 0.25 (Fluid's one reading, no DefiLlama row) + 0.280 x (PST lent 0.00 + own 8.00) + 0.720 x (USDC lent 5.45 + own 0.00); debt 6.50. Costs: pool fee, one-sided, plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "jup-smart:95",
+  "name": "Jupiter T2 USDG-USDC / USDC #95",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "unlisted:USDG"
+  ],
+  "chain": "Solana",
+  "rate": 6.987,
+  "tvl": 39246,
+  "pool": "8LxvfvLfT2sQWrhrwWqWywXMrVKhhmo9qTpr5FdWtzeq",
+  "max_l": 12.25,
+  "borrow": 6.59,
+  "free": 8500823,
+  "lltv": 0.94,
+  "first_bps": 1.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "smart T2",
+  "symbol": "USDG/USDC",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading",
+   "Solana API read at 16:20 UTC, an hour after the snapshot"
+  ],
+  "gate": null,
+  "source": "https://jup.ag/lend/borrow/smart/95/deposit and https://api.solana.fluid.io/v2/main/borrowing/vaults. trading 0.15 (Fluid's one reading, no DefiLlama row) + 0.488 x (USDG lent 4.53 + own 3.76) + 0.512 x (USDC lent 5.45 + own 0.00); debt 6.59. Costs: pool fee, one-sided, plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "jup-smart:96",
+  "name": "Jupiter T3 PST / USDC-USDT #96",
+  "family": "loop_dollar",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "unlisted:PST"
+  ],
+  "chain": "Solana",
+  "rate": 8.0,
+  "tvl": 3037915,
+  "pool": "2zmj1q9WH4bc2gEtg2K3SkKZhm8rH8BUpjck4AhnEge6",
+  "max_l": 7.5,
+  "borrow": 6.388,
+  "free": 0,
+  "lltv": 0.9,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "smart T3",
+  "symbol": "PST",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading",
+   "Solana API read at 16:20 UTC, an hour after the snapshot",
+   "PST 8.00 is Fluid's stakingApr, one reading; DefiLlama has no issuer row for Huma's PST"
+  ],
+  "gate": null,
+  "source": "https://jup.ag/lend/borrow/smart/96/deposit and https://api.solana.fluid.io/v2/main/borrowing/vaults. PST own 8.00; debt 0.776 x 6.59 + 0.224 x 6.94 - trading 0.28. Costs: pool fee, one-sided, plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "jup-smart:97",
+  "name": "Jupiter T2 JupUSD-reUSD / JupUSD #97",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "unlisted:JupUSD",
+   "unlisted:reUSD"
+  ],
+  "chain": "Solana",
+  "rate": 6.748,
+  "tvl": 6045352,
+  "pool": "7s5uDgnQh3mJctrqNdQYYL2b95pLhWnUYSZhAfW58kKN",
+  "max_l": 7.5,
+  "borrow": 6.5,
+  "free": 0,
+  "lltv": 0.9,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "smart T2",
+  "symbol": "REUSD/JUPUSD",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading",
+   "Solana API read at 16:20 UTC, an hour after the snapshot"
+  ],
+  "gate": null,
+  "source": "https://jup.ag/lend/borrow/smart/97/deposit and https://api.solana.fluid.io/v2/main/borrowing/vaults. trading 0.34 (Fluid's one reading, no DefiLlama row) + 0.314 x (JupUSD lent 5.38 + own 0.00) + 0.686 x (reUSD lent 0.00 + own 6.88); debt 6.50. Costs: pool fee, one-sided, plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "jup-smart:103",
+  "name": "Jupiter T2 sUSDai-USDC / USDC #103",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "usd-ai"
+  ],
+  "chain": "Solana",
+  "rate": 6.563,
+  "tvl": 10947462,
+  "pool": "83UCos6JtbPhs5Raa7HzwNbjCdToQWhvKHzWwyEDgAgr",
+  "max_l": 8.25,
+  "borrow": 6.59,
+  "free": 1839341,
+  "lltv": 0.9,
+  "first_bps": 2.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "smart T2",
+  "symbol": "SUSDAI/USDC",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading",
+   "Solana API read at 16:20 UTC, an hour after the snapshot"
+  ],
+  "gate": null,
+  "source": "https://jup.ag/lend/borrow/smart/103/deposit and https://api.solana.fluid.io/v2/main/borrowing/vaults. trading 0.04 (Fluid's one reading, no DefiLlama row) + 0.992 x (sUSDai lent 0.00 + own 6.53) + 0.008 x (USDC lent 5.45 + own 0.00); debt 6.59. Costs: pool fee, one-sided, plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "jup-smart:105",
+  "name": "Jupiter T2 USDGO-USDC / USDC #105",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "unlisted:USDGO"
+  ],
+  "chain": "Solana",
+  "rate": 2.741,
+  "tvl": 8018591,
+  "pool": "DdmQFd7gqYrZtDCVJYmUS37Yz5nu3k87HGjs8rwR4MZn",
+  "max_l": 12.25,
+  "borrow": 6.59,
+  "free": 1721825,
+  "lltv": 0.94,
+  "first_bps": 1.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "smart T2",
+  "symbol": "USDGO/USDC",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading",
+   "Solana API read at 16:20 UTC, an hour after the snapshot"
+  ],
+  "gate": null,
+  "source": "https://jup.ag/lend/borrow/smart/105/deposit and https://api.solana.fluid.io/v2/main/borrowing/vaults. trading 0.00 (Fluid's one reading, no DefiLlama row) + 0.497 x (USDGO lent 0.00 + own 0.00) + 0.503 x (USDC lent 5.45 + own 0.00); debt 6.59. Costs: pool fee, one-sided, plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "jup-smart:108",
+  "name": "Jupiter T2 JupUSD-USDC / USDC #108",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "unlisted:JupUSD"
+  ],
+  "chain": "Solana",
+  "rate": 5.589,
+  "tvl": 3928085,
+  "pool": "AhPwhwH9y1R4y3z6XCXLNcyrqfzKjcpj5DH1Qb9PS5QQ",
+  "max_l": 12.25,
+  "borrow": 6.59,
+  "free": 6169100,
+  "lltv": 0.94,
+  "first_bps": 1.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "smart T2",
+  "symbol": "JUPUSD/USDC",
+  "flags": [
+   "no DefiLlama row: trading is Fluid's one reading",
+   "Solana API read at 16:20 UTC, an hour after the snapshot"
+  ],
+  "gate": null,
+  "source": "https://jup.ag/lend/borrow/smart/108/deposit and https://api.solana.fluid.io/v2/main/borrowing/vaults. trading 0.17 (Fluid's one reading, no DefiLlama row) + 0.445 x (JupUSD lent 5.38 + own 0.00) + 0.555 x (USDC lent 5.45 + own 0.00); debt 6.59. Costs: pool fee, one-sided, plus 10 bps where USDC or the debt token is not in the pool."
+ },
+ {
+  "id": "firm:yv-susde",
+  "name": "FiRM yv-DOLA-sUSDe (Yearn on Curve), DOLA fixed",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "inverse-finance-firm"
+  ],
+  "issuers": [
+   "yearn-finance",
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.153,
+  "tvl": 55780000,
+  "pool": "77a6c1f4-fc04-47ff-aa62-090bcb20e3db",
+  "max_l": 12.25,
+  "borrow": 4.722,
+  "free": 2972443,
+  "lltv": 0.92,
+  "first_bps": 11,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "FiRM fixed rate",
+  "symbol": "YV-DOLA-SUSDE",
+  "flags": [
+   "Yearn vault $11.6M, Curve pool $55.8M",
+   "fixed rate through DBR: pay up front, borrow market min debt $3,000 to $5,000"
+  ],
+  "gate": null,
+  "source": "https://www.inverse.finance/api/f2/fixed-markets and https://www.inverse.finance/firm/; https://yields.llama.fi/pools. Rate: Yearn row 77a6c1f4 apyBase 5.153, 30d mean 5.377, 30-day median 5.53; it is CRV and CVX sold into the vault, so a vault's published rate, not a reward token. Borrow 4.72 is DefiLlama's FiRM row at the snapshot (FiRM's own fixedBorrowApy 4.69 at 16:15 UTC). Costs: USDC to DOLA 10 bps (their stable swap), then one-sided into the Curve pool at the pool's fee(), 1 bp read by eth_call. DBR is bought at the market on top: slippage not counted."
+ },
+ {
+  "id": "firm:yv-susds",
+  "name": "FiRM yv-DOLA-sUSDS (Yearn on Curve), DOLA fixed",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "inverse-finance-firm"
+  ],
+  "issuers": [
+   "yearn-finance"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.753,
+  "tvl": 6590000,
+  "pool": "b6c74919-d481-4a45-8e03-60513866c112",
+  "max_l": 9.75,
+  "borrow": 4.722,
+  "free": 2000000,
+  "lltv": 0.9,
+  "first_bps": 11,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "FiRM fixed rate",
+  "symbol": "YV-DOLA-SUSDS",
+  "flags": [
+   "Yearn vault $0.98M, Curve pool $6.59M",
+   "fixed rate through DBR: pay up front, borrow market min debt $3,000 to $5,000"
+  ],
+  "gate": null,
+  "source": "https://www.inverse.finance/api/f2/fixed-markets and https://www.inverse.finance/firm/; https://yields.llama.fi/pools. Rate: Yearn row b6c74919 apyBase 5.753, 30d mean 6.330; CRV and CVX sold into the vault. Borrow 4.72 is DefiLlama's FiRM row at the snapshot (FiRM's own fixedBorrowApy 4.69 at 16:15 UTC). Costs: USDC to DOLA 10 bps (their stable swap), then one-sided into the Curve pool at the pool's fee(), 1 bp read by eth_call. DBR is bought at the market on top: slippage not counted."
+ },
+ {
+  "id": "firm:cvx-susde",
+  "name": "FiRM DOLA-sUSDe Curve LP on Convex, DOLA fixed",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "inverse-finance-firm"
+  ],
+  "issuers": [
+   "convex-finance",
+   "ethena-usde"
+  ],
+  "chain": "Ethereum",
+  "rate": 1.51,
+  "tvl": 55780000,
+  "pool": "85407c01-6f16-4cef-9ef2-1b2bf2556183",
+  "max_l": 12.25,
+  "borrow": 4.722,
+  "free": 5000000,
+  "lltv": 0.92,
+  "first_bps": 11,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "FiRM fixed rate",
+  "symbol": "DOLA-SUSDE-LP",
+  "flags": [
+   "pays only with CRV and CVX: by the rule the lever does not pay",
+   "fixed rate through DBR: pay up front, borrow market min debt $3,000 to $5,000"
+  ],
+  "gate": null,
+  "source": "https://www.inverse.finance/api/f2/fixed-markets and https://www.inverse.finance/firm/; https://yields.llama.fi/pools. Rate: Convex row 85407c01 apyBase 1.51, rewards 4.04 left out by the rule (FiRM shows 5.55 with them). Borrow 4.72 is DefiLlama's FiRM row at the snapshot (FiRM's own fixedBorrowApy 4.69 at 16:15 UTC). Costs: USDC to DOLA 10 bps (their stable swap), then one-sided into the Curve pool at the pool's fee(), 1 bp read by eth_call. DBR is bought at the market on top: slippage not counted."
+ },
+ {
+  "id": "firm:cvx-susds",
+  "name": "FiRM DOLA-sUSDS Curve LP on Convex, DOLA fixed",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "inverse-finance-firm"
+  ],
+  "issuers": [
+   "convex-finance"
+  ],
+  "chain": "Ethereum",
+  "rate": 0.98,
+  "tvl": 6590000,
+  "pool": "51f9c038-feed-4666-8866-30efc92e0566",
+  "max_l": 9.75,
+  "borrow": 4.722,
+  "free": 2000000,
+  "lltv": 0.9,
+  "first_bps": 11,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "FiRM fixed rate",
+  "symbol": "DOLA-SUSDS-LP",
+  "flags": [
+   "pays only with CRV and CVX: by the rule the lever does not pay",
+   "fixed rate through DBR: pay up front, borrow market min debt $3,000 to $5,000"
+  ],
+  "gate": null,
+  "source": "https://www.inverse.finance/api/f2/fixed-markets and https://www.inverse.finance/firm/; https://yields.llama.fi/pools. Rate: Convex row 51f9c038 apyBase 0.98, rewards 3.74 left out by the rule. Borrow 4.72 is DefiLlama's FiRM row at the snapshot (FiRM's own fixedBorrowApy 4.69 at 16:15 UTC). Costs: USDC to DOLA 10 bps (their stable swap), then one-sided into the Curve pool at the pool's fee(), 1 bp read by eth_call. DBR is bought at the market on top: slippage not counted."
+ },
+ {
+  "id": "firm:sd-scrvusd",
+  "name": "FiRM scrvUSD-sDOLA Curve LP on Stake DAO, DOLA fixed",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "inverse-finance-firm"
+  ],
+  "issuers": [
+   "stake-dao-yield",
+   "crvusd"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.81,
+  "tvl": 6160000,
+  "pool": "54c9a039-42a2-4756-896a-50b81b239ba9",
+  "max_l": 7.5,
+  "borrow": 4.722,
+  "free": 0,
+  "lltv": 0.87,
+  "first_bps": 11,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "FiRM fixed rate",
+  "symbol": "SCRVUSD-SDOLA-LP",
+  "flags": [
+   "market full: leftToBorrow 0, $4.9M debt",
+   "fixed rate through DBR: pay up front, borrow market min debt $3,000 to $5,000"
+  ],
+  "gate": null,
+  "source": "https://www.inverse.finance/api/f2/fixed-markets and https://www.inverse.finance/firm/; https://yields.llama.fi/pools. Rate: Stake DAO row 54c9a039 apyBase 5.81, 30d mean 6.70; market leftToBorrow 0. Borrow 4.72 is DefiLlama's FiRM row at the snapshot (FiRM's own fixedBorrowApy 4.69 at 16:15 UTC). Costs: USDC to DOLA 10 bps (their stable swap), then one-sided into the Curve pool at the pool's fee(), 1 bp read by eth_call. DBR is bought at the market on top: slippage not counted."
+ },
+ {
+  "id": "firm:sd-reusd",
+  "name": "FiRM reUSD-sDOLA Curve LP on Stake DAO, DOLA fixed",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "inverse-finance-firm"
+  ],
+  "issuers": [
+   "stake-dao-yield"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.75,
+  "tvl": 6560000,
+  "pool": "7255c661-892b-4c4c-b869-537a1326b669",
+  "max_l": 6.5,
+  "borrow": 4.722,
+  "free": 10238,
+  "lltv": 0.85,
+  "first_bps": 11,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "FiRM fixed rate",
+  "symbol": "REUSD-SDOLA-LP",
+  "flags": [
+   "reUSD asks identity",
+   "fixed rate through DBR: pay up front, borrow market min debt $3,000 to $5,000"
+  ],
+  "gate": null,
+  "source": "https://www.inverse.finance/api/f2/fixed-markets and https://www.inverse.finance/firm/; https://yields.llama.fi/pools. Rate: Stake DAO row 7255c661 apyBase 2.75; leftToBorrow $10,238. Borrow 4.72 is DefiLlama's FiRM row at the snapshot (FiRM's own fixedBorrowApy 4.69 at 16:15 UTC). Costs: USDC to DOLA 10 bps (their stable swap), then one-sided into the Curve pool at the pool's fee(), 1 bp read by eth_call. DBR is bought at the market on top: slippage not counted."
+ },
+ {
+  "id": "firm:yv-reusd",
+  "name": "FiRM yv-reUSD-sDOLA (Yearn on Curve), DOLA fixed",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "inverse-finance-firm"
+  ],
+  "issuers": [
+   "yearn-finance"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.721,
+  "tvl": 6560000,
+  "pool": "98fcaeb8-6e0a-4552-8f42-41d801a48528",
+  "max_l": 6.5,
+  "borrow": 4.722,
+  "free": 0,
+  "lltv": 0.85,
+  "first_bps": 11,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "FiRM fixed rate",
+  "symbol": "REUSD-SDOLA-YV",
+  "flags": [
+   "market full",
+   "reUSD asks identity",
+   "fixed rate through DBR: pay up front, borrow market min debt $3,000 to $5,000"
+  ],
+  "gate": null,
+  "source": "https://www.inverse.finance/api/f2/fixed-markets and https://www.inverse.finance/firm/; https://yields.llama.fi/pools. Rate: Yearn row 98fcaeb8 apyBase 5.721, 30d mean 9.505; leftToBorrow 0. Borrow 4.72 is DefiLlama's FiRM row at the snapshot (FiRM's own fixedBorrowApy 4.69 at 16:15 UTC). Costs: USDC to DOLA 10 bps (their stable swap), then one-sided into the Curve pool at the pool's fee(), 1 bp read by eth_call. DBR is bought at the market on top: slippage not counted."
+ },
+ {
+  "id": "jlp:kamino-usdc",
+  "name": "Kamino JLP Market: JLP / USDC",
+  "family": "lp_levered",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [
+   "jupiter-perpetual-exchange"
+  ],
+  "chain": "Solana",
+  "rate": 11.13,
+  "tvl": 823000000,
+  "pool": "JLP",
+  "max_l": 6.0,
+  "borrow": 4.558,
+  "free": 1841422,
+  "lltv": 0.84,
+  "first_bps": 30,
+  "loop_bps": 30,
+  "gas": 4.25,
+  "meta": "perps pool share",
+  "symbol": "JLP",
+  "flags": [
+   "one published week: no 30-day reading",
+   "Jupiter Perps not on their list only for having no rate row"
+  ],
+  "gate": null,
+  "source": "JLP 11.13% APR is Jupiter's own published figure (jlpAprPct, https://perps-api.jup.ag/v1/jlp-info, updated 2026-10-31 02:15 UTC, a trailing week); DefiLlama has no JLP pool row, so no 30-day reading. AUM $823M. Borrow and free: https://app.kamino.finance and api.kamino.finance/kamino-market/DxXdAyU3kCjnyggvHmY5nAwg5cRbbmdyX3npfDMjjMek/reserves/metrics; DefiLlama lendBorrow JLP Market USDC supply 20,483,317 borrow 18,641,895. Costs: Cymetica's 30 for a pool."
+ },
+ {
+  "id": "jlp:jup-usdc",
+  "name": "Jupiter Lend vault 8: JLP / USDC",
+  "family": "lp_levered",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "jupiter-perpetual-exchange"
+  ],
+  "chain": "Solana",
+  "rate": 11.13,
+  "tvl": 823000000,
+  "pool": "JLP",
+  "max_l": 6.5,
+  "borrow": 6.609,
+  "free": 37902717,
+  "lltv": 0.85,
+  "first_bps": 30,
+  "loop_bps": 30,
+  "gas": 4.25,
+  "meta": "perps pool share",
+  "symbol": "JLP",
+  "flags": [
+   "one published week: no 30-day reading",
+   "Jupiter Perps not on their list only for having no rate row"
+  ],
+  "gate": null,
+  "source": "JLP 11.13% APR is Jupiter's own published figure (jlpAprPct, https://perps-api.jup.ag/v1/jlp-info, updated 2026-10-31 02:15 UTC, a trailing week); DefiLlama has no JLP pool row, so no 30-day reading. AUM $823M. Borrow and free: https://jup.ag/lend/borrow and https://lite-api.jup.ag/lend/v1/borrow/vaults, vault 8. Costs: Cymetica's 30 for a pool."
+ },
+ {
+  "id": "jlp:jup-usds",
+  "name": "Jupiter Lend vault 34: JLP / USDS",
+  "family": "lp_levered",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "jupiter-perpetual-exchange"
+  ],
+  "chain": "Solana",
+  "rate": 11.13,
+  "tvl": 823000000,
+  "pool": "JLP",
+  "max_l": 6.5,
+  "borrow": 6.183,
+  "free": 253314,
+  "lltv": 0.85,
+  "first_bps": 30,
+  "loop_bps": 30,
+  "gas": 4.25,
+  "meta": "perps pool share",
+  "symbol": "JLP",
+  "flags": [
+   "one published week: no 30-day reading",
+   "Jupiter Perps not on their list only for having no rate row"
+  ],
+  "gate": null,
+  "source": "JLP 11.13% APR is Jupiter's own published figure (jlpAprPct, https://perps-api.jup.ag/v1/jlp-info, updated 2026-10-31 02:15 UTC, a trailing week); DefiLlama has no JLP pool row, so no 30-day reading. AUM $823M. Borrow and free: https://jup.ag/lend/borrow and https://lite-api.jup.ag/lend/v1/borrow/vaults, vault 34. Costs: Cymetica's 30 for a pool."
+ },
+ {
+  "id": "inf:jup-wsol",
+  "name": "Jupiter Lend vault 42: INF / SOL",
+  "family": "lp_levered",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "sanctum-infinity"
+  ],
+  "chain": "Solana",
+  "rate": 5.282,
+  "tvl": 181510000,
+  "pool": "3075a746",
+  "max_l": 16.5,
+  "borrow": 5.095,
+  "free": 11300000,
+  "lltv": 0.97,
+  "first_bps": 10,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "staked SOL pool",
+  "symbol": "INF",
+  "flags": [],
+  "gate": null,
+  "source": "INF row 3075a746 apyBase 5.282, 30d mean 5.404, DefiLlama; https://lite-api.jup.ag/lend/v1/borrow/vaults vault 42: cf 94%, borrowable 116,725 SOL at $97; borrow 5.095 DefiLlama lendBorrow INF/WSOL. Costs: their 10 bps swap off Ethereum."
+ },
+ {
+  "id": "morpho-lp:frxusdola",
+  "name": "Morpho stakedao-frxUsDOLA / frxUSD 91.5%",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [
+   "stake-dao-yield",
+   "unlisted:frxUSD"
+  ],
+  "chain": "Ethereum",
+  "rate": 5.21,
+  "tvl": 800000,
+  "pool": "0x4fbdeb7979204a25b8dec7e4ed65998d358d32debee19ae738202becc52ec4b8",
+  "max_l": 11.75,
+  "borrow": 1.127,
+  "borrow_week": 1.292,
+  "free": 103376,
+  "lltv": 0.915,
+  "first_bps": 40,
+  "loop_bps": 30,
+  "gas": 4.25,
+  "meta": "Curve LP on Stake DAO",
+  "symbol": "FRXUSDOLA",
+  "flags": [
+   "the Curve pool is under $3M"
+  ],
+  "gate": null,
+  "source": "https://app.morpho.org market 0x4fbdeb7979204a25b8dec7e4ed65998d358d32debee19ae738202becc52ec4b8; FRXUSD-SDOLA Stake DAO row 0a80e72c apyBase 5.21, 30d mean 5.95; DefiLlama. Costs: Cymetica's 30 for a pool plus 10 for USDC to frxUSD."
+ },
+ {
+  "id": "morpho-lp:frxsusds",
+  "name": "Morpho stakedao-frxsUSDS / frxUSD 91.5%",
+  "family": "lp_levered_dollar",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [
+   "stake-dao-yield",
+   "unlisted:frxUSD"
+  ],
+  "chain": "Ethereum",
+  "rate": 3.07,
+  "tvl": 1720000,
+  "pool": "0x1f10c0899fdab5d90b11fd830d52c0c468ba8a7cde67deaa37bebbf512ac47ca",
+  "max_l": 11.75,
+  "borrow": 1.993,
+  "borrow_week": 2.058,
+  "free": 61356,
+  "lltv": 0.915,
+  "first_bps": 40,
+  "loop_bps": 30,
+  "gas": 4.25,
+  "meta": "Curve LP on Stake DAO",
+  "symbol": "FRXSUSDS",
+  "flags": [
+   "the Curve pool is under $3M"
+  ],
+  "gate": null,
+  "source": "https://app.morpho.org market 0x1f10c0899fdab5d90b11fd830d52c0c468ba8a7cde67deaa37bebbf512ac47ca; FRXUSD-SUSDS Stake DAO row apyBase 3.07, 30d mean 4.58; DefiLlama. Costs: Cymetica's 30 for a pool plus 10 for USDC to frxUSD."
+ },
+ {
+  "id": "dolomite:gm-link",
+  "name": "Dolomite GM LINK-USDC / USDC",
+  "family": "lp_levered",
+  "platforms": [
+   "dolomite"
+  ],
+  "issuers": [
+   "gmx-evm"
+  ],
+  "chain": "Arbitrum",
+  "rate": 11.546,
+  "tvl": 2550000,
+  "pool": "dffb3514-d667-4f2f-8df3-f716ebe09c93",
+  "max_l": 5.75,
+  "borrow": 7.611,
+  "free": 1350000,
+  "lltv": 0.8333,
+  "first_bps": 30,
+  "loop_bps": 30,
+  "gas": 4.25,
+  "meta": "GM pool share",
+  "symbol": "GM-LINK-USDC",
+  "flags": [
+   "the GM pool is under $3M",
+   "isolation mode, unwinds through GMX's keeper"
+  ],
+  "gate": null,
+  "source": "GMX row dffb3514 apyBase 12.04, 30d mean 11.546; DefiLlama lendBorrow dolomite GM 0x7f1fa204 ltv 0.8333, USDC Arbitrum borrow 7.611, supply 4.05M borrow 2.70M. Dolomite's API did not answer: supply cap of the GM market not read. Costs: Cymetica's 30 for a pool."
+ }
+]

@@ -1,0 +1,18 @@
+[
+ {
+  "match": "eUSDC-47",
+  "reason": "maxDeposit 0: full, read on-chain by the lending hunter"
+ },
+ {
+  "match": "eUSDC-64",
+  "reason": "maxDeposit 0: full, read on-chain by the lending hunter"
+ },
+ {
+  "match": "SBMORPHOUSDC",
+  "reason": "maxDeposit 0, read on-chain by the lending hunter"
+ },
+ {
+  "match": "GTUSDCRWA",
+  "reason": "maxDeposit 0, read on-chain by the lending hunter"
+ }
+]

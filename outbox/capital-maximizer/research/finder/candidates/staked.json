@@ -1,0 +1,1901 @@
+[
+ {
+  "id": "staked:kamino-main-MSOL",
+  "name": "MSOL / SOL loop, Kamino e-mode",
+  "family": "loop_correlated",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [
+   "marinade-liquid-staking"
+  ],
+  "chain": "Solana",
+  "rate": 5.05946,
+  "tvl": 1024900000,
+  "pool": "b3f93865-5ec8-4662-90a0-11808e0aa2bd",
+  "max_l": 7.5,
+  "borrow": 4.97266,
+  "free": 23832184,
+  "lltv": 0.92,
+  "first_bps": 11.96,
+  "loop_bps": 1.96,
+  "gas": 4.25,
+  "meta": "SOL/BTC Market e-mode 2",
+  "symbol": "MSOL",
+  "flags": [
+   "e-mode group 2: LTV 87 against 65/45 outside it, which is all DefiLlama and the scorer see",
+   "Kamino docs list the main market at 7.5x: kamino.com/docs/products/multiply/strategies"
+  ],
+  "gate": null,
+  "source": "round trip measured by two lite-api.jup.ag/swap/v1/quote calls SOL>token>SOL at 350 SOL. Kamino LTV: Solana account 7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF elevationGroups array at byte 200 (72 bytes each: id +2, ltv +3, threshold +4), reserve membership at byte 5480 of the reserve account; debt limit in that group is uncapped. Borrow and free: DefiLlama lendBorrow row 525b2dab-ea6a-4cbc-a07f-84ce561d1f83. Rate: DefiLlama row b3f93865-5ec8-4662-90a0-11808e0aa2bd. https://api.kamino.finance/kamino-market/7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF/reserves/metrics"
+ },
+ {
+  "id": "staked:kamino-main-JUPSOL",
+  "name": "JUPSOL / SOL loop, Kamino e-mode",
+  "family": "loop_correlated",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [
+   "jupiter-staked-sol"
+  ],
+  "chain": "Solana",
+  "rate": 5.07113,
+  "tvl": 1024900000,
+  "pool": "52bd72a7-9e81-4112-abb4-71673e8de9bf",
+  "max_l": 7.5,
+  "borrow": 4.97266,
+  "free": 23832184,
+  "lltv": 0.92,
+  "first_bps": 10.62,
+  "loop_bps": 0.62,
+  "gas": 4.25,
+  "meta": "SOL/BTC Market e-mode 2",
+  "symbol": "JUPSOL",
+  "flags": [
+   "e-mode group 2: LTV 87 against 65/45 outside it, which is all DefiLlama and the scorer see",
+   "Kamino docs list the main market at 7.5x: kamino.com/docs/products/multiply/strategies"
+  ],
+  "gate": null,
+  "source": "round trip measured by two lite-api.jup.ag/swap/v1/quote calls SOL>token>SOL at 350 SOL. Kamino LTV: Solana account 7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF elevationGroups array at byte 200 (72 bytes each: id +2, ltv +3, threshold +4), reserve membership at byte 5480 of the reserve account; debt limit in that group is uncapped. Borrow and free: DefiLlama lendBorrow row 525b2dab-ea6a-4cbc-a07f-84ce561d1f83. Rate: DefiLlama row 52bd72a7-9e81-4112-abb4-71673e8de9bf. https://api.kamino.finance/kamino-market/7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF/reserves/metrics"
+ },
+ {
+  "id": "staked:kamino-main-PSOL",
+  "name": "PSOL / SOL loop, Kamino e-mode",
+  "family": "loop_correlated",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [
+   "phantom-sol"
+  ],
+  "chain": "Solana",
+  "rate": 5.4326,
+  "tvl": 1024900000,
+  "pool": "7f5c2e8b-0428-431b-ba6e-571c38a57010",
+  "max_l": 7.5,
+  "borrow": 4.97266,
+  "free": 23832184,
+  "lltv": 0.92,
+  "first_bps": 12.72,
+  "loop_bps": 2.72,
+  "gas": 4.25,
+  "meta": "SOL/BTC Market e-mode 2",
+  "symbol": "PSOL",
+  "flags": [
+   "e-mode group 2: LTV 87 against 65/45 outside it, which is all DefiLlama and the scorer see",
+   "Kamino docs list the main market at 7.5x: kamino.com/docs/products/multiply/strategies"
+  ],
+  "gate": null,
+  "source": "round trip measured by two lite-api.jup.ag/swap/v1/quote calls SOL>token>SOL at 350 SOL. Kamino LTV: Solana account 7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF elevationGroups array at byte 200 (72 bytes each: id +2, ltv +3, threshold +4), reserve membership at byte 5480 of the reserve account; debt limit in that group is uncapped. Borrow and free: DefiLlama lendBorrow row 525b2dab-ea6a-4cbc-a07f-84ce561d1f83. Rate: DefiLlama row 7f5c2e8b-0428-431b-ba6e-571c38a57010. https://api.kamino.finance/kamino-market/7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF/reserves/metrics"
+ },
+ {
+  "id": "staked:kamino-main-HSOL",
+  "name": "HSOL / SOL loop, Kamino e-mode",
+  "family": "loop_correlated",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [
+   "helius-staked-sol"
+  ],
+  "chain": "Solana",
+  "rate": 5.05812,
+  "tvl": 1024900000,
+  "pool": "d7e101d6-8e6c-4348-9c5f-62398872a301",
+  "max_l": 7.5,
+  "borrow": 4.97266,
+  "free": 23832184,
+  "lltv": 0.92,
+  "first_bps": 21.62,
+  "loop_bps": 11.62,
+  "gas": 4.25,
+  "meta": "SOL/BTC Market e-mode 2",
+  "symbol": "HSOL",
+  "flags": [
+   "e-mode group 2: LTV 87 against 65/45 outside it, which is all DefiLlama and the scorer see",
+   "Kamino docs list the main market at 7.5x: kamino.com/docs/products/multiply/strategies"
+  ],
+  "gate": null,
+  "source": "round trip measured by two lite-api.jup.ag/swap/v1/quote calls SOL>token>SOL at 350 SOL. Kamino LTV: Solana account 7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF elevationGroups array at byte 200 (72 bytes each: id +2, ltv +3, threshold +4), reserve membership at byte 5480 of the reserve account; debt limit in that group is uncapped. Borrow and free: DefiLlama lendBorrow row 525b2dab-ea6a-4cbc-a07f-84ce561d1f83. Rate: DefiLlama row d7e101d6-8e6c-4348-9c5f-62398872a301. https://api.kamino.finance/kamino-market/7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF/reserves/metrics"
+ },
+ {
+  "id": "staked:kamino-main-LANTERNSOL",
+  "name": "LANTERNSOL / SOL loop, Kamino e-mode",
+  "family": "loop_correlated",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [
+   "lantern-staked-sol"
+  ],
+  "chain": "Solana",
+  "rate": 5.32259,
+  "tvl": 1024900000,
+  "pool": "3acae3f1-94fe-4a48-a4bf-5669e06dc259",
+  "max_l": 7.5,
+  "borrow": 4.97266,
+  "free": 23832184,
+  "lltv": 0.92,
+  "first_bps": 20,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "SOL/BTC Market e-mode 2",
+  "symbol": "LANTERNSOL",
+  "flags": [
+   "e-mode group 2: LTV 87 against 65/45 outside it, which is all DefiLlama and the scorer see",
+   "Kamino docs list the main market at 7.5x: kamino.com/docs/products/multiply/strategies"
+  ],
+  "gate": null,
+  "source": "no size quote read: Cymetica's 10. Kamino LTV: Solana account 7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF elevationGroups array at byte 200 (72 bytes each: id +2, ltv +3, threshold +4), reserve membership at byte 5480 of the reserve account; debt limit in that group is uncapped. Borrow and free: DefiLlama lendBorrow row 525b2dab-ea6a-4cbc-a07f-84ce561d1f83. Rate: DefiLlama row 3acae3f1-94fe-4a48-a4bf-5669e06dc259. https://api.kamino.finance/kamino-market/7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF/reserves/metrics"
+ },
+ {
+  "id": "staked:kamino-main-LAINESOL",
+  "name": "LAINESOL / SOL loop, Kamino e-mode",
+  "family": "loop_correlated",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [
+   "laine-sol"
+  ],
+  "chain": "Solana",
+  "rate": 5.20559,
+  "tvl": 1024900000,
+  "pool": "e04a81c8-b419-4088-aff2-636076299fc9",
+  "max_l": 7.5,
+  "borrow": 4.97266,
+  "free": 23832184,
+  "lltv": 0.92,
+  "first_bps": 20,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "SOL/BTC Market e-mode 2",
+  "symbol": "LAINESOL",
+  "flags": [
+   "e-mode group 2: LTV 87 against 65/45 outside it, which is all DefiLlama and the scorer see",
+   "Kamino docs list the main market at 7.5x: kamino.com/docs/products/multiply/strategies"
+  ],
+  "gate": null,
+  "source": "no size quote read: Cymetica's 10. Kamino LTV: Solana account 7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF elevationGroups array at byte 200 (72 bytes each: id +2, ltv +3, threshold +4), reserve membership at byte 5480 of the reserve account; debt limit in that group is uncapped. Borrow and free: DefiLlama lendBorrow row 525b2dab-ea6a-4cbc-a07f-84ce561d1f83. Rate: DefiLlama row e04a81c8-b419-4088-aff2-636076299fc9. https://api.kamino.finance/kamino-market/7u3HeHxYDLhnCoErrtycNokbQYbWGzLs6JSDqGAv5PfF/reserves/metrics"
+ },
+ {
+  "id": "staked:kamino-marinade-MSOL",
+  "name": "MSOL / SOL loop, Kamino Marinade e-mode",
+  "family": "loop_correlated",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [
+   "marinade-liquid-staking"
+  ],
+  "chain": "Solana",
+  "rate": 5.05946,
+  "tvl": 5500000,
+  "pool": "b3f93865-5ec8-4662-90a0-11808e0aa2bd",
+  "max_l": 9.75,
+  "borrow": 4.65925,
+  "free": 377755,
+  "lltv": 0.95,
+  "first_bps": 11.96,
+  "loop_bps": 1.96,
+  "gas": 4.25,
+  "meta": "Marinade Market e-mode 1",
+  "symbol": "MSOL",
+  "flags": [
+   "e-mode group 1: LTV 90 against 45 outside it",
+   "tvl is this market: mSOL 2.84M + SOL 2.70M",
+   "Kamino group read from account bytes, one source"
+  ],
+  "gate": null,
+  "source": "round trip measured by two lite-api.jup.ag/swap/v1/quote calls SOL>token>SOL at 350 SOL. Kamino LTV: Solana account GVDUXFwS8uvBG35RjZv6Y8S1AkV5uASiMJ9qTUKqb5PL elevationGroups array at byte 200 (72 bytes each: id +2, ltv +3, threshold +4), reserve membership at byte 5480 of the reserve account; debt limit in that group is uncapped. Borrow and free: DefiLlama lendBorrow row 31014ab5-839d-439b-a845-b4fff1670a5b. Rate: DefiLlama row b3f93865-5ec8-4662-90a0-11808e0aa2bd. https://api.kamino.finance/kamino-market/GVDUXFwS8uvBG35RjZv6Y8S1AkV5uASiMJ9qTUKqb5PL/reserves/metrics"
+ },
+ {
+  "id": "staked:kamino-jito-JITOSOL",
+  "name": "JITOSOL / SOL loop, Kamino Jito e-mode",
+  "family": "loop_correlated",
+  "platforms": [
+   "kamino-lend"
+  ],
+  "issuers": [
+   "jito-liquid-staking"
+  ],
+  "chain": "Solana",
+  "rate": 4.76587,
+  "tvl": 37700000,
+  "pool": "0e7d0722-9054-4907-8593-567b353c0900",
+  "max_l": 12.25,
+  "borrow": 5.10196,
+  "free": 1540328,
+  "lltv": 0.95,
+  "first_bps": 10.15,
+  "loop_bps": 0.15,
+  "gas": 4.25,
+  "meta": "Jito Market e-mode 1",
+  "symbol": "JITOSOL",
+  "flags": [
+   "negative carry: JitoSOL earns less than SOL costs, the scorer drops it; kept as the record",
+   "account bytes say LTV 92, Kamino docs say 90: moot while the carry is negative"
+  ],
+  "gate": null,
+  "source": "round trip measured by two lite-api.jup.ag/swap/v1/quote calls SOL>token>SOL at 350 SOL. Kamino LTV: Solana account H6rHXmXoCQvq8Ue81MqNh7ow5ysPa1dSozwW3PU1dDH6 elevationGroups array at byte 200 (72 bytes each: id +2, ltv +3, threshold +4), reserve membership at byte 5480 of the reserve account; debt limit in that group is uncapped. Borrow and free: DefiLlama lendBorrow row 8b490ecc-e4db-427d-adfb-18be6146a07c. Rate: DefiLlama row 0e7d0722-9054-4907-8593-567b353c0900. https://api.kamino.finance/kamino-market/H6rHXmXoCQvq8Ue81MqNh7ow5ysPa1dSozwW3PU1dDH6/reserves/metrics"
+ },
+ {
+  "id": "staked:jupiter-INF",
+  "name": "INF / SOL loop, Jupiter Lend vault 42",
+  "family": "loop_correlated",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "sanctum-infinity"
+  ],
+  "chain": "Solana",
+  "rate": 5.2818,
+  "tvl": 50030000,
+  "pool": "3075a746-bdd1-4aac-bcd5-b035abee2622",
+  "max_l": 16.5,
+  "borrow": 5.09522,
+  "free": 11330000,
+  "lltv": 0.95,
+  "first_bps": 22.49,
+  "loop_bps": 12.49,
+  "gas": 4.25,
+  "meta": "INF/WSOL",
+  "symbol": "INF",
+  "flags": [
+   "borrow is the snapshot 5.095; the vault read 4.97 half an hour later",
+   "a loop of the scorer's blind spot: it never pairs jupiter-lend rows"
+  ],
+  "gate": null,
+  "source": "round trip measured by two lite-api.jup.ag/swap/v1/quote calls SOL>token>SOL at 850 SOL. Limit, free, tvl: https://lite-api.jup.ag/lend/v1/borrow/vaults id 42. Borrow: DefiLlama lendBorrow 1377ef06-ba83-466f-9352-adb8f854ef71. Rate: DefiLlama row 3075a746-bdd1-4aac-bcd5-b035abee2622. https://jup.ag/lend/borrow/42"
+ },
+ {
+  "id": "staked:jupiter-JUPSOL",
+  "name": "JUPSOL / SOL loop, Jupiter Lend vault 4",
+  "family": "loop_correlated",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "jupiter-staked-sol"
+  ],
+  "chain": "Solana",
+  "rate": 5.07113,
+  "tvl": 49740000,
+  "pool": "52bd72a7-9e81-4112-abb4-71673e8de9bf",
+  "max_l": 16.5,
+  "borrow": 5.09522,
+  "free": 22251000,
+  "lltv": 0.95,
+  "first_bps": 10.62,
+  "loop_bps": 0.62,
+  "gas": 4.25,
+  "meta": "JupSOL/WSOL",
+  "symbol": "JUPSOL",
+  "flags": [
+   "borrow is the snapshot 5.095; the vault read 4.97 half an hour later",
+   "a loop of the scorer's blind spot: it never pairs jupiter-lend rows"
+  ],
+  "gate": null,
+  "source": "round trip measured by two lite-api.jup.ag/swap/v1/quote calls SOL>token>SOL at 350 SOL. Limit, free, tvl: https://lite-api.jup.ag/lend/v1/borrow/vaults id 4. Borrow: DefiLlama lendBorrow b243daaf-fd09-47e9-8359-940a43058da6. Rate: DefiLlama row 52bd72a7-9e81-4112-abb4-71673e8de9bf. https://jup.ag/lend/borrow/4"
+ },
+ {
+  "id": "staked:jupiter-JITOSOL",
+  "name": "JITOSOL / SOL loop, Jupiter Lend vault 5",
+  "family": "loop_correlated",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "jito-liquid-staking"
+  ],
+  "chain": "Solana",
+  "rate": 4.76587,
+  "tvl": 5200000,
+  "pool": "0e7d0722-9054-4907-8593-567b353c0900",
+  "max_l": 16.5,
+  "borrow": 5.09522,
+  "free": 806000,
+  "lltv": 0.95,
+  "first_bps": 10.15,
+  "loop_bps": 0.15,
+  "gas": 4.25,
+  "meta": "JitoSOL/WSOL",
+  "symbol": "JITOSOL",
+  "flags": [
+   "borrow is the snapshot 5.095; the vault read 4.97 half an hour later",
+   "a loop of the scorer's blind spot: it never pairs jupiter-lend rows"
+  ],
+  "gate": null,
+  "source": "round trip measured by two lite-api.jup.ag/swap/v1/quote calls SOL>token>SOL at 350 SOL. Limit, free, tvl: https://lite-api.jup.ag/lend/v1/borrow/vaults id 5. Borrow: DefiLlama lendBorrow dd024b97-972d-4f89-95b6-49804810e486. Rate: DefiLlama row 0e7d0722-9054-4907-8593-567b353c0900. https://jup.ag/lend/borrow/5"
+ },
+ {
+  "id": "staked:jupiter-MSOL",
+  "name": "MSOL / SOL loop, Jupiter Lend vault 47",
+  "family": "loop_correlated",
+  "platforms": [
+   "jupiter-lend"
+  ],
+  "issuers": [
+   "marinade-liquid-staking"
+  ],
+  "chain": "Solana",
+  "rate": 5.05946,
+  "tvl": 390000,
+  "pool": "b3f93865-5ec8-4662-90a0-11808e0aa2bd",
+  "max_l": 9.0,
+  "borrow": 5.09522,
+  "free": 404000,
+  "lltv": 0.9,
+  "first_bps": 11.96,
+  "loop_bps": 1.96,
+  "gas": 4.25,
+  "meta": "mSOL/WSOL",
+  "symbol": "MSOL",
+  "flags": [
+   "borrow is the snapshot 5.095; the vault read 4.97 half an hour later",
+   "a loop of the scorer's blind spot: it never pairs jupiter-lend rows"
+  ],
+  "gate": null,
+  "source": "round trip measured by two lite-api.jup.ag/swap/v1/quote calls SOL>token>SOL at 350 SOL. Limit, free, tvl: https://lite-api.jup.ag/lend/v1/borrow/vaults id 47. Borrow: DefiLlama lendBorrow d20e54ae-e897-4474-ae33-8a81570261b2. Rate: DefiLlama row b3f93865-5ec8-4662-90a0-11808e0aa2bd. https://jup.ag/lend/borrow/47"
+ },
+ {
+  "id": "staked:hyperlend-KHYPE",
+  "name": "KHYPE / WHYPE loop, HyperLend e-mode 5",
+  "family": "loop_correlated",
+  "platforms": [
+   "hyperlend-pooled"
+  ],
+  "issuers": [
+   "kinetiq-khype"
+  ],
+  "chain": "HyperEVM",
+  "rate": 1.86192,
+  "tvl": 136000000,
+  "pool": "9f25a954-db87-4bb2-a8b2-4be0b843a44c",
+  "max_l": 7.75,
+  "borrow": 0.96432,
+  "free": 30756522,
+  "lltv": 0.9,
+  "first_bps": 11.55,
+  "loop_bps": 1.55,
+  "gas": 4.25,
+  "meta": "e-mode 5 kHYPE/HYPE",
+  "symbol": "KHYPE",
+  "flags": [
+   "e-mode 5: LTV 87.13 against 59 outside it",
+   "WHYPE borrow cap 1.75M HYPE, about 1.22M used"
+  ],
+  "gate": null,
+  "source": "Limit: HyperEVM pool 0x00A89d7a5A02160f20150EbEA7a2b5E4879A1A8b getEModeCategoryCollateralConfig(5) = 8713/9000, membership by getEModeCategoryCollateralBitmap(5) and BorrowableBitmap(5). Free and borrow: https://api.hyperlend.finance/data/markets?chain=hyperEvm. round trip measured by two aggregator-api.kyberswap.com routes calls at 400 HYPE: 1.55 bps. Rate: DefiLlama row 9f25a954-db87-4bb2-a8b2-4be0b843a44c"
+ },
+ {
+  "id": "staked:morpho-KHYPE-0x64e7db7f",
+  "name": "KHYPE / WHYPE loop, Morpho",
+  "family": "loop_correlated",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [
+   "kinetiq-khype"
+  ],
+  "chain": "HyperEVM",
+  "rate": 1.86192,
+  "tvl": 5760658,
+  "pool": "9f25a954-db87-4bb2-a8b2-4be0b843a44c",
+  "max_l": 7.0,
+  "borrow": 0.89305,
+  "free": 699985,
+  "lltv": 0.86,
+  "first_bps": 11.55,
+  "loop_bps": 1.55,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "KHYPE",
+  "flags": [
+   "the scorer skips this market: base_of(WHYPE) is other"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x64e7db7f042812d4335947a7cdf6af1093d29478aff5f1ccd93cc67f8aadfddc: morpho_markets.json, https://app.morpho.org/hyperevm/market/0x64e7db7f042812d4335947a7cdf6af1093d29478aff5f1ccd93cc67f8aadfddc. round trip measured by two aggregator-api.kyberswap.com routes calls at 400 HYPE: 1.55 bps. Rate: DefiLlama row 9f25a954-db87-4bb2-a8b2-4be0b843a44c",
+  "borrow_week": 0.97661
+ },
+ {
+  "id": "staked:hypurrfi-KHYPE",
+  "name": "KHYPE / WHYPE loop, HypurrFi",
+  "family": "loop_correlated",
+  "platforms": [
+   "hypurrfi-pooled"
+  ],
+  "issuers": [
+   "kinetiq-khype"
+  ],
+  "chain": "HyperEVM",
+  "rate": 1.86192,
+  "tvl": 5890099,
+  "pool": "9f25a954-db87-4bb2-a8b2-4be0b843a44c",
+  "max_l": 2.25,
+  "borrow": 1.53113,
+  "free": 1093827,
+  "lltv": null,
+  "first_bps": 11.55,
+  "loop_bps": 1.55,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "KHYPE",
+  "flags": [
+   "LTV outside any e-mode: HypurrFi e-mode not read"
+  ],
+  "gate": null,
+  "source": "DefiLlama lendBorrow aa88cdff-f2ca-4644-9900-8a565e12378c and 049682a8-b7ca-4ffb-a4bb-d4e6a599b116"
+ },
+ {
+  "id": "staked:aave-SAVAX-5.0",
+  "name": "SAVAX / WAVAX loop, Aave e-mode to 5x",
+  "family": "loop_correlated",
+  "platforms": [
+   "aave-v3"
+  ],
+  "issuers": [
+   "benqi-staked-avax"
+  ],
+  "chain": "Avalanche",
+  "rate": 3.60098,
+  "tvl": 91945710,
+  "pool": "3790c3e5-8644-4f6b-8feb-12434d8b99f9",
+  "max_l": 5.0,
+  "borrow": 3.31463,
+  "free": 91945710,
+  "lltv": 0.95,
+  "first_bps": 22.62,
+  "loop_bps": 12.62,
+  "gas": 4.25,
+  "meta": "e-mode AVAX correlated",
+  "symbol": "SAVAX",
+  "flags": [
+   "the scorer skips this pair: base_of(WAVAX) is other",
+   "sAVAX exits by swap: thin at size, 172.82 bps at $72k, so max_l stops at 5 although the limit gives 14.25. Unstaking is 15 days"
+  ],
+  "gate": null,
+  "source": "Limit, borrow, free: aave.json AaveV3Avalanche, eMode AVAX correlated 0.93; tvl is WAVAX free to borrow, a floor on the market,https://app.aave.com/reserve-overview/?underlyingAsset=0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7&marketName=proto_avalanche_v3. round trip measured by two aggregator-api.kyberswap.com routes calls at 3000 AVAX, about $27k; the e-mode allows 14.25x, but 8000 AVAX, about $72k, costs 172.82 bps, so this route stops at 5x: 12.62 bps. Rate: DefiLlama row 3790c3e5-8644-4f6b-8feb-12434d8b99f9"
+ },
+ {
+  "id": "staked:benqi-SAVAX",
+  "name": "SAVAX / AVAX loop, BENQI",
+  "family": "loop_correlated",
+  "platforms": [
+   "benqi-lending"
+  ],
+  "issuers": [
+   "benqi-staked-avax"
+  ],
+  "chain": "Avalanche",
+  "rate": 3.60098,
+  "tvl": 93078627,
+  "pool": "3790c3e5-8644-4f6b-8feb-12434d8b99f9",
+  "max_l": 3.25,
+  "borrow": 3.23768,
+  "free": 4023437,
+  "lltv": null,
+  "first_bps": 22.62,
+  "loop_bps": 12.62,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "SAVAX",
+  "flags": [
+   "the scorer skips this pair: base_of(AVAX) is other"
+  ],
+  "gate": null,
+  "source": "DefiLlama lendBorrow 38583317-5354-4767-8f1e-6a0ae3aa7b5d. round trip measured by two aggregator-api.kyberswap.com routes calls at 3000 AVAX: 12.62 bps. Rate: DefiLlama row 3790c3e5-8644-4f6b-8feb-12434d8b99f9"
+ },
+ {
+  "id": "staked:spark-WSTETH",
+  "name": "WSTETH / WETH loop, Spark e-mode 1",
+  "family": "loop_correlated",
+  "platforms": [
+   "sparklend"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.27408,
+  "tvl": 1499446011,
+  "pool": "747c1d2a-c668-4682-b9f9-296708a3dd90",
+  "max_l": 12.25,
+  "borrow": 1.90131,
+  "free": 319263545,
+  "lltv": 0.93,
+  "first_bps": 10,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "e-mode 1",
+  "symbol": "WSTETH",
+  "flags": [
+   "e-mode 1: LTV 92 against the 83 the scorer reads from DefiLlama",
+   "supply cap 1.33M wstETH, about $4.03B against $3.75B in"
+  ],
+  "gate": null,
+  "source": "Limit: Ethereum pool 0xC13e21B648A5Ee794902342038FF3aDAB66BE987 getEModeCategoryData(1) = 9200/9300, getConfiguration(wstETH) e-mode bits = 1. Borrow, free: DefiLlama lendBorrow 24195b31-d749-445f-bf9e-b65aa025ebdd. Rate: DefiLlama row 747c1d2a-c668-4682-b9f9-296708a3dd90"
+ },
+ {
+  "id": "staked:compound-Eth-WSTETH",
+  "name": "WSTETH / ETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.27408,
+  "tvl": 228528815,
+  "pool": "747c1d2a-c668-4682-b9f9-296708a3dd90",
+  "max_l": 9.75,
+  "borrow": 1.94103,
+  "free": 24609908,
+  "lltv": null,
+  "first_bps": 11,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "WSTETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow ca969cae-bbcb-4cd7-985e-be4df9815e15. Borrow, free: 85c57261-b75b-4447-a115-d79b1a7de8ed. Swap: Cymetica's mint. Rate: DefiLlama row 747c1d2a-c668-4682-b9f9-296708a3dd90"
+ },
+ {
+  "id": "staked:compound-Eth-WEETH",
+  "name": "WEETH / ETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "ether.fi-stake"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.34075,
+  "tvl": 228528815,
+  "pool": "46bd2bdf-6d92-4066-b482-e885ee172264",
+  "max_l": 9.75,
+  "borrow": 1.94103,
+  "free": 24609908,
+  "lltv": null,
+  "first_bps": 11,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "WEETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow ebe53ee0-db95-478e-8476-b8aa420be700. Borrow, free: 85c57261-b75b-4447-a115-d79b1a7de8ed. Swap: Cymetica's mint. Rate: DefiLlama row 46bd2bdf-6d92-4066-b482-e885ee172264"
+ },
+ {
+  "id": "staked:compound-Eth-PUFETH",
+  "name": "PUFETH / ETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "puffer-stake"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.13565,
+  "tvl": 228528815,
+  "pool": "bac6982a-f344-42f7-9af4-a9882f4a77f0",
+  "max_l": 8.25,
+  "borrow": 1.94103,
+  "free": 24609908,
+  "lltv": null,
+  "first_bps": 11,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "PUFETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow 507c0596-8677-4006-bd6d-1698e13203e2. Borrow, free: 85c57261-b75b-4447-a115-d79b1a7de8ed. Swap: Cymetica's mint. Rate: DefiLlama row bac6982a-f344-42f7-9af4-a9882f4a77f0"
+ },
+ {
+  "id": "staked:compound-Eth-CBETH",
+  "name": "CBETH / ETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "coinbase-wrapped-staked-eth"
+  ],
+  "chain": "Ethereum",
+  "rate": 2.30834,
+  "tvl": 228528815,
+  "pool": "0f45d730-b279-4629-8e11-ccb5cc3038b4",
+  "max_l": 9.75,
+  "borrow": 1.94103,
+  "free": 24609908,
+  "lltv": null,
+  "first_bps": 11,
+  "loop_bps": 1,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "CBETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow 68e30785-53bf-49ef-892f-88b197c6bfe6. Borrow, free: 85c57261-b75b-4447-a115-d79b1a7de8ed. Swap: Cymetica's mint. Rate: DefiLlama row 0f45d730-b279-4629-8e11-ccb5cc3038b4"
+ },
+ {
+  "id": "staked:compound-Bas-WEETH",
+  "name": "WEETH / WETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "ether.fi-stake"
+  ],
+  "chain": "Base",
+  "rate": 2.34075,
+  "tvl": 8319469,
+  "pool": "46bd2bdf-6d92-4066-b482-e885ee172264",
+  "max_l": 9.75,
+  "borrow": 1.9285,
+  "free": 280708,
+  "lltv": null,
+  "first_bps": 11.73,
+  "loop_bps": 1.73,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "WEETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow e13cb9ca-d4dd-4c30-a367-8e9b3460e445. Borrow, free: 7993b97d-12c3-4a36-b6b6-5b37bac4f8ae. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 20 WETH. Rate: DefiLlama row 46bd2bdf-6d92-4066-b482-e885ee172264"
+ },
+ {
+  "id": "staked:compound-Bas-WSTETH",
+  "name": "WSTETH / WETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Base",
+  "rate": 2.27408,
+  "tvl": 8319469,
+  "pool": "747c1d2a-c668-4682-b9f9-296708a3dd90",
+  "max_l": 9.75,
+  "borrow": 1.9285,
+  "free": 280708,
+  "lltv": null,
+  "first_bps": 11.17,
+  "loop_bps": 1.17,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "WSTETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow 71391dac-7bbc-478d-9d11-d4813bebd90d. Borrow, free: 7993b97d-12c3-4a36-b6b6-5b37bac4f8ae. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 35 WETH. Rate: DefiLlama row 747c1d2a-c668-4682-b9f9-296708a3dd90"
+ },
+ {
+  "id": "staked:compound-Bas-CBETH",
+  "name": "CBETH / WETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "coinbase-wrapped-staked-eth"
+  ],
+  "chain": "Base",
+  "rate": 2.30834,
+  "tvl": 8319469,
+  "pool": "0f45d730-b279-4629-8e11-ccb5cc3038b4",
+  "max_l": 9.75,
+  "borrow": 1.9285,
+  "free": 280708,
+  "lltv": null,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "CBETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow c372279e-92ff-4acc-ad90-14a4d3a888e4. Borrow, free: 7993b97d-12c3-4a36-b6b6-5b37bac4f8ae. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 35 WETH. Rate: DefiLlama row 0f45d730-b279-4629-8e11-ccb5cc3038b4"
+ },
+ {
+  "id": "staked:compound-Arb-WEETH",
+  "name": "WEETH / WETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "ether.fi-stake"
+  ],
+  "chain": "Arbitrum",
+  "rate": 2.34075,
+  "tvl": 3983572,
+  "pool": "46bd2bdf-6d92-4066-b482-e885ee172264",
+  "max_l": 9.75,
+  "borrow": 1.45385,
+  "free": 365306,
+  "lltv": null,
+  "first_bps": 22.72,
+  "loop_bps": 12.72,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "WEETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow 6e642655-9c87-4d5b-8237-f45cfd42a920. Borrow, free: be3d7cb9-f008-4050-8802-13ea505bcbdf. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 30 WETH. Rate: DefiLlama row 46bd2bdf-6d92-4066-b482-e885ee172264"
+ },
+ {
+  "id": "staked:compound-Arb-EZETH",
+  "name": "EZETH / WETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "renzo"
+  ],
+  "chain": "Arbitrum",
+  "rate": 1.81808,
+  "tvl": 3983572,
+  "pool": "e28e32b5-e356-41d9-8dc7-a376ece56619",
+  "max_l": 9.75,
+  "borrow": 1.45385,
+  "free": 365306,
+  "lltv": null,
+  "first_bps": 20,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "EZETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow 420ad40c-2aab-4996-bb65-643d1ead3bfc. Borrow, free: be3d7cb9-f008-4050-8802-13ea505bcbdf. Swap: Cymetica's 10. Rate: DefiLlama row e28e32b5-e356-41d9-8dc7-a376ece56619"
+ },
+ {
+  "id": "staked:compound-Arb-WSTETH",
+  "name": "WSTETH / WETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Arbitrum",
+  "rate": 2.27408,
+  "tvl": 3983572,
+  "pool": "747c1d2a-c668-4682-b9f9-296708a3dd90",
+  "max_l": 8.25,
+  "borrow": 1.45385,
+  "free": 365306,
+  "lltv": null,
+  "first_bps": 13.01,
+  "loop_bps": 3.01,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "WSTETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow 829ac1b4-2129-4699-a412-59a5d7dbab64. Borrow, free: be3d7cb9-f008-4050-8802-13ea505bcbdf. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 9 WETH. Rate: DefiLlama row 747c1d2a-c668-4682-b9f9-296708a3dd90"
+ },
+ {
+  "id": "staked:compound-Arb-RETH",
+  "name": "RETH / WETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "rocket-pool"
+  ],
+  "chain": "Arbitrum",
+  "rate": 2.04592,
+  "tvl": 3983572,
+  "pool": "d4b3c522-6127-4b89-bedf-83641cdcd2eb",
+  "max_l": 9.75,
+  "borrow": 1.45385,
+  "free": 365306,
+  "lltv": null,
+  "first_bps": 20,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "RETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow 45762d4a-f5fb-4a61-8087-473fc8f98991. Borrow, free: be3d7cb9-f008-4050-8802-13ea505bcbdf. Swap: Cymetica's 10. Rate: DefiLlama row d4b3c522-6127-4b89-bedf-83641cdcd2eb"
+ },
+ {
+  "id": "staked:compound-OP -WEETH",
+  "name": "WEETH / WETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "ether.fi-stake"
+  ],
+  "chain": "OP Mainnet",
+  "rate": 2.34075,
+  "tvl": 3273585,
+  "pool": "46bd2bdf-6d92-4066-b482-e885ee172264",
+  "max_l": 9.75,
+  "borrow": 1.75631,
+  "free": 128496,
+  "lltv": null,
+  "first_bps": 20,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "WEETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow 703d593d-57b4-4efd-a32a-973bec2a2e67. Borrow, free: c0b1d745-7fe9-4c27-a95d-b02aa9d26465. Swap: Cymetica's 10. Rate: DefiLlama row 46bd2bdf-6d92-4066-b482-e885ee172264"
+ },
+ {
+  "id": "staked:compound-OP -EZETH",
+  "name": "EZETH / WETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "renzo"
+  ],
+  "chain": "OP Mainnet",
+  "rate": 1.81808,
+  "tvl": 3273585,
+  "pool": "e28e32b5-e356-41d9-8dc7-a376ece56619",
+  "max_l": 9.75,
+  "borrow": 1.75631,
+  "free": 128496,
+  "lltv": null,
+  "first_bps": 20,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "EZETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow 5b6edf87-536d-4248-b492-57c8dc56f52a. Borrow, free: c0b1d745-7fe9-4c27-a95d-b02aa9d26465. Swap: Cymetica's 10. Rate: DefiLlama row e28e32b5-e356-41d9-8dc7-a376ece56619"
+ },
+ {
+  "id": "staked:compound-OP -WSTETH",
+  "name": "WSTETH / WETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "OP Mainnet",
+  "rate": 2.27408,
+  "tvl": 3273585,
+  "pool": "747c1d2a-c668-4682-b9f9-296708a3dd90",
+  "max_l": 8.25,
+  "borrow": 1.75631,
+  "free": 128496,
+  "lltv": null,
+  "first_bps": 11.06,
+  "loop_bps": 1.06,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "WSTETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow 4712faa3-d362-4187-abc6-5c128d76f46d. Borrow, free: c0b1d745-7fe9-4c27-a95d-b02aa9d26465. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 9 WETH. Rate: DefiLlama row 747c1d2a-c668-4682-b9f9-296708a3dd90"
+ },
+ {
+  "id": "staked:compound-OP -RETH",
+  "name": "RETH / WETH loop, Compound v3",
+  "family": "loop_correlated",
+  "platforms": [
+   "compound-v3"
+  ],
+  "issuers": [
+   "rocket-pool"
+  ],
+  "chain": "OP Mainnet",
+  "rate": 2.04592,
+  "tvl": 3273585,
+  "pool": "d4b3c522-6127-4b89-bedf-83641cdcd2eb",
+  "max_l": 9.75,
+  "borrow": 1.75631,
+  "free": 128496,
+  "lltv": null,
+  "first_bps": 20,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "WETH comet",
+  "symbol": "RETH",
+  "flags": [
+   "the scorer never reads Compound"
+  ],
+  "gate": null,
+  "source": "LTV: DefiLlama lendBorrow f24f1b9f-9556-4f36-996f-e19cadf1f7a6. Borrow, free: c0b1d745-7fe9-4c27-a95d-b02aa9d26465. Swap: Cymetica's 10. Rate: DefiLlama row d4b3c522-6127-4b89-bedf-83641cdcd2eb"
+ },
+ {
+  "id": "staked:morpho-base-wstETH",
+  "name": "wstETH / WETH loop at the measured swap",
+  "family": "loop_correlated",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Base",
+  "rate": 2.27408,
+  "tvl": 5580498,
+  "pool": "747c1d2a-c668-4682-b9f9-296708a3dd90",
+  "max_l": 18.0,
+  "borrow": 1.71858,
+  "free": 560240,
+  "lltv": 0.945,
+  "first_bps": 11.17,
+  "loop_bps": 1.17,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "WSTETH",
+  "flags": [
+   "same market as the scorer's row, which charges 10 bps a borrowed dollar"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x3a4048c64ba1b375330d376b1ce40e4047d03b47ab4d48af484edec9fec801ba. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 35 WETH: 1.17 bps. Rate: DefiLlama row 747c1d2a-c668-4682-b9f9-296708a3dd90",
+  "borrow_week": 1.81195
+ },
+ {
+  "id": "staked:morpho-base-cbETH",
+  "name": "cbETH / WETH loop at the measured swap",
+  "family": "loop_correlated",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [
+   "coinbase-wrapped-staked-eth"
+  ],
+  "chain": "Base",
+  "rate": 2.30834,
+  "tvl": 8027564,
+  "pool": "0f45d730-b279-4629-8e11-ccb5cc3038b4",
+  "max_l": 18.0,
+  "borrow": 1.79064,
+  "free": 795985,
+  "lltv": 0.945,
+  "first_bps": 11.0,
+  "loop_bps": 1.0,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "CBETH",
+  "flags": [
+   "same market as the scorer's row, which charges 10 bps a borrowed dollar"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x84662b4f95b85d6b082b68d32cf71bb565b3f22f216a65509cc2ede7dccdfe8c. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 35 WETH: 1.0 bps. Rate: DefiLlama row 0f45d730-b279-4629-8e11-ccb5cc3038b4",
+  "borrow_week": 2.01157
+ },
+ {
+  "id": "staked:fluid-base-3",
+  "name": "wstETH / ETH loop at the measured swap",
+  "family": "loop_correlated",
+  "platforms": [
+   "fluid-lending"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Base",
+  "rate": 2.32408,
+  "tvl": 4035657,
+  "pool": "747c1d2a-c668-4682-b9f9-296708a3dd90",
+  "max_l": 14.25,
+  "borrow": 1.87,
+  "free": 3002302,
+  "lltv": 0.95,
+  "first_bps": 11.17,
+  "loop_bps": 1.17,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "WSTETH",
+  "flags": [
+   "same vault as the scorer's row, which charges 10 bps a borrowed dollar"
+  ],
+  "gate": null,
+  "source": "fluid.json chain 8453 vault 3, https://api.fluid.instadapp.io/v2/8453/vaults. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 35 WETH: 1.17 bps. Rate: DefiLlama row 747c1d2a-c668-4682-b9f9-296708a3dd90"
+ },
+ {
+  "id": "staked:aave-base-wstETH",
+  "name": "wstETH / WETH loop at the measured swap, Aave e-mode",
+  "family": "loop_correlated",
+  "platforms": [
+   "aave-v3"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Base",
+  "rate": 2.27408,
+  "tvl": 39074603,
+  "pool": "747c1d2a-c668-4682-b9f9-296708a3dd90",
+  "max_l": 14.25,
+  "borrow": 2.09623,
+  "free": 39074603,
+  "lltv": null,
+  "first_bps": 11.17,
+  "loop_bps": 1.17,
+  "gas": 4.25,
+  "meta": "e-mode",
+  "symbol": "WSTETH",
+  "flags": [
+   "same market as the scorer's row, which charges 10 bps a borrowed dollar"
+  ],
+  "gate": null,
+  "source": "aave.json AaveV3Base; tvl is WETH free to borrow, a floor on the market. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 35 WETH: 1.17 bps. Rate: DefiLlama row 747c1d2a-c668-4682-b9f9-296708a3dd90"
+ },
+ {
+  "id": "staked:aave-base-weETH",
+  "name": "weETH / WETH loop at the measured swap, Aave e-mode",
+  "family": "loop_correlated",
+  "platforms": [
+   "aave-v3"
+  ],
+  "issuers": [
+   "ether.fi-stake"
+  ],
+  "chain": "Base",
+  "rate": 2.34075,
+  "tvl": 39074603,
+  "pool": "46bd2bdf-6d92-4066-b482-e885ee172264",
+  "max_l": 14.25,
+  "borrow": 2.09623,
+  "free": 39074603,
+  "lltv": null,
+  "first_bps": 11.96,
+  "loop_bps": 1.96,
+  "gas": 4.25,
+  "meta": "e-mode",
+  "symbol": "WEETH",
+  "flags": [
+   "same market as the scorer's row, which charges 10 bps a borrowed dollar"
+  ],
+  "gate": null,
+  "source": "aave.json AaveV3Base; tvl is WETH free to borrow, a floor on the market. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 30 WETH: 1.96 bps. Rate: DefiLlama row 46bd2bdf-6d92-4066-b482-e885ee172264"
+ },
+ {
+  "id": "staked:moonwell-Bas-WSTETH",
+  "name": "WSTETH / ETH loop, Moonwell",
+  "family": "loop_correlated",
+  "platforms": [
+   "moonwell-lending"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Base",
+  "rate": 2.27408,
+  "tvl": 4562100,
+  "pool": "747c1d2a-c668-4682-b9f9-296708a3dd90",
+  "max_l": 5.25,
+  "borrow": 1.17246,
+  "free": 675116,
+  "lltv": null,
+  "first_bps": 11.17,
+  "loop_bps": 1.17,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "WSTETH",
+  "flags": [
+   "not on their list; reward token left out"
+  ],
+  "gate": null,
+  "source": "DefiLlama lendBorrow 0d27f0a5-572a-41cd-98a6-ad5804f95044 and 914284ae-dbef-421f-bbb7-7c42f527fd5f. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 35 WETH: 1.17 bps. Rate: DefiLlama row 747c1d2a-c668-4682-b9f9-296708a3dd90"
+ },
+ {
+  "id": "staked:moonwell-OP -WSTETH",
+  "name": "WSTETH / ETH loop, Moonwell",
+  "family": "loop_correlated",
+  "platforms": [
+   "moonwell-lending"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "OP Mainnet",
+  "rate": 2.27408,
+  "tvl": 393153,
+  "pool": "747c1d2a-c668-4682-b9f9-296708a3dd90",
+  "max_l": 5.25,
+  "borrow": 0.21594,
+  "free": 203134,
+  "lltv": null,
+  "first_bps": 11.06,
+  "loop_bps": 1.06,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "WSTETH",
+  "flags": [
+   "not on their list; reward token left out"
+  ],
+  "gate": null,
+  "source": "DefiLlama lendBorrow 9cbef607-58b0-40d9-a2bf-e7ba335c1bfd and f65459ef-ebfa-496d-8f3f-23a328c6e78d. Swap: round trip measured by two aggregator-api.kyberswap.com routes calls at 9 WETH: 1.06 bps. Rate: DefiLlama row 747c1d2a-c668-4682-b9f9-296708a3dd90"
+ },
+ {
+  "id": "staked:save-MSOL",
+  "name": "MSOL / SOL loop, Save main pool",
+  "family": "loop_correlated",
+  "platforms": [
+   "save"
+  ],
+  "issuers": [
+   "marinade-liquid-staking"
+  ],
+  "chain": "Solana",
+  "rate": 5.05946,
+  "tvl": 41735196,
+  "pool": "b3f93865-5ec8-4662-90a0-11808e0aa2bd",
+  "max_l": 3.0,
+  "borrow": 4.22,
+  "free": 6956288,
+  "lltv": null,
+  "first_bps": 11.96,
+  "loop_bps": 1.96,
+  "gas": 4.25,
+  "meta": "Main Pool",
+  "symbol": "MSOL",
+  "flags": [
+   "not on their list"
+  ],
+  "gate": null,
+  "source": "DefiLlama lendBorrow 867aff4c-33fc-4591-940a-019549d5a8af and 1170b465-309b-4026-b10d-abdf7b1ac369. round trip measured by two lite-api.jup.ag/swap/v1/quote calls SOL>token>SOL at 350 SOL. Rate: DefiLlama row b3f93865-5ec8-4662-90a0-11808e0aa2bd"
+ },
+ {
+  "id": "staked:morpho-base-JITOSOL",
+  "name": "JITOSOL / SOL loop, Morpho on Base",
+  "family": "loop_correlated",
+  "platforms": [
+   "morpho-blue"
+  ],
+  "issuers": [
+   "jito-liquid-staking"
+  ],
+  "chain": "Base",
+  "rate": 4.76587,
+  "tvl": 866187,
+  "pool": "0e7d0722-9054-4907-8593-567b353c0900",
+  "max_l": 11.75,
+  "borrow": 1.07374,
+  "free": 268067,
+  "lltv": 0.915,
+  "first_bps": 20,
+  "loop_bps": 10,
+  "gas": 4.25,
+  "meta": "",
+  "symbol": "JITOSOL",
+  "flags": [
+   "market under the $3M floor: refused on purpose, shows what a deeper one would pay",
+   "wrapped JitoSOL and SOL on Base, the wrap not read"
+  ],
+  "gate": null,
+  "source": "Morpho market 0x2ea32f6f734f87db12a3b72cfe2b7381837f115411eb57171f672e2d03ed7cf7. Swap: Cymetica's 10, not measured. Rate: DefiLlama row 0e7d0722-9054-4907-8593-567b353c0900",
+  "borrow_week": 1.33837
+ },
+ {
+  "id": "staked:fluid-t4-1-44",
+  "name": "wstETH-ETH smart collateral and debt, Fluid T4",
+  "family": "loop_correlated",
+  "platforms": [
+   "fluid-lending"
+  ],
+  "issuers": [
+   "lido"
+  ],
+  "chain": "Ethereum",
+  "rate": 1.98511,
+  "tvl": 84010737,
+  "pool": "4f715567-420c-400d-9a62-0059331e3940",
+  "max_l": 19.75,
+  "borrow": 2.10558,
+  "free": 12116541,
+  "lltv": 0.97,
+  "first_bps": 12.0,
+  "loop_bps": 2.0,
+  "gas": 4.25,
+  "meta": "T4",
+  "symbol": "WSTETH",
+  "flags": [
+   "rate rests on one day: trading now 0.26567, 7d 2.98158, 30d 0.52321, Fluid's own 0.74",
+   "Fluid shows wstETH stakingApr 4.25; Lido on DefiLlama 2.27 is what is used"
+  ],
+  "gate": null,
+  "source": "fluid.json chain 1 vault 44 (T4), https://api.fluid.instadapp.io/v2/1/vaults. Collateral per share $617 wstETH + $4544 ETH, debt per share $4499 + $612. rate = shares x (token yield 2.27/0.00 + lend 0.03/1.64) + trading 0.266; borrow = shares x (yield 2.27/0.00 + borrow 0.13/2.13) - trading 0.266. Trading is the lowest of Fluid's own 0.74 and DefiLlama 4f715567-420c-400d-9a62-0059331e3940 now 0.26567, 7d 2.98158, 30d 0.52321. Swap: the DEX's fee 100 of 1e6 each way."
+ },
+ {
+  "id": "staked:fluid-t4-1-51",
+  "name": "WBTC-cbBTC smart collateral and debt, Fluid T4",
+  "family": "loop_correlated",
+  "platforms": [
+   "fluid-lending"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 0.3119,
+  "tvl": 18486127,
+  "pool": "8e47b0df-d495-4224-bd98-6cf693e88745",
+  "max_l": 19.75,
+  "borrow": 0.11791,
+  "free": 3770506,
+  "lltv": 0.97,
+  "first_bps": 10.9,
+  "loop_bps": 0.9,
+  "gas": 4.25,
+  "meta": "T4",
+  "symbol": "WBTC",
+  "flags": [
+   "rate rests on one day: trading now 0.25745, 7d 1.62015, 30d 0.94593, Fluid's own 1.05",
+   "Fluid shows wstETH stakingApr 4.25; Lido on DefiLlama 2.27 is what is used"
+  ],
+  "gate": null,
+  "source": "fluid.json chain 1 vault 51 (T4), https://api.fluid.instadapp.io/v2/1/vaults. Collateral per share $47179 WBTC + $116028 cbBTC, debt per share $116557 + $47297. rate = shares x (token yield 0.00/0.00 + lend 0.09/0.04) + trading 0.257; borrow = shares x (yield 0.00/0.00 + borrow 0.41/0.29) - trading 0.257. Trading is the lowest of Fluid's own 1.05 and DefiLlama 8e47b0df-d495-4224-bd98-6cf693e88745 now 0.25745, 7d 1.62015, 30d 0.94593. Swap: the DEX's fee 45 of 1e6 each way."
+ },
+ {
+  "id": "staked:hold-liminal-basis-XHYPE",
+  "name": "XHYPE Delta-neutral yield",
+  "family": "usd_vault",
+  "platforms": [
+   "liminal-basis"
+  ],
+  "issuers": [],
+  "chain": "HyperEVM",
+  "rate": 8.50828,
+  "tvl": 9134640,
+  "pool": "84e38fd1-024f-4107-a1fc-0ae8bfc1b195",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "Delta-neutral yield",
+  "symbol": "XHYPE",
+  "flags": [
+   "minted with stablecoins at $1, delta-neutral: a dollar vault, not staked HYPE (docs.liminal.money/tokenized/xtokens). Liminal docs have a section \"Why Invite-Only?\": access not confirmed"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 84e38fd1-024f-4107-a1fc-0ae8bfc1b195: now 11.28118, 7d 11.28118, 30d 8.50828. https://defillama.com/yields/pool/84e38fd1-024f-4107-a1fc-0ae8bfc1b195"
+ },
+ {
+  "id": "staked:hold-plume-vaults-NETHERFI",
+  "name": "NETHERFI",
+  "family": "stake_hold",
+  "platforms": [
+   "plume-vaults"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 7.1479,
+  "tvl": 9483623,
+  "pool": "bbc9d288-0d96-5ac9-8c02-5b11ab4e2f40",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "NETHERFI",
+  "flags": [
+   "no 7-day reading",
+   "gate not read: a Nest vault"
+  ],
+  "gate": null,
+  "source": "DefiLlama row bbc9d288-0d96-5ac9-8c02-5b11ab4e2f40: now 7.1479, 7d None, 30d 7.1479. https://defillama.com/yields/pool/bbc9d288-0d96-5ac9-8c02-5b11ab4e2f40"
+ },
+ {
+  "id": "staked:hold-mellow-core-EARNETH",
+  "name": "EARNETH Lido earnETH",
+  "family": "stake_hold",
+  "platforms": [
+   "mellow-core"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 6.62871,
+  "tvl": 209027100,
+  "pool": "d0f54ea9-b41f-5d60-a2fc-9a34eb211bbb",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "Lido earnETH",
+  "symbol": "EARNETH",
+  "flags": [
+   "no 7-day reading",
+   "no whitelist in Lido docs (docs.lido.fi/earn); up to 24 hours to deposit, about 3 days to withdraw"
+  ],
+  "gate": null,
+  "source": "DefiLlama row d0f54ea9-b41f-5d60-a2fc-9a34eb211bbb: now 10.36015, 7d None, 30d 6.62871. https://defillama.com/yields/pool/d0f54ea9-b41f-5d60-a2fc-9a34eb211bbb"
+ },
+ {
+  "id": "staked:hold-upshift-HGETH",
+  "name": "HGETH",
+  "family": "stake_hold",
+  "platforms": [
+   "upshift"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 6.15,
+  "tvl": 10230800,
+  "pool": "bb925c10-033a-488d-90c1-595001b5656e",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "HGETH",
+  "flags": [
+   "no 7-day reading",
+   "gate not read"
+  ],
+  "gate": null,
+  "source": "DefiLlama row bb925c10-033a-488d-90c1-595001b5656e: now 6.15, 7d None, 30d 6.15. https://defillama.com/yields/pool/bb925c10-033a-488d-90c1-595001b5656e"
+ },
+ {
+  "id": "staked:hold-alchemix-v3-ALETH",
+  "name": "ALETH Fixed Yield: 4 month term",
+  "family": "stake_hold",
+  "platforms": [
+   "alchemix-v3"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 6.11239,
+  "tvl": 4780907,
+  "pool": "739a70c7-fb99-58e5-a066-02e2d892abe4",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "Fixed Yield: 4 month term",
+  "symbol": "ALETH",
+  "flags": [
+   "no 7-day reading",
+   "gate not read; four-month fixed term"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 739a70c7-fb99-58e5-a066-02e2d892abe4: now 7.25692, 7d None, 30d 6.11239. https://defillama.com/yields/pool/739a70c7-fb99-58e5-a066-02e2d892abe4"
+ },
+ {
+  "id": "staked:hold-hylo-lsts-HYLOSOL",
+  "name": "HYLOSOL 0% rewards fee",
+  "family": "stake_hold",
+  "platforms": [
+   "hylo-lsts"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 5.52095,
+  "tvl": 18302945,
+  "pool": "1b94ffcc-41ce-4071-b5b7-12d6670f4d75",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "0% rewards fee",
+  "symbol": "HYLOSOL",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 1b94ffcc-41ce-4071-b5b7-12d6670f4d75: now 5.52581, 7d None, 30d 5.52095. https://defillama.com/yields/pool/1b94ffcc-41ce-4071-b5b7-12d6670f4d75"
+ },
+ {
+  "id": "staked:hold-ipor-fusion-STETH",
+  "name": "STETH Fusion stETH looping Ethereum",
+  "family": "stake_hold",
+  "platforms": [
+   "ipor-fusion"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 5.47087,
+  "tvl": 4882359,
+  "pool": "eddd84ad-dda7-49ea-9313-662e25e9e518",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "Fusion stETH looping Ethereum",
+  "symbol": "STETH",
+  "flags": [
+   "no 7-day reading",
+   "gate not read: an IPOR Fusion vault can be access-managed"
+  ],
+  "gate": null,
+  "source": "DefiLlama row eddd84ad-dda7-49ea-9313-662e25e9e518: now 5.47087, 7d None, 30d 7.90383. https://defillama.com/yields/pool/eddd84ad-dda7-49ea-9313-662e25e9e518"
+ },
+ {
+  "id": "staked:hold-phantom-sol-PSOL",
+  "name": "PSOL 0% rewards fee",
+  "family": "stake_hold",
+  "platforms": [
+   "phantom-sol"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 5.4326,
+  "tvl": 155480918,
+  "pool": "7f5c2e8b-0428-431b-ba6e-571c38a57010",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "0% rewards fee",
+  "symbol": "PSOL",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 7f5c2e8b-0428-431b-ba6e-571c38a57010: now 5.4326, 7d None, 30d 5.49942. https://defillama.com/yields/pool/7f5c2e8b-0428-431b-ba6e-571c38a57010"
+ },
+ {
+  "id": "staked:hold-backpack-sol-BPSOL",
+  "name": "BPSOL 3% epoch fee",
+  "family": "stake_hold",
+  "platforms": [
+   "backpack-sol"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 5.38286,
+  "tvl": 5980583,
+  "pool": "f2aad126-ae18-5512-bc64-8fa59c136331",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "3% epoch fee",
+  "symbol": "BPSOL",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row f2aad126-ae18-5512-bc64-8fa59c136331: now 5.38286, 7d None, 30d 5.4089. https://defillama.com/yields/pool/f2aad126-ae18-5512-bc64-8fa59c136331"
+ },
+ {
+  "id": "staked:hold-jupiter-staked-sol-JUPSOL",
+  "name": "JUPSOL",
+  "family": "stake_hold",
+  "platforms": [
+   "jupiter-staked-sol"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 5.07113,
+  "tvl": 482737328,
+  "pool": "52bd72a7-9e81-4112-abb4-71673e8de9bf",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "JUPSOL",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 52bd72a7-9e81-4112-abb4-71673e8de9bf: now 5.07113, 7d None, 30d 5.26535. https://defillama.com/yields/pool/52bd72a7-9e81-4112-abb4-71673e8de9bf"
+ },
+ {
+  "id": "staked:hold-helius-staked-sol-HSOL",
+  "name": "HSOL",
+  "family": "stake_hold",
+  "platforms": [
+   "helius-staked-sol"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 5.05812,
+  "tvl": 91605220,
+  "pool": "d7e101d6-8e6c-4348-9c5f-62398872a301",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "HSOL",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row d7e101d6-8e6c-4348-9c5f-62398872a301: now 5.19265, 7d None, 30d 5.05812. https://defillama.com/yields/pool/d7e101d6-8e6c-4348-9c5f-62398872a301"
+ },
+ {
+  "id": "staked:hold-dfdv-staked-sol-DFDVSOL",
+  "name": "DFDVSOL 0% rewards fee",
+  "family": "stake_hold",
+  "platforms": [
+   "dfdv-staked-sol"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 4.94028,
+  "tvl": 197739726,
+  "pool": "568bbb48-dc88-4313-b1cc-ab1d4e763d6d",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "0% rewards fee",
+  "symbol": "DFDVSOL",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 568bbb48-dc88-4313-b1cc-ab1d4e763d6d: now 4.98632, 7d None, 30d 4.94028. https://defillama.com/yields/pool/568bbb48-dc88-4313-b1cc-ab1d4e763d6d"
+ },
+ {
+  "id": "staked:hold-drift-staked-sol-DSOL",
+  "name": "DSOL",
+  "family": "stake_hold",
+  "platforms": [
+   "drift-staked-sol"
+  ],
+  "issuers": [],
+  "chain": "Solana",
+  "rate": 4.91382,
+  "tvl": 258436090,
+  "pool": "296651fc-25f6-4434-b8ec-17c2af9808da",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "DSOL",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 296651fc-25f6-4434-b8ec-17c2af9808da: now 4.91382, 7d None, 30d 4.93814. https://defillama.com/yields/pool/296651fc-25f6-4434-b8ec-17c2af9808da"
+ },
+ {
+  "id": "staked:hold-makina-DETH",
+  "name": "DETH Dialectic ETH",
+  "family": "stake_hold",
+  "platforms": [
+   "makina"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 4.8276,
+  "tvl": 5788002,
+  "pool": "3acfa7fe-2667-56ea-9427-cfb763f891f2",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "Dialectic ETH",
+  "symbol": "DETH",
+  "flags": [
+   "no 7-day reading",
+   "gate not read"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 3acfa7fe-2667-56ea-9427-cfb763f891f2: now 8.58001, 7d None, 30d 4.8276. https://defillama.com/yields/pool/3acfa7fe-2667-56ea-9427-cfb763f891f2"
+ },
+ {
+  "id": "staked:hold-avant-aveth-SAVETH",
+  "name": "SAVETH ERC-4626: savETH → avETH",
+  "family": "stake_hold",
+  "platforms": [
+   "avant-aveth"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 3.92431,
+  "tvl": 25057749,
+  "pool": "b2c0504c-fed5-46ae-908e-aac28bfbede2",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "ERC-4626: savETH → avETH",
+  "symbol": "SAVETH",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row b2c0504c-fed5-46ae-908e-aac28bfbede2: now 4.20225, 7d None, 30d 3.92431. https://defillama.com/yields/pool/b2c0504c-fed5-46ae-908e-aac28bfbede2"
+ },
+ {
+  "id": "staked:hold-ether.fi-liquid-LIQUIDETH",
+  "name": "LIQUIDETH",
+  "family": "stake_hold",
+  "platforms": [
+   "ether.fi-liquid"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 3.19845,
+  "tvl": 332743061,
+  "pool": "b86d4934-2e75-415a-bdd2-e28143d72491",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "LIQUIDETH",
+  "flags": [
+   "gate not read"
+  ],
+  "gate": null,
+  "source": "DefiLlama row b86d4934-2e75-415a-bdd2-e28143d72491: now 3.28817, 7d 3.19845, 30d 3.49139. https://defillama.com/yields/pool/b86d4934-2e75-415a-bdd2-e28143d72491"
+ },
+ {
+  "id": "staked:hold-lagoon-9SETH",
+  "name": "9SETH",
+  "family": "stake_hold",
+  "platforms": [
+   "lagoon"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 3.53246,
+  "tvl": 4354607,
+  "pool": "a5642791-1d8f-4b00-8609-55b710a45dd3",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "9SETH",
+  "flags": [
+   "no 7-day reading",
+   "gate not read"
+  ],
+  "gate": null,
+  "source": "DefiLlama row a5642791-1d8f-4b00-8609-55b710a45dd3: now 3.80061, 7d None, 30d 3.53246. https://defillama.com/yields/pool/a5642791-1d8f-4b00-8609-55b710a45dd3"
+ },
+ {
+  "id": "staked:hold-origin-ether-SUPEROETHB",
+  "name": "SUPEROETHB",
+  "family": "stake_hold",
+  "platforms": [
+   "origin-ether"
+  ],
+  "issuers": [],
+  "chain": "Base",
+  "rate": 2.84846,
+  "tvl": 20831374,
+  "pool": "f388573e-5c0f-4dac-9f70-116a4aabaf17",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "SUPEROETHB",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row f388573e-5c0f-4dac-9f70-116a4aabaf17: now 2.85004, 7d None, 30d 2.84846. https://defillama.com/yields/pool/f388573e-5c0f-4dac-9f70-116a4aabaf17"
+ },
+ {
+  "id": "staked:hold-origin-ether-OETH",
+  "name": "OETH",
+  "family": "stake_hold",
+  "platforms": [
+   "origin-ether"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 2.64753,
+  "tvl": 53225829,
+  "pool": "423681e3-4787-40ce-ae43-e9f67c5269b3",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "OETH",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 423681e3-4787-40ce-ae43-e9f67c5269b3: now 2.65012, 7d None, 30d 2.64753. https://defillama.com/yields/pool/423681e3-4787-40ce-ae43-e9f67c5269b3"
+ },
+ {
+  "id": "staked:hold-harmonix-finance-KHYPE",
+  "name": "KHYPE",
+  "family": "stake_hold",
+  "platforms": [
+   "harmonix-finance"
+  ],
+  "issuers": [],
+  "chain": "HyperEVM",
+  "rate": 2.85472,
+  "tvl": 4838813,
+  "pool": "2576d6eb-44a0-459c-8f95-b364bdf86d63",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "KHYPE",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 2576d6eb-44a0-459c-8f95-b364bdf86d63: now 2.85472, 7d None, 30d 2.85472. https://defillama.com/yields/pool/2576d6eb-44a0-459c-8f95-b364bdf86d63"
+ },
+ {
+  "id": "staked:hold-accountable-CBBTC",
+  "name": "CBBTC Earn ACC Points",
+  "family": "stake_hold",
+  "platforms": [
+   "accountable"
+  ],
+  "issuers": [],
+  "chain": "Monad",
+  "rate": 3.6,
+  "tvl": 41781094,
+  "pool": "5528e3be-2b9b-4062-a2c0-80d3345c7c0f",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "Earn ACC Points",
+  "symbol": "CBBTC",
+  "flags": [
+   "no 7-day reading",
+   "gate not read"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 5528e3be-2b9b-4062-a2c0-80d3345c7c0f: now 3.6, 7d None, 30d 4.00627. https://defillama.com/yields/pool/5528e3be-2b9b-4062-a2c0-80d3345c7c0f"
+ },
+ {
+  "id": "staked:hold-frax-ether-SFRXETH",
+  "name": "SFRXETH",
+  "family": "stake_hold",
+  "platforms": [
+   "frax-ether"
+  ],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 2.54445,
+  "tvl": 87196470,
+  "pool": "5b3aebb3-891d-47fc-92e2-927ada3d5b82",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 10,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "",
+  "symbol": "SFRXETH",
+  "flags": [
+   "no 7-day reading"
+  ],
+  "gate": null,
+  "source": "DefiLlama row 5b3aebb3-891d-47fc-92e2-927ada3d5b82: now 2.54445, 7d None, 30d 2.55879. https://defillama.com/yields/pool/5b3aebb3-891d-47fc-92e2-927ada3d5b82"
+ }
+]
