@@ -14,56 +14,40 @@
   var tone = function (n) { return n > 0 ? 'v7-pos' : n < 0 ? 'v7-neg' : 'v7-flat'; };
   var len = function (h) { return h === 1 ? '1H' : h === 5 ? '5H' : h === 168 ? '7D' : '1D'; };
 
-  function net(t) {
-    var cur = t.mine.reduce(function (a, m) { return a + (m.prize || 0); }, 0);
-    return cur - (t.buyin || 0) * t.mine.length;
-  }
-
   /* ---- finished tables: who won, and was it us ---- */
   function finished(card) {
     var t = byId[Number(card.getAttribute('data-table-id'))];
     if (!t) return;
-    var mine = t.mine, cls = 'none', badge = 'NOT YOURS';
-    if (mine.length) {
-      var n = net(t);
-      cls = n > 0 ? 'win' : n < 0 ? 'loss' : 'even';
-      badge = n > 0 ? 'YOU WON ' + signed(n) : n < 0 ? 'YOU LOST ' + signed(n) : 'BUY-IN BACK';
-      card.classList.add(cls);
-    }
+    var mine = t.mine;
     card.classList.add('v7-res');
+    if (mine.length) card.classList.add('ours');
     var names = mine.map(function (m) { return m.bot; });
     $$('.at-seat', card).forEach(function (s) {
       var a = $('.at-ava', s);
       if (a && names.indexOf(a.getAttribute('title')) >= 0) s.classList.add('v7-me');
     });
-    var first = t.ranked.filter(function (r) { return r.rank === 1; })[0];
-    var w = t.winner;
-    var cur = t.currency === 'ET10' ? ' ET10' : '';
     var buy = t.currency === 'ET10' ? num(t.buyin || 0) + ' ET10' : usd(t.buyin || 0);
-    var lines = '';
-    if (w) {
-      var wMine = names.indexOf(w.bot) >= 0;
-      lines += '<div class="v7-line w" title="' + esc(t.winner_note || '') + '"><span class="k">WINNER</span><span class="n">' + esc(w.bot) + (wMine ? ' · YOU' : '') + '</span><span class="r ' + tone(w.roi_pct) + '">' + pct(w.roi_pct) + '</span></div>';
-    } else {
-      lines += '<div class="v7-line" title="' + esc(t.winner_note || '') + '"><span class="k">WINNER</span><span class="n v7-flat">No winner, buy-ins back</span><span class="r"></span></div>';
-    }
-    if (first && (!w || first.bot !== w.bot)) {
-      lines += '<div class="v7-line"><span class="k">BEST ROI</span><span class="n">' + esc(first.bot) + '</span><span class="r ' + tone(first.roi) + '">' + pct(first.roi) + '</span></div>';
-    }
-    mine.forEach(function (m) {
-      if (w && m.bot === w.bot) return;
-      lines += '<div class="v7-line u"><span class="k">YOU #' + m.rank + '</span><span class="n">' + esc(m.bot) + '</span><span class="r ' + tone(m.roi) + '">' + pct(m.roi) + '</span></div>';
-    });
-    var et = mine.reduce(function (a, m) { return a + (m.et10 || 0); }, 0);
+    var ended = String(t.ends_at || '').slice(5, 10).replace('-', '/');
+    /* Top 3 by rank and what each took. A seat of ours outside them keeps its own row: it may be the one paid (table 77). */
+    var order = t.ranked.slice().sort(function (a, b) { return a.rank - b.rank; });
+    var rows = order.filter(function (r) { return r.rank <= 3 || names.indexOf(r.bot) >= 0; });
+    var lines = rows.map(function (r) {
+      var isMine = names.indexOf(r.bot) >= 0;
+      var cash = r.prize > 0 ? (r.prize === t.buyin ? usd(r.prize) + ' back' : usd(r.prize)) : '';
+      var won = [cash, r.et10 ? '+' + num(r.et10) + ' ET10' : ''].filter(Boolean).join(' ');
+      return '<div class="v7-row' + (isMine ? ' mine' : '') + '"><span class="p">' + r.rank + '</span>' +
+        '<span class="n">' + esc(r.bot) + (isMine ? '<em>YOU</em>' : '') + '</span>' +
+        '<span class="r ' + tone(r.roi) + '">' + pct(r.roi) + '</span>' +
+        '<span class="w' + (won ? '' : ' none') + '">' + (won || '—') + '</span></div>';
+    }).join('');
     var top = document.createElement('div');
     top.className = 'v7-top';
-    top.innerHTML = '<span class="v7-kind"><b>' + esc(buy) + '</b>' + len(t.hours) + (et ? ' · +' + num(et) + ' ET10' : '') + '</span><span class="v7-badge ' + cls + '">' + badge + '</span>';
+    top.innerHTML = '<span class="v7-kind"><b>' + esc(buy) + '</b>' + len(t.hours) + '</span><span class="v7-ended">' + esc(ended) + '</span>';
     var body = document.createElement('div');
     body.className = 'v7-lines';
     body.innerHTML = lines;
     card.insertBefore(top, card.firstChild);
     card.appendChild(body);
-    return cur;
   }
 
   /* ---- My bots ---- */
@@ -172,8 +156,8 @@
     try { var kept = JSON.parse(localStorage.getItem('v7-casino') || 'null'); if (kept) state = kept; } catch (e) { /* first visit */ }
     var box = document.createElement('div');
     box.className = 'v7-bar';
-    box.innerHTML = '<div class="at-seg" role="group" aria-label="Currency"><button type="button" data-v7="cur" data-v="USDC">USDC</button><button type="button" data-v7="cur" data-v="ET10">ET10</button></div>' +
-      '<div class="at-seg" role="group" aria-label="Length"><button type="button" data-v7="len" data-v="h1">1H</button><button type="button" data-v7="len" data-v="h5">5H</button><button type="button" data-v7="len" data-v="h24">1D</button></div>';
+    box.innerHTML = '<div class="at-seg" role="group" aria-label="Length"><button type="button" data-v7="len" data-v="h1">1H</button><button type="button" data-v7="len" data-v="h5">5H</button><button type="button" data-v7="len" data-v="h24">1D</button></div>' +
+      '<div class="at-seg" role="group" aria-label="Buy-in"><button type="button" data-v7="cur" data-v="USDC">USDC</button><button type="button" data-v7="cur" data-v="ET10">ET10</button></div>';
     var mode = $('.at-mode', sec);
     if (mode) box.appendChild(mode);
     sec.parentNode.insertBefore(box, sec);
@@ -206,6 +190,7 @@
     });
   }
 
+  $$('.at-kind p').forEach(function (p) { if (/^Flash tables only/.test(p.textContent.trim())) p.remove(); });
   $$('.at-done .at-tcard').forEach(finished);
   bots();
   bar();
