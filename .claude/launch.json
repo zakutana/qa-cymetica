@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "quant-lab-v3",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/quant-lab-v3/serve.py", "--quiet"],
+      "port": 8807
+    },
+    {
       "name": "nexus-chat-mock",
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/nexus-chat-redesign/serve.py", "--quiet"],
