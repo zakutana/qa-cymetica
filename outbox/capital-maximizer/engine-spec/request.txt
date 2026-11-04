@@ -3,20 +3,20 @@ Why: a search of your own platform list (routes, sources, scorer: https://github
 
 1. Tiers are classes of what a route may hold. Conservative: plain USDC lending on big venues, no borrowing, no vault lending against RWA or PT. Medium: every dollar yield, dollar-on-dollar loops up to 3x. High Risk: adds staked ETH, BTC and SOL, correlated pools, house vaults, loops up to 5x. OG: anything, up to the lender's limit. No minimum liquidation distance in any tier: the card shows it and the user decides. Each tier holds everything below it.
 2. OG ranks every pool over $3M on every chain, whatever the token. Orca ZEC-USDC at 151% ($379 by your rule) and SOL-ZEC at 122% ($325) are not in its top 3.
-3. Levered pools in OG. Nothing open on your list takes a volatile pool position as collateral, so add what does and passes your verification. Revert Lend levers Base WETH-USDC 0.3% to 4.25x: $460 by your rule, $378 on the 30-day median, room for $269k. Loopscale levers Orca SOL-USDC 4.75x, $441, room for $5k. Arcadia reaches 7x but lost $2.5M in 2025: your check decides. The Leverage route box shows this route: at +-20% a dollar loop shows the same number twice.
+3. Levered pools in OG. Nothing open on your list takes a pool position as collateral. Add Revert Lend (Base WETH-USDC 0.3% at 4.25x: $460 by your rule, $378 on the 30-day median, room for $269k), Arcadia (same pool at 7x: $513, room for $83k) and Loopscale (Orca SOL-USDC 4.75x: $441, room for $5k). Arcadia lost $2.5M in 2025: in OG a past loss does not bar a platform, the card says it. KYC still does. The Leverage route box shows this route: at +-20% a dollar loop shows one number twice.
 4. Routes reach Base. Your page lists 13 platforms there and sends nothing. Base WETH-USDC 0.3% holds $154M: DefiLlama's 7-day rate reads 19.8 while its swaps give 52-62%. A 7-day reading that contradicts volume, or reads 0 beside a live rate, is not a rate.
-5. Routes your finder does not offer where they belong. USDC supplied directly to a Morpho market: dCOMP/USDC, median 8.83%, $35 against Medium's #1 $30 (say that one borrower holds most of it). stUSDS/USDC at 3x in Medium and 5x in High: $40 and $55 by your rule, while High's top 3 holds no loop. PT-sUSDS/USDS at 5x. Pendle LP. Fluid's smart vaults at their full rate: fees, lending and staking.
-6. House vaults for High. Its card offers them and none can be held today: HLP's APR is -0.07%, GMX fails your check. Veranta avUSDC on Base pays $81. Keep out 40 Acres: 25%, but a simulated withdrawal reverts.
+5. Routes your finder does not offer where they belong. USDC supplied directly to a Morpho market: dCOMP/USDC, median 8.83%, $35 against Medium's #1 $30 (say that one borrower holds most of it). stUSDS/USDC at 3x in Medium and 5x in High: $40 and $55 by your rule, while High's top 3 holds no loop. Fluid's smart vaults at their full rate: fees, lending and staking.
+6. More platforms for Medium and High. Add Veranta (avUSDC on Base, $81: High's house vaults are empty today), Axis (sUSDx, $54, bought in an open pool) and 3Jane (PT-USD3 held, $52).
 7. A rate that lasts, as asked in our note on ET-33205. Your OG #2, WETH-USDT 0.3%, shows $155 and earns $82: one day carried most of its week's volume. Rate each route on the 30-day median of its base rate. Take off the protocol's cut of pool fees (Uniswap V3 keeps 1/6 on 0.3% and 1%, 1/4 on 0.05% and 0.01%, Orca 13%). Charge a pool's real entry fee: a 1% pool does not cost 0.3%. Measure swaps per route. A debt in a token that earns costs that yield too. A PT maturing inside the month earns its rate only until then.
 8. Say what a route takes. A pool's rate is a pool average: ZEC-USDC needs a range of about +-17%, and full range earns about 10%. Say the range on the card, and a slow exit: Kamino Commodity queues 1-3 months beyond its buffer, sUSDai unlocks over 30 days.
 
 Done when:
 [ ] 1 Tier cards read as in 1. /top3 lev_max for OG is the lender's limit, for High 5, for Medium 3. A route liquidated within 5% can show.
 [ ] 2 Run score.py on the same minute's data, by lasting: each tier's #1 is within 10% of the finder's best on your list.
-[ ] 3 OG's top 3 or its Leverage route holds a levered pool, or the page names which lenders failed your check and why.
+[ ] 3 Revert Lend, Arcadia and Loopscale are on Platforms, and OG's top 3 or Leverage route holds a levered pool.
 [ ] 4 routable_chains holds Base, and at least one Base route is built.
 [ ] 5 Each route kind in 5 returns from /route where the tier allows it.
-[ ] 6 High can hold a house vault, or its card stops offering one.
+[ ] 6 Veranta, Axis and 3Jane are on Platforms, or a row names the KYC that stopped one.
 [ ] 7 WETH-USDT 0.3% shows within 10% of its median figure.
 [ ] 8 A pool's card states its range, a queued route its exit.
 [ ] 9 A fresh wallet can open every top 3 route: deposit simulated, no gate.
