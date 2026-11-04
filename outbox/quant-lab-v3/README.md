@@ -10,5 +10,5 @@ Measured in Firefox: 2,174 px at 2000 wide and 2,211 at 1440, against 22,052 on 
 
 | | |
 |---|---|
-| Ticket | change to ET-33966; first try refused 4 Nov (BB-0027, HTTP 429, session limit until 13:36 UTC) |
+| Ticket | change to ET-33966, filed 4 Nov 14:51 UTC (BB-0029) after two refusals on the session limit (BB-0027, BB-0028) |
 | Scored by the operator | |
