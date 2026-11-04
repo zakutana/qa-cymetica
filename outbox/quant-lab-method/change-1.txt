@@ -1,0 +1,24 @@
+Change to ET-33966, on top of the FAIL of 4 Nov: make the Quant Lab's result honest and readable. Search #19 made the page 22,052 px long (18 screens at 1235 x 1206): 94 blind-test rows take 19,357 px, the first winner is row 32, 7 screens down, and the bots start 18 screens down.
+Why: an owner wants to see in one look who won, on which market periods, and whether the bot is running. Today the winners are buried and the stages cannot be read.
+
+Method:
+1. Blind means blind (the FAIL). A setup is counted only on windows that start at or after the end of the search period it was chosen from, or the shortlist is chosen once from the data before the first window. Today 71 of 94 rows and all 4 winners count windows they were chosen on.
+2. A window counts as "made money" only with at least 5 closed trades. Today +0.54% on 2 trades counts as a won window.
+3. The effective number of tries from the market correlation, as Nexus agreed in his answer of 3 Nov: a market counts as a try only as far as it moves differently from the others.
+
+Page:
+4. Under the reactor, in this order: WINNERS, BOTS, then RUNS. A winner row is one line: model, coin, settings, four small window results, pooled against the bar, trades. Everything else goes in a tooltip.
+5. Thrown-out rows are closed behind one line ("90 thrown out"). Opened, they show the 10 nearest misses and a button for 10 more; none takes more than one line.
+6. RUNS shows the last 5 runs, one line each (44 px at most), the models as a count with the names in a tooltip; older runs behind one button. Clicking a run behaves as today.
+7. BLIND shows the four windows on one time line, falling red and rising green, with the winners and the 5 nearest misses stepping through. It no longer says "60% SEEN", "24H" or "90 DAYS": a search no longer works that way.
+8. THE BAR draws the winners and the 10 nearest misses with readable labels, "+80 more" as a count. Nothing overlaps.
+9. FOUND shows every winner, one at a time with its own card, with "1 of 4" and arrows, and one line above them when they share a coin ("one market's result"). A bot's card says QUEUED until it has really started. It says LIVE and a return only when the bot runs. If the company is paused, it says so and that the owner must resume.
+Keep what stays true: the tiles, the reactor's look and every number's source stay as they are; the API keeps every field.
+
+Done when:
+[ ] 1 No passed setup counts a window that overlaps the search period it was chosen from; the run record shows it.
+[ ] 2 A window with under 5 trades never reads as made money.
+[ ] 3 The run shows the raw and the effective number of tries, and the bar uses the effective one.
+[ ] 4-6 With a run of 94 shortlisted the page is under 3,500 px at 1440 wide; the first winner is visible within 2 screens.
+[ ] 7-8 No text overlaps in BLIND or THE BAR with 94 shortlisted; no "60% SEEN", "24H" or "90 DAYS" anywhere.
+[ ] 9 FOUND steps through all winners; a queued bot never reads LIVE or 0.00%.

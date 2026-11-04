@@ -1,6 +1,8 @@
 # ET-33966 Quant Lab windows, checked 4 Nov 2026 (script v=6aea1ee9), company 14, search #19
 
-Search #19 (started by Cymetica 3 Nov 18:06 UTC, done 23:51, 33,312 combinations, n tried 45,952, z 4.74): 94 shortlisted, 4 passed, 4 paper bots started (experiments 1 to 4), all long, all on AVAX.
+Search #19 (started by Cymetica 3 Nov 18:06 UTC, done 23:51, 33,312 combinations, n tried 45,952, z 4.74): 94 shortlisted, 4 passed, all long, all on AVAX. Corrected 4 Nov: the 4 paper bots (experiments 1 to 4) were created but not started: `pending`, no instance, no start time, 8 hours later. Company 14 is `paused` ("nothing runs and nothing is charged until you resume", last pass 30 Oct), which is the likely reason, and likely the reason for the 2 Nov gap in the daily search too. The verdict note said "started".
+
+Display, measured at 1235 x 1206: page 22,052 px (18 screens), blind-test block 19,357 px for 94 rows, first winner row 32 at y 8,312, bots at y 21,473, one run row 378 px. FOUND draws only `botList[0]` and "LIVE · PAPER 0.00%" while the bot is queued. BLIND still says "60% SEEN", "24H", "90 DAYS · HOURLY". THE BAR draws 94 overlapping labels. Their fix proposal: `outbox/quant-lab-method/change-1.txt`.
 
 | # | Done when | Result |
 |---|---|---|
