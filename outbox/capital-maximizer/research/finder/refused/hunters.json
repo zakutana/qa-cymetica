@@ -10,5 +10,9 @@
  {
   "match": "SBMORPHOUSDC",
   "reason": "maxDeposit 0, read on-chain by the lending hunter"
+ },
+ {
+  "match": "outside:arcadia-base-weth-usdc-03-usdcdebt",
+  "reason": "stale: carries the false 19.80 rate and an impossible 8.0x; challenge-og.json has the corrected row"
  }
 ]

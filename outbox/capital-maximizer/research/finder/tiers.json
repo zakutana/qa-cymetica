@@ -25,7 +25,7 @@
   },
   "conservative_venues": ["aave-v3", "compound-v3", "sparklend", "fluid-lending", "jupiter-lend", "kamino-lend", "morpho-blue"],
   "kyc_refused_tokens": ["REUSD", "REUSDE", "SUSDFR", "USDF", "SUSDF", "USX", "LSETH", "LBTC", "BUIDL", "USYC", "USTB", "USDAT", "SUSDAT", "SRUSDAT", "SYZUSD"],
-  "conservative_market_refused": ["RWA", "Institutional", "Commodity", "Umbrella", "Horizon", "Prime", "OnRe", "Maple", "Elemental", "Allez", "Optimizer", "Plume", "Re7"],
+  "conservative_market_refused": ["RWA", "Institutional", "Commodity", "Umbrella", "Horizon", "Prime", "OnRe", "Maple", "Elemental", "Allez", "Optimizer", "Plume", "Re7", "Superstate", "Opening Bell"],
   "lp_fee_share": {"uniswap-v3": {"0.3%": 0.8333, "1%": 0.8333, "0.05%": 0.75, "0.01%": 0.75, "off_on": ["Avalanche", "Unichain"]}, "uniswap-v2": {"*": 0.8333, "only_on": ["Ethereum"]}, "uniswap-v4": {"0.30%": 0.857, "0.05%": 0.8, "1%": 0.91, "only_on": ["Ethereum", "Base"]}, "orca-dex": {"*": 0.87}},
   "floors": {"pool_tvl_usd": 3000000, "amount_usd": 5000, "max_amount_usd": 100000},
   "lever_step": 0.25

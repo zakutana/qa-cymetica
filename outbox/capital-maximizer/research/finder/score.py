@@ -48,7 +48,7 @@ PT_ISSUER = {**ISSUER, "USD3": "3jane-lending", "AUSD": "agora", "USDAT": "satur
 SKY_ONE_TO_ONE = {"STUSDS", "SUSDS", "USDS"}  # USDC to USDS is Sky's 1:1 window, and staking it is a mint: Cymetica charges 0
 SWAP = {"sky": 0, "stable": 10, "volatile": 10, "mint": 1, "pt": 10, "lp": 30}  # round trip, basis points: their $15 on $5,000 for a pool
 GAS_UNITS = {"lend": 1.0, "lp": 2.0, "loop": 4.25, "away": 0.65}  # off their own costs at two minutes: 0.46/0.91/1.95 and 2.78/5.47/11.73; any route off Ethereum 1.79
-MAJORS = {"WETH", "WSTETH", "WEETH", "RETH", "CBETH", "WBTC", "CBBTC", "TBTC"}
+MAJORS = {"WETH", "WSTETH", "WBTC", "CBBTC"}
 NOT_SKY = {"USDT", "USDT0", "USD\u20ae0", "PYUSD", "AUSD", "USDE", "GHO", "USDG"}  # a loan in these must be swapped: Sky's 1:1 window is USDC and USDS only
 POOLED_LENDERS = {"sparklend", "benqi-lending", "hyperlend-pooled", "kamino-lend", "dolomite"}  # one market: any collateral against any loan
 
@@ -547,6 +547,12 @@ def score(data: Data, cfg: dict, routes: list[dict], amount: float, by: str = "r
                 if best["profit"] > q["profit"]:
                     q, lev = best, best["leverage"]
             q["lasting"] = lasting(data, cfg, route, lev, amount, q)
+            if lev > 1 and q["lasting"] is not None:
+                grid = [1 + i * cfg["lever_step"] for i in range(1, int((lev - 1) / cfg["lever_step"]) + 1)]
+                tried = [(lasting(data, cfg, route, x, amount, price(route, x, amount, data.gas_unit)), x) for x in grid]
+                top_last, top_lev = max(tried, key=lambda t: t[0] if t[0] is not None else -1e12)
+                if top_last is not None and top_last > q["lasting"]:
+                    q["lasting"], q["lasting_leverage"] = top_last, top_lev
             why = refused(data, cfg, route, amount, q)
             row = {**{k: route.get(k) for k in ("id", "name", "family", "platforms", "issuers", "chain", "rate", "borrow", "borrow_week", "tvl", "free", "lltv", "pool", "flags", "meta", "hunter", "source", "symbol")}, **q}
             if why:
@@ -561,7 +567,7 @@ def score(data: Data, cfg: dict, routes: list[dict], amount: float, by: str = "r
                 result[tier]["listed"].append(row)
     for tier in result:
         for k in result[tier]:
-            result[tier][k].sort(key=lambda r: -(r["profit"] if by == "rule" or r.get("lasting") is None else r["lasting"]))
+            result[tier][k].sort(key=lambda r: -(r["profit"] if by == "rule" else r["lasting"] if r.get("lasting") is not None else -1e9))
     return result
 
 
@@ -628,7 +634,7 @@ def main() -> None:
     step = cfg["lever_step"]
     hunted = load_candidates(step)
     gone = {m for c in hunted for f in c["flags"] + [c.get("replaces") or ""] for m in re.findall(r"hold:[0-9a-f-]{36}", f)}
-    same = {c["pool"] for c in hunted if c.get("pool")}
+    same = {c["pool"] for c in hunted if c.get("pool") and (c.get("max_l") or 1) <= 1 and not c["family"].startswith(("stack", "lp_levered"))}
     has_pendle = any(c["hunter"] == "pendle" for c in hunted)
     built = hold_routes(data) + morpho_loops(data, step) + aave_loops(data, step) + fluid_loops(data, step) + generic_loops(data, step) + ([] if has_pendle else pendle_holds(data))
     built = [r for r in built if r["id"] not in gone and not (r["id"].startswith("hold:") and r["pool"] in same) and not (has_pendle and r["symbol"].startswith("PT-"))]
@@ -660,7 +666,8 @@ def main() -> None:
             r["after_rate"] = rate_of(y) if y else 0
     for r in routes:  # the main market of a big venue, or a Morpho vault lending 90% against majors, is what Conservative may hold
         if r["family"] == "usd_lend":
-            r["family"] = "usd_lend_main" if r["platforms"][0] in cfg["conservative_venues"] else "usd_lend"
+            morpho_ok = r["platforms"][0] != "morpho-blue" or "majors" in (r.get("meta") or "")
+            r["family"] = "usd_lend_main" if r["platforms"][0] in cfg["conservative_venues"] and morpho_ok else "usd_lend"
         elif r["family"] == "usd_vault" and r["platforms"][0] == "morpho-blue" and "USDC" in r.get("symbol", "").upper() and data.books.get((r["chain"].lower(), r.get("symbol", "").upper()), 0) >= 0.9:
             r["family"] = "usd_lend_main"
     print(f"taken {data.taken_at} | {len(routes)} routes | gas unit ${data.gas_unit:.2f} | passed platforms {len(data.passed)}")

@@ -1,0 +1,62 @@
+[
+ {
+  "id": "challenge-medium:morpho-direct:dCOMP-USDC",
+  "name": "USDC supplied directly to Morpho market dCOMP / USDC 0.625 (Ethereum)",
+  "family": "usd_vault",
+  "platforms": ["morpho-blue"],
+  "issuers": [],
+  "chain": "Ethereum",
+  "rate": 13.47,
+  "lasting_rate": 8.83,
+  "tvl": 17370290,
+  "pool": "0x24852d8d7464402ddcd717415e009d42bf7427d6a8893487f83c75ee0f4a0ea6",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "direct market supply, no vault",
+  "symbol": "USDC",
+  "gate": null,
+  "flags": [
+   "direct supply() on Morpho Blue: no vault, no curator fee. Simulated on the contract; whether a front end offers it was not read",
+   "the market the listed Api3 dCOMP USDC vault lends into, through its adapter 0x0854c79eC9600FD1d02caA14Ef0527f93bb5e4cc: same borrower, no 5% vault fee. The vault's DefiLlama median 7.29 is under 8.83 x 0.95 = 8.39: not explained",
+   "one borrower, 0xf88a173FCE70F63f4b7311990Fa0859187E007a6, holds $13.48M of the debt against $36.8M dCOMP",
+   "utilization 100% from 2026-10-30 to 2026-11-02: no withdrawal was possible then, and the rate spiked to 92%. Free now $3.88M",
+   "rule rate 13.47 is the tail of that spike; lasting 8.83 is the 30-day median, and share price before the spike gives 8.92"
+  ],
+  "source": "Morpho API https://api.morpho.org/graphql marketById 2026-11-04: supplyApy now 13.47, weekly 49.92, monthly 17.05, daily series n=31 median 8.83, low 8.16, high 92.38, fee 0, bad debt 0. Share price market(id) on Morpho Blue 0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb: 1.0640455779 at 2026-10-05, 1.0695557673 at 2026-10-27 (8.92% a year), 1.0781536484 at 2026-11-04. supply() of 5,000 and 100,000 USDC simulated by eth_call with a state override from an empty address: both accepted, no gate. Supply $17.37M, so 100,000 is 0.6%."
+ },
+ {
+  "id": "challenge-medium:morpho-direct:PT-apyUSD-18JUN2026-USDC",
+  "name": "USDC supplied directly to Morpho market PT-apyUSD-18JUN2026 / USDC 0.86 (Ethereum)",
+  "family": "usd_vault",
+  "platforms": ["morpho-blue"],
+  "issuers": ["apyx-protocol"],
+  "chain": "Ethereum",
+  "rate": 11.78,
+  "lasting_rate": 9.34,
+  "tvl": 3653983,
+  "pool": "0xa75bb490ecfee90c86a9d22ebc2dde42fb83478b3f18722b9fc6f5f668cab124",
+  "max_l": 1.0,
+  "borrow": null,
+  "free": null,
+  "lltv": null,
+  "first_bps": 0,
+  "loop_bps": 0,
+  "gas": 1,
+  "meta": "direct market supply, no vault",
+  "symbol": "USDC",
+  "gate": null,
+  "flags": [
+   "direct supply() on Morpho Blue; Morpho's own API warns not_whitelisted and listed is false",
+   "issuer apyx-protocol named because the market's whole collateral is its matured PT; the user holds only the USDC claim",
+   "one borrower, 0xD17ad0177e9822caA9055aDa6725D497f083a5C5, holds $3.16M of $3.31M debt; the PT matured 2026-06-18",
+   "$3.15M of the $3.65M supply is shares owned by the Morpho contract itself: other lenders hold about $0.5M, so the $3M floor passes only on those shares",
+   "free $0.34M: fits 5,000, 100,000 would be 29% of what is free; utilization 100% on 2026-10-30"
+  ],
+  "source": "Morpho API https://api.morpho.org/graphql marketById 2026-11-04: supplyApy now 14.13, weekly 19.90, monthly 11.78, daily series n=31 median 9.34, low 8.00, high 39.15, bad debt 0. Share price market(id) on Morpho Blue: 1.0456570281 at 2026-10-05, 1.0514874528 at 2026-10-27 (9.63% a year), 1.0555779414 at 2026-11-04. supply() of 5,000 and 100,000 USDC simulated by eth_call with a state override: both accepted."
+ }
+]
