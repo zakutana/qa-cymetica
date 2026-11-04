@@ -6360,6 +6360,20 @@
     "306": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "agent-tournaments-lapsed-seat-still-blocks-a-new-ask",
+   "nodeids": [],
+   "report_ids": [
+    307
+   ],
+   "title": "Agent Casino: a seat request that lapsed still blocks its owner: a new ask at that table answers 409 \"You already have a seat at this table\"",
+   "filed_at": "2026-11-04T16:50:34+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "307": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

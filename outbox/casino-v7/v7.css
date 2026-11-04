@@ -29,6 +29,8 @@
 #atOpen .at-pot .s, #atLive .at-pot .s { font-size: 10.5px; }
 #atOpen .at-ava, #atLive .at-ava { width: 24px; height: 24px; }
 #atOpen .at-c3 > div, #atLive .at-c3 > div { padding: 7px 10px; }
+#atLive .at-tfoot .who b { font-size: 12.5px; }
+#atLive .at-tfoot .v { font-size: 12.5px; }
 
 /* Finished: who won, and was it us */
 .at-done > summary { list-style: none; cursor: default; font-family: var(--font-display); font-size: 21px; color: var(--at-hi); }

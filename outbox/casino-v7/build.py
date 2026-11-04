@@ -33,12 +33,14 @@ def page() -> str:
     html = urllib.request.urlopen(request, timeout=90).read().decode("utf8")
     html = re.sub(r"<script\b[^>]*>.*?</script>", "", html, flags=re.S | re.I)
     html = re.sub(r"<noscript\b[^>]*>.*?</noscript>", "", html, flags=re.S | re.I)
-    html = re.sub(r'\bmedia="print"\s+data-defer-css', "", html)
+    # their script flips these print-only links on; with the script gone the fonts would never load
+    html = re.sub(r'(<link\b[^>]*?)\s+media="print"([^>]*>)', r"\1\2", html)
+    html = re.sub(r'(<link\b[^>]*?)\s+onload="[^"]*"([^>]*>)', r"\1\2", html)
     html = re.sub(r'(href|src|action)="/(?!/)', rf'\1="{HOST}/', html)
     html = html.replace("url(/static", f"url({HOST}/static")
     tail = '<link rel="stylesheet" href="v7.css"></head>'
     html = html.replace("</head>", tail, 1)
-    return html.replace("</body>", '<script src="data.js"></script><script src="v7.js"></script></body>', 1)
+    return html.replace("</body>", '<script src="data.js"></script><script src="owner.js"></script><script src="v7.js"></script></body>', 1)
 
 
 def seat_row(row: dict) -> dict:

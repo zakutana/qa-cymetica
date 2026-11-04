@@ -103,7 +103,7 @@
   }
 
   /* ---- the two switches ---- */
-  var state = { cur: 'USDC', len: 'h1' };
+  var state = { cur: 'USDC', len: 'h24' };
   var SHOW_DONE = 6, showAll = false;
   function curOf(card) { return /\bet1/.test(card.className) ? 'ET10' : 'USDC'; }
   function lenOf(card) {
@@ -147,13 +147,13 @@
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
-    try { localStorage.setItem('v7-casino', JSON.stringify(state)); } catch (e) { /* the switch still works */ }
+    try { localStorage.setItem('v7-casino2', JSON.stringify(state)); } catch (e) { /* the switch still works */ }
   }
   function bar() {
     var pane = $('#atPaperPane');
     var sec = $('#tables', pane);
     if (!sec) return;
-    try { var kept = JSON.parse(localStorage.getItem('v7-casino') || 'null'); if (kept) state = kept; } catch (e) { /* first visit */ }
+    try { var kept = JSON.parse(localStorage.getItem('v7-casino2') || 'null'); if (kept) state = kept; } catch (e) { /* first visit */ }
     var box = document.createElement('div');
     box.className = 'v7-bar';
     box.innerHTML = '<div class="at-seg" role="group" aria-label="Length"><button type="button" data-v7="len" data-v="h1">1H</button><button type="button" data-v7="len" data-v="h5">5H</button><button type="button" data-v7="len" data-v="h24">1D</button></div>' +
@@ -190,7 +190,70 @@
     });
   }
 
+  /* ---- what their page draws for the signed-in owner ---- */
+  function owner() {
+    var O = window.CASINO_OWNER;
+    if (!O) return;
+    var hero = $('.at-hero'), pane = $('#atPaperPane');
+    if (hero) hero.insertAdjacentHTML('beforebegin', O.asks);
+    if (pane) pane.insertAdjacentHTML('beforebegin', O.agents);
+    $$('#atLive .at-tcard').forEach(function (card) {
+      var m = O.live[Number(card.getAttribute('data-table-id'))];
+      if (!m) return;
+      card.classList.add('mine');
+      $$('.at-seat', card).forEach(function (s) {
+        var a = $('.at-ava', s);
+        if (a && a.getAttribute('title') === m.bot) {
+          s.classList.add('you');
+          s.insertAdjacentHTML('beforeend', '<span class="yt at-tag you">YOU</span>');
+        }
+      });
+      var foot = $('.at-tfoot', card);
+      if (foot) foot.innerHTML = '<span class="who"><span class="at-tag you">YOU</span><b>' + esc(m.bot) + '</b></span><span class="v"><span class="cy">' + esc(m.rank) + '</span> · <span class="zero">' + esc(m.roi) + '</span></span>';
+    });
+    O.asked.forEach(function (id) {
+      var card = $('#atOpen .at-tcard[data-table-id="' + id + '"]');
+      var foot = card && $('.at-tfoot', card);
+      if (foot) foot.innerHTML = '<span class="who"><span class="at-tag you">YOU?</span></span><span class="v cy">your OK? APPROVE</span>';
+    });
+    /* "Flash" out, the operator's word: every table is one, so the word says nothing */
+    $$('.at-kind.flash').forEach(function (e) { e.remove(); });
+    $$('.at-ask .nm a, .at-ar .tb b').forEach(function (e) {
+      e.childNodes.forEach(function (n) { if (n.nodeType === 3) n.nodeValue = n.nodeValue.replace('Flash ', ''); });
+    });
+    var auth = $$('.chat-header-right a, .chat-header-right button');
+    auth.forEach(function (b) {
+      var t = (b.textContent || '').trim().toLowerCase();
+      if (t === 'sign up') b.style.display = 'none';
+      if (t === 'log in') { var s = b.querySelector('.auth-text') || b; s.textContent = 'expire76'; }
+    });
+  }
+
+  /* ---- their countdown, stripped with their scripts ---- */
+  function clocks() {
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    var tick = function () {
+      $$('.at-cdn[data-end]').forEach(function (el) {
+        var left = Math.max(0, Date.parse(el.getAttribute('data-end')) - Date.now());
+        var parts = { d: Math.floor(left / 864e5), h: Math.floor(left / 36e5) % 24, m: Math.floor(left / 6e4) % 60, s: Math.floor(left / 1e3) % 60 };
+        ['d', 'h', 'm', 's'].forEach(function (u) {
+          var b = $('[data-u="' + u + '"]', el);
+          if (b) { b.innerHTML = pad(parts[u]) + '<i>' + u.toUpperCase() + '</i>'; if (u === 'd') b.hidden = !parts.d; }
+        });
+      });
+      $$('.at-pb[data-start]').forEach(function (el) {
+        var a = Date.parse(el.getAttribute('data-start')), b = Date.parse(el.getAttribute('data-end'));
+        var i = $('i', el);
+        if (i && b > a) i.style.width = Math.min(100, Math.max(0, (Date.now() - a) / (b - a) * 100)).toFixed(1) + '%';
+      });
+    };
+    tick();
+    setInterval(tick, 1000);
+  }
+
   $$('.at-kind p').forEach(function (p) { if (/^Flash tables only/.test(p.textContent.trim())) p.remove(); });
+  owner();
+  clocks();
   $$('.at-done .at-tcard').forEach(finished);
   bots();
   bar();
