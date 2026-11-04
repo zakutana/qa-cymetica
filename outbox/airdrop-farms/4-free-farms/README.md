@@ -20,6 +20,6 @@ GIWA (on their list) is out: no reward programme published. The next five are na
 |---|---|
 | Ticket | ET-34187 (BB-0032); spec proposed, BB-ACCEPT not sent (the operator's word). BB-0031 earlier was refused with HTTP 429 |
 | Filed | 2026-11-04 20:03 UTC |
-| Accepted, deadline | |
+| Accepted, deadline | 2026-11-04 20:03 UTC (BB-0033), deadline 2026-11-05 20:03 UTC |
 | Shipped | |
 | Verdict | |
