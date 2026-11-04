@@ -72,7 +72,7 @@
 /* a laptop: the button stays above the chat bar */
 @media (min-width: 1101px) and (max-height: 980px) {
   .v8-hero { padding-top: 10px; }
-  .pzs { column-gap: 64px; }   /* clear of the bottom seat */
+  .cfoot .pzs { column-gap: 64px; }   /* clear of the bottom seat */
   .v8-deck { --oy: 62px; }
   .v8-stack { height: 432px; }
   .v8-copy .at-h1 { margin-top: 12px; }

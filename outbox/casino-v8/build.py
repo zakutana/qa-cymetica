@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 
 HERE = Path(__file__).resolve().parent
 V7 = HERE.parent / "casino-v7"
-VERSION = "5"
+VERSION = "6"
 
 
 def source() -> str:
