@@ -18,8 +18,8 @@ GIWA (on their list) is out: no reward programme published. The next five are na
 
 | | |
 |---|---|
-| Ticket | not filed: BB-0031 refused with HTTP 429, the session build limit, resets 2026-11-04 19:50 UTC; file again after that with `scripts/bb.py file --app-url https://cymetica.com/airdrop-farmer --improvements-file outbox/airdrop-farms/4-free-farms/request.txt --confirm` |
-| Filed | |
+| Ticket | ET-34187 (BB-0032); spec proposed, BB-ACCEPT not sent (the operator's word). BB-0031 earlier was refused with HTTP 429 |
+| Filed | 2026-11-04 20:03 UTC |
 | Accepted, deadline | |
 | Shipped | |
 | Verdict | |
