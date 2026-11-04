@@ -1299,12 +1299,18 @@
    ],
    "title": "4 of 136 rounds were staked above 10 % of the table's capital: table 40: BTC round of 3.37851 on a capital of 25 (13.5 %); table 40: BTC round of 11.86989 on a capital of 25 (47.5 %); table 40: BTC round of 7.6242 on a capital of 25 (30.5 %); table 62: BTC round of 21.389063 on a capital of 25 (85.6 %)",
    "filed_at": "2026-11-01T19:34:57+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 249,
+     "verdict": "pass",
+     "at": "2026-11-04T16:01:36+00:00"
+    }
+   ],
    "their_status": {
     "249": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-standings-agree-with-the-trade-list",
@@ -1316,7 +1322,13 @@
    ],
    "title": "2 of 8 finished tables show a seat of ours with one set of numbers in the standings and another in its own trade list: table 15 seat 87 ('lab Wave 2 Perceptron Oracle'): standings {'trades': 17, 'volume_usdc': 29.58, 'pnl_usdc': -5.06}, trade list {'trades': 18, 'volume_usdc': 30.58, 'pnl_usdc': -5.07}; table 40 seat 143 ('casino Trend Titan'): standings {'trades': 4, 'volume_usdc': 24.85, 'pnl_usdc': -5.64}, trade list {'trades': 3, 'volume_usdc': 22.87, 'pnl_usdc': -7.62}",
    "filed_at": "2026-11-01T08:35:43+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 234,
+     "verdict": "pass",
+     "at": "2026-11-04T16:01:32+00:00"
+    }
+   ],
    "their_status": {
     "234": "paid"
    },
@@ -1343,13 +1355,18 @@
      "report_id": 210,
      "verdict": "fail",
      "at": "2026-11-01T08:36:49+00:00"
+    },
+    {
+     "report_id": 210,
+     "verdict": "pass",
+     "at": "2026-11-04T16:01:27+00:00"
     }
    ],
    "their_status": {
     "210": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent_count",
@@ -6275,6 +6292,22 @@
    "verdicts_sent": [],
    "their_status": {
     "304": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "agent-tournaments-seat-keeps-its-allowance-across-the-reset",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_seat_keeps_its_allowance_across_the_reset.py::test_agent_tournaments_seat_keeps_its_allowance_across_the_reset"
+   ],
+   "report_ids": [
+    306
+   ],
+   "title": "Agent Casino: a bot at a 1-day table makes 0 trades all table, \"daily allowance used up\" (222 signals blocked), though the allowance resets inside it; it trades again once the table ends",
+   "filed_at": "2026-11-04T16:01:13+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "306": "pending"
    },
    "withdrawn": false
   }

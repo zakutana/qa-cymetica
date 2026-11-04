@@ -96,6 +96,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/supply-analyzer-sources/serve.py", "--quiet"],
       "port": 8804
+    },
+    {
+      "name": "casino-v7",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/casino-v7", "8841", "--quiet"],
+      "port": 8841
     }
   ]
 }
