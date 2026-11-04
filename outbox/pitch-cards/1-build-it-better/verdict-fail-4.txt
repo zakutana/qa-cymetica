@@ -1,0 +1,6 @@
+Thank you: real-money Invest is in, NEXUS's reasons now name what a basket holds (luxury goods is right now), and the Invest flow signs a user in and brings them back to the same card. Failing it on what is left:
+1. Pitches still do not reach every user: nothing links to the page. Please say what ends the freeze for it.
+2. A tap on a pitch still does nothing: no details, no more information, no link. Please let a tap on the card, short of a swipe, open its details so a user can look before putting money in.
+3. A reason is false again: "Vultisig and Matrixdock Gold helped push this crypto basket up 3 percent this week", legs at -3.78 % and -2.82 % over 5 days while Ambire Wallet, DMT-NAT and Hatom made it. Report #304. The named holdings must be the ones that moved the basket.
+4. The new endpoints under /api/v1/pitch-cards (me/buying-power, me/deals, quote, invest) are not in /api-docs, /openapi-public.json or /llms.txt.
+We have not placed an order: the real-money path is untested from our side.

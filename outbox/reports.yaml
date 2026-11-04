@@ -8620,6 +8620,24 @@ reports:
     body: >
       We have no check for this: the sentence changes between passes. Handing NEXUS the holdings of what it pitches, and not only the label and the returns, would prevent it. GET requests only.
 
+  - key: pitch-credits-holdings-that-fell
+    findings: [CYM-a_theme_pitch_does_not_credit_a_holding_that_fell]
+    check: tests/rest/test_profit_board.py::test_a_theme_pitch_does_not_credit_a_holding_that_fell
+    severity: medium
+    category: logic
+    url: https://cymetica.com/pitch-cards
+    title: "Pitch Cards (ET-33678): NEXUS says Vultisig and Matrixdock Gold helped push a basket up this week; both legs fell, and the legs that made it are not named"
+    expected: >
+      A pitch asks a user for money, so what it credits is true. After #299 NEXUS names holdings (luxury goods now names Marriott, Hyatt and IHG, which did rise); the same should hold for every pick.
+    actual: >
+      Read on 2026-11-04 08:40 UTC, fourth build, pick 3, by nexus, theme polkadot parachain › Security Token: "Vultisig and Matrixdock Gold helped push this crypto basket up 3 percent this week, back near its high."
+      Over the 5-day window the basket's own legs are Vultisig -3.78 %, Matrixdock Gold -2.82 %, Ardor -3.58 %, Sora -12.90 %, against Ambire Wallet +32.35 %, DMT-NAT +25.00 %, Hatom +12.38 %, ARPA +9.04 %. The two named are the legs listed first by relevance, not by what they did.
+    steps:
+      - 'GET https://cymetica.com/api/v1/pitch-cards -> pitches[pick 3]: the sentence above'
+      - 'GET https://cymetica.com/api/v1/themes/performance/security-token?asset_class=crypto -> windows.5d.legs: VULT return_pct -3.78, XAUM -2.82, WALLET +32.35'
+    body: >
+      Our check reads each theme pitch that says holdings "helped", "drove" or "pushed" and fails where a leg it names fell over the same 5 days. Naming the legs ranked by what they did clears it. The deck rotates, so this card may be out of it when you look. GET requests only.
+
   - key: gem-screener-smiley-says-not-checked-where-panel-says-how
     findings: [CYM-the_smiley_says_how_where_the_panel_does]
     check: tests/rest/test_gem_screener_small_words.py::test_the_smiley_says_how_where_the_panel_does

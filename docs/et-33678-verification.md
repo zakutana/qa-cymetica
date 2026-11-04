@@ -51,6 +51,17 @@ Invest on a theme lands on a row with "Hold this basket with your own funds" (ch
 
 New, the operator's: a click on the card's name, number, chart or sentence does nothing, and the card has no links. Not in our mock or spec either.
 
+## Fourth build (shipped 2026-11-04 06:13 UTC, read 08:30 to 09:00): real-money Invest
+
+| Point of the third FAIL | Result | Evidence |
+|---|---|---|
+| 1 real money (C1) | BUILT, NOT TESTED | pc.js reads /me/buying-power, asks /quote, confirms, then /invest; a 72h card has no Invest. We placed nothing: our rule is no live money. Signed out: `GET /me/buying-power` and `/me/deals` answer 401, Invest says "Sign in...", and goes to /login?next=...pitch=<key>. Not seen: balance, fees, a placed order, My deals with a real position |
+| 2 reach | NOT DONE | no link from /, /agent-casino, /fund-performance, /events/universe/movers, /build-it-better, /themes/performance |
+| 3 reasons | PARTLY | luxury goods now names Marriott, Hyatt, IHG (rose 4 %); AMF-WhiteSwan names PERI, CEVA, INTU (its top three legs). The polkadot Security Token basket is credited to Vultisig and Matrixdock Gold, both down over 5 days: #304. #299 is paid |
+| 4 tap on a card | NOT DONE | tap on name, number, chart, sentence: no change, no link |
+
+New, ours: `/api/v1/pitch-cards`, `me/buying-power`, `me/deals`, `quote`, `invest` are in none of /api-docs, /openapi-public.json, /llms.txt. Seven checks run; the credit check fails, six pass. Nothing else on the board changed (15 funds, 39 event cards, 318 company cards, 13 themes, 100 72h cards, none at a loss).
+
 ## Not checked
 
 The /ws/pitch-cards push in a held-open tab. The card going behind Nexus frame by frame: stills and the unchanged code only.

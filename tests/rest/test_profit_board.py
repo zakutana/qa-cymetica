@@ -145,6 +145,38 @@ def test_a_pitch_chart_ends_where_its_big_number_does(rest_anon):
     _verdict(breaches, len(pitches), "every pitch's line ends at its big number", {"board": DATA})
 
 
+CREDIT = re.compile(r"\b(helped|drove|driven|pushed|lifted|led|behind|powered|boosted|carried)\b", re.I)
+
+
+@qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
+def test_a_theme_pitch_does_not_credit_a_holding_that_fell(rest_anon):
+    """A pitch that says holdings pushed the basket up names legs of that basket whose own return, over the same
+    window, is positive. 2026-11-04: "Vultisig and Matrixdock Gold helped push this crypto basket up 3 percent this
+    week", legs at -3.78 % and -2.82 % over 5 days, while Ambire Wallet, DMT-NAT and Hatom made it."""
+    pitches = [p for p in _data(rest_anon).get("pitches") or [] if p.get("kind") == "theme"]
+    if not pitches:
+        raise Inconclusive(f"{DATA}: no theme pitch in the deck")
+    breaches = []
+    for pitch in pitches:
+        slug = (pitch.get("href") or "").split("#theme-")[-1]
+        legs = []
+        for asset in ("stocks", "crypto"):
+            response = get_patiently(rest_anon, f"/api/v1/themes/performance/{slug}?asset_class={asset}")
+            if response.status_code == 200:
+                legs = ((response.json().get("windows") or {}).get("5d") or {}).get("legs") or []
+                if legs:
+                    break
+        said = pitch.get("say") or ""
+        if not legs or not CREDIT.search(said):
+            continue
+        for leg in legs:
+            name = str(leg.get("name") or "")
+            named = re.search(r"\b" + re.escape(str(leg.get("symbol") or "~")) + r"\b", said) or (len(name) > 3 and name.lower() in said.lower())
+            if named and isinstance(leg.get("return_pct"), (int, float)) and leg["return_pct"] <= 0:
+                breaches.append({"what": f"{pitch['name']}: \"{said[:110]}\" names {name}, {leg['return_pct']:+.2f} % over 5 days", "url": pitch.get("href")})
+    _verdict(breaches, len(pitches), "no theme pitch credits a holding that fell", {"board": DATA, "themes": "/api/v1/themes/performance/{slug}"})
+
+
 @qa(component="rest.build_it_better", tier=SafetyTier.SAFE, surface="rest")
 def test_a_pitch_chart_is_not_drawn_around_one_bad_reading(rest_anon):
     """A faint peer line on a pitch with one reading far off both neighbours, which agree. Dropped at the source or

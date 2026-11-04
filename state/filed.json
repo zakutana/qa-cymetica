@@ -6183,7 +6183,7 @@
     }
    ],
    "their_status": {
-    "297": "fixed"
+    "297": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -6214,7 +6214,7 @@
    "filed_at": "2026-11-03T09:50:33+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "299": "pending"
+    "299": "paid"
    },
    "withdrawn": false
   },
@@ -6230,7 +6230,7 @@
    "filed_at": "2026-11-03T10:08:11+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "300": "pending"
+    "300": "paid"
    },
    "withdrawn": false
   },
@@ -6244,7 +6244,7 @@
    "filed_at": "2026-11-03T11:31:48+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "301": "pending"
+    "301": "paid"
    },
    "withdrawn": false
   },
@@ -6258,7 +6258,23 @@
    "filed_at": "2026-11-03T11:31:56+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "302": "pending"
+    "302": "paid"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "pitch-credits-holdings-that-fell",
+   "nodeids": [
+    "tests/rest/test_profit_board.py::test_a_theme_pitch_does_not_credit_a_holding_that_fell"
+   ],
+   "report_ids": [
+    304
+   ],
+   "title": "Pitch Cards (ET-33678): NEXUS says Vultisig and Matrixdock Gold helped push a basket up this week; both legs fell, and the legs that made it are not named",
+   "filed_at": "2026-11-04T08:43:34+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "304": "pending"
    },
    "withdrawn": false
   }
