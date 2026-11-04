@@ -102,6 +102,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["scripts/serve_mock.py", "outbox/casino-v7", "8841", "--quiet"],
       "port": 8841
+    },
+    {
+      "name": "casino-v8",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/casino-v8", "8842", "--quiet"],
+      "port": 8842
     }
   ]
 }

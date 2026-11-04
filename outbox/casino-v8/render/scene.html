@@ -1,0 +1,239 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Agent Casino table, render</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<!-- The table as one object under one light: rendered once, offline, in layers, by render.py. Their shape (a stadium with a pale rail and
+     an LED line round a dark felt) and their palette; only the finish is new. Every frame is an average of many jittered ones: soft
+     shadows and clean edges without any post effect. -->
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from 'three';
+
+const q = new URLSearchParams(location.search);
+const W = +q.get('w') || 1600, H = +q.get('h') || 1100, SAMPLES = +q.get('n') || 48;
+const A = 0.40, R = 0.61, FELT = 0.51;            // half length of the spine, outer radius, felt radius: their 1.64 : 1
+const SEATS = [[0, -1], [1, -.46], [1, .46], [0, 1], [-1, .46], [-1, -.46]];
+// camera: a long lens, high enough that the felt still reads as their top view, low enough that the rail has a wall
+const CAM = { el: 50 * Math.PI / 180, dist: 7.6, fov: 19.5 };
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, premultipliedAlpha: false });
+renderer.setPixelRatio(1); renderer.setSize(W, H);
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setClearColor(0x000000, 0);
+document.body.appendChild(renderer.domElement);
+
+const camera = new THREE.PerspectiveCamera(CAM.fov, W / H, .1, 100);
+const look = new THREE.Vector3(0, -.075, .03);
+camera.position.set(0, Math.sin(CAM.el) * CAM.dist, Math.cos(CAM.el) * CAM.dist);
+camera.lookAt(look);
+camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+
+/* ---- a stadium path, swept with a profile (d: out from the path of radius 0, y: up) ---- */
+function pathPoints(n) {
+  // spine from (-A,0) to (A,0), outward normal rotates round both ends
+  const pts = [], half = Math.floor(n / 2), straight = Math.floor(n * .12);
+  const push = (x, z, nx, nz) => pts.push({ x, z, nx, nz });
+  for (let i = 1; i < straight; i++) push(-A + 2 * A * i / straight, 1, 0, 1);       // near side, z = +
+  for (let i = 0; i <= half - straight; i++) { const t = Math.PI / 2 - Math.PI * i / (half - straight); push(A, 0, Math.cos(t), Math.sin(t)); }
+  for (let i = 1; i < straight; i++) push(A - 2 * A * i / straight, -1, 0, -1);   // from 1: the arc already ended where this starts
+  for (let i = 0; i <= half - straight; i++) { const t = -Math.PI / 2 - Math.PI * i / (half - straight); push(-A, 0, Math.cos(t), Math.sin(t)); }
+  return pts;
+}
+function pos(p, d) { return p.z === 0 ? [p.x + p.nx * d, p.nz * d] : [p.x, p.z * d]; }
+function sweep(profile, colorAt) {
+  const pts = pathPoints(420), m = profile.length, verts = [], cols = [], idx = [];
+  pts.forEach((p, i) => profile.forEach(([d, y]) => {
+    const [x, z] = pos(p, d); verts.push(x, y, z);
+    if (colorAt) { const c = colorAt(i / pts.length, p); cols.push(c.r, c.g, c.b); }
+  }));
+  const n = pts.length;
+  for (let i = 0; i < n; i++) for (let j = 0; j < m - 1; j++) {
+    const a = i * m + j, b = ((i + 1) % n) * m + j, c = ((i + 1) % n) * m + j + 1, d = i * m + j + 1;
+    idx.push(a, d, b, b, d, c);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  if (colorAt) g.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+function arc(cd, cy, rx, ry, from, to, n) {
+  const out = [];
+  for (let i = 0; i <= n; i++) { const t = from + (to - from) * i / n; out.push([cd + rx * Math.cos(t), cy + ry * Math.sin(t)]); }
+  return out;
+}
+function stadiumShape(r) {
+  const s = new THREE.Shape();
+  s.moveTo(-A, r); s.lineTo(A, r); s.absarc(A, 0, r, Math.PI / 2, -Math.PI / 2, true); s.lineTo(-A, -r); s.absarc(-A, 0, r, -Math.PI / 2, -3 * Math.PI / 2, true);
+  return s;
+}
+
+/* ---- the felt: their navy radial, hexes etched in it, the two lines they print on it ---- */
+function feltTexture() {
+  const S = 2048, h = Math.round(S * (2 * FELT) / (2 * (A + FELT))), c = document.createElement('canvas'); c.width = S; c.height = h;
+  const g = c.getContext('2d');
+  const r = g.createRadialGradient(S / 2, h * .42, 0, S / 2, h * .46, S * .52);
+  r.addColorStop(0, '#0f4a63'); r.addColorStop(.36, '#0a2c40'); r.addColorStop(.72, '#071a2a'); r.addColorStop(1, '#04101c');
+  g.fillStyle = r; g.fillRect(0, 0, S, h);
+  // hexes, brightest round the middle
+  const a = 30, hx = a * Math.sqrt(3), vy = a * 1.5;
+  g.lineWidth = 1.6;
+  for (let row = -1; row * vy < h + a; row++) for (let col = -1; col * hx < S + a; col++) {
+    const cx = col * hx + (row % 2 ? hx / 2 : 0), cy = row * vy;
+    const dx = (cx - S / 2) / (S * .46), dy = (cy - h * .5) / (h * .5), f = Math.max(0, 1 - Math.hypot(dx, dy));
+    g.strokeStyle = `rgba(0,207,255,${(.02 + .15 * f * f).toFixed(3)})`;
+    g.beginPath();
+    for (let k = 0; k < 6; k++) { const t = Math.PI / 6 + k * Math.PI / 3, x = cx + a * .96 * Math.cos(t), y = cy + a * .96 * Math.sin(t); k ? g.lineTo(x, y) : g.moveTo(x, y); }
+    g.closePath(); g.stroke();
+  }
+  // the dashed line inside the rail, theirs
+  g.strokeStyle = 'rgba(0,207,255,.30)'; g.lineWidth = 2.4; g.setLineDash([14, 14]);
+  const m = h * .085; g.beginPath(); g.roundRect(m * 1.25, m, S - m * 2.5, h - 2 * m, (h - 2 * m) / 2); g.stroke(); g.setLineDash([]);
+  // their two printed lines
+  g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = "700 40px 'JetBrains Mono', monospace";
+  g.fillStyle = 'rgba(0,207,255,.72)'; try { g.letterSpacing = '20px'; } catch (e) {}
+  g.fillText('AGENT CASINO', S / 2, h * .155);
+  g.fillStyle = 'rgba(0,255,136,.6)'; g.fillText('BEST ROI WINS', S / 2, h * .85);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 16;
+  return t;
+}
+
+/* ---- the studio: one soft light above, two long strips that draw lines in the rail ---- */
+function studio() {
+  const s = new THREE.Scene(); s.background = new THREE.Color(0x03060c);
+  const panel = (w, h, col, I, x, y, z, rx = -Math.PI / 2, rz = 0) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(col).multiplyScalar(I), side: THREE.DoubleSide }));
+    m.position.set(x, y, z); m.rotation.set(rx, 0, rz); s.add(m);
+  };
+  panel(5.5, 2.2, 0xdff4ff, 5.5, 0, 6, .4);                 // the soft box
+  panel(9, .35, 0x00cfff, 14, 0, 2.2, 6.5, -.5);            // near strip, cyan
+  panel(.4, 7, 0x00ff88, 8, 6.5, 2.6, .5, -Math.PI / 2, .2);   // right, green
+  panel(.4, 7, 0x00cfff, 8, -6.5, 2.6, .5, -Math.PI / 2, -.2); // left, cyan
+  panel(9, .22, 0xffffff, 6, 0, 3, -6.5, .5);               // a white line on the far side of the rail
+  return s;
+}
+
+const scene = new THREE.Scene();
+const pm = new THREE.PMREMGenerator(renderer);
+const env = pm.fromScene(studio(), .012).texture;
+scene.environment = env;
+
+const table = new THREE.Group(); scene.add(table);
+const LED = (u, p) => {           // cyan on the left, green on the right, as their rail's line
+  const f = THREE.MathUtils.smoothstep((p.x + (p.z === 0 ? p.nx * R : 0) + 1) / 2, .2, .8);
+  return new THREE.Color(0x00cfff).lerp(new THREE.Color(0x00ff88), f);
+};
+
+// felt
+const feltG = new THREE.ShapeGeometry(stadiumShape(FELT), 80);
+{ const pa = feltG.attributes.position, uv = feltG.attributes.uv;
+  for (let i = 0; i < pa.count; i++) uv.setXY(i, (pa.getX(i) + A + FELT) / (2 * (A + FELT)), (pa.getY(i) + FELT) / (2 * FELT)); }
+const felt = new THREE.Mesh(feltG, new THREE.MeshPhysicalMaterial({ map: feltTexture(), roughness: .8, metalness: 0, clearcoat: .25, clearcoatRoughness: .5, envMapIntensity: .12 }));
+felt.rotation.x = -Math.PI / 2; felt.receiveShadow = true; table.add(felt);
+
+// a shallow trough between felt and rail, the LED line in it
+const trough = sweep([[FELT - .004, .002], [FELT + .004, -.008], [FELT + .012, -.008]]);
+table.add(new THREE.Mesh(trough, new THREE.MeshStandardMaterial({ color: 0x03070c, roughness: .4, metalness: .6 })));
+const ledMat = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false, side: THREE.DoubleSide });
+const led = new THREE.Mesh(sweep([[FELT + .0, .004], [FELT + .009, .007], [FELT + .013, .004]], LED), ledMat);
+led.userData.emit = true; table.add(led);
+
+// the rail: a soft cushion, its top catching the strips. Pale, cool metal, as theirs
+const cushion = [[FELT + .012, .0]].concat(arc(FELT + .012 + .044, .026, .044, .046, Math.PI, 0, 28)).concat([[R, .0], [R - .001, -.03]]);
+const rail = new THREE.Mesh(sweep(cushion), new THREE.MeshPhysicalMaterial({ color: 0xcfe6f2, metalness: 1, roughness: .2, clearcoat: 1, clearcoatRoughness: .06, envMapIntensity: 1.25 }));
+rail.castShadow = true; rail.receiveShadow = true; table.add(rail);
+
+// the body under the rail: dark, narrowing, a thin light at its waist
+const body = sweep([[R - .001, -.03], [R - .012, -.075], [R - .05, -.135], [R - .09, -.16], [R - .22, -.17]]);
+table.add(new THREE.Mesh(body, new THREE.MeshStandardMaterial({ color: 0x0b1420, metalness: .92, roughness: .32, envMapIntensity: 1 })));
+const waist = new THREE.Mesh(sweep([[R - .012, -.077], [R - .0115, -.083], [R - .014, -.086]], LED), ledMat);
+waist.userData.emit = true; table.add(waist);
+// the foot
+const foot = sweep([[.28, -.17], [.25, -.3], [.26, -.40], [.34, -.44], [.36, -.46]]);
+table.add(new THREE.Mesh(foot, new THREE.MeshStandardMaterial({ color: 0x070d16, metalness: .9, roughness: .38 })));
+
+// six seat pads, the height of the rail, each with a thin lit rim
+const SEAT_XZ = SEATS.map(([sx, sz]) => {
+  if (sx === 0) return [0, sz * (R + .135)];
+  return [sx * (A + R + .03), sz * (R + .05) * .86];
+});
+const padMat = new THREE.MeshPhysicalMaterial({ color: 0x0c1826, metalness: .85, roughness: .28, clearcoat: 1, clearcoatRoughness: .1 });
+const rimMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00cfff).multiplyScalar(.9), toneMapped: false });
+SEAT_XZ.forEach(([x, z]) => {
+  const pad = new THREE.Mesh(new THREE.CylinderGeometry(.085, .07, .03, 64), padMat); pad.position.set(x, -.015, z); pad.castShadow = true; pad.userData.pad = true; table.add(pad);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(.0855, .0028, 8, 96), rimMat); rim.rotation.x = Math.PI / 2; rim.position.set(x, 0, z); rim.userData.emit = true; rim.userData.pad = true; table.add(rim);
+});
+
+/* ---- the light: one soft spot straight above; jittered per sample, so the shadows of the rail fall soft ---- */
+const key = new THREE.SpotLight(0xe8f6ff, 150, 0, .42, .9, 2); key.position.set(0, 7, .6); key.target.position.set(0, 0, 0);
+key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.camera.near = 3; key.shadow.camera.far = 11; key.shadow.bias = -.0004;
+scene.add(key, key.target);
+
+/* ---- accumulate ---- */
+const rtOpts = { type: THREE.HalfFloatType, format: THREE.RGBAFormat, samples: 4, colorSpace: THREE.LinearSRGBColorSpace };
+const frame = new THREE.WebGLRenderTarget(W, H, rtOpts);
+const acc = [new THREE.WebGLRenderTarget(W, H, { type: THREE.FloatType, format: THREE.RGBAFormat }), new THREE.WebGLRenderTarget(W, H, { type: THREE.FloatType, format: THREE.RGBAFormat })];
+const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2));
+const qs = new THREE.Scene(); qs.add(quad); const qc = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const vert = 'varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy, 0., 1.); }';
+const mixM = new THREE.ShaderMaterial({ vertexShader: vert, depthTest: false, depthWrite: false, uniforms: { a: { value: null }, b: { value: null }, t: { value: 0 } },
+  fragmentShader: 'uniform sampler2D a,b; uniform float t; varying vec2 v; void main(){ gl_FragColor = mix(texture2D(a,v), texture2D(b,v), t); }' });
+const outM = new THREE.ShaderMaterial({ vertexShader: vert, depthTest: false, depthWrite: false, transparent: false, uniforms: { a: { value: null }, exposure: { value: 1 }, raw: { value: 0 } },
+  fragmentShader: `uniform sampler2D a; uniform float exposure, raw; varying vec2 v;
+    vec3 aces(vec3 c){ c *= .6; return clamp((c*(2.51*c+.03))/(c*(2.43*c+.59)+.14),0.,1.); }
+    vec3 srgb(vec3 c){ return mix(12.92*c, 1.055*pow(c, vec3(1./2.4))-.055, step(.0031308,c)); }
+    void main(){ vec4 p = texture2D(a,v); float al = clamp(p.a,0.,1.); vec3 c = al>0.001 ? p.rgb/al : vec3(0.);
+      c = raw>.5 ? c : aces(c*exposure); gl_FragColor = vec4(srgb(c), al); }` });
+
+function renderLayer(setup) {
+  setup();
+  const prev = camera.position.clone();
+  renderer.toneMapping = THREE.NoToneMapping;
+  const old = renderer.getClearColor(new THREE.Color()); renderer.setClearColor(0x000000, 0);
+  const klight = key.position.clone();
+  for (let i = 0; i < SAMPLES; i++) {
+    // Halton jitter: edges and shadows
+    const hx = halton(i + 1, 2) - .5, hy = halton(i + 1, 3) - .5;
+    camera.setViewOffset(W, H, hx, hy, W, H);
+    key.position.set(klight.x + hx * .9, klight.y, klight.z + hy * .9);
+    renderer.setRenderTarget(frame); renderer.clear(); renderer.render(scene, camera);
+    mixM.uniforms.a.value = acc[0].texture; mixM.uniforms.b.value = frame.texture; mixM.uniforms.t.value = 1 / (i + 1);
+    quad.material = mixM; renderer.setRenderTarget(acc[1]); renderer.render(qs, qc);
+    acc.reverse();
+  }
+  camera.clearViewOffset(); key.position.copy(klight);
+  outM.uniforms.a.value = acc[0].texture;
+  quad.material = outM; renderer.setRenderTarget(null); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(qs, qc);
+  return renderer.domElement.toDataURL('image/png');
+}
+function halton(i, b) { let f = 1, r = 0; while (i > 0) { f /= b; r += f * (i % b); i = Math.floor(i / b); } return r; }
+
+function project(x, y, z) { const v = new THREE.Vector3(x, y, z).project(camera); return [(v.x + 1) / 2, (1 - v.y) / 2]; }
+
+const allMats = new Map();
+table.traverse(o => { if (o.isMesh) allMats.set(o, o.material); });
+function restore() { table.visible = true; table.scale.set(1, 1, 1); table.position.set(0, 0, 0); table.traverse(o => { if (o.isMesh) { o.material = allMats.get(o); o.visible = true; } }); scene.environment = env; key.visible = true; }
+
+window.layers = {
+  // the object, with alpha
+  table() { outM.uniforms.raw.value = 0; return renderLayer(() => restore()); },
+  // only what glows, on black: the bloom is made of this in Python
+  emit() { outM.uniforms.raw.value = 1; const black = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    return renderLayer(() => { restore(); table.traverse(o => { if (o.isMesh && !o.userData.emit) o.material = black; }); }); },
+  // the mask the moving light runs in: the rail's top
+  railmask() { outM.uniforms.raw.value = 1; const black = new THREE.MeshBasicMaterial({ color: 0x000000 }), white = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    return renderLayer(() => { restore(); table.traverse(o => { if (o.isMesh) o.material = o === rail ? white : black; }); }); },
+  // the same object mirrored in the floor, y = -.46
+  mirror() { outM.uniforms.raw.value = 0; return renderLayer(() => { restore(); table.scale.set(1, -1, 1); table.position.y = -.92; table.traverse(o => { if (o.isMesh) { o.material.side = THREE.DoubleSide; if (o.userData.pad) o.visible = false; } }); }); },
+  geometry() {
+    camera.clearViewOffset(); camera.updateMatrixWorld();
+    const y = .004;
+    return { w: W, h: H,
+      seats: SEAT_XZ.map(([x, z]) => project(x, .05, z)),
+      felt: { tl: project(-(A + FELT), y, -FELT), tr: project(A + FELT, y, -FELT), br: project(A + FELT, y, FELT), bl: project(-(A + FELT), y, FELT) },
+      floor: project(0, -.46, 0) };
+  },
+};
+window.ready = (document.fonts && document.fonts.load ? Promise.all([document.fonts.load("700 30px 'JetBrains Mono'")]) : Promise.resolve()).then(() => true);
+</script>
