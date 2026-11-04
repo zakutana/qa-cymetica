@@ -115,7 +115,7 @@
     var tags = (L.featured && L.featured === t.id ? '<span class="feat">' + esc(L.featuredLabel) + '</span>' : '');
     return '<article class="v8-card ' + stateCls + '" data-id="' + (t.id || '') + '">' +
       '<div class="v8-pane"><i class="edge"></i></div>' +
-      '<header class="ctop"><div class="l"><span class="st"><i></i>' + esc(t.stateText) + '</span>' + tags + '<div class="buy">' + esc(t.buy) + (t.unit ? '<small>' + esc(t.unit) + '</small>' : '') + '<span class="ln">' + esc(t.len) + (t.id ? ' &middot; #' + t.id : '') + '</span></div></div>' + clock + '</header>' +
+      '<header class="ctop"><div class="l"><span class="st"><i></i>' + (t.state === 'live' && state.mode === 'paper' ? 'RUNNING' : esc(t.stateText)) + '</span>' + tags + '<div class="buy">' + esc(t.buy) + '<small>' + esc(t.unit || 'buy-in') + '</small><span class="ln">' + esc(t.len) + (t.id ? ' &middot; #' + t.id : '') + '</span></div></div>' + clock + '</header>' +
       object(t) +
       '<footer class="cfoot"><div class="pzs">' + prizes + '</div><div class="who">' + who + (us ? '<small class="need">' + esc(us.need) + '</small>' : '') + '</div></footer>' +
       '</article>';
@@ -125,7 +125,7 @@
     if (!t) return '';
     var ask = askOf[t.id];
     if (ask) return '<button type="button" class="at-btn no" data-noop>Decline</button><button type="button" class="at-btn blue act" data-noop>APPROVE ' + esc(ask.loss) + '</button>';
-    if (t.state === 'live') return '<a class="at-btn ghost act" href="' + esc(t.href) + '">OPEN TABLE ' + ARROW + '</a>';
+    if (t.state === 'live') return '<a class="at-btn go act" href="' + esc(t.href) + '">OPEN TABLE ' + ARROW + '</a>';
     if (t.state === 'coming') return '<button type="button" class="at-btn no act" disabled>' + esc(t.cta) + '</button>';
     return '<button type="button" class="at-btn go act" data-noop>' + esc(t.cta) + ' ' + ARROW + '</button>';
   }
@@ -314,7 +314,7 @@
       '<section class="v8-finished" id="finished"><button type="button" class="v8-line" data-fold aria-expanded="false"><h2>Finished tables</h2>' +
         '<span class="st"><b>' + totals.n + '</b> tables</span><span class="st"><b>' + totals.won + '</b> ours won</span><span class="st"><b>' + totals.none + '</b> no winner</span>' +
         '<span class="st">net <b class="' + tone(totals.net) + '">' + signed(totals.net) + '</b></span><span class="st"><b>+' + num(totals.et10) + '</b> ET10</span>' + CHEV + '</button>' +
-        '<div class="v8-fold"><div class="in"><p class="v8-dn">Top 3 and what each took. A table with one member pays its own buy-in back.</p><div class="v8-donelist">' +
+        '<div class="v8-fold"><div class="in"><p class="v8-dn">Top 3 and what each took. A house bot takes no prize: its place passes to the next member. A table with one member pays its own buy-in back.</p><div class="v8-donelist">' +
           newest.map(function (t, i) { return doneBlock(t, i >= SHOW_DONE); }).join('') +
         '</div><button type="button" class="v8-morebots" data-moredone>All ' + totals.n + ' finished ' + CHEV + '</button></div></div></section>';
 
@@ -373,7 +373,7 @@
     });
     if (fine) stack.addEventListener('pointerleave', function () { stack.style.setProperty('--tilty', '0deg'); stack.style.setProperty('--tiltx', '0deg'); });
     /* a phone: the object scales with its column */
-    var fit = function () { var w = deck.clientWidth; root.style.setProperty('--k', Math.min(1, w / 540).toFixed(4)); };
+    var fit = function () { var w = deck.clientWidth; root.style.setProperty('--k', (Math.min(1, w / 540) * (matchMedia('(min-width: 1101px) and (max-height: 980px)').matches ? .86 : 1)).toFixed(4)); };
     addEventListener('resize', fit); fit();
   }
 
