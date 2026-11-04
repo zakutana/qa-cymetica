@@ -10,9 +10,5 @@
  {
   "match": "SBMORPHOUSDC",
   "reason": "maxDeposit 0, read on-chain by the lending hunter"
- },
- {
-  "match": "GTUSDCRWA",
-  "reason": "maxDeposit 0, read on-chain by the lending hunter"
  }
 ]

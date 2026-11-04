@@ -1,0 +1,42 @@
+[
+ {
+  "match": "#67",
+  "lasting_rate": 6.29,
+  "lasting_borrow": 5.93,
+  "first_bps": 12,
+  "note": "Medium verifier: real swap $6, fee median 0.25"
+ },
+ {
+  "match": "APYXAPXUSD",
+  "issuers": [
+   "apyx-protocol"
+  ],
+  "first_bps": 28,
+  "note": "asset is apxUSD; round trip 27.6 bp simulated at 5,000"
+ },
+ {
+  "match": "apyUSD / USDC",
+  "first_bps": 53,
+  "loop_bps": 53,
+  "note": "High verifier: round trip 53 bp at $25,000"
+ },
+ {
+  "match": "eAUSD-16",
+  "issuers": [
+   "agora"
+  ],
+  "note": "asset is AUSD: mint KYC, bought in an open pool under 2 bp"
+ },
+ {
+  "match": "40 Acres",
+  "note": "High verifier: USDC cannot be withdrawn now, a simulated 1 USDC withdrawal reverts; rate real"
+ },
+ {
+  "match": "USDC Kamino Institutional Commodity",
+  "note": "exit: instant within the $2.72M buffer, beyond it a FIFO queue paid as 1-3 month loans mature"
+ },
+ {
+  "match": "Dolomite USDC / UNI",
+  "note": "capped at 4.0x by UNI's margin premium"
+ }
+]

@@ -1,0 +1,6 @@
+[
+ {
+  "match": "stack:short-dolomite-usdc-uni",
+  "reason": "7.5x does not exist: Dolomite's UNI marginPremium 0.1565 (getMarketMarginPremium(12) on 0x6Bd780E7..., api.dolomite.io/tokens/42161) with marginRatio 0.15 needs 133% collateral, limit 0.752, so 4.0x at most, net 15.78% not 29.44%"
+ }
+]

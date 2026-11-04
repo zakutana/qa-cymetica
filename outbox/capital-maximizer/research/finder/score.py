@@ -209,7 +209,8 @@ def hold_routes(data: Data) -> list[dict]:
                 family = "lp_correlated"
             else:
                 family = "lp_volatile"
-            first = SWAP["lp"]
+            tier = re.match(r"([0-9.]+)%", meta)
+            first = max(SWAP["lp"], float(tier.group(1)) * 100) if tier else SWAP["lp"]
         if not family:
             continue
         rows.append({"id": f"hold:{p['pool']}", "name": f"{p['symbol']}{' ' + meta if meta else ''}", "family": family, "platforms": [slug], "issuers": [],
@@ -473,10 +474,15 @@ def lasting(data: Data, cfg: dict, route: dict, leverage: float, amount: float, 
     """The same route on the 30-day median and the worse borrow rate. None when no chart was read: a fixed rate (a PT) keeps its own."""
     fixed = route["family"].startswith("pt_") or str(route.get("symbol", "")).startswith("PT-")
     row = data.lasting.get(route.get("pool") or "")
-    if not row and not fixed:
+    if route.get("lasting_rate") is not None:
+        rate = route["lasting_rate"]
+    elif fixed:
+        rate = month_rate(route, route["rate"])
+    elif row:
+        rate = min(route["rate"], row["median"]) * lp_share(cfg, route)
+    else:
         return None
-    rate = month_rate(route, route["rate"]) if fixed else min(route["rate"], row["median"]) * lp_share(cfg, route)
-    bor = max(route.get("borrow") or 0, route.get("borrow_week") or 0)
+    bor = max(route.get("borrow") or 0, route.get("borrow_week") or 0, route.get("lasting_borrow") or 0)
     net = leverage * rate - (leverage - 1) * bor
     gross = amount * ((1 + net / 100) ** (30 / 365) - 1) if net > -100 else -amount
     return round(gross - q["swap"] - q["gas"], 2)
@@ -634,9 +640,19 @@ def main() -> None:
             seen.add(key)
             unique.append(r)
     routes = unique
+    overrides = json.loads((HERE / "overrides.json").read_text(encoding="utf-8")) if (HERE / "overrides.json").exists() else []
+    for r in routes:  # what a reader established about a route, by its own source, with the reason in overrides.json
+        text = f"{r.get('id')} {r.get('name')}"
+        for o in overrides:
+            if o["match"].lower() in text.lower():
+                r["issuers"] = list(r.get("issuers") or []) + o.get("issuers", [])
+                for k in ("lasting_rate", "lasting_borrow", "first_bps", "loop_bps", "after_rate"):
+                    if k in o:
+                        r[k] = o[k]
+                r["flags"] = list(r.get("flags") or []) + ([o["note"]] if o.get("note") else [])
     for r in routes:  # after a PT matures its money earns what the token earns, or nothing
         if r.get("matures_days") is None and str(r.get("symbol", "")).startswith("PT-"):
-            found = next((re.search(r"matures in (\\d+)", x) for x in r["flags"] if "matures in" in x), None)
+            found = next((re.search(r"matures in (\d+)", x) for x in r["flags"] if "matures in" in x), None)
             r["matures_days"] = int(found.group(1)) if found else None
         if r.get("matures_days") is not None and r.get("after_rate") is None:
             token = re.split(r"[-/ ]", str(r.get("symbol", "")).upper().replace("PT-", ""))[0]
@@ -645,7 +661,7 @@ def main() -> None:
     for r in routes:  # the main market of a big venue, or a Morpho vault lending 90% against majors, is what Conservative may hold
         if r["family"] == "usd_lend":
             r["family"] = "usd_lend_main" if r["platforms"][0] in cfg["conservative_venues"] else "usd_lend"
-        elif r["family"] == "usd_vault" and r["platforms"][0] == "morpho-blue" and data.books.get((r["chain"].lower(), r.get("symbol", "").upper()), 0) >= 0.9:
+        elif r["family"] == "usd_vault" and r["platforms"][0] == "morpho-blue" and "USDC" in r.get("symbol", "").upper() and data.books.get((r["chain"].lower(), r.get("symbol", "").upper()), 0) >= 0.9:
             r["family"] = "usd_lend_main"
     print(f"taken {data.taken_at} | {len(routes)} routes | gas unit ${data.gas_unit:.2f} | passed platforms {len(data.passed)}")
     if a.check:
