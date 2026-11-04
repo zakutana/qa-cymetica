@@ -1,0 +1,32 @@
+{
+  "_": "The one tier table: score.py reads it and the spec quotes it. Decided 2026-11-04 on the operator's words: OG is the maximum yield that can be found, each lower tier the same with less risk; liquidation is never a filter.",
+  "ladder": ["conservative", "medium", "high", "og"],
+  "tiers": {
+    "conservative": {
+      "families": ["usd_lend_main"],
+      "max_leverage": 1,
+      "says": "Plain USDC lending on the big venues. No borrowing, no vault lending against RWA or PT."
+    },
+    "medium": {
+      "families": ["usd_lend_main", "usd_lend", "usd_vault", "savings", "lp_stable", "pt_hold_dollar", "loop_dollar", "lp_levered_dollar"],
+      "max_leverage": 3,
+      "says": "Every dollar yield: vaults, RWA markets, savings dollars, stable pools, PT to maturity. Dollar on dollar loops up to 3x."
+    },
+    "high": {
+      "families": ["usd_lend_main", "usd_lend", "usd_vault", "savings", "lp_stable", "pt_hold_dollar", "loop_dollar", "lp_levered_dollar", "stake_hold", "pt_hold_other", "lp_correlated", "perps_lp", "loop_correlated"],
+      "max_leverage": 5,
+      "says": "Adds staked ETH, BTC and SOL, correlated pools and house vaults. Loops up to 5x."
+    },
+    "og": {
+      "families": ["*"],
+      "max_leverage": null,
+      "says": "Anything: volatile pools, borrowed money into any pool, multi-step routes. Leverage up to the lender's limit."
+    }
+  },
+  "conservative_venues": ["aave-v3", "compound-v3", "sparklend", "fluid-lending", "jupiter-lend", "kamino-lend", "morpho-blue"],
+  "kyc_refused_tokens": ["REUSD", "SREUSD", "SUSDFR", "USDF", "SUSDF", "USX", "SYRUP", "LSETH", "LBTC", "BUIDL", "USYC", "USTB"],
+  "conservative_market_refused": ["RWA", "Institutional", "Commodity", "Umbrella", "Horizon", "Prime", "OnRe", "Maple", "Elemental", "Allez", "Optimizer"],
+  "lp_fee_share": {"uniswap-v3": {"0.3%": 0.8333, "0.05%": 0.75}, "orca-dex": {"*": 0.87}},
+  "floors": {"pool_tvl_usd": 3000000, "amount_usd": 5000, "max_amount_usd": 100000},
+  "lever_step": 0.25
+}
