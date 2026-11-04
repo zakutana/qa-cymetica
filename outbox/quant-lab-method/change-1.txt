@@ -1,5 +1,6 @@
 Change to ET-33966, on top of the FAIL of 4 Nov: make the Quant Lab's result honest and readable. Search #19 made the page 22,052 px long (18 screens at 1235 x 1206): 94 blind-test rows take 19,357 px, the first winner is row 32, 7 screens down, and the bots start 18 screens down.
 Why: an owner wants to see in one look who won, on which market periods, and whether the bot is running. Today the winners are buried and the stages cannot be read.
+Everything is at https://github.com/zakutana/qa-cymetica/tree/main/outbox/quant-lab-v3: a working mock on your live page with search #19's data (python serve.py, then http://127.0.0.1:8807/company/app/experiments), and pics/ with the target for the page (1-page.png), BLIND (2-blind.png), THE BAR (3-bar.png) and FOUND (4-found.png). q3.js and q3.css are your quant-lab.js and quant-lab.css changes; take them as they are. In the mock the numbers are search #19's as served, so it still shows the 4 winners that points 1 and 9b would change. Build the look as drawn.
 
 Method:
 1. Blind means blind (the FAIL). A setup is counted only on windows that start at or after the end of the search period it was chosen from, or the shortlist is chosen once from the data before the first window. Today 71 of 94 rows and all 4 winners count windows they were chosen on.
