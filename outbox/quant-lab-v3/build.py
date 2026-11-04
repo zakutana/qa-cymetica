@@ -46,20 +46,13 @@ sub("txt('BAR ' + c.bar.toFixed(2) + '%', x, lz + 14, '700 12px ' + MONO, C.gree
     "txt(c.bar.toFixed(1) + '%', x, lz - 12, '700 11px ' + MONO, C.green, 'left');")
 sub("txt((c.won ? '✓ ' : '✗ ') + pct(c.held), x + w * 0.68, c.won ? yv - 20 : Math.max(yv, y0) + 22, '400 22px ' + BLACK, c.won ? C.green : C.red, 'center', 16);",
     "txt((c.won ? '✓ ' : '✗ ') + pct(c.held), x + w * 0.5, c.won ? yv - 20 : Math.max(yv, y0) + 22, '400 ' + (w < 110 ? 13 : 19) + 'px ' + BLACK, c.won ? C.green : C.red, 'center', 10);")
-# FOUND: every winner in turn, a queued bot says so
-sub("    var b = M.botList[0], c = b.cand, cx = g.x + g.w * 0.55, cy = g.y + g.h * 0.42;\n",
-    "    var nb = M.botList.length, fi = M.mode !== 'real' ? 0 : Q3.pick != null ? Q3.pick % nb : Math.min(nb - 1, Math.floor(p * nb));\n"
-    "    if (M.mode === 'real' && nb > 1) p = Q3.pick != null ? 0.97 : Math.min(0.999, p * nb - fi);\n"
-    "    if (fi !== Q3.fi) { Q3.fi = fi; delete fired.flash; delete fired.t1; parts = []; rings = []; flash = 0; }\n"
-    "    q3Nav(true);\n"
-    "    var b = M.botList[fi], c = b.cand, cx = g.x + g.w * 0.55, cy = g.y + g.h * 0.42;\n")
-sub("    var drawn = Math.max(2, Math.floor(ease(seg(p, 0.58, 0.96)) * b.pts.length)), lo = Math.min.apply(null, b.pts),",
-    "    var ex3 = M.mode === 'real' ? q3Exp(c) : null;\n"
-    "    if (ex3 && ex3.status !== 'running' && ex3.status !== 'passed') { q3Card(b, px0, pw, 278, H - 278 - 56); ctx.restore(); return; }\n"
-    "    var drawn = Math.max(2, Math.floor(ease(seg(p, 0.58, 0.96)) * b.pts.length)), lo = Math.min.apply(null, b.pts),")
-# the nav shows on FOUND only; resuming the clock gives up a picked winner
-sub("    DRAW[STAGES[si][0]](p, t);\n", "    if (STAGES[si][0] !== 'bot') q3Nav(false);\n    if (!paused) Q3.pick = null;\n    DRAW[STAGES[si][0]](p, t);\n")
-sub("    M = MODE === 'sim' ? SIM : REAL; cells = null;\n", "    M = MODE === 'sim' ? SIM : REAL; cells = null; q3Stage();\n")
+# FOUND: one animation, then all the agents it found on one screen
+sub("    slam('PROFITABLE AGENT', px0, 56, 50, 0.38, p);\n",
+    "    var nb3 = M.mode === 'real' ? M.botList.length : 1;\n"
+    "    slam(nb3 > 1 ? nb3 + ' PROFITABLE AGENTS' : 'PROFITABLE AGENT', px0, 40, 44, 0.38, p);\n")
+sub("    slam('FOUND', px0, 112, 50, 0.44, p, C.green);\n", "    slam('FOUND', px0, 92, 44, 0.44, p, C.green);\n")
+sub("    coin(c.market, px0 + 16, 170, 16);\n",
+    "    if (M.mode === 'real') { ctx.restore(); q3Cards(px0, pw, p); return; }\n    coin(c.market, px0 + 16, 170, 16);\n")
 sub("    renderScore(); renderTop(); renderBots(); renderCaps();\n", "    renderScore(); renderTop(); renderBots(); renderCaps(); q3Note();\n")
 # the company's own state, for "paused"
 sub("    S.cid = o.id; connect(); return loadAll().then(function () {\n",

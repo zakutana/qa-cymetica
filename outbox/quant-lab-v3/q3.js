@@ -1,5 +1,5 @@
   // ================================================================= quant-lab-v3 mock: everything below is ours
-  var Q3 = { open: false, n: 10, older: false, pick: null, fi: -1 };
+  var Q3 = { open: false, n: 10, older: false };
   function q3Run() { var id = LAST_GOOD && LAST_GOOD.id; return (M.runs || []).filter(function (r) { return r.id === id; })[0] || null; }
   function q3Windows() { var r = q3Run(); return r && r.windows && r.windows.length ? r.windows : null; }
   function q3Paused() { var m = S.mine; return !!(m && m.status === 'paused'); }
@@ -93,18 +93,8 @@
     if (k === 'open') { Q3.open = !Q3.open; Q3.n = 10; renderTop(); }
     else if (k === 'more') { Q3.n += 10; renderTop(); }
     else if (k === 'older') { Q3.older = !Q3.older; renderRuns(); }
-    else if (k === 'prev' || k === 'next') {
-      var n = M.botList.length, cur = Q3.pick == null ? Math.max(0, Q3.fi) : Q3.pick;
-      Q3.pick = (cur + (k === 'next' ? 1 : -1) + n) % n;
-      pause(true); held = startOf(STAGES.length - 1) + STAGES[STAGES.length - 1][3] * 0.97; fired = {}; lastStage = -1;
-    }
   });
-  // the stages: FOUND takes as long as its winners need; THE BAR and BLIND draw the winners and the nearest misses, no more
-  function q3Stage() {
-    var bot = STAGES.filter(function (s) { return s[0] === 'bot'; })[0]; if (!bot) return;
-    bot[3] = M.mode === 'real' && M.botList.length > 1 ? 5 * M.botList.length : 7;
-    TOTAL = STAGES.reduce(function (a, x) { return a + x[3]; }, 0);
-  }
+  // THE BAR and BLIND draw the winners and the nearest misses, no more
   function q3Bar() {
     if (!q3Windows()) return { list: M.candidates, more: 0 };
     var p = q3Parts(), all = p.won.concat(p.out), cap = Math.max(5, Math.min(14, Math.floor((W - 140) / 120)));
@@ -139,31 +129,38 @@
       });
     });
   }
-  function q3Nav(on) {
-    var el = $('q3nav'); if (!el) return;
-    var n = M.botList ? M.botList.length : 0, show = on && M.mode === 'real' && n > 1;
-    if (el.hidden === !show && (!show || el.getAttribute('data-i') === String(Q3.fi))) return;
-    el.hidden = !show; el.setAttribute('data-i', String(Q3.fi));
-    if (show) $('q3navn').textContent = (Q3.fi + 1) + ' of ' + n;
-  }
-  // FOUND's card for a bot that is not trading: what it did on the windows, and that it is waiting
-  function q3Card(b, x0, pw, ey, eh) {
-    var c = b.cand, wins = q3Windows() || [], cw = (pw - 230) / Math.max(1, wins.length), hiV = 1;
-    (c.windows || []).forEach(function (w) { hiV = Math.max(hiV, Math.abs(w.return_pct || 0)); });
-    rr(x0 - 10, ey - 10, pw + 10, eh + 20, 14); ctx.fillStyle = 'rgba(13, 21, 32, .85)'; ctx.fill(); ctx.strokeStyle = 'rgba(0, 207, 255, .35)'; ctx.lineWidth = 1.5; ctx.stroke();
-    var base = ey + eh * 0.58, room = eh * 0.34;
-    ctx.strokeStyle = C.dim3; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x0 + 4, base); ctx.lineTo(x0 + cw * wins.length, base); ctx.stroke();
-    wins.forEach(function (ww, i) {
-      var w = (c.windows || []).filter(function (q) { return q.id === ww.id; })[0]; if (!w) return;
-      var seen = q3Seen(c, w), thin = w.trades != null && w.trades < 5, col = seen || thin ? C.dim3 : w.return_pct >= 0 ? C.green : C.red, h = Math.max(2, Math.abs(w.return_pct) / hiV * room), x = x0 + 10 + i * cw;
-      ctx.fillStyle = col; ctx.fillRect(x, w.return_pct >= 0 ? base - h : base, cw - 26, h);
-      txt(pct(w.return_pct), x + (cw - 26) / 2, (w.return_pct >= 0 ? base - h : base + h) + (w.return_pct >= 0 ? -12 : 12), '700 12px ' + MONO, col, 'center');
-      txt(day(w.start), x + (cw - 26) / 2, ey + eh - 8, '700 11px ' + MONO, C.dim, 'center');
+  // FOUND: one animation, every agent the search found on one screen, each landing in turn
+  function q3Cards(x0, pw, p) {
+    var all = M.botList.slice().sort(function (a, b) { return b.cand.held - a.cand.held; }), max = 6, list = all.slice(0, max), n = list.length;
+    var cols = n <= 1 ? 1 : n <= 4 ? 2 : 3, rows = Math.ceil(n / cols), gap = 12, y0 = 142, ch = Math.min(170, (H - y0 - 22 - gap * (rows - 1)) / rows), cw = (pw - gap * (cols - 1)) / cols;
+    list.forEach(function (b, i) {
+      var c = b.cand, a = ease(seg(p, 0.5 + i * 0.05, 0.6 + i * 0.05)), x = x0 + (i % cols) * (cw + gap), y = y0 + Math.floor(i / cols) * (ch + gap) + (1 - a) * 30;
+      if (a <= 0) return;
+      var e = q3Exp(c), live = e && (e.status === 'running' || e.status === 'passed');
+      ctx.save(); ctx.globalAlpha = a;
+      rr(x, y, cw, ch, 12); ctx.fillStyle = 'rgba(13, 21, 32, .9)'; ctx.fill(); ctx.strokeStyle = 'rgba(0, 255, 136, .4)'; ctx.lineWidth = 1.5; ctx.stroke();
+      coin(c.market, x + 24, y + 26, 13);
+      var nf = cw < 430 ? 13 : 15, nm = baseOf(c.setup)[1].toUpperCase() + ' · ' + c.market;
+      txt(nm, x + 46, y + 20, '400 ' + nf + 'px ' + BLACK, C.text, 'left');
+      ctx.font = '700 11px ' + MONO; var st = String(c.settings).replace(' / ', ' · ').replace('entry stricter: ', '').replace('entry looser: ', ''), st0 = st; while (ctx.measureText(st + '…').width > cw - 200 && st.length > 4) st = st.slice(0, -1);
+      txt(st === st0 ? st : st + '…', x + 46, y + 38, '700 11px ' + MONO, C.dim, 'left');
+      txt(pct(c.held), x + cw - 14, y + 24, '400 24px ' + BLACK, C.green, 'right', 12);
+      txt(c.trades + ' TRADES · ' + (live ? 'RUNNING' : 'QUEUED'), x + cw - 14, y + 46, '700 11px ' + MONO, live ? C.green : C.cyan, 'right');
+      // its result on each window: a bar and the number
+      var wins = q3Windows() || [], hiV = 1, by = y + 60, bh = ch - 60 - 24, base = by + bh * 0.72, bw = (cw - 28) / Math.max(1, wins.length);
+      (c.windows || []).forEach(function (w) { hiV = Math.max(hiV, Math.abs(w.return_pct || 0)); });
+      wins.forEach(function (ww, k) {
+        var w = (c.windows || []).filter(function (q) { return q.id === ww.id; })[0]; if (!w) return;
+        var seen = q3Seen(c, w), thin = w.trades != null && w.trades < 5, col = seen || thin ? C.dim3 : w.return_pct >= 0 ? C.green : C.red, h = Math.max(2, Math.abs(w.return_pct) / hiV * bh * 0.5), bx = x + 14 + k * bw;
+        ctx.fillStyle = col; ctx.fillRect(bx + 2, w.return_pct >= 0 ? base - h : base, bw - 58, h);
+        txt(pct(w.return_pct), bx + bw - 52, base - 6, '700 11px ' + MONO, col, 'left');
+        txt(day(w.start), bx + 2, y + ch - 11, '700 10px ' + MONO, C.dim3, 'left');
+      });
+      ctx.restore();
     });
-    txt('QUEUED', x0 + pw - 20, ey + eh / 2 - 22, '400 30px ' + BLACK, C.cyan, 'right', 12);
-    txt(q3Paused() ? 'COMPANY PAUSED' : 'NOT TRADING YET', x0 + pw - 20, ey + eh / 2 + 8, '700 12px ' + MONO, q3Paused() ? C.red : C.dim, 'right');
-    txt(pct(c.held) + ' · ' + c.trades + ' TRADES', x0 + pw - 20, ey + eh / 2 + 30, '700 12px ' + MONO, C.green, 'right');
-    txt('HELD BACK, NOT LIVE', x0 + pw - 20, ey + eh / 2 + 48, '700 11px ' + MONO, C.dim3, 'right');
+    if (all.length > max) txt('+' + (all.length - max) + ' MORE', x0 + pw, 118, '700 12px ' + MONO, C.dim, 'right');
+    var one = all.length > 1 && all.every(function (b) { return b.cand.market === all[0].cand.market; });
+    if (one) txt('ALL ON ' + all[0].cand.market + ': ONE MARKET\'S RESULT', x0 + pw, 92, '700 12px ' + MONO, C.cyan, 'right');
   }
   function q3Exp(c) { return ((S.ov && S.ov.experiments) || []).filter(function (x) { return x.id === c.experiment_id; })[0] || null; }
   function q3Order() {
@@ -175,10 +172,6 @@
     [].forEach.call(blind.querySelectorAll('.q2-bh > *'), function (el, i) { if (el.tagName !== 'H2' && !/^top(label|note)$/.test(el.id || '') && !el.classList.contains('sp')) el.hidden = true; });
     var note = document.createElement('div'); note.id = 'q3paused'; note.className = 'q3-paused'; note.hidden = true;
     $('bots').parentNode.insertBefore(note, $('bots'));
-    var wrap = cv.parentNode, nav = document.createElement('div');
-    nav.id = 'q3nav'; nav.className = 'q3-nav'; nav.hidden = true;
-    nav.innerHTML = '<button type="button" data-q3="prev" aria-label="Previous winner">‹</button><span id="q3navn"></span><button type="button" data-q3="next" aria-label="Next winner">›</button>';
-    wrap.appendChild(nav);
   }
   function q3Note() {
     var el = $('q3paused'); if (!el) return;

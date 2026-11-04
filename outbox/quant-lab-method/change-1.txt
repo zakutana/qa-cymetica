@@ -13,7 +13,8 @@ Page:
 6. RUNS shows the last 5 runs, one line each (44 px at most), the models as a count with the names in a tooltip; older runs behind one button. Clicking a run behaves as today.
 7. BLIND shows the four windows on one time line, falling red and rising green, with the winners and the 5 nearest misses stepping through. It no longer says "60% SEEN", "24H" or "90 DAYS": a search no longer works that way.
 8. THE BAR draws the winners and the 10 nearest misses with readable labels, "+80 more" as a count. Nothing overlaps.
-9. FOUND shows every winner, one at a time with its own card, with "1 of 4" and arrows, and one line above them when they share a coin ("one market's result"). A bot's card says QUEUED until it has really started. It says LIVE and a return only when the bot runs. If the company is paused, it says so and that the owner must resume.
+9. FOUND is one animation that ends with every agent found on one screen: a card each (coin, name, settings, pooled result, trades, its result on each window), with one line when they share a coin ("one market's result"). A card says QUEUED until the bot has really started, and RUNNING with a return only when it runs. If the company is paused, the page says so and that the owner must resume.
+9b. One model on one coin passes as one agent, with its best settings: search #19's two CryptoBull Blue winners on AVAX are nearly one bot, since every entry of "rsi_14 < 25, volume > 1.8" is also an entry of "rsi_14 < 30, volume > 1.5". The other settings that passed go in its tooltip.
 10. An idea card under Approvals that nothing executes (`executable: false`) does not offer Approve as if it did something: it says what the click does. A card goes away when its problem no longer holds: "Price history for LINK" and "for BTC, ATOM" still wait, though search #19 loaded all 12 markets.
 Keep what stays true: the tiles, the reactor's look and every number's source stay as they are; the API keeps every field.
 
@@ -23,6 +24,6 @@ Done when:
 [ ] 3 The run shows the raw and the effective number of tries, and the bar uses the effective one.
 [ ] 4-6 With a run of 94 shortlisted the page is under 3,500 px at 1440 wide; the first winner is visible within 2 screens.
 [ ] 7-8 No text overlaps in BLIND or THE BAR with 94 shortlisted; no "60% SEEN", "24H" or "90 DAYS" anywhere.
-[ ] 9 FOUND steps through all winners; a queued bot never reads LIVE or 0.00%.
+[ ] 9 FOUND shows all winners on one screen in one animation; a queued bot never reads LIVE or 0.00%.
 [ ] 3b A finalist's row shows its result on all 12 coins.
 [ ] 10 No idea card waits for a problem the latest search no longer has; a card that executes nothing says so.

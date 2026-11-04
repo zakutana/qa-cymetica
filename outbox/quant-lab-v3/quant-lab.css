@@ -276,7 +276,3 @@ a.q2-ib { display: inline-block; text-decoration: none; }
 .q3-paused { margin: 0 0 10px; padding: 10px 14px; font: 700 12px 'JetBrains Mono', monospace; color: #a9b8cc; border: 1px solid rgba(255, 68, 68, .45); border-radius: 10px; background: rgba(255, 68, 68, .06); }
 .q3-paused b { color: #ff4444; } .q3-paused a { color: #00cfff; margin-left: 6px; }
 .q2-bots { grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
-.q3-nav { position: absolute; top: 12px; right: 16px; display: flex; align-items: center; gap: 8px; font: 700 13px 'JetBrains Mono', monospace; color: #e6edf7; z-index: 3; }
-.q3-nav[hidden] { display: none; }
-.q3-nav button { width: 32px; height: 32px; font-size: 18px; line-height: 1; color: #00ff88; background: #0d1520; border: 1px solid rgba(0, 255, 136, .45); border-radius: 8px; cursor: pointer; }
-.q3-nav button:hover { background: #111a28; }
