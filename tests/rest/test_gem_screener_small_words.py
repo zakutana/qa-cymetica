@@ -51,13 +51,14 @@ def test_one_word_means_one_number(rest_anon):
     breaches = []
     for theme in snap.get("themes") or []:
         f = theme.get("fundament") or {}
-        if f.get("last30") and f.get("rev30d") and abs(f["last30"] / f["rev30d"] - 1) > 0.03 and "isNum(f.last30) ? f.last30" in html:
+        if f.get("last30") and f.get("rev30d") and abs(f["last30"] / f["rev30d"] - 1) > 0.03 and "isNum(f.last30) ? f.last30" in html and "function fundRev30" not in html:   # ET-33771: their one-figure helper
             breaches.append({"what": f"theme {theme.get('key')}: revenue over 30 days is ${f['last30']:,.0f} in the table and ${f['rev30d']:,.0f} in its panel"})
     index = (snap.get("altseason") or {}).get("index")
     breadth = (((snap.get("altseason_cycle") or {}).get("components") or {}).get("breadth") or {}).get("value")
     if "% on the old card" in html and index is not None and breadth is not None and abs(index - breadth) > 1:
         breaches.append({"what": f"the Altseason (i) says {breadth:.0f}% on the old card; the old card's figure, altseason.index, is {index:.0f}"})
-    if re.search(r"hot\.slice\(0, ?3\)", html) and ((snap.get("sector_stages") or {}).get("counts") or {}).get("hot", 0) > 3:
+    if (re.search(r"hot\.slice\(0, ?3\)", html) and "more marked Hot" not in html
+            and ((snap.get("sector_stages") or {}).get("counts") or {}).get("hot", 0) > 3):
         breaches.append({"what": f"'Hot right now' names 3 sectors; {snap['sector_stages']['counts']['hot']} are marked Hot in the table beneath it, and it does not say more exist"})
     heat = " ".join(a.get("line") or "" for a in (_coin(rest_anon, "stonkfun").get("degen_level") or {}).get("areas") or [])
     if "Price vs revenue: needs history" in heat:
@@ -235,6 +236,13 @@ def test_no_schedule_on_any_feed_is_said_only_where_there_is_none(rest_anon):
     _verdict(breaches, read, "the sentence is said only where no schedule is on file", {"batch": SUPPLY_BATCH})
 
 
+def says_free_to_sell(name) -> bool:
+    """The slice's label claims a free float. Their fix (2026-11-03, #286) keeps the slice and its 100 % but renames it
+    'Not shown locked (vesting or staking not read)': what the pie says is what is not known, and that passes."""
+    text = str(name or "").lower()
+    return "free to sell" in text or ("not read" not in text and "unknown" not in text and "not shown" not in text)
+
+
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_the_supply_pie_does_not_say_free_to_sell_when_it_does_not_know(rest_anon):
     """A pie that is 100 % 'Free to sell' on a coin whose vesting and staking are listed as unknown states what is not known."""
@@ -243,9 +251,10 @@ def test_the_supply_pie_does_not_say_free_to_sell_when_it_does_not_know(rest_ano
         raise Inconclusive("the batch is empty")
     rows = []
     for row in items:
-        free = next((s.get("share_pct") for s in row.get("slices_today") or [] if s.get("key") == "free"), 0) or 0
+        slice_ = next((s for s in row.get("slices_today") or [] if s.get("key") == "free"), {})
         unknown = row.get("unknown_names") or []
-        if free >= 99.9 and "vesting schedule" in unknown and "staking" in unknown:
+        if (slice_.get("share_pct") or 0) >= 99.9 and says_free_to_sell(slice_.get("name")) \
+                and "vesting schedule" in unknown and "staking" in unknown:
             rows.append((row.get("token") or {}).get("symbol"))
     breaches = [{"what": f"{len(rows)} of {len(items)} rows draw a pie 100% Free to sell with vesting and staking listed as unknown: {rows[:8]}"}] if rows else []
     _verdict(breaches, len(items), "no pie states what the row does not know", {"batch": SUPPLY_BATCH})
@@ -257,7 +266,9 @@ def test_to_holders_says_none_only_where_it_knows(rest_anon):
     means it is not one. Either sentence moving clears it."""
     _, html = read_page(rest_anon)
     breaches = []
-    if "no payouts, buybacks or burns found" in html:
+    # the sentence stays in the page's script for a coin whose payouts were read and are none; their fix (#274,
+    # 2026-11-03) is the other branch, "unknown - holders' revenue could not be read", for a coin read as null
+    if "no payouts, buybacks or burns found" in html and "revenue could not be read" not in html:   # their text has a typographic apostrophe
         coin = _coin(rest_anon, "dolomite")
         report = _report_text(rest_anon, "dolomite")
         if "holders' share unknown" in report and (coin.get("to_holders") or {}).get("value") in (None, 0):

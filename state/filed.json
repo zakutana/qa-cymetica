@@ -214,7 +214,7 @@
     "136": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail",
+   "last_check": "pass",
    "hold": "NEXT.md: wait for the word 'omez kontrolu'"
   },
   {
@@ -5310,12 +5310,18 @@
    ],
    "title": "Gem Screener: exploits DefiLlama lists under the app's own name are called \"not tied to this protocol\" or \"No exploit listed\", on Degen pick Dolomite among others",
    "filed_at": "2026-11-02T09:22:17+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 255,
+     "verdict": "pass",
+     "at": "2026-11-04T16:32:01+00:00"
+    }
+   ],
    "their_status": {
     "255": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-aerodrome-excluded-as-no-token",
@@ -5511,12 +5517,18 @@
    ],
    "title": "Gem Screener: five fixed sentences are false against the page's own data: chains \"context only\", SOLV's $20K pool, \"prices incomplete (523 of 523)\", Hyperliquid \"the most expensive\", \"the 18 checks\"",
    "filed_at": "2026-11-02T09:25:12+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 264,
+     "verdict": "pass",
+     "at": "2026-11-04T16:35:49+00:00"
+    }
+   ],
    "their_status": {
     "264": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-phase-help-is-not-what-the-phase-is",
@@ -5703,12 +5715,18 @@
    ],
    "title": "Gem Screener: \"19% of the float unlocks within 90 days\" while next_unlock says 24.1 % of it; unlock percentages use two denominators under one word",
    "filed_at": "2026-11-02T09:27:26+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 273,
+     "verdict": "pass",
+     "at": "2026-11-04T16:35:54+00:00"
+    }
+   ],
    "their_status": {
     "273": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-to-holders-none-where-unknown",
@@ -5720,12 +5738,18 @@
    ],
    "title": "Gem Screener: Degen pick Dolomite reads \"To holders: None, no payouts, buybacks or burns found\" while its own report says \"holders' share unknown\"",
    "filed_at": "2026-11-02T13:16:12+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 274,
+     "verdict": "pass",
+     "at": "2026-11-04T16:40:51+00:00"
+    }
+   ],
    "their_status": {
     "274": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-picks-route-misses-a-cards-unknown",
@@ -5915,12 +5939,18 @@
    ],
    "title": "Gem Screener: five small statements against their data, among them \"52% on the old card\" (it reads 48), \"Hot right now\" naming 3 of 4, and two 30-day revenues for one sector",
    "filed_at": "2026-11-02T13:19:03+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 283,
+     "verdict": "pass",
+     "at": "2026-11-04T16:41:56+00:00"
+    }
+   ],
    "their_status": {
     "283": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-lombard-dilution-ok-with-a-schedule-ahead",
@@ -5955,12 +5985,18 @@
    ],
    "title": "Supply Analyzer: \"No vesting or unlock schedule on any feed we read\" on Jupiter, CoWSwap, Chainlink and 13 more, whose finished schedules are on DefiLlama; the Supply column reads n/a",
    "filed_at": "2026-11-02T13:38:39+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 285,
+     "verdict": "pass",
+     "at": "2026-11-04T16:32:07+00:00"
+    }
+   ],
    "their_status": {
     "285": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "supply-pie-says-free-to-sell-when-unknown",
@@ -5972,12 +6008,18 @@
    ],
    "title": "Supply column: a pie 100 % \"Free to sell\" on rows whose own record lists vesting and staking as unknown",
    "filed_at": "2026-11-02T13:39:46+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 286,
+     "verdict": "pass",
+     "at": "2026-11-04T16:40:56+00:00"
+    }
+   ],
    "their_status": {
     "286": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-card-omits-exploit-its-guardian-lists",
@@ -6245,11 +6287,18 @@
    ],
    "title": "Gem Screener: the smiley says \"how is not checked yet\" on 24 apps whose To holders tile names how, Jupiter and Hyperliquid among them; the fix was reported live",
    "filed_at": "2026-11-03T10:08:11+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 300,
+     "verdict": "pass",
+     "at": "2026-11-04T16:32:16+00:00"
+    }
+   ],
    "their_status": {
     "300": "paid"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "nexus-select-on-page-button-turns-itself-off",
@@ -6293,7 +6342,8 @@
    "their_status": {
     "304": "pending"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "agent-tournaments-seat-keeps-its-allowance-across-the-reset",

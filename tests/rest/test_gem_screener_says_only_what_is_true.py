@@ -299,6 +299,16 @@ def test_the_holders_line_says_its_window(rest_anon):
     _verdict(breaches, len(snap["apps"]), "no line states an old share as the present one")
 
 
+def incomplete_sentence_is_unguarded(html: str) -> bool:
+    """The page's script holds the 'incomplete' sentence; it is said whatever the data when nothing tests
+    `live < asked` first. Their fix (2026-11-03, #264) is that test: the sentence is in the source either way,
+    so its presence alone says nothing about what a visitor reads."""
+    at = html.find("Prices of the moment were incomplete")
+    if at < 0:
+        return False
+    return not re.search(r"if\s*\(\s*live\s*<\s*asked\s*\)", html[max(0, at - 160):at])
+
+
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_what_the_page_says_of_itself_holds(rest_anon):
     """The page's fixed sentences against the same page's data. A sentence that goes
@@ -313,7 +323,7 @@ def test_what_the_page_says_of_itself_holds(rest_anon):
     if "pool holds about $20K" in html and solv and not 10_000 <= solv <= 40_000:
         breaches.append({"what": f"About: 'SOLV's deepest reachable pool holds about $20K', its row's pool holds ${solv:,.0f}"})
     priced = (snap.get("sector_stages") or {}).get("priced") or {}
-    if ("Prices of the moment were incomplete" in html and priced.get("end") != "live"
+    if (incomplete_sentence_is_unguarded(html) and priced.get("end") != "live"
             and priced.get("live_coins") == priced.get("coins_asked") and priced.get("coins_asked")):
         breaches.append({"what": f"Sectors: 'Prices of the moment were incomplete ({priced['live_coins']} of "
                                  f"{priced['coins_asked']} coins had one)'; every coin had one, the cause is a basket's weight"})
@@ -480,6 +490,14 @@ def test_a_report_says_good_only_of_what_it_checked(rest_anon):
     _verdict(breaches, read, f"the {read} reports read agree with their checks")
 
 
+def unit_is_of_circulating(unit) -> bool:
+    """A unit whose own words say the percentage is of the circulating supply. Their fix (2026-11-03, #273) names
+    the denominator in every unit, '% of the supply unlocked today on DefiLlama's schedule (next_unlock.pct_of_circ
+    is of CoinGecko circulating)': the word is then in a note about the other number, and two denominators that
+    are named differ by design."""
+    return "circulating" in re.sub(r"\([^)]*\)", "", str(unit or ""))
+
+
 @qa(component="rest.gem_screener", tier=SafetyTier.SAFE, surface="rest")
 def test_a_supply_percentage_is_of_what_it_says(rest_anon):
     """'Of the float' and '% of circulating supply' are of the circulating supply the
@@ -495,7 +513,7 @@ def test_a_supply_percentage_is_of_what_it_says(rest_anon):
     lista = _coin(rest_anon, "lista-dao")
     cliff = ((lista.get("unlocks") or {}).get("next_cliff") or {}).get("size") or {}
     pct = (lista.get("next_unlock") or {}).get("pct_of_circ")
-    if "circulating" in str(cliff.get("unit")) and cliff.get("value") and pct and abs(cliff["value"] - pct) / pct > 0.10:
+    if unit_is_of_circulating(cliff.get("unit")) and cliff.get("value") and pct and abs(cliff["value"] - pct) / pct > 0.10:
         breaches.append({"what": f"Lista: next_cliff.size {cliff['value']} {cliff['unit']!r}; next_unlock.pct_of_circ is {pct:.2f} for the same event"})
     _verdict(breaches, 2, "the percentages agree where both are given")
 
