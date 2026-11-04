@@ -1,21 +1,21 @@
-Change to ET-33966, on top of the FAIL of 4 Nov: make the Quant Lab's result honest and readable. Search #19 made the page 22,052 px long: 94 blind-test rows take 19,357 px, the first winner is row 32, the bots start 18 screens down.
-Materials: https://github.com/zakutana/qa-cymetica/tree/main/outbox/quant-lab-v3 . A working mock on your live page with search #19's data (python serve.py, then http://127.0.0.1:8807/company/app/experiments); pics/ holds the target for the page, BLIND, THE BAR and FOUND; q3.js and q3.css are the changes to your quant-lab.js and .css, take them as they are. Its numbers are #19's as served, so it still shows the 4 winners that points 1 and 5 would change. Build the look as drawn.
+Change to ET-33966, on top of the FAIL of 4 Nov: make the Quant Lab's result honest and readable. Search #19 made the page 22,052 px long: the first winner is row 32 and the bots start 18 screens down.
+Materials: https://github.com/zakutana/qa-cymetica/tree/main/outbox/quant-lab-v3 . A working mock on your live page with search #19's data (python serve.py, then http://127.0.0.1:8807/company/app/experiments); pics/ holds the target for the page, BLIND, THE BAR and FOUND; q3.js and q3.css are the changes to your quant-lab.js and .css, take them as they are. Its numbers are #19's as served. Build the look as drawn.
 
 Method:
 1. Blind means blind (the FAIL). Count a setup only on windows that start at or after the end of the search period it was chosen from, or choose the shortlist once from the data before the first window. Today 71 of 94 rows and all 4 winners count windows they were chosen on.
 2. A window counts as "made money" only with at least 5 closed trades. Today +0.54% on 2 trades counts.
 3. The effective number of tries from the market correlation, as Nexus agreed on 3 Nov.
-4. Search on the 3 or 4 coins least like each other, not all 12, then replay each finalist on all 12 and show the result per coin. Our replay of the enzyme winner (rsi_14 < 25, SL 8, TP 10, Binance closes; AVAX +9.96% against your +11.08%): 9 of 12 coins made money, mean +2.07%. The kind of rule carries over, its size does not, and only the other coins show that. A paper bot starts on the coins where the finalist held up.
+4. Search on the 3 or 4 coins least like each other, not all 12, then replay each finalist on all 12 and show the result per coin. Our replay of the enzyme winner (Binance closes; AVAX +9.96% against your +11.08%): 9 of 12 coins made money, mean +2.07%. The kind of rule carries over, its size does not, and the other coins show that. A finalist is only a proposal: a card under Approvals, and its paper bot starts on Approve, on the coins where it held up. Nothing starts by itself.
 5. One model on one coin passes as one agent, with its best settings. #19's two CryptoBull Blue winners on AVAX are nearly one bot: every entry of "rsi_14 < 25, volume > 1.8" is also an entry of "rsi_14 < 30, volume > 1.5".
 
 Page:
 6. Under the reactor: WINNERS, BOTS, RUNS, in that order. A winner row is one line: model, coin, settings, its result on each window (the windows are the columns, with the 12-coin move in the header), pooled, bar, trades. A window it was chosen on reads "seen".
 7. Thrown-out rows close behind one line ("90 thrown out"). Opened: the 10 nearest misses and a button for 10 more, one line each.
 8. RUNS: the last 5, one line each (44 px at most), the models as a count with names in a tooltip; older runs behind one button.
-9. BLIND shows the four windows, falling red and rising green, with the winners and nearest misses stepping through. No "60% SEEN", "24H" or "90 DAYS": a search no longer works that way.
+9. BLIND shows the four windows, falling red and rising green, with the winners and nearest misses stepping through. No "60% SEEN", "24H" or "90 DAYS" labels.
 10. THE BAR draws the winners and the nearest misses that fit, "+N more" as a count. Nothing overlaps.
-11. FOUND is one animation ending with every agent found on one screen: a card each (coin, name, settings, pooled, trades, its window results), one line when they share a coin. A card says QUEUED until the bot has started, RUNNING and a return only when it runs. A paused company is said on the page.
-12. An idea card under Approvals that nothing executes (executable: false) says what the click does, and goes away when its problem no longer holds: "Price history for LINK" and "for BTC, ATOM" still wait though #19 loaded all 12 markets.
+11. FOUND is one animation ending with every agent found on one screen: a card each (coin, name, settings, pooled, trades, its window results), one line when they share a coin. A card says PROPOSED until the owner approves, then QUEUED, and RUNNING with a return only when the bot runs. A paused company is said on the page.
+12. Approve on a winner starts its bot. An idea card that nothing executes (executable: false) says what the click does, and goes away when its problem no longer holds: "Price history for LINK" and "for BTC, ATOM" still wait though #19 loaded all 12 markets.
 Keep: the tiles, the reactor's look, every number's source and every API field.
 
 Done when:
@@ -26,5 +26,5 @@ Done when:
 [ ] 5 One model on one coin is one agent.
 [ ] 6-8 With 94 shortlisted the page is under 3,500 px at 1440 wide; the first winner shows within 2 screens.
 [ ] 9-10 No overlap in BLIND or THE BAR with 94 shortlisted; none of the old labels anywhere.
-[ ] 11 FOUND shows all winners on one screen; a queued bot never reads LIVE or 0.00%.
+[ ] 11 FOUND shows all winners on one screen; no bot starts without Approve; a queued bot never reads LIVE or 0.00%.
 [ ] 12 No idea card waits for a problem the latest search no longer has.
