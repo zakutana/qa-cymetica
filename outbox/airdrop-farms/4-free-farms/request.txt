@@ -1,0 +1,20 @@
+Airdrop Farmer (https://cymetica.com/airdrop-farmer), next round: 5 free farms the agent runs from one click, all built at the same time, then 5 more. Our research of 29 Oct with a source for every farm (file B-free-hot.md): https://github.com/zakutana/qa-cymetica/tree/7498270d9704ad326eb0d6158bc56f681157dcfd/outbox/airdrop-farms/research-2026-10-29 . Only farms with no KYC.
+Why: users come for farms that work for them at once, and free ones draw the most people. Today the agent runs 2 farms, one of them (Mellow) earns no points, and none of the 5 free farms on your list runs. Ten live free farms is what will bring the most people.
+
+1. These 5 free farms. Each has a running programme, no token yet, no KYC, and is among the most farmed. Re-check each one daily; a farm leaves the day its token trades or its programme ends.
+- Push Chain: Season 3 is its last points season before mainnet, and 10% of 10B PC is for airdrops (its tokenomics). The user claims faucet PC once in the browser; the agent runs the quests and on-chain steps.
+- Rialo: $20M seed led by Pantera, devnet points. No airdrop is confirmed, so mark it SPECULATIVE. It is not on your list: add it. The user signs in with Google and Discord once; its Agent Grand Prix is made for agents (MCP).
+- GenLayer Season 2: Season 1 points carry over. The user signs in and does the social steps once. Its terms exclude accounts that only do automated tasks: say so on the card, the user decides.
+- Konnex: $15M raised; airdrops.io lists its airdrop as confirmed. The user connects SubWallet and signs in with X once; the agent does the testnet tasks.
+- Miden: $25M seed (a16z). Only a wallet and a faucet. Add support for its own wallet (Bread). No points for testnet users yet: mark it SPECULATIVE.
+- GIWA is not one of them: it publishes no reward programme. Keep it listed as Coming soon.
+2. One click per farm. The card shows the one step that is the user's, if there is one; after it the agent runs everything on a schedule, with gas from your testnet faucet wallet. Each step done shows on Live farms with a transaction the user can check.
+3. Build all 5 in this one build, not one after another.
+4. Then 5 more free farms the same way, from our research: Orbinum (20M ORB confirmed, TGE Q4 2026; Google sign-in once by the user), Psy Protocol ($9M seed; wallet, faucet and bridge), Unicity ($3M seed; agent-shaped tasks), Vibe Vibe (5% of supply for testnet users), DogeOS ($6.9M seed, Polychain; X and Telegram once by the user). Check each against the live page first; if one fails, take the next hottest free farm on the community trackers.
+5. Keep what is true today: free farms first, hottest first, each with its last-checked time. How many farms the free plan gets and how many Pro gets is your decision (#1086).
+Done when:
+[ ] 1 Push Chain, Rialo, GenLayer, Konnex and Miden show AGENT RUNS IT and FREE, each with its one user step if it has one, and Rialo is on the list.
+[ ] 2 Each of the five shows at least one done step with a transaction hash on Live farms, from a test wallet we use.
+[ ] 3 GenLayer's card says its terms exclude automated-only accounts; no farm is held back for anything but KYC.
+[ ] 4 The 5 more are listed (running, or Coming soon with the exact step that is missing), each checked within the last 24 hours.
+[ ] 5 A farm whose token trades or whose programme ended is gone from the list the same day.
