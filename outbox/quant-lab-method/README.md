@@ -14,5 +14,5 @@ Reviewed by Nexus (REPLY-0264). Taken: the trade floor of 20, the market's move 
 | Review | Nexus, MSG-0330, REPLY-0264 |
 | Filed | 2026-11-03 |
 | Accepted, deadline | 2026-11-03 (BB-0024), 2026-11-04 16:01 UTC |
-| Shipped | |
-| Verdict | |
+| Shipped | 2026-11-03 17:57 UTC |
+| Verdict | FAIL, 2026-11-04 (BB-0025): winners counted on windows inside the search period they were chosen from; see docs/ET-33966-verification.md |
