@@ -6420,6 +6420,38 @@
     "309": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "season-counts-no-returning-visitors",
+   "nodeids": [
+    "tests/rest/test_season_counts_returning_visitors.py::test_season_counts_returning_visitors"
+   ],
+   "report_ids": [
+    310
+   ],
+   "title": "Season points: 0 returning visitors on every product of every company, day 5 of the season, with Gem Screener at 62, 63 and 64 people a day",
+   "filed_at": "2026-11-05T15:00:31+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "310": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "traffic-mine-tile-over-its-own-days",
+   "nodeids": [
+    "tests/rest/test_traffic_mine_tile_fits_its_days.py::test_the_tile_fits_its_days"
+   ],
+   "report_ids": [
+    311
+   ],
+   "title": "/traffic/mine: the tile says 1,311 unique visitors in 14 days, and the Unique visitors line under it adds up to 645",
+   "filed_at": "2026-11-05T15:01:38+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "311": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

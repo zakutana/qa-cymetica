@@ -10966,6 +10966,52 @@ reports:
       An owner watching the table reads a $3.34 first prize that cannot be paid. Showing the buy-in back on these tables, in the API and on the card, fixes it. Paper tables only; read-only for this report.
     check: tests/rest/test_agent_tournaments_one_member_prizes_now.py::test_agent_tournaments_one_member_prizes_now
 
+  - key: season-counts-no-returning-visitors
+    findings: [CYM-season-counts-returning-visitors]
+    check: tests/rest/test_season_counts_returning_visitors.py::test_season_counts_returning_visitors
+    severity: medium
+    category: logic
+    url: https://cymetica.com/company/app
+    title: "Season points: 0 returning visitors on every product of every company, day 5 of the season, with Gem Screener at 62, 63 and 64 people a day"
+    expected: >
+      The Products tab says "Returning visitor (signed out, same browser on 2+ days): 1 point, +0.25 per further day from the 3rd".
+      With about 60 different people a day on Gem Screener for three days, and /app-usage saying 13 % of its people came back,
+      the season counts some returning visitors.
+    actual: >
+      Read on 2026-11-05 at 14:51 UTC (computed_at). season-breakdown of company 14 reads visitors 0 on all 11 products. The season board
+      reads returning_visitors 0 on all 7 companies, while it does count active users (4 for company 14). Gem Screener's last three days in
+      /api/v1/company/products are 62, 63 and 64 people.
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/14/season-breakdown -> products[].visitors 0 on all 11, season_starts 2026-11-01'
+      - 'GET https://cymetica.com/api/v1/company/season -> rows[].returning_visitors 0 on all 7 companies'
+      - 'GET https://cymetica.com/api/v1/company/products -> Gem Screener daily ends 62, 63, 64'
+      - 'GET https://cymetica.com/api/v1/app-usage -> humans[/gem-screener].came_back_pct 13'
+    body: >
+      Season points are what companies are ranked on, so please recount from the start of the season (1 November), not only from the fix.
+      Our check fails while Gem Screener reads 0 returning visitors with those daily counts; it passes when it reads at least one. It does
+      not say how many there should be. If 0 is right, please say what makes a visitor "return" in the count. GET requests only.
+
+  - key: traffic-mine-tile-over-its-own-days
+    findings: [CYM-traffic-mine-tile-fits-its-days]
+    check: tests/rest/test_traffic_mine_tile_fits_its_days.py::test_the_tile_fits_its_days
+    severity: low
+    category: logic
+    url: https://cymetica.com/traffic/mine
+    title: "/traffic/mine: the tile says 1,311 unique visitors in 14 days, and the Unique visitors line under it adds up to 645"
+    expected: >
+      Distinct people over a period cannot be more than each day's distinct people added together, so a tile and a line with one name
+      fit that, or the page says they count differently.
+    actual: >
+      Read on 2026-11-05 at 14:53 UTC, 14 days: totals.unique_visitors 1,311, sum of unique_daily 645. At 30 days: 1,720 and 1,080.
+      The note under the new chart "People per day by page" says it counts "the same way ... as Unique visitors above", and the page's
+      own note explains the column Unique but not the tile. The tile read 214 before report #251 was fixed, so it looks like the tile took the column's count and the line did not.
+    steps:
+      - 'Open https://cymetica.com/traffic/mine signed in, 14 days -> tile UNIQUE VISITORS 1,311; hover the days of the Page views per day chart and add up Unique visitors -> 645'
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=14 with an API key -> totals.unique_visitors, unique_daily'
+    body: >
+      An owner reads two figures under one name and cannot tell how many people came. Our check fails while the tile is over the sum of the
+      days by more than 2 and passes when it is not. Naming the two apart on the page also closes this; tell us and we read the page. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
