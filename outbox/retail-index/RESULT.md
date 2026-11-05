@@ -144,3 +144,82 @@ did 13 and 26 weeks after each logged week. That is the only test left that hist
 
 Four tops cannot prove the next two to three years. If ours fails B1, B2 or B3, or does not beat the baselines on
 2024 to now, the result is "no better" and it is reported that way, with the table.
+
+---
+
+# Retail index v6: social attention only (second registered attempt)
+
+Registered 2026-11-05, **before** `fetch.py` has read Wikimedia or the Reddit archive. This is the second try at the same
+question, so it is not a clean one: v5's table is known (v5 reads 54 at 2021-11 because turnover, users and chase were below
+spring 2021). The operator's brief is that retail is people, not price: v3 (+0.65 with BTC) is mostly price, v4 (-0.39) is its
+inverse, and neither holds a social series. Every choice below is a stated principle; no weight or threshold is tuned.
+
+**What the operator named and I looked at first.** Kryptomagazin's Social Metrics page (YouTube, App Store, Wikipedia) and
+Cowen's Social Risk (YouTube, X, Coinbase app rank, Google Trends). Both depend on series with no history for YouTube and the
+App Store; Kryptomagazin says so on its page. Only Wikipedia has a long history. Its own maxima (5-year page) are Cryptocurrency
+2021-11-26, Ethereum 2021-11-13, Bitcoin 2024-12-11: **expected, not fitted**, that an attention family peaks in the 2021-11 window,
+where v5 was low.
+
+## Sources that can be tested on the past (public, anonymous GET, `build_source_client`)
+
+| Source | Series | From |
+|---|---|---|
+| Wikimedia pageviews (CC0) | daily views, agent `user`, all-access, of en.wikipedia `Bitcoin`, `Cryptocurrency`, `Ethereum`, `Dogecoin`; weekly sum | 2015-07 |
+| Reddit, Arctic Shift archive of Pushshift | submissions per week in r/CryptoCurrency, r/Bitcoin, r/ethtrader; comments per week if the archive answers the aggregate | 2015 |
+| the same | submissions per week in r/CryptoMoonShots, r/SatoshiStreetBets, r/altcoin | each sub's first month |
+
+A week `W` holds the days `[W-7, W)`, as in v5. Reddit is read in chunks of at most 6 months with pauses (longer ranges time out); if
+an aggregate will not answer, the day-by-day listing is paged instead. If a member cannot be read for a subreddit, the **member is
+dropped for every subreddit**, never filled. A subreddit with fewer than 78 weeks of history is not scored that week (26 to detrend,
+52 to rank), so the degen family is absent or thin before 2019.
+
+**Left out, and why:** YouTube (public RSS lists the last 15 videos, no history) and the App Store chart (Wayback has a gap from 2020
+to mid-2022) are collected from now on and join only after 52 weeks, never in a back-test. X and TikTok have no licence-free history.
+Google Trends answered 429 twice on 2026-11-05 and is unofficial: out. LunarCrush (about $90 a month, from 2020-01) only on the
+operator's word. The Block shows YouTube, tweets and subreddit growth, but its terms forbid automated collection: looked at by
+hand, never read by script.
+
+**Known limits, stated up front:** Wikipedia attention has been decaying since chatbots took lookups, which the 104-week detrend
+is there to absorb; Reddit membership grows and its rules and bots change; both are English-language, and neither is X or TikTok,
+where much of today's retail talks.
+
+## The index, v6
+
+Same machinery as v5 (`qa/retailindex.py`): every member is divided by the trailing 104-week median of its own past values
+(at least 26), then ranked among the trailing 208 weeks (at least 52), equal weight inside a family and between families.
+
+| Family | Members |
+|---|---|
+| attention | Wikipedia Bitcoin, Cryptocurrency, Ethereum, Dogecoin |
+| crowd | submissions (and comments) in r/CryptoCurrency, r/Bitcoin, r/ethtrader |
+| degen | submissions (and comments) in r/CryptoMoonShots, r/SatoshiStreetBets, r/altcoin |
+
+**Index = mean of the families that exist; at least 2, exactly 2 is "thin".** Zones as v5: under 25 asleep, 25 to 40 waking, 40 to
+75 active, 75 and over saturated. No price, turnover, funding or Fear & Greed enters.
+
+**Written now, shown only if v6 fails below: v6b** = the three social families plus v5's `turnover` and `premia` (+0.09 and 0.00
+with BTC price), equal weight per family. If v6 passes, v6b is not shown.
+
+## The peak signal (written now, not tuned)
+
+At week `i`, with `m` the 4-week mean of the index: **signal** = the index was at least 75 in some of the last 13 weeks, and
+`m[i]` is at least 15 points under the highest `m` of the last 26 weeks. A signal fires on the first week that holds after one that
+did not; none fires within 26 weeks of the previous one. It is read late by construction: it says the peak is behind us, it does not
+forecast one. Scored identically on v6, v3 and v4:
+- a dated top is **caught** if a signal fires within 8 weeks either side of it, and the signed delay is reported;
+- a **false alarm** is a signal with neither a dated top nor an alt-basket top of the extended set (v5's zig-zag set) within 8 weeks.
+
+## Done-when for v6 (the operator may change; their v3 is the bar)
+
+- [ ] **B1' every top window holds a week at 75 or more** (stricter than v5's 70; B1 at 70 is printed too). The 2018-01 window is
+  thin (two families at most) and is marked, as in v5.
+- [ ] B2 every low window holds a week at 35 or less (v3 passes with 3, 25, 13).
+- [ ] B3 |Spearman with the BTC weekly close|, 2018-01 to now, at most 0.40 (v3: +0.65).
+- [ ] B9 weeks at 75 or more are at most 10% of scored weeks, no run over 26 weeks (v3: 21%, 64 weeks).
+- [ ] B8 permutation p for the dated windows at most 0.05.
+- [ ] Of the runs at 75 or more, at least 75% contain a confirmed alt-basket top (v3: 75%).
+- [ ] The peak signal's table: tops caught, signed delay, false alarms, against the same rule on v3 and v4.
+- [ ] B4, B5, B7 as in v5, A/A byte-identical, charts looked at, forward log started with the new code hash.
+
+If it does not pass, the report says so with the table; nothing is tuned until it does. The index can say "saturated" in the past
+top windows and quiet in the lows; whether it does so in 2027 is the only test left, and the forward log is where it is run.
