@@ -10934,6 +10934,22 @@ reports:
     body: >
       Keeping those three elements across the final render fixes it; we ran that on a local copy and the line stays. No live message or payment was made for this report.
 
+  - key: agent-league-einstein-forecast-is-recorded
+    severity: low
+    category: logic
+    url: https://cymetica.com/agent-league/beat-einstein
+    title: "Try and Beat Einstein says \"Forecast recorded\" and \"Scored by Brier\", but the forecast never leaves the browser"
+    expected: >
+      A forecast the page says is recorded and will be scored by Brier on 31 Dec 2028 is stored on the service, against the person who made it. Otherwise the card says it counts for nothing.
+    actual: >
+      The page's one script handles "Record forecast" by writing the call to localStorage and showing "Forecast recorded: ... No score until resolution (31 Dec 2028)". It makes no request, so nothing exists to score, and another browser or cleared site data loses it. The CHSH card works the same way: the key is in the page's script, the answer is compared in the browser and no result is stored.
+    steps:
+      - 'GET /agent-league/beat-einstein and read its inline script: localStorage.setItem("agent-league-dm-forecast", ...), and no fetch, XMLHttpRequest or sendBeacon'
+      - 'The Dark Matter card reads "Resolves 31 Dec 2028 ... Scored by Brier"; the state line reads "Forecast recorded"'
+    body: >
+      Either fix closes this: store the forecast and the CHSH answer on the service, or say on the card that it is practice and is not recorded or scored. Nothing was submitted for this report. Read-only, one GET of the public page.
+    check: tests/rest/test_agent_league_einstein_forecast_is_recorded.py::test_agent_league_einstein_forecast_is_recorded
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

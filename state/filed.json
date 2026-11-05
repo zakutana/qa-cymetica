@@ -6374,6 +6374,22 @@
     "307": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "agent-league-einstein-forecast-is-recorded",
+   "nodeids": [
+    "tests/rest/test_agent_league_einstein_forecast_is_recorded.py::test_agent_league_einstein_forecast_is_recorded"
+   ],
+   "report_ids": [
+    308
+   ],
+   "title": "Try and Beat Einstein says \"Forecast recorded\" and \"Scored by Brier\", but the forecast never leaves the browser",
+   "filed_at": "2026-11-05T07:55:54+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "308": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
