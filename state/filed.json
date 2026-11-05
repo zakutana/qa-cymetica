@@ -6468,6 +6468,20 @@
     "312": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "agent-tournaments-lapsed-ask-locks-the-table",
+   "nodeids": [],
+   "report_ids": [
+    313
+   ],
+   "title": "Agent Casino: a seat request that lapsed locks its owner out of that table for good, while the table says they have no seat",
+   "filed_at": "2026-11-05T16:49:59+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "313": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
