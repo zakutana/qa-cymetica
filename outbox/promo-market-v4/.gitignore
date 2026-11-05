@@ -1,0 +1,3 @@
+# render.py draws the working pictures again in a minute; the request's own are build-it-better/pictures/*.webp
+/pictures/
+live/__pycache__/

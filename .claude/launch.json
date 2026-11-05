@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "promo-market-v4",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/promo-market-v4/live/serve.py"],
+      "port": 8792
+    },
+    {
       "name": "quant-lab-v3",
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/quant-lab-v3/serve.py", "--quiet"],

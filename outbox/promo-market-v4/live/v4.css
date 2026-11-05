@@ -1,0 +1,32 @@
+/* v4, on top of their promo_market_v2.css and promo_market_v3.css: their variables, their sizes; only what v4 adds. */
+
+/* no sort any more: a brief has no end date and one budget, so the market has nothing to sort by */
+#bsort:empty { display: none; }
+
+/* Post a brief: the currency, then one big amount */
+.v4cur { display: inline-flex; margin: 0 0 10px; }
+.v4cur button { min-width: 84px; }
+.v3amt.v4big .in { height: 52px; font: 700 22px var(--mono); padding-right: 70px; }
+.v3amt.v4big i { height: 52px; font-size: 12px; }
+.v3amt.v4big em { text-align: left; }
+.v3nb .quick { margin-top: 8px; }
+
+/* the owner's Offers: the amount to give is typed in the row */
+.v3amt.v4give { width: 148px; margin-left: auto; }
+.v3amt.v4give .in { height: 34px; font-size: 13px; }
+.v3amt.v4give i { height: 34px; }
+
+/* the promoter's steps: offer, agreed, posted, 3 days up, paid */
+.v4steps { display: flex; gap: 4px; margin: 12px 0 4px; }
+.v4steps span { flex: 1; display: grid; gap: 6px; font: 600 10px var(--mono); letter-spacing: .5px; text-transform: uppercase; color: var(--text3); }
+.v4steps i { height: 4px; border-radius: 4px; background: var(--line2); }
+.v4steps .done { color: var(--text2); }
+.v4steps .done i { background: rgba(0,255,136,.55); }
+.v4steps .now { color: var(--green); }
+.v4steps .now i { background: var(--green); box-shadow: 0 0 10px rgba(0,255,136,.6); }
+.v4days { display: flex; gap: 6px; margin-top: 10px; }
+.v4days span { flex: 1; height: 8px; border-radius: 8px; background: var(--line2); }
+.v4days span.on { background: var(--green); box-shadow: 0 0 10px rgba(0,255,136,.5); }
+.v4pair { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 8px; margin-top: 12px; }
+.v4post { margin-top: 12px; }
+.v4post .own { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
