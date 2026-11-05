@@ -24,8 +24,8 @@ from qa.paths import atomic_write  # noqa: E402
 DATA = HERE / "data"
 P = {"bg": "#0a0e17", "panel": "#0f1626", "line": "#1d2a44", "grid": "#16213a", "mute": "#6e7f9f", "text": "#e6edf7",
      "cyan": "#00cfff", "green": "#00ff88", "red": "#ff4444", "blue": "#3b82f6"}
-W_, H_ = 1200, 540
-ML, MR, MT, MB = 58, 86, 112, 46
+W_, H_ = 1200, 566
+ML, MR, MT, MB = 58, 86, 138, 46
 PW, PH = W_ - ML - MR, H_ - MT - MB
 
 
@@ -77,7 +77,7 @@ def money(v):
     return f"${v / 1e9:.1f}bn" if v < 1e11 else f"${v / 1e9:.0f}bn"
 
 
-def svg(cid, title, big, sub, series, weeks, others, thin=None, marks=True, legend=()):
+def svg(cid, title, big, sub, series, weeks, others, thin=None, marks=True, legend=(), peaks=()):
     fr = Frame(weeks)
     yo, ticks = others_axis(weeks, others)
     out = [f'<svg id="{cid}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W_} {H_}" width="{W_}" height="{H_}">',
@@ -90,12 +90,11 @@ def svg(cid, title, big, sub, series, weeks, others, thin=None, marks=True, lege
     out.append(f'<text x="{ML}" y="26" class="k">{title}</text>')
     out.append(f'<text x="{ML}" y="66" class="big">{big}</text>')
     out.append(f'<text x="{ML}" y="90" class="sub">{sub}</text>')
-    lx = W_ - MR
-    for label, color, dash in reversed(legend):
-        tw = 8 * len(label) + 34
-        lx -= tw
-        out.append(f'<line x1="{lx}" x2="{lx + 22}" y1="22" y2="22" stroke="{color}" stroke-width="3" {"stroke-dasharray=\"5 4\"" if dash else ""}/>')
-        out.append(f'<text x="{lx + 28}" y="26" class="leg">{label}</text>')
+    lx = ML   # the legend has its own row under the header, so it never meets the title
+    for label, color, dash in legend:
+        out.append(f'<line x1="{lx}" x2="{lx + 22}" y1="108" y2="108" stroke="{color}" stroke-width="3" {"stroke-dasharray=\"5 4\"" if dash else ""}/>')
+        out.append(f'<text x="{lx + 28}" y="112" class="leg">{label}</text>')
+        lx += 8 * len(label) + 52
     # grid and axes
     for v in range(0, 101, 20):
         out.append(f'<line x1="{ML}" x2="{ML + PW}" y1="{fr.y(v):.1f}" y2="{fr.y(v):.1f}" stroke="{P["grid"]}"/>')
@@ -145,6 +144,10 @@ def svg(cid, title, big, sub, series, weeks, others, thin=None, marks=True, lege
             x, y = fr.x(weeks[last]), fr.y(vals[last])
             out.append(f'<rect x="{x + 6:.1f}" y="{y - 11:.1f}" width="34" height="22" rx="6" fill="{P["bg"]}" stroke="{color}"/>')
             out.append(f'<text x="{x + 23:.1f}" y="{y + 4:.1f}" class="pill" fill="{color}" text-anchor="middle">{vals[last]:.0f}</text>')
+    for w, v in peaks:   # the peak signal: "the top is behind us", drawn on the 4-week mean it reads
+        x, y = fr.x(w), fr.y(v)
+        out.append(f'<path d="M{x - 6:.1f},{y - 15:.1f} L{x + 6:.1f},{y - 15:.1f} L{x:.1f},{y - 4:.1f} Z" fill="{P["red"]}"/>')
+        out.append(f'<text x="{x:.1f}" y="{y - 20:.1f}" class="ev" fill="{P["red"]}" text-anchor="middle">peak signal {R.iso(w)[:7]}</text>')
     out.append("</svg>")
     return "\n".join(out)
 
@@ -165,7 +168,67 @@ svg text {{ font-family: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif; fil
 """
 
 
+def render(html, shots):
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(channel="chrome", args=["--disable-lcd-text", "--font-render-hinting=none"])
+        page = browser.new_page(viewport={"width": 1440, "height": 900}, device_scale_factor=1)
+        page.set_content(html)
+        page.wait_for_timeout(300)
+        for cid, name in shots:
+            page.locator(f"#{cid}").screenshot(path=str(HERE / name))
+        browser.close()
+
+
+def palette_scan(html):
+    found = {h.lower() for h in re.findall(r"#[0-9a-fA-F]{6}\b", html)}
+    off = found - set(P.values())
+    if off:
+        sys.exit(f"off-palette colours in the chart, nothing drawn: {sorted(off)}")
+
+
+def main_v6():
+    """Charts of the social index v6: ours, ours beside their v3 and v4 with the peak signals, and its three families."""
+    table = R.merge_social(R.read_table((DATA / "weekly.csv").read_text(encoding="utf-8")),
+                           (DATA / "social_weekly.csv").read_text(encoding="utf-8"))
+    res = R.compute_index(table, families=R.SOCIAL_FAMILIES)
+    weeks, idx, nf = table["week"], res["index"], res["nfam"]
+    v4, v3, others = table["cy_v4"], table["cy_v3"], table["cy_others"]
+    now = idx[-1]
+    ma4 = R.moving_mean(idx)
+    peaks = [(weeks[i], ma4[i]) for i in R.peak_signals(idx)]
+    blue_leg = ("small coins in $ (log)", P["blue"], False)
+    raw = ("v6 weekly", idx, P["cyan"], None, False, 1.1, 0.5)
+    fam = res["families"]
+    charts = [
+        svg("v6", "RETAIL HEAT v6 · SOCIAL ATTENTION ONLY: WIKIPEDIA, REDDIT", f"{now:.0f}",
+            f"{R.zone(now)} · week of {R.iso(weeks[-1])} · {nf[-1]} families · 4-week mean {ma4[-1]:.0f}",
+            [raw, ("v6 4-week mean", ma4, P["cyan"], "thin", True, 2.4)], weeks, others, thin=nf, marks=True,
+            legend=[("v6 weekly (thin) and 4-week mean (dashed: 2 families)", P["cyan"], False), blue_leg], peaks=peaks),
+        svg("cmp6", "COMPARE · v6 AGAINST CYMETICA'S TWO RETAIL MEASURES", f"{now:.0f} vs {v4[-1]:.0f} vs {v3[-1]:.0f}",
+            f"v6 weekly · v4 · v3, now; v6 4-week mean {ma4[-1]:.0f}",
+            [("v3", v3, P["green"], None, False), ("v4", v4, P["red"], None, False), raw, ("v6 4-week mean", ma4, P["cyan"], None, True, 2.4)],
+            weeks, others, marks=True, peaks=peaks,
+            legend=[("v6 (ours; thin weekly, thick 4-week mean)", P["cyan"], False), ("Cymetica v4", P["red"], False), ("Cymetica v3", P["green"], False), blue_leg]),
+        svg("fam6", "THE THREE FAMILIES BEHIND v6", f"{fam['attention'][-1]:.0f} · {fam['crowd'][-1]:.0f} · {fam['degen'][-1]:.0f}",
+            f"attention (Wikipedia) · crowd (r/CryptoCurrency, r/Bitcoin, r/ethtrader) · degen (r/CryptoMoonShots, r/SatoshiStreetBets, r/altcoin), now",
+            [("attention", fam["attention"], P["cyan"], None, False), ("crowd", fam["crowd"], P["green"], None, False),
+             ("degen", fam["degen"], P["text"], None, False)], weeks, others, marks=True,
+            legend=[("attention", P["cyan"], False), ("crowd", P["green"], False), ("degen", P["text"], False), blue_leg]),
+    ]
+    html = f'<!doctype html><meta charset="utf-8"><title>retail index v6</title><style>{STYLE}</style><body>' + "".join(
+        f'<div class="c">{c}</div>' for c in charts) + "</body>"
+    palette_scan(html)
+    atomic_write(HERE / "cache" / "charts6.html", html)
+    render(html, (("v6", "chart-v6.png"), ("cmp6", "chart-compare-v6.png"), ("fam6", "chart-families-v6.png")))
+    print("drew chart-v6.png, chart-compare-v6.png, chart-families-v6.png")
+    return 0
+
+
 def main():
+    if "--v6" in sys.argv[1:]:
+        return main_v6()
     table = R.read_table((DATA / "weekly.csv").read_text(encoding="utf-8"))
     res = R.compute_index(table)
     weeks, idx, nf = table["week"], res["index"], res["nfam"]

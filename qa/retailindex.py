@@ -146,6 +146,17 @@ def parse_fx(rates: dict) -> dict:
     return out
 
 
+def parse_wikimedia(items) -> dict:
+    """Wikimedia daily pageviews [{timestamp 'YYYYMMDD00', views}] -> {day: views}."""
+    out = {}
+    for it in items or []:
+        try:
+            out[ordinal(f"{it['timestamp'][:4]}-{it['timestamp'][4:6]}-{it['timestamp'][6:8]}")] = float(it["views"])
+        except (KeyError, TypeError, ValueError):
+            continue
+    return out
+
+
 def parse_fng(rows) -> dict:
     """alternative.me [{value, timestamp}] -> {day: value}."""
     out = {}
@@ -170,9 +181,30 @@ def read_table(text: str) -> dict:
     return cols
 
 
+def sample_days(first: int, end: int) -> list[int]:
+    """The Tuesday and the Friday of every Monday-to-Sunday week, for days in [first, end): the two days a Reddit member
+    is read on (RESULT.md, amendment 1). Times 3.5 they stand for the week."""
+    out, d = [], monday_on_or_before(first)
+    while d < end:
+        out += [d + k for k in (1, 4) if first <= d + k < end]
+        d += 7
+    return out
+
+
+def merge_social(table: dict, text: str) -> dict:
+    """The columns of `data/social_weekly.csv` laid on the weekly table's weeks (same Monday, same row)."""
+    soc = read_table(text)
+    at = {w: i for i, w in enumerate(soc["week"])}
+    out = {k: v[:] for k, v in table.items()}
+    for k, v in soc.items():
+        if k != "week":
+            out[k] = [None if w not in at else v[at[w]] for w in table["week"]]
+    return out
+
+
 def index_csv(table: dict, result: dict) -> str:
     """The index as CSV text: week, index, families behind it, zone, and each family's score."""
-    fams = list(FAMILIES)
+    fams = list(result["families"])
     out = ["week,index,nfam,zone," + ",".join(fams)]
     for i, w in enumerate(table["week"]):
         v = result["index"][i]
@@ -192,6 +224,14 @@ FAMILIES = {
     "leverage": [("fund", False)],
     "chase": [("breadth", False), ("froth", False)],
 }
+# v6: social attention only (RESULT.md, second registered attempt). Every member is a weekly count, detrended.
+SOCIAL_FAMILIES = {
+    "attention": [("wiki_bitcoin", True), ("wiki_cryptocurrency", True), ("wiki_ethereum", True), ("wiki_dogecoin", True)],
+    "crowd": [("rd_cc", True), ("rd_btc", True), ("rd_eth", True)],
+    "degen": [("rd_cms", True), ("rd_ssb", True), ("rd_alt", True)],
+}
+# written beside v6 and shown only if v6 fails: the social families plus v5's two price-free ones
+V6B_FAMILIES = {**SOCIAL_FAMILIES, "turnover": FAMILIES["turnover"], "premia": FAMILIES["premia"]}
 PCT_WINDOW, PCT_MIN = 208, 52
 DETREND_WINDOW, DETREND_MIN = 104, 26
 ASLEEP, AWAKE_AT, SATURATED = 25.0, 40.0, 75.0
@@ -232,20 +272,22 @@ def _mean(vals):
     return sum(vals) / len(vals) if vals else None
 
 
-def compute_index(table: dict, drop_family: str | None = None) -> dict:
-    """members, families, index and the number of families behind each week. `drop_family` leaves one family out."""
+def compute_index(table: dict, drop_family: str | None = None, families: dict | None = None) -> dict:
+    """members, families, index and the number of families behind each week. `drop_family` leaves one family out;
+    `families` is v5's `FAMILIES` unless another set (v6's `SOCIAL_FAMILIES`) is given."""
+    defs = families or FAMILIES
     n = len(table["week"])
     members: dict[str, list] = {}
-    for fam, cols in FAMILIES.items():
+    for fam, cols in defs.items():
         for col, trend in cols:
             x = table.get(col) or [None] * n
             members[col] = trailing_percentile(detrend(x) if trend else x)
     fams: dict[str, list] = {}
-    for fam, cols in FAMILIES.items():
+    for fam, cols in defs.items():
         fams[fam] = [_mean([members[c][i] for c, _ in cols]) for i in range(n)]
     index, nfam = [], []
     for i in range(n):
-        vals = [fams[f][i] for f in FAMILIES if f != drop_family and fams[f][i] is not None]
+        vals = [fams[f][i] for f in defs if f != drop_family and fams[f][i] is not None]
         nfam.append(len(vals))
         index.append(sum(vals) / len(vals) if len(vals) >= 2 else None)
     return {"members": members, "families": fams, "index": index, "nfam": nfam}
@@ -410,8 +452,10 @@ def window_positions(weeks: list, center: int, half: int = HALF) -> list[int]:
     return [i for i, w in enumerate(weeks) if center - half * WEEK <= w <= center + half * WEEK]
 
 
-def check_windows(series: list, weeks: list, nfam: list | None, dates: tuple, kind: str, half: int = HALF) -> list[dict]:
-    """B1 (kind 'top': highest week >= 70) or B2 (kind 'low': lowest week <= 35) for each dated window."""
+def check_windows(series: list, weeks: list, nfam: list | None, dates: tuple, kind: str, half: int = HALF,
+                  top_min: float = TOP_MIN) -> list[dict]:
+    """B1 (kind 'top': highest week >= `top_min`, 70; v6 also asks 75) or B2 (kind 'low': lowest week <= 35) for each
+    dated window."""
     out = []
     for d in dates:
         pos = [i for i in window_positions(weeks, ordinal(d), half) if series[i] is not None]
@@ -422,7 +466,7 @@ def check_windows(series: list, weeks: list, nfam: list | None, dates: tuple, ki
             continue
         pick = max(pos, key=lambda i: series[i]) if kind == "top" else min(pos, key=lambda i: series[i])
         v = series[pick]
-        ok = v >= TOP_MIN if kind == "top" else v <= LOW_MAX
+        ok = v >= top_min if kind == "top" else v <= LOW_MAX
         out.append({"date": d, "status": "pass" if ok else "fail", "value": round(v, 1), "week": iso(weeks[pick]),
                     "thin": bool(nfam is not None and nfam[pick] == 2)})
     return out
@@ -520,3 +564,44 @@ def top_zone_share(series: list) -> tuple:
         return None, 0
     longest = max((b - a + 1 for a, b in runs_at_or_above(series, SATURATED)), default=0)
     return sum(1 for v in vals if v >= SATURATED) / len(vals), longest
+
+
+# ---- the peak signal (v6, written down before the first run: RESULT.md) ------------------------------
+
+PEAK_LOOK, PEAK_BACK, PEAK_DROP, PEAK_QUIET, PEAK_HALF = 13, 26, 15.0, 26, 8
+
+
+def peak_signals(index: list) -> list[int]:
+    """Weeks at which "the peak is behind us" fires: the index was at 75 or more in some of the last 13 weeks and its
+    4-week mean is 15 points under the highest 4-week mean of the last 26 weeks. It fires on the first week that holds
+    after one that did not, and not within 26 weeks of the previous signal. It is late by construction."""
+    m = moving_mean(index, 4)
+    out, prev, last = [], False, None
+    for i in range(len(index)):
+        hot = any(v is not None and v >= SATURATED for v in index[max(0, i - PEAK_LOOK + 1):i + 1])
+        back = [v for v in m[max(0, i - PEAK_BACK + 1):i + 1] if v is not None]
+        cond = bool(hot and m[i] is not None and back and m[i] <= max(back) - PEAK_DROP)
+        if cond and not prev and (last is None or i - last > PEAK_QUIET):
+            out.append(i)
+            last = i
+        prev = cond
+    return out
+
+
+def score_signals(signals: list[int], weeks: list, top_dates: tuple, other_tops: list[int], half: int = PEAK_HALF) -> dict:
+    """A dated top is caught if a signal fires within `half` weeks of it (the delay is signed, in weeks, from the top to
+    the nearest such signal). A false alarm is a signal with no dated top and no other alt-basket top (`other_tops`,
+    positions) within `half` weeks."""
+    tops = []
+    for d in top_dates:
+        c = ordinal(d)
+        tops.append(min(range(len(weeks)), key=lambda i: abs(weeks[i] - c)))
+    per_top = []
+    for d, p in zip(top_dates, tops):
+        near = [s for s in signals if abs(s - p) <= half]
+        pick = min(near, key=lambda s: abs(s - p)) if near else None
+        per_top.append({"date": d, "caught": pick is not None, "delay": None if pick is None else pick - p})
+    allowed = tops + list(other_tops)
+    false = [s for s in signals if not any(abs(s - p) <= half for p in allowed)]
+    return {"tops": per_top, "caught": sum(t["caught"] for t in per_top), "signals": len(signals),
+            "false_alarms": len(false), "false_weeks": false}

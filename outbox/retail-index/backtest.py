@@ -1,9 +1,11 @@
-"""The back-test of retail index v5 against the rules in RESULT.md, one table, and the same checks on every baseline.
+"""The back-test of retail index v5 (or, with --v6, the social index v6) against the rules in RESULT.md, one table, and
+the same checks on every baseline.
 
-    python -I outbox/retail-index/backtest.py [--json]
+    python -I outbox/retail-index/backtest.py [--json] [--v6 [--v6b]]
 
-No network: it reads `data/weekly.csv`. Same table in, same bytes out (the last line is a digest of every number, so an
-A/A run is one comparison). Nothing here is fitted.
+No network: it reads `data/weekly.csv` (and `data/social_weekly.csv` for v6). Same table in, same bytes out (the last
+line is a digest of every number, so an A/A run is one comparison). Nothing here is fitted. `--v6b` adds the variant
+written down beside v6 (social + turnover + premia); RESULT.md says to show it only if v6 fails.
 """
 from __future__ import annotations
 
@@ -21,7 +23,6 @@ from qa.paths import atomic_write  # noqa: E402
 
 DATA = HERE / "data"
 SEGMENTS = {"all": (None, None), "2018-2023": (None, R.ordinal("2023-12-31")), "2024-now": (R.ordinal("2024-01-01"), None)}
-FEATURES = [c for cols in R.FAMILIES.values() for c, _ in cols]
 
 
 def mask(series, weeks, lo, hi):
@@ -45,22 +46,37 @@ def r1(x):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--json", action="store_true", help="also write data/backtest.json")
+    ap.add_argument("--json", action="store_true", help="also write data/backtest.json (data/backtest_v6.json with --v6)")
+    ap.add_argument("--v6", action="store_true", help="score the social index v6 instead of v5")
+    ap.add_argument("--v6b", action="store_true", help="with --v6: also the social + turnover + premia variant")
     args = ap.parse_args(argv)
 
     table = R.read_table((DATA / "weekly.csv").read_text(encoding="utf-8"))
+    fams = R.FAMILIES
+    if args.v6:
+        table = R.merge_social(table, (DATA / "social_weekly.csv").read_text(encoding="utf-8"))
+        fams = R.SOCIAL_FAMILIES
+    features = [c for cols in fams.values() for c, _ in cols]
     weeks = table["week"]
     n = len(weeks)
-    res = R.compute_index(table)
+    res = R.compute_index(table, families=fams if args.v6 else None)
+    ours = "v6 (ours)" if args.v6 else "v5 (ours)"
     sets = {
-        "v5 (ours)": (res["index"], res["nfam"]),
-        "v5 4w (post-hoc)": (R.moving_mean(res["index"]), res["nfam"]),
+        ours: (res["index"], res["nfam"]),
+        ours.replace(" (ours)", " 4w (post-hoc)"): (R.moving_mean(res["index"]), res["nfam"]),
         "Cymetica v4": (table["cy_v4"], None),
         "Cymetica v3": (table["cy_v3"], None),
         "Fear & Greed": (table["fng"], None),
         "BTC price pct": (R.trailing_percentile(table["btc"]), None),
         "Funding pct": (R.trailing_percentile(table["fund"]), None),
     }
+    if args.v6:
+        v5 = R.compute_index(table)
+        sets["v5 (earlier)"] = (v5["index"], v5["nfam"])
+        sets["Wikipedia only"] = (res["families"]["attention"], None)
+        if args.v6b:
+            b = R.compute_index(table, families=R.V6B_FAMILIES)
+            sets["v6b (+turnover, premia)"] = (b["index"], b["nfam"])
     alt, btc = table["alt_level"], table["btc"]
     out: dict = {"weeks": n, "scored": sum(v is not None for v in res["index"])}
     lines: list[str] = []
@@ -79,8 +95,15 @@ def main(argv=None):
         lows = R.check_windows(s, weeks, nf, R.LOW_DATES, "low")
         out["b1b2"][name] = {"tops": tops, "lows": lows}
         v1, v2 = verdict(tops), verdict(lows)
+        extra = ""
+        if args.v6:
+            v75 = verdict(R.check_windows(s, weeks, nf, R.TOP_DATES, "top", top_min=75.0))
+            out["b1b2"][name]["b1_75"] = v75
+            extra = f"   B1' {'-' if v75 is None else ('PASS' if v75 else 'FAIL')}"
         say(f"{name:14}" + "".join(f"{cell(r):>9}" for r in tops) + " |" + "".join(f"{cell(r):>9}" for r in lows)
-            + f"   {'-' if v1 is None else ('PASS' if v1 else 'FAIL'):4}  {'-' if v2 is None else ('PASS' if v2 else 'FAIL'):4}")
+            + f"   {'-' if v1 is None else ('PASS' if v1 else 'FAIL'):4}  {'-' if v2 is None else ('PASS' if v2 else 'FAIL'):4}" + extra)
+    if args.v6:
+        say("   B1' = the same top windows asked for 75 instead of 70 (the v6 bar)")
     say()
 
     # ---- B3 price proxy -------------------------------------------------------------------------
@@ -98,13 +121,13 @@ def main(argv=None):
     say()
 
     # ---- B4 robustness --------------------------------------------------------------------------
-    say("B4 robustness of v5: leave one family out (latest reading moves by <= 15; B1/B2 verdict unchanged), leave one cycle out")
-    base_top = verdict(out["b1b2"]["v5 (ours)"]["tops"])
-    base_low = verdict(out["b1b2"]["v5 (ours)"]["lows"])
+    say(f"B4 robustness of {ours.split()[0]}: leave one family out (latest reading moves by <= 15; B1/B2 verdict unchanged), leave one cycle out")
+    base_top = verdict(out["b1b2"][ours]["tops"])
+    base_low = verdict(out["b1b2"][ours]["lows"])
     now_base = res["index"][-1]
     out["b4"] = {"family": {}, "cycle": {}, "latest": r1(now_base)}
-    for fam in R.FAMILIES:
-        r = R.compute_index(table, drop_family=fam)
+    for fam in fams:
+        r = R.compute_index(table, drop_family=fam, families=fams if args.v6 else None)
         t = verdict(R.check_windows(r["index"], weeks, r["nfam"], R.TOP_DATES, "top"))
         lo = verdict(R.check_windows(r["index"], weeks, r["nfam"], R.LOW_DATES, "low"))
         d = None if r["index"][-1] is None or now_base is None else r["index"][-1] - now_base
@@ -120,11 +143,11 @@ def main(argv=None):
             return (lo is None or day >= lo) and (hi is None or day <= hi)
 
         t2 = {k: v[:] for k, v in table.items()}
-        for k in FEATURES:
+        for k in features:
             for i, w in enumerate(weeks):
                 if inside(w):
                     t2[k][i] = None
-        r = R.compute_index(t2)
+        r = R.compute_index(t2, families=fams if args.v6 else None)
         changed = []
         for kind, d in all_dates:
             if inside(R.ordinal(d)):
@@ -214,15 +237,50 @@ def main(argv=None):
     # ---- the reading now ------------------------------------------------------------------------
     say("Now (latest week " + R.iso(weeks[-1]) + "): " + ", ".join(
         f"{name} {('%.0f' % s[-1]) if s[-1] is not None else '-'}" for name, (s, _nf) in sets.items())
-        + f"; v5 zone {R.zone(res['index'][-1])}, families {res['nfam'][-1]}")
+        + f"; {ours.split()[0]} zone {R.zone(res['index'][-1])}, families {res['nfam'][-1]}")
     out["now"] = {name: r1(s[-1]) for name, (s, _nf) in sets.items()}
+
+    if args.v6:
+        # ---- the peak signal, the rule written before the first run ---------------------------------
+        say()
+        say("Peak signal (hot in the last 13 weeks, 4-week mean 15 under its 26-week high; once per 26 weeks): tops caught within 8 weeks,"
+            " signed delay in weeks, false alarms")
+        out["peak"] = {}
+        for name in (ours, "Cymetica v3", "Cymetica v4"):
+            s = sets[name][0]
+            sig = R.peak_signals(s)
+            sc = R.score_signals(sig, weeks, R.TOP_DATES, tops_pos)
+            out["peak"][name] = {"signals": [R.iso(weeks[i]) for i in sig], "caught": sc["caught"], "false_alarms": sc["false_alarms"],
+                                 "tops": sc["tops"]}
+            cells = "  ".join(f"{t['date'][:7]} " + ("miss" if not t["caught"] else f"{t['delay']:+d}w") for t in sc["tops"])
+            say(f"  {name:14} {sc['caught']} of {len(R.TOP_DATES)} caught  [{cells}]  signals {sc['signals']}, false alarms {sc['false_alarms']}")
+        say("  v6 signal weeks: " + ", ".join(out["peak"][ours]["signals"]))
+
+        # ---- the done-when, line by line ---------------------------------------------------------------
+        say()
+        say("Done-when for v6, from the numbers above:")
+        mine = out["b1b2"][ours]
+        hit75 = verdict(R.check_windows(res["index"], weeks, res["nfam"], R.TOP_DATES, "top", top_min=75.0))
+        share, longest = R.top_zone_share(res["index"])
+        b8 = out["b8"][ours]
+        lines_ = [
+            ("B1' every scorable top window holds a week at 75+", hit75),
+            ("B2 every scorable low window holds a week at 35-", verdict(mine["lows"])),
+            ("B3 |rho| with BTC at most 0.40", out["b3"][ours] is not None and abs(out["b3"][ours]) <= R.SPEARMAN_MAX),
+            ("B9 at most 10% of weeks at 75+, no run over 26", share is not None and share <= R.SHARE_MAX and longest <= 26),
+            ("B8 permutation p at most 0.05", b8["p"] is not None and b8["p"] <= 0.05),
+            ("75+ runs that contain a confirmed top: at least 75%", b8["precision_posthoc"] is not None and b8["precision_posthoc"] >= 0.75),
+        ]
+        out["done_when"] = {k: v for k, v in lines_}
+        for k, v in lines_:
+            say(f"  [{'x' if v else ' '}] {k}")
 
     body = json.dumps(out, sort_keys=True, indent=1)
     digest = hashlib.sha256(body.encode()).hexdigest()[:16]
     say(f"digest {digest}")
     print("\n".join(lines))
     if args.json:
-        atomic_write(DATA / "backtest.json", body + "\n")
+        atomic_write(DATA / ("backtest_v6.json" if args.v6 else "backtest.json"), body + "\n")
     return 0
 
 

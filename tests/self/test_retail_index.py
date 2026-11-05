@@ -147,3 +147,110 @@ def test_the_top_zone_share_counts_scored_weeks_and_the_longest_run():
     series = [None, 10, 80, 80, 80, 20, 76, 30]
     share, longest = R.top_zone_share(series)
     assert abs(share - 4 / 7) < 1e-12 and longest == 3
+
+
+# ---- v6: social families and the peak signal -------------------------------------------------------
+
+def _social_table(n=330, **cols):
+    base = R.ordinal("2018-01-01")
+    t = {"week": [base + 7 * i for i in range(n)]}
+    for k in [c for f in R.SOCIAL_FAMILIES.values() for c, _ in f]:
+        t[k] = [None] * n
+    t.update(cols)
+    return t
+
+
+def test_wikimedia_rows_become_days():
+    rows = [{"timestamp": "2021112600", "views": 21497}, {"timestamp": "bad", "views": 1}, {"views": 3}]
+    assert R.parse_wikimedia(rows) == {R.ordinal("2021-11-26"): 21497.0}
+
+
+def test_a_reddit_week_is_sampled_on_its_tuesday_and_friday_and_stands_for_the_week_times_three_and_a_half():
+    W = R.ordinal("2024-03-11")            # a Monday: the week holds [W-7, W)
+    days = R.sample_days(W - 7, W)
+    assert [R.date.fromordinal(d).strftime("%a") for d in days] == ["Tue", "Fri"]
+    assert all(W - 7 <= d < W for d in days)
+    daily = {days[0]: 100, days[1]: 300}
+    assert R.week_sum(daily, W, min_days=2) == 1400.0       # (100 + 300) x 3.5
+    assert R.week_sum({days[0]: 100}, W, min_days=2) is None   # one sampled day is not a week
+    # a range that starts mid-week keeps only the days inside it
+    assert R.sample_days(W - 5, W - 2) == [W - 3]
+
+
+def test_the_social_index_uses_only_social_columns_and_the_default_still_uses_v5s():
+    n = 330
+    t = _social_table(n, wiki_bitcoin=[100.0 + (i % 7) for i in range(n)], rd_cc=[50.0 + (i % 5) for i in range(n)])
+    t["cb_turn"] = [1.0 + (i % 3) for i in range(n)]
+    social = R.compute_index(t, families=R.SOCIAL_FAMILIES)
+    assert list(social["families"]) == ["attention", "crowd", "degen"]
+    assert "cb_turn" not in social["members"]
+    assert social["nfam"][-1] == 2 and social["index"][-1] is not None   # attention + crowd, degen absent: thin
+    v5 = R.compute_index(t)
+    assert list(v5["families"]) == list(R.FAMILIES) and "wiki_bitcoin" not in v5["members"]
+
+
+def test_a_social_burst_reads_high_and_a_later_week_does_not_move_an_earlier_one():
+    n = 330
+    wiki = [100.0] * n
+    reddit = [40.0] * n
+    for i in range(300, 306):
+        wiki[i], reddit[i] = 400.0, 200.0
+    t = _social_table(n, wiki_bitcoin=wiki, wiki_ethereum=wiki[:], rd_cc=reddit, rd_btc=reddit[:])
+    full = R.compute_index(t, families=R.SOCIAL_FAMILIES)["index"]
+    cut = {k: (v[:304] if isinstance(v, list) else v) for k, v in t.items()}
+    early = R.compute_index(cut, families=R.SOCIAL_FAMILIES)["index"]
+    assert full[303] > 90 and full[250] < 60
+    assert early[:304] == full[:304]
+
+
+def test_the_index_csv_names_the_families_it_was_given():
+    n = 330
+    t = _social_table(n, wiki_bitcoin=[1.0 + (i % 4) for i in range(n)], rd_cc=[2.0 + (i % 3) for i in range(n)])
+    r = R.compute_index(t, families=R.SOCIAL_FAMILIES)
+    head = R.index_csv(t, r).splitlines()[0]
+    assert head == "week,index,nfam,zone,attention,crowd,degen"
+
+
+def _weeks(n):
+    return [R.ordinal("2020-01-06") + 7 * i for i in range(n)]
+
+
+def test_the_peak_signal_waits_for_the_fall_and_is_silent_when_the_index_never_got_hot():
+    never = [50.0] * 60
+    assert R.peak_signals(never) == []
+    rise_fall = [30.0] * 10 + [80.0] * 6 + [80 - 8 * k for k in range(1, 13)] + [20.0] * 30
+    sig = R.peak_signals(rise_fall)
+    assert len(sig) == 1
+    # the 4-week mean has fallen 15 below its high only some weeks after the peak, never before it
+    assert sig[0] > 15
+    assert max(v for v in rise_fall[:sig[0] + 1]) == 80.0
+
+
+def test_the_peak_signal_does_not_fire_twice_inside_26_weeks_and_fires_again_after():
+    one = [30.0] * 10 + [80.0] * 5 + [20.0] * 12
+    two = one + [30.0] * 4 + [80.0] * 5 + [20.0] * 12
+    three = one + [30.0] * 40 + [80.0] * 5 + [20.0] * 12
+    assert len(R.peak_signals(two)) == 1
+    assert len(R.peak_signals(three)) == 2
+
+
+def test_the_signal_score_counts_a_top_within_eight_weeks_and_a_far_signal_as_false():
+    weeks = _weeks(200)
+    top_pos = 100
+    top_date = R.iso(weeks[top_pos])
+    s = R.score_signals([top_pos + 5, 20], weeks, (top_date,), other_tops=[])
+    assert s["caught"] == 1 and s["tops"][0]["delay"] == 5
+    assert s["signals"] == 2 and s["false_alarms"] == 1 and s["false_weeks"] == [20]
+    other = R.score_signals([top_pos + 5, 20], weeks, (top_date,), other_tops=[22])
+    assert other["false_alarms"] == 0
+    miss = R.score_signals([top_pos + 9], weeks, (top_date,), other_tops=[])
+    assert miss["caught"] == 0 and miss["tops"][0]["delay"] is None
+
+
+def test_the_top_window_check_can_ask_for_75_instead_of_70():
+    weeks = _weeks(200)
+    series = [40.0] * 200
+    series[100] = 72.0
+    d = R.iso(weeks[100])
+    assert R.check_windows(series, weeks, None, (d,), "top")[0]["status"] == "pass"
+    assert R.check_windows(series, weeks, None, (d,), "top", top_min=75.0)[0]["status"] == "fail"

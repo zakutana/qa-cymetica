@@ -47,7 +47,7 @@ def rows() -> list[dict]:
 def read_back(table, result):
     weeks, alt, btc = table["week"], table["alt_level"], table["btc"]
     at = {R.iso(w): i for i, w in enumerate(weeks)}
-    print("logged week   index  zone       families  alt +13w  alt +26w  BTC +13w  BTC +26w")
+    print("logged week   v5     v6    v6 signal  alt +13w  alt +26w  BTC +13w  BTC +26w")
     for r in rows():
         i = at.get(r["week"])
         cells = []
@@ -55,7 +55,8 @@ def read_back(table, result):
             for h in (13, 26):
                 v = R.forward_return(lvl, i, h) if i is not None else None
                 cells.append("   later " if v is None else f"{100 * v:+8.0f}%")
-        print(f"{r['week']}  {r['index']:5.1f}  {r['zone']:9}  {r['nfam']:8d}  " + " ".join(cells))
+        v6 = r.get("v6")
+        print(f"{r['week']}  {r['index']:5.1f}  {('%5.1f' % v6['index']) if v6 else '    -'}  {('SIGNAL' if v6['peak_signal'] else '-') if v6 else '':9}  " + " ".join(cells))
 
 
 def main(argv=None):
@@ -68,8 +69,17 @@ def main(argv=None):
         if code not in (0, 1):
             print("fetch failed outright, nothing logged", file=sys.stderr)
             return code
+        # the social rows: Wikimedia again, Reddit only the new days (cached), and the live record that has no history.
+        # A failure is named by those scripts; the v6 reading below needs the files they leave, never a guess.
+        for script in ("fetch_social.py", "collect_live.py"):
+            subprocess.call([sys.executable, "-I", str(HERE / script)])
     table = R.read_table((DATA / "weekly.csv").read_text(encoding="utf-8"))
     result = R.compute_index(table)
+    social_file = DATA / "social_weekly.csv"
+    result6 = None
+    if social_file.exists():
+        table = R.merge_social(table, social_file.read_text(encoding="utf-8"))
+        result6 = R.compute_index(table, families=R.SOCIAL_FAMILIES)
     if args.read:
         read_back(table, result)
         return 0
@@ -90,11 +100,19 @@ def main(argv=None):
            "baselines": {"funding_pct": R.trailing_percentile(table["fund"])[i], "fear_greed": table["fng"][i],
                          "btc_price_pct": R.trailing_percentile(table["btc"])[i]},
            "code_sha256": hashlib.sha256((REPO / "qa" / "retailindex.py").read_bytes()).hexdigest()[:16]}
+    if result6 is not None and result6["index"][i] is not None:
+        ma6 = R.moving_mean(result6["index"])[i]
+        row["v6"] = {"index": round(result6["index"][i], 2), "zone": R.zone(result6["index"][i]), "nfam": result6["nfam"][i],
+                     "index_4w": None if ma6 is None else round(ma6, 2),
+                     "families": {f: (None if result6["families"][f][i] is None else round(result6["families"][f][i], 2)) for f in R.SOCIAL_FAMILIES},
+                     # does the peak signal fire this very week (the rule in RESULT.md, v6 section)
+                     "peak_signal": i in R.peak_signals(result6["index"])}
     p = log_path()
     p.parent.mkdir(parents=True, exist_ok=True)
     with p.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(row, sort_keys=True) + "\n")
-    print(f"logged {week}: index {row['index']} ({row['zone']}), {row['nfam']} families; Cymetica v4 {row['cymetica_v4']}, v3 {row['cymetica_v3']}")
+    v6 = f"; v6 {row['v6']['index']} ({row['v6']['zone']})" + (", PEAK SIGNAL" if row["v6"]["peak_signal"] else "") if "v6" in row else ""
+    print(f"logged {week}: v5 {row['index']} ({row['zone']}), {row['nfam']} families; Cymetica v4 {row['cymetica_v4']}, v3 {row['cymetica_v3']}{v6}")
     return 0
 
 
