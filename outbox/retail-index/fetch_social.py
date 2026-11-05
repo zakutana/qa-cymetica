@@ -127,7 +127,7 @@ def read_reddit(client, sub, end, refresh=False):
                 rows = get(client, f"{ARCTIC}/posts/search/aggregate",
                            params={"subreddit": sub, "aggregate": "created_utc", "frequency": "day",
                                    "after": R.iso(d), "before": R.iso(d + 1)}, tries=1)
-            except Slow:
+            except SourceError:   # a timeout (Slow) or a dropped connection: this day is asked again in the next pass
                 failed.append(d)
                 time.sleep(1)
                 continue
