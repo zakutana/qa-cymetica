@@ -231,3 +231,40 @@ forecast one. Scored identically on v6, v3 and v4:
 
 If it does not pass, the report says so with the table; nothing is tuned until it does. The index can say "saturated" in the past
 top windows and quiet in the lows; whether it does so in 2027 is the only test left, and the forward log is where it is run.
+
+## Result v6, read 2026-11-05 (`python -I backtest.py --v6 [--v6b]`, digests 42bafe1a9c60a1f5 and 0e8c12c77bb989b5, each run twice with identical output)
+
+`data/social_weekly.csv`: Wikimedia every day, six subreddits on the sampled Tuesday and Friday of each week (all sampled days answered
+after retries; `data/social_sources.json`). Nothing tuned after the first run.
+
+| | B1 tops at 70 | **B1' at 75** | B2 lows (35-) | B3 rho vs BTC | B9 weeks at 75+, longest run | B8 p | 75+ runs holding a top |
+|---|---|---|---|---|---|---|---|
+| **v6 (ours)** | PASS 96 92 72 78 | **FAIL** (72 at 2021-11) | **FAIL** 2 8 **38** | **+0.45 FAIL** | **16.0%, 42 wk FAIL** | 0.062 FAIL | 100% of 3 (pass) |
+| v6b (written beside it) | FAIL 97 93 **67** 72 | FAIL | PASS 6 18 29 | +0.39 PASS | 13.3%, 24 wk FAIL | 0.041 | 33% |
+| Cymetica v3 | PASS | PASS | PASS | +0.65 | 21.3%, 64 wk | 0.009 | 75% |
+| Wikipedia only (baseline) | PASS 98 97 80 87 | PASS | PASS 1 4 29 | +0.48 | 17.8%, 32 wk | 0.022 | 64% |
+| v5 (earlier) | FAIL (54 at 2021-11) | FAIL | PASS | +0.29 | 9.8%, 14 wk | 0.036 | 50% |
+
+**v6 meets one of its six lines** (the share of 75+ runs holding a top; three runs). It fails B1' at 2021-11 (72), B2 at 2023-09 (38), B3, B9 and B8.
+The report says so; nothing is tuned.
+
+**Peak signal** (rule above, same on all three): v6 catches **1 of 4** tops (2018-01, +5 weeks), signals on 2018-02-19 and 2021-08-23, one false alarm;
+v3 catches 2 of 4 (+7 and +6 weeks) with 5 signals and 2 false alarms; v4 catches 0 of 4 with 4 false alarms of 5. It misses 2021-05 (its signal fired
+in 2021-08, 14 weeks late), 2021-11 and 2024-12 (the index never fell far enough under its high to fire).
+
+What the numbers say, and what they do not:
+- **Social attention is not free of price either**: v6 +0.45 and Wikipedia alone +0.48 against the BTC close. People look at and talk about crypto when it is
+  going up, so a measure of attention cannot be separated from price by choosing a different source. v3's +0.65 is the same fault, only larger.
+- **Wikipedia alone does what v6 asks of the dated windows** (7 of 7, p 0.022) and the Reddit families make it worse (B2 at 2023-09, B9). That was not a
+  choice written before the run (it was a baseline), so it is not adopted; it is read, and it is the next thing to test forward.
+- **The 4-week mean is worse than the weekly line at the tops** (2021-11: 70 -> fails the 75 bar by more), as in v5; it is for the eye and for the peak signal only.
+- **No measure here is a reliable sell at 75+**: alt basket 13 weeks later is up on average in 2018-2023 for v6 (+84%, interval -8 to +293, 33 weeks) as for
+  v3 (+79%) and v5 (+185%); the interval holds zero in every case. 75+ means hot, not over.
+- **Today (week of 2026-11-02): v6 36 (waking; 4-week mean 23), Wikipedia 54, v5 45, v3 39, v4 14.** All of them say the same thing: retail is not at a top.
+- B4: leaving out attention moves the latest reading by -9.3 and changes the B1 verdict (it is flagged); leaving out the 2018 cycle flips 2021-11 to a fail.
+
+Limits that stay: four tops; the Reddit members are two sampled days a week; Reddit membership and rules change; Wikipedia attention has been decaying
+since chatbots took lookups; English language only; X, TikTok, YouTube and the App Store chart have no history here (the last two are collected from
+2026-11-05 by `collect_live.py` and join after 52 weeks).
+
+Forward: `tick.py` now logs v5 and v6 and whether the peak signal fires that week; read it with `tick.py --read`.

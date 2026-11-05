@@ -1,0 +1,38 @@
+{
+ "as_of": "2026-11-05",
+ "last_week": "2026-11-02",
+ "not_read": {},
+ "note": "Reddit is sampled on the Tuesday and the Friday of each week (RESULT.md, amendment 1), times 3.5; its days are Prague days (the archive buckets in local time): up to 2 h off a UTC day.",
+ "reddit_covered": {
+  "rd_alt": {
+   "sampled_days_read": 1235,
+   "sampled_days_unread": 0,
+   "start": "2015-01-01"
+  },
+  "rd_btc": {
+   "sampled_days_read": 1235,
+   "sampled_days_unread": 0,
+   "start": "2015-01-01"
+  },
+  "rd_cc": {
+   "sampled_days_read": 1235,
+   "sampled_days_unread": 0,
+   "start": "2015-01-01"
+  },
+  "rd_cms": {
+   "sampled_days_read": 926,
+   "sampled_days_unread": 0,
+   "start": "2017-12-16"
+  },
+  "rd_eth": {
+   "sampled_days_read": 1211,
+   "sampled_days_unread": 0,
+   "start": "2015-03-25"
+  },
+  "rd_ssb": {
+   "sampled_days_read": 698,
+   "sampled_days_unread": 0,
+   "start": "2020-02-23"
+  }
+ }
+}

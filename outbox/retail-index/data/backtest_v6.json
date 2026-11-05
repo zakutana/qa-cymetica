@@ -1,0 +1,1785 @@
+{
+ "b1b2": {
+  "BTC price pct": {
+   "b1_75": true,
+   "lows": [
+    {
+     "date": "2018-12-17",
+     "status": "fail",
+     "thin": false,
+     "value": 59.3,
+     "week": "2019-01-28"
+    },
+    {
+     "date": "2022-11-21",
+     "status": "fail",
+     "thin": false,
+     "value": 48.3,
+     "week": "2023-01-02"
+    },
+    {
+     "date": "2023-09-04",
+     "status": "fail",
+     "thin": false,
+     "value": 50.7,
+     "week": "2023-09-11"
+    }
+   ],
+   "tops": [
+    {
+     "date": "2018-01-15",
+     "status": "pass",
+     "thin": false,
+     "value": 99.6,
+     "week": "2017-12-18"
+    },
+    {
+     "date": "2021-05-17",
+     "status": "pass",
+     "thin": false,
+     "value": 99.8,
+     "week": "2021-04-12"
+    },
+    {
+     "date": "2021-11-08",
+     "status": "pass",
+     "thin": false,
+     "value": 99.8,
+     "week": "2021-10-18"
+    },
+    {
+     "date": "2024-12-16",
+     "status": "pass",
+     "thin": false,
+     "value": 99.8,
+     "week": "2024-11-11"
+    }
+   ]
+  },
+  "Cymetica v3": {
+   "b1_75": true,
+   "lows": [
+    {
+     "date": "2018-12-17",
+     "status": "pass",
+     "thin": false,
+     "value": 2.7,
+     "week": "2018-11-12"
+    },
+    {
+     "date": "2022-11-21",
+     "status": "pass",
+     "thin": false,
+     "value": 25.2,
+     "week": "2023-01-02"
+    },
+    {
+     "date": "2023-09-04",
+     "status": "pass",
+     "thin": false,
+     "value": 12.9,
+     "week": "2023-09-25"
+    }
+   ],
+   "tops": [
+    {
+     "date": "2018-01-15",
+     "status": "pass",
+     "thin": false,
+     "value": 100.0,
+     "week": "2017-12-04"
+    },
+    {
+     "date": "2021-05-17",
+     "status": "pass",
+     "thin": false,
+     "value": 99.6,
+     "week": "2021-05-24"
+    },
+    {
+     "date": "2021-11-08",
+     "status": "pass",
+     "thin": false,
+     "value": 76.3,
+     "week": "2021-12-13"
+    },
+    {
+     "date": "2024-12-16",
+     "status": "pass",
+     "thin": false,
+     "value": 93.5,
+     "week": "2024-12-09"
+    }
+   ]
+  },
+  "Cymetica v4": {
+   "b1_75": false,
+   "lows": [
+    {
+     "date": "2018-12-17",
+     "status": "fail",
+     "thin": false,
+     "value": 48.8,
+     "week": "2018-11-12"
+    },
+    {
+     "date": "2022-11-21",
+     "status": "fail",
+     "thin": false,
+     "value": 54.8,
+     "week": "2023-01-02"
+    },
+    {
+     "date": "2023-09-04",
+     "status": "pass",
+     "thin": false,
+     "value": 22.5,
+     "week": "2023-08-14"
+    }
+   ],
+   "tops": [
+    {
+     "date": "2018-01-15",
+     "status": "pass",
+     "thin": false,
+     "value": 74.6,
+     "week": "2018-01-15"
+    },
+    {
+     "date": "2021-05-17",
+     "status": "pass",
+     "thin": false,
+     "value": 98.2,
+     "week": "2021-05-31"
+    },
+    {
+     "date": "2021-11-08",
+     "status": "pass",
+     "thin": false,
+     "value": 70.1,
+     "week": "2021-09-27"
+    },
+    {
+     "date": "2024-12-16",
+     "status": "pass",
+     "thin": false,
+     "value": 73.9,
+     "week": "2024-12-09"
+    }
+   ]
+  },
+  "Fear & Greed": {
+   "b1_75": false,
+   "lows": [
+    {
+     "date": "2018-12-17",
+     "status": "pass",
+     "thin": false,
+     "value": 9.0,
+     "week": "2018-11-26"
+    },
+    {
+     "date": "2022-11-21",
+     "status": "pass",
+     "thin": false,
+     "value": 22.0,
+     "week": "2022-10-10"
+    },
+    {
+     "date": "2023-09-04",
+     "status": "fail",
+     "thin": false,
+     "value": 37.0,
+     "week": "2023-08-21"
+    }
+   ],
+   "tops": [
+    {
+     "date": "2018-01-15",
+     "status": "fail",
+     "thin": false,
+     "value": 63.0,
+     "week": "2018-02-19"
+    },
+    {
+     "date": "2021-05-17",
+     "status": "pass",
+     "thin": false,
+     "value": 79.0,
+     "week": "2021-04-19"
+    },
+    {
+     "date": "2021-11-08",
+     "status": "pass",
+     "thin": false,
+     "value": 79.0,
+     "week": "2021-10-18"
+    },
+    {
+     "date": "2024-12-16",
+     "status": "pass",
+     "thin": false,
+     "value": 90.0,
+     "week": "2024-11-18"
+    }
+   ]
+  },
+  "Funding pct": {
+   "b1_75": true,
+   "lows": [
+    {
+     "date": "2018-12-17",
+     "status": "not scorable",
+     "thin": false,
+     "value": null,
+     "week": null
+    },
+    {
+     "date": "2022-11-21",
+     "status": "pass",
+     "thin": false,
+     "value": 1.5,
+     "week": "2022-11-14"
+    },
+    {
+     "date": "2023-09-04",
+     "status": "pass",
+     "thin": false,
+     "value": 9.9,
+     "week": "2023-08-28"
+    }
+   ],
+   "tops": [
+    {
+     "date": "2018-01-15",
+     "status": "not scorable",
+     "thin": false,
+     "value": null,
+     "week": null
+    },
+    {
+     "date": "2021-05-17",
+     "status": "pass",
+     "thin": false,
+     "value": 94.6,
+     "week": "2021-04-19"
+    },
+    {
+     "date": "2021-11-08",
+     "status": "pass",
+     "thin": false,
+     "value": 76.5,
+     "week": "2021-11-08"
+    },
+    {
+     "date": "2024-12-16",
+     "status": "pass",
+     "thin": false,
+     "value": 86.8,
+     "week": "2024-12-09"
+    }
+   ]
+  },
+  "Wikipedia only": {
+   "b1_75": true,
+   "lows": [
+    {
+     "date": "2018-12-17",
+     "status": "pass",
+     "thin": false,
+     "value": 1.1,
+     "week": "2019-01-28"
+    },
+    {
+     "date": "2022-11-21",
+     "status": "pass",
+     "thin": false,
+     "value": 4.1,
+     "week": "2022-10-10"
+    },
+    {
+     "date": "2023-09-04",
+     "status": "pass",
+     "thin": false,
+     "value": 29.0,
+     "week": "2023-07-24"
+    }
+   ],
+   "tops": [
+    {
+     "date": "2018-01-15",
+     "status": "pass",
+     "thin": false,
+     "value": 98.5,
+     "week": "2017-12-18"
+    },
+    {
+     "date": "2021-05-17",
+     "status": "pass",
+     "thin": false,
+     "value": 97.0,
+     "week": "2021-05-17"
+    },
+    {
+     "date": "2021-11-08",
+     "status": "pass",
+     "thin": false,
+     "value": 80.2,
+     "week": "2021-11-01"
+    },
+    {
+     "date": "2024-12-16",
+     "status": "pass",
+     "thin": false,
+     "value": 87.3,
+     "week": "2024-12-09"
+    }
+   ]
+  },
+  "v5 (earlier)": {
+   "b1_75": false,
+   "lows": [
+    {
+     "date": "2018-12-17",
+     "status": "pass",
+     "thin": false,
+     "value": 8.3,
+     "week": "2019-01-28"
+    },
+    {
+     "date": "2022-11-21",
+     "status": "pass",
+     "thin": false,
+     "value": 30.1,
+     "week": "2023-01-02"
+    },
+    {
+     "date": "2023-09-04",
+     "status": "pass",
+     "thin": false,
+     "value": 23.2,
+     "week": "2023-08-28"
+    }
+   ],
+   "tops": [
+    {
+     "date": "2018-01-15",
+     "status": "pass",
+     "thin": true,
+     "value": 98.5,
+     "week": "2017-12-11"
+    },
+    {
+     "date": "2021-05-17",
+     "status": "pass",
+     "thin": false,
+     "value": 80.2,
+     "week": "2021-04-19"
+    },
+    {
+     "date": "2021-11-08",
+     "status": "fail",
+     "thin": false,
+     "value": 53.8,
+     "week": "2021-10-25"
+    },
+    {
+     "date": "2024-12-16",
+     "status": "pass",
+     "thin": false,
+     "value": 73.8,
+     "week": "2024-12-09"
+    }
+   ]
+  },
+  "v6 (ours)": {
+   "b1_75": false,
+   "lows": [
+    {
+     "date": "2018-12-17",
+     "status": "pass",
+     "thin": false,
+     "value": 1.9,
+     "week": "2018-12-31"
+    },
+    {
+     "date": "2022-11-21",
+     "status": "pass",
+     "thin": false,
+     "value": 8.2,
+     "week": "2023-01-02"
+    },
+    {
+     "date": "2023-09-04",
+     "status": "fail",
+     "thin": false,
+     "value": 37.8,
+     "week": "2023-08-07"
+    }
+   ],
+   "tops": [
+    {
+     "date": "2018-01-15",
+     "status": "pass",
+     "thin": false,
+     "value": 96.5,
+     "week": "2017-12-18"
+    },
+    {
+     "date": "2021-05-17",
+     "status": "pass",
+     "thin": false,
+     "value": 92.1,
+     "week": "2021-05-17"
+    },
+    {
+     "date": "2021-11-08",
+     "status": "pass",
+     "thin": false,
+     "value": 71.6,
+     "week": "2021-11-01"
+    },
+    {
+     "date": "2024-12-16",
+     "status": "pass",
+     "thin": false,
+     "value": 78.5,
+     "week": "2024-12-09"
+    }
+   ]
+  },
+  "v6 4w (post-hoc)": {
+   "b1_75": false,
+   "lows": [
+    {
+     "date": "2018-12-17",
+     "status": "pass",
+     "thin": false,
+     "value": 3.3,
+     "week": "2019-01-21"
+    },
+    {
+     "date": "2022-11-21",
+     "status": "pass",
+     "thin": false,
+     "value": 10.0,
+     "week": "2022-10-24"
+    },
+    {
+     "date": "2023-09-04",
+     "status": "fail",
+     "thin": false,
+     "value": 37.4,
+     "week": "2023-07-24"
+    }
+   ],
+   "tops": [
+    {
+     "date": "2018-01-15",
+     "status": "pass",
+     "thin": false,
+     "value": 95.0,
+     "week": "2017-12-25"
+    },
+    {
+     "date": "2021-05-17",
+     "status": "pass",
+     "thin": false,
+     "value": 91.0,
+     "week": "2021-05-24"
+    },
+    {
+     "date": "2021-11-08",
+     "status": "fail",
+     "thin": false,
+     "value": 69.7,
+     "week": "2021-11-22"
+    },
+    {
+     "date": "2024-12-16",
+     "status": "pass",
+     "thin": false,
+     "value": 75.8,
+     "week": "2024-12-16"
+    }
+   ]
+  }
+ },
+ "b3": {
+  "BTC price pct": 0.3624,
+  "Cymetica v3": 0.6464,
+  "Cymetica v4": -0.3889,
+  "Fear & Greed": 0.243,
+  "Funding pct": 0.1312,
+  "Wikipedia only": 0.4801,
+  "v5 (earlier)": 0.2894,
+  "v6 (ours)": 0.4527,
+  "v6 4w (post-hoc)": 0.4594
+ },
+ "b4": {
+  "cycle": {
+   "2019-2022": [
+    "2023-09 fail->not scorable"
+   ],
+   "2023 on": [],
+   "to 2018": [
+    "2021-11 pass->fail",
+    "2023-09 fail->pass"
+   ]
+  },
+  "family": {
+   "attention": {
+    "b1": false,
+    "b2": false,
+    "delta": -9.2949,
+    "latest": 26.5625
+   },
+   "crowd": {
+    "b1": true,
+    "b2": false,
+    "delta": 6.9912,
+    "latest": 42.8486
+   },
+   "degen": {
+    "b1": true,
+    "b2": false,
+    "delta": 2.3037,
+    "latest": 38.1611
+   }
+  },
+  "latest": 35.8574
+ },
+ "b5": {
+  "BTC price pct": {
+   "2018-2023|alt13": {
+    "diff": 0.1753,
+    "flagged": 163,
+    "hi": 0.9664,
+    "lo": -0.362,
+    "n": 291
+   },
+   "2018-2023|alt26": {
+    "diff": 0.5922,
+    "flagged": 163,
+    "hi": 2.4497,
+    "lo": -0.6295,
+    "n": 291
+   },
+   "2018-2023|btc13": {
+    "diff": 0.0866,
+    "flagged": 260,
+    "hi": 0.4266,
+    "lo": -0.2555,
+    "n": 388
+   },
+   "2018-2023|btc26": {
+    "diff": 0.157,
+    "flagged": 260,
+    "hi": 0.8439,
+    "lo": -0.4661,
+    "n": 388
+   },
+   "2024-now|alt13": {
+    "diff": -0.132,
+    "flagged": 108,
+    "hi": 0.209,
+    "lo": -0.3298,
+    "n": 136
+   },
+   "2024-now|alt26": {
+    "diff": -0.2898,
+    "flagged": 108,
+    "hi": 0.2197,
+    "lo": -0.4315,
+    "n": 123
+   },
+   "2024-now|btc13": {
+    "diff": 0.0136,
+    "flagged": 108,
+    "hi": 0.2216,
+    "lo": -0.1341,
+    "n": 136
+   },
+   "2024-now|btc26": {
+    "diff": 0.0284,
+    "flagged": 108,
+    "hi": 0.3433,
+    "lo": -0.1571,
+    "n": 123
+   },
+   "all|alt13": {
+    "diff": 0.0295,
+    "flagged": 271,
+    "hi": 0.5106,
+    "lo": -0.3374,
+    "n": 427
+   },
+   "all|alt26": {
+    "diff": 0.1379,
+    "flagged": 271,
+    "hi": 1.2564,
+    "lo": -0.6806,
+    "n": 414
+   },
+   "all|btc13": {
+    "diff": 0.0465,
+    "flagged": 368,
+    "hi": 0.3052,
+    "lo": -0.2326,
+    "n": 524
+   },
+   "all|btc26": {
+    "diff": 0.022,
+    "flagged": 368,
+    "hi": 0.5432,
+    "lo": -0.5099,
+    "n": 511
+   }
+  },
+  "Cymetica v3": {
+   "2018-2023|alt13": {
+    "diff": 0.7876,
+    "flagged": 26,
+    "hi": 2.9595,
+    "lo": -0.411,
+    "n": 291
+   },
+   "2018-2023|alt26": {
+    "diff": 0.0538,
+    "flagged": 26,
+    "hi": 1.2193,
+    "lo": -1.3895,
+    "n": 291
+   },
+   "2018-2023|btc13": {
+    "diff": 0.324,
+    "flagged": 97,
+    "hi": 0.8207,
+    "lo": -0.1735,
+    "n": 386
+   },
+   "2018-2023|btc26": {
+    "diff": 0.7598,
+    "flagged": 97,
+    "hi": 1.9167,
+    "lo": -0.3593,
+    "n": 386
+   },
+   "2024-now|alt13": {
+    "diff": -0.4283,
+    "flagged": 17,
+    "hi": -0.1464,
+    "lo": -0.6059,
+    "n": 136
+   },
+   "2024-now|alt26": {
+    "diff": -0.2575,
+    "flagged": 17,
+    "hi": 0.0331,
+    "lo": -0.4845,
+    "n": 123
+   },
+   "2024-now|btc13": {
+    "diff": -0.1649,
+    "flagged": 17,
+    "hi": 0.0124,
+    "lo": -0.2764,
+    "n": 136
+   },
+   "2024-now|btc26": {
+    "diff": 0.007,
+    "flagged": 17,
+    "hi": 0.2492,
+    "lo": -0.2315,
+    "n": 123
+   },
+   "all|alt13": {
+    "diff": 0.2911,
+    "flagged": 43,
+    "hi": 1.6307,
+    "lo": -0.5083,
+    "n": 427
+   },
+   "all|alt26": {
+    "diff": -0.1675,
+    "flagged": 43,
+    "hi": 0.7094,
+    "lo": -1.2029,
+    "n": 414
+   },
+   "all|btc13": {
+    "diff": 0.2668,
+    "flagged": 114,
+    "hi": 0.7123,
+    "lo": -0.1605,
+    "n": 522
+   },
+   "all|btc26": {
+    "diff": 0.6961,
+    "flagged": 114,
+    "hi": 1.702,
+    "lo": -0.2401,
+    "n": 509
+   }
+  },
+  "Cymetica v4": {
+   "2018-2023|alt13": {
+    "diff": 0.6532,
+    "flagged": 66,
+    "hi": 1.7735,
+    "lo": -0.1448,
+    "n": 291
+   },
+   "2018-2023|alt26": {
+    "diff": 0.1534,
+    "flagged": 66,
+    "hi": 1.2032,
+    "lo": -0.8243,
+    "n": 291
+   },
+   "2018-2023|btc13": {
+    "diff": 0.0169,
+    "flagged": 66,
+    "hi": 0.3593,
+    "lo": -0.2957,
+    "n": 311
+   },
+   "2018-2023|btc26": {
+    "diff": -0.225,
+    "flagged": 66,
+    "hi": 0.1454,
+    "lo": -0.5958,
+    "n": 311
+   },
+   "2024-now|alt13": {
+    "diff": -0.383,
+    "flagged": 1,
+    "hi": -0.179,
+    "lo": -0.5227,
+    "n": 136
+   },
+   "2024-now|alt26": {
+    "diff": -0.2807,
+    "flagged": 1,
+    "hi": -0.077,
+    "lo": -0.4592,
+    "n": 123
+   },
+   "2024-now|btc13": {
+    "diff": -0.1316,
+    "flagged": 1,
+    "hi": 0.0058,
+    "lo": -0.2252,
+    "n": 136
+   },
+   "2024-now|btc26": {
+    "diff": -0.1513,
+    "flagged": 1,
+    "hi": 0.0391,
+    "lo": -0.3108,
+    "n": 123
+   },
+   "all|alt13": {
+    "diff": 0.6948,
+    "flagged": 67,
+    "hi": 1.8299,
+    "lo": -0.1494,
+    "n": 427
+   },
+   "all|alt26": {
+    "diff": 0.4497,
+    "flagged": 67,
+    "hi": 1.5281,
+    "lo": -0.3557,
+    "n": 414
+   },
+   "all|btc13": {
+    "diff": 0.0462,
+    "flagged": 67,
+    "hi": 0.3739,
+    "lo": -0.2294,
+    "n": 447
+   },
+   "all|btc26": {
+    "diff": -0.1072,
+    "flagged": 67,
+    "hi": 0.2128,
+    "lo": -0.3944,
+    "n": 434
+   }
+  },
+  "Fear & Greed": {
+   "2018-2023|alt13": {
+    "diff": 1.6892,
+    "flagged": 31,
+    "hi": 3.1216,
+    "lo": -0.3181,
+    "n": 291
+   },
+   "2018-2023|alt26": {
+    "diff": 2.8591,
+    "flagged": 31,
+    "hi": 5.3738,
+    "lo": -0.2017,
+    "n": 291
+   },
+   "2018-2023|btc13": {
+    "diff": 0.4705,
+    "flagged": 31,
+    "hi": 1.0209,
+    "lo": -0.1832,
+    "n": 308
+   },
+   "2018-2023|btc26": {
+    "diff": 0.4197,
+    "flagged": 31,
+    "hi": 1.4505,
+    "lo": -0.3682,
+    "n": 308
+   },
+   "2024-now|alt13": {
+    "diff": -0.3899,
+    "flagged": 14,
+    "hi": -0.1766,
+    "lo": -0.5442,
+    "n": 136
+   },
+   "2024-now|alt26": {
+    "diff": -0.1616,
+    "flagged": 14,
+    "hi": 0.3575,
+    "lo": -0.3473,
+    "n": 123
+   },
+   "2024-now|btc13": {
+    "diff": -0.1493,
+    "flagged": 14,
+    "hi": -0.006,
+    "lo": -0.2592,
+    "n": 136
+   },
+   "2024-now|btc26": {
+    "diff": -0.0127,
+    "flagged": 14,
+    "hi": 0.2942,
+    "lo": -0.2198,
+    "n": 123
+   },
+   "all|alt13": {
+    "diff": 1.0431,
+    "flagged": 45,
+    "hi": 2.404,
+    "lo": -0.3915,
+    "n": 427
+   },
+   "all|alt26": {
+    "diff": 1.9097,
+    "flagged": 45,
+    "hi": 4.1358,
+    "lo": -0.3177,
+    "n": 414
+   },
+   "all|btc13": {
+    "diff": 0.2775,
+    "flagged": 45,
+    "hi": 0.7801,
+    "lo": -0.1692,
+    "n": 444
+   },
+   "all|btc26": {
+    "diff": 0.277,
+    "flagged": 45,
+    "hi": 0.9311,
+    "lo": -0.2553,
+    "n": 431
+   }
+  },
+  "Funding pct": {
+   "2018-2023|alt13": {
+    "diff": 1.7758,
+    "flagged": 21,
+    "hi": 3.3502,
+    "lo": -0.4843,
+    "n": 173
+   },
+   "2018-2023|alt26": {
+    "diff": 2.049,
+    "flagged": 21,
+    "hi": 6.1361,
+    "lo": -0.4802,
+    "n": 173
+   },
+   "2018-2023|btc13": {
+    "diff": 0.2471,
+    "flagged": 21,
+    "hi": 1.0682,
+    "lo": -0.4626,
+    "n": 173
+   },
+   "2018-2023|btc26": {
+    "diff": -0.0515,
+    "flagged": 21,
+    "hi": 0.8363,
+    "lo": -0.501,
+    "n": 173
+   },
+   "2024-now|alt13": {
+    "diff": -0.1485,
+    "flagged": 12,
+    "hi": -0.0449,
+    "lo": -0.5046,
+    "n": 136
+   },
+   "2024-now|alt26": {
+    "diff": -0.2678,
+    "flagged": 12,
+    "hi": -0.1249,
+    "lo": -0.5317,
+    "n": 123
+   },
+   "2024-now|btc13": {
+    "diff": 0.0065,
+    "flagged": 12,
+    "hi": 0.0705,
+    "lo": -0.2085,
+    "n": 136
+   },
+   "2024-now|btc26": {
+    "diff": -0.0722,
+    "flagged": 12,
+    "hi": 0.0893,
+    "lo": -0.369,
+    "n": 123
+   },
+   "all|alt13": {
+    "diff": 1.0971,
+    "flagged": 33,
+    "hi": 2.418,
+    "lo": -0.3509,
+    "n": 309
+   },
+   "all|alt26": {
+    "diff": 1.264,
+    "flagged": 33,
+    "hi": 3.2587,
+    "lo": -0.4405,
+    "n": 296
+   },
+   "all|btc13": {
+    "diff": 0.1697,
+    "flagged": 33,
+    "hi": 0.617,
+    "lo": -0.2237,
+    "n": 309
+   },
+   "all|btc26": {
+    "diff": -0.0412,
+    "flagged": 33,
+    "hi": 0.3683,
+    "lo": -0.2759,
+    "n": 296
+   }
+  },
+  "Wikipedia only": {
+   "2018-2023|alt13": {
+    "diff": 1.0732,
+    "flagged": 31,
+    "hi": 3.1316,
+    "lo": -0.2637,
+    "n": 291
+   },
+   "2018-2023|alt26": {
+    "diff": 0.4632,
+    "flagged": 31,
+    "hi": 1.9631,
+    "lo": -0.8524,
+    "n": 291
+   },
+   "2018-2023|btc13": {
+    "diff": 0.3569,
+    "flagged": 81,
+    "hi": 0.8624,
+    "lo": -0.153,
+    "n": 362
+   },
+   "2018-2023|btc26": {
+    "diff": 0.7099,
+    "flagged": 81,
+    "hi": 2.0179,
+    "lo": -0.5662,
+    "n": 362
+   },
+   "2024-now|alt13": {
+    "diff": -0.3619,
+    "flagged": 10,
+    "hi": -0.003,
+    "lo": -0.5329,
+    "n": 136
+   },
+   "2024-now|alt26": {
+    "diff": -0.2707,
+    "flagged": 10,
+    "hi": 0.088,
+    "lo": -0.4766,
+    "n": 123
+   },
+   "2024-now|btc13": {
+    "diff": -0.1132,
+    "flagged": 10,
+    "hi": 0.1117,
+    "lo": -0.2275,
+    "n": 136
+   },
+   "2024-now|btc26": {
+    "diff": -0.0337,
+    "flagged": 10,
+    "hi": 0.1741,
+    "lo": -0.2536,
+    "n": 123
+   },
+   "all|alt13": {
+    "diff": 0.7371,
+    "flagged": 41,
+    "hi": 2.179,
+    "lo": -0.3593,
+    "n": 427
+   },
+   "all|alt26": {
+    "diff": 0.3352,
+    "flagged": 41,
+    "hi": 1.4072,
+    "lo": -0.7609,
+    "n": 414
+   },
+   "all|btc13": {
+    "diff": 0.3289,
+    "flagged": 91,
+    "hi": 0.7564,
+    "lo": -0.1297,
+    "n": 498
+   },
+   "all|btc26": {
+    "diff": 0.698,
+    "flagged": 91,
+    "hi": 1.8243,
+    "lo": -0.4125,
+    "n": 485
+   }
+  },
+  "v5 (earlier)": {
+   "2018-2023|alt13": {
+    "diff": 1.8458,
+    "flagged": 9,
+    "hi": 4.0412,
+    "lo": -0.5644,
+    "n": 291
+   },
+   "2018-2023|alt26": {
+    "diff": 1.2756,
+    "flagged": 9,
+    "hi": 5.2122,
+    "lo": -0.5676,
+    "n": 291
+   },
+   "2018-2023|btc13": {
+    "diff": 0.4226,
+    "flagged": 48,
+    "hi": 0.9851,
+    "lo": -0.1542,
+    "n": 362
+   },
+   "2018-2023|btc26": {
+    "diff": 0.9811,
+    "flagged": 48,
+    "hi": 2.6327,
+    "lo": -0.5746,
+    "n": 362
+   },
+   "2024-now|alt13": {
+    "diff": -0.1665,
+    "flagged": 2,
+    "hi": 0.036,
+    "lo": -0.3138,
+    "n": 136
+   },
+   "2024-now|alt26": {
+    "diff": -0.3548,
+    "flagged": 2,
+    "hi": -0.1494,
+    "lo": -0.5282,
+    "n": 123
+   },
+   "2024-now|btc13": {
+    "diff": -0.0287,
+    "flagged": 2,
+    "hi": 0.1022,
+    "lo": -0.1298,
+    "n": 136
+   },
+   "2024-now|btc26": {
+    "diff": -0.2453,
+    "flagged": 2,
+    "hi": -0.0515,
+    "lo": -0.4195,
+    "n": 123
+   },
+   "all|alt13": {
+    "diff": 1.515,
+    "flagged": 11,
+    "hi": 3.5817,
+    "lo": -0.4754,
+    "n": 427
+   },
+   "all|alt26": {
+    "diff": 1.0847,
+    "flagged": 11,
+    "hi": 3.0265,
+    "lo": -0.7468,
+    "n": 414
+   },
+   "all|btc13": {
+    "diff": 0.4434,
+    "flagged": 50,
+    "hi": 0.963,
+    "lo": -0.126,
+    "n": 498
+   },
+   "all|btc26": {
+    "diff": 1.0325,
+    "flagged": 50,
+    "hi": 2.5387,
+    "lo": -0.4763,
+    "n": 485
+   }
+  },
+  "v6 (ours)": {
+   "2018-2023|alt13": {
+    "diff": 0.8415,
+    "flagged": 33,
+    "hi": 2.9252,
+    "lo": -0.0762,
+    "n": 291
+   },
+   "2018-2023|alt26": {
+    "diff": -0.0007,
+    "flagged": 33,
+    "hi": 1.1713,
+    "lo": -1.1317,
+    "n": 291
+   },
+   "2018-2023|btc13": {
+    "diff": 0.3777,
+    "flagged": 80,
+    "hi": 0.9865,
+    "lo": -0.1553,
+    "n": 362
+   },
+   "2018-2023|btc26": {
+    "diff": 0.5071,
+    "flagged": 80,
+    "hi": 1.8041,
+    "lo": -0.583,
+    "n": 362
+   },
+   "2024-now|alt13": {
+    "diff": -0.5043,
+    "flagged": 2,
+    "hi": -0.2987,
+    "lo": -0.6615,
+    "n": 136
+   },
+   "2024-now|alt26": {
+    "diff": -0.3744,
+    "flagged": 2,
+    "hi": -0.1574,
+    "lo": -0.5543,
+    "n": 123
+   },
+   "2024-now|btc13": {
+    "diff": -0.1843,
+    "flagged": 2,
+    "hi": -0.0405,
+    "lo": -0.2954,
+    "n": 136
+   },
+   "2024-now|btc26": {
+    "diff": -0.0148,
+    "flagged": 2,
+    "hi": 0.1651,
+    "lo": -0.1747,
+    "n": 123
+   },
+   "all|alt13": {
+    "diff": 0.8234,
+    "flagged": 35,
+    "hi": 2.5057,
+    "lo": -0.226,
+    "n": 427
+   },
+   "all|alt26": {
+    "diff": 0.2218,
+    "flagged": 35,
+    "hi": 1.1674,
+    "lo": -0.7816,
+    "n": 414
+   },
+   "all|btc13": {
+    "diff": 0.3998,
+    "flagged": 82,
+    "hi": 0.9339,
+    "lo": -0.1007,
+    "n": 498
+   },
+   "all|btc26": {
+    "diff": 0.6168,
+    "flagged": 82,
+    "hi": 1.8773,
+    "lo": -0.3989,
+    "n": 485
+   }
+  },
+  "v6 4w (post-hoc)": {
+   "2018-2023|alt13": {
+    "diff": 0.6755,
+    "flagged": 33,
+    "hi": 2.3304,
+    "lo": -0.11,
+    "n": 291
+   },
+   "2018-2023|alt26": {
+    "diff": -0.1457,
+    "flagged": 33,
+    "hi": 0.8356,
+    "lo": -1.2887,
+    "n": 291
+   },
+   "2018-2023|btc13": {
+    "diff": 0.3496,
+    "flagged": 82,
+    "hi": 0.9142,
+    "lo": -0.1774,
+    "n": 359
+   },
+   "2018-2023|btc26": {
+    "diff": 0.5024,
+    "flagged": 82,
+    "hi": 1.7932,
+    "lo": -0.5691,
+    "n": 359
+   },
+   "2024-now|alt13": {
+    "diff": -0.6276,
+    "flagged": 2,
+    "hi": -0.4227,
+    "lo": -0.7684,
+    "n": 136
+   },
+   "2024-now|alt26": {
+    "diff": -0.4712,
+    "flagged": 2,
+    "hi": -0.2642,
+    "lo": -0.6436,
+    "n": 123
+   },
+   "2024-now|btc13": {
+    "diff": -0.2816,
+    "flagged": 2,
+    "hi": -0.14,
+    "lo": -0.3795,
+    "n": 136
+   },
+   "2024-now|btc26": {
+    "diff": -0.0668,
+    "flagged": 2,
+    "hi": 0.1205,
+    "lo": -0.2284,
+    "n": 123
+   },
+   "all|alt13": {
+    "diff": 0.6646,
+    "flagged": 35,
+    "hi": 2.025,
+    "lo": -0.2938,
+    "n": 427
+   },
+   "all|alt26": {
+    "diff": 0.0835,
+    "flagged": 35,
+    "hi": 0.9224,
+    "lo": -0.9593,
+    "n": 414
+   },
+   "all|btc13": {
+    "diff": 0.3712,
+    "flagged": 84,
+    "hi": 0.9085,
+    "lo": -0.1435,
+    "n": 495
+   },
+   "all|btc26": {
+    "diff": 0.6089,
+    "flagged": 84,
+    "hi": 1.8543,
+    "lo": -0.4494,
+    "n": 482
+   }
+  }
+ },
+ "b6": {
+  "BTC price pct": {
+   "2018-2023": {
+    "awake_events": 0,
+    "awake_rose": null,
+    "sat_fell": 0.8,
+    "sat_runs": 5
+   },
+   "2024-now": {
+    "awake_events": 0,
+    "awake_rose": null,
+    "sat_fell": 1.0,
+    "sat_runs": 1
+   },
+   "all": {
+    "awake_events": 0,
+    "awake_rose": null,
+    "sat_fell": 0.8,
+    "sat_runs": 5
+   }
+  },
+  "Cymetica v3": {
+   "2018-2023": {
+    "awake_events": 7,
+    "awake_rose": 0.5714,
+    "sat_fell": 1.0,
+    "sat_runs": 2
+   },
+   "2024-now": {
+    "awake_events": 0,
+    "awake_rose": null,
+    "sat_fell": 1.0,
+    "sat_runs": 2
+   },
+   "all": {
+    "awake_events": 8,
+    "awake_rose": 0.625,
+    "sat_fell": 1.0,
+    "sat_runs": 4
+   }
+  },
+  "Cymetica v4": {
+   "2018-2023": {
+    "awake_events": 1,
+    "awake_rose": 1.0,
+    "sat_fell": 0.875,
+    "sat_runs": 8
+   },
+   "2024-now": {
+    "awake_events": 4,
+    "awake_rose": 0.5,
+    "sat_fell": 1.0,
+    "sat_runs": 1
+   },
+   "all": {
+    "awake_events": 6,
+    "awake_rose": 0.5,
+    "sat_fell": 0.8889,
+    "sat_runs": 9
+   }
+  },
+  "Fear & Greed": {
+   "2018-2023": {
+    "awake_events": 22,
+    "awake_rose": 0.3636,
+    "sat_fell": 0.8,
+    "sat_runs": 10
+   },
+   "2024-now": {
+    "awake_events": 4,
+    "awake_rose": 0.0,
+    "sat_fell": 1.0,
+    "sat_runs": 6
+   },
+   "all": {
+    "awake_events": 26,
+    "awake_rose": 0.3077,
+    "sat_fell": 0.875,
+    "sat_runs": 16
+   }
+  },
+  "Funding pct": {
+   "2018-2023": {
+    "awake_events": 14,
+    "awake_rose": 0.5,
+    "sat_fell": 0.8,
+    "sat_runs": 10
+   },
+   "2024-now": {
+    "awake_events": 15,
+    "awake_rose": 0.4,
+    "sat_fell": 1.0,
+    "sat_runs": 4
+   },
+   "all": {
+    "awake_events": 29,
+    "awake_rose": 0.4483,
+    "sat_fell": 0.8462,
+    "sat_runs": 13
+   }
+  },
+  "Wikipedia only": {
+   "2018-2023": {
+    "awake_events": 9,
+    "awake_rose": 0.7778,
+    "sat_fell": 1.0,
+    "sat_runs": 6
+   },
+   "2024-now": {
+    "awake_events": 2,
+    "awake_rose": 0.0,
+    "sat_fell": 1.0,
+    "sat_runs": 5
+   },
+   "all": {
+    "awake_events": 11,
+    "awake_rose": 0.6364,
+    "sat_fell": 1.0,
+    "sat_runs": 11
+   }
+  },
+  "v5 (earlier)": {
+   "2018-2023": {
+    "awake_events": 16,
+    "awake_rose": 0.6875,
+    "sat_fell": 1.0,
+    "sat_runs": 5
+   },
+   "2024-now": {
+    "awake_events": 3,
+    "awake_rose": 0.3333,
+    "sat_fell": 1.0,
+    "sat_runs": 1
+   },
+   "all": {
+    "awake_events": 19,
+    "awake_rose": 0.6316,
+    "sat_fell": 1.0,
+    "sat_runs": 6
+   }
+  },
+  "v6 (ours)": {
+   "2018-2023": {
+    "awake_events": 10,
+    "awake_rose": 0.9,
+    "sat_fell": 1.0,
+    "sat_runs": 1
+   },
+   "2024-now": {
+    "awake_events": 3,
+    "awake_rose": 0.6667,
+    "sat_fell": 1.0,
+    "sat_runs": 2
+   },
+   "all": {
+    "awake_events": 13,
+    "awake_rose": 0.8462,
+    "sat_fell": 1.0,
+    "sat_runs": 3
+   }
+  },
+  "v6 4w (post-hoc)": {
+   "2018-2023": {
+    "awake_events": 4,
+    "awake_rose": 1.0,
+    "sat_fell": 1.0,
+    "sat_runs": 1
+   },
+   "2024-now": {
+    "awake_events": 0,
+    "awake_rose": null,
+    "sat_fell": 1.0,
+    "sat_runs": 1
+   },
+   "all": {
+    "awake_events": 4,
+    "awake_rose": 1.0,
+    "sat_fell": 1.0,
+    "sat_runs": 2
+   }
+  }
+ },
+ "b8": {
+  "BTC price pct": {
+   "dated": 0.5714,
+   "dated_n": 7,
+   "extended": 0.4667,
+   "extended_n": 15,
+   "late": 0.5,
+   "late_n": 6,
+   "p": 0.751,
+   "precision_posthoc": 0.8,
+   "runs": 5
+  },
+  "Cymetica v3": {
+   "dated": 1.0,
+   "dated_n": 7,
+   "extended": 0.6667,
+   "extended_n": 15,
+   "late": 0.6667,
+   "late_n": 6,
+   "p": 0.0095,
+   "precision_posthoc": 0.75,
+   "runs": 4
+  },
+  "Cymetica v4": {
+   "dated": 0.7143,
+   "dated_n": 7,
+   "extended": 0.5333,
+   "extended_n": 15,
+   "late": 0.8333,
+   "late_n": 6,
+   "p": 0.2355,
+   "precision_posthoc": 0.2222,
+   "runs": 9
+  },
+  "Fear & Greed": {
+   "dated": 0.7143,
+   "dated_n": 7,
+   "extended": 0.9333,
+   "extended_n": 15,
+   "late": 1.0,
+   "late_n": 6,
+   "p": 0.3625,
+   "precision_posthoc": 0.4375,
+   "runs": 16
+  },
+  "Funding pct": {
+   "dated": 1.0,
+   "dated_n": 5,
+   "extended": 1.0,
+   "extended_n": 10,
+   "late": 1.0,
+   "late_n": 6,
+   "p": 0.0375,
+   "precision_posthoc": 0.4615,
+   "runs": 13
+  },
+  "Wikipedia only": {
+   "dated": 1.0,
+   "dated_n": 7,
+   "extended": 0.7333,
+   "extended_n": 15,
+   "late": 0.6667,
+   "late_n": 6,
+   "p": 0.0225,
+   "precision_posthoc": 0.6364,
+   "runs": 11
+  },
+  "v5 (earlier)": {
+   "dated": 0.8571,
+   "dated_n": 7,
+   "extended": 0.7333,
+   "extended_n": 15,
+   "late": 0.8333,
+   "late_n": 6,
+   "p": 0.0365,
+   "precision_posthoc": 0.5,
+   "runs": 6
+  },
+  "v6 (ours)": {
+   "dated": 0.8571,
+   "dated_n": 7,
+   "extended": 0.6,
+   "extended_n": 15,
+   "late": 0.5,
+   "late_n": 6,
+   "p": 0.0625,
+   "precision_posthoc": 1.0,
+   "runs": 3
+  },
+  "v6 4w (post-hoc)": {
+   "dated": 0.7143,
+   "dated_n": 7,
+   "extended": 0.5333,
+   "extended_n": 15,
+   "late": 0.5,
+   "late_n": 6,
+   "p": 0.163,
+   "precision_posthoc": 1.0,
+   "runs": 2
+  }
+ },
+ "b9": {
+  "BTC price pct": {
+   "longest": 112,
+   "share": 0.6853
+  },
+  "Cymetica v3": {
+   "longest": 64,
+   "share": 0.2131
+  },
+  "Cymetica v4": {
+   "longest": 34,
+   "share": 0.1457
+  },
+  "Fear & Greed": {
+   "longest": 11,
+   "share": 0.0985
+  },
+  "Funding pct": {
+   "longest": 8,
+   "share": 0.1025
+  },
+  "Wikipedia only": {
+   "longest": 32,
+   "share": 0.1781
+  },
+  "v5 (earlier)": {
+   "longest": 14,
+   "share": 0.0978
+  },
+  "v6 (ours)": {
+   "longest": 42,
+   "share": 0.1605
+  },
+  "v6 4w (post-hoc)": {
+   "longest": 43,
+   "share": 0.1654
+  }
+ },
+ "base": {
+  "2018-2023": {
+   "fall": 0.7698,
+   "rise": 0.5086,
+   "weeks": 291
+  },
+  "2024-now": {
+   "fall": 0.9593,
+   "rise": 0.3333,
+   "weeks": 123
+  },
+  "all": {
+   "fall": 0.8261,
+   "rise": 0.4565,
+   "weeks": 414
+  }
+ },
+ "done_when": {
+  "75+ runs that contain a confirmed top: at least 75%": true,
+  "B1' every scorable top window holds a week at 75+": false,
+  "B2 every scorable low window holds a week at 35-": false,
+  "B3 |rho| with BTC at most 0.40": false,
+  "B8 permutation p at most 0.05": false,
+  "B9 at most 10% of weeks at 75+, no run over 26": false
+ },
+ "now": {
+  "BTC price pct": 64.6635,
+  "Cymetica v3": 38.9,
+  "Cymetica v4": 14.5,
+  "Fear & Greed": 34.0,
+  "Funding pct": 48.3173,
+  "Wikipedia only": 54.4471,
+  "v5 (earlier)": 44.5433,
+  "v6 (ours)": 35.8574,
+  "v6 4w (post-hoc)": 22.8966
+ },
+ "peak": {
+  "Cymetica v3": {
+   "caught": 2,
+   "false_alarms": 2,
+   "signals": [
+    "2018-03-05",
+    "2021-06-28",
+    "2022-01-24",
+    "2024-05-06",
+    "2025-03-03"
+   ],
+   "tops": [
+    {
+     "caught": true,
+     "date": "2018-01-15",
+     "delay": 7
+    },
+    {
+     "caught": true,
+     "date": "2021-05-17",
+     "delay": 6
+    },
+    {
+     "caught": false,
+     "date": "2021-11-08",
+     "delay": null
+    },
+    {
+     "caught": false,
+     "date": "2024-12-16",
+     "delay": null
+    }
+   ]
+  },
+  "Cymetica v4": {
+   "caught": 0,
+   "false_alarms": 4,
+   "signals": [
+    "2019-08-26",
+    "2020-10-12",
+    "2021-07-19",
+    "2023-01-02",
+    "2024-04-29"
+   ],
+   "tops": [
+    {
+     "caught": false,
+     "date": "2018-01-15",
+     "delay": null
+    },
+    {
+     "caught": false,
+     "date": "2021-05-17",
+     "delay": null
+    },
+    {
+     "caught": false,
+     "date": "2021-11-08",
+     "delay": null
+    },
+    {
+     "caught": false,
+     "date": "2024-12-16",
+     "delay": null
+    }
+   ]
+  },
+  "v6 (ours)": {
+   "caught": 1,
+   "false_alarms": 1,
+   "signals": [
+    "2018-02-19",
+    "2021-08-23"
+   ],
+   "tops": [
+    {
+     "caught": true,
+     "date": "2018-01-15",
+     "delay": 5
+    },
+    {
+     "caught": false,
+     "date": "2021-05-17",
+     "delay": null
+    },
+    {
+     "caught": false,
+     "date": "2021-11-08",
+     "delay": null
+    },
+    {
+     "caught": false,
+     "date": "2024-12-16",
+     "delay": null
+    }
+   ]
+  }
+ },
+ "scored": 511,
+ "weeks": 588
+}
