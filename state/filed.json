@@ -5254,7 +5254,13 @@
    ],
    "title": "Products tab: Infiltrator reads 0 unique visitors and 18 uses",
    "filed_at": "2026-11-02T07:20:54+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 252,
+     "verdict": "fail",
+     "at": "2026-11-05T22:45:41+00:00"
+    }
+   ],
    "their_status": {
     "252": "paid"
    },
@@ -6433,9 +6439,11 @@
    "filed_at": "2026-11-05T15:00:31+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "310": "pending"
+    "310": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail",
+   "hold": "NEXT.md: their 0 is by their rule (REPLY-0272); recheck at season end"
   },
   {
    "key": "traffic-mine-tile-over-its-own-days",
@@ -6447,11 +6455,18 @@
    ],
    "title": "/traffic/mine: the tile says 1,311 unique visitors in 14 days, and the Unique visitors line under it adds up to 645",
    "filed_at": "2026-11-05T15:01:38+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 311,
+     "verdict": "pass",
+     "at": "2026-11-05T22:45:21+00:00"
+    }
+   ],
    "their_status": {
-    "311": "pending"
+    "311": "fixed"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "altseason-retail-tile-fails-its-own-backtest",
