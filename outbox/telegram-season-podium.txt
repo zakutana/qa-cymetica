@@ -6,6 +6,6 @@
 
 3. Our company's icon. The leaderboard row for Ironstar Capital (company 14) draws the default dome in cyan. GET /api/v1/company/universe says the company's station is rift, accent gold, and that is what the picture shows. Reading the scripts: live.js sets CO.UNIVERSE = rows.filter(function (r) { return !r.mine; }), so the owner's own company is not in it, and uvboard.js looks each row up in CO.UNIVERSE by company_id and falls back to skin 'dome', accent 'cyan'. The owner also does not see the icon change after changing the look in Settings. Other companies' rows draw the skin and colour they have in /universe.
 
-Also in the picture: a link to Cymetica Quest (cymetica.com/quest) in the free space beside "Who gets a place".
+Also in the picture: a link to the Cymetica Quest (cymetica.com/quest) in the free space beside "Who gets a place", with the Quest's own mark and colours.
 
 The ET10 amounts and every figure in the picture are the live ones. Only the podium, the icon of our row and the link are ours.

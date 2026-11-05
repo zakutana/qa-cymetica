@@ -77,6 +77,22 @@
         (openLine ? '<em class="pod-open">' + openLine + '</em>' : '') + '</div>';
     }).join('') + '<span class="pod-floor"></span>';
   }
+  // the Quest's own mark, copied from cymetica.com/quest (its header brand), ids renamed so they cannot meet the page's
+  var QUEST_MARK = '<svg class="lq-m" width="46" height="46" viewBox="0 0 64 64" aria-hidden="true"><defs>' +
+    '<radialGradient id="lq-core" cx="36%" cy="26%" r="74%"><stop offset="0" stop-color="#142b44"/><stop offset=".55" stop-color="#08121e"/><stop offset="1" stop-color="#04080f"/></radialGradient>' +
+    '<linearGradient id="lq-brand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>' +
+    '<linearGradient id="lq-hi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6ffed"/><stop offset=".45" stop-color="#00ff88"/><stop offset="1" stop-color="#00b86b"/></linearGradient>' +
+    '<linearGradient id="lq-lo" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a8f3ff"/><stop offset=".5" stop-color="#00cfff"/><stop offset="1" stop-color="#007eb8"/></linearGradient></defs>' +
+    '<circle cx="32" cy="32" r="27" fill="url(#lq-core)"/>' +
+    '<path d="M13.5 20.5A22.5 22.5 0 0 1 50.5 20.5" fill="none" stroke="#ffffff" stroke-opacity=".2" stroke-width="1.1" stroke-linecap="round"/>' +
+    '<circle cx="32" cy="32" r="27.2" fill="none" stroke="url(#lq-brand)" stroke-width="1.35" opacity=".42"/>' +
+    '<path d="M9.8 16.5A27.2 27.2 0 0 1 50.2 11.8" fill="none" stroke="url(#lq-brand)" stroke-width="2.7" stroke-linecap="round"/>' +
+    '<path d="M54.2 47.5A27.2 27.2 0 0 1 13.8 52.2" fill="none" stroke="url(#lq-brand)" stroke-width="2.7" stroke-linecap="round" opacity=".88"/>' +
+    '<circle cx="50.2" cy="11.8" r="4.2" fill="#00ff88" opacity=".32"/><circle cx="50.2" cy="11.8" r="2.1" fill="#effff7"/>' +
+    '<circle cx="32" cy="32" r="21.5" fill="none" stroke="url(#lq-brand)" stroke-width="1.2" stroke-dasharray="1.15 2.6025" opacity=".68"/>' +
+    '<path d="M32 36.8 21.8 47.6l4.4 1.2L32 42.4Z" fill="#00a8e0"/><path d="M32 36.8 42.2 47.6 37.8 48.8 32 42.4Z" fill="url(#lq-lo)"/>' +
+    '<path d="M32 26.2 18.8 39.8l5.1 1.4L32 33.1Z" fill="#00d878"/><path d="M32 26.2 45.2 39.8l-5.1 1.4L32 33.1Z" fill="url(#lq-hi)"/>' +
+    '<path d="M32 12.8l1.3 3.5 3.5 1.3-3.5 1.3-1.3 3.5-1.3-3.5-3.5-1.3 3.5-1.3Z" fill="#f2fff9"/></svg>';
   // ?season0&live: the board as the live site fills it (season-live.js is a copy of /api/v1/company/season), with the podium as we drew it
   // and every company's station as that company chose it
   function tableLive() {
@@ -104,7 +120,7 @@
       '<div class="lb-rule s0 live"><div class="lb-pod">' + podium(S.prizes_et10, 'open · ' + q + ' pts to take it') + '</div>' +
         '<div class="lb-pt"><div class="lb-pt-h"><span>What counts</span><span>Points</span><span>Cap</span></div>' + counts + '</div>' +
         '<div class="lb-who"><h4>Who gets a place</h4>' + who + '</div>' +
-        '<a class="lb-quest" href="/quest"><span class="lq-i">CQ</span><span class="lq-t"><b>Cymetica Quest</b><small>cymetica.com/quest</small></span><span class="lq-go">Open ›</span></a></div>' +
+        '<a class="lb-quest" href="/quest">' + QUEST_MARK + '<span class="lq-t"><small>CYMETICA</small><b>QUEST</b></span><span class="lq-go">Open ›</span></a></div>' +
       '<p class="lb-sub">' + S.note + ' Last computed ' + S.computed_at.replace('T', ' ').replace('Z', ' UTC') + '.</p>' +
       '<div class="lb-head s0"><span>#</span><span></span><span>Company</span><span>Users</span><span>Visitors</span><span>Agents</span><span>Points</span></div>' +
       '<div class="lb">' + rows + '</div>';
