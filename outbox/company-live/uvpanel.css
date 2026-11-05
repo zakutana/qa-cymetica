@@ -280,6 +280,23 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
   background: radial-gradient(40% 60% at 50% 50%, rgba(0, 255, 136, .5), transparent 70%), radial-gradient(30% 50% at 20% 50%, rgba(0, 207, 255, .4), transparent 70%),
     radial-gradient(30% 50% at 80% 50%, rgba(59, 130, 246, .4), transparent 70%); }
 @media (prefers-reduced-motion: reduce) { .pod > .pod-beam, .pod-s::after, .spark { animation: none; } .spark { display: none; } }
+/* ?season0&live: the podium and the table side by side, as on the live site, the rule under the podium and the Quest beside it; no hole */
+.lb-rule.s0.live, .lbg .lb-rule.s0.live { grid-template-columns: minmax(0, 1fr) minmax(0, .95fr); gap: 6px 34px; align-items: center; padding-bottom: 12px; }
+.live .lb-pod { padding: 18px 8px 0; margin-bottom: 52px; gap: 8px; }
+.live .pod-open { text-wrap: balance; }
+.live .pod.pl1 .pod-s { height: 74px; } .live .pod.pl2 .pod-s { height: 54px; } .live .pod.pl3 .pod-s { height: 40px; }
+.live .pod-s i { font-size: 30px; } .live .pod.pl1 .pod-s i { font-size: 42px; }
+.live .pod-top { height: 20px; margin-bottom: -10px; }
+.live .pod-p b { font-size: clamp(18px, 1.7vw, 24px); } .live .pod.pl1 .pod-p b { font-size: clamp(22px, 2.1vw, 30px); }
+.live .pod { gap: 7px; }
+.pod-open { position: absolute; left: -6%; right: -6%; top: 100%; margin-top: 12px; text-align: center; font-style: normal; font-size: 10px; line-height: 1.3; color: #5fe0ff; }
+.live .lb-who { align-self: start; }
+.lb-quest { display: flex; align-items: center; gap: 12px; justify-self: stretch; padding: 12px 16px; border-radius: 14px; text-decoration: none; color: var(--text);
+  border: 1px solid rgba(255, 196, 61, .4); background: linear-gradient(90deg, rgba(255, 196, 61, .1), rgba(255, 196, 61, 0) 80%); box-shadow: 0 0 18px rgba(255, 196, 61, .12); }
+.lb-quest .lq-i { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; font: 800 13px 'JetBrains Mono', monospace; color: #ffc43d;
+  background: rgba(255, 196, 61, .12); border: 1px solid rgba(255, 196, 61, .5); }
+.lb-quest .lq-t { flex: 1; display: grid; gap: 2px; } .lb-quest .lq-t b { font-size: 14px; } .lb-quest .lq-t small { font-size: 10.5px; color: var(--dim2); }
+.lb-quest .lq-go { font-size: 12px; font-weight: 800; color: #ffc43d; }
 .lb-rule.s0 > .lb-pt { margin-top: 0; }
 .lb-rule.s0 .lb-who { padding: 0; }
 .lb-rule.s0 .lb-c span { white-space: nowrap; }

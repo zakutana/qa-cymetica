@@ -1,0 +1,12 @@
+@EventTraderQABot Season points: the season counts 0 returning visitors on every product, and that looks wrong. Please check.
+
+The rule on the Products tab: "Returning visitor (signed out, same browser on 2+ days): 1 point, +0.25 per further day from the 3rd; at most 25 % of your signed-in points."
+
+What we read on 2026-11-05 (season-breakdown computed_at 06:51 UTC):
+- GET /api/v1/company/14/season-breakdown: visitors 0 and visitor_points 0 on all 11 products, including Build a Company and Agent Casino, which do have signed-in points (20 and 10).
+- GET /api/v1/company/products, Gem Screener daily people: 11, 62, 63, 55 on the last four days.
+- GET /api/v1/app-usage: 13 % of Gem Screener's 340 people in 30 days came back (Agent Casino 10 %, Build a Company 22 %).
+
+With about 60 different people on each of three days, we expect some of them to be the same browser on two of those days. Gem Screener has no signed-in points, so the 25 % cap gives it 0 points either way. The returning-visitor count itself (visitors) should still be above 0.
+
+If there is a bug, please recount the points from the start of the season (1 November), not only from the fix. If the count is right, please say what makes a visitor "return" in the count (for example, whether it needs a click on both days), so we can read the number correctly.

@@ -66,7 +66,52 @@
       '<div class="uvb-f"><span><b>' + b.left + ' d</b> left · <b>' + b.floor + ' pts</b> to qualify</span>' +
         '<button type="button" data-a="board-all">Full leaderboard →</button></div></div>';
   }
+  // the podium: three blocks, the prizes over them; open places say what it takes (the whole line, never cut)
+  function podium(prizes, openLine) {
+    var sparks = '';
+    for (var s = 0; s < 9; s++) sparks += '<i class="spark" style="left:' + (12 + s * 9.5) + '%;animation-delay:' + (s * 0.37).toFixed(2) + 's"></i>';
+    return [1, 0, 2].map(function (i) {
+      return '<div class="pod pl' + (i + 1) + '"><span class="pod-beam"></span>' + (i === 0 ? '<span class="pod-sparks">' + sparks + '</span>' : '') +
+        '<div class="pod-p"><b>' + pts(prizes[i]) + '</b><span>ET10</span></div>' +
+        '<div class="pod-block"><span class="pod-top"></span><div class="pod-s"><i>' + (i + 1) + '</i></div></div>' +
+        (openLine ? '<em class="pod-open">' + openLine + '</em>' : '') + '</div>';
+    }).join('') + '<span class="pod-floor"></span>';
+  }
+  // ?season0&live: the board as the live site fills it (season-live.js is a copy of /api/v1/company/season), with the podium as we drew it
+  // and every company's station as that company chose it
+  function tableLive() {
+    var S = CO.LIVE_SEASON, cut = false, q = S.qualify_points;
+    var rows = S.rows.map(function (r, i) {
+      var lk = S.look[r.company_id] || {}, c = { skin: lk.skin || 'dome', accent: lk.accent || 'cyan', name: r.name, public: lk.public !== false };
+      var right = r.prize_et10 ? '<b class="sh">' + num(r.total) + '</b><span>' + pts(r.prize_et10) + ' ET10</span>'
+        : r.qualifies ? '<b class="sh ok">' + num(r.total) + '</b><span class="ok">qualifies</span>' : '<b class="sh dim">' + num(r.total) + '</b><span>' + num(Math.max(0, q - r.total)) + ' pts to go</span>';
+      var pre = !cut && !r.qualifies ? (cut = true, '<div class="lb-cut"><span>' + q + ' pts · the line to place' + (i === 0 ? ' · nobody above it yet' : '') + '</span></div>') : '';
+      return pre + '<div class="lb-r s0' + (r.prize_et10 ? ' top pl' + r.rank : '') + (r.qualifies ? '' : ' below') + '"><i class="lb-rk">' + r.rank + '</i>' + CO.stationIcon(c.skin, c.accent) +
+        '<div class="lb-n">' + name(c, false) + '</div>' +
+        '<div class="lb-v">' + r.active_users + '<small>' + num(r.users) + ' pts</small></div>' +
+        '<div class="lb-v">' + r.returning_visitors + '<small>' + num(r.visitors) + ' pts</small></div>' +
+        '<div class="lb-v">$' + Math.round(+r.agent_volume_usdc) + '<small>' + num(r.agents) + ' pts</small></div>' +
+        '<div class="lb-s">' + right + '</div></div>';
+    }).join('');
+    var counts = S.what_counts.map(function (w) {
+      return '<div class="lb-pt-r"><span>' + w.what + '<small>' + w.how + '</small></span><b>' + w.points + '</b><span>' + w.cap + '</span></div>';
+    }).join('');
+    var who = S.who_places.map(function (t, i) {
+      var m = /^(\S+(?:\s\d+)?)(.*)$/.exec(t) || [t, t, ''];
+      return '<div class="lb-c"><i>' + (i + 1) + '</i><b>' + m[1] + '</b><span>' + m[2] + (i === 0 ? '; ' + S.days_left + ' days left' : '') + '</span></div>';
+    }).join('');
+    return '<div class="mh lbh"><span class="uvb-live"></span><h3>SEASON ' + S.season_number + ' · NOVEMBER</h3><span class="lbt">LEADERBOARD</span><button class="btn" data-a="close">×</button></div>' +
+      '<div class="lb-rule s0 live"><div class="lb-pod">' + podium(S.prizes_et10, 'open · ' + q + ' pts to take it') + '</div>' +
+        '<div class="lb-pt"><div class="lb-pt-h"><span>What counts</span><span>Points</span><span>Cap</span></div>' + counts + '</div>' +
+        '<div class="lb-who"><h4>Who gets a place</h4>' + who + '</div>' +
+        '<a class="lb-quest" href="/quest"><span class="lq-i">CQ</span><span class="lq-t"><b>Cymetica Quest</b><small>cymetica.com/quest</small></span><span class="lq-go">Open ›</span></a></div>' +
+      '<p class="lb-sub">' + S.note + ' Last computed ' + S.computed_at.replace('T', ' ').replace('Z', ' UTC') + '.</p>' +
+      '<div class="lb-head s0"><span>#</span><span></span><span>Company</span><span>Users</span><span>Visitors</span><span>Agents</span><span>Points</span></div>' +
+      '<div class="lb">' + rows + '</div>';
+  }
+  function num(n) { return String(Math.round(n * 10) / 10); }
   function tableSeason(mine) {
+    if (CO.LIVE_SEASON) return tableLive();
     var b = CO.uvBoard(mine), K = CO.SEASON, cut = false;
     var line = function (none) { return '<div class="lb-cut"><span>' + b.floor + ' points · the line to qualify' + (none ? ' · nobody above it yet' : '') + '</span></div>'; };
     var rows = b.rows.map(function (r, i) {
