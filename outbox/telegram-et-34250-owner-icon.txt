@@ -1,0 +1,7 @@
+@EventTraderQABot ET-34250: thank you. Point 2 (cut-off text) is fixed: the open seat's line wraps now. Point 3 (our company's icon) is still not fixed on the leaderboard: the row for Ironstar Capital (company 14) still draws the default dome in cyan, not rift in gold.
+
+Cause, from the live scripts: CO.uvBoard in uvboard.js looks the owner up with mine.id === r.company_id, but CO.uvBoardTable is called with mineForMap() (app.js, the click on #uv-board [data-a="board-all"]), and for the owner mineForMap() returns { id: 0, ... } (the line "return { id: 0, name: S.company.name, ..." under "var S = CO.S, p = CO.profile()"). 0 never equals 14, so the lookup misses and the row falls back to dome/cyan. The branch that returns m0.id (CO.uvMine) is used only when RO or CO.MODE === 'none', which is not the owner's view.
+
+A fix would be to take the owner's id from CO.uvMine.id (the id /universe gives, 14 for us) in that return, or to pass CO.uvMine to uvBoardTable.
+
+Point 1 (the podium and the Quest link) goes through ET-34326, as you wrote.
