@@ -168,9 +168,9 @@ where v5 was low.
 | Reddit, Arctic Shift archive of Pushshift | submissions per week in r/CryptoCurrency, r/Bitcoin, r/ethtrader; comments per week if the archive answers the aggregate | 2015 |
 | the same | submissions per week in r/CryptoMoonShots, r/SatoshiStreetBets, r/altcoin | each sub's first month |
 
-A week `W` holds the days `[W-7, W)`, as in v5. Reddit is read in chunks of at most 6 months with pauses (longer ranges time out); if
-an aggregate will not answer, the day-by-day listing is paged instead. If a member cannot be read for a subreddit, the **member is
-dropped for every subreddit**, never filled. A subreddit with fewer than 78 weeks of history is not scored that week (26 to detrend,
+A week `W` holds the days `[W-7, W)`, as in v5. The archive times out on long ranges, so Reddit is read one day at a time (see
+Amendment 1 below). If a member cannot be read for a subreddit, the **member is dropped for every subreddit**, never filled; that is
+why comments are not read: they are ten times the rows of submissions and the archive already refuses submissions in bulk. A subreddit with fewer than 78 weeks of history is not scored that week (26 to detrend,
 52 to rank), so the degen family is absent or thin before 2019.
 
 **Left out, and why:** YouTube (public RSS lists the last 15 videos, no history) and the App Store chart (Wayback has a gap from 2020
@@ -182,6 +182,14 @@ hand, never read by script.
 **Known limits, stated up front:** Wikipedia attention has been decaying since chatbots took lookups, which the 104-week detrend
 is there to absorb; Reddit membership grows and its rules and bots change; both are English-language, and neither is X or TikTok,
 where much of today's retail talks.
+
+**Amendment 1, 2026-11-05, still before any v6 number exists (no index, no table row has been looked at).** The archive answers
+about 1.5 thousand rows a second and times out on bigger asks, so reading every day of six subreddits for eleven years would take
+most of a day (r/Bitcoin 2017 alone: ten days a minute). **A Reddit member is therefore sampled: the submissions on the Tuesday and
+the Friday (Prague days, the archive buckets in local time) of each week, times 3.5.** Both days must be read or the week is empty
+for that subreddit. Wikipedia stays every day. The cost is noise: two days of seven are a rougher weekly count than seven, so
+v6's weekly line is expected to be jumpier than a full read would be; the 4-week mean the peak signal uses smooths that, and the
+report says so wherever the weekly line is shown. Same members, same detrend and percentile, no other change.
 
 ## The index, v6
 
