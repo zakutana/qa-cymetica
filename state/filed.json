@@ -6452,6 +6452,22 @@
     "311": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "altseason-retail-tile-fails-its-own-backtest",
+   "nodeids": [
+    "tests/rest/test_gem_screener_retail_tile_passes_its_own_backtest.py::test_the_retail_tile_passes_its_own_backtest_or_is_the_number_the_index_uses"
+   ],
+   "report_ids": [
+    312
+   ],
+   "title": "Altseason index: the Retail tile reads 15 ('asleep') from a measure whose own published back-test says fail, and the index is built from a different number, 39",
+   "filed_at": "2026-11-05T15:03:20+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "312": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
