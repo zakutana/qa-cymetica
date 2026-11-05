@@ -282,8 +282,7 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 @media (prefers-reduced-motion: reduce) { .pod > .pod-beam, .pod-s::after, .spark { animation: none; } .spark { display: none; } }
 /* ?season0&live: the podium and the table side by side, as on the live site, the rule under the podium and the Quest beside it; no hole */
 .lb-rule.s0.live, .lbg .lb-rule.s0.live { grid-template-columns: minmax(0, 1fr) minmax(0, .95fr); gap: 6px 34px; align-items: center; padding-bottom: 12px; }
-.live .lb-pod { padding: 18px 8px 0; margin-bottom: 52px; gap: 8px; }
-.live .pod-open { text-wrap: balance; }
+.live .lb-pod { padding: 18px 8px 0; margin-bottom: 34px; gap: 8px; }
 .live .pod.pl1 .pod-s { height: 74px; } .live .pod.pl2 .pod-s { height: 54px; } .live .pod.pl3 .pod-s { height: 40px; }
 .live .pod-s i { font-size: 30px; } .live .pod.pl1 .pod-s i { font-size: 42px; }
 .live .pod-top { height: 20px; margin-bottom: -10px; }
@@ -291,13 +290,12 @@ a.uvr { color: var(--text); text-decoration: none; } a.uvr:hover { background: v
 .live .pod { gap: 7px; }
 .pod-open { position: absolute; left: -6%; right: -6%; top: 100%; margin-top: 12px; text-align: center; font-style: normal; font-size: 10px; line-height: 1.3; color: #5fe0ff; }
 .live .lb-who { align-self: start; }
+.lb-foot { margin: 12px 4px 0; font-size: 10.5px; color: var(--dim2); }
 /* the Quest's own colours (cymetica.com/quest): cyan into green on a dark ground, its mark, its two-line wordmark */
-.lb-quest { display: flex; align-items: center; gap: 14px; justify-self: stretch; padding: 12px 18px 12px 14px; border-radius: 16px; text-decoration: none; color: var(--text);
+.lb-quest { display: flex; align-items: center; gap: 12px; justify-self: stretch; padding: 12px 16px; border-radius: 14px; text-decoration: none; color: var(--text);
   border: 1px solid rgba(0, 255, 200, .38); background: linear-gradient(90deg, rgba(0, 207, 255, .12), rgba(0, 255, 136, .08) 70%, rgba(0, 255, 136, 0)); box-shadow: 0 0 22px rgba(0, 255, 160, .12); }
 .lb-quest .lq-m { flex: none; filter: drop-shadow(0 0 8px rgba(0, 255, 160, .45)); }
-.lb-quest .lq-t { flex: 1; display: grid; gap: 1px; line-height: 1; }
-.lb-quest .lq-t small { font: 700 10.5px 'JetBrains Mono', monospace; letter-spacing: .22em; color: #5fe0ff; }
-.lb-quest .lq-t b { font: 400 24px/1.05 'Archivo Black', sans-serif; letter-spacing: .01em; color: #effff7; }
+.lb-quest .lq-t { flex: 1; display: grid; gap: 2px; } .lb-quest .lq-t b { font-size: 14px; } .lb-quest .lq-t small { font-size: 10.5px; color: var(--dim2); }
 .lb-quest .lq-go { font-size: 12px; font-weight: 800; color: #00ff88; }
 .lb-rule.s0 > .lb-pt { margin-top: 0; }
 .lb-rule.s0 .lb-who { padding: 0; }

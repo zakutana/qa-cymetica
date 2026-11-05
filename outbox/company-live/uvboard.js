@@ -78,7 +78,7 @@
     }).join('') + '<span class="pod-floor"></span>';
   }
   // the Quest's own mark, copied from cymetica.com/quest (its header brand), ids renamed so they cannot meet the page's
-  var QUEST_MARK = '<svg class="lq-m" width="46" height="46" viewBox="0 0 64 64" aria-hidden="true"><defs>' +
+  var QUEST_MARK = '<svg class="lq-m" width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><defs>' +
     '<radialGradient id="lq-core" cx="36%" cy="26%" r="74%"><stop offset="0" stop-color="#142b44"/><stop offset=".55" stop-color="#08121e"/><stop offset="1" stop-color="#04080f"/></radialGradient>' +
     '<linearGradient id="lq-brand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00cfff"/><stop offset="1" stop-color="#00ff88"/></linearGradient>' +
     '<linearGradient id="lq-hi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6ffed"/><stop offset=".45" stop-color="#00ff88"/><stop offset="1" stop-color="#00b86b"/></linearGradient>' +
@@ -117,13 +117,13 @@
       return '<div class="lb-c"><i>' + (i + 1) + '</i><b>' + m[1] + '</b><span>' + m[2] + (i === 0 ? '; ' + S.days_left + ' days left' : '') + '</span></div>';
     }).join('');
     return '<div class="mh lbh"><span class="uvb-live"></span><h3>SEASON ' + S.season_number + ' · NOVEMBER</h3><span class="lbt">LEADERBOARD</span><button class="btn" data-a="close">×</button></div>' +
-      '<div class="lb-rule s0 live"><div class="lb-pod">' + podium(S.prizes_et10, 'open · ' + q + ' pts to take it') + '</div>' +
+      '<div class="lb-rule s0 live"><div class="lb-pod">' + podium(S.prizes_et10) + '</div>' +
         '<div class="lb-pt"><div class="lb-pt-h"><span>What counts</span><span>Points</span><span>Cap</span></div>' + counts + '</div>' +
         '<div class="lb-who"><h4>Who gets a place</h4>' + who + '</div>' +
-        '<a class="lb-quest" href="/quest">' + QUEST_MARK + '<span class="lq-t"><small>CYMETICA</small><b>QUEST</b></span><span class="lq-go">Open ›</span></a></div>' +
-      '<p class="lb-sub">' + S.note + ' Last computed ' + S.computed_at.replace('T', ' ').replace('Z', ' UTC') + '.</p>' +
+        '<a class="lb-quest" href="/quest">' + QUEST_MARK + '<span class="lq-t"><b>Cymetica Quest</b><small>cymetica.com/quest</small></span><span class="lq-go">Open ›</span></a></div>' +
       '<div class="lb-head s0"><span>#</span><span></span><span>Company</span><span>Users</span><span>Visitors</span><span>Agents</span><span>Points</span></div>' +
-      '<div class="lb">' + rows + '</div>';
+      '<div class="lb">' + rows + '</div>' +
+      '<p class="lb-foot">' + S.note + ' Last computed ' + S.computed_at.replace('T', ' ').replace('Z', ' UTC') + '.</p>';
   }
   function num(n) { return String(Math.round(n * 10) / 10); }
   function tableSeason(mine) {

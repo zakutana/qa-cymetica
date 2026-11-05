@@ -2,7 +2,7 @@
 
 1. The podium. Drawn: three steps as blocks, each with a lit top face and a glass front, a beam of light from above, sparks rising off the first, a glowing floor and a reflection under the podium; the prize above its step, the place number on the front. Live today: three flat columns with the prize number, "ET10" and the place number only. In the picture the podium sits left and "What counts" right, the same placement as the live page.
 
-2. Cut-off text. Under each live column the line "open · 100 pts to take it" ends in "100 pts to tak…". In the picture the whole line is there.
+2. Cut-off text. Under each live column the line "open · 100 pts to take it" ends in "100 pts to tak…". In the picture we left it out: the same rule is already in "Who gets a place" ("100+ points in the month, or the place stays open").
 
 3. Our company's icon. The leaderboard row for Ironstar Capital (company 14) draws the default dome in cyan. GET /api/v1/company/universe says the company's station is rift, accent gold, and that is what the picture shows. Reading the scripts: live.js sets CO.UNIVERSE = rows.filter(function (r) { return !r.mine; }), so the owner's own company is not in it, and uvboard.js looks each row up in CO.UNIVERSE by company_id and falls back to skin 'dome', accent 'cyan'. The owner also does not see the icon change after changing the look in Settings. Other companies' rows draw the skin and colour they have in /universe.
 
