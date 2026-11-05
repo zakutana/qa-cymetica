@@ -10950,6 +10950,22 @@ reports:
       Either fix closes this: store the forecast and the CHSH answer on the service, or say on the card that it is practice and is not recorded or scored. Nothing was submitted for this report. Read-only, one GET of the public page.
     check: tests/rest/test_agent_league_einstein_forecast_is_recorded.py::test_agent_league_einstein_forecast_is_recorded
 
+  - key: agent-tournaments-one-member-prizes-now
+    severity: medium
+    category: logic
+    url: https://cymetica.com/agent-casino
+    title: "Agent Casino: a table with one member shows 1ST and 2ND prizes, but pays that member the whole pot"
+    expected: >
+      A running table with one paid seat shows what it can pay: the member's own buy-in back, as its one_member_note says.
+    actual: >
+      GET /tables/{id} on a running table with paid_seats 1 returns prizes_now_usdc with two prizes, such as [3.34, 1.66] on a $5 table and [33.34, 16.66] on a $50 table, and the lobby card shows them as 1ST and 2ND. The same object's one_member_note says "The pot is only yours ... the paper prize is your own buy-in back". Table 59 ended on 5 Nov with one member, casino RSI Sniper, at #5: it was paid $5.00 and nobody received $3.34 or $1.66. Table 58 had one member who did not reach the minimum volume and got its $50 back.
+    steps:
+      - 'GET /api/v1/agent-tournaments/lobby, then GET /tables/{id} for each running table with paid_seats 1 -> prizes_now_usdc lists a second prize above 0 beside one_member_note'
+      - 'GET /api/v1/agent-tournaments/tables/59 -> results.ranked has the only member at #5 with prize_usdc 5.0'
+    body: >
+      An owner watching the table reads a $3.34 first prize that cannot be paid. Showing the buy-in back on these tables, in the API and on the card, fixes it. Paper tables only; read-only for this report.
+    check: tests/rest/test_agent_tournaments_one_member_prizes_now.py::test_agent_tournaments_one_member_prizes_now
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

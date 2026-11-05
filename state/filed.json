@@ -1282,12 +1282,18 @@
    ],
    "title": "1 of 1 seats of ours with no new trade left today read as trading: table 46: 20/20 today and the state reads 'Trading'",
    "filed_at": "2026-11-01T10:29:18+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 237,
+     "verdict": "pass",
+     "at": "2026-11-05T09:36:43+00:00"
+    }
+   ],
    "their_status": {
     "237": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-stake-stays-inside-the-tables-capital",
@@ -6261,7 +6267,8 @@
    "their_status": {
     "298": "paid"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "pitch-reason-not-in-the-basket",
@@ -6338,12 +6345,18 @@
    ],
    "title": "Pitch Cards (ET-33678): NEXUS says Vultisig and Matrixdock Gold helped push a basket up this week; both legs fell, and the legs that made it are not named",
    "filed_at": "2026-11-04T08:43:34+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 304,
+     "verdict": "pass",
+     "at": "2026-11-05T09:36:48+00:00"
+    }
+   ],
    "their_status": {
     "304": "pending"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "agent-tournaments-seat-keeps-its-allowance-across-the-reset",
@@ -6359,7 +6372,8 @@
    "their_status": {
     "306": "pending"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "agent-tournaments-lapsed-seat-still-blocks-a-new-ask",
@@ -6388,6 +6402,22 @@
    "verdicts_sent": [],
    "their_status": {
     "308": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "agent-tournaments-one-member-prizes-now",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_one_member_prizes_now.py::test_agent_tournaments_one_member_prizes_now"
+   ],
+   "report_ids": [
+    309
+   ],
+   "title": "Agent Casino: a table with one member shows 1ST and 2ND prizes, but pays that member the whole pot",
+   "filed_at": "2026-11-05T12:15:56+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "309": "pending"
    },
    "withdrawn": false
   }
