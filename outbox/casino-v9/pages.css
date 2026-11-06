@@ -10,6 +10,15 @@
 .v9-big .v9-seat .lab b i { margin-left: 5px; padding: 0 4px; border-radius: 4px; font: 700 10px var(--at-num); font-style: normal; color: var(--at-ink2); box-shadow: inset 0 0 0 1px var(--at-line); }
 .v9-big .v9-seat .lab span { font: 700 12px var(--at-num); }
 .v9-big .v9-seat .lab .neg { color: var(--at-red); } .v9-big .v9-seat .lab .pos { color: var(--at-green); } .v9-big .v9-seat .lab .flat { color: var(--at-muted); }
+.v9-big .pot { justify-content: flex-start; padding-top: 4px; }
+.v9-big .pot .v { font-size: 54px; }
+.v9-spots { display: flex; gap: 12px; margin-top: 10px; }
+.v9-spots .sp { display: flex; flex-direction: column; align-items: center; min-width: 120px; padding: 6px 12px; border-radius: 10px; background: rgba(7,11,18,.7); box-shadow: inset 0 0 0 1px rgba(59,130,246,.45); }
+.v9-spots .sp:first-child { box-shadow: inset 0 0 0 1.5px var(--at-blue); }
+.v9-spots i { font: 700 11px var(--at-num); font-style: normal; letter-spacing: .12em; color: var(--at-muted); }
+.v9-spots b { font: 400 24px/1.1 var(--font-display); color: var(--at-blue); }
+.v9-spots .sp + .sp b { color: var(--at-hi); }
+.v9-spots em { font: 700 12px var(--at-num); font-style: normal; color: var(--at-cyan); }
 .v9-big .v9-seat .lab em { padding: 1px 6px; border-radius: 5px; font: 700 10px var(--at-num); font-style: normal; color: var(--at-bg); background: var(--at-cyan); }
 
 /* ---------------------------------------------------------------- the leaderboard: more margin, no gap after the names */

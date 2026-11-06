@@ -21,6 +21,10 @@
         rank: txt($('.at-rk', s)), roi: txt($('.at-lab em', s)), house: !!$('.at-h', s), you: !!name && name === mine };
     });
     var pot = { k: txt($('.at-pot .k', tbl)), v: txt($('.at-pot .v', tbl)), s: txt($('.at-pot .s', tbl)) };
+    /* their felt carries the prizes under the pot: they stay on ours */
+    var spots = $$('.at-spots .sp', tbl).map(function (sp) {
+      return '<span class="sp"><i>' + esc(txt($('.k', sp))) + '</i><b>' + esc(txt($('b', sp))) + '</b><em>' + esc(txt($('.e', sp))) + '</em></span>';
+    }).join('');
 
     var f = G.felt, P = function (p) { return [p[0] * PW, p[1] * PH]; };
     var a = P(f.tl), b = P(f.tr), c = P(f.br), d = P(f.bl);
@@ -44,7 +48,7 @@
     holder.className = 'v9-big';
     holder.innerHTML = '<div class="v9-stage"><div class="v9-obj"><div class="v9-plate">' +
       '<img class="glow" src="art/glow.webp" alt="" draggable="false"><img class="tbl" src="art/table.webp" alt="" draggable="false"><span class="sheen" aria-hidden="true"><i></i></span>' +
-      '<div class="pot" style="width:' + FW + 'px;height:' + FH + 'px;transform:' + FM + '"><span class="k">' + esc(pot.k) + '</span><b class="v">' + esc(pot.v) + '</b><span class="s">' + esc(pot.s) + '</span></div>' +
+      '<div class="pot" style="width:' + FW + 'px;height:' + FH + 'px;transform:' + FM + '"><span class="k">' + esc(pot.k) + '</span><b class="v">' + esc(pot.v) + '</b><span class="s">' + esc(pot.s) + '</span>' + (spots ? '<span class="v9-spots">' + spots + '</span>' : '') + '</div>' +
       seatHtml + '</div></div></div>';
     tbl.replaceWith(holder);
     var fit = function () { $$('.v9-big .v9-stage').forEach(function (s) { s.style.setProperty('--k', Math.min(1.3, s.clientWidth / 640).toFixed(4)); }); };
