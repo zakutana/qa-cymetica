@@ -114,6 +114,14 @@ body.v9-agents #agents { margin-top: 28px; }
 .who.you-row { margin-top: 8px; padding: 7px 10px; border: 0; border-radius: 10px; background: rgba(7,11,18,.55); box-shadow: inset 0 0 0 1px var(--at-line2); }
 .who.you-row b { max-width: 55%; font-size: 13px; }
 
+/* ET10 tables in green: real ET10, as paper money is blue (the operator, 2026-11-06) */
+.v9-card.et .pot .v { color: var(--at-green) !important; text-shadow: 0 0 34px rgba(0,255,136,.5) !important; }
+.v9-card.et .pot .s { color: var(--at-green); }
+.v9-card.et .cfoot .pz b { color: var(--at-green); }
+.v9-card.et .cfoot .pz:not(.w) b { color: var(--at-hi); }
+.v9-card.et .cfoot .pz b small { color: var(--at-green); }
+.v9-fin.et .fr .w:not(.none) { color: var(--at-green); }
+
 /* an empty seat is the render's own pad with a plus on it: no second, dashed circle over it */
 .v9-seat.empty .at-ava { background: none !important; border: 0 !important; box-shadow: none !important; color: var(--at-cyan); display: grid; place-items: center; }
 .v9-seat.empty .at-ava::before { content: "+"; font: 700 22px/1 var(--at-num); transform: translateY(9px); text-shadow: 0 0 10px rgba(0,207,255,.7); }

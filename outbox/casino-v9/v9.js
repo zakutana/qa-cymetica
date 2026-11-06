@@ -97,7 +97,7 @@
       : '<span class="plain">' + esc(t.who) + '</span>';
     return '<header class="ctop"><div class="l"><div class="top"><span class="st"><i></i>' + esc(t.stateText) + '</span><span class="ln">' + stopwatch(t.len) + '</span>' + (t.example ? '<span class="ex">EXAMPLE</span>' : '') + '</div></div>' + clock + '</header>' +
       /* the buy-in is said once, on the felt (the operator, 2026-11-06: no duplicates; the prize boxes below carry the pot) */
-      plate(pot(t.unit ? 'BUY-IN · ' + t.unit : 'BUY-IN', t.buy, t.taken ? t.pot + ' in the pool so far' : '') +   /* no ET10 line on the felt (the operator) */ t.seats.map(function (s, i) { return seatHtml(s, i, us); }).join(''), moving) +
+      plate(pot('BUY-IN', t.buy, t.taken ? t.pot + (t.unit ? ' ' + t.unit : '') + ' in the pool so far' : (t.unit || '')) +   /* no ET10 line on the felt (the operator) */ t.seats.map(function (s, i) { return seatHtml(s, i, us); }).join(''), moving) +
       '<footer class="cfoot"><div class="pzs">' + prizes + '</div>' + (quiet ? (us ? '<div class="who you-row"><span class="you">YOU</span><b>' + esc(us.bot) + '</b><span class="r">' + esc(us.rank) + '</span><span class="o ' + (/^-/.test(us.roi) ? 'neg' : /^\+0\.00/.test(us.roi) ? 'flat' : 'pos') + '">' + esc(us.roi) + '</span></div>' : '') : '<div class="who">' + who + '</div>') + '</footer>';
   }
 
