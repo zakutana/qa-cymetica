@@ -82,7 +82,7 @@
     }).join('');
     var who = us ? '<span class="you">YOU</span><b>' + esc(us.bot) + '</b><span class="r">' + esc(us.rank) + '</span><span class="o ' + (/^-/.test(us.roi) ? 'neg' : /^\+0\.00/.test(us.roi) ? 'flat' : 'pos') + '">' + esc(us.roi) + '</span>' + (us.need ? '<small class="need">' + esc(us.need) + '</small>' : '')
       : '<span class="plain">' + esc(t.who) + '</span>';
-    return '<header class="ctop"><div class="l"><div class="top"><span class="st"><i></i>' + esc(t.stateText) + '</span><span class="ln">' + stopwatch(t.len) + (t.id ? '#' + t.id : '') + '</span>' + (t.example ? '<span class="ex">EXAMPLE</span>' : '') + '</div><div class="buy">' + esc(t.buy) + '<small>' + esc(t.unit || 'buy-in') + '</small></div></div>' + clock + '</header>' +
+    return '<header class="ctop"><div class="l"><div class="top"><span class="st"><i></i>' + esc(t.stateText) + '</span><span class="ln">' + stopwatch(t.len) + '</span>' + (t.example ? '<span class="ex">EXAMPLE</span>' : '') + '</div><div class="buy">' + esc(t.buy) + '<small>' + esc(t.unit || 'buy-in') + '</small></div></div>' + clock + '</header>' +
       plate(pot(t.potKey, t.pot, t.potSub) + t.seats.map(function (s, i) { return seatHtml(s, i, us); }).join(''), moving) +
       '<footer class="cfoot"><div class="pzs">' + prizes + '</div>' + (quiet ? '' : '<div class="who">' + who + '</div>') + '</footer>';
   }
@@ -125,7 +125,7 @@
     return items.map(function (x, i) {
       return '<button type="button" class="rt' + (i === state.i ? ' on' : '') + '" data-pick="' + i + '">' +
         plate(x.seats.map(function (s, j) { return seatHtml(s, j, null); }).join(''), false) +
-        '<span class="rc"><b>' + esc(x.buy) + (x.unit ? '<small>' + esc(x.unit) + '</small>' : '') + '</b><span>' + stopwatch(x.len) + (x.id ? '#' + x.id : '') + '</span></span><span class="rs">' + esc(x.who) + '</span></button>';
+        '<span class="rc"><b>' + esc(x.buy) + (x.unit ? '<small>' + esc(x.unit) + '</small>' : '') + '</b><span>' + stopwatch(x.len) + '</span></span><span class="rs">' + esc(x.who) + '</span></button>';
     }).join('');
   }
 
@@ -209,7 +209,7 @@
     var buy = isEt(t) ? num(et10Buyin(t)) + ' ET10' : usd(t.buyin || 0);
     var me = t.ranked.filter(function (r) { return ids.indexOf(r.seat_id) >= 0; })[0];
     return '<a class="v9-fin' + (ids.length ? ' ours' : '') + (isEt(t) ? ' et' : '') + '"' + (hidden ? ' hidden' : '') + ' href="' + HOST + '/agent-casino/table/' + t.id + '/results">' +
-      '<div class="fh"><b>' + esc(buy) + '</b><span class="ln">' + stopwatch(len(t.hours)) + '#' + t.id + '</span><span class="sp"></span>' + (me ? '<span class="place">#' + me.rank + ' of ' + t.ranked.length + '</span>' : '') + '<span>' + esc(ended) + '</span></div>' +
+      '<div class="fh"><b>' + esc(buy) + '</b><span class="ln">' + stopwatch(len(t.hours)) + '</span><span class="sp"></span>' + (me ? '<span class="place">#' + me.rank + ' of ' + t.ranked.length + '</span>' : '') + '<span>' + esc(ended) + '</span></div>' +
       '<div class="fbody">' + finishedTable(t, ids) + '<div class="fb">' +
       rows.map(function (r) {
         var mine = ids.indexOf(r.seat_id) >= 0, w = [took(t, r), etLabel(r)].filter(Boolean).join(' ');
