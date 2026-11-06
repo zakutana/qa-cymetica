@@ -62,10 +62,13 @@
   .at-ava.you { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,207,255,.22), 0 0 16px rgba(0,207,255,.6); }
 
   /* 3D heads: a calm dark round seat, a 1px ring in the bot's colour, the render inside */
-  .hd { position: relative; border-radius: 50%; background: var(--sunk); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 40%, transparent); }
-  .hd img { position: absolute; left: 50%; top: 50%; width: var(--k, 92%); height: var(--k, 92%); transform: translate(-50%, -51.5%); display: block; }
-  .hd.you { box-shadow: inset 0 0 0 1px var(--cyan), 0 0 0 2px var(--bg), 0 0 0 3.5px var(--cyan), 0 0 16px rgba(0,207,255,.55); }
-  .hd.s20.you { box-shadow: inset 0 0 0 1px var(--cyan), 0 0 0 1.5px var(--bg), 0 0 0 2.5px var(--cyan), 0 0 8px rgba(0,207,255,.55); }
+  .hd { position: relative; border-radius: 50%; background: var(--sunk); }
+  .hd::after { content: ""; position: absolute; inset: 0; border-radius: 50%; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 40%, transparent); pointer-events: none; }
+  .hd img { position: absolute; left: 50%; top: 50%; width: var(--k, 92%); height: var(--k, 92%); transform: translate(-50%, var(--ty, -51.5%)); display: block; }
+  .hd.full { overflow: hidden; } .hd.full img { width: 100%; height: 100%; transform: translate(-50%, -50%); }
+  .hd.you { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--cyan), 0 0 16px rgba(0,207,255,.55); }
+  .hd.you::after { box-shadow: inset 0 0 0 1px var(--cyan); }
+  .hd.s20.you { box-shadow: 0 0 0 1.5px var(--bg), 0 0 0 2.5px var(--cyan), 0 0 8px rgba(0,207,255,.55); }
   .hero { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 18px; }
   .hero .av { width: 96px; height: 96px; }
 
@@ -101,7 +104,7 @@
 
 <div class="wrap">
   <header>
-    <h1>Agent icons <span>3D heads</span></h1>
+    <h1>Agent icons <span>3D v1 + 5 new</span></h1>
     <p>Today first · same 6 bots · rendered like the table · 20 / 30 / 44 / 48 / 96 px</p>
   </header>
   <main id="dirs"></main>
@@ -113,13 +116,23 @@
   var L = ['a', 'b', 'c', 'd', 'e', 'f'];
   var DIRS = [
     { today: true, name: 'Today', box: 'Round · gradient · ring', idea: 'Six cartoon robot faces in glowing circles, as live now.' },
-    { name: '3D heads', box: 'Dark round seat · 1px ring', hero: true,
-      idea: 'The same six bots as chrome heads with a dark glass visor and LED eyes in their colour, rendered like the casino table.' }
+    { set: 'v1', n: 'V1', name: '3D v1', box: 'Dark round seat · 1px ring',
+      idea: 'Chrome heads, dark glass visor, LED eyes in the bot’s colour, rendered like the casino table.' },
+    { set: 'ceramic', ty: '-49%', n: '01', name: 'Ceramic', box: 'Dark round seat · 1px ring',
+      idea: 'Glossy white ceramic shells, a black glass visor that wraps round, vivid LEDs.' },
+    { set: 'glass', k: '86%', ty: '-50.5%', n: '02', name: 'Glass dome', box: 'Dark round seat · 1px ring',
+      idea: 'A clear glass helmet on a chrome base, the lit core inside it.' },
+    { set: 'neon', n: '03', name: 'Neon edge', box: 'Dark round seat · 1px ring',
+      idea: 'Dark anodised gunmetal, the bot’s colour as thin lit lines round the visor and a seam round the head.' },
+    { set: 'portrait', n: '04', name: 'Portrait', box: 'Full-bleed seat · backlight', full: true,
+      idea: 'The head fills the seat edge to edge, lit from behind in the bot’s colour.' },
+    { set: 'mecha', ty: '-52.5%', n: '05', name: 'Mecha', box: 'Dark round seat · 1px ring',
+      idea: 'Hard surface: pale armour plates on a gunmetal frame, a painted stripe, bolts, side vents.' }
   ];
   function ava(d, i, size, you) {
     var c = COLS[i], l = L[i];
     if (d.today) return '<span class="av at-ava ' + (size || '') + (you ? ' you' : '') + '" style="--c:' + c + '"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#at-bot-' + l + '"/></svg></span>';
-    return '<span class="av hd ' + (size || '') + (you ? ' you' : '') + '" style="--c:' + c + '"><img src="heads/' + l + '.webp" alt=""></span>';
+    return '<span class="av hd ' + (size || '') + (d.full ? ' full' : '') + (you ? ' you' : '') + '" style="--c:' + c + (d.ty ? ';--ty:' + d.ty : '') + (d.k ? ';--k:' + d.k : '') + '"><img src="heads/' + d.set + '/' + l + '.webp" alt=""></span>';
   }
   var SEATS = [[30, 12], [70, 12], [94, 50], [70, 88], [30, 88], [6, 50]];
   var YOU = 4;
@@ -133,7 +146,7 @@
     var seats = SEATS.map(function (p, i) {
       return '<span class="seat" style="left:' + p[0] + '%;top:' + p[1] + '%">' + ava(d, i, '', i === YOU) + (i === YOU ? '<em>YOU</em>' : '') + '</span>';
     }).join('');
-    return '<section class="dir' + (d.today ? ' today' : '') + '"><h2><span class="n">' + (d.today ? 'NOW' : 'NEW') + '</span>' + d.name +
+    return '<section class="dir' + (d.today ? ' today' : '') + '"><h2><span class="n">' + (d.today ? 'NOW' : d.n) + '</span>' + d.name +
       '<span class="ct">' + d.box + '</span></h2><p class="idea">' + d.idea + '</p>' + hero +
       '<div class="body"><div class="ladder">' + ladder + '</div><div class="ctx">' + row +
       '<div class="tbl"><div class="felt"><span>PRO #91</span></div>' + seats + '</div></div></div></section>';

@@ -1,0 +1,250 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Agent heads v2, render</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+<!-- Five more directions for the six casino bots, on heads.html's pipeline (itself the table's, outbox/casino-v8/render/scene.html).
+     heads.html stays the source of v1. Here: ceramic, glass, neon, portrait, mecha. No collar; d's lens is one big lit disc,
+     e's slits are long and thin; the LEDs' exact colour is put back in render.py, so the pale tints do not wash to white. -->
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+const q = new URLSearchParams(location.search);
+const S = +q.get('s') || 512, SAMPLES = +q.get('n') || 48;
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true, premultipliedAlpha: false });
+renderer.setPixelRatio(1); renderer.setSize(S, S);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.setClearColor(0x000000, 0);
+document.body.appendChild(renderer.domElement);
+
+const camera = new THREE.PerspectiveCamera(16, 1, .1, 100);
+function frameCam(dist, lookY) {
+  const EL = 9 * Math.PI / 180, LOOK = new THREE.Vector3(0, lookY, 0);
+  camera.position.set(0, LOOK.y + Math.sin(EL) * dist, Math.cos(EL) * dist); camera.lookAt(LOOK);
+  camera.updateProjectionMatrix(); camera.updateMatrixWorld();
+}
+
+/* ---- the studio, as heads.html ---- */
+function studio() {
+  const s = new THREE.Scene(); s.background = new THREE.Color(0x03060c);
+  const panel = (w, h, col, I, x, y, z, rx = -Math.PI / 2, rz = 0, ry = 0) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(col).multiplyScalar(I), side: THREE.DoubleSide }));
+    m.position.set(x, y, z); m.rotation.set(rx, ry, rz); s.add(m);
+  };
+  panel(5.5, 2.2, 0xdff4ff, 7, 0, 6, .4);
+  panel(3.2, 2.4, 0xdff4ff, 2.2, -3.2, 2.2, 4.2, 0, 0, .6);
+  panel(4.5, 1.6, 0xdff4ff, 2.2, .8, 1.4, 6, 0, 0, 0);
+  panel(9, .35, 0x00cfff, 10, 0, -1.6, 6.5, -.5);
+  panel(.4, 7, 0x00ff88, 7, 6.5, 2.6, .5, -Math.PI / 2, .2);
+  panel(.4, 7, 0x00cfff, 7, -6.5, 2.6, .5, -Math.PI / 2, -.2);
+  panel(9, .5, 0xffffff, 7, 0, 3.4, -6.5, .5);
+  return s;
+}
+const scene = new THREE.Scene();
+const pm = new THREE.PMREMGenerator(renderer);
+scene.environment = pm.fromScene(studio(), .012).texture;
+const key = new THREE.DirectionalLight(0xe8f6ff, 1.6); key.position.set(-2.5, 4, 4); scene.add(key);
+const rimC = new THREE.DirectionalLight(0x00cfff, 7); rimC.position.set(4.5, 1.2, -1.6); scene.add(rimC);
+const rimW = new THREE.DirectionalLight(0xdff4ff, 2.0); rimW.position.set(-4, 2.5, -3); scene.add(rimW);
+
+/* ---- materials ---- */
+const phys = o => new THREE.MeshPhysicalMaterial(o);
+const MAT = {
+  chrome: phys({ color: 0xcfe6f2, metalness: 1, roughness: .34, clearcoat: 1, clearcoatRoughness: .06, envMapIntensity: 1.6 }),
+  dark: phys({ color: 0x0b1420, metalness: .92, roughness: .32, clearcoat: .6, clearcoatRoughness: .2, envMapIntensity: 1 }),
+  glass: phys({ color: 0x03060b, metalness: .3, roughness: .06, clearcoat: 1, clearcoatRoughness: .03, envMapIntensity: 1.4 }),
+  ceramic: phys({ color: 0xe4ebf1, metalness: 0, roughness: .3, clearcoat: 1, clearcoatRoughness: .04, envMapIntensity: .9 }),
+  blackCeramic: phys({ color: 0x0a0e15, metalness: .1, roughness: .25, clearcoat: 1, clearcoatRoughness: .04, envMapIntensity: 1.2 }),
+  gun: phys({ color: 0x1b2431, metalness: .85, roughness: .4, clearcoat: .5, clearcoatRoughness: .25, envMapIntensity: 1.1 }),
+  gunDeep: phys({ color: 0x0c121b, metalness: .8, roughness: .45, envMapIntensity: .9 }),
+  panel: phys({ color: 0xd3dce5, metalness: .25, roughness: .42, clearcoat: .4, clearcoatRoughness: .2, envMapIntensity: 1 }),
+  dome: phys({ color: 0xffffff, metalness: 0, roughness: .02, transmission: 1, thickness: .03, ior: 1.35, clearcoat: .4, clearcoatRoughness: .02, envMapIntensity: .55, specularIntensity: .7 }),
+};
+// the glass dome's edge: bright where the surface turns away, clear where it faces the camera
+const FRESNEL = new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
+  vertexShader: 'varying vec3 vN; varying vec3 vV; void main(){ vec4 p = modelViewMatrix * vec4(position,1.); vN = normalize(normalMatrix * normal); vV = normalize(-p.xyz); gl_Position = projectionMatrix * p; }',
+  fragmentShader: 'varying vec3 vN; varying vec3 vV; void main(){ float f = pow(1. - abs(dot(normalize(vN), normalize(vV))), 2.6); gl_FragColor = vec4(vec3(.75, .92, 1.) * 1.3, clamp(f * .95, 0., 1.)); }' });
+const led = (hex, k = 1) => { const m = new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(k), toneMapped: false }); m.userData.emit = true; return m; };
+const paint = hex => phys({ color: hex, metalness: .3, roughness: .32, clearcoat: 1, clearcoatRoughness: .05 });
+
+function mesh(g, m, x = 0, y = 0, z = 0) { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); return o; }
+function rbox(w, h, d, r, m, x, y, z) { return mesh(new RoundedBoxGeometry(w, h, d, 8, r), m, x, y, z); }
+function rod(len, r, m) { const g = new THREE.CylinderGeometry(r, r, len, 32); g.translate(0, len / 2, 0); return new THREE.Mesh(g, m); }
+function disc(r, depth, m, x, y, z) { const g = new THREE.CylinderGeometry(r, r, depth + .06, 64); g.rotateX(Math.PI / 2); return mesh(g, m, x, y, z - .03); }
+function pill(w, h, depth, m, x, y, z) { return mesh(new RoundedBoxGeometry(w, h, depth + .06, 6, Math.min(w, h) / 2 - .001), m, x, y, z - .03); }
+// a lit line along a rounded rectangle: in the XY plane at z (a visor's edge), or in the XZ plane at y (a seam round the head)
+function rrectLine(w, h, r, t, m, plane, at, oy = 0) {
+  const pts = [], n = 16, cx = w / 2 - r, cy = h / 2 - r;
+  [[cx, cy, 0], [-cx, cy, Math.PI / 2], [-cx, -cy, Math.PI], [cx, -cy, 1.5 * Math.PI]].forEach(([x, y, a0]) => {
+    for (let i = 0; i <= n; i++) { const a = a0 + i / n * Math.PI / 2; pts.push([x + r * Math.cos(a), y + r * Math.sin(a)]); }
+  });
+  const v = pts.map(([a, b]) => plane === 'xy' ? new THREE.Vector3(a, b + oy, at) : new THREE.Vector3(a, at, b));
+  return new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(v, true, 'centripetal'), 320, t, 8, true), m);
+}
+
+/* ---- the six bots' parts, the same in every style. P: top of the head, half width, face front z, face centre y, face scale ---- */
+function parts(g, id, hex, M, P) {
+  const L = led(hex), Ldim = led(hex, .5), s = P.s, cy = P.cy, FZ = P.fz, top = P.top, half = P.half;
+  if (id === 'a') {
+    const r = rod(.2, .022, M.trim); r.position.set(0, top - .01, 0); g.add(r);
+    g.add(mesh(new THREE.SphereGeometry(.068, 48, 32), L, 0, top + .24, 0));
+    g.add(disc(.12 * s, .03, L, -.19 * s, cy, FZ)); g.add(disc(.12 * s, .03, L, .19 * s, cy, FZ));
+  }
+  if (id === 'b') {
+    [-1, 1].forEach(k => { const r = rod(.24, .02, M.trim); r.position.set(k * .24, top - .03, 0); r.rotation.z = -k * .45; g.add(r);
+      g.add(mesh(new THREE.SphereGeometry(.048, 32, 24), L, k * (.24 + Math.sin(.45) * .26), top - .03 + Math.cos(.45) * .26, 0)); });
+    g.add(pill(.62 * s, .19 * s, .03, L, 0, cy, FZ));
+  }
+  if (id === 'c') {
+    [-1, 1].forEach(k => {
+      g.add(rbox(.12, .36, .34, .05, M.dark, k * (half + .05), cy, 0));
+      for (let j = -1; j <= 1; j++) g.add(rbox(.03, .22, .035, .012, j ? Ldim : L, k * (half + .11), cy, j * .08));
+    });
+    g.add(mesh(new RoundedBoxGeometry(.2 * s, .2 * s, .09, 4, .04), L, -.18 * s, cy, FZ - .03));
+    g.add(mesh(new RoundedBoxGeometry(.2 * s, .2 * s, .09, 4, .04), L, .18 * s, cy, FZ - .03));
+  }
+  if (id === 'd') {             // one big lens: a lit disc with a small dark iris, a thin trim bezel
+    const r = rod(.2, .022, M.trim); r.position.set(0, top - .01, 0); g.add(r);
+    const t = new THREE.CylinderGeometry(.022, .022, .26, 32); t.rotateZ(Math.PI / 2); g.add(mesh(t, M.trim, 0, top + .19, 0));
+    [-1, 1].forEach(k => g.add(mesh(new THREE.SphereGeometry(.036, 24, 16), L, k * .13, top + .19, 0)));
+    g.add(disc(.2 * s, .03, L, 0, cy, FZ));
+    g.add(disc(.06 * s, .03, MAT.glass, 0, cy, FZ + .012));
+    const bez = new THREE.TorusGeometry(.225 * s, .02, 24, 96); g.add(mesh(bez, M.trim, 0, cy, FZ));
+  }
+  if (id === 'e') {             // long thin slits
+    const r1 = rod(.16, .022, M.trim); r1.position.set(0, top - .01, 0); g.add(r1);
+    const r2 = rod(.16, .022, M.trim); r2.position.set(0, top + .15, 0); r2.rotation.z = -1.0; g.add(r2);
+    g.add(mesh(new THREE.SphereGeometry(.042, 24, 16), L, Math.sin(1.0) * .16, top + .15 + Math.cos(1.0) * .16, 0));
+    g.add(pill(.32 * s, .075 * s, .03, L, -.19 * s, cy, FZ)); g.add(pill(.32 * s, .075 * s, .03, L, .19 * s, cy, FZ));
+  }
+  if (id === 'f') {
+    const arcG = new THREE.TorusGeometry(half + .1, .035, 24, 128, Math.PI); g.add(mesh(arcG, M.trim, 0, cy + .03, 0));
+    [-1, 1].forEach(k => {
+      const pad = new THREE.CylinderGeometry(.21, .21, .12, 64); pad.rotateZ(Math.PI / 2); g.add(mesh(pad, M.dark, k * (half + .06), cy + .01, 0));
+      const rim = new THREE.TorusGeometry(.15, .018, 16, 96); rim.rotateY(Math.PI / 2); g.add(mesh(rim, L, k * (half + .125), cy + .01, 0));
+    });
+    g.add(disc(.095 * s, .03, L, -.16 * s, cy, FZ)); g.add(disc(.095 * s, .03, L, .16 * s, cy, FZ));
+  }
+}
+
+const W = 1.0, H = .84, D = .8;
+
+/* ---- the five styles ---- */
+const STYLES = {
+  // white pearl ceramic, a black glass visor that wraps, nothing metal but the trim
+  ceramic(id, hex) {
+    const g = new THREE.Group(), M = { trim: MAT.ceramic, dark: MAT.blackCeramic };
+    g.add(rbox(W, H + .02, D + .02, .38, MAT.ceramic, 0, 0, 0));
+    g.add(rbox(W * .86, H * .6, D + .05, .22, MAT.blackCeramic, 0, -.03, 0));
+    parts(g, id, hex, M, { top: (H + .02) / 2, half: W / 2, fz: D / 2 + .025, cy: -.03, s: 1 });
+    return g;
+  },
+  // a clear glass dome over a dark core; the LEDs sit on the core, inside the glass
+  glass(id, hex) {
+    const g = new THREE.Group(), M = { trim: MAT.chrome, dark: MAT.dark }, R = .56, cyS = -.08;
+    const base = new THREE.CylinderGeometry(.46, .5, .12, 96); g.add(mesh(base, MAT.dark, 0, -.42, 0));
+    const ring = new THREE.TorusGeometry(.47, .025, 16, 128); ring.rotateX(Math.PI / 2); g.add(mesh(ring, MAT.chrome, 0, -.36, 0));
+    g.add(rbox(.66, .5, .5, .16, MAT.gunDeep, 0, cyS, 0));
+    const domeG = new THREE.SphereGeometry(R, 96, 64, 0, Math.PI * 2, 0, Math.PI * .66);
+    const shell = mesh(domeG, phys({ color: 0x9fdcff, metalness: 0, roughness: .03, clearcoat: 1, clearcoatRoughness: .02, envMapIntensity: 2.2, transparent: true, opacity: .1, depthWrite: false }), 0, cyS + .02, 0);
+    shell.renderOrder = 2; g.add(shell);
+    const rim = mesh(domeG, FRESNEL, 0, cyS + .02, 0); rim.renderOrder = 3; g.add(rim);
+    // the soft box's reflection, a long glint up-left, and a small one down-right
+    const glint = (w, h, x, y, rz, o) => { const m = new THREE.Mesh(new THREE.CircleGeometry(.5, 48), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: o, depthWrite: false }));
+      m.scale.set(w, h, 1); m.rotation.z = rz; const n = new THREE.Vector3(x, y, Math.sqrt(Math.max(0, 1 - x * x - y * y))); m.position.copy(n.clone().multiplyScalar(R + .004)).add(new THREE.Vector3(0, cyS + .02, 0));
+      m.lookAt(n.clone().multiplyScalar(5).add(m.position)); m.rotateZ(rz); m.renderOrder = 4; return m; };
+    g.add(glint(.34, .07, -.46, .55, .75, .55));
+    parts(g, id, hex, M, { top: cyS + .02 + R, half: R - .02, fz: .25 + .012, cy: cyS, s: .8 });
+    return g;
+  },
+  // dark anodised gunmetal, the bot's colour as thin lit edges round the visor and a seam round the head
+  neon(id, hex) {
+    const g = new THREE.Group(), M = { trim: MAT.gun, dark: MAT.gunDeep }, L = led(hex);
+    g.add(rbox(W, H, D, .12, MAT.gun, 0, 0, 0));
+    g.add(rbox(W * .82, H * .6, D + .03, .06, MAT.glass, 0, -.03, 0));
+    g.add(rrectLine(W * .82 + .04, H * .6 + .04, .08, .011, L, 'xy', D / 2 + .006, -.03));
+    g.add(rrectLine(W + .014, D + .014, .127, .009, L, 'xz', H / 2 - .16));
+    g.add(rbox(.26, .022, .02, .01, led(hex, .5), 0, -H / 2 + .07, D / 2 + .004));
+    parts(g, id, hex, M, { top: H / 2, half: W / 2, fz: D / 2 + .015, cy: -.03, s: 1 });
+    return g;
+  },
+  // v1's head, closer, filling the seat; the coloured backlight is laid behind it in render.py
+  portrait(id, hex) {
+    const g = new THREE.Group(), M = { trim: MAT.chrome, dark: MAT.dark };
+    g.add(rbox(W, H, D, .3, MAT.chrome, 0, 0, 0));
+    g.add(rbox(W * .9, H * .74, D + .02, .14, MAT.dark, 0, -.03, 0));
+    g.add(rbox(W * .84, H * .66, D + .04, .12, MAT.glass, 0, -.03, 0));
+    parts(g, id, hex, M, { top: H / 2, half: W / 2, fz: D / 2 + .02, cy: -.03, s: 1 });
+    return g;
+  },
+  // hard surface: pale panels on a gunmetal frame, a painted stripe, bolts, cheek vents
+  mecha(id, hex) {
+    const g = new THREE.Group(), M = { trim: MAT.gun, dark: MAT.gun }, P = paint(hex);
+    g.add(rbox(W, H, D, .12, MAT.gun, 0, 0, 0));                                            // the frame
+    g.add(rbox(W * .96, .2, D * .94, .06, MAT.panel, 0, H / 2 - .05, 0));                     // crown plate
+    g.add(rbox(.3, .035, .02, .012, P, 0, H / 2 - .07, D * .47 + .008));                    // painted stripe on it
+    g.add(rbox(W * .9, H * .6, D + .03, .05, MAT.gunDeep, 0, -.07, 0));                     // visor bezel
+    g.add(rbox(W * .82, H * .5, D + .05, .04, MAT.glass, 0, -.07, 0));
+    g.add(rbox(W * .62, .09, D * .5 + .1, .03, MAT.panel, 0, -H / 2 + .02, .12));            // chin plate
+    [[-1, 1], [1, 1], [-1, -1], [1, -1]].forEach(([x, y]) => {                               // bolts at the visor's corners
+      const b = new THREE.CylinderGeometry(.018, .018, .02, 24); b.rotateX(Math.PI / 2);
+      g.add(mesh(b, MAT.chrome, x * W * .42, -.07 + y * H * .27, D / 2 + .02));
+    });
+    if (id !== 'c' && id !== 'f') [-1, 1].forEach(k => {                                     // cheek plates with vents
+      g.add(rbox(.06, .46, .56, .03, MAT.panel, k * (W / 2 + .015), -.06, -.02));
+      for (let j = 0; j < 3; j++) g.add(rbox(.02, .035, .34, .01, MAT.gunDeep, k * (W / 2 + .045), -.16 + j * .09, -.02));
+    });
+    parts(g, id, hex, M, { top: H / 2, half: W / 2 + .02, fz: D / 2 + .025, cy: -.07, s: .9 });
+    return g;
+  },
+};
+const FRAME = { ceramic: [5.3, .14], glass: [5.3, .12], neon: [5.3, .14], portrait: [4.45, .1], mecha: [5.3, .14] };
+
+/* ---- accumulate, as heads.html ---- */
+const rtOpts = { type: THREE.HalfFloatType, format: THREE.RGBAFormat, samples: 4, colorSpace: THREE.LinearSRGBColorSpace };
+const frame = new THREE.WebGLRenderTarget(S, S, rtOpts);
+const acc = [new THREE.WebGLRenderTarget(S, S, { type: THREE.FloatType, format: THREE.RGBAFormat }), new THREE.WebGLRenderTarget(S, S, { type: THREE.FloatType, format: THREE.RGBAFormat })];
+const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2));
+const qs = new THREE.Scene(); qs.add(quad); const qc = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const vert = 'varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy, 0., 1.); }';
+const mixM = new THREE.ShaderMaterial({ vertexShader: vert, depthTest: false, depthWrite: false, uniforms: { a: { value: null }, b: { value: null }, t: { value: 0 } },
+  fragmentShader: 'uniform sampler2D a,b; uniform float t; varying vec2 v; void main(){ gl_FragColor = mix(texture2D(a,v), texture2D(b,v), t); }' });
+const outM = new THREE.ShaderMaterial({ vertexShader: vert, depthTest: false, depthWrite: false, uniforms: { a: { value: null }, raw: { value: 0 } },
+  fragmentShader: `uniform sampler2D a; uniform float raw; varying vec2 v;
+    vec3 aces(vec3 c){ c *= .6; return clamp((c*(2.51*c+.03))/(c*(2.43*c+.59)+.14),0.,1.); }
+    vec3 srgb(vec3 c){ return mix(12.92*c, 1.055*pow(c, vec3(1./2.4))-.055, step(.0031308,c)); }
+    void main(){ vec4 p = texture2D(a,v); float al = clamp(p.a,0.,1.); vec3 c = al>0.001 ? p.rgb/al : vec3(0.);
+      c = raw>.5 ? c : aces(c); gl_FragColor = vec4(srgb(c), al); }` });
+function halton(i, b) { let f = 1, r = 0; while (i > 0) { f /= b; r += f * (i % b); i = Math.floor(i / b); } return r; }
+function accumulate() {
+  renderer.toneMapping = THREE.NoToneMapping;
+  for (let i = 0; i < SAMPLES; i++) {
+    const hx = halton(i + 1, 2) - .5, hy = halton(i + 1, 3) - .5;
+    camera.setViewOffset(S, S, hx, hy, S, S);
+    renderer.setRenderTarget(frame); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(scene, camera);
+    mixM.uniforms.a.value = acc[0].texture; mixM.uniforms.b.value = frame.texture; mixM.uniforms.t.value = 1 / (i + 1);
+    quad.material = mixM; renderer.setRenderTarget(acc[1]); renderer.render(qs, qc);
+    acc.reverse();
+  }
+  camera.clearViewOffset();
+  outM.uniforms.a.value = acc[0].texture; quad.material = outM;
+  renderer.setRenderTarget(null); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.render(qs, qc);
+  return renderer.domElement.toDataURL('image/png');
+}
+
+let current = null;
+function place(style, id, hex, turn) {
+  if (current) scene.remove(current);
+  current = STYLES[style](id, hex); current.rotation.y = turn; scene.add(current);
+  rimC.color.set(hex);
+  frameCam(...FRAME[style]);
+}
+window.layers = {
+  head(style, id, hex, turn) { place(style, id, hex, turn); outM.uniforms.raw.value = 0; return accumulate(); },
+  emit(style, id, hex, turn) { place(style, id, hex, turn); outM.uniforms.raw.value = 1; const black = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    current.traverse(o => { if (o.isMesh && o.material.transmission > 0) o.visible = false; else if (o.isMesh && !o.material.userData.emit) o.material = black; });
+    return accumulate(); },
+};
+</script>
