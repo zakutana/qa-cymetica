@@ -1,0 +1,230 @@
+<main class="content-main" id="main-content">
+<div class="tl-page one-page" id="one" data-view="basic" data-basic="yours">
+    <div class="tl-wrap">
+        <div class="tl-hero">
+            <span class="tl-eyebrow">EventTrader</span>
+            <h1>Traffic</h1>
+            <p>Visitors, apps and what you created, on one page. Daily visitors, where they come from, which apps get used and the traffic on your own pages.</p>
+            <div class="tl-live on"><i></i><span>Live · updates every 20s</span></div>
+        </div>
+
+        <div class="tl-toolbar one-toolbar">
+            <div class="one-views" role="tablist" aria-label="View">
+                <button type="button" class="tl-chip one-view on" data-view="basic" role="tab" aria-selected="true">Basic</button>
+                <button type="button" class="tl-chip one-view" data-view="advanced" role="tab" aria-selected="false">Advanced</button>
+            </div>
+            <div class="tl-range" role="tablist" aria-label="Time range">
+                <button type="button" class="tl-chip one-days" data-days="7" role="tab">7 days</button>
+                <button type="button" class="tl-chip one-days on" data-days="14" role="tab" aria-selected="true">14 days</button>
+                <button type="button" class="tl-chip one-days" data-days="30" role="tab">30 days</button>
+                <button type="button" class="tl-chip one-days" data-days="90" role="tab">90 days</button>
+            </div>
+        </div>
+
+        <!-- ============ CLAUDE'S BASIC (mock alternative, switched in the demo pill) ============ -->
+        <section class="v-claude">
+            <h2 class="one-section">Yesterday <span class="tl-unit" id="c-yday-label"></span></h2>
+            <div class="c-tiles" id="c-tiles"></div>
+
+            <div class="tl-grid one-grid">
+                <div class="tl-panel">
+                    <h2>Your apps yesterday <span class="tl-unit">people · vs the 7 days before</span></h2>
+                    <ul class="c-apps" id="c-apps"></ul>
+                </div>
+                <div class="tl-panel">
+                    <h2>Your share of the site <span class="tl-unit">people per day</span></h2>
+                    <div class="tl-canvas-wrap c-short"><canvas id="c-share"></canvas></div>
+                    <p class="tl-note" id="c-share-note"></p>
+                </div>
+            </div>
+
+            <div class="tl-panel">
+                <h2>Your apps <span class="tl-unit" id="c-table-unit"></span></h2>
+                <div class="tl-scroll"><table class="au-table c-table" id="c-table"></table></div>
+                <p class="tl-note">People = whole product (every page and tool of the app). Uses = page loads where the visitor clicked, typed or filled in. Came back and the rank are from the site's app list (30 days, people and AI agents); "–" = the app is not in its top 40.</p>
+            </div>
+
+            <div class="tl-grid one-grid">
+                <div class="tl-panel">
+                    <h2>Site visitors <span class="tl-unit">per day</span></h2>
+                    <div class="tl-canvas-wrap c-short"><canvas id="c-site"></canvas></div>
+                </div>
+                <div class="tl-panel">
+                    <h2>Volume generated <span class="tl-unit">per day</span></h2>
+                    <div class="tl-canvas-wrap c-short"><canvas id="c-vol"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ SITE ============ -->
+        <div class="v-basic">
+            <div class="tl-kpis">
+                <div class="tl-kpi"><div class="v" id="k-total">–</div><div class="k">Arrivals</div></div>
+                <div class="tl-kpi pos"><div class="v" id="k-unique">–</div><div class="k">Unique visitors</div></div>
+                <div class="tl-kpi"><div class="v" id="k-today">–</div><div class="k">Arrivals today (Pacific)</div></div>
+                <div class="tl-kpi"><div class="v" id="k-agents">–</div><div class="k">AI-agent requests</div></div>
+                <div class="tl-kpi pos"><div class="v" id="k-agents-u">–</div><div class="k">Unique AI agents</div></div>
+                <div class="tl-kpi"><div class="v" id="k-bots">–</div><div class="k">Bots filtered</div></div>
+            </div>
+
+            <div class="tl-panel one-chart" id="p-line">
+                <h2>Visitors over time <span class="tl-unit">per day</span></h2>
+                <p class="tl-agents-lead">Humans on the left axis, AI agents (dashed) on the right axis — one chart, four lines. Click a legend item to hide or show a line.</p>
+                <div class="tl-canvas-wrap"><canvas id="tl-line"></canvas><div class="one-loading">Loading…</div></div>
+            </div>
+        </div>
+
+        <div class="tl-grid v-adv">
+            <div class="tl-panel">
+                <h2>Top sources <span class="tl-unit">arrivals</span></h2>
+                <div class="tl-src-wrap"><canvas id="tl-src"></canvas></div>
+            </div>
+            <div class="tl-panel">
+                <h2>Top pages <span class="tl-unit">landings, whole range</span></h2>
+                <ul class="tl-paths" id="tl-paths"></ul>
+                <p class="tl-note" id="tl-paths-note"></p>
+            </div>
+        </div>
+
+        <div class="tl-panel v-adv" id="tl-do">
+            <h2>What visitors do <span class="tl-unit" id="tl-do-range">last 24 h</span></h2>
+            <p class="tl-agents-lead">Every request, arrivals AND the pages opened after them (for AI agents also their API calls), grouped by product area. These counts are larger than the arrival counts above. Humans and AI agents are counted separately.</p>
+            <div class="tl-toolbar" role="tablist" aria-label="Window">
+                <button type="button" class="tl-chip tl-do-chip on" data-win="24h">Last 24 h</button>
+                <button type="button" class="tl-chip tl-do-chip" data-win="range">Selected range</button>
+            </div>
+            <div class="tl-do-grid">
+                <div><h3>Humans <span class="tl-unit">requests <span id="tl-do-human-total"></span></span></h3><ul class="tl-paths" id="tl-do-human"></ul></div>
+                <div><h3>AI agents <span class="tl-unit">requests <span id="tl-do-agent-total"></span></span></h3><ul class="tl-paths" id="tl-do-agent"></ul></div>
+            </div>
+            <h3 style="margin-top:18px;font-size:0.9rem;color:var(--text-heading);">Actions taken</h3>
+            <div class="tl-scroll"><table class="tl-acts" id="tl-acts">
+                <thead><tr><th>Action</th><th>Customer-participating · 24 h</th><th>Platform-only · 24 h</th><th>Customer-participating · range</th><th>Platform-only · range</th></tr></thead>
+                <tbody></tbody>
+            </table></div>
+            <p class="tl-note" id="tl-do-note"></p>
+        </div>
+
+        <div class="tl-panel v-basic one-chart" id="tl-vol">
+            <h2>Volume generated <span class="tl-unit">traded notional per day</span></h2>
+            <div class="tl-canvas-wrap"><canvas id="tl-vol-chart"></canvas><div class="one-loading">Loading…</div></div>
+            <p class="tl-note" id="tl-vol-note"></p>
+        </div>
+
+        <div class="tl-panel tl-agents v-adv">
+            <h2>AI Agents</h2>
+            <p class="tl-agents-lead">EventTrader is AI-native — agents are first-class users. These are the AI agents, crawlers and answer engines visiting the platform (they read <code>llms.txt</code> and <code>.well-known/mcp</code> and act on their owner's behalf). Counted separately, never mixed into the human numbers.</p>
+            <p class="tl-agents-lead"><strong>Requests</strong> = every request an agent makes (one crawler reading 300 pages is 300 requests). It is the same number as the AI agents total under What visitors do. <strong>Unique agents</strong> = distinct agents, one per agent family per hashed IP — the same basis as unique human visitors. Their daily lines are in the chart above; the list below ranks agent families by visits.</p>
+            <ul class="tl-paths" id="tl-agents-list"></ul>
+            <div class="tl-agents-cta">
+                <span>Want your agent here? Point ChatGPT, Claude, Gemini or any MCP/HTTP agent at us — it registers, funds with your own USDC and trades.</span>
+                <a href="https://cymetica.com/build" class="tl-agents-btn">Get the paste prompt →</a>
+            </div>
+        </div>
+
+        <!-- ============ APPS (was /app-usage) ============ -->
+        <h2 class="one-section v-basic">Apps <span class="tl-unit" id="au-window"></span></h2>
+        <div class="au-stats v-adv" id="au-stats"></div>
+
+        <section class="tl-panel v-adv" id="au-history">
+            <h2 id="au-history-title">Usage over time</h2>
+            <p class="tl-note" id="au-history-sub" style="margin:0 0 12px"></p>
+            <div class="au-controls">
+                <div class="au-metrics" role="group" aria-label="What to count">
+                    <button class="au-metric" type="button" data-metric="users" aria-pressed="true">Users</button>
+                    <button class="au-metric" type="button" data-metric="sessions" aria-pressed="false">Sessions</button>
+                </div>
+                <div class="au-metrics" role="group" aria-label="How many days">
+                    <button class="au-metric au-range" type="button" data-range="30" aria-pressed="true">30 days</button>
+                    <button class="au-metric au-range" type="button" data-range="60" aria-pressed="false">60 days</button>
+                    <button class="au-metric au-range" type="button" data-range="90" aria-pressed="false">90 days</button>
+                </div>
+            </div>
+            <div class="au-grid" id="au-history-grid"></div>
+        </section>
+
+        <section class="tl-panel v-basic" id="au-table-panel">
+            <div class="one-head">
+                <h2 id="au-title">Most used by everyone</h2>
+                <div class="au-tabs" role="tablist" aria-label="Who is using the apps">
+                    <button class="au-tab" role="tab" aria-selected="true" data-aud="combined">Everyone</button>
+                    <button class="au-tab" role="tab" aria-selected="false" data-aud="humans">People</button>
+                    <button class="au-tab" role="tab" aria-selected="false" data-aud="ai_agents">AI agents</button>
+                </div>
+            </div>
+            <p class="tl-note" id="au-sub" style="margin:0 0 8px"></p>
+            <table class="au-table one-apps" id="au-table"></table>
+            <button type="button" class="one-more" id="au-more"></button>
+            <p class="au-note v-adv">Ranking weighs how many users an app has, how much they use it and how many come back. Sign-in, account and marketing pages are left out; our own accounts and tools are never counted as users. People and agents are counted per day without tracking anyone, so the figures are estimates. Updated hourly.</p>
+        </section>
+
+        <!-- ============ YOURS (was /traffic/mine) ============ -->
+        <h2 class="one-section v-basic">Your traffic <span class="tl-unit">what you created · only you see this part</span></h2>
+
+        <div class="tm-kpis v-adv">
+            <div class="tm-kpi"><div class="v" id="m-visits">–</div><div class="k">Page views</div></div>
+            <div class="tm-kpi"><div class="v" id="m-unique">–</div><div class="k">Unique visitors</div></div>
+            <div class="tm-kpi"><div class="v" id="m-agents">–</div><div class="k">AI-agent requests</div></div>
+            <div class="tm-kpi"><div class="v" id="m-items">–</div><div class="k">Pages you created</div></div>
+        </div>
+
+        <div class="tl-panel v-basic one-chart" id="p-mine-line">
+            <h2>Page views per day</h2>
+            <div class="tm-canvas"><canvas id="tm-line"></canvas><div class="one-loading">Loading…</div></div>
+        </div>
+
+        <div class="tl-panel v-basic one-chart" id="p-mine-stack">
+            <h2>People per day by page</h2>
+            <div class="tm-canvas one-tall"><canvas id="tm-stack"></canvas><div class="one-loading">Loading…</div></div>
+            <p class="tl-note">One bar per day, split by page: each colour is the distinct people who opened that page that day, cut at the same Pacific midnight as Unique visitors. One person can use two of your pages on the same day, so the pages can add up to more than Unique visitors.</p>
+        </div>
+
+        <div class="tl-grid v-adv">
+            <div class="tl-panel"><h2>Where visitors came from</h2><ul class="tm-list" id="tm-sources"></ul></div>
+            <div class="tl-panel"><h2>Referring sites</h2><ul class="tm-list" id="tm-refs"></ul></div>
+        </div>
+
+        <section class="tl-panel v-basic">
+            <h2>Your apps <span class="tl-unit" id="ya-unit"></span></h2>
+            <table class="au-table one-apps" id="ya-table"></table>
+            <p class="tl-note">Same columns as the app list above. Users = whole product (all its pages and tools). Came back is filled here from the site's app list where it lists the app (30 days); for the rest it is the number Cymetica would add.</p>
+        </section>
+
+        <section class="tl-panel v-adv">
+            <h2>All your pages <span class="tl-unit" id="tm-items-unit"></span></h2>
+            <div class="tm-scroll">
+                <table class="tm-table">
+                    <thead><tr><th>Page</th><th>Page views</th><th>Unique</th><th>AI agents</th><th>From another page here</th></tr></thead>
+                    <tbody id="tm-items"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="tl-panel v-adv">
+            <h2>Users you brought</h2>
+            <p class="tm-empty" id="tm-ref-intro"></p>
+            <div class="tm-kpis" style="margin-top:14px">
+                <div class="tm-kpi"><div class="v" id="r-att">–</div><div class="k">Registered</div></div>
+                <div class="tm-kpi"><div class="v" id="r-q">–</div><div class="k">Qualified (first deposit)</div></div>
+                <div class="tm-kpi"><div class="v" id="r-e">–</div><div class="k">ET10 earned</div></div>
+                <div class="tm-kpi"><div class="v" id="r-p">–</div><div class="k">ET10 on the way</div></div>
+            </div>
+            <p class="tm-empty" id="tm-ref-empty" style="margin-top:12px">No one has registered through your links yet. Post your tracked cymetica.com/c/ links; every registration they bring shows up here.</p>
+        </section>
+
+        <!-- ============ ONE TABLE OF WHAT EACH NUMBER COUNTS ============ -->
+        <details class="tl-panel one-defs" id="one-defs" open>
+            <summary><h2>What each number counts <span class="tl-unit" id="defs-count"></span></h2></summary>
+            <div class="tl-scroll"><table class="au-table one-defs-table" id="defs-table"></table></div>
+        </details>
+
+        <p class="tl-foot">Aggregate, privacy-safe stats. Visitors and your pages: days cut at midnight Pacific time; "14 days" is 14 calendar days including today. Apps: the last 30 full UTC days. Unique visitors are counted by hashed IP — no raw IP addresses are stored or shown. <span id="one-gen"></span></p>
+    </div>
+</div>
+
+<div class="one-demo" id="one-demo" aria-label="Mock only">
+    <span>MOCK · Basic view:</span>
+    <button type="button" data-basic="yours" class="on">Yours</button>
+    <button type="button" data-basic="claude">Claude's</button>
+</div>
+</main>

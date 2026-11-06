@@ -120,6 +120,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["scripts/serve_mock.py", "outbox/casino-v9", "8843", "--quiet"],
       "port": 8843
+    },
+    {
+      "name": "traffic-one",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["scripts/serve_mock.py", "outbox/traffic-one", "8844", "--quiet"],
+      "port": 8844
     }
   ]
 }

@@ -1,0 +1,26 @@
+/* copied by hand from the signed-in https://cymetica.com/traffic/mine (2026-11-06); that page needs a sign-in, so build.py cannot fetch it */
+.tm-page { --bg-card: var(--surface); --panel-bg: var(--surface); --panel-border: var(--hairline);
+    --text-primary: var(--text); --text-secondary: var(--text-2); color: var(--text-primary); }
+.tm-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+.tm-kpi { background: var(--bg-card); border: 1px solid var(--panel-border); border-radius: 12px; padding: 18px; }
+.tm-kpi .v { font-family: 'Archivo Black', sans-serif; font-size: 1.9rem; color: var(--text); line-height: 1.1; }
+.tm-kpi .k { font-size: 0.76rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 6px; }
+.tm-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-top: 18px; }
+.tm-canvas { position: relative; height: 300px; }
+.tm-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tm-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.tm-table th, .tm-table td { text-align: right; padding: 9px 6px; border-bottom: 1px solid var(--panel-border); white-space: nowrap; }
+.tm-table th:first-child, .tm-table td:first-child { text-align: left; white-space: normal; }
+.tm-table th { color: var(--text-secondary); font-weight: 600; font-size: 0.78rem; }
+.tm-table td { font-variant-numeric: tabular-nums; }
+.tm-table a { color: var(--text-primary); text-decoration: none; }
+.tm-table a:hover { text-decoration: underline; }
+.tm-kind { display: inline-block; font-size: 0.7rem; color: var(--text-2); border: 1px solid var(--panel-border); border-radius: 6px; padding: 1px 6px; margin-right: 6px; }
+.tm-sub { color: var(--text-secondary); font-size: 0.76rem; display: block; margin-top: 2px; }
+.tm-list { list-style: none; margin: 0; padding: 0; }
+.tm-list li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--panel-border); font-size: 0.9rem; }
+.tm-list li:last-child { border-bottom: none; }
+.tm-list .n { color: var(--text); font-weight: 700; }
+.tm-empty { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; }
+.tm-foot { color: var(--text-secondary); font-size: 0.8rem; margin-top: 18px; line-height: 1.5; }
+@media (max-width: 820px) { .tm-grid { grid-template-columns: 1fr; } .tm-kpis { grid-template-columns: 1fr 1fr; } }
