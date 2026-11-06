@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 HERE = Path(__file__).resolve().parent
 OUTBOX = HERE.parent
 HOST = "https://cymetica.com"
-VERSION = "14"
+VERSION = "16"
 
 
 def load(name: str, path: Path):
@@ -42,14 +42,15 @@ def anonymous_page() -> str:
     return re.sub(r'<script src="(data|owner|v7)\.js"></script>', "", html)
 
 
-def owner_piece(owner: BeautifulSoup, name: str):
-    """One piece of the owner's page, with absolute links and 'Flash' out, the operator's word."""
+def owner_piece(owner: BeautifulSoup, name: str, patched: bool = True):
+    """One piece of the owner's page with absolute links; patched: 'Flash' out and the volume line short (the operator)."""
     raw = owner.select_one(f"template#{name}").decode_contents()
-    raw = re.sub(r'<span class="at-kind flash"[^>]*>FLASH</span>', "", raw)
-    raw = raw.replace("Flash ", "")
-    # their long red "needs $X more volume to qualify": the figure stays, grey and short (the operator, 2026-11-06)
-    raw = re.sub(r'<span>needs</span>\s*(\$[\d,.]+)\s*<span>more volume to qualify</span>', r"\1 to qualify", raw)
-    raw = re.sub(r'href="/(?!/)', f'href="{HOST}/', raw)
+    if patched:
+        raw = re.sub(r'<span class="at-kind flash"[^>]*>FLASH</span>', "", raw)
+        raw = raw.replace("Flash ", "")
+        # their long red "needs $X more volume to qualify": the figure stays, grey and short (the operator, 2026-11-06)
+        raw = re.sub(r'<span>needs</span>\s*(\$[\d,.]+)\s*<span>more volume to qualify</span>', r"\1 to qualify", raw)
+    raw = re.sub(r'(href|src)="/(?!/)', rf'\1="{HOST}/', raw)
     return BeautifulSoup(raw, "html.parser")
 
 
@@ -186,15 +187,20 @@ def finish(out: str, css: tuple, scripts: tuple) -> str:
 
 
 def table_page() -> str:
-    """Table 99 as its owner sees it: their page, the owner's panel above it, our table drawn on it (table.js)."""
+    """Table 99 as its owner sees it, laid out as theirs is (the owner's panel above, Coach/Settings beside); only the
+    table itself is ours (table.js). The operator, 2026-11-06: change the table's design, not the page's layout."""
     soup = BeautifulSoup(fetch_page(f"/agent-casino/table/{TABLE_MOCK}"), "html.parser")
     owner = BeautifulSoup((HERE / "owner.html").read_text(encoding="utf8"), "html.parser")
     head = soup.select_one(".at-rhead")
-    lead = owner_piece(owner, "lead")
-    for old in soup.select("#atLead"):
+    lead = owner_piece(owner, "lead", patched=False)
+    for old in soup.select("#atLead, #atSide"):
         old.decompose()
     if head:
         head.insert_after(lead)
+    room, main = soup.select_one("#atRoom"), soup.select_one("#atRoom .at-main")
+    if room and main:
+        main.insert_after(owner_piece(owner, "side", patched=False))
+        room["class"] = list(dict.fromkeys(room.get("class", []) + ["has-side"]))
     pill = soup.select_one(".at-bar .at-pill")
     if pill:
         pill.replace_with(owner_piece(owner, "pill"))

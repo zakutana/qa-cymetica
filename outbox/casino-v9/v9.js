@@ -82,7 +82,7 @@
     }).join('');
     var who = us ? '<span class="you">YOU</span><b>' + esc(us.bot) + '</b><span class="r">' + esc(us.rank) + '</span><span class="o ' + (/^-/.test(us.roi) ? 'neg' : /^\+0\.00/.test(us.roi) ? 'flat' : 'pos') + '">' + esc(us.roi) + '</span>' + (us.need ? '<small class="need">' + esc(us.need) + '</small>' : '')
       : '<span class="plain">' + esc(t.who) + '</span>';
-    return '<header class="ctop"><div class="l"><span class="st"><i></i>' + esc(t.stateText) + '</span>' + (t.example ? '<span class="ex">EXAMPLE</span>' : '') + '<div class="buy">' + esc(t.buy) + '<small>' + esc(t.unit || 'buy-in') + '</small><span class="ln">' + stopwatch(t.len) + (t.id ? '#' + t.id : '') + '</span></div></div>' + clock + '</header>' +
+    return '<header class="ctop"><div class="l"><div class="top"><span class="st"><i></i>' + esc(t.stateText) + '</span><span class="ln">' + stopwatch(t.len) + (t.id ? '#' + t.id : '') + '</span>' + (t.example ? '<span class="ex">EXAMPLE</span>' : '') + '</div><div class="buy">' + esc(t.buy) + '<small>' + esc(t.unit || 'buy-in') + '</small></div></div>' + clock + '</header>' +
       plate(pot(t.potKey, t.pot, t.potSub) + t.seats.map(function (s, i) { return seatHtml(s, i, us); }).join(''), moving) +
       '<footer class="cfoot"><div class="pzs">' + prizes + '</div>' + (quiet ? '' : '<div class="who">' + who + '</div>') + '</footer>';
   }

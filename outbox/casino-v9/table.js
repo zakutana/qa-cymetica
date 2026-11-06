@@ -1,5 +1,5 @@
-/* Agent Casino v9, a table's own page. Their page; the owner's panel folded to one row and one line; their table
-   drawn on the rendered table of the lobby. Every figure is read off their own markup. Buttons do nothing. */
+/* Agent Casino v9, a table's own page: their page as it is, laid out as theirs; only the table drawing is ours, the
+   rendered table of the lobby with their seats on it. Every figure is read off their own markup. Buttons do nothing. */
 (function () {
   var G = window.CASINO_TABLE;
   var $ = function (s, r) { return (r || document).querySelector(s); };
@@ -7,42 +7,20 @@
   var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; };
   var txt = function (el) { return el ? el.textContent.replace(/\s+/g, ' ').trim() : ''; };
   var CROWN = '<span class="at-crown"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M1 11h16L15.5 3 11.8 6.8 9 1 6.2 6.8 2.5 3z" fill="currentColor"/></svg></span>';
-
-  /* ---------------------------------------------------------------- the owner's panel: one row, one line, details on demand */
   var lead = $('#atLead');
   var mine = lead ? txt($('.who b', lead)) : '';
-  if (lead) {
-    var head = $('.at-lead-h', lead), left = $('.left', lead);
-    if (head && left) head.appendChild(left);
-    var chips = $$('p', lead).map(function (p) {
-      if (p.classList.contains('need')) return '<span class="chip need">' + esc(txt(p)) + '</span>';
-      var body = txt(p).replace(/^[^:]*:\s*/, '');
-      var first = body.split(/\s+because\s+|[,;.:]\s/)[0];
-      return '<span class="chip">' + esc(first) + '</span>';
-    }).join('');
-    lead.insertAdjacentHTML('beforeend', '<div class="v9-chips">' + chips + '<button type="button" class="v9-more" data-details aria-expanded="false">Details</button></div>');
-    lead.classList.add('v9-folded');
-    lead.addEventListener('click', function (e) {
-      var b = e.target.closest('[data-details]');
-      if (!b) return;
-      var open = lead.classList.toggle('v9-open');
-      b.textContent = open ? 'Less' : 'Details';
-      b.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
-  }
 
-  /* ---------------------------------------------------------------- their table, on the rendered one */
-  var big = $('.at-big');
-  if (big && G) {
+  /* ---------------------------------------------------------------- their table, drawn on the rendered one */
+  var tbl = $('.at-big .at-tbl');
+  if (tbl && G) {
     var PW = 890, PH = PW * G.h / G.w, FW = 420, FH = 180;
-    var seats = $$('.at-seat', big).map(function (s) {
+    var seats = $$('.at-seat', tbl).map(function (s) {
       var ava = $('.at-ava', s), use = $('use', s), name = ava ? ava.getAttribute('title') : '';
       var colour = ((ava && ava.getAttribute('style')) || '').match(/--c:\s*(#[0-9a-fA-F]{3,8})/);
       return { empty: !name, bot: name, colour: colour ? colour[1] : null, shape: use ? use.getAttribute('href').slice(-1) : 'a',
-        rank: txt($('.at-rk', s)), roi: txt($('.at-lab em', s)), house: !!$('.at-h', s), you: name === mine };
+        rank: txt($('.at-rk', s)), roi: txt($('.at-lab em', s)), house: !!$('.at-h', s), you: !!name && name === mine };
     });
-    var pot = { k: txt($('.at-pot .k', big)), v: txt($('.at-pot .v', big)), s: txt($('.at-pot .s', big)) };
-    var prizes = $$('.at-spots .sp', big).map(function (sp) { return { k: txt($('.k', sp)), b: txt($('b', sp)), e: txt($('.e', sp)) }; });
+    var pot = { k: txt($('.at-pot .k', tbl)), v: txt($('.at-pot .v', tbl)), s: txt($('.at-pot .s', tbl)) };
 
     var f = G.felt, P = function (p) { return [p[0] * PW, p[1] * PH]; };
     var a = P(f.tl), b = P(f.tr), c = P(f.br), d = P(f.bl);
@@ -62,19 +40,27 @@
         (s.rank === '1' ? CROWN : '') +
         '<span class="lab' + (i === 0 ? ' up' : '') + '">' + (s.you ? '<em>YOU</em>' : '') + '<b>' + esc(name) + (s.house ? '<i>H</i>' : '') + '</b><span class="' + (/^-/.test(s.roi) ? 'neg' : /^\+0\.00/.test(s.roi) ? 'flat' : 'pos') + '">' + (s.rank ? '#' + esc(s.rank) + ' · ' : '') + esc(s.roi) + '</span></span></span>';
     }).join('');
-    big.classList.add('v9-big');
-    big.innerHTML = '<div class="v9-stage"><div class="v9-obj"><div class="v9-plate">' +
+    var holder = document.createElement('div');
+    holder.className = 'v9-big';
+    holder.innerHTML = '<div class="v9-stage"><div class="v9-obj"><div class="v9-plate">' +
       '<img class="glow" src="art/glow.webp" alt="" draggable="false"><img class="tbl" src="art/table.webp" alt="" draggable="false"><span class="sheen" aria-hidden="true"><i></i></span>' +
       '<div class="pot" style="width:' + FW + 'px;height:' + FH + 'px;transform:' + FM + '"><span class="k">' + esc(pot.k) + '</span><b class="v">' + esc(pot.v) + '</b><span class="s">' + esc(pot.s) + '</span></div>' +
-      seatHtml + '</div></div></div>' +
-      '<div class="pzs v9-bigpz">' + prizes.map(function (p, i) {
-        return '<div class="pz' + (i === 0 ? ' w' : '') + '"><span class="k">' + esc(p.k) + '</span><b>' + esc(p.b) + '</b><span class="e">' + esc(p.e) + '</span></div>';
-      }).join('') + '</div>';
+      seatHtml + '</div></div></div>';
+    tbl.replaceWith(holder);
     var fit = function () { $$('.v9-big .v9-stage').forEach(function (s) { s.style.setProperty('--k', Math.min(1.3, s.clientWidth / 640).toFixed(4)); }); };
     addEventListener('resize', fit); fit();
   }
 
-  /* ---------------------------------------------------------------- their clocks, stripped with their scripts */
+  /* ---------------------------------------------------------------- what their scripts did: the side tabs, the clocks */
+  document.addEventListener('click', function (e) {
+    var tab = e.target.closest('#atTabs [role="tab"]');
+    if (tab) {
+      $$('#atTabs [role="tab"]').forEach(function (t) { var on = t === tab; t.classList.toggle('on', on); t.setAttribute('aria-selected', on ? 'true' : 'false'); });
+      $$('#atTabs .at-pane').forEach(function (p) { p.hidden = p.id !== tab.getAttribute('aria-controls'); });
+      return;
+    }
+    if (e.target.closest('button')) e.preventDefault();
+  });
   var pad = function (n) { return (n < 10 ? '0' : '') + n; };
   function tick() {
     $$('.at-cdn[data-end]').forEach(function (el) {
@@ -91,5 +77,4 @@
     });
   }
   tick(); setInterval(tick, 1000);
-  document.addEventListener('click', function (e) { var b = e.target.closest('main button, #atRoot button'); if (b && !b.closest('[data-details]')) e.preventDefault(); });
 })();

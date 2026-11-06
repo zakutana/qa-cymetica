@@ -23,7 +23,9 @@ a.v9-card:hover { border-color: rgba(0,207,255,.55); }
 .v9-card.coming .ctop .st { color: var(--at-muted); }
 .ctop .buy { margin-top: 6px; font: 400 23px/1 var(--font-display); color: var(--at-hi); white-space: nowrap; }
 .ctop .buy small { margin-left: 4px; font: 700 11.5px var(--at-num); color: var(--at-cyan); }
-.ctop .ln { margin-left: 9px; font: 700 12.5px var(--at-num); color: var(--at-ink2); }
+.ctop .top { display: flex; align-items: center; gap: 12px; }
+.ctop .ln { font: 700 13px var(--at-num); color: var(--at-ink2); }
+.ctop .ex { margin-left: 0 !important; }
 .ctop .clock { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .ctop .clock.quiet { font: 600 13px var(--at-num); color: var(--at-ink2); padding-top: 1px; white-space: nowrap; }
 .ctop .at-cdn { font-size: 19px; font-variant-numeric: tabular-nums; }
