@@ -273,3 +273,9 @@ body.v9-agents #agents { margin-top: 28px; }
   .v9-done > summary .st { font-size: 12px; }
   .pz b { font-size: 15px; }
 }
+
+/* finished tables: what 1st and 2nd took, said as an amount, and their own line why (the operator, 2026-11-07) */
+.fr .w { font-size: 13px; }
+.fr .w.none { display: inline !important; font-weight: 700; color: var(--at-ink2); }
+.fr .w i { margin-right: 4px; font: 600 10.5px var(--at-num); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: var(--at-muted); }
+.fnote { margin: 6px 6px 0; font: 500 12px/1.45 var(--at-num); color: var(--at-muted); }

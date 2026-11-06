@@ -219,7 +219,7 @@
   }
   function doneCard(t, hidden) {
     var ids = t.mine.map(function (m) { return m.seat_id; });
-    var rows = t.ranked.slice().sort(function (a, b) { return a.rank - b.rank; }).filter(function (r) { return r.rank <= 3 || ids.indexOf(r.seat_id) >= 0; });
+    var rows = t.ranked.slice().sort(function (a, b) { return a.rank - b.rank; }).filter(function (r) { return r.rank <= 3 || r.prize > 0 || ids.indexOf(r.seat_id) >= 0; });
     var ended = String(t.ends_at || '').slice(5, 10).replace('-', '/');
     var buy = isEt(t) ? num(et10Buyin(t)) + ' ET10' : usd(t.buyin || 0);
     var me = t.ranked.filter(function (r) { return ids.indexOf(r.seat_id) >= 0; })[0];
@@ -228,8 +228,8 @@
       '<div class="fbody">' + finishedTable(t, ids) + '<div class="fb">' +
       rows.map(function (r) {
         var mine = ids.indexOf(r.seat_id) >= 0, w = [took(t, r), etLabel(r)].filter(Boolean).join(' ');
-        return '<div class="fr' + (mine ? ' mine' : '') + '"><span class="p">' + r.rank + '</span><span class="n">' + esc(r.bot) + '</span><span class="o ' + tone(r.roi) + '">' + pct(r.roi) + '</span><span class="w' + (w ? '' : ' none') + '">' + (esc(w) || '—') + '</span></div>';
-      }).join('') + '</div></div></a>';
+        return '<div class="fr' + (mine ? ' mine' : '') + '"><span class="p">' + r.rank + '</span><span class="n">' + esc(r.bot) + '</span><span class="o ' + tone(r.roi) + '">' + pct(r.roi) + '</span><span class="w' + (w ? '' : ' none') + '">' + (esc(w) || (r.house ? '<i>house</i> ' : '') + (isEt(t) ? '0 ET10' : '$0')) + '</span></div>';
+      }).join('') + (t.winner_note ? '<p class="fnote">' + esc(t.winner_note) + '</p>' : '') + '</div></div></a>';
   }
 
   /* ---------------------------------------------------------------- the page */
