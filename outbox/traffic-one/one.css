@@ -41,6 +41,12 @@
 .au-stat { background: var(--bg-card); border-color: var(--panel-border); }
 .au-card { background: rgba(10,14,23,0.35); border-color: var(--panel-border); }
 
+/* tooltips on column heads and tiles */
+[data-tip] { cursor: help; text-decoration: underline dotted rgba(169,184,204,0.5); text-underline-offset: 4px; }
+.one-tip { position: fixed; z-index: 10000; max-width: 300px; padding: 9px 12px; border-radius: 8px; background: #0a0e17; border: 1px solid rgba(0,207,255,0.45); box-shadow: 0 8px 28px rgba(0,0,0,0.6);
+    color: #e6edf5; font-size: 0.8rem; line-height: 1.45; font-weight: 400; text-transform: none; letter-spacing: normal; pointer-events: none; opacity: 0; transition: opacity 0.12s; }
+.one-tip.on { opacity: 1; }
+
 /* the definitions table */
 .one-defs summary { cursor: pointer; list-style: none; }
 .one-defs summary::-webkit-details-marker { display: none; }

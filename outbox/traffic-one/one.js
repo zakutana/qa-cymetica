@@ -129,7 +129,7 @@
         cols.push(['Came back', 'n'], ['Uses', 'n']);
         cols.forEach(function (h, i) {
             var th = el('th', h[1], h[0]);
-            if (h[0] === 'Uses' && opts.usesNew) th.appendChild(el('span', 'new', 'NEW'));
+            var tip = (opts.tips || APP_TIPS)[h[0]]; if (tip) th.setAttribute('data-tip', tip);
             tr.appendChild(th);
         });
         head.appendChild(tr); table.appendChild(head);
@@ -151,6 +151,49 @@
         });
         table.appendChild(body);
     }
+    /* ---------- tooltips: one short line per column and tile ---------- */
+    var APP_TIPS = {
+        'Unique visitors': 'Distinct people who used the app, all its pages and tools, each counted once. Counted by account or browser, so it is not the same number as the site\'s Unique visitors.',
+        'Page views': 'Every page of the app a person opened. AI agents are not counted.',
+        'Came back': 'Share of these visitors who used the app on two or more days in the last 30 days.',
+        Uses: 'Page loads where the visitor did something: clicked, typed or filled in. Opening a page and leaving is not a use.'
+    };
+    var TIPS = [
+        ['#k-total + .k', 'The first page someone opens when they come from outside: search, a link, a chat. The pages they open after it are not counted.'],
+        ['#k-unique + .k', 'Distinct people who opened any page of the site, each counted once. Counted by IP address.'],
+        ['#k-today + .k', 'Arrivals since midnight today, Pacific time.'],
+        ['#k-agents + .k', 'Every request an AI agent made. One crawler reading 300 pages is 300.'],
+        ['#k-agents-u + .k', 'Distinct AI agents: one per agent family per IP address.'],
+        ['#k-bots + .k', 'Cymetica does not say what this counts.'],
+        ['#m-visits + .k', 'Every page a person opened on your pages. AI agents and background calls are not counted.'],
+        ['#m-unique + .k', 'Distinct people who opened any of your pages, each counted once. Counted by IP address.'],
+        ['#m-agents + .k', 'Every request an AI agent made to your pages.'],
+        ['#m-items + .k', 'Pages, apps and products you created.'],
+        ['.tm-table th:nth-child(2)', 'Every time a person opened the page.'],
+        ['.tm-table th:nth-child(3)', 'Distinct people who opened this one page, each counted once. Counted by IP address.'],
+        ['.tm-table th:nth-child(4)', 'Requests AI agents made to this page.'],
+        ['.tm-table th:nth-child(5)', 'Cymetica does not say what this counts.'],
+        ['.tl-acts th:nth-child(2)', 'Actions with a customer account on at least one side, in the last 24 hours.'],
+        ['.tl-acts th:nth-child(3)', 'Actions where every side is a system, test, market-maker or internal account, in the last 24 hours.'],
+        ['.tl-acts th:nth-child(4)', 'Actions with a customer account on at least one side, over the selected range.'],
+        ['.tl-acts th:nth-child(5)', 'Actions where every side is a system, test, market-maker or internal account, over the selected range.']
+    ];
+    function tips() {
+        TIPS.forEach(function (t) { document.querySelectorAll(t[0]).forEach(function (n) { n.setAttribute('data-tip', t[1]); }); });
+        var box = el('div', 'one-tip'); box.id = 'one-tip'; document.body.appendChild(box);
+        function hide() { box.classList.remove('on'); }
+        document.addEventListener('mouseover', function (e) {
+            var n = e.target.closest ? e.target.closest('[data-tip]') : null;
+            if (!n) { hide(); return; }
+            box.textContent = n.getAttribute('data-tip'); box.classList.add('on');
+            var r = n.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
+            var x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), window.innerWidth - w - 8);
+            var y = r.top - h - 8; if (y < 8) y = r.bottom + 8;
+            box.style.left = x + 'px'; box.style.top = y + 'px';
+        });
+        window.addEventListener('scroll', hide, { passive: true });
+    }
+
     var AUD = { combined: ['Most used by everyone', 'People and AI agents together, each user counted once.'],
         humans: ['Most used by people', 'Visitors in a web browser.'],
         ai_agents: ['Most used by AI agents', 'Outside AI agents using the site, the API or the MCP server. Training and search crawlers are not counted.'] };
@@ -158,13 +201,15 @@
         var w = U.window || {};
         $('au-window').textContent = 'last ' + (w.days || 30) + ' days · ' + (w.since || '') + ' to today (UTC)';
         $('au-title').textContent = AUD[aud][0];
-        $('au-sub').textContent = AUD[aud][1] + ' Unique visitors = distinct people who used the app in 30 days, each counted once (Cymetica called it Users). Came back = share who used it on two or more days. Uses = page loads where they clicked, typed or filled in; the API publishes it today only for products in a company, so only those rows have it.';
+        $('au-sub').textContent = AUD[aud][1];
         document.querySelectorAll('.au-tab').forEach(function (t) { t.setAttribute('aria-selected', String(t.getAttribute('data-aud') === aud)); });
         var all = (U[aud] || []).map(function (r) {
             var p = PRODUCT[r.path];
             return { rank: r.rank, app: r.app, path: r.path, users: r.users, came: r.came_back_pct, uses: p ? p.uses : null, yours: !!p };
         });
-        appTable($('au-table'), auAll ? all : all.slice(0, 15), { usesNew: true, tagYours: true });
+        var tips = Object.assign({}, APP_TIPS, { 'Unique visitors': aud === 'humans' ? APP_TIPS['Unique visitors'] : aud === 'ai_agents' ? 'Distinct outside AI agents that used the app in the last 30 days, each counted once.' : 'Distinct people and AI agents that used the app in the last 30 days, each counted once.',
+            Uses: APP_TIPS.Uses + ' Cymetica publishes it only for apps in a company, so the other rows show a dot.' });
+        appTable($('au-table'), auAll ? all : all.slice(0, 15), { tagYours: true, tips: tips });
         $('au-more').textContent = auAll ? 'Show top 15' : 'Show all ' + all.length;
         var t = U.totals || {};
         var st = $('au-stats'); st.textContent = '';
@@ -390,7 +435,7 @@
                 scales: { x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true } }, y: { stacked: true, beginAtZero: true, grid: { color: GRID }, ticks: { callback: function (x) { return usd(x); } } } } } });
     }
 
-    function renderRange() { site(); activity(); mine(); defs(); }
+    function renderRange() { site(); activity(); mine(); }
     function renderAll() { renderRange(); apps(); history(); }
 
     /* ---------- controls ---------- */
@@ -428,6 +473,7 @@
     });
     var q = new URLSearchParams(location.search);
     if (q.get('view')) document.querySelector('.one-view[data-view="' + q.get('view') + '"]').click();
+    tips();
     $('one-gen').textContent = 'Mock data: Cymetica\'s own APIs read ' + String((S['public-14'] || {}).generated_at || '').slice(0, 16).replace('T', ' ') + ' UTC.';
     renderAll();
 })();
