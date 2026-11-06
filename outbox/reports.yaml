@@ -8952,6 +8952,34 @@ reports:
       POSTs were real Build it Better filings the account owner asked for; nothing else was written. If extra usage is meant not to cover
       Build it Better requests, say it on /usage and in the 429, and we read both.
 
+  - key: extra-usage-reads-zero-deposited-usdc-while-portfolio-shows-8-31
+    severity: medium
+    category: api
+    url: https://cymetica.com/usage
+    title: "Extra usage refuses a $1.50 Build it Better filing as 'not covered by your own deposits' (deposit_backed_usdc 0.00) while the portfolio shows 8.31 USDC cash and the balance check reads 'timeout'"
+    expected: >
+      With extra usage on and USDC from the account's own deposits on the account, a filing past the weekly window is paid from it, or
+      the 429 names the amount it read and why it does not count. /usage says before the toggle that extra usage spends only deposited USDC.
+    actual: >
+      Read on 2026-11-06 at 18:32-18:40 UTC. POST /api/v1/build-it-better/requests came back HTTP 429, code USAGE_LIMIT, limit "weekly",
+      message "Extra usage is on, but the USDC/USDT from your own deposits does not cover this filing ($1.50). Deposit USDC or USDT to
+      your account to continue now." Its usage.extra_usage says enabled true, month_spend_usdc "0.00", monthly_cap_usdc "25.00",
+      deposit_backed_usdc "0.00". Seven minutes later, same API key: GET /api/v1/account/me/portfolio lists USDC, category "cash",
+      balance 8.307546, value_usd 8.31. GET /api/v1/account/me says balance_usdc "0.00", ledger_balance_usdc "0.00",
+      onchain_balance_usdc "0.00", balances_provisional true, balance_check_status "timeout". The account's ledger
+      (GET /api/v1/account/me/transactions) has DEPOSIT rows "USDC deposit from Base (instant)" of 6.874349 on 26 Oct and 90.00 on
+      29 Oct. So the filing counts the on-chain read that timed out as 0.00 deposited, and refuses $1.50 against 8.31 USDC. Nothing on
+      /usage, in /static/js/usage-page.js or nexus-usage.js, or on /api-docs says extra usage spends only deposit-backed USDC.
+    steps:
+      - 'POST https://cymetica.com/api/v1/build-it-better/requests (week 5.85 of 6.00 u used, extra usage on) -> 429, usage.extra_usage.deposit_backed_usdc "0.00", "does not cover this filing ($1.50)"'
+      - 'GET https://cymetica.com/api/v1/account/me/portfolio with the same key -> assets: {"symbol": "USDC", "category": "cash", "balance": 8.307546}'
+      - 'GET https://cymetica.com/api/v1/account/me -> balance_usdc "0.00", onchain_balance_usdc "0.00", balances_provisional true, balance_check_status "timeout"'
+      - 'Open https://cymetica.com/usage -> the Extra usage toggle and its prompt ask only for a monthly limit; no line says the money must be deposited USDC/USDT'
+    body: >
+      A creator who has USDC on the account and turns extra usage on is told to deposit more, because a balance read that timed out is
+      taken as zero. The POST was a real Build it Better filing the account owner asked for; nothing else was written. Related to #314
+      (the same filing refused earlier as over a spend limit while extra usage was on).
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

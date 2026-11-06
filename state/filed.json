@@ -6514,6 +6514,20 @@
     "314": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "extra-usage-reads-zero-deposited-usdc-while-portfolio-shows-8-31",
+   "nodeids": [],
+   "report_ids": [
+    315
+   ],
+   "title": "Extra usage refuses a $1.50 Build it Better filing as 'not covered by your own deposits' (deposit_backed_usdc 0.00) while the portfolio shows 8.31 USDC cash and the balance check reads 'timeout'",
+   "filed_at": "2026-11-06T18:41:44+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "315": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
