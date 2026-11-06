@@ -1,5 +1,6 @@
-/* Agent Casino v9, on their page. Running tables on the rendered table, Open as a picker, Finished folded. Buttons do nothing.
-   Every figure comes from lobby.js (their markup and the owner's) or data.js (our results). */
+/* Agent Casino v9, on their page. Running tables on the rendered table, Open as a picker with its switches beside it,
+   Finished folded, one card per table. Buttons do nothing. Every figure comes from lobby.js (their markup and the owner's)
+   or data.js (our results). */
 (function () {
   var L = window.CASINO_LOBBY, D = window.CASINO, G = window.CASINO_TABLE;
   var HOST = 'https://cymetica.com';
@@ -24,6 +25,14 @@
     return '<span class="at-cdn" data-end="' + esc(end) + '" aria-label="Time left"><span data-u="d" hidden></span><span data-u="h"></span><span data-u="m"></span><span data-u="s"></span></span>';
   };
 
+  /* a species wears the same face at every table: read it off the seats their page draws */
+  var species = function (name) { return String(name || '').replace(/^(House|casino|tournament|lab Wave \d+)\s+/i, '').replace(/\s+Clone$/i, ''); };
+  var faces = {};
+  L.live.concat(L.open, L.liveKinds).forEach(function (t) {
+    (t.seats || []).forEach(function (s) { if (s && s.bot && s.colour) faces[species(s.bot)] = { colour: s.colour, shape: s.shape }; });
+  });
+  D.bots.forEach(function (b) { if (b.avatar && b.avatar.color) faces[species(b.bot)] = faces[species(b.bot)] || { colour: b.avatar.color, shape: b.avatar.shape }; });
+
   /* ---------------------------------------------------------------- the table: everything inside the card */
   var PW = 890, PH = PW * G.h / G.w, FW = 420, FH = 180;
   function feltMatrix(w, h) {
@@ -38,21 +47,21 @@
     return 'matrix3d(' + [A, E, 0, I, B, F, 0, J, 0, 0, 1, 0, C, H, 0, 1].map(function (n) { return n.toFixed(7); }).join(',') + ')';
   }
   var FM = feltMatrix(FW, FH);
+  var at = function (i) { var p = G.seats[i]; return 'left:' + (p[0] * PW).toFixed(1) + 'px;top:' + (p[1] * PH).toFixed(1) + 'px'; };
 
   function seatHtml(s, i, us) {
-    var at = G.seats[i], pos = 'left:' + (at[0] * PW).toFixed(1) + 'px;top:' + (at[1] * PH).toFixed(1) + 'px';
-    if (!s || s.empty) return '<span class="v9-seat empty" style="' + pos + '"><span class="at-ava"></span></span>';
+    if (!s || s.empty) return '<span class="v9-seat empty" style="' + at(i) + '"><span class="at-ava"></span></span>';
     var mine = us && us.bot === s.bot;
-    return '<span class="v9-seat' + (s.lead ? ' lead' : '') + (mine ? ' you' : '') + (s.pending ? ' pend' : '') + '" style="' + pos + '" title="' + esc(s.bot) + '">' +
+    return '<span class="v9-seat' + (s.lead ? ' lead' : '') + (mine ? ' you' : '') + (s.pending ? ' pend' : '') + '" style="' + at(i) + '" title="' + esc(s.bot) + '">' +
       ava(s.colour, s.shape) + (s.lead ? CROWN : '') + (mine ? '<em>YOU</em>' : '') + '</span>';
   }
-  function stage(t, us, moving) {
-    var cy = /^\d/.test(t.pot) ? ' cy' : '';
+  function plate(inner, moving) {
     return '<div class="v9-stage"><div class="v9-obj"><div class="v9-plate">' +
       '<img class="glow" src="art/glow.webp" alt="" draggable="false"><img class="tbl" src="art/table.webp" alt="" draggable="false">' +
-      (moving ? '<span class="sheen" aria-hidden="true"><i></i></span>' : '') +
-      '<div class="pot" style="width:' + FW + 'px;height:' + FH + 'px;transform:' + FM + '"><span class="k">' + esc(t.potKey) + '</span><b class="v' + cy + '">' + esc(t.pot) + '</b><span class="s">' + esc(t.potSub) + '</span></div>' +
-      t.seats.map(function (s, i) { return seatHtml(s, i, us); }).join('') + '</div></div></div>';
+      (moving ? '<span class="sheen" aria-hidden="true"><i></i></span>' : '') + inner + '</div></div></div>';
+  }
+  function pot(key, value, sub) {
+    return '<div class="pot" style="width:' + FW + 'px;height:' + FH + 'px;transform:' + FM + '"><span class="k">' + esc(key) + '</span><b class="v' + (/^\d/.test(value) ? ' cy' : '') + '">' + esc(value) + '</b><span class="s">' + esc(sub) + '</span></div>';
   }
   function fit() {
     $$('.v9-stage').forEach(function (s) { s.style.setProperty('--k', Math.min(1, s.clientWidth / 580).toFixed(4)); });
@@ -66,119 +75,61 @@
     var prizes = t.prizes.map(function (p) {
       return '<div class="pz' + (p.place === '1ST' ? ' w' : '') + '"><span class="k">' + esc(p.place) + '</span><b>' + esc(p.cash) + (p.unit ? '<small>' + esc(p.unit) + '</small>' : '') + '</b>' + (p.extra ? '<span class="e">' + esc(p.extra) + '</span>' : '') + '</div>';
     }).join('');
-    var who = us ? '<span class="you">YOU</span><b>' + esc(us.bot) + '</b><span class="r">' + esc(us.rank) + '</span><span class="o ' + (/^-/.test(us.roi) ? 'neg' : 'flat') + '">' + esc(us.roi) + '</span>' + (us.need ? '<small class="need">' + esc(us.need) + '</small>' : '')
+    var who = us ? '<span class="you">YOU</span><b>' + esc(us.bot) + '</b><span class="r">' + esc(us.rank) + '</span><span class="o ' + (/^-/.test(us.roi) ? 'neg' : /^\+0\.00/.test(us.roi) ? 'flat' : 'pos') + '">' + esc(us.roi) + '</span>' + (us.need ? '<small class="need">' + esc(us.need) + '</small>' : '')
       : '<span class="plain">' + esc(t.who) + '</span>';
     return '<header class="ctop"><div class="l"><span class="st"><i></i>' + esc(t.stateText) + '</span><div class="buy">' + esc(t.buy) + '<small>' + esc(t.unit || 'buy-in') + '</small><span class="ln">' + esc(t.len) + (t.id ? ' &middot; #' + t.id : '') + '</span></div></div>' + clock + '</header>' +
-      stage(t, us, moving) +
+      plate(pot(t.potKey, t.pot, t.potSub) + t.seats.map(function (s, i) { return seatHtml(s, i, us); }).join(''), moving) +
       '<footer class="cfoot"><div class="pzs">' + prizes + '</div><div class="who">' + who + '</div></footer>';
   }
 
-  /* ---------------------------------------------------------------- the switches */
+  /* ---------------------------------------------------------------- the switches: they choose the open table */
   var state = { len: 24, cur: 'USDC', mode: 'paper', i: 0 };
   try { var kept = JSON.parse(localStorage.getItem('v9-casino') || 'null'); if (kept && kept.len) { state.len = kept.len; state.cur = kept.cur; state.mode = kept.mode; } } catch (e) { /* first visit */ }
-  function match(c) { return c.hours === state.len && c.cur === state.cur; }
-  function openList() { return (state.mode === 'live' ? L.liveKinds : L.open).filter(match); }
-  function liveList() { return state.mode === 'live' ? [] : L.live.filter(match); }
+  function openList() {
+    return (state.mode === 'live' ? L.liveKinds : L.open).filter(function (c) { return c.hours === state.len && c.cur === state.cur; });
+  }
 
-  /* ---------------------------------------------------------------- running tables */
+  /* ---------------------------------------------------------------- running tables: all of them */
   function paintLive() {
-    var items = liveList(), grid = $('#liveGrid');
-    $('#tables h2 .n').textContent = items.length;
-    grid.innerHTML = items.map(function (t) {
-      var mine = L.agents[t.id] ? ' mine' : '';
-      return '<a class="v9-card live' + mine + '" href="' + esc(t.href) + '">' + cardInner(t, false) + '</a>';
+    var grid = $('#liveGrid');
+    $('#tables h2 .n').textContent = L.live.length;
+    grid.innerHTML = L.live.map(function (t) {
+      return '<a class="v9-card live' + (L.agents[t.id] ? ' mine' : '') + '" href="' + esc(t.href) + '">' + cardInner(t, false) + '</a>';
     }).join('');
-    var note = $('#liveNote');
-    note.hidden = items.length > 0;
-    note.textContent = state.mode === 'live' ? L.liveNote : 'No table running at this length.';
+    $('#liveNote').hidden = L.live.length > 0;
   }
 
-  /* ---------------------------------------------------------------- the picker: Open, one table at a time */
-  var deck, stack, pager, acts, busy = false;
-  function cardHtml(t) { return '<article class="v9-card ' + (t.state === 'coming' ? 'coming' : 'open') + '" data-id="' + (t.id || '') + '">' + cardInner(t, true) + '</article>'; }
-  function actionHtml(t) {
-    if (!t) return '';
-    if (t.state === 'coming') return '<button type="button" class="at-btn no act" disabled>' + esc(t.cta) + '</button>';
-    return '<button type="button" class="at-btn go act" data-noop>' + esc(t.cta) + ' ' + ARROW + '</button>';
-  }
-  function chrome(items, t) {
-    pager.hidden = items.length < 2;
-    $('.count', pager).innerHTML = '<b>' + (state.i + 1) + '</b> / ' + items.length;
-    acts.innerHTML = actionHtml(t);
-    $('#open h2 .n').textContent = items.length;
-  }
-  function setBack(i) {
-    var old = $('.v9-card.back', stack), items = openList();
-    if (old) old.remove();
-    var holder = document.createElement('div');
-    holder.innerHTML = cardHtml(items[i]);
-    var b = holder.firstChild;
-    b.classList.add('back'); b.setAttribute('data-i', i);
-    stack.insertBefore(b, stack.firstChild);
-    fit(); tick();
-    return b;
-  }
-  function holdHeight(el) { stack.style.height = el.offsetHeight + 'px'; }
-  function paintDeck(direction) {
+  /* ---------------------------------------------------------------- the open table, one at a time, its controls beside it */
+  function paintOpen() {
     var items = openList();
     if (state.i >= items.length) state.i = 0;
-    var t = items[state.i], fresh = document.createElement('div');
-    fresh.innerHTML = t ? cardHtml(t) : '<article class="v9-card none"><div class="nothing"><b>No open table here.</b><span>Try another length.</span></div></article>';
-    var el = fresh.firstChild;
-    $$('.v9-card', stack).forEach(function (old) { old.remove(); });
-    stack.appendChild(el);
-    if (direction) { el.classList.add('in'); void el.offsetWidth; el.classList.remove('in'); }
-    fit();
-    holdHeight(el);
-    chrome(items, t);
-    if (t && items.length > 1) { setBack((state.i + 1) % items.length); drag(el); }
-    tick();
+    var t = items[state.i], card = $('#openCard');
+    card.className = 'v9-card ' + (t ? (t.state === 'coming' ? 'coming' : 'open') : 'none');
+    card.innerHTML = t ? cardInner(t, true)
+      : '<div class="nothing"><b>No open table here.</b><span>' + esc(state.mode === 'live' ? L.liveNote.split('. ')[0] + '.' : 'Try another length or buy-in.') + '</span></div>';
+    card.classList.remove('shown'); void card.offsetWidth; card.classList.add('shown');
+    $('#open h2 .n').textContent = items.length;
+    var pager = $('#openPager');
+    pager.hidden = items.length < 2;
+    $('.count', pager).innerHTML = 'Table <b>' + (state.i + 1) + '</b> of ' + items.length;
+    $('#openAct').innerHTML = !t ? '' : t.state === 'coming' ? '<button type="button" class="at-btn no wide" disabled>' + esc(t.cta) + '</button>'
+      : '<button type="button" class="at-btn go xl wide" data-noop>' + esc(t.cta) + ' ' + ARROW + '</button>';
+    $('#openNote').textContent = state.mode === 'live' ? L.liveNote : '';
+    $$('[data-sw]').forEach(function (b) {
+      var on = String(state[b.getAttribute('data-sw')]) === b.getAttribute('data-v');
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    try { localStorage.setItem('v9-casino', JSON.stringify({ len: state.len, cur: state.cur, mode: state.mode })); } catch (e) { /* the switch still works */ }
+    fit(); tick();
   }
   function go(dir) {
-    var items = openList();
-    if (busy || items.length < 2) return;
-    busy = true;
-    var n = items.length, target = (state.i + dir + n) % n;
-    var top = $('.v9-card:not(.back)', stack), back = $('.v9-card.back', stack);
-    if (!back || Number(back.getAttribute('data-i')) !== target) { back = setBack(target); void back.offsetWidth; }
-    state.i = target;
-    chrome(items, items[target]);
-    stack.classList.add('leaving');
-    top.classList.add(dir > 0 ? 'gone-l' : 'gone-r');
-    setTimeout(function () {
-      top.remove();
-      back.classList.remove('back'); back.removeAttribute('data-i');
-      stack.classList.remove('leaving');
-      holdHeight(back);
-      drag(back);
-      setBack((state.i + 1) % n);
-      busy = false;
-    }, 420);
-  }
-  /* Pitch Cards' drag: it only turns the page */
-  function drag(el) {
-    var x0 = 0, y0 = 0, dx = 0, on = false;
-    el.addEventListener('pointerdown', function (e) {
-      if (e.button || e.target.closest('a,button')) return;
-      on = true; x0 = e.clientX; y0 = e.clientY; dx = 0; el.classList.add('drag'); stack.classList.add('dragging'); el.setPointerCapture(e.pointerId);
-    });
-    el.addEventListener('pointermove', function (e) {
-      if (!on) return;
-      dx = e.clientX - x0;
-      var items = openList(), n = items.length, want = (state.i + (dx < 0 ? 1 : -1) + n) % n, back = $('.v9-card.back', stack);
-      if (back && dx !== 0 && Number(back.getAttribute('data-i')) !== want) setBack(want);
-      el.style.setProperty('--tx', dx + 'px'); el.style.setProperty('--ty', (e.clientY - y0) * .2 + 'px'); el.style.setProperty('--r', dx / 22 + 'deg');
-    });
-    function end() {
-      if (!on) return;
-      on = false; el.classList.remove('drag'); stack.classList.remove('dragging');
-      ['--tx', '--ty', '--r'].forEach(function (k) { el.style.removeProperty(k); });
-      if (dx < -110) go(1); else if (dx > 110) go(-1);
-    }
-    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+    var n = openList().length;
+    if (n < 2) return;
+    state.i = (state.i + dir + n) % n;
+    paintOpen();
   }
 
-  /* ---------------------------------------------------------------- finished: a small table, and the placings beside it */
+  /* ---------------------------------------------------------------- finished: one card per table */
   /* An ET10 table's buy-in is in its tier and its prize in ET10: it never enters a dollar sum. */
   function et10Buyin(t) { return t.tier === 'et100' ? 100 : t.tier === 'et1k' ? 1000 : t.buyin || 0; }
   function isEt(t) { return t.currency === 'ET10'; }
@@ -200,27 +151,29 @@
       totals.et10 += etPaid(m);
     });
   });
-  function miniTable(t, ids) {
+  function finishedTable(t, ids) {
     var order = t.ranked.slice().sort(function (a, b) { return a.rank - b.rank; });
-    var dots = G.seats.map(function (at, i) {
-      var r = order[i];
-      if (!r) return '';
-      var cls = ids.indexOf(r.seat_id) >= 0 ? ' me' : r.rank === 1 ? ' first' : '';
-      return '<i class="d' + cls + '" style="left:' + (at[0] * PW).toFixed(1) + 'px;top:' + (at[1] * PH).toFixed(1) + 'px"></i>';
+    var seats = order.map(function (r, i) {
+      if (i >= G.seats.length) return '';
+      var face = faces[species(r.bot)] || {}, mine = ids.indexOf(r.seat_id) >= 0;
+      return '<span class="v9-seat' + (r.rank === 1 ? ' lead' : '') + (mine ? ' you' : '') + '" style="' + at(i) + '" title="' + esc(r.bot) + '">' + ava(face.colour, face.shape) + (r.rank === 1 ? CROWN : '') + '</span>';
     }).join('');
-    return '<div class="v9-mini"><div class="v9-stage"><div class="v9-obj"><div class="v9-plate"><img class="tbl" src="art/table.webp" alt="" loading="lazy" draggable="false">' + dots + '</div></div></div></div>';
+    var value = isEt(t) ? num(t.pot || 0) : usd(t.pot || 0);
+    return '<div class="v9-mini">' + plate(pot('POT', value, isEt(t) ? 'ET10' : '') + seats, false) + '</div>';
   }
   function doneCard(t, hidden) {
     var ids = t.mine.map(function (m) { return m.seat_id; });
     var rows = t.ranked.slice().sort(function (a, b) { return a.rank - b.rank; }).filter(function (r) { return r.rank <= 3 || ids.indexOf(r.seat_id) >= 0; });
     var ended = String(t.ends_at || '').slice(5, 10).replace('-', '/');
     var buy = isEt(t) ? num(et10Buyin(t)) + ' ET10' : usd(t.buyin || 0);
-    return '<a class="v9-fin' + (ids.length ? ' ours' : '') + '"' + (hidden ? ' hidden' : '') + ' href="' + HOST + '/agent-casino/table/' + t.id + '/results">' + miniTable(t, ids) +
-      '<div class="fb"><div class="fh"><b>' + esc(buy) + '</b><span>' + len(t.hours) + ' &middot; #' + t.id + '</span><span class="sp"></span><span>' + esc(ended) + '</span></div>' +
+    var me = t.ranked.filter(function (r) { return ids.indexOf(r.seat_id) >= 0; })[0];
+    return '<a class="v9-fin' + (ids.length ? ' ours' : '') + '"' + (hidden ? ' hidden' : '') + ' href="' + HOST + '/agent-casino/table/' + t.id + '/results">' +
+      '<div class="fh"><b>' + esc(buy) + '</b><span>' + len(t.hours) + ' &middot; #' + t.id + '</span><span class="sp"></span>' + (me ? '<span class="place">#' + me.rank + ' of ' + t.ranked.length + '</span>' : '') + '<span>' + esc(ended) + '</span></div>' +
+      '<div class="fbody">' + finishedTable(t, ids) + '<div class="fb">' +
       rows.map(function (r) {
         var mine = ids.indexOf(r.seat_id) >= 0, w = [took(t, r), etLabel(r)].filter(Boolean).join(' ');
         return '<div class="fr' + (mine ? ' mine' : '') + '"><span class="p">' + r.rank + '</span><span class="n">' + esc(r.bot) + '</span><span class="o ' + tone(r.roi) + '">' + pct(r.roi) + '</span><span class="w' + (w ? '' : ' none') + '">' + (esc(w) || '—') + '</span></div>';
-      }).join('') + '</div></a>';
+      }).join('') + '</div></div></a>';
   }
 
   /* ---------------------------------------------------------------- the page */
@@ -228,16 +181,20 @@
   function build() {
     var newest = D.tables.slice().sort(function (a, b) { return String(b.ends_at).localeCompare(String(a.ends_at)); });
     root.innerHTML =
-      '<div class="v9-bar" id="tablesbar"><div class="at-seg" role="group" aria-label="Length"><button type="button" data-sw="len" data-v="1">1H</button><button type="button" data-sw="len" data-v="5">5H</button><button type="button" data-sw="len" data-v="24">1D</button></div>' +
-        '<div class="at-seg" role="group" aria-label="Buy-in"><button type="button" data-sw="cur" data-v="USDC">USDC</button><button type="button" data-sw="cur" data-v="ET10">ET10</button></div>' +
-        '<div class="at-seg mode" role="group" aria-label="Paper or Live tables"><button type="button" data-sw="mode" data-v="paper">PAPER</button><button type="button" data-sw="mode" data-v="live"><i class="at-dot"></i>LIVE</button></div></div>' +
-      '<div class="at-sec" id="tables"><h2>Live now <span class="n"></span></h2></div><div class="v9-live" id="liveGrid"></div><p class="v9-note" id="liveNote" hidden></p>' +
-      '<div class="at-sec" id="open"><h2>Open, starts when full <span class="n"></span></h2><a class="v9-create" href="' + esc(L.create) + '">+ Create a table</a></div>' +
-      '<div class="v9-deck" id="deck"><div class="v9-stack"></div><div class="v9-under"><div class="pager"><button type="button" class="nav" data-go="-1" aria-label="Previous table">' + BACK + '</button><span class="count"></span><button type="button" class="nav" data-go="1" aria-label="Next table">' + ARROW + '</button></div><div class="acts"></div></div></div>' +
+      '<div class="at-sec" id="tables"><h2>Live now <span class="n"></span></h2></div><div class="v9-live" id="liveGrid"></div><p class="v9-note" id="liveNote" hidden>No table is running.</p>' +
+      '<div class="at-sec" id="open"><h2>Open, starts when full <span class="n"></span></h2></div>' +
+      '<div class="v9-open"><article class="v9-card open" id="openCard"></article>' +
+        '<aside class="v9-side">' +
+          '<div class="sw"><span class="at-lbl">How long</span><div class="at-seg" role="group" aria-label="Length"><button type="button" data-sw="len" data-v="1">1H</button><button type="button" data-sw="len" data-v="5">5H</button><button type="button" data-sw="len" data-v="24">1D</button></div></div>' +
+          '<div class="sw"><span class="at-lbl">Buy-in</span><div class="at-seg" role="group" aria-label="Buy-in"><button type="button" data-sw="cur" data-v="USDC">USDC</button><button type="button" data-sw="cur" data-v="ET10">ET10</button></div></div>' +
+          '<div class="sw"><span class="at-lbl">Tables</span><div class="at-seg" role="group" aria-label="Paper or Live tables"><button type="button" data-sw="mode" data-v="paper">PAPER</button><button type="button" data-sw="mode" data-v="live"><i class="at-dot"></i>LIVE</button></div></div>' +
+          '<div class="pager" id="openPager"><button type="button" class="nav" data-go="-1" aria-label="Previous table">' + BACK + '</button><span class="count"></span><button type="button" class="nav" data-go="1" aria-label="Next table">' + ARROW + '</button></div>' +
+          '<div id="openAct"></div><p class="v9-note" id="openNote"></p>' +
+          '<a class="v9-create" href="' + esc(L.create) + '">+ Create a table</a>' +
+        '</aside></div>' +
       '<details class="v9-done" id="finished"><summary><h2>Finished tables <span class="n">' + totals.n + '</span></h2><span class="st"><b>' + totals.won + '</b> won by your agents</span><span class="st">net <b class="' + tone(totals.net) + '">' + signed(totals.net) + '</b></span><span class="st"><b>+' + num(totals.et10) + '</b> ET10</span>' + CHEV + '</summary>' +
         '<div class="v9-finlist">' + newest.map(function (t, i) { return doneCard(t, i >= SHOW_DONE); }).join('') + '</div>' +
         (newest.length > SHOW_DONE ? '<button type="button" class="v9-all" data-moredone>All ' + totals.n + ' finished ' + CHEV + '</button>' : '') + '</details>';
-    deck = $('#deck'); stack = $('.v9-stack', deck); pager = $('.pager', deck); acts = $('.acts', deck);
 
     root.addEventListener('click', function (e) {
       if (e.target.closest('[data-noop]')) { e.preventDefault(); return; }
@@ -246,7 +203,7 @@
         var k = sw.getAttribute('data-sw'), v = sw.getAttribute('data-v');
         state[k] = k === 'len' ? Number(v) : v;
         state.i = 0;
-        paintAll(1);
+        paintOpen();
         return;
       }
       var nav = e.target.closest('[data-go]');
@@ -254,21 +211,7 @@
       if (e.target.closest('[data-moredone]')) { $$('.v9-fin[hidden]').forEach(function (b) { b.hidden = false; }); fit(); e.target.closest('[data-moredone]').remove(); }
     });
     $('#finished').addEventListener('toggle', fit);
-    document.addEventListener('keydown', function (e) {
-      if (e.target.closest && e.target.closest('input,textarea,[contenteditable]')) return;
-      if (e.key === 'ArrowLeft') go(-1); else if (e.key === 'ArrowRight') go(1);
-    });
-    addEventListener('resize', function () { fit(); var top = $('.v9-card:not(.back)', stack); if (top) holdHeight(top); });
-  }
-  function paintAll(direction) {
-    paintLive();
-    paintDeck(direction);
-    fit();
-    $$('[data-sw]').forEach(function (b) {
-      var on = String(state[b.getAttribute('data-sw')]) === b.getAttribute('data-v');
-      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
-    });
-    try { localStorage.setItem('v9-casino', JSON.stringify({ len: state.len, cur: state.cur, mode: state.mode })); } catch (e) { /* the switch still works */ }
+    addEventListener('resize', fit);
   }
 
   /* ---------------------------------------------------------------- what their scripts did */
@@ -307,11 +250,8 @@
     });
   }
 
-  /* the column names over their list */
-  var list = $('.at-agents');
-  if (list) list.insertAdjacentHTML('afterbegin', '<div class="v9-arhead"><span></span><span>Agent</span><span>Table</span><span>Rank</span><span>ROI</span><span>Wins now</span></div>');
-
   build();
-  paintAll();
+  paintLive();
+  paintOpen();
   setInterval(tick, 1000);
 })();

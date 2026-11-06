@@ -21,7 +21,7 @@ from bs4 import BeautifulSoup
 HERE = Path(__file__).resolve().parent
 OUTBOX = HERE.parent
 HOST = "https://cymetica.com"
-VERSION = "4"
+VERSION = "7"
 
 
 def load(name: str, path: Path):
@@ -46,6 +46,8 @@ def owner_piece(owner: BeautifulSoup, name: str):
     raw = owner.select_one(f"template#{name}").decode_contents()
     raw = re.sub(r'<span class="at-kind flash"[^>]*>FLASH</span>', "", raw)
     raw = raw.replace("Flash ", "")
+    # their long red "needs $X more volume to qualify": the figure stays, grey and short (the operator, 2026-11-06)
+    raw = re.sub(r'<span>needs</span>\s*(\$[\d,.]+)\s*<span>more volume to qualify</span>', r"\1 to qualify", raw)
     raw = re.sub(r'href="/(?!/)', f'href="{HOST}/', raw)
     return BeautifulSoup(raw, "html.parser")
 
@@ -120,9 +122,6 @@ def assemble(html: str) -> tuple[str, dict]:
     paper.replace_with(holder)
 
     out = str(soup)
-    # the smile is what reads as a toy; their other faces stay
-    out = out.replace('<path d="M16.2 26.4q3.8 2.4 7.6 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
-                      '<path d="M16.8 27h6.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>')
     v = f"?v={VERSION}"
     out = out.replace("</head>", f'<link rel="preload" as="image" href="art/table.webp{v}"><link rel="stylesheet" href="v9.css{v}"></head>', 1)
     scripts = "".join(f'<script src="{name}{v}"></script>' for name in ("data.js", "lobby.js", "art/geometry.js", "v9.js"))
