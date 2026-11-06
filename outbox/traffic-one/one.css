@@ -8,6 +8,7 @@
 .one-page { --surface: var(--bg-card); }
 .one-toolbar { justify-content: space-between; }
 .one-views { display: inline-flex; gap: 6px; }
+.one-mine { border-style: dashed; }
 .one-view.on { color: var(--positive); border-color: var(--positive); background: rgba(0,255,136,0.08); }
 
 .one-section { font-family: 'Archivo Black', sans-serif; font-size: 1.45rem; color: var(--text-heading, #fff); margin: 42px 0 0; padding-top: 22px; border-top: 1px solid var(--panel-border); }

@@ -10,7 +10,8 @@
 
         <div class="tl-toolbar one-toolbar">
             <div class="one-views" role="tablist" aria-label="View">
-                <button type="button" class="tl-chip one-view on" data-view="basic" role="tab" aria-selected="true">Basic</button>
+                <button type="button" class="tl-chip one-view on" data-view="basic" data-basic="yours" role="tab" aria-selected="true">Basic</button>
+                <button type="button" class="tl-chip one-view one-mine" data-view="basic" data-basic="claude" role="tab" aria-selected="false">Basic · Claude's</button>
                 <button type="button" class="tl-chip one-view" data-view="advanced" role="tab" aria-selected="false">Advanced</button>
             </div>
             <div class="tl-range" role="tablist" aria-label="Time range">
@@ -222,9 +223,4 @@
     </div>
 </div>
 
-<div class="one-demo" id="one-demo" aria-label="Mock only">
-    <span>MOCK · Basic view:</span>
-    <button type="button" data-basic="yours" class="on">Yours</button>
-    <button type="button" data-basic="claude">Claude's</button>
-</div>
 </main>

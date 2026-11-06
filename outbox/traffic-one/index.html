@@ -111,7 +111,7 @@
     
     
 
-    <style nonce="WR7k7qTryce7AHiLZ2RFmw==">
+    <style nonce="5LKqLtKfQSI2ctxg9Jni6w==">
         /* Flexbox body pushes footer to bottom on short pages */
         body {
             display: flex;
@@ -316,7 +316,7 @@
     
 
     
-    <style nonce="WR7k7qTryce7AHiLZ2RFmw==">
+    <style nonce="5LKqLtKfQSI2ctxg9Jni6w==">
     #globalSimBanner {
         display: none;
         background: rgba(0, 207, 255,0.06);
@@ -378,7 +378,7 @@
     
     
     
-    <style nonce="WR7k7qTryce7AHiLZ2RFmw==">
+    <style nonce="5LKqLtKfQSI2ctxg9Jni6w==">
         .tl-page {
             --bg-primary: #0a0e17; --bg-secondary: #0d1520; --bg-card: #111a28;
             --panel-bg: rgba(17,24,39,0.6); --panel-border: rgba(0,150,255,0.15);
@@ -459,11 +459,11 @@
 
 
 
-<style nonce="WR7k7qTryce7AHiLZ2RFmw==">
+<style nonce="5LKqLtKfQSI2ctxg9Jni6w==">
 html.st-embed .chat-header,html.st-embed #agent-start,html.st-embed .footer-bar,html.st-embed #nexus-chat-widget,html.st-embed .skip-link,html.st-embed .content-back-btn,html.st-embed #agentPasteBar,html.st-embed .agent-paste-bar,html.st-embed #globalSimBanner{display:none!important}
 html.st-embed body,html.st-embed .main-content,html.st-embed .chat-container,html.st-embed .perpetual-main{padding-top:0!important}
 </style>
-<style nonce="WR7k7qTryce7AHiLZ2RFmw==">
+<style nonce="5LKqLtKfQSI2ctxg9Jni6w==">
 /* Font already loaded via <link> in base_content.html — @import removed (was render-blocking + duplicate) */
 /* Fixed floating header - ensure consistent behavior across all pages */
 .chat-header {
@@ -1899,7 +1899,7 @@ body.no-header-padding .agent-paste-bar {
 
 
 
-<style nonce="WR7k7qTryce7AHiLZ2RFmw==">
+<style nonce="5LKqLtKfQSI2ctxg9Jni6w==">
 /* outlined, not filled: a page keeps its ONE filled accent button (design-token rule) */
 .apb-connect-btn, .thf-connect-btn { background: var(--surface); color: var(--accent); border: 1px solid var(--accent);
     border-radius: 10px; padding: .7rem 1.4rem; min-height: 44px; font-family: var(--font-display); font-size: 1rem;
@@ -2824,7 +2824,8 @@ body.no-header-padding .agent-paste-bar {
 
         <div class="tl-toolbar one-toolbar">
             <div class="one-views" role="tablist" aria-label="View">
-                <button type="button" class="tl-chip one-view on" data-view="basic" role="tab" aria-selected="true">Basic</button>
+                <button type="button" class="tl-chip one-view on" data-view="basic" data-basic="yours" role="tab" aria-selected="true">Basic</button>
+                <button type="button" class="tl-chip one-view one-mine" data-view="basic" data-basic="claude" role="tab" aria-selected="false">Basic · Claude's</button>
                 <button type="button" class="tl-chip one-view" data-view="advanced" role="tab" aria-selected="false">Advanced</button>
             </div>
             <div class="tl-range" role="tablist" aria-label="Time range">
@@ -3036,11 +3037,6 @@ body.no-header-padding .agent-paste-bar {
     </div>
 </div>
 
-<div class="one-demo" id="one-demo" aria-label="Mock only">
-    <span>MOCK · Basic view:</span>
-    <button type="button" data-basic="yours" class="on">Yours</button>
-    <button type="button" data-basic="claude">Claude's</button>
-</div>
 </main>
 
 
@@ -3048,7 +3044,7 @@ body.no-header-padding .agent-paste-bar {
 
     
     
-<style nonce="WR7k7qTryce7AHiLZ2RFmw==">
+<style nonce="5LKqLtKfQSI2ctxg9Jni6w==">
 #authModal .am-content{max-width:500px}
 #authModal .am-close{z-index:10;position:absolute;top:16px;right:16px}
 #authModal .am-title{color:var(--accent-cyan);margin-bottom:1.5rem;font-family:var(--font-display)}
@@ -3228,7 +3224,7 @@ body.no-header-padding .agent-paste-bar {
 
     
     
-    <style nonce="WR7k7qTryce7AHiLZ2RFmw==">
+    <style nonce="5LKqLtKfQSI2ctxg9Jni6w==">
     /* Footer Bar Styles - Static bottom navigation */
     .footer-bar {
         display: flex;

@@ -404,16 +404,8 @@
     document.querySelectorAll('.one-view').forEach(function (btn) {
         btn.addEventListener('click', function () {
             root.setAttribute('data-view', btn.getAttribute('data-view'));
+            if (btn.hasAttribute('data-basic')) root.setAttribute('data-basic', btn.getAttribute('data-basic'));
             document.querySelectorAll('.one-view').forEach(function (b) { var on = b === btn; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
-            try { localStorage.setItem('one-view', btn.getAttribute('data-view')); } catch (e) { /* fine */ }
-        });
-    });
-    document.querySelectorAll('#one-demo button').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            root.setAttribute('data-basic', btn.getAttribute('data-basic'));
-            if (root.getAttribute('data-view') !== 'basic') document.querySelector('.one-view[data-view="basic"]').click();
-            document.querySelectorAll('#one-demo button').forEach(function (b) { b.classList.toggle('on', b === btn); });
-            window.scrollTo(0, 0);
         });
     });
     document.querySelectorAll('.au-tab').forEach(function (t) { t.addEventListener('click', function () { aud = t.getAttribute('data-aud'); apps(); history(); }); });
@@ -429,7 +421,7 @@
         });
     });
     var q = new URLSearchParams(location.search);
-    if (q.get('basic')) document.querySelector('#one-demo button[data-basic="' + q.get('basic') + '"]').click();
+    if (q.get('basic')) document.querySelector('.one-view[data-basic="' + q.get('basic') + '"]').click();
     if (q.get('view')) document.querySelector('.one-view[data-view="' + q.get('view') + '"]').click();
     $('one-gen').textContent = 'Mock data: Cymetica\'s own APIs read ' + String((S['public-14'] || {}).generated_at || '').slice(0, 16).replace('T', ' ') + ' UTC.';
     renderAll();
