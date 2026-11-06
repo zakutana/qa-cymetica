@@ -7,3 +7,9 @@
 .at-ava.you > .v9-head, .v9-seat.you .v9-head, .at-seat.you .v9-head { filter: drop-shadow(0 0 6px rgba(0,207,255,.85)) drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
 .v9-seat.lead .v9-head { filter: drop-shadow(0 0 6px rgba(0,255,136,.75)) drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
 .at-stack .at-ava:has(> .v9-head) + .at-ava:has(> .v9-head) { margin-left: -4px !important; }
+
+/* our seat at a table: a green ring round the head, YOU above it (the operator, 2026-11-06) */
+.v9-seat.you .at-ava::after { content: ""; position: absolute; inset: -9%; border-radius: 50%; box-shadow: 0 0 0 2px var(--at-green, #00ff88), 0 0 14px rgba(0,255,136,.55); pointer-events: none; }
+.v9-seat.you .v9-head { filter: drop-shadow(0 4px 6px rgba(0,0,0,.5)) !important; }
+.v9-seat.you > em { top: auto !important; bottom: calc(100% + 8px) !important; background: var(--at-green, #00ff88) !important; color: var(--at-bg, #0a0e17) !important; }
+.v9-seat.you.lead > em { bottom: calc(100% + 22px) !important; }
