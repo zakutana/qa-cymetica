@@ -214,7 +214,7 @@
     "136": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass",
+   "last_check": "fail",
    "hold": "NEXT.md: wait for the word 'omez kontrolu'"
   },
   {
@@ -6409,7 +6409,8 @@
    "their_status": {
     "308": "pending"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "agent-tournaments-one-member-prizes-now",
@@ -6425,7 +6426,8 @@
    "their_status": {
     "309": "pending"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "season-counts-no-returning-visitors",
@@ -6439,7 +6441,7 @@
    "filed_at": "2026-11-05T15:00:31+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "310": "fixed"
+    "310": "paid"
    },
    "withdrawn": false,
    "last_check": "fail",
@@ -6463,7 +6465,7 @@
     }
    ],
    "their_status": {
-    "311": "fixed"
+    "311": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -6482,7 +6484,8 @@
    "their_status": {
     "312": "pending"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "agent-tournaments-lapsed-ask-locks-the-table",
@@ -6495,6 +6498,20 @@
    "verdicts_sent": [],
    "their_status": {
     "313": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "bb-filing-refuses-extra-usage-that-is-on",
+   "nodeids": [],
+   "report_ids": [
+    314
+   ],
+   "title": "Build it Better filing refused with 'You've reached your extra-usage spend limit' while /usage shows extra usage ON and $0.00 of $25.00 spent",
+   "filed_at": "2026-11-06T14:16:29+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "314": "pending"
    },
    "withdrawn": false
   }

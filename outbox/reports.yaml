@@ -8926,6 +8926,32 @@ reports:
       does not say which of the two measures is right. If you keep the tile and say on the page that it failed its check, tell us and we
       read the page. GET requests only.
 
+  - key: bb-filing-refuses-extra-usage-that-is-on
+    severity: medium
+    category: api
+    url: https://cymetica.com/usage
+    title: "Build it Better filing refused with 'You've reached your extra-usage spend limit' while /usage shows extra usage ON and $0.00 of $25.00 spent"
+    expected: >
+      With extra usage on and $0.00 of a $25.00 monthly limit spent, a Build it Better request (0.50 u) past the weekly window is accepted
+      and paid from extra usage, or the refusal says the real reason.
+    actual: >
+      Read on 2026-11-06. The account turned extra usage on at /usage, which then reads EXTRA USAGE ON, "$25.00 left of $25.00 this month",
+      0.15 u left of 6.00 u this week. Two filings after that, at 14:12 and 14:14 UTC, came back HTTP 429,
+      code USAGE_LIMIT, limit "extra_usage_cap", message "You've reached your extra-usage spend limit for this month. Raise it under
+      Usage, or wait for the next reset." The usage object in that 429 says extra_usage.enabled false, month_spend_usdc "0.00",
+      monthly_cap_usdc "25.00", and gives the session window's reset (19:10 UTC) as resets_at. GET /api/v1/nexus/usage 46 s after the
+      second refusal, with the same API key, says extra_usage.enabled true, month_spend_usdc "0.00". So the filing reads extra usage as
+      off while every other read says on, and the message names a spend limit nobody has reached. /usage also says "0 Build it Better
+      requests fit" with $25.00 of extra usage left.
+    steps:
+      - 'GET https://cymetica.com/api/v1/nexus/usage with the account''s API key -> usage.extra_usage {"enabled": true, "month_spend_usdc": "0.00", "monthly_cap_usdc": "25.00"}, week.used_units 5.85 of 6.00'
+      - 'POST https://cymetica.com/api/v1/build-it-better/requests with app_url https://cymetica.com/traffic and a 5,626-character request -> 429 {"code": "USAGE_LIMIT", "limit": "extra_usage_cap", ...}, usage.extra_usage.enabled false, month_spend_usdc "0.00"'
+      - 'Open https://cymetica.com/usage signed in as the same account -> EXTRA USAGE ON, $25.00 left of $25.00, "0 Build it Better requests fit"'
+    body: >
+      A creator who turns extra usage on to keep building is told they spent a limit they have not touched, and cannot file. The
+      POSTs were real Build it Better filings the account owner asked for; nothing else was written. If extra usage is meant not to cover
+      Build it Better requests, say it on /usage and in the 429, and we read both.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
