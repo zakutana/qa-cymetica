@@ -108,9 +108,15 @@ body.v9-agents #agents { margin-top: 28px; }
 .cfoot .pz { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 8px 8px; border-radius: 10px; background: rgba(7,11,18,.55); box-shadow: inset 0 0 0 1px var(--at-line2); }
 .cfoot .pz.w { box-shadow: inset 0 0 0 1px rgba(59,130,246,.45); background: linear-gradient(180deg, rgba(59,130,246,.10), rgba(7,11,18,.55)); }
 .v9-card.et .cfoot .pz.w { box-shadow: inset 0 0 0 1px rgba(0,255,136,.4); background: linear-gradient(180deg, rgba(0,255,136,.08), rgba(7,11,18,.55)); }
-.cfoot .pz .k { font: 700 9.5px var(--at-num); letter-spacing: .16em; color: var(--at-muted); }
-.cfoot .pz b { font: 400 17px/1.15 var(--font-display); }
-.cfoot .pz .e { font: 700 10.5px var(--at-num); color: var(--at-cyan); }
+.cfoot .pz .k { font: 700 10px var(--at-num); letter-spacing: .16em; color: var(--at-ink2); }
+/* the winnings stand out (the operator, 2026-11-06): bigger, both in paper blue, the ET10 on top in green */
+.cfoot .pz { padding: 9px 8px 10px; }
+.cfoot .pz b { font: 400 25px/1.1 var(--font-display) !important; color: var(--at-blue) !important; text-shadow: 0 0 18px rgba(59,130,246,.45); }
+.cfoot .pz:not(.w) b { color: #7fa9f5 !important; text-shadow: none; }
+.cfoot .pz .e { margin-top: 2px; font: 700 12.5px var(--at-num); color: var(--at-green); }
+.cfoot .pz.w { box-shadow: inset 0 0 0 1.5px rgba(59,130,246,.7), 0 0 22px -6px rgba(59,130,246,.6); background: linear-gradient(180deg, rgba(59,130,246,.18), rgba(7,11,18,.55)); }
+.v9-card.et .cfoot .pz b { color: var(--at-green) !important; text-shadow: 0 0 18px rgba(0,255,136,.4); }
+.v9-card.et .cfoot .pz:not(.w) b { color: #7fe8b7 !important; text-shadow: none; }
 .who.you-row { margin-top: 8px; padding: 7px 10px; border: 0; border-radius: 10px; background: rgba(7,11,18,.55); box-shadow: inset 0 0 0 1px var(--at-line2); }
 .who.you-row b { max-width: 55%; font-size: 13px; }
 
