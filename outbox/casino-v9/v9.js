@@ -191,8 +191,9 @@
   function isEt(t) { return t.currency === 'ET10'; }
   function took(t, r) {
     if (!(r.prize > 0)) return '';
-    if (isEt(t)) return num(r.prize) + ' ET10' + (r.prize === et10Buyin(t) ? ' back' : '');
-    return usd(r.prize) + (r.prize === t.buyin ? ' back' : '');
+    /* their note says when nobody qualified and the buy-ins went back: that is a refund, not a win (the operator, 2026-11-07: 'jakych back') */
+    var refund = /buy-ins went back/.test(t.winner_note || '') && r.prize === (isEt(t) ? et10Buyin(t) : t.buyin);
+    return (isEt(t) ? num(r.prize) + ' ET10' : usd(r.prize)) + (refund ? ' refund' : ' won');
   }
   /* /tables/5 and /tables/11 read status "capped" (seats 29 and 46), read 5 Nov: their terms say capped is not paid out. */
   var CAPPED = { 29: true, 46: true };
