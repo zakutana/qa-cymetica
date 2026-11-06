@@ -63,28 +63,17 @@
   .av svg { display: block; width: 100%; height: 100%; overflow: visible; }
   .s20 { width: 20px; height: 20px; } .s30 { width: 30px; height: 30px; } .s44 { width: 44px; height: 44px; } .s48 { width: 48px; height: 48px; }
 
-  /* 1 Visor: rounded-square plate, hairline, flat */
-  .v-visor { --ko: #111a28; border-radius: 27%; background: var(--panel2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 38%, transparent); }
-  .v-visor svg { padding: 6%; }
-  /* 2 Token: the coin is the container */
-  .v-token { --ko: #0a0e17; border-radius: 50%; }
-  /* 3 Chip: sunk tile, no border */
-  .v-chip { border-radius: 24%; background: var(--sunk); box-shadow: inset 0 0 0 1px var(--line2); }
-  .v-chip svg { padding: 7%; }
-  /* 4 Hex Core: hex drawn in the SVG */
-  .v-hex { --ko: #070b12; }
-  /* 5 Signal: round gauge drawn in the SVG */
-  .v-signal { --ko: #070b12; border-radius: 50%; }
-  /* 6 Fleet: rounded-square plate, hairline */
-  .v-fleet { --ko: #111a28; border-radius: 30%; background: var(--panel2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 34%, transparent); }
-  .v-fleet svg { padding: 8%; }
+  /* one robot set, three fills: --hfo = head fill opacity, --fc = colour of eyes/visor/grille */
+  /* 1 Line: outline head, lit LEDs, thin 1px ring */
+  .v-line { --hfo: 0; --fc: currentColor; border-radius: 50%; background: var(--sunk); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 42%, transparent); }
+  /* 2 Duotone: tinted head, solid features, dark rounded-square plate */
+  .v-duo { --hfo: .16; --fc: currentColor; border-radius: 28%; background: var(--panel2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent); }
+  /* 3 Solid: filled head, features cut out dark, thin 1px ring */
+  .v-solid { --hfo: 1; --fc: #070b12; border-radius: 50%; background: var(--sunk); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 42%, transparent); }
 
-  /* YOU: one cyan ring + glow, same on every direction */
-  .av.you { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--cyan), 0 0 16px rgba(0,207,255,.55); }
-  .v-visor.you, .v-fleet.you { box-shadow: inset 0 0 0 1px var(--cyan), 0 0 0 2px var(--bg), 0 0 0 3.5px var(--cyan), 0 0 16px rgba(0,207,255,.55); }
-  .v-hex.you { box-shadow: none; --ring: #00cfff; --rw: 2.6; }
-  .v-hex.you svg { filter: drop-shadow(0 0 5px rgba(0,207,255,.75)); }
-  .s20.you { box-shadow: 0 0 0 1.5px var(--bg), 0 0 0 2.5px var(--cyan), 0 0 8px rgba(0,207,255,.55); }
+  /* YOU: cyan ring + glow, the only glow on the page */
+  .av.you { box-shadow: inset 0 0 0 1px var(--cyan), 0 0 0 2px var(--bg), 0 0 0 3.5px var(--cyan), 0 0 16px rgba(0,207,255,.55); }
+  .s20.you { box-shadow: inset 0 0 0 1px var(--cyan), 0 0 0 1.5px var(--bg), 0 0 0 2.5px var(--cyan), 0 0 8px rgba(0,207,255,.55); }
 
   @media (max-width: 900px) {
     .body { grid-template-columns: 1fr; gap: 22px; }
@@ -115,63 +104,26 @@
 <symbol id="at-bot-e" viewBox="0 0 40 40"><path d="M20 13V9l3.6-1.8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path><rect fill="currentColor" fill-opacity=".18" height="18" rx="6" stroke="currentColor" stroke-width="2.2" width="21" x="9.5" y="13"></rect><path d="M13.4 20.6h5M21.6 20.6h5" stroke="currentColor" stroke-linecap="round" stroke-width="2.8"></path><circle cx="20" cy="26.3" fill="currentColor" r="1.7"></circle></symbol>
 <symbol id="at-bot-f" viewBox="0 0 40 40"><path d="M8.6 21.5a11.4 11.4 0 0 1 22.8 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2.2"></path><rect fill="currentColor" fill-opacity=".18" height="17" rx="6" stroke="currentColor" stroke-width="2.2" width="18" x="11" y="14"></rect><rect fill="currentColor" height="8.4" rx="2" width="4.6" x="6.4" y="19"></rect><rect fill="currentColor" height="8.4" rx="2" width="4.6" x="29" y="19"></rect><circle cx="16.5" cy="21.6" fill="currentColor" r="2.3"></circle><circle cx="23.5" cy="21.6" fill="currentColor" r="2.3"></circle><path d="M17.2 26.6h5.6" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path></symbol>
 
-<!-- ===== 1 Visor: solid machine helmets, one visor band knocked out ===== -->
-<symbol id="v1-a" viewBox="0 0 40 40"><path d="M8 21a12 12 0 0 1 24 0v9a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4z" fill="currentColor"/><rect x="11" y="18.5" width="18" height="5" rx="2.5" style="fill:var(--ko)"/><rect x="13.4" y="20" width="5.4" height="2" rx="1" fill="currentColor"/></symbol>
-<symbol id="v1-b" viewBox="0 0 40 40"><path d="M20 5l13 7v13.5L20 35 7 25.5V12z" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/><path d="M10.5 17.2 20 22.2l9.5-5v4.4L20 26.6l-9.5-5z" style="fill:var(--ko)"/></symbol>
-<symbol id="v1-c" viewBox="0 0 40 40"><rect x="4.5" y="15.5" width="6" height="12" rx="1.6" fill="currentColor"/><rect x="29.5" y="15.5" width="6" height="12" rx="1.6" fill="currentColor"/><rect x="9" y="7" width="22" height="27" rx="3.5" fill="currentColor"/><rect x="12.5" y="13.5" width="15" height="10" rx="1.6" style="fill:var(--ko)"/><rect x="14.6" y="17.4" width="10.8" height="2.4" rx="1.2" fill="currentColor"/></symbol>
-<symbol id="v1-d" viewBox="0 0 40 40"><path d="M12.5 35h15l-3-5h-9z" fill="currentColor"/><circle cx="20" cy="18.5" r="13" fill="currentColor"/><circle cx="20" cy="18.5" r="6.2" style="fill:var(--ko)"/><circle cx="20" cy="18.5" r="2.7" fill="currentColor"/></symbol>
-<symbol id="v1-e" viewBox="0 0 40 40"><rect x="17.4" y="2.5" width="5.2" height="8" rx="2" fill="currentColor"/><rect x="10" y="7" width="20" height="28" rx="10" fill="currentColor"/><rect x="10" y="17.5" width="20" height="4.2" style="fill:var(--ko)"/><rect x="22" y="18.6" width="5" height="2" rx="1" fill="currentColor"/></symbol>
-<symbol id="v1-f" viewBox="0 0 40 40"><rect x="18.7" y="5.5" width="2.6" height="9" fill="currentColor"/><circle cx="20" cy="5.6" r="2.8" fill="currentColor"/><rect x="4" y="13" width="32" height="19.5" rx="9.75" fill="currentColor"/><rect x="8.5" y="20" width="23" height="5.2" rx="2.6" style="fill:var(--ko)"/></symbol>
-
-<!-- ===== 2 Token: a solid coin, one dark geometric mark ===== -->
-<symbol id="v2-frame" viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="currentColor"/><circle cx="20" cy="20" r="16.6" fill="none" style="stroke:var(--ko)" stroke-opacity=".22" stroke-width="1"/></symbol>
-<symbol id="v2-a" viewBox="0 0 40 40"><path d="M20 10.5 30.5 28.5h-21z" style="fill:var(--ko)" stroke-linejoin="round"/></symbol>
-<symbol id="v2-b" viewBox="0 0 40 40"><circle cx="18.8" cy="21.2" r="6.8" fill="none" style="stroke:var(--ko)" stroke-width="3.4"/><circle cx="28.2" cy="11.8" r="3" style="fill:var(--ko)"/></symbol>
-<symbol id="v2-c" viewBox="0 0 40 40"><rect x="10.5" y="10.5" width="19" height="4.4" rx="1.2" style="fill:var(--ko)"/><rect x="10.5" y="17.8" width="13.5" height="4.4" rx="1.2" style="fill:var(--ko)"/><rect x="10.5" y="25.1" width="8" height="4.4" rx="1.2" style="fill:var(--ko)"/></symbol>
-<symbol id="v2-d" viewBox="0 0 40 40"><circle cx="20" cy="20" r="8.6" fill="none" style="stroke:var(--ko)" stroke-width="3.2"/><path d="M20 11.4a8.6 8.6 0 0 0 0 17.2z" style="fill:var(--ko)"/></symbol>
-<symbol id="v2-e" viewBox="0 0 40 40"><path d="M20 8.5 31.5 20 20 31.5 8.5 20z" style="fill:var(--ko)"/><circle cx="20" cy="20" r="3.6" fill="currentColor"/></symbol>
-<symbol id="v2-f" viewBox="0 0 40 40"><path d="M11.5 12.5 18.5 20l-7 7.5M21.5 12.5 28.5 20l-7 7.5" fill="none" style="stroke:var(--ko)" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-
-<!-- ===== 3 Chip: circuit dies, pin layout and die shape per bot ===== -->
-<symbol id="v3-a" viewBox="0 0 40 40"><rect x="11" y="11" width="18" height="18" rx="2.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6"/><path d="M15 6v5M20 6v5M25 6v5M15 29v5M20 29v5M25 29v5M6 15h5M6 20h5M6 25h5M29 15h5M29 20h5M29 25h5" stroke="currentColor" stroke-width="2.2"/><rect x="15.5" y="15.5" width="9" height="9" rx="1.2" fill="currentColor"/></symbol>
-<symbol id="v3-b" viewBox="0 0 40 40"><rect x="13" y="6.5" width="14" height="27" rx="2.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6"/><path d="M7.5 12.5h5.5M7.5 20h5.5M7.5 27.5h5.5M27 12.5h5.5M27 20h5.5M27 27.5h5.5" stroke="currentColor" stroke-width="2.2"/><circle cx="20" cy="20" r="4.4" fill="currentColor"/></symbol>
-<symbol id="v3-c" viewBox="0 0 40 40"><rect x="6.5" y="13" width="27" height="14" rx="2.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6"/><path d="M12.5 7.5V13M20 7.5V13M27.5 7.5V13M12.5 27v5.5M20 27v5.5M27.5 27v5.5" stroke="currentColor" stroke-width="2.2"/><rect x="11" y="17.8" width="4.4" height="4.4" rx=".8" fill="currentColor"/><rect x="17.8" y="17.8" width="4.4" height="4.4" rx=".8" fill="currentColor"/><rect x="24.6" y="17.8" width="4.4" height="4.4" rx=".8" fill="currentColor"/></symbol>
-<symbol id="v3-d" viewBox="0 0 40 40"><circle cx="20" cy="20" r="9.6" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6"/><path d="M20 4v5M20 31v5M4 20h5M31 20h5M8.7 8.7l3.4 3.4M31.3 8.7l-3.4 3.4M8.7 31.3l3.4-3.4M31.3 31.3l-3.4-3.4" stroke="currentColor" stroke-width="2.2"/><circle cx="20" cy="20" r="4.2" fill="currentColor"/></symbol>
-<symbol id="v3-e" viewBox="0 0 40 40"><path d="M20 7.5 32.5 20 20 32.5 7.5 20z" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M20 2.5v5M20 32.5v5M2.5 20h5M32.5 20h5" stroke="currentColor" stroke-width="2.2"/><path d="M20 15 25 20 20 25 15 20z" fill="currentColor"/></symbol>
-<symbol id="v3-f" viewBox="0 0 40 40"><path d="M15.5 8.5h15.5v22.5H8.5V15.5z" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M31 14h5M31 19.7h5M31 25.4h5M14 31v5M19.7 31v5M25.4 31v5" stroke="currentColor" stroke-width="2.2"/><path d="M14.5 25.5 20 15l5.5 10.5z" fill="currentColor"/></symbol>
-
-<!-- ===== 4 Hex Core: a hex shell, one sensor eye ===== -->
-<symbol id="v4-frame" viewBox="0 0 40 40"><path d="M20 2.5 35.16 11.25v17.5L20 37.5 4.84 28.75v-17.5z" style="fill:var(--ko)"/><path d="M20 2.5 35.16 11.25v17.5L20 37.5 4.84 28.75v-17.5z" fill="currentColor" fill-opacity=".1" style="stroke:var(--ring,currentColor);stroke-width:var(--rw,1.8)" stroke-opacity=".8" stroke-linejoin="round"/></symbol>
-<symbol id="v4-a" viewBox="0 0 40 40"><circle cx="20" cy="20" r="7.8" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="20" cy="20" r="3.4" fill="currentColor"/></symbol>
-<symbol id="v4-b" viewBox="0 0 40 40"><rect x="10.5" y="17.4" width="19" height="5.2" rx="2.6" fill="currentColor"/></symbol>
-<symbol id="v4-c" viewBox="0 0 40 40"><path d="M27.5 20l-3.75 6.5h-7.5L12.5 20l3.75-6.5h7.5z" fill="currentColor"/><circle cx="20" cy="20" r="2.4" style="fill:var(--ko)"/></symbol>
-<symbol id="v4-d" viewBox="0 0 40 40"><circle cx="20" cy="20" r="5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M20 8v5.4M20 26.6V32M8 20h5.4M26.6 20H32" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></symbol>
-<symbol id="v4-e" viewBox="0 0 40 40"><circle cx="20" cy="14.2" r="3" fill="currentColor"/><circle cx="14.8" cy="23.2" r="3" fill="currentColor"/><circle cx="25.2" cy="23.2" r="3" fill="currentColor"/></symbol>
-<symbol id="v4-f" viewBox="0 0 40 40"><rect x="17.4" y="10.5" width="5.2" height="19" rx="2.6" fill="currentColor"/></symbol>
-
-<!-- ===== 5 Signal: a gauge ring, one signal trace ===== -->
-<symbol id="v5-frame" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19.5" style="fill:var(--ko)"/><circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-opacity=".2" stroke-width="1.6"/><path d="M20 3a17 17 0 1 1-17 17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
-<symbol id="v5-a" viewBox="0 0 40 40"><path d="M8.5 20q3.83-8.5 7.67 0t7.67 0t7.67 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
-<symbol id="v5-b" viewBox="0 0 40 40"><circle cx="20" cy="20" r="9.4" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M20 20l6.6-6.6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="20" r="2.6" fill="currentColor"/></symbol>
-<symbol id="v5-c" viewBox="0 0 40 40"><rect x="11.4" y="22" width="4.4" height="7" rx="1" fill="currentColor"/><rect x="17.8" y="17" width="4.4" height="12" rx="1" fill="currentColor"/><rect x="24.2" y="11.5" width="4.4" height="17.5" rx="1" fill="currentColor"/></symbol>
-<symbol id="v5-d" viewBox="0 0 40 40"><path d="M8 21h5.5l3.2-8.5 4.6 15.5 3.2-7h7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
-<symbol id="v5-e" viewBox="0 0 40 40"><circle cx="13.5" cy="26.5" r="2.9" fill="currentColor"/><path d="M13.5 19a7.5 7.5 0 0 1 7.5 7.5M13.5 12.5a14 14 0 0 1 14 14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
-<symbol id="v5-f" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="12" ry="5" fill="none" stroke="currentColor" stroke-width="2.6" transform="rotate(-30 20 20)"/><circle cx="20" cy="20" r="3.6" fill="currentColor"/></symbol>
-
-<!-- ===== 6 Fleet: whole machines in silhouette ===== -->
-<symbol id="v6-a" viewBox="0 0 40 40"><path d="M11.5 11.5l17 17M28.5 11.5l-17 17" stroke="currentColor" stroke-width="3"/><circle cx="10.5" cy="10.5" r="4.6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="29.5" cy="10.5" r="4.6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="10.5" cy="29.5" r="4.6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="29.5" cy="29.5" r="4.6" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="14.8" y="14.8" width="10.4" height="10.4" rx="3" fill="currentColor"/><circle cx="20" cy="20" r="1.9" style="fill:var(--ko)"/></symbol>
-<symbol id="v6-b" viewBox="0 0 40 40"><rect x="4" y="15" width="10" height="10" rx="1" fill="currentColor" fill-opacity=".35" stroke="currentColor" stroke-width="2.2"/><rect x="26" y="15" width="10" height="10" rx="1" fill="currentColor" fill-opacity=".35" stroke="currentColor" stroke-width="2.2"/><path d="M14 20h2.5M23.5 20H26M20 12.5V8" stroke="currentColor" stroke-width="2.2"/><rect x="16" y="12.5" width="8" height="15" rx="2" fill="currentColor"/><circle cx="20" cy="6.6" r="2.4" fill="currentColor"/><path d="M17.5 31.5h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
-<symbol id="v6-c" viewBox="0 0 40 40"><path d="M14 22v6.5L10.5 34M26 22v6.5L29.5 34M7.5 34.5h6M26.5 34.5h6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 8V4.5" stroke="currentColor" stroke-width="2.6"/><rect x="7.5" y="8" width="25" height="15" rx="3.5" fill="currentColor"/><rect x="11.5" y="13" width="17" height="4.6" rx="2.3" style="fill:var(--ko)"/></symbol>
-<symbol id="v6-d" viewBox="0 0 40 40"><path d="M27 14V9" stroke="currentColor" stroke-width="2.6"/><rect x="22.5" y="4.5" width="9" height="5" rx="1.6" fill="currentColor"/><rect x="5" y="14" width="30" height="12" rx="3" fill="currentColor"/><rect x="8.5" y="17.5" width="10" height="4.4" rx="1.6" style="fill:var(--ko)"/><circle cx="12" cy="31" r="4" fill="currentColor"/><circle cx="28" cy="31" r="4" fill="currentColor"/><circle cx="12" cy="31" r="1.4" style="fill:var(--ko)"/><circle cx="28" cy="31" r="1.4" style="fill:var(--ko)"/></symbol>
-<symbol id="v6-e" viewBox="0 0 40 40"><path d="M20 14.5 26.5 35M20 14.5 13.5 35M15.6 28h8.8" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="10.5" r="3.4" fill="currentColor"/><path d="M13.6 5.4a7.4 7.4 0 0 0 0 10.2M26.4 5.4a7.4 7.4 0 0 1 0 10.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
-<symbol id="v6-f" viewBox="0 0 40 40"><rect x="6.5" y="30" width="17" height="5" rx="1.6" fill="currentColor"/><path d="M15 30 12.5 18.5 26 11" fill="none" stroke="currentColor" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 11l6-1.6M26 11l2.6 5.4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="12.5" cy="18.5" r="3.4" fill="currentColor"/><circle cx="12.5" cy="18.5" r="1.3" style="fill:var(--ko)"/></symbol>
+<!-- ===== Pro robots: today's six bots on one grid. Head 22x18 at (9,15), rx 5, stroke 2 (edges on whole pixels at 20 px). ===== -->
+<!-- a: round antenna, two round LEDs -->
+<symbol id="r-a" viewBox="0 0 40 40"><path d="M20 14.5V10.5" stroke="currentColor" stroke-width="2"/><circle cx="20" cy="8.2" r="2.6" fill="currentColor"/><rect x="9" y="15" width="22" height="18" rx="5" stroke="currentColor" stroke-width="2" style="fill:currentColor;fill-opacity:var(--hfo,.16)"/><circle cx="15" cy="23.5" r="3" style="fill:var(--fc,currentColor)"/><circle cx="25" cy="23.5" r="3" style="fill:var(--fc,currentColor)"/></symbol>
+<!-- b: two antennas, wide visor bar -->
+<symbol id="r-b" viewBox="0 0 40 40"><path d="M14.5 14.5 12.2 9.8M25.5 14.5l2.3-4.7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="11.6" cy="8.6" r="2.1" fill="currentColor"/><circle cx="28.4" cy="8.6" r="2.1" fill="currentColor"/><rect x="9" y="15" width="22" height="18" rx="5" stroke="currentColor" stroke-width="2" style="fill:currentColor;fill-opacity:var(--hfo,.16)"/><rect x="12" y="20" width="16" height="6" rx="3" style="fill:var(--fc,currentColor)"/></symbol>
+<!-- c: side ears, square eyes, vent grille -->
+<symbol id="r-c" viewBox="0 0 40 40"><rect x="4" y="19" width="3.5" height="10" rx="1.2" fill="currentColor"/><rect x="32.5" y="19" width="3.5" height="10" rx="1.2" fill="currentColor"/><rect x="9" y="15" width="22" height="18" rx="5" stroke="currentColor" stroke-width="2" style="fill:currentColor;fill-opacity:var(--hfo,.16)"/><rect x="13" y="19.5" width="5" height="5" rx="1" style="fill:var(--fc,currentColor)"/><rect x="22" y="19.5" width="5" height="5" rx="1" style="fill:var(--fc,currentColor)"/><rect x="15" y="27" width="2" height="3" rx=".6" style="fill:var(--fc,currentColor)"/><rect x="19" y="27" width="2" height="3" rx=".6" style="fill:var(--fc,currentColor)"/><rect x="23" y="27" width="2" height="3" rx=".6" style="fill:var(--fc,currentColor)"/></symbol>
+<!-- d: T antenna, one round lens -->
+<symbol id="r-d" viewBox="0 0 40 40"><path d="M20 14.5V9M15.5 9h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="9" y="15" width="22" height="18" rx="5" stroke="currentColor" stroke-width="2" style="fill:currentColor;fill-opacity:var(--hfo,.16)"/><circle cx="20" cy="24" r="5" fill="none" stroke-width="2" style="stroke:var(--fc,currentColor)"/><circle cx="20" cy="24" r="2" style="fill:var(--fc,currentColor)"/></symbol>
+<!-- e: bent antenna, slit eyes -->
+<symbol id="r-e" viewBox="0 0 40 40"><path d="M20 14.5V10.2l4.4-2.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="25.4" cy="7.3" r="1.8" fill="currentColor"/><rect x="9" y="15" width="22" height="18" rx="5" stroke="currentColor" stroke-width="2" style="fill:currentColor;fill-opacity:var(--hfo,.16)"/><rect x="12" y="22" width="7" height="3" rx="1.5" style="fill:var(--fc,currentColor)"/><rect x="21" y="22" width="7" height="3" rx="1.5" style="fill:var(--fc,currentColor)"/></symbol>
+<!-- f: headphone arc, side pads -->
+<symbol id="r-f" viewBox="0 0 40 40"><path d="M7 21a13 13 0 0 1 26 0" fill="none" stroke="currentColor" stroke-width="2"/><rect x="9" y="15" width="22" height="18" rx="5" stroke="currentColor" stroke-width="2" style="fill:currentColor;fill-opacity:var(--hfo,.16)"/><rect x="4.5" y="19" width="5" height="10" rx="2" fill="currentColor"/><rect x="30.5" y="19" width="5" height="10" rx="2" fill="currentColor"/><circle cx="16" cy="24" r="2.2" style="fill:var(--fc,currentColor)"/><circle cx="24" cy="24" r="2.2" style="fill:var(--fc,currentColor)"/></symbol>
 </defs>
 </svg>
 
 <div class="wrap">
   <header>
-    <h1>Agent icons <span>6 directions</span></h1>
-    <p>Today first · 6 bots per set · colour per bot · 20 / 30 / 44 / 48 px</p>
+    <h1>Agent icons <span>3 variants</span></h1>
+    <p>Today first · same 6 robots · colour per bot · 20 / 30 / 44 / 48 px</p>
   </header>
   <main id="dirs"></main>
 </div>
@@ -183,18 +135,12 @@
   var DIRS = [
     { today: true, name: 'Today', box: 'Round · gradient · ring',
       idea: 'Six cartoon robot faces in glowing circles, as live now.' },
-    { key: 'v1', cls: 'v-visor', name: 'Visor', box: 'Rounded square · hairline',
-      idea: 'Solid machine helmets, one visor band and no face; each bot has its own shell.' },
-    { key: 'v2', cls: 'v-token', frame: 'v2-frame', name: 'Token', box: 'Solid coin · no border',
-      idea: 'A solid coin in the bot’s colour stamped with one geometric mark, like an exchange token.' },
-    { key: 'v3', cls: 'v-chip', name: 'Chip', box: 'Sunk tile · no border',
-      idea: 'Each bot is a processor die: the pin layout and the core shape tell them apart.' },
-    { key: 'v4', cls: 'v-hex', frame: 'v4-frame', name: 'Hex Core', box: 'Hex shell · hairline',
-      idea: 'One hex shell for every bot, with a different sensor eye inside.' },
-    { key: 'v5', cls: 'v-signal', frame: 'v5-frame', name: 'Signal', box: 'Round gauge ring',
-      idea: 'A gauge ring holding the bot’s signal trace: wave, radar, bars, pulse, broadcast, orbit.' },
-    { key: 'v6', cls: 'v-fleet', name: 'Fleet', box: 'Rounded square · hairline',
-      idea: 'Whole machines in silhouette: drone, satellite, walker, rover, beacon, arm.' }
+    { key: 'r', cls: 'v-line', name: 'Line', box: 'Round · 1px ring',
+      idea: 'The same six robots on one grid: outline head, lit LED eyes, no mouth.' },
+    { key: 'r', cls: 'v-duo', name: 'Duotone', box: 'Dark rounded-square plate · 1px edge',
+      idea: 'Tinted head with a solid outline, solid LEDs and visor.' },
+    { key: 'r', cls: 'v-solid', name: 'Solid', box: 'Round · 1px ring',
+      idea: 'Filled head, eyes and visor cut out dark.' }
   ];
 
   function ava(d, i, size, you) {
