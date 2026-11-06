@@ -109,8 +109,10 @@ body.v9-agents #agents { margin-top: 28px; }
 .cfoot .pz.w { box-shadow: inset 0 0 0 1px rgba(59,130,246,.45); background: linear-gradient(180deg, rgba(59,130,246,.10), rgba(7,11,18,.55)); }
 .v9-card.et .cfoot .pz.w { box-shadow: inset 0 0 0 1px rgba(0,255,136,.4); background: linear-gradient(180deg, rgba(0,255,136,.08), rgba(7,11,18,.55)); }
 /* 1ST and 2ND stand out as tags of their own (the operator, 2026-11-06) */
-.cfoot .pz .k { display: inline-block; margin-bottom: 2px; font: 400 15px/1.2 var(--font-display); letter-spacing: .1em; color: var(--at-hi); }
-.cfoot .pz.w .k { color: var(--at-green); text-shadow: 0 0 12px rgba(0,255,136,.45); }
+.cfoot .pz .k { display: inline-block; margin-bottom: 4px; padding: 3px 10px; border-radius: 99px; font: 400 13px/1.2 var(--font-display); letter-spacing: .08em; color: var(--at-hi); background: rgba(127,169,245,.16); box-shadow: inset 0 0 0 1px rgba(127,169,245,.45); }
+.cfoot .pz.w .k { color: var(--at-bg); background: var(--at-green); box-shadow: 0 0 14px rgba(0,255,136,.45); }
+/* Your agents card: two tiles once "Needs you" is gone (the operator, 2026-11-07) */
+.at-me .at-mini3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 /* the winnings stand out (the operator, 2026-11-06): bigger, both in paper blue, the ET10 on top in green */
 .cfoot .pz { padding: 9px 8px 10px; }
 .cfoot .pz b { font: 400 25px/1.1 var(--font-display) !important; color: var(--at-blue) !important; text-shadow: 0 0 18px rgba(59,130,246,.45); }
@@ -179,7 +181,15 @@ body.v9-agents #agents { margin-top: 28px; }
 .rt.on { border-color: var(--at-cyan); box-shadow: 0 0 0 1px var(--at-cyan); }
 .rt .v9-stage { margin: 0; }
 .rt .v9-plate .glow { display: none; }
-.rt .rc { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.rt .rc { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.rt .rc .p1 { display: flex; align-items: baseline; gap: 6px; font: 400 15px var(--font-display) !important; color: var(--at-blue) !important; }
+.rt .rc .p1 i { font: 400 11px var(--font-display); font-style: normal; letter-spacing: .08em; color: var(--at-green); }
+.rt .v9-clk { width: 26px !important; height: 28px !important; margin: 0; flex: none; }
+.v9-clk:not(.h5) .rg { stroke: var(--at-cyan) !important; }
+.rt:not(.et) .pot .v { color: var(--at-blue) !important; text-shadow: 0 0 34px rgba(59,130,246,.55) !important; }
+.rt.et .pot .v, .rt.et .rc .p1 { color: var(--at-green) !important; }
+.rt .pot .v { font-size: 92px !important; }
+.rt .pot .s { font-size: 34px !important; }
 .rt .rc b { font: 400 14px var(--font-display); color: var(--at-hi); }
 .rt .rc b small { margin-left: 3px; font: 700 9.5px var(--at-num); color: var(--at-cyan); }
 .rt .rc span { font: 600 11px var(--at-num); color: var(--at-muted); }
@@ -205,8 +215,8 @@ body.v9-agents #agents { margin-top: 28px; }
 .pager .nav svg { width: 17px; height: 17px; }
 #openNote:empty { display: none; }
 #openAct { max-width: 380px; }
-.v9-create { font: 700 12.5px var(--at-num); color: var(--at-cyan); text-decoration: none; }
-.v9-create:hover { color: var(--at-hi); }
+.at-btn.v9-create { margin-left: auto; padding: 12px 20px; min-height: 46px; border-radius: 12px; font: 400 14px var(--font-display); letter-spacing: .04em; color: var(--at-cyan); background: rgba(0,207,255,.10); box-shadow: inset 0 0 0 1.5px rgba(0,207,255,.7), 0 0 22px -6px rgba(0,207,255,.6); text-decoration: none; }
+.at-btn.v9-create:hover { color: var(--at-bg); background: var(--at-cyan); }
 
 /* ---------------------------------------------------------------- Finished: folded; a card per table, the table beside its placings */
 .v9-done { margin-top: 44px; border-top: 1px solid var(--at-line2); }

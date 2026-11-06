@@ -137,9 +137,10 @@
   function railHtml(items) {
     if (items.length < 2) return '';
     return items.map(function (x, i) {
-      return '<button type="button" class="rt' + (i === state.i ? ' on' : '') + '" data-pick="' + i + '">' +
-        plate(x.seats.map(function (s, j) { return seatHtml(s, j, null); }).join(''), false) +
-        '<span class="rc"><b>' + esc(x.buy) + (x.unit ? '<small>' + esc(x.unit) + '</small>' : '') + '</b><span>' + stopwatch(x.len) + '</span></span><span class="rs">' + esc(x.who) + '</span></button>';
+      return '<button type="button" class="rt' + (i === state.i ? ' on' : '') + (x.cur === 'ET10' ? ' et' : '') + '" data-pick="' + i + '">' +
+        /* the small table carries its buy-in on the felt, as the big one does; under it the first prize and the seats left */
+        plate(pot('', x.buy, x.unit || '') + x.seats.map(function (s, j) { return seatHtml(s, j, null); }).join(''), false) +
+        '<span class="rc"><span class="p1"><i>1ST</i>' + esc((x.prizes[0] || {}).cash || '') + '</span>' + stopwatch(x.len) + '</span><span class="rs">' + esc(x.who) + '</span></button>';
     }).join('');
   }
 
@@ -237,7 +238,7 @@
     var newest = D.tables.slice().sort(function (a, b) { return String(b.ends_at).localeCompare(String(a.ends_at)); });
     root.innerHTML =
       '<div class="at-sec" id="tables"><h2>Live now <span class="n"></span></h2></div><div class="v9-live" id="liveGrid"></div><p class="v9-note" id="liveNote" hidden>No table is running.</p>' +
-      '<div class="at-sec" id="open"><h2>Open, starts when full <span class="n"></span></h2></div>' +
+      '<div class="at-sec" id="open"><h2>Open, starts when full <span class="n"></span></h2><a class="at-btn v9-create" href="' + esc(L.create) + '">+ Create a table</a></div>' +
       '<div class="v9-open"><div class="v9-openl"><article class="v9-card open" id="openCard"></article><div class="v9-rail" id="openRail"></div></div>' +
         '<aside class="v9-side">' +
           '<div class="sw"><span class="at-lbl">How long</span><div class="at-seg" role="group" aria-label="Length"><button type="button" data-sw="len" data-v="1">1H</button><button type="button" data-sw="len" data-v="5">5H</button><button type="button" data-sw="len" data-v="24">1D</button></div></div>' +
@@ -246,7 +247,6 @@
           '<label class="v9-ex"><input type="checkbox" data-example> Show an example: open tables with players</label>' +
           '<div class="pager" id="openPager"><button type="button" class="nav" data-go="-1" aria-label="Previous table">' + BACK + '</button><span class="count"></span><button type="button" class="nav" data-go="1" aria-label="Next table">' + ARROW + '</button></div>' +
           '<div id="openAct"></div><p class="v9-note" id="openNote"></p>' +
-          '<a class="v9-create" href="' + esc(L.create) + '">+ Create a table</a>' +
         '</aside></div>' +
       '<details class="v9-done" id="finished"><summary><h2>Finished tables <span class="n">' + totals.n + '</span></h2><span class="st"><b>' + totals.won + '</b> won by your agents</span><span class="st">net <b class="' + tone(totals.net) + '">' + signed(totals.net) + '</b></span><span class="st"><b>+' + num(totals.et10) + '</b> ET10</span>' + CHEV + '</summary>' +
         '<div class="v9-finlist">' + newest.map(function (t, i) { return doneCard(t, i >= SHOW_DONE); }).join('') + '</div>' +

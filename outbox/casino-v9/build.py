@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 HERE = Path(__file__).resolve().parent
 OUTBOX = HERE.parent
 HOST = "https://cymetica.com"
-VERSION = "31"
+VERSION = "35"
 
 
 def load(name: str, path: Path):
@@ -50,6 +50,8 @@ def owner_piece(owner: BeautifulSoup, name: str, patched: bool = True):
         raw = raw.replace("Flash ", "")
         # their long red "needs $X more volume to qualify": the figure stays, grey and short (the operator, 2026-11-06)
         raw = re.sub(r'<span>needs</span>\s*(\$[\d,.]+)\s*<span>more volume to qualify</span>', r"\1 to qualify", raw)
+        # "Needs you 0" on the Your agents card says nothing (the operator, 2026-11-07): the tile goes
+        raw = re.sub(r'<div class="[^"]*"><span class="at-lbl">Needs you</span><span class="[^"]*">[^<]*</span></div>', "", raw)
     raw = re.sub(r'(href|src)="/(?!/)', rf'\1="{HOST}/', raw)
     return BeautifulSoup(raw, "html.parser")
 
