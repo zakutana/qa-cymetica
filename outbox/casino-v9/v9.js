@@ -72,11 +72,24 @@
     $$('.v9-stage').forEach(function (s) { s.style.setProperty('--k', Math.min(1, s.clientWidth / 580).toFixed(4)); });
   }
 
+  /* the time left on a card, four ways to choose from (the operator, 2026-11-06: the giant digits look odd).
+     A pill: a small dark pill, 19:21:14, a hairline of progress under it.  B ring: a progress ring with 19h 21m beside it.
+     C edge: 19h 21m left in small type, the progress as a line along the card's top edge.  D quiet: 19h 21m left, nothing else. */
+  var CLOCKS = { a: 'Pill', b: 'Ring', c: 'Edge', d: 'Quiet' };
+  var clockStyle = 'a';
+  try { clockStyle = localStorage.getItem('v9-clock') || 'a'; } catch (e) { /* first visit */ }
+  function clockHtml(t) {
+    var span = ' data-start="' + esc(t.start) + '" data-end="' + esc(t.end) + '"';
+    if (clockStyle === 'b') return '<div class="clock cb"><svg class="v9-ring"' + span + ' viewBox="0 0 36 36" aria-hidden="true"><circle class="tr" cx="18" cy="18" r="15"/><circle class="rg" cx="18" cy="18" r="15" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 18 18)"/></svg><span class="txt">' + cdn(t.end) + '<small>left</small></span></div>';
+    if (clockStyle === 'c') return '<div class="clock cc">' + cdn(t.end) + '<small>left</small><span class="at-pb edge"' + span + '><i></i></span></div>';
+    if (clockStyle === 'd') return '<div class="clock cd">' + cdn(t.end) + '<small>left</small></div>';
+    return '<div class="clock ca"><span class="pill">' + cdn(t.end) + '</span><span class="at-pb"' + span + '><i></i></span></div>';
+  }
+
   /* one card, a running table or an open one */
   function cardInner(t, moving, quiet) {
     var us = L.agents[t.id];
-    var clock = t.end ? '<div class="clock">' + cdn(t.end) + '<span class="cdl">' + esc(t.cdl) + '</span><span class="at-pb" data-start="' + esc(t.start) + '" data-end="' + esc(t.end) + '"><i></i></span></div>'
-      : '<div class="clock quiet">' + esc(t.cdl) + '</div>';
+    var clock = t.end ? clockHtml(t) : '<div class="clock quiet">' + esc(t.cdl) + '</div>';
     var prizes = t.prizes.map(function (p) {
       return '<div class="pz' + (p.place === '1ST' ? ' w' : '') + '"><span class="k">' + esc(p.place) + '</span><b>' + esc(p.cash) + (p.unit ? '<small>' + esc(p.unit) + '</small>' : '') + '</b>' + (p.extra ? '<span class="e">' + esc(p.extra) + '</span>' : '') + '</div>';
     }).join('');
@@ -84,7 +97,7 @@
       : '<span class="plain">' + esc(t.who) + '</span>';
     return '<header class="ctop"><div class="l"><div class="top"><span class="st"><i></i>' + esc(t.stateText) + '</span><span class="ln">' + stopwatch(t.len) + '</span>' + (t.example ? '<span class="ex">EXAMPLE</span>' : '') + '</div><div class="buy">' + esc(t.buy) + '<small>' + esc(t.unit || 'buy-in') + '</small></div></div>' + clock + '</header>' +
       plate(pot(t.potKey, t.pot, t.potSub) + t.seats.map(function (s, i) { return seatHtml(s, i, us); }).join(''), moving) +
-      '<footer class="cfoot"><div class="pzs">' + prizes + '</div>' + (quiet ? '' : '<div class="who">' + who + '</div>') + '</footer>';
+      '<footer class="cfoot"><div class="pzs">' + prizes + '</div>' + (quiet ? (us ? '<div class="who you-row"><span class="you">YOU</span><b>' + esc(us.bot) + '</b><span class="r">' + esc(us.rank) + '</span><span class="o ' + (/^-/.test(us.roi) ? 'neg' : /^\+0\.00/.test(us.roi) ? 'flat' : 'pos') + '">' + esc(us.roi) + '</span></div>' : '') : '<div class="who">' + who + '</div>') + '</footer>';
   }
 
   /* ---------------------------------------------------------------- the switches: they choose the open table */
@@ -302,11 +315,34 @@
       var i = $('i', el);
       if (i && b > a) i.style.width = Math.min(100, Math.max(0, (Date.now() - a) / (b - a) * 100)).toFixed(1) + '%';
     });
+    $$('.v9-ring[data-start]').forEach(function (el) {
+      var a = Date.parse(el.getAttribute('data-start')), b = Date.parse(el.getAttribute('data-end')), rg = $('.rg', el);
+      if (rg && b > a) rg.setAttribute('stroke-dasharray', Math.min(100, Math.max(0, (b - Date.now()) / (b - a) * 100)).toFixed(1) + ' 100');
+    });
+  }
+
+  /* the countdown proposals: a small switch in the corner of the mock, not part of the design */
+  function clockPicker() {
+    var box = document.createElement('div');
+    box.className = 'v9-demo';
+    box.innerHTML = '<span>Countdown</span>' + Object.keys(CLOCKS).map(function (k) { return '<button type="button" data-clock="' + k + '">' + k.toUpperCase() + ' · ' + CLOCKS[k] + '</button>'; }).join('');
+    document.body.appendChild(box);
+    var mark = function () { $$('[data-clock]', box).forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-clock') === clockStyle); }); };
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-clock]');
+      if (!b) return;
+      clockStyle = b.getAttribute('data-clock');
+      try { localStorage.setItem('v9-clock', clockStyle); } catch (x) { /* the switch still works */ }
+      paintLive(); paintOpen(); tick(); mark();
+    });
+    mark();
   }
 
   build();
   paintLive();
   paintOpen();
+  clockPicker();
+  tick();
   tab(location.hash === '#agents' ? 'agents' : 'lobby');
   setInterval(tick, 1000);
 })();

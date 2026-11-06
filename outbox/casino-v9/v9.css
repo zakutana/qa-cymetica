@@ -99,6 +99,52 @@ body.v9-agents #agents { margin-top: 28px; }
 .v9-fin:not(.et) .fr .w:not(.none) { color: var(--at-blue); }
 .at-lbr .won { color: var(--at-blue) !important; }
 
+/* ---------------------------------------------------------------- the prizes as their live card has them: two small boxes,
+   and our seat as one line in a box under them (the operator, 2026-11-06: "v live verzi teď je lepší, jen ty kostky menší
+   nebo hezčí") */
+.cfoot .pzs { grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.cfoot .pz { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 7px 8px 8px; border-radius: 10px; background: rgba(7,11,18,.55); box-shadow: inset 0 0 0 1px var(--at-line2); }
+.cfoot .pz.w { box-shadow: inset 0 0 0 1px rgba(59,130,246,.45); background: linear-gradient(180deg, rgba(59,130,246,.10), rgba(7,11,18,.55)); }
+.v9-card.et .cfoot .pz.w { box-shadow: inset 0 0 0 1px rgba(0,255,136,.4); background: linear-gradient(180deg, rgba(0,255,136,.08), rgba(7,11,18,.55)); }
+.cfoot .pz .k { font: 700 9.5px var(--at-num); letter-spacing: .16em; color: var(--at-muted); }
+.cfoot .pz b { font: 400 17px/1.15 var(--font-display); }
+.cfoot .pz .e { font: 700 10.5px var(--at-num); color: var(--at-cyan); }
+.who.you-row { margin-top: 8px; padding: 7px 10px; border: 0; border-radius: 10px; background: rgba(7,11,18,.55); box-shadow: inset 0 0 0 1px var(--at-line2); }
+.who.you-row b { max-width: 55%; font-size: 13px; }
+
+/* ---------------------------------------------------------------- the countdown, four proposals (v9.js clockHtml) */
+.ctop .clock.ca, .ctop .clock.cb, .ctop .clock.cc, .ctop .clock.cd { gap: 6px; }
+.clock .at-cdn [data-u] { font-variant-numeric: tabular-nums; }
+/* A pill: 19:21:14 in a small dark pill, a hairline under it */
+.clock.ca .pill { display: inline-flex; padding: 5px 10px; border-radius: 99px; background: var(--at-sunk); box-shadow: inset 0 0 0 1px var(--at-line); }
+.clock.ca .at-cdn { font: 700 14px var(--at-num) !important; color: var(--at-hi); gap: 0 !important; }
+.clock.ca .at-cdn i { display: none; }
+.clock.ca .at-cdn [data-u="d"]::after, .clock.ca .at-cdn [data-u="h"]::after, .clock.ca .at-cdn [data-u="m"]::after { content: ":"; color: var(--at-muted); }
+.clock.ca .at-pb { width: 84px; height: 2px; }
+/* B ring: the ring empties as the table runs, 19h 21m beside it */
+.clock.cb { flex-direction: row !important; align-items: center !important; }
+.clock.cb .v9-ring { width: 30px; height: 30px; }
+.clock.cb .v9-ring circle { fill: none; stroke-width: 3.2; }
+.clock.cb .v9-ring .tr { stroke: rgba(111,129,153,.28); }
+.clock.cb .v9-ring .rg { stroke: var(--at-green); stroke-linecap: round; }
+.clock.cb .txt { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
+.clock.cb .at-cdn, .clock.cc .at-cdn, .clock.cd .at-cdn { font: 700 15px var(--at-num) !important; color: var(--at-hi); gap: 4px !important; }
+.clock.cb .at-cdn i, .clock.cc .at-cdn i, .clock.cd .at-cdn i { text-transform: lowercase; color: var(--at-muted) !important; font: 600 12px var(--at-num) !important; margin-left: 1px; }
+.clock.cb [data-u="s"], .clock.cc [data-u="s"], .clock.cd [data-u="s"] { display: none !important; }
+.clock.cb small, .clock.cc small, .clock.cd small { font: 600 10.5px var(--at-num); letter-spacing: .08em; color: var(--at-muted); text-transform: uppercase; }
+/* C edge: the progress runs along the card's top edge */
+.clock.cc { flex-direction: row !important; align-items: baseline !important; }
+.clock.cc .at-pb.edge { position: absolute; left: 0; right: 0; top: 0; width: auto !important; height: 3px; border-radius: 0; background: rgba(111,129,153,.18); }
+.v9-card { position: relative; }
+.ctop { position: static; }
+.ctop > * { position: relative; z-index: 2; }
+/* D quiet: just 19h 21m left */
+.clock.cd { flex-direction: row !important; align-items: baseline !important; }
+
+.v9-demo { position: fixed; left: 16px; bottom: 76px; z-index: 50; display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 12px; background: rgba(7,11,18,.92); box-shadow: inset 0 0 0 1px var(--at-line), 0 10px 30px rgba(0,0,0,.6); font: 600 11px var(--at-num); color: var(--at-muted); }
+.v9-demo button { padding: 5px 9px; border: 0; border-radius: 8px; cursor: pointer; background: none; color: var(--at-ink2); font: 600 11px var(--at-num); }
+.v9-demo button.on { color: var(--at-bg); background: var(--at-cyan); }
+
 /* ---------------------------------------------------------------- Open: the table on the left, its switches beside it */
 .ctop .ex { margin-left: 10px; padding: 2px 6px; border-radius: 6px; font: 700 9.5px var(--at-num); letter-spacing: .1em; color: var(--at-bg); background: var(--at-blue); }
 .v9-ex { display: flex; align-items: center; gap: 8px; cursor: pointer; font: 600 12.5px var(--at-num); color: var(--at-ink2); }
