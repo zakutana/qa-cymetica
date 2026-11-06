@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 HERE = Path(__file__).resolve().parent
 OUTBOX = HERE.parent
 HOST = "https://cymetica.com"
-VERSION = "12"
+VERSION = "14"
 
 
 def load(name: str, path: Path):

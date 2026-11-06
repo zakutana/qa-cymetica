@@ -45,6 +45,7 @@
 .at-lbr { margin-top: 8px; border: 1px solid var(--at-line2); border-top-color: var(--at-line2); border-radius: 14px; background: var(--at-panel); }
 .at-lbr.you { background: linear-gradient(90deg, rgba(0,207,255,.14), var(--at-panel) 70%); border-color: rgba(0,207,255,.35); }
 .at-lbr .nm { gap: 12px; }
+.at-lbr .won { color: var(--at-blue) !important; }   /* paper money is blue, the operator 2026-11-06 */
 @media (max-width: 760px) {
   .at-lbh, .at-lbr { grid-template-columns: 32px minmax(0, 1fr) auto; padding: 10px 12px; column-gap: 10px; }
 }

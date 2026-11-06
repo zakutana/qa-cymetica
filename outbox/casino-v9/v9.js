@@ -21,6 +21,11 @@
   var ava = function (colour, shape) {
     return '<span class="at-ava" style="--c:' + esc(colour || '#00cfff') + '"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#at-bot-' + esc(shape || 'a') + '"/></svg></span>';
   };
+  /* their stopwatch from the hero's How long box, small: the table's length wherever its type is named */
+  var stopwatch = function (label) {
+    var l = String(label || '').toUpperCase(), share = l === '1H' ? 18 : l === '5H' ? 55 : 92;
+    return '<span class="at-bclk v9-clk' + (l === '5H' ? ' h5' : '') + '" title="' + esc(l) + ' table"><svg viewBox="0 0 48 52" aria-hidden="true"><rect x="20" y="1" width="8" height="5" rx="1.5"/><path d="M24 6v4"/><circle class="tr" cx="24" cy="29" r="20"/><circle class="rg" cx="24" cy="29" r="20" pathLength="100" stroke-dasharray="' + share + ' 100" transform="rotate(-90 24 29)"/></svg><b>' + esc(l) + '</b></span>';
+  };
   var cdn = function (end) {
     return '<span class="at-cdn" data-end="' + esc(end) + '" aria-label="Time left"><span data-u="d" hidden></span><span data-u="h"></span><span data-u="m"></span><span data-u="s"></span></span>';
   };
@@ -77,7 +82,7 @@
     }).join('');
     var who = us ? '<span class="you">YOU</span><b>' + esc(us.bot) + '</b><span class="r">' + esc(us.rank) + '</span><span class="o ' + (/^-/.test(us.roi) ? 'neg' : /^\+0\.00/.test(us.roi) ? 'flat' : 'pos') + '">' + esc(us.roi) + '</span>' + (us.need ? '<small class="need">' + esc(us.need) + '</small>' : '')
       : '<span class="plain">' + esc(t.who) + '</span>';
-    return '<header class="ctop"><div class="l"><span class="st"><i></i>' + esc(t.stateText) + '</span>' + (t.example ? '<span class="ex">EXAMPLE</span>' : '') + '<div class="buy">' + esc(t.buy) + '<small>' + esc(t.unit || 'buy-in') + '</small><span class="ln">' + esc(t.len) + (t.id ? ' &middot; #' + t.id : '') + '</span></div></div>' + clock + '</header>' +
+    return '<header class="ctop"><div class="l"><span class="st"><i></i>' + esc(t.stateText) + '</span>' + (t.example ? '<span class="ex">EXAMPLE</span>' : '') + '<div class="buy">' + esc(t.buy) + '<small>' + esc(t.unit || 'buy-in') + '</small><span class="ln">' + stopwatch(t.len) + (t.id ? '#' + t.id : '') + '</span></div></div>' + clock + '</header>' +
       plate(pot(t.potKey, t.pot, t.potSub) + t.seats.map(function (s, i) { return seatHtml(s, i, us); }).join(''), moving) +
       '<footer class="cfoot"><div class="pzs">' + prizes + '</div>' + (quiet ? '' : '<div class="who">' + who + '</div>') + '</footer>';
   }
@@ -111,7 +116,7 @@
     });
     var prizes = k > 1 ? [{ place: '1ST', cash: money(first), unit: unit, extra: 'now' }, { place: '2ND', cash: money(second), unit: unit, extra: 'now' }]
       : k === 1 ? [{ place: '1ST', cash: money(buy), unit: unit, extra: 'buy-in back' }] : t.prizes;
-    return Object.assign({}, t, { example: true, taken: k, seats: seats, who: (6 - k) + ' seats left',
+    return Object.assign({}, t, { example: true, taken: k, seats: seats, who: (6 - k) + (6 - k === 1 ? ' seat left' : ' seats left'),
       potKey: k ? 'PRIZE POOL · SO FAR' : t.potKey, pot: k ? money(pot) : t.pot,
       potSub: k ? k + ' paid · ' + t.pot + (et ? ' ET10' : '') + ' when full' : t.potSub, prizes: prizes });
   }
@@ -120,7 +125,7 @@
     return items.map(function (x, i) {
       return '<button type="button" class="rt' + (i === state.i ? ' on' : '') + '" data-pick="' + i + '">' +
         plate(x.seats.map(function (s, j) { return seatHtml(s, j, null); }).join(''), false) +
-        '<span class="rc"><b>' + esc(x.buy) + (x.unit ? '<small>' + esc(x.unit) + '</small>' : '') + '</b><span>' + (x.id ? '#' + x.id : esc(x.len)) + '</span></span><span class="rs">' + esc(x.who) + '</span></button>';
+        '<span class="rc"><b>' + esc(x.buy) + (x.unit ? '<small>' + esc(x.unit) + '</small>' : '') + '</b><span>' + stopwatch(x.len) + (x.id ? '#' + x.id : '') + '</span></span><span class="rs">' + esc(x.who) + '</span></button>';
     }).join('');
   }
 
@@ -129,7 +134,7 @@
     var grid = $('#liveGrid');
     $('#tables h2 .n').textContent = L.live.length;
     grid.innerHTML = L.live.map(function (t) {
-      return '<a class="v9-card live' + (L.agents[t.id] ? ' mine' : '') + '" href="' + (t.id === L.tableMock ? 'table.html' : esc(t.href)) + '">' + cardInner(t, false, true) + '</a>';
+      return '<a class="v9-card live' + (t.cur === 'ET10' ? ' et' : '') + (L.agents[t.id] ? ' mine' : '') + '" href="' + (t.id === L.tableMock ? 'table.html' : esc(t.href)) + '">' + cardInner(t, false, true) + '</a>';
     }).join('');
     $('#liveNote').hidden = L.live.length > 0;
   }
@@ -139,7 +144,7 @@
     var items = openList();
     if (state.i >= items.length) state.i = 0;
     var t = items[state.i], card = $('#openCard');
-    card.className = 'v9-card ' + (t ? (t.state === 'coming' ? 'coming' : 'open') : 'none');
+    card.className = 'v9-card ' + (t ? (t.state === 'coming' ? 'coming' : 'open') + (t.cur === 'ET10' ? ' et' : '') : 'none');
     card.innerHTML = t ? cardInner(t, true)
       : '<div class="nothing"><b>No open table here.</b><span>' + esc(state.mode === 'live' ? L.liveNote.split('. ')[0] + '.' : 'Try another length or buy-in.') + '</span></div>';
     card.classList.remove('shown'); void card.offsetWidth; card.classList.add('shown');
@@ -203,8 +208,8 @@
     var ended = String(t.ends_at || '').slice(5, 10).replace('-', '/');
     var buy = isEt(t) ? num(et10Buyin(t)) + ' ET10' : usd(t.buyin || 0);
     var me = t.ranked.filter(function (r) { return ids.indexOf(r.seat_id) >= 0; })[0];
-    return '<a class="v9-fin' + (ids.length ? ' ours' : '') + '"' + (hidden ? ' hidden' : '') + ' href="' + HOST + '/agent-casino/table/' + t.id + '/results">' +
-      '<div class="fh"><b>' + esc(buy) + '</b><span>' + len(t.hours) + ' &middot; #' + t.id + '</span><span class="sp"></span>' + (me ? '<span class="place">#' + me.rank + ' of ' + t.ranked.length + '</span>' : '') + '<span>' + esc(ended) + '</span></div>' +
+    return '<a class="v9-fin' + (ids.length ? ' ours' : '') + (isEt(t) ? ' et' : '') + '"' + (hidden ? ' hidden' : '') + ' href="' + HOST + '/agent-casino/table/' + t.id + '/results">' +
+      '<div class="fh"><b>' + esc(buy) + '</b><span class="ln">' + stopwatch(len(t.hours)) + '#' + t.id + '</span><span class="sp"></span>' + (me ? '<span class="place">#' + me.rank + ' of ' + t.ranked.length + '</span>' : '') + '<span>' + esc(ended) + '</span></div>' +
       '<div class="fbody">' + finishedTable(t, ids) + '<div class="fb">' +
       rows.map(function (r) {
         var mine = ids.indexOf(r.seat_id) >= 0, w = [took(t, r), etLabel(r)].filter(Boolean).join(' ');
