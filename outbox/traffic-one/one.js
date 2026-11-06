@@ -234,7 +234,13 @@
         });
         rows.sort(function (x, y) { return y.peak - x.peak; });
         $('au-history-title').textContent = 'Usage over time: ' + (sessions ? 'browser sessions' : AUD[aud][0].replace('Most used by ', ''));
-        $('au-history-sub').textContent = (sessions ? 'Browser sessions' : 'Users') + ' per day for each app over the last ' + hRange + ' full days, ' + md(dd[0]) + ' to ' + md(dd[dd.length - 1]) + ' (UTC). The number is the latest full day. Each chart has its own scale, so compare shapes and read the numbers for size.';
+        var what = (sessions ? 'Browser sessions' : 'Users') + ' per day for each app over the last ' + hRange + ' full days, ' + md(dd[0]) + ' to ' + md(dd[dd.length - 1]) + ' (UTC). The number is the latest full day; today appears once it ends at midnight UTC. Each chart has its own scale, so compare shapes and read the numbers for size. Breaks in a line are days with no records.';
+        var markIdx = sessions ? -1 : dd.indexOf(H.full_records_from);
+        $('au-history-sub').textContent = sessions
+            ? what + ' A session is one visit and one person can have many, so sessions and users are not comparable. Unlike users, sessions can include automated browsers and our own visits. These are the same for the Everyone and People tabs.'
+            : what + (markIdx > 0 ? ' The dashed line marks ' + md(H.full_records_from) + ': before it we recorded far fewer page visits, so usage to its left reads low.' : '');
+        var hb = $('au-history-rows'); hb.textContent = '';
+        $('au-history-details').hidden = !rows.length;
         var W = 240, Hh = 64, PAD = 4, NS = 'http://www.w3.org/2000/svg';
         rows.forEach(function (r) {
             var last = r.v.length - 1; while (last >= 0 && r.v[last] == null) last--;
@@ -246,7 +252,12 @@
             var pts = [];
             r.v.forEach(function (u, i) { if (u != null) pts.push((i / n * W).toFixed(1) + ',' + (Hh - PAD - (r.peak ? u / r.peak : 0) * (Hh - 2 * PAD)).toFixed(1)); });
             var base = document.createElementNS(NS, 'line'); base.setAttribute('class', 'base'); base.setAttribute('x1', 0); base.setAttribute('x2', W); base.setAttribute('y1', Hh - PAD); base.setAttribute('y2', Hh - PAD); svg.appendChild(base);
+            if (markIdx > 0) { var mk = document.createElementNS(NS, 'line'); mk.setAttribute('class', 'mark'); var mx = (markIdx / n * W).toFixed(1); mk.setAttribute('x1', mx); mk.setAttribute('x2', mx); mk.setAttribute('y1', 0); mk.setAttribute('y2', Hh - PAD); svg.appendChild(mk); }
             var line = document.createElementNS(NS, 'polyline'); line.setAttribute('class', 'line'); line.setAttribute('points', pts.join(' ')); svg.appendChild(line);
+            var pk = r.v.indexOf(r.peak), tr = el('tr'), tdn = el('td');
+            if (r.s.path) { var ln = el('a', null, r.s.app); ln.href = 'https://cymetica.com' + r.s.path; tdn.appendChild(ln); } else tdn.textContent = r.s.app;
+            tr.appendChild(tdn); tr.appendChild(el('td', 'n', nf(r.peak))); tr.appendChild(el('td', null, md(dd[pk])));
+            tr.appendChild(el('td', 'n', nf(r.v[last]) + ' · ' + md(dd[last]))); hb.appendChild(tr);
             var plot = el('div', 'au-plot'); plot.appendChild(svg); box.appendChild(plot);
             box.appendChild(el('div', 'au-card-foot', md(dd[last]) + ' · peak ' + nf(r.peak)));
             grid.appendChild(box);
@@ -305,7 +316,17 @@
         $('tm-ref-intro').textContent = 'Every visitor who clicks one of your tracked links and then registers is attributed to you. They count once they make their first deposit: ' + nf(r.per_user_et10) + ' ET10 per qualified user, ' + (r.schedule || '') + '.';
         $('r-att').textContent = nf((r.attributed || 0) + (r.qualified || 0) + (r.paid || 0));
         $('r-q').textContent = nf(r.qualified_total); $('r-e').textContent = nf(r.earned_et10); $('r-p').textContent = nf(r.pending_et10);
-        $('tm-ref-empty').hidden = (r.rows || []).length > 0;
+        var rr = r.rows || [], rb = $('tm-ref-rows'); rb.textContent = '';
+        $('tm-ref-empty').hidden = rr.length > 0; $('tm-ref-table').hidden = !rr.length;
+        var ST = { attributed: 'Waiting for first deposit', qualified: 'Qualified · credit scheduled', paid: 'Credited' };
+        rr.forEach(function (row) {
+            var tr = el('tr'), td = el('td', null, String(row.registered_at || '–').slice(0, 10));
+            if (row.backfilled) td.appendChild(el('span', 'tm-sub', 'Attributed by the one-time review of earlier visits'));
+            tr.appendChild(td);
+            tr.appendChild(el('td', null, row.first_deposit_at ? String(row.first_deposit_at).slice(0, 10) : 'Not yet'));
+            var ts = el('td', null, ST[row.status] || row.status); if (row.paid_at) ts.appendChild(el('span', 'tm-sub', String(row.paid_at).slice(0, 10)));
+            tr.appendChild(ts); tr.appendChild(el('td', null, row.reward_et10 ? nf(row.reward_et10) : '–')); rb.appendChild(tr);
+        });
     }
 
     /* ---------- one table of what each number counts ---------- */

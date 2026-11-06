@@ -106,6 +106,13 @@
                 </div>
             </div>
             <div class="au-grid" id="au-history-grid"></div>
+            <details class="au-details" id="au-history-details">
+                <summary>View as a table</summary>
+                <div class="au-table-wrap"><table class="au-table">
+                    <thead><tr><th>App</th><th class="n">Peak day</th><th>Peak on</th><th class="n">Latest full day</th></tr></thead>
+                    <tbody id="au-history-rows"></tbody>
+                </table></div>
+            </details>
         </section>
 
         <section class="tl-panel v-basic" id="au-table-panel">
@@ -126,6 +133,7 @@
         <!-- ============ YOURS (was /traffic/mine) ============ -->
         <h2 class="one-section v-basic">Your traffic <span class="tl-unit">what you created · only you see this part</span></h2>
 
+        <p class="tl-note v-adv">Page views, unique visitors, AI-agent requests and where they came from, for every feature, app, company, event card, perpetual and Agent League page you create.</p>
         <div class="tm-kpis v-adv">
             <div class="tm-kpi"><div class="v" id="m-visits">–</div><div class="k">Page views</div></div>
             <div class="tm-kpi"><div class="v" id="m-unique">–</div><div class="k">Unique visitors</div></div>
@@ -163,6 +171,7 @@
                     <tbody id="tm-items"></tbody>
                 </table>
             </div>
+            <p class="tl-note">Aggregate counts only. Page views are every time a person opened one of your pages or anything under it (for Agent Casino that includes its tables and leaderboard), arriving from outside or moving around EventTrader; the Arrivals figure counts only arrivals from outside, so the two are different numbers. Unique visitors, the chart and the Unique column all count the same thing: distinct hashed addresses among human page views, so the daily figures add up to at least the period figure. Days cut at midnight Pacific time. The "Whole product" line under an app is a different count: the distinct people who used the product anywhere in the period, including its tools (the same figure as the Apps list, which cuts its days at UTC), and Uses are the page loads in which they clicked, typed or filled in the app. No IP address is stored or shown. AI agents are counted apart from people; other bots are left out.</p>
         </section>
 
         <section class="tl-panel v-adv">
@@ -175,6 +184,12 @@
                 <div class="tm-kpi"><div class="v" id="r-p">–</div><div class="k">ET10 on the way</div></div>
             </div>
             <p class="tm-empty" id="tm-ref-empty" style="margin-top:12px">No one has registered through your links yet. Post your tracked cymetica.com/c/ links; every registration they bring shows up here.</p>
+            <div class="tm-scroll" id="tm-ref-table" hidden>
+                <table class="tm-table">
+                    <thead><tr><th>Registered</th><th>First deposit</th><th>Reward</th><th>ET10</th></tr></thead>
+                    <tbody id="tm-ref-rows"></tbody>
+                </table>
+            </div>
         </section>
 
         <p class="tl-foot">Aggregate, privacy-safe stats. Visitors and your pages: days cut at midnight Pacific time; "14 days" is 14 calendar days including today. Apps: the last 30 full UTC days. Unique visitors are counted by hashed IP — no raw IP addresses are stored or shown. <span id="one-gen"></span></p>
