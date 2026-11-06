@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 HERE = Path(__file__).resolve().parent
 OUTBOX = HERE.parent
 HOST = "https://cymetica.com"
-VERSION = "18"
+VERSION = "19"
 
 
 def load(name: str, path: Path):
@@ -135,7 +135,7 @@ def assemble(html: str) -> tuple[str, dict]:
 
     mock_nav(soup)
     data["tableMock"] = TABLE_MOCK
-    return finish(str(soup), ("v9.css",), ("data.js", "lobby.js", "art/geometry.js", "v9.js")), data
+    return finish(str(soup), ("v9.css", "heads.css"), ("data.js", "lobby.js", "art/geometry.js", "v9.js", "heads.js")), data
 
 
 TABLE_MOCK = 99
@@ -205,7 +205,7 @@ def table_page() -> str:
     if pill:
         pill.replace_with(owner_piece(owner, "pill"))
     mock_nav(soup)
-    return finish(str(soup), ("v9.css", "pages.css"), ("data.js", "art/geometry.js", "table.js"))
+    return finish(str(soup), ("v9.css", "pages.css", "heads.css"), ("data.js", "art/geometry.js", "table.js", "heads.js"))
 
 
 def leaderboard_page() -> str:
@@ -216,7 +216,7 @@ def leaderboard_page() -> str:
     if pill:
         pill.replace_with(owner_piece(owner, "pill"))
     mock_nav(soup)
-    return finish(str(soup), ("pages.css",), ("data.js", "pages.js"))
+    return finish(str(soup), ("pages.css", "heads.css"), ("data.js", "pages.js", "heads.js"))
 
 
 def main() -> int:

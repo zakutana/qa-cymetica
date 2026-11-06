@@ -1,0 +1,7 @@
+/* Agent Casino v9: the 3D v1 heads in their avatar, as the icon page seats them: a calm dark round seat, a 1px ring in
+   the bot's colour, the render inside; YOU keeps its cyan ring and glow. */
+.at-ava:has(> .v9-head) { position: relative; overflow: visible; background: var(--at-sunk, #070b12) !important; border: 0 !important; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c, #00cfff) 40%, transparent) !important; }
+.at-ava > .v9-head { position: absolute; left: 50%; top: 50%; width: 92%; height: 92%; transform: translate(-50%, -51.5%); display: block; max-width: none; pointer-events: none; }
+.at-ava.you:has(> .v9-head), .v9-seat.you .at-ava:has(> .v9-head), .at-seat.you .at-ava:has(> .v9-head) {
+  box-shadow: 0 0 0 2px var(--at-bg, #0a0e17), 0 0 0 3.5px var(--at-cyan, #00cfff), 0 0 16px rgba(0,207,255,.55) !important; }
+.v9-seat.lead .at-ava:has(> .v9-head) { box-shadow: inset 0 0 0 1.5px var(--at-green, #00ff88), 0 0 14px rgba(0,255,136,.45) !important; }
