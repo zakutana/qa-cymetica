@@ -75,7 +75,29 @@ a.v9-card:hover { border-color: rgba(0,207,255,.55); }
 .who .need { flex: 1 1 100%; font: 600 11.5px var(--at-num); color: var(--at-muted); }
 .who .plain { font: 600 12.5px var(--at-num); }
 
+/* ---------------------------------------------------------------- Your agents: its own tab */
+.at-nav a[data-tab] { cursor: pointer; }
+body:not(.v9-agents) #agents, body:not(.v9-agents) .at-agents { display: none !important; }
+body.v9-agents .at-hero, body.v9-agents #v9 { display: none !important; }
+body.v9-agents #agents { margin-top: 28px; }
+
 /* ---------------------------------------------------------------- Open: the table on the left, its switches beside it */
+.ctop .ex { margin-left: 10px; padding: 2px 6px; border-radius: 6px; font: 700 9.5px var(--at-num); letter-spacing: .1em; color: var(--at-bg); background: var(--at-blue); }
+.v9-ex { display: flex; align-items: center; gap: 8px; cursor: pointer; font: 600 12.5px var(--at-num); color: var(--at-ink2); }
+.v9-ex input { width: 16px; height: 16px; accent-color: var(--at-cyan); }
+.v9-openl { min-width: 0; }
+.v9-rail { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 10px; margin-top: 12px; }
+.v9-rail:empty { display: none; }
+.rt { display: flex; flex-direction: column; align-items: stretch; gap: 2px; padding: 6px 8px 8px; cursor: pointer; text-align: left; color: inherit; border-radius: 12px; background: var(--at-sunk); border: 1px solid var(--at-line2); }
+.rt:hover { border-color: rgba(0,207,255,.5); }
+.rt.on { border-color: var(--at-cyan); box-shadow: 0 0 0 1px var(--at-cyan); }
+.rt .v9-stage { margin: 0; }
+.rt .v9-plate .glow { display: none; }
+.rt .rc { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.rt .rc b { font: 400 14px var(--font-display); color: var(--at-hi); }
+.rt .rc b small { margin-left: 3px; font: 700 9.5px var(--at-num); color: var(--at-cyan); }
+.rt .rc span { font: 600 11px var(--at-num); color: var(--at-muted); }
+.rt .rs { font: 600 11px var(--at-num); color: var(--at-ink2); }
 .v9-open { display: grid; grid-template-columns: minmax(0, 560px) minmax(240px, 1fr); gap: 28px; align-items: start; }
 #openCard.shown { animation: v9in .28s ease-out; }
 @keyframes v9in { from { opacity: 0; transform: translateY(6px); } }

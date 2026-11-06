@@ -1,0 +1,50 @@
+/* Agent Casino v9, the pages beside the lobby. */
+
+/* ---------------------------------------------------------------- a table's page: the owner's panel folded */
+.at-lead.v9-folded { padding: 16px 20px; }
+.at-lead.v9-folded .at-lead-h { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.at-lead.v9-folded .at-lead-h .left { margin-left: auto; display: flex; align-items: center; gap: 8px; margin-top: 0; padding-top: 0; border: 0; }
+.at-lead.v9-folded .at-lead-h .left .at-pb { width: 110px; }
+.at-lead.v9-folded > p { display: none; }
+.at-lead.v9-folded .at-lead-h { flex-wrap: nowrap; }
+.at-lead.v9-folded .who { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; flex: 1; min-width: 0; text-align: left; }
+.at-lead.v9-folded .who b { font-size: clamp(17px, 2.2vw, 26px); white-space: normal; overflow: visible; line-height: 1.15; word-break: normal; overflow-wrap: normal; }
+@media (max-width: 760px) {
+  .at-lead.v9-folded .at-lead-h { flex-wrap: wrap; gap: 10px; }
+  .at-lead.v9-folded .at-lead-h > .at-ava { width: 40px; height: 40px; }
+  .at-lead.v9-folded .who { flex-basis: calc(100% - 60px); }
+  .at-lead.v9-folded .tags { margin-left: 50px; }
+}
+.at-lead.v9-folded .tags { flex: none; }
+.at-lead.v9-folded .at-lead-h .left { display: none; }   /* the page's own clock stands above it */
+.at-lead.v9-folded.v9-open > p { display: block; margin: 8px 0 0; }
+.at-lead.v9-folded.v9-open > p.need { display: none; }
+.v9-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.v9-chips .chip { padding: 5px 10px; border-radius: 99px; font: 600 12px var(--at-num); color: var(--at-ink2); background: var(--at-sunk); border: 1px solid var(--at-line2); }
+.v9-chips .chip.need { color: var(--at-hi); }
+.v9-chips .v9-more { margin-left: 4px; }
+
+/* ---------------------------------------------------------------- a table's page: the rendered table */
+.at-big.v9-big { display: block; padding: 18px 18px 22px; overflow: hidden; border-radius: 18px; background: var(--at-panel); border: 1px solid var(--at-line); }
+.v9-big .v9-stage { --k: 1; height: calc(380px * var(--k)); margin: 0 auto; max-width: 900px; }
+.v9-big .v9-seat .lab { position: absolute; left: 50%; top: calc(100% + 6px); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 1px; width: max-content; max-width: 240px; text-align: center; }
+.v9-big .v9-seat .lab.up { top: auto; bottom: calc(100% + 16px); }
+.v9-big .v9-seat .lab b { font: 700 13px var(--at-num); color: var(--at-hi); white-space: nowrap; }
+.v9-big .v9-seat .lab b i { margin-left: 5px; padding: 0 4px; border-radius: 4px; font: 700 10px var(--at-num); font-style: normal; color: var(--at-ink2); box-shadow: inset 0 0 0 1px var(--at-line); }
+.v9-big .v9-seat .lab span { font: 700 12px var(--at-num); }
+.v9-big .v9-seat .lab .neg { color: var(--at-red); } .v9-big .v9-seat .lab .pos { color: var(--at-green); } .v9-big .v9-seat .lab .flat { color: var(--at-muted); }
+.v9-big .v9-seat .lab em { padding: 1px 6px; border-radius: 5px; font: 700 10px var(--at-num); font-style: normal; color: var(--at-bg); background: var(--at-cyan); }
+.v9-big .v9-seat em:not(.lab em) { display: none; }
+.v9-bigpz { max-width: 560px; margin: 8px auto 0; }
+
+/* ---------------------------------------------------------------- the leaderboard: more margin, no gap after the names */
+*:has(> .at-lbr) { padding: 22px 26px 26px !important; }
+/* the name takes what it needs; the four figures share the rest evenly, centred, so no empty band follows the names */
+.at-lbh, .at-lbr { grid-template-columns: 48px minmax(0, 460px) repeat(4, minmax(80px, 1fr)); column-gap: 18px; padding: 14px 20px; }
+.at-lbh span:nth-child(n+3), .at-lbr > :nth-child(n+3) { text-align: center !important; justify-self: center; }
+.at-lbr { margin-top: 8px; border: 1px solid var(--at-line2); border-top-color: var(--at-line2); border-radius: 14px; background: var(--at-panel); }
+.at-lbr.you { background: linear-gradient(90deg, rgba(0,207,255,.14), var(--at-panel) 70%); border-color: rgba(0,207,255,.35); }
+.at-lbr .nm { gap: 12px; }
+@media (max-width: 760px) {
+  .at-lbh, .at-lbr { grid-template-columns: 32px minmax(0, 1fr) auto; padding: 10px 12px; column-gap: 10px; }
+}

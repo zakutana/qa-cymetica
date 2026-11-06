@@ -68,7 +68,7 @@
   }
 
   /* one card, a running table or an open one */
-  function cardInner(t, moving) {
+  function cardInner(t, moving, quiet) {
     var us = L.agents[t.id];
     var clock = t.end ? '<div class="clock">' + cdn(t.end) + '<span class="cdl">' + esc(t.cdl) + '</span><span class="at-pb" data-start="' + esc(t.start) + '" data-end="' + esc(t.end) + '"><i></i></span></div>'
       : '<div class="clock quiet">' + esc(t.cdl) + '</div>';
@@ -77,16 +77,51 @@
     }).join('');
     var who = us ? '<span class="you">YOU</span><b>' + esc(us.bot) + '</b><span class="r">' + esc(us.rank) + '</span><span class="o ' + (/^-/.test(us.roi) ? 'neg' : /^\+0\.00/.test(us.roi) ? 'flat' : 'pos') + '">' + esc(us.roi) + '</span>' + (us.need ? '<small class="need">' + esc(us.need) + '</small>' : '')
       : '<span class="plain">' + esc(t.who) + '</span>';
-    return '<header class="ctop"><div class="l"><span class="st"><i></i>' + esc(t.stateText) + '</span><div class="buy">' + esc(t.buy) + '<small>' + esc(t.unit || 'buy-in') + '</small><span class="ln">' + esc(t.len) + (t.id ? ' &middot; #' + t.id : '') + '</span></div></div>' + clock + '</header>' +
+    return '<header class="ctop"><div class="l"><span class="st"><i></i>' + esc(t.stateText) + '</span>' + (t.example ? '<span class="ex">EXAMPLE</span>' : '') + '<div class="buy">' + esc(t.buy) + '<small>' + esc(t.unit || 'buy-in') + '</small><span class="ln">' + esc(t.len) + (t.id ? ' &middot; #' + t.id : '') + '</span></div></div>' + clock + '</header>' +
       plate(pot(t.potKey, t.pot, t.potSub) + t.seats.map(function (s, i) { return seatHtml(s, i, us); }).join(''), moving) +
-      '<footer class="cfoot"><div class="pzs">' + prizes + '</div><div class="who">' + who + '</div></footer>';
+      '<footer class="cfoot"><div class="pzs">' + prizes + '</div>' + (quiet ? '' : '<div class="who">' + who + '</div>') + '</footer>';
   }
 
   /* ---------------------------------------------------------------- the switches: they choose the open table */
   var state = { len: 24, cur: 'USDC', mode: 'paper', i: 0 };
   try { var kept = JSON.parse(localStorage.getItem('v9-casino') || 'null'); if (kept && kept.len) { state.len = kept.len; state.cur = kept.cur; state.mode = kept.mode; } } catch (e) { /* first visit */ }
   function openList() {
-    return (state.mode === 'live' ? L.liveKinds : L.open).filter(function (c) { return c.hours === state.len && c.cur === state.cur; });
+    var base = (state.mode === 'live' ? L.liveKinds : L.open).filter(function (c) { return c.hours === state.len && c.cur === state.cur; });
+    if (!state.example || state.mode === 'live') return base;
+    /* a busy lobby: three tables of each kind on offer, the copies without a number of their own */
+    var many = [];
+    [0, 1, 2].forEach(function (copy) { base.forEach(function (t) { many.push(Object.assign({}, t, { id: copy ? null : t.id, seed: (t.id || 0) + copy * 5 })); }); });
+    return many.map(exampleOf).sort(function (a, b) { return b.taken - a.taken; });
+  }
+
+  /* An example, asked for by the operator: the same open tables with players seated, so the page shows a busy lobby.
+     One model: k paid seats of the table's own buy-in; the pot is k buy-ins, split 2/3 and 1/3 (/rules prize_split),
+     and a table with one member pays its buy-in back (/rules one_member_table). The seated bots are species of theirs. */
+  var CROWD = Object.keys(faces).sort();
+  var FILL = [4, 2, 5, 1, 3, 0];
+  function exampleOf(t, i) {
+    var k = FILL[(t.seed || i) % FILL.length], et = t.cur === 'ET10', unit = et ? 'ET10' : '';
+    var buy = parseFloat(String(t.buy).replace(/[^\d.]/g, '')) || 0;
+    var money = function (n) { return et ? num(n) : usd(n); };
+    var pot = buy * k, second = Math.floor(pot / 3 * 100) / 100, first = Math.round((pot - second) * 100) / 100;
+    var seats = t.seats.map(function (s, j) {
+      if (j >= k || !CROWD.length) return { empty: true };
+      var name = CROWD[((t.seed || 0) * 7 + j * 3) % CROWD.length], f = faces[name];
+      return { bot: name, colour: f.colour, shape: f.shape };
+    });
+    var prizes = k > 1 ? [{ place: '1ST', cash: money(first), unit: unit, extra: 'now' }, { place: '2ND', cash: money(second), unit: unit, extra: 'now' }]
+      : k === 1 ? [{ place: '1ST', cash: money(buy), unit: unit, extra: 'buy-in back' }] : t.prizes;
+    return Object.assign({}, t, { example: true, taken: k, seats: seats, who: (6 - k) + ' seats left',
+      potKey: k ? 'PRIZE POOL · SO FAR' : t.potKey, pot: k ? money(pot) : t.pot,
+      potSub: k ? k + ' paid · ' + t.pot + (et ? ' ET10' : '') + ' when full' : t.potSub, prizes: prizes });
+  }
+  function railHtml(items) {
+    if (items.length < 2) return '';
+    return items.map(function (x, i) {
+      return '<button type="button" class="rt' + (i === state.i ? ' on' : '') + '" data-pick="' + i + '">' +
+        plate(x.seats.map(function (s, j) { return seatHtml(s, j, null); }).join(''), false) +
+        '<span class="rc"><b>' + esc(x.buy) + (x.unit ? '<small>' + esc(x.unit) + '</small>' : '') + '</b><span>' + (x.id ? '#' + x.id : esc(x.len)) + '</span></span><span class="rs">' + esc(x.who) + '</span></button>';
+    }).join('');
   }
 
   /* ---------------------------------------------------------------- running tables: all of them */
@@ -94,7 +129,7 @@
     var grid = $('#liveGrid');
     $('#tables h2 .n').textContent = L.live.length;
     grid.innerHTML = L.live.map(function (t) {
-      return '<a class="v9-card live' + (L.agents[t.id] ? ' mine' : '') + '" href="' + esc(t.href) + '">' + cardInner(t, false) + '</a>';
+      return '<a class="v9-card live' + (L.agents[t.id] ? ' mine' : '') + '" href="' + (t.id === L.tableMock ? 'table.html' : esc(t.href)) + '">' + cardInner(t, false, true) + '</a>';
     }).join('');
     $('#liveNote').hidden = L.live.length > 0;
   }
@@ -109,6 +144,7 @@
       : '<div class="nothing"><b>No open table here.</b><span>' + esc(state.mode === 'live' ? L.liveNote.split('. ')[0] + '.' : 'Try another length or buy-in.') + '</span></div>';
     card.classList.remove('shown'); void card.offsetWidth; card.classList.add('shown');
     $('#open h2 .n').textContent = items.length;
+    $('#openRail').innerHTML = railHtml(items);
     var pager = $('#openPager');
     pager.hidden = items.length < 2;
     $('.count', pager).innerHTML = 'Table <b>' + (state.i + 1) + '</b> of ' + items.length;
@@ -183,11 +219,12 @@
     root.innerHTML =
       '<div class="at-sec" id="tables"><h2>Live now <span class="n"></span></h2></div><div class="v9-live" id="liveGrid"></div><p class="v9-note" id="liveNote" hidden>No table is running.</p>' +
       '<div class="at-sec" id="open"><h2>Open, starts when full <span class="n"></span></h2></div>' +
-      '<div class="v9-open"><article class="v9-card open" id="openCard"></article>' +
+      '<div class="v9-open"><div class="v9-openl"><article class="v9-card open" id="openCard"></article><div class="v9-rail" id="openRail"></div></div>' +
         '<aside class="v9-side">' +
           '<div class="sw"><span class="at-lbl">How long</span><div class="at-seg" role="group" aria-label="Length"><button type="button" data-sw="len" data-v="1">1H</button><button type="button" data-sw="len" data-v="5">5H</button><button type="button" data-sw="len" data-v="24">1D</button></div></div>' +
           '<div class="sw"><span class="at-lbl">Buy-in</span><div class="at-seg" role="group" aria-label="Buy-in"><button type="button" data-sw="cur" data-v="USDC">USDC</button><button type="button" data-sw="cur" data-v="ET10">ET10</button></div></div>' +
           '<div class="sw"><span class="at-lbl">Tables</span><div class="at-seg" role="group" aria-label="Paper or Live tables"><button type="button" data-sw="mode" data-v="paper">PAPER</button><button type="button" data-sw="mode" data-v="live"><i class="at-dot"></i>LIVE</button></div></div>' +
+          '<label class="v9-ex"><input type="checkbox" data-example> Show an example: open tables with players</label>' +
           '<div class="pager" id="openPager"><button type="button" class="nav" data-go="-1" aria-label="Previous table">' + BACK + '</button><span class="count"></span><button type="button" class="nav" data-go="1" aria-label="Next table">' + ARROW + '</button></div>' +
           '<div id="openAct"></div><p class="v9-note" id="openNote"></p>' +
           '<a class="v9-create" href="' + esc(L.create) + '">+ Create a table</a>' +
@@ -208,14 +245,26 @@
       }
       var nav = e.target.closest('[data-go]');
       if (nav) { go(Number(nav.getAttribute('data-go'))); return; }
+      var pick = e.target.closest('[data-pick]');
+      if (pick) { state.i = Number(pick.getAttribute('data-pick')); paintOpen(); return; }
       if (e.target.closest('[data-moredone]')) { $$('.v9-fin[hidden]').forEach(function (b) { b.hidden = false; }); fit(); e.target.closest('[data-moredone]').remove(); }
     });
     $('#finished').addEventListener('toggle', fit);
+    $('[data-example]').addEventListener('change', function (e) { state.example = e.target.checked; state.i = 0; paintOpen(); });
     addEventListener('resize', fit);
+  }
+
+  /* ---------------------------------------------------------------- Your agents: a tab of its own */
+  function tab(name) {
+    document.body.classList.toggle('v9-agents', name === 'agents');
+    $$('[data-tab]').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-tab') === name); });
+    fit();
   }
 
   /* ---------------------------------------------------------------- what their scripts did */
   document.addEventListener('click', function (e) {
+    var tb = e.target.closest('[data-tab], a[href$="#agents"]');
+    if (tb) { e.preventDefault(); tab(tb.getAttribute('data-tab') || 'agents'); scrollTo(0, 0); return; }
     var more = e.target.closest('[data-more]');
     if (more) {
       var small = $('small', more.parentNode), was = !small.hidden;
@@ -253,5 +302,6 @@
   build();
   paintLive();
   paintOpen();
+  tab(location.hash === '#agents' ? 'agents' : 'lobby');
   setInterval(tick, 1000);
 })();

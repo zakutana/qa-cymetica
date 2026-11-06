@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agent Icons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0a0e17; --panel: #0d1520; --panel2: #111a28; --sunk: #070b12;
+    --ink: #E6EDF7; --ink2: #A9B8CC; --muted: #6F8199;
+    --line: rgba(0,150,255,.15); --line2: rgba(0,150,255,.08);
+    --cyan: #00cfff; --green: #00ff88; --blue: #3b82f6; --red: #ff4444;
+    --num: "JetBrains Mono", ui-monospace, Menlo, monospace; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 400 15px/1.45 Inter, system-ui, sans-serif; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 32px 16px 64px; }
+  header h1 { margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -.01em; }
+  header h1 span { color: var(--cyan); }
+  header p { margin: 6px 0 0; color: var(--ink2); font: 600 12px var(--num); letter-spacing: .08em; text-transform: uppercase; }
+
+  .dir { margin-top: 22px; padding: 22px 24px; border-radius: 24px; background: var(--panel); border: 1px solid var(--line); }
+  .dir.today { border-style: dashed; }
+  .dir h2 { margin: 0; display: flex; align-items: baseline; gap: 12px; font-size: 20px; font-weight: 800; }
+  .dir h2 .n { font: 800 13px var(--num); color: var(--cyan); }
+  .dir.today h2 .n { color: var(--muted); }
+  .dir h2 .ct { margin-left: auto; font: 600 11px var(--num); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .dir .idea { margin: 4px 0 0; color: var(--ink2); font-size: 14px; }
+  .body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 28px; margin-top: 18px; align-items: center; }
+
+  .ladder { display: grid; gap: 14px; }
+  .ladder .r { display: flex; align-items: center; gap: 14px; }
+  .ladder .r > b { flex: none; width: 44px; font: 700 11px var(--num); color: var(--muted); }
+  .ladder .r .six { display: flex; align-items: center; gap: 14px; }
+
+  /* context: their "Your agents" row (.at-ar), copied */
+  .ctx { display: grid; gap: 18px; min-width: 0; }
+  .ar { display: grid; grid-template-columns: 42px minmax(0,1fr) minmax(0,1.1fr) 56px 84px; align-items: center; gap: 12px; padding: 8px 14px; min-height: 62px; border-radius: 16px; background: var(--panel2); border: 1px solid var(--line2); }
+  .ar > .av, .ar > .at-ava { width: 42px; height: 42px; }
+  .ar .nm b { display: block; font-weight: 700; font-size: 15px; color: #F3F7FC; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ar .tb b { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; color: #F3F7FC; white-space: nowrap; }
+  .ar .buy { font: 800 11.5px Inter, sans-serif; color: var(--bg); background: var(--blue); padding: 4px 8px; border-radius: 99px; }
+  .ar .rk { font: 800 18px Inter, sans-serif; color: #F3F7FC; white-space: nowrap; }
+  .ar .rk small { font-size: 13px; color: var(--muted); font-weight: 700; }
+  .ar .roi { font: 800 19px Inter, sans-serif; text-align: right; color: var(--red); white-space: nowrap; }
+
+  /* a simple oval table, six seats */
+  .tbl { position: relative; width: 100%; max-width: 420px; aspect-ratio: 2 / 1.08; margin: 6px auto 18px; }
+  .tbl .felt { position: absolute; left: 11%; right: 11%; top: 15%; bottom: 15%; border-radius: 999px; background: radial-gradient(ellipse at 50% 38%, rgba(0,207,255,.10), var(--sunk) 78%); box-shadow: 0 0 0 5px var(--sunk), 0 0 0 6.5px rgba(0,207,255,.45); }
+  .tbl .felt::after { content: ""; position: absolute; inset: 12% 9%; border-radius: 999px; border: 1px dashed rgba(0,207,255,.18); }
+  .tbl .felt span { position: absolute; inset: 0; display: grid; place-items: center; font: 700 10px var(--num); letter-spacing: .14em; color: var(--muted); }
+  .seat { position: absolute; width: 38px; height: 38px; transform: translate(-50%, -50%); z-index: 2; }
+  .seat > * { width: 100%; height: 100%; }
+  .seat em { position: absolute; left: 50%; top: calc(100% + 4px); transform: translateX(-50%); width: max-content; height: auto; padding: 0 5px; border-radius: 4px; font: 800 9px/1.5 var(--num); font-style: normal; color: var(--bg); background: var(--cyan); }
+
+  /* ---------- today: their .at-ava, verbatim ---------- */
+  .at-ava { display: block; flex: none; width: 40px; height: 40px; border-radius: 50%; color: var(--c, var(--cyan)); background: radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--c, var(--cyan)) 24%, var(--panel)), var(--sunk) 72%); border: 1.5px solid color-mix(in srgb, var(--c, var(--cyan)) 75%, transparent); }
+  .at-ava svg { display: block; width: 100%; height: 100%; }
+  .at-ava.you { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,207,255,.22), 0 0 16px rgba(0,207,255,.6); }
+
+  /* ---------- the new avatars ---------- */
+  .av { position: relative; display: block; flex: none; color: var(--c, var(--cyan)); }
+  .av svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .s20 { width: 20px; height: 20px; } .s30 { width: 30px; height: 30px; } .s44 { width: 44px; height: 44px; } .s48 { width: 48px; height: 48px; }
+
+  /* 1 Visor: rounded-square plate, hairline, flat */
+  .v-visor { --ko: #111a28; border-radius: 27%; background: var(--panel2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 38%, transparent); }
+  .v-visor svg { padding: 6%; }
+  /* 2 Token: the coin is the container */
+  .v-token { --ko: #0a0e17; border-radius: 50%; }
+  /* 3 Chip: sunk tile, no border */
+  .v-chip { border-radius: 24%; background: var(--sunk); box-shadow: inset 0 0 0 1px var(--line2); }
+  .v-chip svg { padding: 7%; }
+  /* 4 Hex Core: hex drawn in the SVG */
+  .v-hex { --ko: #070b12; }
+  /* 5 Signal: round gauge drawn in the SVG */
+  .v-signal { --ko: #070b12; border-radius: 50%; }
+  /* 6 Fleet: rounded-square plate, hairline */
+  .v-fleet { --ko: #111a28; border-radius: 30%; background: var(--panel2); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 34%, transparent); }
+  .v-fleet svg { padding: 8%; }
+
+  /* YOU: one cyan ring + glow, same on every direction */
+  .av.you { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--cyan), 0 0 16px rgba(0,207,255,.55); }
+  .v-visor.you, .v-fleet.you { box-shadow: inset 0 0 0 1px var(--cyan), 0 0 0 2px var(--bg), 0 0 0 3.5px var(--cyan), 0 0 16px rgba(0,207,255,.55); }
+  .v-hex.you { box-shadow: none; --ring: #00cfff; --rw: 2.6; }
+  .v-hex.you svg { filter: drop-shadow(0 0 5px rgba(0,207,255,.75)); }
+  .s20.you { box-shadow: 0 0 0 1.5px var(--bg), 0 0 0 2.5px var(--cyan), 0 0 8px rgba(0,207,255,.55); }
+
+  @media (max-width: 900px) {
+    .body { grid-template-columns: 1fr; gap: 22px; }
+  }
+  @media (max-width: 700px) {
+    .wrap { padding: 22px 16px 48px; }
+    header h1 { font-size: 24px; }
+    .dir { padding: 16px; border-radius: 20px; }
+    .dir h2 { flex-wrap: wrap; gap: 4px 10px; font-size: 18px; }
+    .dir h2 .ct { margin-left: 0; width: 100%; }
+    .ladder .r { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .ladder .r .six { gap: 10px; }
+    .ar { grid-template-columns: 38px minmax(0,1fr) auto; grid-template-areas: "av nm roi" "av tb rk"; gap: 4px 10px; padding: 10px 12px; }
+    .ar > .av, .ar > .at-ava { grid-area: av; width: 38px; height: 38px; }
+    .ar .nm { grid-area: nm; min-width: 0; } .ar .tb { grid-area: tb; } .ar .roi { grid-area: roi; } .ar .rk { grid-area: rk; font-size: 15px; text-align: right; }
+    .seat { width: 32px; height: 32px; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<!-- ===== Today (their six, verbatim) ===== -->
+<symbol id="at-bot-a" viewBox="0 0 40 40"><path d="M20 13V9.4" stroke="currentColor" stroke-linecap="round" stroke-width="2.2"></path><circle cx="20" cy="7.8" fill="currentColor" r="2.3"></circle><rect fill="currentColor" fill-opacity=".18" height="18" rx="6" stroke="currentColor" stroke-width="2.2" width="21" x="9.5" y="13"></rect><circle cx="15.6" cy="21" fill="currentColor" r="2.6"></circle><circle cx="24.4" cy="21" fill="currentColor" r="2.6"></circle><path d="M16.2 26.4q3.8 2.4 7.6 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path></symbol>
+<symbol id="at-bot-b" viewBox="0 0 40 40"><path d="M14.2 13l-2.2-4.4M25.8 13l2.2-4.4" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path><circle cx="11.6" cy="7.9" fill="currentColor" r="1.9"></circle><circle cx="28.4" cy="7.9" fill="currentColor" r="1.9"></circle><rect fill="currentColor" fill-opacity=".18" height="18" rx="6" stroke="currentColor" stroke-width="2.2" width="21" x="9.5" y="13"></rect><rect fill="currentColor" height="5.6" rx="2.8" width="15.2" x="12.4" y="18.3"></rect><path d="M17 27.2h6" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path></symbol>
+<symbol id="at-bot-c" viewBox="0 0 40 40"><rect fill="currentColor" height="8" rx="1.5" width="3.4" x="5.6" y="18"></rect><rect fill="currentColor" height="8" rx="1.5" width="3.4" x="31" y="18"></rect><rect fill="currentColor" fill-opacity=".18" height="19" rx="5" stroke="currentColor" stroke-width="2.2" width="21" x="9.5" y="12"></rect><rect fill="currentColor" height="4.8" rx="1.1" width="4.8" x="13.2" y="17.4"></rect><rect fill="currentColor" height="4.8" rx="1.1" width="4.8" x="22" y="17.4"></rect><path d="M15.6 25.8v2.2M18.6 25.8v2.2M21.4 25.8v2.2M24.4 25.8v2.2" stroke="currentColor" stroke-linecap="round" stroke-width="1.7"></path></symbol>
+<symbol id="at-bot-d" viewBox="0 0 40 40"><path d="M20 12.6V8.6M16.8 8.6h6.4" stroke="currentColor" stroke-linecap="round" stroke-width="2.2"></path><rect fill="currentColor" fill-opacity=".18" height="18.4" rx="7" stroke="currentColor" stroke-width="2.2" width="21" x="9.5" y="12.6"></rect><circle cx="20" cy="20.6" fill="currentColor" fill-opacity=".3" r="5" stroke="currentColor" stroke-width="2"></circle><circle cx="20" cy="20.6" fill="currentColor" r="2.1"></circle><path d="M16.6 27.1h6.8" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path></symbol>
+<symbol id="at-bot-e" viewBox="0 0 40 40"><path d="M20 13V9l3.6-1.8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"></path><rect fill="currentColor" fill-opacity=".18" height="18" rx="6" stroke="currentColor" stroke-width="2.2" width="21" x="9.5" y="13"></rect><path d="M13.4 20.6h5M21.6 20.6h5" stroke="currentColor" stroke-linecap="round" stroke-width="2.8"></path><circle cx="20" cy="26.3" fill="currentColor" r="1.7"></circle></symbol>
+<symbol id="at-bot-f" viewBox="0 0 40 40"><path d="M8.6 21.5a11.4 11.4 0 0 1 22.8 0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2.2"></path><rect fill="currentColor" fill-opacity=".18" height="17" rx="6" stroke="currentColor" stroke-width="2.2" width="18" x="11" y="14"></rect><rect fill="currentColor" height="8.4" rx="2" width="4.6" x="6.4" y="19"></rect><rect fill="currentColor" height="8.4" rx="2" width="4.6" x="29" y="19"></rect><circle cx="16.5" cy="21.6" fill="currentColor" r="2.3"></circle><circle cx="23.5" cy="21.6" fill="currentColor" r="2.3"></circle><path d="M17.2 26.6h5.6" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path></symbol>
+
+<!-- ===== 1 Visor: solid machine helmets, one visor band knocked out ===== -->
+<symbol id="v1-a" viewBox="0 0 40 40"><path d="M8 21a12 12 0 0 1 24 0v9a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4z" fill="currentColor"/><rect x="11" y="18.5" width="18" height="5" rx="2.5" style="fill:var(--ko)"/><rect x="13.4" y="20" width="5.4" height="2" rx="1" fill="currentColor"/></symbol>
+<symbol id="v1-b" viewBox="0 0 40 40"><path d="M20 5l13 7v13.5L20 35 7 25.5V12z" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linejoin="round"/><path d="M10.5 17.2 20 22.2l9.5-5v4.4L20 26.6l-9.5-5z" style="fill:var(--ko)"/></symbol>
+<symbol id="v1-c" viewBox="0 0 40 40"><rect x="4.5" y="15.5" width="6" height="12" rx="1.6" fill="currentColor"/><rect x="29.5" y="15.5" width="6" height="12" rx="1.6" fill="currentColor"/><rect x="9" y="7" width="22" height="27" rx="3.5" fill="currentColor"/><rect x="12.5" y="13.5" width="15" height="10" rx="1.6" style="fill:var(--ko)"/><rect x="14.6" y="17.4" width="10.8" height="2.4" rx="1.2" fill="currentColor"/></symbol>
+<symbol id="v1-d" viewBox="0 0 40 40"><path d="M12.5 35h15l-3-5h-9z" fill="currentColor"/><circle cx="20" cy="18.5" r="13" fill="currentColor"/><circle cx="20" cy="18.5" r="6.2" style="fill:var(--ko)"/><circle cx="20" cy="18.5" r="2.7" fill="currentColor"/></symbol>
+<symbol id="v1-e" viewBox="0 0 40 40"><rect x="17.4" y="2.5" width="5.2" height="8" rx="2" fill="currentColor"/><rect x="10" y="7" width="20" height="28" rx="10" fill="currentColor"/><rect x="10" y="17.5" width="20" height="4.2" style="fill:var(--ko)"/><rect x="22" y="18.6" width="5" height="2" rx="1" fill="currentColor"/></symbol>
+<symbol id="v1-f" viewBox="0 0 40 40"><rect x="18.7" y="5.5" width="2.6" height="9" fill="currentColor"/><circle cx="20" cy="5.6" r="2.8" fill="currentColor"/><rect x="4" y="13" width="32" height="19.5" rx="9.75" fill="currentColor"/><rect x="8.5" y="20" width="23" height="5.2" rx="2.6" style="fill:var(--ko)"/></symbol>
+
+<!-- ===== 2 Token: a solid coin, one dark geometric mark ===== -->
+<symbol id="v2-frame" viewBox="0 0 40 40"><circle cx="20" cy="20" r="20" fill="currentColor"/><circle cx="20" cy="20" r="16.6" fill="none" style="stroke:var(--ko)" stroke-opacity=".22" stroke-width="1"/></symbol>
+<symbol id="v2-a" viewBox="0 0 40 40"><path d="M20 10.5 30.5 28.5h-21z" style="fill:var(--ko)" stroke-linejoin="round"/></symbol>
+<symbol id="v2-b" viewBox="0 0 40 40"><circle cx="18.8" cy="21.2" r="6.8" fill="none" style="stroke:var(--ko)" stroke-width="3.4"/><circle cx="28.2" cy="11.8" r="3" style="fill:var(--ko)"/></symbol>
+<symbol id="v2-c" viewBox="0 0 40 40"><rect x="10.5" y="10.5" width="19" height="4.4" rx="1.2" style="fill:var(--ko)"/><rect x="10.5" y="17.8" width="13.5" height="4.4" rx="1.2" style="fill:var(--ko)"/><rect x="10.5" y="25.1" width="8" height="4.4" rx="1.2" style="fill:var(--ko)"/></symbol>
+<symbol id="v2-d" viewBox="0 0 40 40"><circle cx="20" cy="20" r="8.6" fill="none" style="stroke:var(--ko)" stroke-width="3.2"/><path d="M20 11.4a8.6 8.6 0 0 0 0 17.2z" style="fill:var(--ko)"/></symbol>
+<symbol id="v2-e" viewBox="0 0 40 40"><path d="M20 8.5 31.5 20 20 31.5 8.5 20z" style="fill:var(--ko)"/><circle cx="20" cy="20" r="3.6" fill="currentColor"/></symbol>
+<symbol id="v2-f" viewBox="0 0 40 40"><path d="M11.5 12.5 18.5 20l-7 7.5M21.5 12.5 28.5 20l-7 7.5" fill="none" style="stroke:var(--ko)" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+
+<!-- ===== 3 Chip: circuit dies, pin layout and die shape per bot ===== -->
+<symbol id="v3-a" viewBox="0 0 40 40"><rect x="11" y="11" width="18" height="18" rx="2.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6"/><path d="M15 6v5M20 6v5M25 6v5M15 29v5M20 29v5M25 29v5M6 15h5M6 20h5M6 25h5M29 15h5M29 20h5M29 25h5" stroke="currentColor" stroke-width="2.2"/><rect x="15.5" y="15.5" width="9" height="9" rx="1.2" fill="currentColor"/></symbol>
+<symbol id="v3-b" viewBox="0 0 40 40"><rect x="13" y="6.5" width="14" height="27" rx="2.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6"/><path d="M7.5 12.5h5.5M7.5 20h5.5M7.5 27.5h5.5M27 12.5h5.5M27 20h5.5M27 27.5h5.5" stroke="currentColor" stroke-width="2.2"/><circle cx="20" cy="20" r="4.4" fill="currentColor"/></symbol>
+<symbol id="v3-c" viewBox="0 0 40 40"><rect x="6.5" y="13" width="27" height="14" rx="2.5" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6"/><path d="M12.5 7.5V13M20 7.5V13M27.5 7.5V13M12.5 27v5.5M20 27v5.5M27.5 27v5.5" stroke="currentColor" stroke-width="2.2"/><rect x="11" y="17.8" width="4.4" height="4.4" rx=".8" fill="currentColor"/><rect x="17.8" y="17.8" width="4.4" height="4.4" rx=".8" fill="currentColor"/><rect x="24.6" y="17.8" width="4.4" height="4.4" rx=".8" fill="currentColor"/></symbol>
+<symbol id="v3-d" viewBox="0 0 40 40"><circle cx="20" cy="20" r="9.6" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6"/><path d="M20 4v5M20 31v5M4 20h5M31 20h5M8.7 8.7l3.4 3.4M31.3 8.7l-3.4 3.4M8.7 31.3l3.4-3.4M31.3 31.3l-3.4-3.4" stroke="currentColor" stroke-width="2.2"/><circle cx="20" cy="20" r="4.2" fill="currentColor"/></symbol>
+<symbol id="v3-e" viewBox="0 0 40 40"><path d="M20 7.5 32.5 20 20 32.5 7.5 20z" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M20 2.5v5M20 32.5v5M2.5 20h5M32.5 20h5" stroke="currentColor" stroke-width="2.2"/><path d="M20 15 25 20 20 25 15 20z" fill="currentColor"/></symbol>
+<symbol id="v3-f" viewBox="0 0 40 40"><path d="M15.5 8.5h15.5v22.5H8.5V15.5z" fill="currentColor" fill-opacity=".14" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><path d="M31 14h5M31 19.7h5M31 25.4h5M14 31v5M19.7 31v5M25.4 31v5" stroke="currentColor" stroke-width="2.2"/><path d="M14.5 25.5 20 15l5.5 10.5z" fill="currentColor"/></symbol>
+
+<!-- ===== 4 Hex Core: a hex shell, one sensor eye ===== -->
+<symbol id="v4-frame" viewBox="0 0 40 40"><path d="M20 2.5 35.16 11.25v17.5L20 37.5 4.84 28.75v-17.5z" style="fill:var(--ko)"/><path d="M20 2.5 35.16 11.25v17.5L20 37.5 4.84 28.75v-17.5z" fill="currentColor" fill-opacity=".1" style="stroke:var(--ring,currentColor);stroke-width:var(--rw,1.8)" stroke-opacity=".8" stroke-linejoin="round"/></symbol>
+<symbol id="v4-a" viewBox="0 0 40 40"><circle cx="20" cy="20" r="7.8" fill="none" stroke="currentColor" stroke-width="2.6"/><circle cx="20" cy="20" r="3.4" fill="currentColor"/></symbol>
+<symbol id="v4-b" viewBox="0 0 40 40"><rect x="10.5" y="17.4" width="19" height="5.2" rx="2.6" fill="currentColor"/></symbol>
+<symbol id="v4-c" viewBox="0 0 40 40"><path d="M27.5 20l-3.75 6.5h-7.5L12.5 20l3.75-6.5h7.5z" fill="currentColor"/><circle cx="20" cy="20" r="2.4" style="fill:var(--ko)"/></symbol>
+<symbol id="v4-d" viewBox="0 0 40 40"><circle cx="20" cy="20" r="5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M20 8v5.4M20 26.6V32M8 20h5.4M26.6 20H32" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></symbol>
+<symbol id="v4-e" viewBox="0 0 40 40"><circle cx="20" cy="14.2" r="3" fill="currentColor"/><circle cx="14.8" cy="23.2" r="3" fill="currentColor"/><circle cx="25.2" cy="23.2" r="3" fill="currentColor"/></symbol>
+<symbol id="v4-f" viewBox="0 0 40 40"><rect x="17.4" y="10.5" width="5.2" height="19" rx="2.6" fill="currentColor"/></symbol>
+
+<!-- ===== 5 Signal: a gauge ring, one signal trace ===== -->
+<symbol id="v5-frame" viewBox="0 0 40 40"><circle cx="20" cy="20" r="19.5" style="fill:var(--ko)"/><circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-opacity=".2" stroke-width="1.6"/><path d="M20 3a17 17 0 1 1-17 17" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+<symbol id="v5-a" viewBox="0 0 40 40"><path d="M8.5 20q3.83-8.5 7.67 0t7.67 0t7.67 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+<symbol id="v5-b" viewBox="0 0 40 40"><circle cx="20" cy="20" r="9.4" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M20 20l6.6-6.6" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="20" cy="20" r="2.6" fill="currentColor"/></symbol>
+<symbol id="v5-c" viewBox="0 0 40 40"><rect x="11.4" y="22" width="4.4" height="7" rx="1" fill="currentColor"/><rect x="17.8" y="17" width="4.4" height="12" rx="1" fill="currentColor"/><rect x="24.2" y="11.5" width="4.4" height="17.5" rx="1" fill="currentColor"/></symbol>
+<symbol id="v5-d" viewBox="0 0 40 40"><path d="M8 21h5.5l3.2-8.5 4.6 15.5 3.2-7h7.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="v5-e" viewBox="0 0 40 40"><circle cx="13.5" cy="26.5" r="2.9" fill="currentColor"/><path d="M13.5 19a7.5 7.5 0 0 1 7.5 7.5M13.5 12.5a14 14 0 0 1 14 14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+<symbol id="v5-f" viewBox="0 0 40 40"><ellipse cx="20" cy="20" rx="12" ry="5" fill="none" stroke="currentColor" stroke-width="2.6" transform="rotate(-30 20 20)"/><circle cx="20" cy="20" r="3.6" fill="currentColor"/></symbol>
+
+<!-- ===== 6 Fleet: whole machines in silhouette ===== -->
+<symbol id="v6-a" viewBox="0 0 40 40"><path d="M11.5 11.5l17 17M28.5 11.5l-17 17" stroke="currentColor" stroke-width="3"/><circle cx="10.5" cy="10.5" r="4.6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="29.5" cy="10.5" r="4.6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="10.5" cy="29.5" r="4.6" fill="none" stroke="currentColor" stroke-width="2.4"/><circle cx="29.5" cy="29.5" r="4.6" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="14.8" y="14.8" width="10.4" height="10.4" rx="3" fill="currentColor"/><circle cx="20" cy="20" r="1.9" style="fill:var(--ko)"/></symbol>
+<symbol id="v6-b" viewBox="0 0 40 40"><rect x="4" y="15" width="10" height="10" rx="1" fill="currentColor" fill-opacity=".35" stroke="currentColor" stroke-width="2.2"/><rect x="26" y="15" width="10" height="10" rx="1" fill="currentColor" fill-opacity=".35" stroke="currentColor" stroke-width="2.2"/><path d="M14 20h2.5M23.5 20H26M20 12.5V8" stroke="currentColor" stroke-width="2.2"/><rect x="16" y="12.5" width="8" height="15" rx="2" fill="currentColor"/><circle cx="20" cy="6.6" r="2.4" fill="currentColor"/><path d="M17.5 31.5h5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+<symbol id="v6-c" viewBox="0 0 40 40"><path d="M14 22v6.5L10.5 34M26 22v6.5L29.5 34M7.5 34.5h6M26.5 34.5h6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 8V4.5" stroke="currentColor" stroke-width="2.6"/><rect x="7.5" y="8" width="25" height="15" rx="3.5" fill="currentColor"/><rect x="11.5" y="13" width="17" height="4.6" rx="2.3" style="fill:var(--ko)"/></symbol>
+<symbol id="v6-d" viewBox="0 0 40 40"><path d="M27 14V9" stroke="currentColor" stroke-width="2.6"/><rect x="22.5" y="4.5" width="9" height="5" rx="1.6" fill="currentColor"/><rect x="5" y="14" width="30" height="12" rx="3" fill="currentColor"/><rect x="8.5" y="17.5" width="10" height="4.4" rx="1.6" style="fill:var(--ko)"/><circle cx="12" cy="31" r="4" fill="currentColor"/><circle cx="28" cy="31" r="4" fill="currentColor"/><circle cx="12" cy="31" r="1.4" style="fill:var(--ko)"/><circle cx="28" cy="31" r="1.4" style="fill:var(--ko)"/></symbol>
+<symbol id="v6-e" viewBox="0 0 40 40"><path d="M20 14.5 26.5 35M20 14.5 13.5 35M15.6 28h8.8" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="10.5" r="3.4" fill="currentColor"/><path d="M13.6 5.4a7.4 7.4 0 0 0 0 10.2M26.4 5.4a7.4 7.4 0 0 1 0 10.2" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></symbol>
+<symbol id="v6-f" viewBox="0 0 40 40"><rect x="6.5" y="30" width="17" height="5" rx="1.6" fill="currentColor"/><path d="M15 30 12.5 18.5 26 11" fill="none" stroke="currentColor" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M26 11l6-1.6M26 11l2.6 5.4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="12.5" cy="18.5" r="3.4" fill="currentColor"/><circle cx="12.5" cy="18.5" r="1.3" style="fill:var(--ko)"/></symbol>
+</defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <h1>Agent icons <span>6 directions</span></h1>
+    <p>Today first · 6 bots per set · colour per bot · 20 / 30 / 44 / 48 px</p>
+  </header>
+  <main id="dirs"></main>
+</div>
+
+<script>
+(function () {
+  var COLS = ['#00cfff', '#00ff88', '#3b82f6', '#7FE6FF', '#66ffb8', '#93c5fd'];
+  var L = ['a', 'b', 'c', 'd', 'e', 'f'];
+  var DIRS = [
+    { today: true, name: 'Today', box: 'Round · gradient · ring',
+      idea: 'Six cartoon robot faces in glowing circles, as live now.' },
+    { key: 'v1', cls: 'v-visor', name: 'Visor', box: 'Rounded square · hairline',
+      idea: 'Solid machine helmets, one visor band and no face; each bot has its own shell.' },
+    { key: 'v2', cls: 'v-token', frame: 'v2-frame', name: 'Token', box: 'Solid coin · no border',
+      idea: 'A solid coin in the bot’s colour stamped with one geometric mark, like an exchange token.' },
+    { key: 'v3', cls: 'v-chip', name: 'Chip', box: 'Sunk tile · no border',
+      idea: 'Each bot is a processor die: the pin layout and the core shape tell them apart.' },
+    { key: 'v4', cls: 'v-hex', frame: 'v4-frame', name: 'Hex Core', box: 'Hex shell · hairline',
+      idea: 'One hex shell for every bot, with a different sensor eye inside.' },
+    { key: 'v5', cls: 'v-signal', frame: 'v5-frame', name: 'Signal', box: 'Round gauge ring',
+      idea: 'A gauge ring holding the bot’s signal trace: wave, radar, bars, pulse, broadcast, orbit.' },
+    { key: 'v6', cls: 'v-fleet', name: 'Fleet', box: 'Rounded square · hairline',
+      idea: 'Whole machines in silhouette: drone, satellite, walker, rover, beacon, arm.' }
+  ];
+
+  function ava(d, i, size, you) {
+    var c = COLS[i], l = L[i];
+    if (d.today) return '<span class="at-ava ' + (size || '') + (you ? ' you' : '') + '" style="--c:' + c + '"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#at-bot-' + l + '"/></svg></span>';
+    return '<span class="av ' + d.cls + ' ' + (size || '') + (you ? ' you' : '') + '" style="--c:' + c + '"><svg viewBox="0 0 40 40" aria-hidden="true">' +
+      (d.frame ? '<use href="#' + d.frame + '"/>' : '') + '<use href="#' + d.key + '-' + l + '"/></svg></span>';
+  }
+  var SEATS = [[30, 12], [70, 12], [94, 50], [70, 88], [30, 88], [6, 50]];
+  var YOU = 4;
+
+  var html = DIRS.map(function (d, n) {
+    var ladder = [20, 30, 44, 48].map(function (s) {
+      return '<div class="r"><b>' + s + ' px</b><div class="six">' + L.map(function (_, i) { return ava(d, i, 's' + s); }).join('') + '</div></div>';
+    }).join('');
+    var row = '<div class="ar">' + ava(d, 0, '', true) +
+      '<div class="nm"><b>casino RSI Sniper</b></div>' +
+      '<div class="tb"><b><span class="buy">$50</span>Pro #91</b></div>' +
+      '<div class="rk">#2<small>/6</small></div>' +
+      '<div class="roi">−9.76%</div></div>';
+    var seats = SEATS.map(function (p, i) {
+      return '<span class="seat" style="left:' + p[0] + '%;top:' + p[1] + '%">' + ava(d, i, '', i === YOU) + (i === YOU ? '<em>YOU</em>' : '') + '</span>';
+    }).join('');
+    var tbl = '<div class="tbl"><div class="felt"><span>PRO #91</span></div>' + seats + '</div>';
+    return '<section class="dir' + (d.today ? ' today' : '') + '"><h2><span class="n">' + (d.today ? 'NOW' : String(n).padStart(2, '0')) + '</span>' + d.name +
+      '<span class="ct">' + d.box + '</span></h2><p class="idea">' + d.idea + '</p>' +
+      '<div class="body"><div class="ladder">' + ladder + '</div><div class="ctx">' + row + tbl + '</div></div></section>';
+  }).join('');
+  document.getElementById('dirs').innerHTML = html;
+})();
+</script>
+</body>
+</html>

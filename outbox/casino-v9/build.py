@@ -14,6 +14,7 @@ import importlib.util
 import json
 import re
 import shutil
+import urllib.request
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -21,7 +22,7 @@ from bs4 import BeautifulSoup
 HERE = Path(__file__).resolve().parent
 OUTBOX = HERE.parent
 HOST = "https://cymetica.com"
-VERSION = "7"
+VERSION = "12"
 
 
 def load(name: str, path: Path):
@@ -108,6 +109,16 @@ def assemble(html: str) -> tuple[str, dict]:
     paper.insert_before(head)
     paper.insert_before(agents)
 
+    # Your agents is a tab of its own beside Lobby (the operator, 2026-11-06)
+    nav = soup.select_one(".at-bar .at-nav")
+    if nav:
+        lobby_link = nav.find("a")
+        lobby_link["data-tab"] = "lobby"
+        tab = soup.new_tag("a", href="#agents")
+        tab["data-tab"] = "agents"
+        tab.string = "Your agents"
+        lobby_link.insert_after(tab)
+
     # Flash out of the hero, the operator's word; the green button goes to the picker
     for p in hero.select(".at-kind p"):
         if p.get_text().strip().startswith("Flash tables only"):
@@ -121,16 +132,85 @@ def assemble(html: str) -> tuple[str, dict]:
     holder["class"] = "v9"
     paper.replace_with(holder)
 
-    out = str(soup)
+    mock_nav(soup)
+    data["tableMock"] = TABLE_MOCK
+    return finish(str(soup), ("v9.css",), ("data.js", "lobby.js", "art/geometry.js", "v9.js")), data
+
+
+TABLE_MOCK = 99
+
+
+def fetch_page(path: str) -> str:
+    """One of their pages, anonymous, no script of theirs (as v7's fetch of the lobby)."""
+    request = urllib.request.Request(f"{HOST}{path}", headers={"User-Agent": "Mozilla/5.0"})
+    html = urllib.request.urlopen(request, timeout=90).read().decode("utf8")
+    html = re.sub(r"<script\b[^>]*>.*?</script>", "", html, flags=re.S | re.I)
+    html = re.sub(r"<noscript\b[^>]*>.*?</noscript>", "", html, flags=re.S | re.I)
+    html = re.sub(r'(<link\b[^>]*?)\s+media="print"([^>]*>)', r"\1\2", html)
+    html = re.sub(r'(<link\b[^>]*?)\s+onload="[^"]*"([^>]*>)', r"\1\2", html)
+    html = re.sub(r'(href|src|action)="/(?!/)', rf'\1="{HOST}/', html)
+    return html.replace("url(/static", f"url({HOST}/static")
+
+
+def mock_nav(soup: BeautifulSoup) -> None:
+    """Their casino tabs lead between the mock's own pages: Lobby, Your agents (a tab of its own), Leaderboard."""
+    nav = soup.select_one(".at-bar .at-nav")
+    if not nav:
+        return
+    for link in nav.find_all("a"):
+        text = link.get_text().strip()
+        if text == "Lobby":
+            link["href"] = "index.html"
+        elif text == "Your agents":
+            link["href"] = "index.html#agents"
+        elif text == "Leaderboard":
+            link["href"] = "leaderboard.html"
+    if not nav.find("a", attrs={"data-tab": "agents"}):
+        tab = soup.new_tag("a", href="index.html#agents")
+        tab.string = "Your agents"
+        nav.find("a").insert_after(tab)
+
+
+def finish(out: str, css: tuple, scripts: tuple) -> str:
+    """Our files on top, their chat bar as a still copy, the anonymous header as live shows it."""
     v = f"?v={VERSION}"
-    out = out.replace("</head>", f'<link rel="preload" as="image" href="art/table.webp{v}"><link rel="stylesheet" href="v9.css{v}"></head>', 1)
-    scripts = "".join(f'<script src="{name}{v}"></script>' for name in ("data.js", "lobby.js", "art/geometry.js", "v9.js"))
+    links = "".join(f'<link rel="stylesheet" href="{name}{v}">' for name in css)
+    out = out.replace("</head>", f'<link rel="preload" as="image" href="art/table.webp{v}">{links}</head>', 1)
+    tags = "".join(f'<script src="{name}{v}"></script>' for name in scripts)
     bar = (OUTBOX / "casino-v8" / "chatbar.html").read_text(encoding="utf8")
     out = re.sub(r'<div[^>]*id="nexus-chat-widget"[^>]*></div>', "", out)
     out = re.sub(r'(<div class="chat-title"[^>]*>)EventTrader', r"\1Cymetica", out, count=1)
     out = re.sub(r'(<span class="chat-subtitle"[^>]*>)Financial AI Models', r"\1Specialized AI", out, count=1)
     out = out.replace("</head>", "<style>#appDock{display:none}</style></head>", 1)
-    return out.replace("</body>", bar + scripts + "</body>", 1), data
+    return out.replace("</body>", bar + tags + "</body>", 1)
+
+
+def table_page() -> str:
+    """Table 99 as its owner sees it: their page, the owner's panel above it, our table drawn on it (table.js)."""
+    soup = BeautifulSoup(fetch_page(f"/agent-casino/table/{TABLE_MOCK}"), "html.parser")
+    owner = BeautifulSoup((HERE / "owner.html").read_text(encoding="utf8"), "html.parser")
+    head = soup.select_one(".at-rhead")
+    lead = owner_piece(owner, "lead")
+    for old in soup.select("#atLead"):
+        old.decompose()
+    if head:
+        head.insert_after(lead)
+    pill = soup.select_one(".at-bar .at-pill")
+    if pill:
+        pill.replace_with(owner_piece(owner, "pill"))
+    mock_nav(soup)
+    return finish(str(soup), ("v9.css", "pages.css"), ("data.js", "art/geometry.js", "table.js"))
+
+
+def leaderboard_page() -> str:
+    """Their leaderboard, wider margins and no gap after the names (pages.css); our bots marked YOU (pages.js)."""
+    soup = BeautifulSoup(fetch_page("/agent-casino/leaderboard"), "html.parser")
+    owner = BeautifulSoup((HERE / "owner.html").read_text(encoding="utf8"), "html.parser")
+    pill = soup.select_one(".at-bar .at-pill")
+    if pill:
+        pill.replace_with(owner_piece(owner, "pill"))
+    mock_nav(soup)
+    return finish(str(soup), ("pages.css",), ("data.js", "pages.js"))
 
 
 def main() -> int:
@@ -147,6 +227,8 @@ def main() -> int:
     (HERE / "data.js").write_text(f"window.CASINO={text};\n", encoding="utf8")
     (HERE / "lobby.js").write_text(f"window.CASINO_LOBBY={written};\n", encoding="utf8")
     (HERE / "index.html").write_text(page, encoding="utf8")
+    (HERE / "table.html").write_text(table_page(), encoding="utf8")
+    (HERE / "leaderboard.html").write_text(leaderboard_page(), encoding="utf8")
     print(f"{len(data['live'])} running, {len(data['open'])} open, {len(data['liveKinds'])} live kinds, {len(results['tables'])} finished")
     return 0
 
