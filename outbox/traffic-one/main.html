@@ -10,8 +10,7 @@
 
         <div class="tl-toolbar one-toolbar">
             <div class="one-views" role="tablist" aria-label="View">
-                <button type="button" class="tl-chip one-view on" data-view="basic" data-basic="yours" role="tab" aria-selected="true">Basic</button>
-                <button type="button" class="tl-chip one-view one-mine" data-view="basic" data-basic="claude" role="tab" aria-selected="false">Basic · Claude's</button>
+                <button type="button" class="tl-chip one-view on" data-view="basic" role="tab" aria-selected="true">Basic</button>
                 <button type="button" class="tl-chip one-view" data-view="advanced" role="tab" aria-selected="false">Advanced</button>
             </div>
             <div class="tl-range" role="tablist" aria-label="Time range">
@@ -21,41 +20,6 @@
                 <button type="button" class="tl-chip one-days" data-days="90" role="tab">90 days</button>
             </div>
         </div>
-
-        <!-- ============ CLAUDE'S BASIC (mock alternative, switched in the demo pill) ============ -->
-        <section class="v-claude">
-            <h2 class="one-section">Yesterday <span class="tl-unit" id="c-yday-label"></span></h2>
-            <div class="c-tiles" id="c-tiles"></div>
-
-            <div class="tl-grid one-grid">
-                <div class="tl-panel">
-                    <h2>Your apps yesterday <span class="tl-unit">people · vs the 7 days before</span></h2>
-                    <ul class="c-apps" id="c-apps"></ul>
-                </div>
-                <div class="tl-panel">
-                    <h2>Your share of the site <span class="tl-unit">people per day</span></h2>
-                    <div class="tl-canvas-wrap c-short"><canvas id="c-share"></canvas></div>
-                    <p class="tl-note" id="c-share-note"></p>
-                </div>
-            </div>
-
-            <div class="tl-panel">
-                <h2>Your apps <span class="tl-unit" id="c-table-unit"></span></h2>
-                <div class="tl-scroll"><table class="au-table c-table" id="c-table"></table></div>
-                <p class="tl-note">People = whole product (every page and tool of the app). Uses = page loads where the visitor clicked, typed or filled in. Came back and the rank are from the site's app list (30 days, people and AI agents); "–" = the app is not in its top 40.</p>
-            </div>
-
-            <div class="tl-grid one-grid">
-                <div class="tl-panel">
-                    <h2>Site visitors <span class="tl-unit">per day</span></h2>
-                    <div class="tl-canvas-wrap c-short"><canvas id="c-site"></canvas></div>
-                </div>
-                <div class="tl-panel">
-                    <h2>Volume generated <span class="tl-unit">per day</span></h2>
-                    <div class="tl-canvas-wrap c-short"><canvas id="c-vol"></canvas></div>
-                </div>
-            </div>
-        </section>
 
         <!-- ============ SITE ============ -->
         <div class="v-basic">
@@ -188,7 +152,7 @@
         <section class="tl-panel v-basic">
             <h2>Your apps <span class="tl-unit" id="ya-unit"></span></h2>
             <table class="au-table one-apps" id="ya-table"></table>
-            <p class="tl-note">Same columns as the app list above. Users = whole product (all its pages and tools). Came back is filled here from the site's app list where it lists the app (30 days); for the rest it is the number Cymetica would add.</p>
+            <p class="tl-note">Same columns as the app list above, plus Page views. Unique visitors = whole product (all its pages and tools). Came back is filled here from the site's app list where it lists the app (30 days); for the rest it is the number Cymetica would add.</p>
         </section>
 
         <section class="tl-panel v-adv">

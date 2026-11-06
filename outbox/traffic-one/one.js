@@ -124,7 +124,10 @@
     function appTable(table, rows, opts) {
         table.textContent = '';
         var head = el('thead'), tr = el('tr');
-        [['#', ''], ['App', ''], ['Users', 'n'], ['Came back', 'n'], ['Uses', 'n']].forEach(function (h, i) {
+        var cols = [['#', ''], ['App', ''], ['Unique visitors', 'n']];
+        if (opts.views) cols.push(['Page views', 'n']);
+        cols.push(['Came back', 'n'], ['Uses', 'n']);
+        cols.forEach(function (h, i) {
             var th = el('th', h[1], h[0]);
             if (h[0] === 'Uses' && opts.usesNew) th.appendChild(el('span', 'new', 'NEW'));
             tr.appendChild(th);
@@ -139,6 +142,7 @@
             if (r.yours && opts.tagYours) td.appendChild(el('span', 'tag', 'yours'));
             row.appendChild(td);
             row.appendChild(el('td', 'n', nf(r.users)));
+            if (opts.views) row.appendChild(el('td', 'n', nf(r.views)));
             var cb = el('td', 'n' + (r.came == null ? ' mute' : ''), r.came == null ? '–' : r.came + '%');
             if (r.came != null) { var b = el('span', 'au-bar'); b.style.width = (r.came * 0.4) + 'px'; cb.appendChild(b); }
             row.appendChild(cb);
@@ -154,7 +158,7 @@
         var w = U.window || {};
         $('au-window').textContent = 'last ' + (w.days || 30) + ' days · ' + (w.since || '') + ' to today (UTC)';
         $('au-title').textContent = AUD[aud][0];
-        $('au-sub').textContent = AUD[aud][1] + ' Users = unique visitors of the app in 30 days. Came back = share who used it on two or more days. Uses = page loads where they clicked, typed or filled in; the API publishes it today only for products in a company, so only those rows have it.';
+        $('au-sub').textContent = AUD[aud][1] + ' Unique visitors = distinct people who used the app in 30 days, each counted once (Cymetica called it Users). Came back = share who used it on two or more days. Uses = page loads where they clicked, typed or filled in; the API publishes it today only for products in a company, so only those rows have it.';
         document.querySelectorAll('.au-tab').forEach(function (t) { t.setAttribute('aria-selected', String(t.getAttribute('data-aud') === aud)); });
         var all = (U[aud] || []).map(function (r) {
             var p = PRODUCT[r.path];
@@ -239,7 +243,7 @@
         }
         fill('tm-sources', m.by_source, 'source'); fill('tm-refs', m.referrers, 'host');
         var ya = yourApps(m);
-        appTable($('ya-table'), ya, {});
+        appTable($('ya-table'), ya, { views: true });
         $('ya-unit').textContent = ya.length + ' apps · last ' + days + ' days';
         var tb = $('tm-items'); tb.textContent = '';
         (m.items || []).forEach(function (it) {
@@ -261,44 +265,46 @@
 
     /* ---------- one table of what each number counts ---------- */
     function defs() {
-        var d = P(), m = M(), a = A() || S['activity-14'] || {}, ad = a.definitions || {}, pd = PR.definitions || {};
-        var gm = yourApps(m).filter(function (x) { return x.path === '/gem-screener'; })[0] || {};
-        var gu = USAGE.combined['/gem-screener'] || {};
-        // [name, page today, short line (from their definition), one person = , day cut, now, their full words]
-        var IP = 'hashed IP', ACC = 'account or browser';
+        var a = A() || S['activity-14'] || {}, ad = a.definitions || {}, pd = PR.definitions || {};
+        // [number, shown in, what it counts, their own words (tooltip)]; '?' in the third = Cymetica never defined it
         var rows = [
-            ['Arrivals', '/traffic', 'First page someone opens coming from outside (search, link, chat). Later pages do not count.', IP, 'Pacific', nf(d.total), ad.visits],
-            ['Unique visitors', '/traffic', 'Distinct people who opened any page, arriving or moving around.', IP, 'Pacific', nf(d.unique_total), ad.unique_visitors],
-            ['Top pages', '/traffic', 'Arrivals per landing page; only the top 12 are listed.', IP, 'Pacific', 'arrivals', ad.top_pages],
-            ['AI-agent requests', '/traffic, yours', 'Every request an AI agent made: one crawler reading 300 pages is 300.', 'request', 'Pacific', nf((d.ai_agents || {}).total)],
-            ['Unique AI agents', '/traffic', 'Distinct AI agents.', 'agent family per IP', 'Pacific', nf((d.ai_agents || {}).unique_total)],
-            ['Bots filtered', '/traffic', 'Not defined on the page.', '?', 'Pacific', nf(d.bots)],
-            ['Requests', '/traffic', 'Every page opened, arrivals and after; for AI agents also API calls.', 'request', 'Pacific', 'per area', ad.requests],
-            ['Traded notional', '/traffic', 'Price × quantity of every filled CLOB trade, per day.', 'trade', 'Pacific', 'USD', ad.volume],
-            ['Users', '/app-usage', 'Distinct users of an app over 30 days; three visits count once. Everyone = people + AI agents.', ACC, 'UTC', 'Gem ' + nf(gu.users), (U.definitions || {}).users],
-            ['Came back', '/app-usage', 'Share of Users who used the app on two or more days.', ACC, 'UTC', 'Gem ' + (gu.came_back_pct != null ? gu.came_back_pct + '%' : '–')],
-            ['Sessions', '/app-usage', 'Visits; one person can have many, and they can include automated browsers and staff.', 'visit', 'UTC', 'per day'],
-            ['Page views', 'yours', 'Every page a person opened on your pages (background calls do not count).', 'view', 'Pacific', nf((m.totals || {}).visits), ad.human_requests],
-            ['Unique', 'yours', 'Distinct people who opened that one page.', IP, 'Pacific', 'Gem ' + nf(gm.unique)],
-            ['Whole product people', 'yours, /company', 'Distinct people on any page or tool of the app, AI agents excluded.', ACC, 'UTC', 'Gem ' + nf(gm.users), pd.unique_visitors],
-            ['Uses', 'yours, /company', 'Page loads where the visitor clicked, typed or filled in.', 'page load', '–', 'Gem ' + nf(gm.uses), pd.uses],
-            ['From another page here', 'yours', 'Not defined on the page.', '?', 'Pacific', 'per page'],
-            ['People per day by page', 'yours', 'Distinct people per page per day; one person on two pages counts twice.', IP, 'Pacific', 'per day']
+            ['Basic view'],
+            ['Arrivals', 'Visitors over time', 'The first page someone opens when they come from outside (search, a link, a chat). The pages they open after it are not counted.', ad.visits],
+            ['Unique visitors', 'Visitors over time', 'Distinct people who opened any page of the site. Counted by IP address, so one person on two networks counts twice.', ad.unique_visitors],
+            ['AI-agent requests', 'Visitors over time', 'Every request an AI agent made. One crawler reading 300 pages is 300.'],
+            ['Unique AI agents', 'Visitors over time', 'Distinct AI agents.'],
+            ['Bots filtered', 'Visitors over time', '?'],
+            ['Volume', 'Volume generated', 'Dollar value of every filled trade, per day.', ad.volume],
+            ['Unique visitors (apps)', 'Apps, Your apps', 'Distinct people who used the app, all its pages and tools together. Counted by account or browser, not by IP, so it is a different number from the site\'s Unique visitors. Cymetica called it "Users" on /app-usage and "people" on /traffic/mine.', (U.definitions || {}).users],
+            ['Page views', 'Your traffic, Your apps', 'Every page a person opened on your pages. AI agents and background calls are not counted.', ad.human_requests],
+            ['Came back', 'Apps, Your apps', 'Share of the unique visitors who used the app on two or more days.'],
+            ['Uses', 'Apps, Your apps', 'Page loads where the visitor did something: clicked, typed or filled in.', pd.uses],
+            ['People per day by page', 'Your traffic', 'Distinct people per page per day. One person on two of your pages counts in both.'],
+            ['Advanced view'],
+            ['Top pages', 'Top pages', 'Arrivals per page they landed on. Not people, so it is much smaller than Unique visitors.', ad.top_pages],
+            ['Requests', 'What visitors do', 'Every page opened, the first one and all after it; for AI agents also API calls.', ad.requests],
+            ['Sessions', 'Usage over time', 'Visits in a web browser. One person can have many.'],
+            ['Unique', 'All your pages', 'Distinct people who opened that one page, counted by IP address.'],
+            ['From another page here', 'All your pages', '?']
         ];
         var t = $('defs-table'); t.textContent = '';
         var head = el('thead'), hr = el('tr');
-        [['Number', ''], ['What it counts', ''], ['One = ', ''], ['Day', ''], ['Now', 'n']].forEach(function (h) { hr.appendChild(el('th', h[1], h[0])); });
+        ['Number', 'Shown in', 'What it counts'].forEach(function (h) { hr.appendChild(el('th', null, h)); });
         head.appendChild(hr); t.appendChild(head);
-        var b = el('tbody');
+        var b = el('tbody'), n = 0;
         rows.forEach(function (r) {
             var tr = el('tr');
-            var nm = el('td', null, r[0]); nm.appendChild(el('span', 'pg', r[1])); tr.appendChild(nm);
-            var wd = el('td', 'what' + (r[3] === '?' ? ' undef' : ''), r[2]); if (r[6]) wd.title = 'Their words: ' + r[6]; tr.appendChild(wd);
-            tr.appendChild(el('td', 'who', r[3])); tr.appendChild(el('td', 'who', r[4]));
-            tr.appendChild(el('td', 'ex', r[5])); b.appendChild(tr);
+            if (r.length === 1) { var g = el('td', 'grp', r[0]); g.colSpan = 3; tr.appendChild(g); b.appendChild(tr); return; }
+            n++;
+            tr.appendChild(el('td', null, r[0]));
+            tr.appendChild(el('td', 'who', r[1]));
+            var und = r[2] === '?';
+            var wd = el('td', 'what' + (und ? ' undef' : ''), und ? 'Cymetica does not say what this counts.' : r[2]);
+            if (r[3]) wd.title = 'Their words: ' + r[3];
+            tr.appendChild(wd); b.appendChild(tr);
         });
         t.appendChild(b);
-        $('defs-count').textContent = rows.length + ' numbers on today\'s three pages, one place';
+        $('defs-count').textContent = n + ' numbers';
     }
 
     /* ---------- Claude's basic ---------- */
@@ -384,7 +390,7 @@
                 scales: { x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true } }, y: { stacked: true, beginAtZero: true, grid: { color: GRID }, ticks: { callback: function (x) { return usd(x); } } } } } });
     }
 
-    function renderRange() { site(); activity(); mine(); defs(); claude(); }
+    function renderRange() { site(); activity(); mine(); defs(); }
     function renderAll() { renderRange(); apps(); history(); }
 
     /* ---------- controls ---------- */
@@ -421,7 +427,6 @@
         });
     });
     var q = new URLSearchParams(location.search);
-    if (q.get('basic')) document.querySelector('.one-view[data-basic="' + q.get('basic') + '"]').click();
     if (q.get('view')) document.querySelector('.one-view[data-view="' + q.get('view') + '"]').click();
     $('one-gen').textContent = 'Mock data: Cymetica\'s own APIs read ' + String((S['public-14'] || {}).generated_at || '').slice(0, 16).replace('T', ' ') + ' UTC.';
     renderAll();

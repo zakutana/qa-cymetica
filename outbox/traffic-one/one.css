@@ -51,7 +51,8 @@
 .one-defs-table td { vertical-align: top; font-size: 0.85rem; line-height: 1.45; padding: 7px 8px; }
 .one-defs-table td:first-child { color: var(--accent); font-weight: 700; white-space: nowrap; }
 .one-defs-table td .pg { display: block; color: var(--text-secondary); font-weight: 400; font-size: 0.72rem; }
-.one-defs-table td.what { width: 52%; }
+.one-defs-table td.what { width: 62%; }
+.one-defs-table td.grp { color: var(--positive); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; padding-top: 16px; border-bottom: 1px solid var(--panel-border); }
 .one-defs-table td.undef { color: var(--negative); }
 .one-defs-table td.who { color: var(--text-secondary); white-space: nowrap; }
 .one-defs-table .ex { color: var(--positive); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; font-weight: 700; }
