@@ -8997,6 +8997,37 @@ reports:
       The prize at these tables turned on volume, and the coach watched rank only. A coach that tracks the volume still needed against the time left, says it, and sizes up or trades more before the end fixes it; if the daily allowance of 20 trades makes the volume impossible, it should say that instead. Paper tables only; read-only for this report.
     check: tests/rest/test_agent_tournaments_coach_watches_volume.py::test_agent_tournaments_coach_watches_volume
 
+  - key: set-off-took-111-usdc-acknowledged-not-returned
+    severity: high
+    category: logic
+    url: https://cymetica.com/account
+    title: "111.220977 USDC taken from the user's deposit wallet as 'ET10 capital call set-off' against ET10 buys already paid at fill, admitted by NEXUS as a double charge, not returned after 7 and 12 days"
+    expected: >
+      Money the platform takes in error is returned to the user's wallet, and the ledger shows the return. Until then every NEXUS
+      answer about it says the same thing.
+    actual: >
+      Read from GET /api/v1/account/me/transactions on 2026-11-06 at 20:58 UTC. Two ADJUSTMENT rows, currency USDC:
+      id 98131876, 2026-10-25T12:21:26Z, -21.22097700, "ET10 capital call set-off: 21.220977 USDC from your deposit wallet
+      0xC9c69CA8C4932bb6cC83d50aC9A427d10598109B (chain 8453) applied to your outstanding ET10 purchase capital and delivered to the
+      platform capital account", tx 0xac43f684c299b9947601dd7eb9b40614eb20c1752d26214eae37b3d3510cd773; and id 100883170,
+      2026-10-30T00:20:44Z, -90.00000000, the same text, tx 0xe19c0780c1f87ebcbef99fee8813616b87e0c92ac256a9c19d13e8bbfe0c3de2. The 90
+      came 12 hours after the user's DEPOSIT id 100576786 of 90.00 USDC (2026-10-29T12:03:47Z), which the user made to keep as USDC; the
+      user agreed to no capital call. NEXUS on Telegram (ref ET-33640) wrote on 2026-11-04 that both set-offs hit order-book ET10 buys
+      already paid when they filled, "That was a second charge, and it was our error", that the set-off was switched off on 3 Nov, and
+      that the return "needs a signed transfer back from the platform capital account", with no date. No USDC row after 2026-10-30
+      returns any of it. NEXUS also gave contradicting answers on the same money: "nothing was taken" (ET-33640, earlier), and on
+      2026-11-04 that the 90 USDC was "consumed by account activity (trades/fees)" (ET-34272), while the ledger shows a set-off row,
+      not trades. ET-34075 ("still cannot see those 90$ back") is still "investigating".
+    steps:
+      - 'GET https://cymetica.com/api/v1/account/me/transactions?limit=100 with the account''s key -> ADJUSTMENT rows 98131876 (-21.220977 USDC, 25 Oct) and 100883170 (-90.00 USDC, 30 Oct), "ET10 capital call set-off ... delivered to the platform capital account"'
+      - 'Page through every USDC row after 2026-10-30T00:20:44Z -> none returns 21.220977, 90 or 111.220977 USDC'
+      - 'Open both tx hashes on basescan.org -> USDC moved from the user''s deposit wallet 0xC9c69CA8...598109B to the platform'
+    body: >
+      The platform took 111.220977 USDC of a user's own deposits for a debt that did not exist, says so itself, and has not given it
+      back: 12 days for the 21.22, 7 days for the 90. The user has asked on four tickets (ET-33640, ET-33645, ET-33917, ET-34075). A
+      deposit platform that keeps money it admits it took in error cannot be trusted with the next deposit. Return 111.220977 USDC to
+      0xC9c69CA8C4932bb6cC83d50aC9A427d10598109B, show the return in the ledger, and give the user a date. Read only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

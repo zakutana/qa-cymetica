@@ -6528,6 +6528,20 @@
     "315": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "set-off-took-111-usdc-acknowledged-not-returned",
+   "nodeids": [],
+   "report_ids": [
+    317
+   ],
+   "title": "111.220977 USDC taken from the user's deposit wallet as 'ET10 capital call set-off' against ET10 buys already paid at fill, admitted by NEXUS as a double charge, not returned after 7 and 12 days",
+   "filed_at": "2026-11-06T20:59:11+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "317": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
