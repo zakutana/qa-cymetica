@@ -303,7 +303,7 @@
           + ' · called ' + pct(o.ev_signals_taken) + ' · n=' + num(o.n || 0, 0) + '</small></div>';
       });
     });
-    $('btGrid').innerHTML = grid;
+    $('btGrid').innerHTML = rows.length ? grid : '';
     var reasons = g.reasons || [];
     $('btReasons').innerHTML = g.publishable
       ? (b.negative_ev_everywhere ? '<div>Negative expected value under every exit rule at every horizon.</div>' : '<div>Cell: average return on every signal · MCC · return when called.</div>')
@@ -317,7 +317,7 @@
     solana: 'Solana wallets ranked by their realized track record on DEX swaps parsed from a public RPC — closed round trips only, in SOL, scored by the same formula as Robinhood Chain. A wallet we have never seen close a trade scores exactly 50 and does not count as qualified.'
   };
   function renderTraders(d) {
-    if (d) { state.tr[state.chain] = d; renderCopy(); }
+    if (d) { state.tr[state.chain] = d; renderCopy(); renderPicks(); }
     $('tradersSub').textContent = TSUB[state.chain];
     var el = $('traders');
     var rows = (d && d.rows) || [];
@@ -502,9 +502,24 @@
     var smart = sol
       ? (r.credibility_available ? num(r.qualified_buyers, 0) + ' <span>smart wallet' + (r.qualified_buyers === 1 ? '' : 's') + '</span>' : num(r.buys_1h, 0) + ' <span>buys in 1h</span>')
       : num(r.qualified_buyers, 0) + ' <span>smart wallet' + (r.qualified_buyers === 1 ? '' : 's') + '</span>';
-    var dots = sol ? '' : '<div class="fr-dots">' + (r.top_buyers || []).slice(0, 8).map(function (b) {
-      return '<i class="' + (b.gone ? 'gone' : '') + '" title="' + esc(b.wallet_short) + ' · score ' + num(b.score, 0) + (b.gone ? ' · already sold' : '') + '"></i>';
-    }).join('') + '</div>';
+    // who is buying: each wallet's rank on the leaderboard, its win rate and trades, and whether it has already sold
+    var board = {};
+    ((state.tr[state.chain] || {}).rows || []).forEach(function (t, k) { board[t.wallet] = { rank: k + 1, wr: t.win_rate, rt: t.round_trips }; });
+    var buyers = (r.top_buyers || []).slice().sort(function (a, b) {
+      var ra = (board[a.wallet] || {}).rank || 999, rb = (board[b.wallet] || {}).rank || 999;
+      return ra - rb || (b.score || 0) - (a.score || 0);
+    });
+    var who = buyers.length ? '<div class="pk-who"><div class="pk-wh"><span>Wallet</span><span>Win %</span><span>Trades</span></div>'
+      + buyers.slice(0, 3).map(function (b) {
+        var t = board[b.wallet], rt = t ? t.rt : b.record_round_trips;
+        return '<div class="pk-w' + (b.gone ? ' sold' : '') + '"><span class="r">' + (t ? '#' + t.rank : '—') + '</span>'
+          + '<a href="' + esc(EXPLORER[state.chain] + b.wallet) + '" target="_blank" rel="noopener" title="' + esc(b.wallet) + ' · score ' + num(b.score, 0) + '">' + esc(String(b.wallet).slice(0, 4) + '…' + String(b.wallet).slice(-4)) + '</a>'
+          + '<span class="wr">' + (t ? num(100 * t.wr, 0) + '%' : '<em>score ' + num(b.score, 0) + '</em>') + '</span>'
+          + '<span class="n">' + (has(rt) ? num(rt, 0) : '—') + '</span>'
+          + (b.gone ? '<span class="sd" title="This wallet has already sold out of the token">SOLD</span>' : '<span class="sd in">IN</span>') + '</div>';
+      }).join('')
+      + (buyers.length > 3 ? '<div class="pk-more">+' + (buyers.length - 3) + ' more</div>' : '') + '</div>' : '';
+    var dots = '';
     var badge = (r.same_name_on_board ? '<span class="tag dupe" title="Other launches on this board share this name — check the address">SAME NAME ×' + (r.same_name_on_board + 1) + '</span>' : '') + (r.hot ? '<span class="tag hot">HOT</span>' : (r.fresh ? '<span class="tag fresh">FRESH</span>' : ''));
     var thin = r.thin ? '<div class="fr-warn" title="Largest buy at 5% slippage is under $500">Thin: max buy ' + usd(r.max_buy_5pct_usd) + '</div>' : '';
     var url = tradeUrl(r);
@@ -516,6 +531,7 @@
       + '<div><b>' + usdK(r.usd_invested) + '</b><span>' + (sol ? 'volume 24h' : 'bought') + '</span></div>'
       + '<div><b>' + ago(sol ? r.token_age_seconds : r.first_buy_seconds_ago) + '</b><span>' + (sol ? 'pool age' : 'since first buy') + '</span></div>'
       + '</div>'
+      + who
       + thin
       + (url ? '<a class="pk-go" href="' + esc(url) + '" target="_blank" rel="noopener">Trade ' + esc(r.symbol || '') + ' ↗</a>' : '')
       + '</div>';
