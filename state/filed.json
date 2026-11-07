@@ -173,8 +173,7 @@
     "134": "paid"
    },
    "withdrawn": false,
-   "last_check": "inconclusive",
-   "hold": "NEXT.md: read whether reset or auto-resume first"
+   "last_check": "inconclusive"
   },
   {
    "key": "CYM-a_build_ships_inside_the_24_hours_it_publishes",
@@ -214,8 +213,7 @@
     "136": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail",
-   "hold": "NEXT.md: wait for the word 'omez kontrolu'"
+   "last_check": "fail"
   },
   {
    "key": "CYM-a_card_index_moves_no_further_than_its_basket_can",
@@ -276,8 +274,7 @@
     "122": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass",
-   "hold": "NEXT.md: passes only with the US market open"
+   "last_check": "pass"
   },
   {
    "key": "CYM-a_card_keeps_what_its_company_spun_off",
@@ -1263,14 +1260,18 @@
      "report_id": 201,
      "verdict": "fail",
      "at": "2026-10-25T03:47:19+00:00"
+    },
+    {
+     "report_id": 201,
+     "verdict": "pass",
+     "at": "2026-11-07T16:22:45+00:00"
     }
    ],
    "their_status": {
     "201": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass",
-   "hold": "NEXT.md: read before a FAIL goes"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-spent-bot-does-not-read-as-trading",
@@ -1526,7 +1527,7 @@
    },
    "withdrawn": false,
    "last_check": "fail",
-   "hold": "NEXT.md: their answer of 22.10., wait for the word '#46 jako dokumentace'"
+   "hold": "decided 2026-11-07: their answer of 22.10. is a documentation defect, no FAIL goes; the operator can veto"
   },
   {
    "key": "CYM-async-a2a-investigation-arrives",
@@ -1601,8 +1602,7 @@
     "137": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass",
-   "hold": "NEXT.md: their inbox is full, read on first"
+   "last_check": "pass"
   },
   {
    "key": "CYM-award-contradicts-its-own-tier",
@@ -2607,14 +2607,18 @@
      "report_id": 93,
      "verdict": "fail",
      "at": "2026-10-21T09:07:25+00:00"
+    },
+    {
+     "report_id": 93,
+     "verdict": "pass",
+     "at": "2026-11-07T16:22:49+00:00"
     }
    ],
    "their_status": {
     "93": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass",
-   "hold": "NEXT.md: wait for the word 'podej novy'"
+   "last_check": "pass"
   },
   {
    "key": "CYM-every_gem_screener_route_llms_txt_names_is_in_the_openapi",
@@ -6374,12 +6378,18 @@
    ],
    "title": "Agent Casino: a bot at a 1-day table makes 0 trades all table, \"daily allowance used up\" (222 signals blocked), though the allowance resets inside it; it trades again once the table ends",
    "filed_at": "2026-11-04T16:01:13+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 306,
+     "verdict": "pass",
+     "at": "2026-11-07T10:45:56+00:00"
+    }
+   ],
    "their_status": {
     "306": "pending"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "agent-tournaments-lapsed-seat-still-blocks-a-new-ask",
@@ -6511,7 +6521,7 @@
    "filed_at": "2026-11-06T14:16:29+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "314": "pending"
+    "314": "paid"
    },
    "withdrawn": false
   },
@@ -6528,6 +6538,23 @@
     "315": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "agent-tournaments-coach-watches-volume",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_coach_watches_volume.py::test_agent_tournaments_coach_watches_volume"
+   ],
+   "report_ids": [
+    316
+   ],
+   "title": "Agent Casino: the NEXUS coach lets a seat in 1st place lose its prize on volume and never mentions volume",
+   "filed_at": "2026-11-06T18:42:10+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "316": "pending"
+   },
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "set-off-took-111-usdc-acknowledged-not-returned",

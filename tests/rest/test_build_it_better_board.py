@@ -74,6 +74,23 @@ def _our_token() -> str:
     return value if isinstance(value, str) and 8 <= len(value) <= 64 else ""
 
 
+def _our_tickets() -> set[str]:
+    """Tickets we filed or acted on, from state/bb.jsonl; empty when it does not read."""
+    path = REPO / "state" / "bb.jsonl"
+    out: set[str] = set()
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            try:
+                ticket = (json.loads(line) or {}).get("ticket")
+            except ValueError:
+                continue
+            if isinstance(ticket, str) and ticket.startswith("ET-"):
+                out.add(ticket)
+    except OSError:
+        pass
+    return out
+
+
 def lines_of(improvements: str) -> list[str]:
     """The requester's list, one item per line.
 
@@ -586,9 +603,15 @@ def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
                                "verdict": item.get("verdict"),
                                "on_time": item.get("on_time")})
 
-    judged, history, unplaced = [], [], []
+    # Our own requests are not judged here (a stranger's clock is the promise; ours
+    # is read on its own ticket), so a late one of ours never reopens a paid report.
+    ours = _our_tickets()
+    judged, history, unplaced, ours_left = [], [], [], []
     for item in dated:
         if str(item.get("ticket")) in log_unread:
+            continue
+        if str(item.get("ticket")) in ours:
+            ours_left.append(str(item.get("ticket")))
             continue
         placed = settled_before(item, since)
         if placed is None:
@@ -642,6 +665,9 @@ def test_a_build_ships_inside_the_24_hours_it_publishes(rest_anon):
                 f"with nothing shipped"
                 + (f"; {len(waiting)} still inside their window: "
                    f"{', '.join(waiting)}" if waiting else ""))
+    if ours_left:
+        said += (f". NOT in the verdict: {len(ours_left)} request(s) of ours "
+                 f"({', '.join(ours_left)}); the promise is held to other people's builds")
     if history:
         said += (f". NOT in the verdict: {len(history)} request(s) settled "
                  f"more than {SETTLED_WITHIN_HOURS} h ago and are history: "
