@@ -95,7 +95,7 @@
     }).join('');
     var who = us ? '<span class="you">YOU</span><b>' + esc(us.bot) + '</b><span class="r">' + esc(us.rank) + '</span><span class="o ' + (/^-/.test(us.roi) ? 'neg' : /^\+0\.00/.test(us.roi) ? 'flat' : 'pos') + '">' + esc(us.roi) + '</span>' + (us.need ? '<small class="need">' + esc(us.need) + '</small>' : '')
       : '<span class="plain">' + esc(t.who) + '</span>';
-    return '<header class="ctop"><div class="l"><div class="top"><span class="st"><i></i>' + esc(t.stateText) + '</span><span class="ln">' + stopwatch(t.len) + '</span>' + (t.example ? '<span class="ex">EXAMPLE</span>' : '') + '</div></div>' + clock + '</header>' +
+    return '<header class="ctop"><div class="l"><div class="top"><span class="ln">' + stopwatch(t.len) + '</span><span class="st"><i></i>' + esc(t.stateText) + '</span>' + (t.example ? '<span class="ex">EXAMPLE</span>' : '') + '</div></div>' + clock + '</header>' +
       /* the buy-in is said once, on the felt (the operator, 2026-11-06: no duplicates; the prize boxes below carry the pot) */
       plate(pot('BUY-IN', t.buy, t.taken ? t.pot + (t.unit ? ' ' + t.unit : '') + ' in the pool so far' : (t.unit || '')) +   /* no ET10 line on the felt (the operator) */ t.seats.map(function (s, i) { return seatHtml(s, i, us); }).join(''), moving) +
       '<footer class="cfoot"><div class="pzs">' + prizes + '</div>' + (quiet ? (us ? '<div class="who you-row"><span class="you">YOU</span><b>' + esc(us.bot) + '</b><span class="r">' + esc(us.rank) + '</span><span class="o ' + (/^-/.test(us.roi) ? 'neg' : /^\+0\.00/.test(us.roi) ? 'flat' : 'pos') + '">' + esc(us.roi) + '</span></div>' : '') : '<div class="who">' + who + '</div>') + '</footer>';
@@ -145,13 +145,37 @@
   }
 
   /* ---------------------------------------------------------------- running tables: all of them */
+  /* Live now filters like Open does (the operator, 2026-11-07); ALL on length and buy-in, since this is a list of what runs */
+  var lf = { len: 'all', cur: 'all', mode: 'paper', who: 'all' };
+  function liveList() {
+    if (lf.mode === 'live') return [];
+    return L.live.filter(function (t) { return (lf.len === 'all' || String(t.hours) === lf.len) && (lf.cur === 'all' || t.cur === lf.cur) && (lf.who === 'all' || !!L.agents[t.id]); });
+  }
+  /* Your agents: the time left in a column of its own, the cards' clock (the operator, 2026-11-07) */
+  function agentClocks() {
+    $$('.at-agents .at-ar').forEach(function (r) {
+      var id = Number((r.getAttribute('href') || '').split('/').pop()), tm = (L.times || {})[id], old = $('.v9-left', r);
+      if (old) old.remove();
+      var cell = document.createElement('div');
+      cell.className = 'v9-left';
+      cell.innerHTML = tm && tm.end && tm.status !== 'done' ? clockHtml(tm) : '<span class="v9-ended">' + (tm && tm.status === 'done' ? 'ENDED' : '') + '</span>';
+      $('.tb', r).after(cell);
+      var line = $('.tb small', r);
+      if (line) line.hidden = true;
+    });
+  }
   function paintLive() {
-    var grid = $('#liveGrid');
-    $('#tables h2 .n').textContent = L.live.length;
-    grid.innerHTML = L.live.map(function (t) {
+    var grid = $('#liveGrid'), items = liveList();
+    $('#tables h2 .n').textContent = items.length;
+    $$('[data-lf]').forEach(function (b) {
+      var on = lf[b.getAttribute('data-lf')] === b.getAttribute('data-v');
+      b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    grid.innerHTML = items.map(function (t) {
       return '<a class="v9-card live' + (t.cur === 'ET10' ? ' et' : '') + (L.agents[t.id] ? ' mine' : '') + '" href="' + (t.id === L.tableMock ? 'table.html' : esc(t.href)) + '">' + cardInner(t, false, true) + '</a>';
     }).join('');
-    $('#liveNote').hidden = L.live.length > 0;
+    $('#liveNote').textContent = lf.mode === 'live' ? L.liveNote : (lf.who === 'mine' ? 'None of your agents sits at a table of this kind.' : 'No table of this kind is running. Try another length or buy-in.');
+    $('#liveNote').hidden = items.length > 0;
   }
 
   /* ---------------------------------------------------------------- the open table, one at a time, its controls beside it */
@@ -238,7 +262,14 @@
   function build() {
     var newest = D.tables.slice().sort(function (a, b) { return String(b.ends_at).localeCompare(String(a.ends_at)); });
     root.innerHTML =
-      '<div class="at-sec" id="tables"><h2>Live now <span class="n"></span></h2></div><div class="v9-live" id="liveGrid"></div><p class="v9-note" id="liveNote" hidden>No table is running.</p>' +
+      '<div class="at-sec" id="tables"><h2>Live now <span class="n"></span></h2></div>' +
+      '<div class="v9-side v9-filt" id="liveFilt">' +
+        '<div class="sw"><span class="at-lbl">How long</span><div class="at-seg" role="group" aria-label="Length"><button type="button" data-lf="len" data-v="all">ALL</button><button type="button" data-lf="len" data-v="1">1H</button><button type="button" data-lf="len" data-v="5">5H</button><button type="button" data-lf="len" data-v="24">1D</button></div></div>' +
+        '<div class="sw"><span class="at-lbl">Buy-in</span><div class="at-seg" role="group" aria-label="Buy-in"><button type="button" data-lf="cur" data-v="all">ALL</button><button type="button" data-lf="cur" data-v="USDC">USDC</button><button type="button" data-lf="cur" data-v="ET10">ET10</button></div></div>' +
+        '<div class="sw"><span class="at-lbl">Tables</span><div class="at-seg" role="group" aria-label="Paper or Live tables"><button type="button" data-lf="mode" data-v="paper">PAPER</button><button type="button" data-lf="mode" data-v="live"><i class="at-dot"></i>LIVE</button></div></div>' +
+        '<div class="sw"><span class="at-lbl">Agents</span><div class="at-seg" role="group" aria-label="All tables or mine"><button type="button" data-lf="who" data-v="all">ALL</button><button type="button" data-lf="who" data-v="mine">MINE</button></div></div>' +
+      '</div>' +
+      '<div class="v9-live" id="liveGrid"></div><p class="v9-note" id="liveNote" hidden>No table is running.</p>' +
       '<div class="at-sec" id="open"><h2>Open, starts when full <span class="n"></span></h2><a class="at-btn v9-create" href="' + esc(L.create) + '">+ Create a table</a></div>' +
       '<div class="v9-open"><div class="v9-openl"><article class="v9-card open" id="openCard"></article><div class="v9-rail" id="openRail"></div></div>' +
         '<aside class="v9-side">' +
@@ -263,6 +294,8 @@
         paintOpen();
         return;
       }
+      var f = e.target.closest('[data-lf]');
+      if (f) { lf[f.getAttribute('data-lf')] = f.getAttribute('data-v'); paintLive(); if (typeof fit === 'function') fit(); return; }
       var nav = e.target.closest('[data-go]');
       if (nav) { go(Number(nav.getAttribute('data-go'))); return; }
       var pick = e.target.closest('[data-pick]');
@@ -335,13 +368,14 @@
       if (!b) return;
       clockStyle = b.getAttribute('data-clock');
       try { localStorage.setItem('v9-clock', clockStyle); } catch (x) { /* the switch still works */ }
-      paintLive(); paintOpen(); tick(); mark();
+      paintLive(); agentClocks(); paintOpen(); tick(); mark();
     });
     mark();
   }
 
   build();
   paintLive();
+  agentClocks();
   paintOpen();
   clockPicker();
   tick();

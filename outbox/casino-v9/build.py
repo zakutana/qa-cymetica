@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 HERE = Path(__file__).resolve().parent
 OUTBOX = HERE.parent
 HOST = "https://cymetica.com"
-VERSION = "38"
+VERSION = "42"
 
 
 def load(name: str, path: Path):
@@ -68,6 +68,21 @@ def fold_asks(asks: BeautifulSoup) -> None:
         small.insert_before(holder)
 
 
+def table_times(agents: BeautifulSoup) -> dict:
+    """Start and end of each table a row of Your agents points at, read anonymously (GET), for the time-left column."""
+    out = {}
+    for row in agents.select(".at-ar"):
+        tid = int(row["href"].rsplit("/", 1)[1])
+        try:
+            req = urllib.request.Request(f"{HOST}/api/v1/agent-tournaments/tables/{tid}", headers={"User-Agent": "qa-mock"})
+            t = json.load(urllib.request.urlopen(req, timeout=20))
+            t = t.get("table", t)
+            out[tid] = {"start": t.get("starts_at"), "end": t.get("ends_at"), "status": t.get("status")}
+        except Exception as e:  # a failed read leaves the row without a clock, said here
+            print(f"  table {tid}: {e}: no clock")
+    return out
+
+
 def agents_by_table(agents: BeautifulSoup) -> dict:
     out = {}
     for row in agents.select(".at-ar.live"):
@@ -88,7 +103,7 @@ def assemble(html: str) -> tuple[str, dict]:
             "open": [V8.card(c) for c in paper.select("#atOpen .at-tcard")],
             "liveKinds": [{**V8.card(c), "hours": int(re.search(r"\bh(1|5|24)\b", c.get("data-tags", "")).group(1))} for c in live.select(".at-tcard")],
             "liveNote": V8.text(live.select_one(".at-secnote")), "create": HOST + "/agent-casino?create=1",
-            "agents": agents_by_table(agents)}
+            "agents": agents_by_table(agents), "times": table_times(agents)}
     create = paper.select_one("#open .at-btn.ghost")
     if create and create.get("href"):
         data["create"] = create["href"]

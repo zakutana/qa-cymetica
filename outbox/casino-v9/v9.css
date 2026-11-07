@@ -279,3 +279,21 @@ body.v9-agents #agents { margin-top: 28px; }
 .fr .w.none { display: inline !important; font-weight: 700; color: var(--at-ink2); }
 .fr .w i { margin-right: 4px; font: 600 10.5px var(--at-num); font-style: normal; letter-spacing: .08em; text-transform: uppercase; color: var(--at-muted); }
 .fnote { margin: 6px 6px 0; font: 500 12px/1.45 var(--at-num); color: var(--at-muted); }
+
+/* Live now: the same three filters as Open, in one row under the heading (the operator, 2026-11-07) */
+.v9-side.v9-filt { flex-direction: row; flex-wrap: wrap; gap: 14px 28px; padding-top: 0; margin: -4px 0 18px; }
+@media (max-width: 760px) { .v9-side.v9-filt { order: 0; flex-direction: column; gap: 12px; } }
+@media (max-width: 760px) { .v9-side.v9-filt .at-seg button { min-width: 0; padding-left: 12px; padding-right: 12px; } }
+
+/* Your agents rows: a time-left column of its own, the line 'LIVE · 4H LEFT' gone from under the table name (the operator, 2026-11-07) */
+@media (min-width: 1101px) { .at .at-ar { grid-template-columns: 42px minmax(0,1fr) minmax(0,1.1fr) 132px 72px 100px 150px; } }
+@media (min-width: 701px) and (max-width: 1100px) { .at .at-ar { grid-template-columns: 40px minmax(0,1fr) minmax(0,1.1fr) 120px 64px 90px; } }
+@media (max-width: 700px) {
+  .at .at-ar { grid-template-areas: "av nm roi" "av tb rk" "av lf lf"; }
+  .at-ar .v9-left { grid-area: lf; }
+  .at-ar .v9-left .clock { flex-direction: row; gap: 10px; }
+}
+.at-ar .v9-left { display: flex; justify-content: flex-start; min-width: 0; }
+.at-ar .v9-left .clock { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.at-ar .v9-ended { font: 700 11px var(--at-num); letter-spacing: .08em; color: var(--at-muted); }
+.at-ar .tb small[hidden] { display: none; }
