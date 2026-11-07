@@ -422,8 +422,17 @@ def ask_next(client, rows: list[dict], tables_open: list[dict], my_seats: list[d
     seated = casino.seated_instances(my_seats)
     spent = {r.get("instance_id") for r in rows if r.get("type") == "spent"
              and str(r.get("at", ""))[:10] == _now().date().isoformat()}
+    # A bot at two tables, or with no trade where it sits, is not seated a further time (variant E).
+    live_seats = [s for s in my_seats or [] if isinstance(s, dict) and s.get("table_status") in ("open", "running", "filling")]
+    counted: dict = {}
+    for s in live_seats:
+        counted[s.get("instance_id")] = counted.get(s.get("instance_id"), 0) + 1
+    twice = {i for i, n in counted.items() if n >= 2}
+    last = {r.get("table_id"): r for r in rows if r.get("type") == "seat"}
+    still = {s.get("instance_id") for s in live_seats if s.get("table_status") == "running"
+             and (last.get(s.get("table_id")) or {}).get("trades") == 0}
     asked = 0
-    for ask in casino.next_asks(rows, bots, tables_open, seated, spent, running):
+    for ask in casino.next_asks(rows, bots, tables_open, seated, spent, running, twice=twice, still=still):
         code = seat(str(ask["table_id"]), str(ask["instance_id"]), True, client=client)
         if code == 0:
             _append({"type": "experiment", "by": "tick", **ask})

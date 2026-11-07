@@ -442,6 +442,13 @@ def test_the_next_asks_are_one_bot_a_table_and_never_repeat():
     asks = casino.next_asks([], two, tables + [{"id": 35, "tier": "fpro5h"}], seated={"i0", "i9"}, spent={"i1"}, running=0)
     assert [a["variant"] for a in asks].count("E") == 1
 
+    # E is a bot at two tables, not three (7 Nov: Ichimoku Empress at 100 and 102, then asked for 95),
+    # and not a bot that has not traded at the table it sits at (Perceptron Oracle, 0 trades at 99).
+    asks = casino.next_asks([], bots, tables, seated={"i0"}, spent=set(), running=0, twice={"i0"})
+    assert "E" not in [a["variant"] for a in asks]
+    asks = casino.next_asks([], bots, tables, seated={"i0"}, spent=set(), running=0, still={"i0"})
+    assert "E" not in [a["variant"] for a in asks]
+
     # The ceiling counts what already runs.
     assert casino.next_asks([], bots, tables, seated=set(), spent=set(), running=casino.MAX_RUNNING) == []
     assert len(casino.next_asks([], bots, tables, seated=set(), spent=set(), running=casino.MAX_RUNNING - 1)) == 1
