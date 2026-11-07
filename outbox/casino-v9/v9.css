@@ -297,3 +297,18 @@ body.v9-agents #agents { margin-top: 28px; }
 .at-ar .v9-left .clock { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .at-ar .v9-ended { font: 700 11px var(--at-num); letter-spacing: .08em; color: var(--at-muted); }
 .at-ar .tb small[hidden] { display: none; }
+
+/* IDLE, calm: a quiet chip with a moon, not a red alarm (the operator, 2026-11-07: "udelej nejak hezky") */
+.at .at-tag.idle { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 99px; border: 0; font: 700 11px var(--at-num); letter-spacing: .08em; color: #9fb6d6; background: rgba(127,169,245,.10); box-shadow: inset 0 0 0 1px rgba(127,169,245,.35); cursor: pointer; }
+.at .at-tag.idle .why { margin-left: 2px; padding-left: 7px; border-left: 1px solid rgba(127,169,245,.35); color: var(--at-cyan); letter-spacing: .02em; font-weight: 600; }
+.at .at-tag.idle .zz { position: relative; width: 10px; height: 10px; border-radius: 50%; box-shadow: inset -3px -1px 0 0 #9fb6d6; transform: rotate(-20deg); flex: none; }
+.at-ar .nm { display: flex; align-items: center; gap: 10px; }
+.at-ar .nm b { min-width: 0; }
+.at-ar .v9-idle { flex: none; cursor: default; }
+/* house bots told apart from members' bots: a house head is quieter and wears their H (the operator, 2026-11-07) */
+.v9-seat.house .v9-head { filter: grayscale(.9) brightness(.7) drop-shadow(0 4px 6px rgba(0,0,0,.6)) !important; }
+.v9-seat.house::after { content: "H"; position: absolute; right: -2px; bottom: -2px; z-index: 3; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 5px; font: 700 10px/1 var(--at-num); color: var(--at-ink2); background: var(--at-sunk, #070b12); box-shadow: inset 0 0 0 1px var(--at-line); }
+.v9-seat.member:not(.you) .at-ava::after { content: ""; position: absolute; inset: -9%; border-radius: 50%; box-shadow: 0 0 0 2px var(--at-cyan), 0 0 12px rgba(0,207,255,.45); pointer-events: none; }
+.at .at-tag.idle { white-space: nowrap; flex: none; width: auto; height: auto; }
+.at-ar .nm { flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; }
+.at-ar .nm b { max-width: 100%; }

@@ -57,7 +57,7 @@
   function seatHtml(s, i, us) {
     if (!s || s.empty) return '<span class="v9-seat empty" style="' + at(i) + '"><span class="at-ava"></span></span>';
     var mine = us && us.bot === s.bot;
-    return '<span class="v9-seat' + (s.lead ? ' lead' : '') + (mine ? ' you' : '') + (s.pending ? ' pend' : '') + '" style="' + at(i) + '" title="' + esc(s.bot) + '">' +
+    return '<span class="v9-seat' + (s.lead ? ' lead' : '') + (mine ? ' you' : '') + (/^House\s/.test(s.bot) ? ' house' : ' member') + (s.pending ? ' pend' : '') + '" style="' + at(i) + '" title="' + esc(s.bot) + '">' +
       ava(s.colour, s.shape) + (s.lead ? CROWN : '') + (mine ? '<em>YOU</em>' : '') + '</span>';
   }
   function plate(inner, moving) {
@@ -162,6 +162,17 @@
       $('.tb', r).after(cell);
       var line = $('.tb small', r);
       if (line) line.hidden = true;
+      /* IDLE on the row too, the same tag as the table page (the operator, 2026-11-07) */
+      var was = $('.v9-idle', r);
+      if (was) was.remove();
+      if (tm && tm.status !== 'done' && tm.idle_h > 0) {
+        var tag = document.createElement('span');
+        tag.className = 'at-tag idle v9-idle';
+        tag.title = tm.idle_text || '';
+        tag.innerHTML = '<i class="zz" aria-hidden="true"></i>IDLE ' + tm.idle_h + ' H';
+        $('.nm', r).appendChild(tag);
+      }
+      if (id === L.tableMock) r.setAttribute('href', 'table.html');
     });
   }
   function paintLive() {
@@ -237,7 +248,7 @@
     var seats = order.map(function (r, i) {
       if (i >= G.seats.length) return '';
       var face = faces[species(r.bot)] || {}, mine = ids.indexOf(r.seat_id) >= 0;
-      return '<span class="v9-seat' + (r.rank === 1 ? ' lead' : '') + (mine ? ' you' : '') + '" style="' + at(i) + '" title="' + esc(r.bot) + '">' + ava(face.colour, face.shape) + (r.rank === 1 ? CROWN : '') + '</span>';
+      return '<span class="v9-seat' + (r.rank === 1 ? ' lead' : '') + (mine ? ' you' : '') + (r.house ? ' house' : ' member') + '" style="' + at(i) + '" title="' + esc(r.bot) + '">' + ava(face.colour, face.shape) + (r.rank === 1 ? CROWN : '') + '</span>';
     }).join('');
     var value = isEt(t) ? num(t.pot || 0) : usd(t.pot || 0);
     return '<div class="v9-mini">' + plate(pot('POT', value, isEt(t) ? 'ET10' : '') + seats, false) + '</div>';

@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 HERE = Path(__file__).resolve().parent
 OUTBOX = HERE.parent
 HOST = "https://cymetica.com"
-VERSION = "42"
+VERSION = "45"
 
 
 def load(name: str, path: Path):
@@ -77,7 +77,10 @@ def table_times(agents: BeautifulSoup) -> dict:
             req = urllib.request.Request(f"{HOST}/api/v1/agent-tournaments/tables/{tid}", headers={"User-Agent": "qa-mock"})
             t = json.load(urllib.request.urlopen(req, timeout=20))
             t = t.get("table", t)
-            out[tid] = {"start": t.get("starts_at"), "end": t.get("ends_at"), "status": t.get("status")}
+            bot = V8.text(row.select_one(".nm b"))
+            seat = next((s for s in t.get("seats") or [] if s.get("bot") == bot), {})
+            out[tid] = {"start": t.get("starts_at"), "end": t.get("ends_at"), "status": t.get("status"),
+                        "idle_h": seat.get("idle_h"), "idle_text": seat.get("idle_text")}
         except Exception as e:  # a failed read leaves the row without a clock, said here
             print(f"  table {tid}: {e}: no clock")
     return out
@@ -155,7 +158,7 @@ def assemble(html: str) -> tuple[str, dict]:
     return finish(str(soup), ("v9.css", "heads.css"), ("data.js", "lobby.js", "art/geometry.js", "v9.js", "heads.js")), data
 
 
-TABLE_MOCK = 99
+TABLE_MOCK = 100
 
 
 def fetch_page(path: str) -> str:
@@ -218,6 +221,17 @@ def table_page() -> str:
     if room and main:
         main.insert_after(owner_piece(owner, "side", patched=False))
         room["class"] = list(dict.fromkeys(room.get("class", []) + ["has-side"]))
+    # other bots' NOT TRADING, tag and red sentence, out of the standings (the operator, 2026-11-07: "me nezajima")
+    for row in soup.select(".at-lr"):
+        if not row.select_one(".at-h"):
+            continue
+        for tag in row.select(".at-tag.gone"):
+            tag.decompose()
+        for em in row.select(".nm > span > em.neg"):
+            after = em.next_sibling
+            if isinstance(after, str) and after.lstrip().startswith("·"):
+                after.replace_with(after.lstrip()[1:].lstrip())
+            em.decompose()
     pill = soup.select_one(".at-bar .at-pill")
     if pill:
         pill.replace_with(owner_piece(owner, "pill"))

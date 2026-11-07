@@ -39,7 +39,7 @@
       var pos = 'left:' + (at[0] * PW).toFixed(1) + 'px;top:' + (at[1] * PH).toFixed(1) + 'px';
       if (s.empty) return '<span class="v9-seat empty" style="' + pos + '"><span class="at-ava"></span></span>';
       var name = s.bot.replace(/^House\s+/, '');
-      return '<span class="v9-seat' + (s.rank === '1' ? ' lead' : '') + (s.you ? ' you' : '') + '" style="' + pos + '" title="' + esc(s.bot) + '">' +
+      return '<span class="v9-seat' + (s.rank === '1' ? ' lead' : '') + (s.you ? ' you' : '') + (s.house ? ' house' : ' member') + '" style="' + pos + '" title="' + esc(s.bot) + '">' +
         '<span class="at-ava" style="--c:' + esc(s.colour || '#00cfff') + '"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#at-bot-' + esc(s.shape) + '"/></svg></span>' +
         (s.rank === '1' ? CROWN : '') +
         '<span class="lab' + (i === 0 ? ' up' : '') + '">' + (s.you ? '<em>YOU</em>' : '') + '<b>' + esc(name) + (s.house ? '<i>H</i>' : '') + '</b><span class="' + (/^-/.test(s.roi) ? 'neg' : /^\+0\.00/.test(s.roi) ? 'flat' : 'pos') + '">' + (s.rank ? '#' + esc(s.rank) + ' · ' : '') + esc(s.roi) + '</span></span></span>';
@@ -63,6 +63,8 @@
       $$('#atTabs .at-pane').forEach(function (p) { p.hidden = p.id !== tab.getAttribute('aria-controls'); });
       return;
     }
+    var idle = e.target.closest('.at-tag.idle');
+    if (idle) { var p = $('.v9-idletext'); if (p) p.hidden = !p.hidden; return; }
     if (e.target.closest('button')) e.preventDefault();
   });
   var pad = function (n) { return (n < 10 ? '0' : '') + n; };
