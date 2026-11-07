@@ -1,4 +1,4 @@
-<div class="fr" id="fr">
+<div class="fr basic" id="fr">
 
   <nav class="fr-bar">
     <a class="fr-logo" href="#top" aria-label="FOMO Radar">
@@ -11,10 +11,13 @@
       </svg>
       <span><small>FOMO</small><b>RADAR</b></span>
     </a>
-    <div class="fr-tabs">
+    <div class="fr-tabs fr-adv">
       <a href="#signals" class="on">Signals</a><a href="#accuracy">Accuracy</a><a href="#wallets">Top wallets</a><a href="#clusters" data-rh>Clusters</a><a href="#api">API</a>
     </div>
     <div class="fr-right">
+      <div class="fr-mode" id="modeSeg">
+        <button type="button" data-mode="basic" class="on">Basic</button><button type="button" data-mode="advanced">Advanced</button>
+      </div>
       <span class="fr-live"><i></i>LIVE <b id="upd">--:--:--</b></span>
       <div class="fr-seg" id="chainSeg">
         <button type="button" data-chain="robinhood" class="on">Robinhood</button><button type="button" data-chain="solana">Solana</button>
@@ -33,7 +36,8 @@
         <a class="fr-dup" href="https://cymetica.com/duplicate">Requested on /duplicate — built free in 24 h →</a>
       </div>
 
-      <div class="fr-boxes">
+      <div class="fr-mkt fr-basic" id="basicMkt"></div>
+      <div class="fr-boxes fr-adv">
         <div class="fr-box" id="boxRegime">
           <div class="k">MARKET</div>
           <div class="v" id="regState">—</div>
@@ -63,7 +67,26 @@
     </div>
   </section>
 
-  <section class="fr-sec" id="signals">
+  <section class="fr-sec fr-basic" id="picks">
+    <div class="fr-head">
+      <h2>Smart wallets are buying</h2>
+      <span class="fr-kind">sorted by conviction</span>
+    </div>
+    <div class="fr-picks" id="picksGrid"><div class="fr-empty">Loading live signals…</div></div>
+    <div class="fr-exits" id="exits"></div>
+  </section>
+
+  <section class="fr-sec fr-basic" id="copy">
+    <div class="fr-head">
+      <h2>Copy a wallet: would it have paid?</h2>
+      <span class="fr-kind" id="copyWin"></span>
+    </div>
+    <div class="fr-copygrid" id="copyGrid"><div class="fr-empty">Loading wallets…</div></div>
+    <p class="fr-copynote" id="copyNote"></p>
+    <button type="button" class="fr-advlink" data-mode="advanced">Every number behind these picks → Advanced</button>
+  </section>
+
+  <section class="fr-sec fr-adv" id="signals">
     <div class="fr-head">
       <h2>Buy signals</h2>
       <span class="fr-kind" id="kind"></span>
@@ -83,7 +106,7 @@
     <div class="fr-list" id="rows"><div class="fr-empty">Loading live signals…</div></div>
   </section>
 
-  <section class="fr-sec" id="accuracy">
+  <section class="fr-sec fr-adv" id="accuracy">
     <div class="fr-head">
       <h2>Is the 3× chance real?</h2>
       <button type="button" class="fr-i" data-fold="calsub" aria-expanded="false" title="How the probability is measured">i</button>
@@ -133,7 +156,7 @@
     </div>
   </section>
 
-  <section class="fr-sec" id="wallets">
+  <section class="fr-sec fr-adv" id="wallets">
     <div class="fr-head">
       <h2>Top wallets</h2>
       <span class="fr-kind">closed round trips only</span>
@@ -143,7 +166,7 @@
     <div class="fr-board" id="traders"><div class="fr-empty">Loading wallets…</div></div>
   </section>
 
-  <section class="fr-sec" id="clusters" data-rh>
+  <section class="fr-sec fr-adv" id="clusters" data-rh>
     <div class="fr-head">
       <h2>Sibling wallets count once</h2>
       <span class="fr-kind">entity resolution</span>
@@ -167,7 +190,7 @@
     </div>
   </section>
 
-  <section class="fr-sec fr-api" id="api">
+  <section class="fr-sec fr-api fr-adv" id="api">
     <div class="fr-head"><h2>JSON for agents and bots</h2><span class="fr-kind">no key required</span></div>
     <div class="fr-eps">
       <button type="button" data-copy="GET /api/v1/clones/fomo-radar/signals?chain=robinhood|solana&amp;filter=all|hot|fresh|exits"><b>signals</b><span>?chain=robinhood|solana&amp;filter=all|hot|fresh|exits</span></button>

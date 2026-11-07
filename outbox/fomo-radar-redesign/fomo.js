@@ -317,6 +317,7 @@
     solana: 'Solana wallets ranked by their realized track record on DEX swaps parsed from a public RPC — closed round trips only, in SOL, scored by the same formula as Robinhood Chain. A wallet we have never seen close a trade scores exactly 50 and does not count as qualified.'
   };
   function renderTraders(d) {
+    if (d) { state.tr[state.chain] = d; renderCopy(); }
     $('tradersSub').textContent = TSUB[state.chain];
     var el = $('traders');
     var rows = (d && d.rows) || [];
@@ -467,6 +468,12 @@
   cv.addEventListener('click', function () {
     if (!hover) return;
     var key = hover.r.token_address;
+    if (basic()) {
+      var card = document.querySelector('.fr-pick[data-key="' + key + '"]') || $('picks');
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      card.classList.remove('flash'); void card.offsetWidth; card.classList.add('flash');
+      return;
+    }
     if (state.filter !== 'all') setFilter('all');
     var rows = state.sig[state.chain].all.rows, i = rows.findIndex(function (r) { return r.token_address === key; });
     $('signals').scrollIntoView({ behavior: 'smooth' });
@@ -483,9 +490,97 @@
       if (chain !== state.chain) return;
       var d = by.all || by[state.filter];
       if (d) { renderMeta(d); renderCal(d.calibration); renderEntities(d); }
-      renderRows(); setBlips();
+      renderRows(); renderPicks(); renderCopy(); setBlips();
     });
   }
+
+  // ---------- Basic: what to buy, in one look ----------
+  function basic() { return $('fr').classList.contains('basic'); }
+  function tradeUrl(r) { return r.page_url ? (r.page_url.charAt(0) === '/' ? HOST + r.page_url : r.page_url) : (r.explorer_url || ''); }
+  function pick(r, i) {
+    var p = prob(r), sol = state.chain === 'solana';
+    var smart = sol
+      ? (r.credibility_available ? num(r.qualified_buyers, 0) + ' <span>smart wallet' + (r.qualified_buyers === 1 ? '' : 's') + '</span>' : num(r.buys_1h, 0) + ' <span>buys in 1h</span>')
+      : num(r.qualified_buyers, 0) + ' <span>smart wallet' + (r.qualified_buyers === 1 ? '' : 's') + '</span>';
+    var dots = sol ? '' : '<div class="fr-dots">' + (r.top_buyers || []).slice(0, 8).map(function (b) {
+      return '<i class="' + (b.gone ? 'gone' : '') + '" title="' + esc(b.wallet_short) + ' · score ' + num(b.score, 0) + (b.gone ? ' · already sold' : '') + '"></i>';
+    }).join('') + '</div>';
+    var badge = (r.same_name_on_board ? '<span class="tag dupe" title="Other launches on this board share this name — check the address">SAME NAME ×' + (r.same_name_on_board + 1) + '</span>' : '') + (r.hot ? '<span class="tag hot">HOT</span>' : (r.fresh ? '<span class="tag fresh">FRESH</span>' : ''));
+    var thin = r.thin ? '<div class="fr-warn" title="Largest buy at 5% slippage is under $500">Thin: max buy ' + usd(r.max_buy_5pct_usd) + '</div>' : '';
+    var url = tradeUrl(r);
+    return '<div class="fr-pick' + (i === 0 ? ' first' : '') + '" data-key="' + esc(r.token_address) + '">'
+      + '<div class="pk-top"><span class="pk-rk">' + (i + 1) + '</span><div class="pk-name"><b>' + esc(r.symbol || r.name || 'token') + '</b><small>' + esc(r.name || '') + '</small></div>' + badge + '</div>'
+      + '<div class="pk-p ' + p.cls + '"><b>' + p.big + '</b><span>chance of 3× in 72h</span></div>'
+      + '<div class="pk-stats">'
+      + '<div><b>' + smart + '</b>' + dots + '</div>'
+      + '<div><b>' + usdK(r.usd_invested) + '</b><span>' + (sol ? 'volume 24h' : 'bought') + '</span></div>'
+      + '<div><b>' + ago(sol ? r.token_age_seconds : r.first_buy_seconds_ago) + '</b><span>' + (sol ? 'pool age' : 'since first buy') + '</span></div>'
+      + '</div>'
+      + thin
+      + (url ? '<a class="pk-go" href="' + esc(url) + '" target="_blank" rel="noopener">Trade ' + esc(r.symbol || '') + ' ↗</a>' : '')
+      + '</div>';
+  }
+  function renderPicks() {
+    var d = (state.sig[state.chain] || {}).all, grid = $('picksGrid');
+    if (!d) { grid.innerHTML = '<div class="fr-empty">Data temporarily unavailable — retrying</div>'; $('exits').innerHTML = ''; return; }
+    var rows = d.rows || [];
+    var buys = rows.filter(function (r) { return !r.exit_signal; }).slice(0, 12);
+    var exits = rows.filter(function (r) { return r.exit_signal; });
+    var g = d.regime;
+    $('basicMkt').innerHTML = g && g.label
+      ? '<span class="dot ' + (REG[g.state] || 'cy') + '"></span>Market <b class="' + (REG[g.state] || 'cy') + '">' + esc(String(g.state).toUpperCase()) + '</b>'
+        + (g.suppressed ? ' · signals suppressed' : '') + '<span class="sep">·</span>' + num(d.tokens_tracked, 0) + (state.chain === 'solana' ? ' pools' : ' tokens') + ' scanned'
+      : '';
+    grid.innerHTML = buys.length ? buys.map(pick).join('') : '<div class="fr-empty">' + esc(d.message || 'No buy signal right now.') + '</div>';
+    $('exits').innerHTML = exits.length
+      ? '<span class="ex-lb">Smart money selling</span>' + exits.map(function (r) {
+        var url = tradeUrl(r);
+        return '<a href="' + esc(url || '#') + '" target="_blank" rel="noopener" title="' + esc(r.exit_reason || 'credible wallets exiting') + '">' + esc(r.symbol || r.name) + '</a>';
+      }).join('')
+      : '';
+  }
+  // copy a wallet: its own closed trades in the live window, and where it sits right now
+  state.tr = {};
+  function renderCopy() {
+    var chain = state.chain, t = state.tr[chain], s = (state.sig[chain] || {}).all, grid = $('copyGrid');
+    if (!t) { grid.innerHTML = '<div class="fr-empty">Loading wallets…</div>'; return; }
+    var rows = (t.rows || []).slice(0, 4);
+    if (!rows.length) { grid.innerHTML = '<div class="fr-empty">' + esc(t.message || 'No wallet has closed a round trip in the current window yet.') + '</div>'; return; }
+    var px = s ? (chain === 'solana' ? s.sol_usd : s.eth_usd) : null, unit = chain === 'solana' ? 'SOL' : 'ETH';
+    var holding = {};
+    ((s && s.rows) || []).forEach(function (r) {
+      (r.top_buyers || []).forEach(function (b) { if (!b.gone) (holding[b.wallet] = holding[b.wallet] || []).push(r.symbol || r.name); });
+    });
+    $('copyWin').textContent = 'last ' + dur(t.window_seconds || (s && s.window_seconds)) + ' · its own trades';
+    grid.innerHTML = rows.map(function (w, i) {
+      var val = has(w.realized_eth) ? w.realized_eth : w.realized_sol, win = val > 0;
+      var mult = has(w.avg_log_return) ? Math.exp(w.avg_log_return) : null;
+      var now = holding[w.wallet] || [];
+      return '<div class="fr-cw ' + (win ? 'win' : 'loss') + '">'
+        + '<div class="cw-top"><span class="cw-rk">' + (i + 1) + '</span><a href="' + esc(w.explorer_url) + '" target="_blank" rel="noopener" title="' + esc(w.wallet) + '">' + esc(short(w.wallet)) + '</a>'
+        + '<span class="cw-v">' + (win ? 'PAID' : 'LOST') + '</span></div>'
+        + '<div class="cw-big">' + (val > 0 ? '+' : '') + num(val, 3) + ' ' + unit + (has(px) ? '<small>' + (val >= 0 ? '+' : '−') + usd(Math.abs(val * px)) + '</small>' : '') + '</div>'
+        + '<div class="cw-bar"><i style="width:' + Math.round(100 * (w.win_rate || 0)) + '%"></i></div>'
+        + '<div class="cw-st"><span><b>' + num(w.wins, 0) + '</b> of ' + num(w.round_trips, 0) + ' trades won</span>'
+        + (mult ? '<span>typical trade <b>×' + mult.toFixed(2) + '</b></span>' : '') + '</div>'
+        + '<div class="cw-st"><span>holds <b>' + ago(w.avg_hold_seconds) + '</b></span><span>open now <b>' + num(w.open_positions, 0) + '</b></span></div>'
+        + '<div class="cw-now">' + (now.length ? 'In now: ' + now.slice(0, 4).map(function (x) { return '<b>' + esc(x) + '</b>'; }).join(' ') : '<span>Not in a signal right now</span>') + '</div>'
+        + '</div>';
+    }).join('');
+    $('copyNote').textContent = 'Its own closed trades at its own prices. A copy buys after it and pays slippage; it holds about ' + ago(rows[0].avg_hold_seconds) + ', so a copy has to be that fast.';
+  }
+  function setMode(m) {
+    $('fr').classList.toggle('basic', m === 'basic');
+    document.querySelectorAll('#modeSeg button').forEach(function (b) { b.classList.toggle('on', b.dataset.mode === m); });
+    try { localStorage.setItem('fomoMode', m); } catch (e) { /* private window */ }
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-mode]');
+    if (!b) return;
+    setMode(b.dataset.mode);
+    if (b.classList.contains('fr-advlink')) $('signals').scrollIntoView({ behavior: 'smooth' });
+  });
+  try { if (localStorage.getItem('fomoMode') === 'advanced') setMode('advanced'); } catch (e) { /* default basic */ }
   function loadAll() {
     var chain = state.chain;
     loadSignals();
@@ -504,6 +599,8 @@
     state.chain = b.dataset.chain; state.open = null;
     document.querySelectorAll('#chainSeg button').forEach(function (x) { x.classList.toggle('on', x === b); });
     $('rows').innerHTML = '<div class="fr-empty">Loading live signals…</div>';
+    $('picksGrid').innerHTML = '<div class="fr-empty">Loading live signals…</div>'; $('exits').innerHTML = '';
+    $('copyGrid').innerHTML = '<div class="fr-empty">Loading wallets…</div>';
     $('traders').innerHTML = '<div class="fr-empty">Loading wallets…</div>';
     blips = [];
     loadAll();

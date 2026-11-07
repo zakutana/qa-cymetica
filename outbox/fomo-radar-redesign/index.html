@@ -111,7 +111,7 @@
     
     
 
-    <style nonce="plYcVMp6WiRCiEVMUsX+9g==">
+    <style nonce="YD38CVLjiwQyhomlNDnQJw==">
         /* Flexbox body pushes footer to bottom on short pages */
         body {
             display: flex;
@@ -316,7 +316,7 @@
     
 
     
-    <style nonce="plYcVMp6WiRCiEVMUsX+9g==">
+    <style nonce="YD38CVLjiwQyhomlNDnQJw==">
     #globalSimBanner {
         display: none;
         background: rgba(0, 207, 255,0.06);
@@ -378,7 +378,7 @@
     
     
     
-    <style nonce="plYcVMp6WiRCiEVMUsX+9g==">
+    <style nonce="YD38CVLjiwQyhomlNDnQJw==">
         /* Page tokens, scoped to this page so the site header/footer keep the global theme */
         .clone-page {
             --bg-primary: #0a0e17;
@@ -529,7 +529,7 @@
     
 
     
-<link rel="stylesheet" href="fomo.css?v=1794077549"></head>
+<link rel="stylesheet" href="fomo.css?v=1794078523"></head>
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
     
@@ -540,11 +540,11 @@
 
 
 
-<style nonce="plYcVMp6WiRCiEVMUsX+9g==">
+<style nonce="YD38CVLjiwQyhomlNDnQJw==">
 html.st-embed .chat-header,html.st-embed #agent-start,html.st-embed .footer-bar,html.st-embed #nexus-chat-widget,html.st-embed .skip-link,html.st-embed .content-back-btn,html.st-embed #agentPasteBar,html.st-embed .agent-paste-bar,html.st-embed #globalSimBanner{display:none!important}
 html.st-embed body,html.st-embed .main-content,html.st-embed .chat-container,html.st-embed .perpetual-main{padding-top:0!important}
 </style>
-<style nonce="plYcVMp6WiRCiEVMUsX+9g==">
+<style nonce="YD38CVLjiwQyhomlNDnQJw==">
 /* Font already loaded via <link> in base_content.html — @import removed (was render-blocking + duplicate) */
 /* Fixed floating header - ensure consistent behavior across all pages */
 .chat-header {
@@ -1980,7 +1980,7 @@ body.no-header-padding .agent-paste-bar {
 
 
 
-<style nonce="plYcVMp6WiRCiEVMUsX+9g==">
+<style nonce="YD38CVLjiwQyhomlNDnQJw==">
 /* outlined, not filled: a page keeps its ONE filled accent button (design-token rule) */
 .apb-connect-btn, .thf-connect-btn { background: var(--surface); color: var(--accent); border: 1px solid var(--accent);
     border-radius: 10px; padding: .7rem 1.4rem; min-height: 44px; font-family: var(--font-display); font-size: 1rem;
@@ -2905,7 +2905,7 @@ body.no-header-padding .agent-paste-bar {
         </a>
         
         
-<div class="fr" id="fr">
+<div class="fr basic" id="fr">
 
   <nav class="fr-bar">
     <a class="fr-logo" href="#top" aria-label="FOMO Radar">
@@ -2918,10 +2918,13 @@ body.no-header-padding .agent-paste-bar {
       </svg>
       <span><small>FOMO</small><b>RADAR</b></span>
     </a>
-    <div class="fr-tabs">
+    <div class="fr-tabs fr-adv">
       <a href="#signals" class="on">Signals</a><a href="#accuracy">Accuracy</a><a href="#wallets">Top wallets</a><a href="#clusters" data-rh>Clusters</a><a href="#api">API</a>
     </div>
     <div class="fr-right">
+      <div class="fr-mode" id="modeSeg">
+        <button type="button" data-mode="basic" class="on">Basic</button><button type="button" data-mode="advanced">Advanced</button>
+      </div>
       <span class="fr-live"><i></i>LIVE <b id="upd">--:--:--</b></span>
       <div class="fr-seg" id="chainSeg">
         <button type="button" data-chain="robinhood" class="on">Robinhood</button><button type="button" data-chain="solana">Solana</button>
@@ -2940,7 +2943,8 @@ body.no-header-padding .agent-paste-bar {
         <a class="fr-dup" href="https://cymetica.com/duplicate">Requested on /duplicate — built free in 24 h →</a>
       </div>
 
-      <div class="fr-boxes">
+      <div class="fr-mkt fr-basic" id="basicMkt"></div>
+      <div class="fr-boxes fr-adv">
         <div class="fr-box" id="boxRegime">
           <div class="k">MARKET</div>
           <div class="v" id="regState">—</div>
@@ -2970,7 +2974,26 @@ body.no-header-padding .agent-paste-bar {
     </div>
   </section>
 
-  <section class="fr-sec" id="signals">
+  <section class="fr-sec fr-basic" id="picks">
+    <div class="fr-head">
+      <h2>Smart wallets are buying</h2>
+      <span class="fr-kind">sorted by conviction</span>
+    </div>
+    <div class="fr-picks" id="picksGrid"><div class="fr-empty">Loading live signals…</div></div>
+    <div class="fr-exits" id="exits"></div>
+  </section>
+
+  <section class="fr-sec fr-basic" id="copy">
+    <div class="fr-head">
+      <h2>Copy a wallet: would it have paid?</h2>
+      <span class="fr-kind" id="copyWin"></span>
+    </div>
+    <div class="fr-copygrid" id="copyGrid"><div class="fr-empty">Loading wallets…</div></div>
+    <p class="fr-copynote" id="copyNote"></p>
+    <button type="button" class="fr-advlink" data-mode="advanced">Every number behind these picks → Advanced</button>
+  </section>
+
+  <section class="fr-sec fr-adv" id="signals">
     <div class="fr-head">
       <h2>Buy signals</h2>
       <span class="fr-kind" id="kind"></span>
@@ -2990,7 +3013,7 @@ body.no-header-padding .agent-paste-bar {
     <div class="fr-list" id="rows"><div class="fr-empty">Loading live signals…</div></div>
   </section>
 
-  <section class="fr-sec" id="accuracy">
+  <section class="fr-sec fr-adv" id="accuracy">
     <div class="fr-head">
       <h2>Is the 3× chance real?</h2>
       <button type="button" class="fr-i" data-fold="calsub" aria-expanded="false" title="How the probability is measured">i</button>
@@ -3040,7 +3063,7 @@ body.no-header-padding .agent-paste-bar {
     </div>
   </section>
 
-  <section class="fr-sec" id="wallets">
+  <section class="fr-sec fr-adv" id="wallets">
     <div class="fr-head">
       <h2>Top wallets</h2>
       <span class="fr-kind">closed round trips only</span>
@@ -3050,7 +3073,7 @@ body.no-header-padding .agent-paste-bar {
     <div class="fr-board" id="traders"><div class="fr-empty">Loading wallets…</div></div>
   </section>
 
-  <section class="fr-sec" id="clusters" data-rh>
+  <section class="fr-sec fr-adv" id="clusters" data-rh>
     <div class="fr-head">
       <h2>Sibling wallets count once</h2>
       <span class="fr-kind">entity resolution</span>
@@ -3074,7 +3097,7 @@ body.no-header-padding .agent-paste-bar {
     </div>
   </section>
 
-  <section class="fr-sec fr-api" id="api">
+  <section class="fr-sec fr-api fr-adv" id="api">
     <div class="fr-head"><h2>JSON for agents and bots</h2><span class="fr-kind">no key required</span></div>
     <div class="fr-eps">
       <button type="button" data-copy="GET /api/v1/clones/fomo-radar/signals?chain=robinhood|solana&amp;filter=all|hot|fresh|exits"><b>signals</b><span>?chain=robinhood|solana&amp;filter=all|hot|fresh|exits</span></button>
@@ -3093,7 +3116,7 @@ body.no-header-padding .agent-paste-bar {
 
     
     
-<style nonce="plYcVMp6WiRCiEVMUsX+9g==">
+<style nonce="YD38CVLjiwQyhomlNDnQJw==">
 #authModal .am-content{max-width:500px}
 #authModal .am-close{z-index:10;position:absolute;top:16px;right:16px}
 #authModal .am-title{color:var(--accent-cyan);margin-bottom:1.5rem;font-family:var(--font-display)}
@@ -3273,7 +3296,7 @@ body.no-header-padding .agent-paste-bar {
 
     
     
-    <style nonce="plYcVMp6WiRCiEVMUsX+9g==">
+    <style nonce="YD38CVLjiwQyhomlNDnQJw==">
     /* Footer Bar Styles - Static bottom navigation */
     .footer-bar {
         display: flex;
@@ -3689,5 +3712,5 @@ body.no-header-padding .agent-paste-bar {
     
     
     
-<script src="fomo.js?v=1794077549"></script></body>
+<script src="fomo.js?v=1794078523"></script></body>
 </html>
