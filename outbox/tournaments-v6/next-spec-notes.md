@@ -31,3 +31,5 @@ Goals, not methods; each becomes a numbered line of the next Build it Better whe
 14. "1 won · 3 lost" over "5 closed": a flat trade is in neither. Goal: "1 won · 3 lost · 1 flat".
 15. The coach's "tuned 8 min ago; no closed trade since" at table 27, 10:36: two rounds had closed after the tune (10:30:18, 10:31:30 by the bot's activity feed). Goal: the sentence counts what the standings count.
 16. The trade list shows when a round opened, under no heading; the coach and the stop act on when it closed. Goal: both times on a row.
+17. Table 97, 7 Nov: the coach tightened stop loss 3 → 2 % at 10:00 "to hold the standing" (rank 1); two losing rounds later the bot paused on that stop ("Paused: stop-loss hit, until about 10:36"), fell to #2, and "the coach tunes nothing while the bot is paused". Goal: a coach move made to hold a lead does not park the bot; when its own tune pauses the bot it says so and what it does next.
+18. Table 97: the Changelog lists the coach's 10:00 stop-loss change under "Your changes" ("NEXUS changed stop loss"); the lead shows "PAUSED PAUSED". Goal: Your changes holds the owner's changes; the tag reads once.
