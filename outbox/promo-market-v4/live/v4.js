@@ -215,7 +215,8 @@
           '<button class="btn sm c" data-copytext="' + esc(location.origin + '/promo-market#brief/' + b.id) + '">' + ic('link') + 'Share</button></div></div>' +
       '<div class="tiles" style="--n:4">' +
         tile('wallet', 'Budget', big(b.budget), 'in your wallet until you pay', 'rgb(0,207,255)') +
-        tile('coin', 'Left to hand out', big(b.left), open ? 'on the market now' : 'not on the market', 'rgb(0,255,136)') +
+        // an ended brief does not say "left": that read as money held for you; the budget never left your wallet
+        tile('coin', open ? 'Left to hand out' : 'Stays in your wallet', big(b.left), open ? 'on the market now' : 'never left it · nothing owed', 'rgb(0,255,136)') +
         tile('check', 'Agreed', big(agreed), fmt(inPlay.length) + ' post' + (inPlay.length === 1 ? '' : 's') + ' to pay') +
         tile('briefs', 'Paid', big(b.paid), 'sent by you', 'rgb(59,130,246)') + '</div>' +
       v3Offers(b, r) + (S.v4pay ? v4payBox(b, r) : '') + v3Promoters(b, r);
@@ -241,7 +242,8 @@
           '<td class="n"><b class="v3of" style="font-size:15px">' + v4n(o.amount) + '</b> <small class="dim">' + cur + '</small>' + (o.ask !== o.amount ? '<br><small class="dim">asked ' + v4n(o.ask) + '</small>' : '') + '</td>' +
           '<td>' + v4chip(o, true) + '</td><td>' + (o.post_url ? '<a class="lnk" href="' + esc(o.post_url) + '" target="_blank" rel="noopener">post ↗</a>' : '<span class="dim">—</span>') + '</td>' +
           '<td class="v3act">' + (o.state === 'earned' ? '<button class="btn sm g" data-v4pay="' + b.id + ':' + o.id + '">Pay</button>' : '') + '</td></tr>').join('') + '</tbody></table></div>' :
-        '<div class="empty"><b>Nobody is agreed yet</b><span>It is on the market now, with ' + v4n(b.left) + ' ' + cur + ' left.</span><a class="btn c sm" href="#market" style="margin-top:6px">See it on the market</a></div>') + '</div>';
+        '<div class="empty"><b>Nobody is agreed</b>' + (b.status === 'open' ? '<span>It is on the market now, with ' + v4n(b.left) + ' ' + cur + ' left.</span><a class="btn c sm" href="#market" style="margin-top:6px">See it on the market</a>' :
+          '<span>The brief is ended. ' + v4n(b.left) + ' ' + cur + ' stayed in your wallet.</span>') + '</div>') + '</div>';
   }
   /* the confirmation, as their Pay shows it: whose wallet, what, to where; nothing moves until the owner confirms */
   function v4payBox(b, r) {
@@ -259,7 +261,7 @@
     if (!prods.length) return '<div class="card"><div class="empty">' + holo(46) + '<b>No app of yours yet</b><span>Build an app with Build it Better: once it ships, it is listed here and you can post a brief for it.</span>' +
       '<a class="btn g" href="/build-it-better" style="margin-top:8px">Open Build it Better ' + ic('arrow') + '</a></div></div>';
     const rs = prods.map((p) => p.brief).filter(Boolean), by = {};
-    rs.forEach((r) => { const c = r.brief.currency; (by[c] = by[c] || { left: 0, paid: 0 }); by[c].left += r.brief.left; by[c].paid += r.brief.paid; });
+    rs.forEach((r) => { const c = r.brief.currency; (by[c] = by[c] || { left: 0, paid: 0 }); by[c].left += r.brief.status === 'open' ? r.brief.left : 0; by[c].paid += r.brief.paid; });
     const sumBy = (k) => Object.keys(by).length ? Object.keys(by).map((c) => '<span class="pos">' + v4n(by[c][k]) + '</span><small>' + esc(c) + '</small>').join(' ') : '<span class="pos">0</span>';
     const waiting = sum(rs, (r) => (r.offers || []).filter((o) => o.state === 'pending').length);
     return '<div class="tiles" style="--n:3">' +
@@ -274,7 +276,7 @@
     return '<article class="pc" data-product="' + esc(p.path) + '"><div class="img">' + (p.preview_url || !p.site ? '<img alt="" src="' + esc(p.site ? p.preview_url : pic(p.path)) + '">' : '<div class="v3noimg">' + ic('globe') + '</div>') +
         (b ? '<div class="tl"><span class="chip ' + (b.status === 'open' ? 'g' : '') + '">' + (b.status === 'open' ? '<i class="live"></i>Open' : esc(b.status)) + '</span></div>' : '') + '</div>' +
       '<div class="bd"><div class="nm"><b title="' + esc(p.name) + '">' + esc(shortName(p.name)) + '</b></div>' + v3where({ url: p.url, site: p.site, path: p.path }) +
-        (b ? '<div class="r3"><div><b class="pos">' + v4n(b.left) + '</b><span>' + esc(b.currency) + ' left</span></div><div><b>' + fmt((r.offers || []).filter((o) => o.state === 'pending').length) + '</b><span>offers</span></div></div>' +
+        (b ? '<div class="r3"><div><b class="pos">' + v4n(b.left) + '</b><span>' + esc(b.currency) + (b.status === 'open' ? ' left' : ' kept') + '</span></div><div><b>' + fmt((r.offers || []).filter((o) => o.state === 'pending').length) + '</b><span>offers</span></div></div>' +
           '<a class="btn sm full" href="#mybrief/' + b.id + '">Open the brief ' + ic('arrow') + '</a>' + (live ? '' : '<a class="btn g sm full" href="#new' + esc(p.site ? '/' + V3_SITE : p.path) + '">' + ic('plus') + 'Create brief</a>') :
           '<div class="nob">No brief yet</div><a class="btn g sm full" href="#new' + esc(p.site ? '/' + V3_SITE : p.path) + '">' + ic('plus') + 'Create brief</a>') +
       '</div></article>';

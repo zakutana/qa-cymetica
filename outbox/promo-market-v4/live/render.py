@@ -44,6 +44,7 @@ def main():
             page.screenshot(path=str(path), **kw)
 
         def at(url, name, full=False):
+            page.goto("about:blank")      # a change of the hash alone would not reload the page and its reads
             page.goto(url); ready(page)
             shot(OUT / f"{name}.png", full_page=full)
             bad.extend((name, x) for x in page.evaluate(CHECK, BOXES))
@@ -81,6 +82,9 @@ def main():
         page.click("[data-v4pay]"); page.wait_for_timeout(400)
         shot(OUT / "12-owner-confirms-pay.png", full_page=True)
         at(OWNER + "#me/products", "13-my-products", full=True)
+        seed("cancelled")      # an ended brief: the budget never left the owner's wallet, so it does not say "left"
+        at(OWNER + "#mybrief/9001", "14-ended-brief", full=True)
+        at(OWNER + "#me/products", "15-my-products-ended", full=True)
         seed("open")
         b.close()
     for where, what in bad:

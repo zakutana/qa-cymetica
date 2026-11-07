@@ -60,7 +60,7 @@ BAR = ('<div id="v4bar" style="position:fixed;left:16px;bottom:16px;z-index:90;d
        'background:rgba(6,9,15,.94);border:1px solid rgba(0,207,255,.35);font:600 12px JetBrains Mono,monospace;color:#8fa3bf">'
        '<span style="color:#00cfff">MOCK</span><span id="v4day">day +0</span>'
        '<button data-v4="skip" style="{b}">+1 day</button>'
-       '<select id="v4seed" style="{b}"><option value="">sample…</option><option>open</option><option>countered</option><option>approved</option><option>posted</option><option>paid</option></select>'
+       '<select id="v4seed" style="{b}"><option value="">sample…</option><option>open</option><option>countered</option><option>approved</option><option>posted</option><option>paid</option><option>cancelled</option></select>'
        '<button data-v4="reset" style="{b}">Reset</button>'
        '<a href="{owner}" style="{b}text-decoration:none">Owner window</a><a href="{promoter}" style="{b}text-decoration:none">Promoter window</a></div>'
        '<script>(function(){{var bar=document.getElementById("v4bar");'

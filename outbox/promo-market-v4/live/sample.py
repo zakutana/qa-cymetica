@@ -261,7 +261,10 @@ class Market:
             self._offer("memecoin_mia_demo", 8000, applied_ago=timedelta(hours=3))
             if stage == "open":
                 return
-            mine = self._offer("gemhunter_demo", 50000, applied_ago=timedelta(hours=5), mine=True)
+            if stage == "cancelled":
+                self.cancel()
+                return
+            mine =self._offer("gemhunter_demo", 50000, applied_ago=timedelta(hours=5), mine=True)
             self.decide(mine["id"], "approve", 10000)           # the owner edits 50k down to 10k: 40k stays in the brief
             if stage == "countered":
                 return
