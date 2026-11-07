@@ -526,8 +526,7 @@
     var url = tradeUrl(r);
     return '<div class="fr-pick' + (i === 0 ? ' first' : '') + '" data-key="' + esc(r.token_address) + '">'
       + '<div class="pk-top"><span class="pk-rk">' + (i + 1) + '</span><div class="pk-name"><b>' + esc(r.symbol || r.name || 'token') + '</b><small>' + esc(r.name || '') + '</small></div>' + badge + '</div>'
-      + '<div class="pk-pp"><div class="pk-p ' + p.cls + '"><b>' + p.big + '</b><span>chance of 3× in 72h</span></div>'
-      + '<div class="pk-p2" title="Chance of 2× in 72h: the radar labels every signal\'s max multiple but publishes only the 3× fit"><b>—</b><span>2× · not published</span></div></div>'
+      + '<div class="pk-p ' + p.cls + '"><b>' + p.big + '</b><span>chance of 3× in 72h</span></div>'
       + '<div class="pk-stats">'
       + '<div><b>' + smart + '</b>' + dots + '</div>'
       + '<div><b>' + usdK(r.usd_invested) + '</b><span>' + (sol ? 'volume 24h' : 'bought') + '</span></div>'
