@@ -44,7 +44,7 @@
       /* names stand beside the head, away from the rim: left seats to the left, right seats to the right */
       var side = i === 0 ? ' up' : at[0] < 0.36 ? ' l' : at[0] > 0.64 ? ' r' : '';
       var tone = /idle/i.test(s.roi) || /^-/.test(s.roi) ? 'neg' : /^\+0\.00/.test(s.roi) ? 'flat' : 'pos';
-      return '<span class="v9-seat' + (s.rank === '1' ? ' lead' : '') + (s.you ? ' you' : '') + (s.house ? ' house' : ' member') + '" style="' + pos + '" title="' + esc(s.bot) + '">' +
+      return '<span class="v9-seat' + (s.rank === '1' ? ' lead' : '') + (s.you ? ' you' : '') + (/idle/i.test(s.roi) ? ' idle' : '') + (s.house ? ' house' : ' member') + '" style="' + pos + '" title="' + esc(s.bot) + '">' +
         '<span class="at-ava" style="--c:' + esc(s.colour || '#00cfff') + '"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#at-bot-' + esc(s.shape) + '"/></svg></span>' +
         (s.rank === '1' ? CROWN : '') +
         '<span class="lab' + side + '">' + (s.you ? '<em>YOU</em>' : '') + '<b>' + esc(name) + (s.house ? '<i>H</i>' : '') + '</b><span class="' + tone + '">' + (s.rank ? '#' + esc(s.rank) + ' · ' : '') + esc(s.roi) + '</span></span></span>';
@@ -56,7 +56,7 @@
       '<div class="pot" style="width:' + FW + 'px;height:' + FH + 'px;transform:' + FM + '"><span class="k">' + esc(pot.k) + '</span><b class="v">' + esc(pot.v) + '</b><span class="s">' + esc(pot.s) + '</span>' + (spots ? '<span class="v9-spots">' + spots + '</span>' : '') + '</div>' +
       seatHtml + '</div></div></div>';
     tbl.replaceWith(holder);
-    var fit = function () { $$('.v9-big .v9-stage').forEach(function (s) { s.style.setProperty('--k', (s.clientWidth >= 600 ? Math.min(1.1, s.clientWidth / 900) : s.clientWidth / 640).toFixed(4)); }); };
+    var fit = function () { $$('.v9-big .v9-stage').forEach(function (s) { s.style.setProperty('--k', (s.clientWidth >= 600 ? Math.min(1.5, s.clientWidth / 880) : s.clientWidth / 640).toFixed(4)); }); };
     addEventListener('resize', fit); fit();
   }
 

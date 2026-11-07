@@ -57,3 +57,7 @@
 .at-lr .nm b { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; white-space: normal; overflow: visible; }
 .at-lr .nm b .at-tag { margin: 0; }
 .at-lr .nm b .at-tag.idle { padding: 3px 9px !important; min-height: 0 !important; line-height: 1.2 !important; border-radius: 99px !important; }
+/* an idle seat of ours: the ring red too; a larger table on a taller plate (the operator, 2026-11-07) */
+.v9-seat.you.idle .at-ava::after { box-shadow: 0 0 0 2px var(--at-red), 0 0 14px rgba(255,68,68,.55) !important; }
+.v9-big { padding: 64px 0 40px; }
+.v9-big .v9-stage { height: calc(430px * var(--k)); }
