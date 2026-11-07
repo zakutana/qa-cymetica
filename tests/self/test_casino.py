@@ -453,6 +453,10 @@ def test_the_next_asks_are_one_bot_a_table_and_never_repeat():
     asked = [{"type": "intent", "kind": "seat", "table_id": "44", "instance_id": "i0"}]
     asks = casino.next_asks(asked, bots, tables[:1], seated=set(), spent=set(), running=0)
     assert [a["instance_id"] for a in asks] == ["i1"]
+    # A table that answered one_seat_per_owner with all its seats free is locked to us (#313): skipped.
+    locked = [{"type": "outcome", "kind": "seat", "table_id": "44", "outcome": "rejected",
+               "response": {"detail": {"error": {"code": "one_seat_per_owner"}}}}]
+    assert casino.next_asks(locked, bots, tables[:1], seated=set(), spent=set(), running=0) == []
     # Nor any other variant: 0 trades at its last table is 0 at the next (Perceptron Oracle, 99 then 105).
     asks = casino.next_asks([], bots, tables, seated=set(), spent=set(), running=0, still={"i0"})
     assert "i0" not in [a["instance_id"] for a in asks]

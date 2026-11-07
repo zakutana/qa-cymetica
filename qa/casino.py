@@ -499,6 +499,9 @@ def next_asks(rows: list[dict], bots: list[dict], tables: list[dict], seated: se
     out = set(twice or ()) | set(still or ())
     asked_here = {(str(r.get("table_id")), r.get("instance_id")) for r in rows
                   if r.get("type") == "intent" and r.get("kind") == "seat"}
+    locked = {str(r.get("table_id")) for r in rows if r.get("type") == "outcome" and r.get("kind") == "seat"
+              and "one_seat_per_owner" in str(r.get("response"))}
+    tables = [t for t in tables if str(t.get("id")) not in locked]
     tried = {(r.get("variant"), r.get("species"), r.get("tier")) for r in rows if r.get("type") == "experiment"}
     counts = {v: sum(1 for r in rows if r.get("type") == "experiment" and r.get("variant") == v) for v in VARIANTS}
     used: set = set()
