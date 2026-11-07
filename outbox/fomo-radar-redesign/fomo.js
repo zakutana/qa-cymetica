@@ -521,11 +521,13 @@
       + (buyers.length > 3 ? '<div class="pk-more">+' + (buyers.length - 3) + ' more</div>' : '') + '</div>' : '';
     var dots = '';
     var badge = (r.same_name_on_board ? '<span class="tag dupe" title="Other launches on this board share this name — check the address">SAME NAME ×' + (r.same_name_on_board + 1) + '</span>' : '') + (r.hot ? '<span class="tag hot">HOT</span>' : (r.fresh ? '<span class="tag fresh">FRESH</span>' : ''));
+    if (r.launchpad === 'pons') badge += '<a class="tag thin pk-lp" href="' + HOST + '/launchpad/compare" target="_blank" rel="noopener" title="PONS charges 1% a trade, EventTrader 0.25%">PONS · 1% fee</a>';
     var thin = r.thin ? '<div class="fr-warn" title="Largest buy at 5% slippage is under $500">Thin: max buy ' + usd(r.max_buy_5pct_usd) + '</div>' : '';
     var url = tradeUrl(r);
     return '<div class="fr-pick' + (i === 0 ? ' first' : '') + '" data-key="' + esc(r.token_address) + '">'
       + '<div class="pk-top"><span class="pk-rk">' + (i + 1) + '</span><div class="pk-name"><b>' + esc(r.symbol || r.name || 'token') + '</b><small>' + esc(r.name || '') + '</small></div>' + badge + '</div>'
-      + '<div class="pk-p ' + p.cls + '"><b>' + p.big + '</b><span>chance of 3× in 72h</span></div>'
+      + '<div class="pk-pp"><div class="pk-p ' + p.cls + '"><b>' + p.big + '</b><span>chance of 3× in 72h</span></div>'
+      + '<div class="pk-p2" title="Chance of 2× in 72h: the radar labels every signal\'s max multiple but publishes only the 3× fit"><b>—</b><span>2× · not published</span></div></div>'
       + '<div class="pk-stats">'
       + '<div><b>' + smart + '</b>' + dots + '</div>'
       + '<div><b>' + usdK(r.usd_invested) + '</b><span>' + (sol ? 'volume 24h' : 'bought') + '</span></div>'
@@ -547,6 +549,14 @@
       ? '<span class="dot ' + (REG[g.state] || 'cy') + '"></span>Market <b class="' + (REG[g.state] || 'cy') + '">' + esc(String(g.state).toUpperCase()) + '</b>'
         + (g.suppressed ? ' · signals suppressed' : '') + '<span class="sep">·</span>' + num(d.tokens_tracked, 0) + (state.chain === 'solana' ? ' pools' : ' tokens') + ' scanned'
       : '';
+    // the launchpad comparison Cymetica promotes (/launchpad/compare), told with this board's own count
+    var pons = state.chain === 'robinhood' ? rows.filter(function (r) { return r.launchpad === 'pons'; }).length : 0;
+    $('lpPromo').hidden = !pons;
+    if (pons) $('lpPromo').innerHTML = '<div class="pr-num"><b>4×</b><span>lower fee</span></div>'
+      + '<div class="pr-txt"><b>' + pons + ' of ' + rows.length + '</b> tokens on this radar trade on PONS at a <em class="r">1% fee</em>. EventTrader charges <em class="g">0.25%</em>:'
+      + ' $10,000 of trading costs <em class="g">$25</em>, not <em class="r">$100</em>. Launch free, keep 80% of every fee.</div>'
+      + '<div class="pr-go"><a class="pk-go" href="' + HOST + '/launchpad/robinhood" target="_blank" rel="noopener">Launch on EventTrader →</a>'
+      + '<a class="pr-sec" href="' + HOST + '/launchpad/compare" target="_blank" rel="noopener">Compare launchpads →</a></div>';
     grid.innerHTML = buys.length ? buys.map(pick).join('') : '<div class="fr-empty">' + esc(d.message || 'No buy signal right now.') + '</div>';
     $('exits').innerHTML = exits.length
       ? '<span class="ex-lb">Smart money selling</span>' + exits.map(function (r) {
@@ -567,23 +577,21 @@
     ((s && s.rows) || []).forEach(function (r) {
       (r.top_buyers || []).forEach(function (b) { if (!b.gone) (holding[b.wallet] = holding[b.wallet] || []).push(r.symbol || r.name); });
     });
-    $('copyWin').textContent = 'last ' + dur(t.window_seconds || (s && s.window_seconds)) + ' · its own trades';
+    var span = dur(t.window_seconds || (s && s.window_seconds));
+    $('copyWin').textContent = 'last ' + span;
     grid.innerHTML = rows.map(function (w, i) {
       var val = has(w.realized_eth) ? w.realized_eth : w.realized_sol, win = val > 0;
-      var mult = has(w.avg_log_return) ? Math.exp(w.avg_log_return) : null;
       var now = holding[w.wallet] || [];
+      var big = has(px) ? (val >= 0 ? '+' : '−') + usd(Math.abs(val * px)) : (val > 0 ? '+' : '') + num(val, 3) + ' ' + unit;
       return '<div class="fr-cw ' + (win ? 'win' : 'loss') + '">'
-        + '<div class="cw-top"><span class="cw-rk">' + (i + 1) + '</span><a href="' + esc(w.explorer_url) + '" target="_blank" rel="noopener" title="' + esc(w.wallet) + '">' + esc(short(w.wallet)) + '</a>'
-        + '<span class="cw-v">' + (win ? 'PAID' : 'LOST') + '</span></div>'
-        + '<div class="cw-big">' + (val > 0 ? '+' : '') + num(val, 3) + ' ' + unit + (has(px) ? '<small>' + (val >= 0 ? '+' : '−') + usd(Math.abs(val * px)) + '</small>' : '') + '</div>'
+        + '<div class="cw-top"><span class="cw-rk">#' + (i + 1) + '</span><a href="' + esc(w.explorer_url) + '" target="_blank" rel="noopener" title="' + esc(w.wallet) + '">' + esc(short(w.wallet)) + '</a></div>'
+        + '<div class="cw-big">' + big + '<small>' + (win ? 'made' : 'lost') + ' in ' + span + (has(px) ? ' · ' + (val > 0 ? '+' : '') + num(val, 3) + ' ' + unit : '') + '</small></div>'
         + '<div class="cw-bar"><i style="width:' + Math.round(100 * (w.win_rate || 0)) + '%"></i></div>'
-        + '<div class="cw-st"><span><b>' + num(w.wins, 0) + '</b> of ' + num(w.round_trips, 0) + ' trades won</span>'
-        + (mult ? '<span>typical trade <b>×' + mult.toFixed(2) + '</b></span>' : '') + '</div>'
-        + '<div class="cw-st"><span>holds <b>' + ago(w.avg_hold_seconds) + '</b></span><span>open now <b>' + num(w.open_positions, 0) + '</b></span></div>'
-        + '<div class="cw-now">' + (now.length ? 'In now: ' + now.slice(0, 4).map(function (x) { return '<b>' + esc(x) + '</b>'; }).join(' ') : '<span>Not in a signal right now</span>') + '</div>'
+        + '<div class="cw-st"><span>won <b>' + num(w.wins, 0) + ' of ' + num(w.round_trips, 0) + '</b> trades</span></div>'
+        + '<div class="cw-now">' + (now.length ? 'Buying now: ' + now.slice(0, 4).map(function (x) { return '<b>' + esc(x) + '</b>'; }).join(' ') : '<span>Not buying anything right now</span>') + '</div>'
         + '</div>';
     }).join('');
-    $('copyNote').textContent = 'Its own closed trades at its own prices. A copy buys after it and pays slippage; it holds about ' + ago(rows[0].avg_hold_seconds) + ', so a copy has to be that fast.';
+    $('copyNote').textContent = 'What the wallet itself made. Copying it, you buy after it, and it sells within about ' + ago(rows[0].avg_hold_seconds) + '.';
   }
   function setMode(m) {
     $('fr').classList.toggle('basic', m === 'basic');
