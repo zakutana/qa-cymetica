@@ -61,3 +61,4 @@
 .v9-seat.you.idle .at-ava::after { box-shadow: 0 0 0 2px var(--at-red), 0 0 14px rgba(255,68,68,.55) !important; }
 .v9-big { padding: 64px 0 40px; }
 .v9-big .v9-stage { height: calc(430px * var(--k)); }
+.v9-big .v9-seat.house::after { display: none; } /* the table page names its house bots with H already */

@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 HERE = Path(__file__).resolve().parent
 OUTBOX = HERE.parent
 HOST = "https://cymetica.com"
-VERSION = "49"
+VERSION = "51"
 
 
 def load(name: str, path: Path):
@@ -48,6 +48,9 @@ def owner_piece(owner: BeautifulSoup, name: str, patched: bool = True):
     if patched:
         raw = re.sub(r'<span class="at-kind flash"[^>]*>FLASH</span>', "", raw)
         raw = raw.replace("Flash ", "")
+        # "Pro #94", "Micro #93": the old tier names and the table number go; the length as the lobby's stopwatch (2026-11-07)
+        raw = re.sub(r"</span>(?:Pro|Micro)(?: (1H|5H))? #\d+",
+                     lambda m: "</span>" + STOPWATCH.format(l=m.group(1) or "1D", share={"1H": 18, "5H": 55}.get(m.group(1), 92)), raw)
         # their long red "needs $X more volume to qualify": the figure stays, grey and short (the operator, 2026-11-06)
         raw = re.sub(r'<span>needs</span>\s*(\$[\d,.]+)\s*<span>more volume to qualify</span>', r"\1 to qualify", raw)
         # "Needs you 0" on the Your agents card says nothing (the operator, 2026-11-07): the tile goes

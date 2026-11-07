@@ -162,6 +162,8 @@
       $('.tb', r).after(cell);
       var line = $('.tb small', r);
       if (line) line.hidden = true;
+      /* an ended table no longer asks for volume */
+      var nv = $('.needvol', r); if (nv && tm && tm.status === 'done') nv.hidden = true;
       /* IDLE on the row too, the same tag as the table page (the operator, 2026-11-07) */
       var was = $('.v9-idle', r);
       if (was) was.remove();
