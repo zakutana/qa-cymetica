@@ -22,7 +22,7 @@ from bs4 import BeautifulSoup
 HERE = Path(__file__).resolve().parent
 OUTBOX = HERE.parent
 HOST = "https://cymetica.com"
-VERSION = "45"
+VERSION = "48"
 
 
 def load(name: str, path: Path):
@@ -159,6 +159,7 @@ def assemble(html: str) -> tuple[str, dict]:
 
 
 TABLE_MOCK = 100
+STOPWATCH = '<span class="at-bclk v9-clk" title="{l} table"><svg viewBox="0 0 48 52" aria-hidden="true"><rect x="20" y="1" width="8" height="5" rx="1.5"/><path d="M24 6v4"/><circle class="tr" cx="24" cy="29" r="20"/><circle class="rg" cx="24" cy="29" r="20" pathLength="100" stroke-dasharray="{share} 100" transform="rotate(-90 24 29)"/></svg><b>{l}</b></span>'
 
 
 def fetch_page(path: str) -> str:
@@ -211,12 +212,29 @@ def table_page() -> str:
     table itself is ours (table.js). The operator, 2026-11-06: change the table's design, not the page's layout."""
     soup = BeautifulSoup(fetch_page(f"/agent-casino/table/{TABLE_MOCK}"), "html.parser")
     owner = BeautifulSoup((HERE / "owner.html").read_text(encoding="utf8"), "html.parser")
-    head = soup.select_one(".at-rhead")
-    lead = owner_piece(owner, "lead", patched=False)
+    # no owner's panel above the table (the operator, 2026-11-07: "ten panel tam nedavej vubec")
     for old in soup.select("#atLead, #atSide"):
         old.decompose()
+    head = soup.select_one(".at-rhead")
     if head:
-        head.insert_after(lead)
+        # the lobby's stopwatch beside the price, LIVE beside it; the corner clock as the lobby cards draw it
+        clk, corner = head.select_one(".at-clk"), head.select_one(".at-corner")
+        if clk:
+            l = (clk.get_text() or "").strip().upper() or "1D"
+            share = 18 if l == "1H" else 55 if l == "5H" else 92
+            sw = BeautifulSoup(STOPWATCH.format(l=l, share=share), "html.parser")
+            state = corner.select_one(".at-st") if corner else None
+            clk.replace_with(sw)
+            if state:
+                head.select_one(".v9-clk").insert_after(state.extract())
+        if corner:
+            cdn, pb = corner.select_one(".at-cdn"), corner.select_one(".at-pb")
+            end, start = (cdn.get("data-end") if cdn else ""), (pb.get("data-start") if pb else "")
+            corner.clear()
+            corner.append(BeautifulSoup(
+                f'<div class="clock ca"><span class="pill"><span class="at-cdn" data-end="{end}" aria-label="Time left"><span data-u="d" hidden></span>'
+                f'<span data-u="h"></span><span data-u="m"></span><span data-u="s"></span></span></span>'
+                f'<span class="at-pb" data-start="{start}" data-end="{end}" aria-hidden="true"><i></i></span></div>', "html.parser"))
     room, main = soup.select_one("#atRoom"), soup.select_one("#atRoom .at-main")
     if room and main:
         main.insert_after(owner_piece(owner, "side", patched=False))
@@ -236,7 +254,9 @@ def table_page() -> str:
     if pill:
         pill.replace_with(owner_piece(owner, "pill"))
     mock_nav(soup)
-    return finish(str(soup), ("v9.css", "pages.css", "heads.css"), ("data.js", "art/geometry.js", "table.js", "heads.js"))
+    # "jake elo? co to je": the rating goes from the standings (the operator, 2026-11-07)
+    out = re.sub(r"\s*·\s*[\d,]+ ELO", "", str(soup))
+    return finish(out, ("v9.css", "pages.css", "heads.css"), ("data.js", "art/geometry.js", "table.js", "heads.js"))
 
 
 def leaderboard_page() -> str:
@@ -263,7 +283,8 @@ def main() -> int:
         shutil.copytree(OUTBOX / "casino-v8" / "art", art)
     (HERE / "data.js").write_text(f"window.CASINO={text};\n", encoding="utf8")
     (HERE / "lobby.js").write_text(f"window.CASINO_LOBBY={written};\n", encoding="utf8")
-    (HERE / "index.html").write_text(page, encoding="utf8")
+    # ET10 on top for the first two only (the operator, 2026-11-07)
+    (HERE / "index.html").write_text(page.replace("Extra for the top 3.", "Extra for the top 2."), encoding="utf8")
     (HERE / "table.html").write_text(table_page(), encoding="utf8")
     (HERE / "leaderboard.html").write_text(leaderboard_page(), encoding="utf8")
     print(f"{len(data['live'])} running, {len(data['open'])} open, {len(data['liveKinds'])} live kinds, {len(results['tables'])} finished")

@@ -312,3 +312,8 @@ body.v9-agents #agents { margin-top: 28px; }
 .at .at-tag.idle { white-space: nowrap; flex: none; width: auto; height: auto; }
 .at-ar .nm { flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; }
 .at-ar .nm b { max-width: 100%; }
+
+/* IDLE is red everywhere (the operator, 2026-11-07) */
+.at .at-tag.idle { color: var(--at-red) !important; background: rgba(255,68,68,.10) !important; box-shadow: inset 0 0 0 1px rgba(255,68,68,.55) !important; }
+.at .at-tag.idle .zz { box-shadow: inset -3px -1px 0 0 var(--at-red) !important; }
+.at .at-tag.idle .why { border-left-color: rgba(255,68,68,.45) !important; }

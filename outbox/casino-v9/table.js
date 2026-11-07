@@ -7,8 +7,7 @@
   var esc = function (s) { var d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; };
   var txt = function (el) { return el ? el.textContent.replace(/\s+/g, ' ').trim() : ''; };
   var CROWN = '<span class="at-crown"><svg viewBox="0 0 18 12" aria-hidden="true"><path d="M1 11h16L15.5 3 11.8 6.8 9 1 6.2 6.8 2.5 3z" fill="currentColor"/></svg></span>';
-  var lead = $('#atLead');
-  var mine = lead ? txt($('.who b', lead)) : '';
+  var mine = txt($('#atLead .who b') || $('#atCtl .who b'));
 
   /* ---------------------------------------------------------------- their table, drawn on the rendered one */
   var tbl = $('.at-big .at-tbl');
@@ -21,8 +20,11 @@
         rank: txt($('.at-rk', s)), roi: txt($('.at-lab em', s)), house: !!$('.at-h', s), you: !!name && name === mine };
     });
     var pot = { k: txt($('.at-pot .k', tbl)), v: txt($('.at-pot .v', tbl)), s: txt($('.at-pot .s', tbl)) };
+    /* ET10 on top for the first two only (the operator, 2026-11-07): the pot's ET10 line is the sum of the two spots */
+    var et = $$('.at-spots .sp .e', tbl).slice(0, 2).reduce(function (n, e) { var m = txt(e).replace(/,/g, '').match(/(\d+)\s*ET10/); return n + (m ? Number(m[1]) : 0); }, 0);
+    if (et) pot.s = '+ ' + et + ' ET10';
     /* their felt carries the prizes under the pot: they stay on ours */
-    var spots = $$('.at-spots .sp', tbl).map(function (sp) {
+    var spots = $$('.at-spots .sp', tbl).slice(0, 2).map(function (sp) {
       return '<span class="sp"><i>' + esc(txt($('.k', sp))) + '</i><b>' + esc(txt($('b', sp))) + '</b><em>' + esc(txt($('.e', sp))) + '</em></span>';
     }).join('');
 
@@ -39,10 +41,13 @@
       var pos = 'left:' + (at[0] * PW).toFixed(1) + 'px;top:' + (at[1] * PH).toFixed(1) + 'px';
       if (s.empty) return '<span class="v9-seat empty" style="' + pos + '"><span class="at-ava"></span></span>';
       var name = s.bot.replace(/^House\s+/, '');
+      /* names stand beside the head, away from the rim: left seats to the left, right seats to the right */
+      var side = i === 0 ? ' up' : at[0] < 0.36 ? ' l' : at[0] > 0.64 ? ' r' : '';
+      var tone = /idle/i.test(s.roi) || /^-/.test(s.roi) ? 'neg' : /^\+0\.00/.test(s.roi) ? 'flat' : 'pos';
       return '<span class="v9-seat' + (s.rank === '1' ? ' lead' : '') + (s.you ? ' you' : '') + (s.house ? ' house' : ' member') + '" style="' + pos + '" title="' + esc(s.bot) + '">' +
         '<span class="at-ava" style="--c:' + esc(s.colour || '#00cfff') + '"><svg viewBox="0 0 40 40" aria-hidden="true"><use href="#at-bot-' + esc(s.shape) + '"/></svg></span>' +
         (s.rank === '1' ? CROWN : '') +
-        '<span class="lab' + (i === 0 ? ' up' : '') + '">' + (s.you ? '<em>YOU</em>' : '') + '<b>' + esc(name) + (s.house ? '<i>H</i>' : '') + '</b><span class="' + (/^-/.test(s.roi) ? 'neg' : /^\+0\.00/.test(s.roi) ? 'flat' : 'pos') + '">' + (s.rank ? '#' + esc(s.rank) + ' · ' : '') + esc(s.roi) + '</span></span></span>';
+        '<span class="lab' + side + '">' + (s.you ? '<em>YOU</em>' : '') + '<b>' + esc(name) + (s.house ? '<i>H</i>' : '') + '</b><span class="' + tone + '">' + (s.rank ? '#' + esc(s.rank) + ' · ' : '') + esc(s.roi) + '</span></span></span>';
     }).join('');
     var holder = document.createElement('div');
     holder.className = 'v9-big';
@@ -51,7 +56,7 @@
       '<div class="pot" style="width:' + FW + 'px;height:' + FH + 'px;transform:' + FM + '"><span class="k">' + esc(pot.k) + '</span><b class="v">' + esc(pot.v) + '</b><span class="s">' + esc(pot.s) + '</span>' + (spots ? '<span class="v9-spots">' + spots + '</span>' : '') + '</div>' +
       seatHtml + '</div></div></div>';
     tbl.replaceWith(holder);
-    var fit = function () { $$('.v9-big .v9-stage').forEach(function (s) { s.style.setProperty('--k', Math.min(1.3, s.clientWidth / 640).toFixed(4)); }); };
+    var fit = function () { $$('.v9-big .v9-stage').forEach(function (s) { s.style.setProperty('--k', (s.clientWidth >= 600 ? Math.min(1.1, s.clientWidth / 900) : s.clientWidth / 640).toFixed(4)); }); };
     addEventListener('resize', fit); fit();
   }
 

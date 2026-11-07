@@ -42,3 +42,18 @@
 .v9-lead .left .at-pb { width: 140px; }
 .v9-lead .at-lead-h .who { min-width: 0; flex: 1 1 auto; }
 .v9-lead .at-lead-h .who b { max-width: none !important; overflow: visible !important; text-overflow: clip !important; white-space: normal !important; }
+
+/* round 2 (the operator, 2026-11-07) */
+.at-rhead .v9-clk { width: 40px !important; height: 43px !important; vertical-align: middle; margin: 0 4px 0 6px; }
+.at-rhead .v9-clk b { font-size: 11px !important; top: 3px !important; }
+.at-rhead .at-st { margin-right: 10px; }
+.at-rhead .at-corner .clock.ca { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.at-rhead .at-corner .clock.ca .pill { padding: 7px 14px; }
+.at-rhead .at-corner .clock.ca .at-cdn { font-size: 22px !important; }
+.at-rhead .at-corner .clock.ca .at-pb { width: 140px; height: 3px; }
+.v9-big .v9-seat .lab.l { left: auto; right: calc(100% + 12px); top: 50%; transform: translateY(-50%); align-items: flex-end; text-align: right; }
+.v9-big .v9-seat .lab.r { left: calc(100% + 12px); top: 50%; transform: translateY(-50%); align-items: flex-start; text-align: left; }
+@media (max-width: 700px) { .v9-big .v9-seat .lab.l, .v9-big .v9-seat .lab.r { left: 50%; right: auto; top: calc(100% + 6px); transform: translateX(-50%); align-items: center; text-align: center; } }
+.at-lr .nm b { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; white-space: normal; overflow: visible; }
+.at-lr .nm b .at-tag { margin: 0; }
+.at-lr .nm b .at-tag.idle { padding: 3px 9px !important; min-height: 0 !important; line-height: 1.2 !important; border-radius: 99px !important; }
