@@ -497,6 +497,8 @@ def next_asks(rows: list[dict], bots: list[dict], tables: list[dict], seated: se
     `twice`: instances at two tables already, never an E (a third table tests nothing). `still`:
     instances whose latest table, running or ended, shows no trade: seated anywhere they sit still."""
     out = set(twice or ()) | set(still or ())
+    asked_here = {(str(r.get("table_id")), r.get("instance_id")) for r in rows
+                  if r.get("type") == "intent" and r.get("kind") == "seat"}
     tried = {(r.get("variant"), r.get("species"), r.get("tier")) for r in rows if r.get("type") == "experiment"}
     counts = {v: sum(1 for r in rows if r.get("type") == "experiment" and r.get("variant") == v) for v in VARIANTS}
     used: set = set()
@@ -512,6 +514,7 @@ def next_asks(rows: list[dict], bots: list[dict], tables: list[dict], seated: se
                     and ((b.get("instance_id") in seated) == (variant == "E"))
                     and not (variant == "E" and b.get("instance_id") in out)
                     and b.get("instance_id") not in set(still or ())
+                    and (str(table.get("id")), b.get("instance_id")) not in asked_here
                     and (variant, b.get("species"), table.get("tier")) not in tried]
             if pool:
                 bot = pool[0]

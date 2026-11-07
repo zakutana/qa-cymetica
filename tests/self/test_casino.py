@@ -448,6 +448,11 @@ def test_the_next_asks_are_one_bot_a_table_and_never_repeat():
     assert "E" not in [a["variant"] for a in asks]
     asks = casino.next_asks([], bots, tables, seated={"i0"}, spent=set(), running=0, still={"i0"})
     assert "E" not in [a["variant"] for a in asks]
+    # A bot already asked for at a table is not asked for there again (the floor refuses it, and the table
+    # sat empty tick after tick: Divergence Dragon at 67, SEAT-0056).
+    asked = [{"type": "intent", "kind": "seat", "table_id": "44", "instance_id": "i0"}]
+    asks = casino.next_asks(asked, bots, tables[:1], seated=set(), spent=set(), running=0)
+    assert [a["instance_id"] for a in asks] == ["i1"]
     # Nor any other variant: 0 trades at its last table is 0 at the next (Perceptron Oracle, 99 then 105).
     asks = casino.next_asks([], bots, tables, seated=set(), spent=set(), running=0, still={"i0"})
     assert "i0" not in [a["instance_id"] for a in asks]
