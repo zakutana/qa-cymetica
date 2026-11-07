@@ -494,8 +494,8 @@ def next_asks(rows: list[dict], bots: list[dict], tables: list[dict], seated: se
 
     `seated`: instances at a table now, who sit out every variant but E (the variant is that they do
     not). `spent`: instances out of today's allowance, who cannot trade and would only repeat table 41.
-    `twice`: instances at two tables already; `still`: instances with no trade at the table they sit at.
-    Neither is an E: a third table, or a second for a bot that does not play the first, tests nothing."""
+    `twice`: instances at two tables already, never an E (a third table tests nothing). `still`:
+    instances whose latest table, running or ended, shows no trade: seated anywhere they sit still."""
     out = set(twice or ()) | set(still or ())
     tried = {(r.get("variant"), r.get("species"), r.get("tier")) for r in rows if r.get("type") == "experiment"}
     counts = {v: sum(1 for r in rows if r.get("type") == "experiment" and r.get("variant") == v) for v in VARIANTS}
@@ -511,6 +511,7 @@ def next_asks(rows: list[dict], bots: list[dict], tables: list[dict], seated: se
             pool = [b for b in bots if b.get("instance_id") not in used and b.get("instance_id") not in spent
                     and ((b.get("instance_id") in seated) == (variant == "E"))
                     and not (variant == "E" and b.get("instance_id") in out)
+                    and b.get("instance_id") not in set(still or ())
                     and (variant, b.get("species"), table.get("tier")) not in tried]
             if pool:
                 bot = pool[0]

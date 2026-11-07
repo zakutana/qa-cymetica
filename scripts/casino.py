@@ -428,9 +428,16 @@ def ask_next(client, rows: list[dict], tables_open: list[dict], my_seats: list[d
     for s in live_seats:
         counted[s.get("instance_id")] = counted.get(s.get("instance_id"), 0) + 1
     twice = {i for i, n in counted.items() if n >= 2}
+    # still: the bot's latest table (by its last reading) shows no trade, running or ended
     last = {r.get("table_id"): r for r in rows if r.get("type") == "seat"}
-    still = {s.get("instance_id") for s in live_seats if s.get("table_status") == "running"
-             and (last.get(s.get("table_id")) or {}).get("trades") == 0}
+    whose = {t: e.get("instance_id") for t, e in experiments(rows).items()}
+    whose.update({s.get("table_id"): s.get("instance_id") for s in my_seats or [] if isinstance(s, dict)})
+    latest: dict = {}
+    for table_id, row in last.items():
+        inst = whose.get(table_id)
+        if inst and str(row.get("at", "")) > str((latest.get(inst) or {}).get("at", "")):
+            latest[inst] = row
+    still = {i for i, row in latest.items() if row.get("trades") == 0 and (row.get("status") == "done" or row.get("status") == "running")}
     asked = 0
     for ask in casino.next_asks(rows, bots, tables_open, seated, spent, running, twice=twice, still=still):
         code = seat(str(ask["table_id"]), str(ask["instance_id"]), True, client=client)
