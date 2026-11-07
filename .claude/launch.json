@@ -14,6 +14,12 @@
       "port": 8807
     },
     {
+      "name": "fomo-radar-mock",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/fomo-radar-redesign/serve.py", "--quiet"],
+      "port": 8846
+    },
+    {
       "name": "nexus-chat-mock",
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/nexus-chat-redesign/serve.py", "--quiet"],

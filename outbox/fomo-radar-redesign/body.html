@@ -1,0 +1,181 @@
+<div class="fr" id="fr">
+
+  <nav class="fr-bar">
+    <a class="fr-logo" href="#top" aria-label="FOMO Radar">
+      <svg viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+        <circle cx="20" cy="20" r="17" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="1.5"/>
+        <circle cx="20" cy="20" r="10" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="1.2"/>
+        <path d="M20 20 L20 3 A17 17 0 0 1 34.7 11.5 Z" fill="currentColor" fill-opacity=".35"/>
+        <line x1="20" y1="20" x2="34.7" y2="11.5" stroke="currentColor" stroke-width="2"/>
+        <circle cx="27" cy="9.5" r="2.4" fill="#00ff88"/><circle cx="12" cy="26" r="1.8" fill="#00cfff"/>
+      </svg>
+      <span><small>FOMO</small><b>RADAR</b></span>
+    </a>
+    <div class="fr-tabs">
+      <a href="#signals" class="on">Signals</a><a href="#accuracy">Accuracy</a><a href="#wallets">Top wallets</a><a href="#clusters" data-rh>Clusters</a><a href="#api">API</a>
+    </div>
+    <div class="fr-right">
+      <span class="fr-live"><i></i>LIVE <b id="upd">--:--:--</b></span>
+      <div class="fr-seg" id="chainSeg">
+        <button type="button" data-chain="robinhood" class="on">Robinhood</button><button type="button" data-chain="solana">Solana</button>
+      </div>
+    </div>
+  </nav>
+
+  <section class="fr-hero" id="top">
+    <div class="fr-hl">
+      <div class="fr-pill"><i></i><span id="heroPill">Reading the chain…</span></div>
+      <h1>Proven wallets.<br>What they buy.<br><em>Right now.</em></h1>
+      <p class="fr-lead">Every buyer weighted by their own on-chain track record, never by dollar size.
+        <button type="button" class="fr-more" data-fold="about" aria-expanded="false">How it works</button></p>
+      <div class="fr-fold" id="fold-about" hidden>
+        <p>Which tokens are credible wallets buying <em>right now</em>. Robinhood Chain signals are ranked by <strong>trader-credibility conviction</strong> — every buyer is weighted by their own realized on-chain track record, never by dollar size. Solana signals run through the <strong>same credibility machinery</strong>, from per-wallet swap history parsed off a public Solana RPC — and any pool we have not indexed enough swaps for keeps its pool-level buy-pressure score and says so. Every score carries a <strong>measured probability</strong> of a 3× inside 72 hours — or says plainly that there is not enough labelled history yet.</p>
+        <a class="fr-dup" href="https://cymetica.com/duplicate">Requested on /duplicate — built free in 24 h →</a>
+      </div>
+
+      <div class="fr-boxes">
+        <div class="fr-box" id="boxRegime">
+          <div class="k">MARKET</div>
+          <div class="v" id="regState">—</div>
+          <div class="s" id="regExp">exposure —</div>
+          <div class="t" id="regDet"></div>
+        </div>
+        <div class="fr-box">
+          <div class="k">WINDOW</div>
+          <div class="v cy"><span id="winNow">—</span><small id="winOf"></small></div>
+          <div class="fr-prog"><i id="winBar"></i></div>
+          <div class="t" id="winNote"></div>
+        </div>
+        <div class="fr-box" id="boxScan">
+          <div class="k">SCANNED</div>
+          <div class="fr-trio" id="scanTrio"></div>
+          <div class="t" id="scanNote"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="fr-scope" id="scope">
+      <canvas id="scopeCv" aria-label="Radar of the live signals: the taller the beam, the higher the conviction"></canvas>
+      <div class="fr-tip" id="scopeTip" hidden></div>
+      <div class="fr-legend">
+        <span><i class="g"></i>buy</span><span><i class="c"></i>fresh</span><span><i class="r"></i>exit</span><span class="h">height = conviction</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="fr-sec" id="signals">
+    <div class="fr-head">
+      <h2>Buy signals</h2>
+      <span class="fr-kind" id="kind"></span>
+      <button type="button" class="fr-i" data-fold="sigsub" aria-expanded="false" title="What the score is">i</button>
+      <div class="fr-chips" id="filterChips">
+        <button type="button" class="on" data-filter="all">All <b data-n="all"></b></button>
+        <button type="button" data-filter="hot">Hot <b data-n="hot"></b></button>
+        <button type="button" data-filter="fresh">Fresh <b data-n="fresh"></b></button>
+        <button type="button" data-filter="exits">Exits <b data-n="exits"></b></button>
+      </div>
+    </div>
+    <div class="fr-fold fr-note" id="fold-sigsub" hidden><p id="signalSub"></p><p class="fr-tags-key">
+      <span class="tag hot">HOT</span> buy pressure now · <span class="tag fresh">FRESH</span> new qualified buyers · <span class="tag exit">EXIT</span> credible wallets selling ·
+      <span class="tag thin">THIN</span> largest buy at 5% slippage is under $500 · <span class="tag dupe">SAME NAME</span> other launches on this board share this name — the addresses are the identity ·
+      <span class="tag exit">CO-BUY</span> qualified buyers whose first buy landed in the same block / same transaction · <span class="tag ent">SIBLINGS</span> sibling wallets resolved into one entity cast ONE vote ·
+      <span class="gone-k"></span> GONE: the wallet has already sold out</p></div>
+    <div class="fr-list" id="rows"><div class="fr-empty">Loading live signals…</div></div>
+  </section>
+
+  <section class="fr-sec" id="accuracy">
+    <div class="fr-head">
+      <h2>Is the 3× chance real?</h2>
+      <button type="button" class="fr-i" data-fold="calsub" aria-expanded="false" title="How the probability is measured">i</button>
+    </div>
+    <div class="fr-fold fr-note" id="fold-calsub" hidden><p>Every signal this radar emits is written down <em>before</em> its outcome is known, then labelled 72&nbsp;hours later from the prices that actually printed. The percentage next to a score is the share of past signals at that score that went 3× within 72&nbsp;hours — not a model's opinion of the score.</p></div>
+
+    <div class="fr-acc">
+      <div class="fr-card">
+        <h3>Current fit</h3>
+        <div class="fr-tiles" id="calFit"></div>
+      </div>
+      <div class="fr-card fr-wide">
+        <h3>Said vs was <span>share that went 3× in 72 h, out of sample</span></h3>
+        <div class="fr-bins" id="calBins"></div>
+        <div class="fr-binkey"><span><i class="said"></i>said</span><span><i class="was"></i>was</span></div>
+      </div>
+      <div class="fr-card">
+        <h3>Hit rate by signal type <span>rolling</span></h3>
+        <div class="fr-types" id="calTypes"></div>
+      </div>
+    </div>
+
+    <div class="fr-steps">
+      <details><summary><b>1</b>Persist</summary><p>Each emitted signal is stored with its chain, token, timestamp, conviction, signal type and feature block — one row per token per 6-hour window, written before anyone knows what happens next.</p></details>
+      <details><summary><b>2</b>Observe</summary><p>Robinhood Chain is indexed by no public price feed, so its price history is recorded from the chain's own trade prints (ETH per token on every curve trade), every 60&nbsp;seconds for the first hour and every 15&nbsp;minutes after that. Solana falls back to public pool candles.</p></details>
+      <details><summary><b>3</b>Label</summary><p>72&nbsp;hours later each signal gets: max multiple, whether it hit 3×, whether it rugged inside the first 5&nbsp;minutes (price or liquidity down 90%), whether it rugged within 24&nbsp;hours, and — on bonding curves — whether it survived graduation.</p></details>
+      <details><summary><b>4</b>Fit</summary><p>An isotonic regression (monotone, so a higher score can never map to a lower probability) is refitted every 15&nbsp;minutes over the rolling window of labelled signals. The Brier score shown is <em>out of sample</em>: fitted on the oldest 70% of the window, scored on the newest 30% it never saw, next to what the flat base rate scored on the same tail.</p></details>
+      <details><summary><b>5</b>Gate</summary><p>A market-wide regime measure (median 24-hour return and the share of tracked tokens below their 24-hour open) scales the exposure recommendation. When the whole meme market is bleeding it goes to zero and the signals are suppressed — the answer to a bad tape is no exposure, not a better model.</p></details>
+      <details class="fr-x"><summary>Misses &amp; gaps</summary><p>A signal whose 72-hour window we could not price is marked unmeasurable and <strong>excluded</strong> from the fit — never counted as a miss. Below the minimum labelled sample the page shows <strong>insufficient history (n/N)</strong> and no percentage at all. Machine-readable: <code>GET /api/v1/clones/fomo-radar/calibration?chain=robinhood|solana</code>.</p></details>
+    </div>
+
+    <div class="fr-card fr-bt">
+      <div class="fr-bt-top">
+        <div>
+          <h3>A $100 trade on every signal <span>exit-policy backtest</span></h3>
+          <button type="button" class="fr-more" data-fold="btsub" aria-expanded="false">What this measures</button>
+        </div>
+        <div class="fr-status" id="btStatus">—</div>
+      </div>
+      <div class="fr-fold fr-note" id="fold-btsub" hidden>
+        <p>The probability above asks whether a token <em>touched</em> 3×. Nobody sells at the top. This backtest replays each past signal against the complete price record it was labelled from, buys and sells a $100 position against the pool depth recorded at each moment, and applies a named exit rule. It is scored walk-forward with a gap longer than the longest horizon between what the model learned from and what it is tested on. It measures the past. It is not a forecast and not a guarantee.</p>
+        <p>Exit rules: hold to the horizon; a trailing stop 30% below the peak; or sell half at 2× and trail the rest by 30%. Horizons: 6, 24 and 72&nbsp;hours. A result counts as positive when the position returned more than it cost after price impact. The headline test is the Matthews correlation (MCC) of the out-of-sample calls, which must reach 0.30; a negative expected value at every horizon is a valid result and is published as such. A result is withheld while the stored price records cover too few of the signals the radar emitted, because a figure on the tokens that kept trading would hide the ones that died. Machine-readable: <code>GET /api/v1/clones/fomo-radar/backtest?chain=robinhood|solana</code>.</p>
+      </div>
+      <div class="fr-tiles" id="btGate"></div>
+      <div class="fr-grid9" id="btGrid"></div>
+      <div class="fr-reasons" id="btReasons"></div>
+    </div>
+  </section>
+
+  <section class="fr-sec" id="wallets">
+    <div class="fr-head">
+      <h2>Top wallets</h2>
+      <span class="fr-kind">closed round trips only</span>
+      <button type="button" class="fr-i" data-fold="trsub" aria-expanded="false" title="How wallets are scored">i</button>
+    </div>
+    <div class="fr-fold fr-note" id="fold-trsub" hidden><p id="tradersSub"></p></div>
+    <div class="fr-board" id="traders"><div class="fr-empty">Loading wallets…</div></div>
+  </section>
+
+  <section class="fr-sec" id="clusters" data-rh>
+    <div class="fr-head">
+      <h2>Sibling wallets count once</h2>
+      <span class="fr-kind">entity resolution</span>
+      <button type="button" class="fr-i" data-fold="entsub" aria-expanded="false" title="Why">i</button>
+    </div>
+    <div class="fr-fold fr-note" id="fold-entsub" hidden><p>A wallet costs nothing to create, so counting addresses counts what a farm can mint. Every qualified buyer on Robinhood Chain is resolved into an <strong>entity</strong> by union-find over four kinds of evidence, and conviction is summed over entities: wallets that always trade together cast one vote between them.</p></div>
+
+    <div class="fr-ent">
+      <div class="fr-card fr-entnum">
+        <div class="fr-big" id="entBig">—</div>
+        <div class="fr-entsub" id="entSub"></div>
+        <div class="fr-fallback" id="entFallback"></div>      </div>
+      <div class="fr-rules" id="entRules">
+        <details data-rule="same_tx,same_block"><summary><span class="ic">TX</span><b>Same atomic transaction</b><em data-st></em></summary><p>Two wallets bought the same curve inside one transaction. One transaction has one sender paying for it — independent strangers cannot share one. The same block is a weaker version of the same link and is drawn separately.</p></details>
+        <details data-rule="funder"><summary><span class="ic">$</span><b>Common non-exchange funder</b><em data-st></em></summary><p>The address that submitted and paid for a wallet's first observed buy. A wallet that submits its own transaction draws no link, exchange and infrastructure addresses are excluded by a maintained list, and a funder with dozens of children is treated as infrastructure rather than one operator.</p></details>
+        <details data-rule="bundle"><summary><span class="ic">ID</span><b>Shared bundle id</b><em data-st></em></summary><p>Where the chain publishes a bundle id, wallets sharing one are the same submission. Robinhood Chain does not publish one today, so this rule reports itself unavailable instead of guessing a link.</p></details>
+        <details data-rule="cosine"><summary><span class="ic">∠</span><b>Portfolio cosine similarity</b><em data-st></em></summary><p>Token portfolios are turned into vectors weighted by how rare each token is, and two wallets pointing the same way — sharing at least two tokens — are one entity. Sharing the day's hot coin is worth nothing here; sharing two coins nobody else touched is worth everything.</p></details>
+        <details><summary><span class="ic">1</span><b>How an entity votes</b><em class="n">once</em></summary><p>Once. Its score is its <em>best</em> member's track record, so a farm can neither dilute nor amplify it. Its ETH is the sum of its members' buys on the curve. Its selectivity is computed on the entity's whole portfolio: forty tokens spread over eight wallets is a forty-token buyer, not eight specialists.</p></details>
+        <details><summary><span class="ic">OFF</span><b>When a source is down</b><em class="n">no link</em></summary><p>That rule draws no link at all and those wallets are counted as separate addresses — the honest, conservative answer. The live state of each rule is listed below and never hidden.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="fr-sec fr-api" id="api">
+    <div class="fr-head"><h2>JSON for agents and bots</h2><span class="fr-kind">no key required</span></div>
+    <div class="fr-eps">
+      <button type="button" data-copy="GET /api/v1/clones/fomo-radar/signals?chain=robinhood|solana&amp;filter=all|hot|fresh|exits"><b>signals</b><span>?chain=robinhood|solana&amp;filter=all|hot|fresh|exits</span></button>
+      <button type="button" data-copy="GET /api/v1/clones/fomo-radar/traders?chain=robinhood"><b>traders</b><span>?chain=robinhood</span></button>
+      <button type="button" data-copy="GET /api/v1/clones/fomo-radar/entities"><b>entities</b><span>the resolved entities and the evidence that linked them</span></button>
+      <button type="button" data-copy="GET /api/v1/clones/fomo-radar/calibration?chain=robinhood|solana"><b>calibration</b><span>the measured score→outcome link</span></button>
+      <button type="button" data-copy="GET /api/v1/clones/fomo-radar/docs"><b>docs</b><span>the exact scoring formulas</span></button>
+    </div>
+    <p class="fr-src">Robinhood Chain data is read straight from the chain-4663 bonding-curve trade logs; Solana pools come from public DEX aggregates and Solana per-wallet track records from swap transactions parsed off a public Solana RPC. Where we have not indexed enough swaps for a pool, that row keeps its pool-level buy-pressure score and says so — a trader score is never invented. Nothing here is financial advice — an on-chain track record is a description of the past, not a prediction.</p>
+  </section>
+</div>
