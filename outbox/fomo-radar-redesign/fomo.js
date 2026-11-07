@@ -32,7 +32,7 @@
     if (s < 86400) return (s / 3600).toFixed(1) + 'h';
     return (s / 86400).toFixed(1) + 'd';
   }
-  function dur(s) { if (!s) return '—'; return s < 3600 ? Math.round(s / 60) + ' min' : (s / 3600).toFixed(1) + ' h'; }
+  function dur(s) { if (!s) return '—'; return s < 3600 ? Math.round(s / 60) + ' min' : (s / 3600).toFixed(1) + ' h'; }
   function short(a) { a = String(a || ''); return a.length > 14 ? a.slice(0, 6) + '…' + a.slice(-4) : a; }
   function addr(a, chain) {
     if (!a) return '—';
@@ -76,7 +76,7 @@
     var dots = (r.top_buyers || []).slice(0, 8).map(function (b) {
       return '<i class="' + (b.gone ? 'gone' : '') + '" title="' + esc(b.wallet_short) + ' · score ' + num(b.score, 0) + (b.gone ? ' · GONE' : '') + '"></i>';
     }).join('');
-    return '<div class="fr-row" data-i="' + i + '">'
+    return '<div class="fr-row' + (i < 3 ? ' top' : '') + '" data-i="' + i + '">'
       + '<div class="rk">' + (i + 1) + '</div>'
       + '<div class="fr-tok"><div class="top"><span class="sym">' + esc(r.symbol || r.name || 'token') + '</span><span class="nm">' + esc(r.name || '') + '</span></div><div class="tags">' + tags(r) + '</div></div>'
       + '<div class="fr-c fr-conv"><b>' + num(r.conviction, 1) + '</b><div class="fr-bar2"><i style="width:' + Math.max(2, Math.min(100, r.conviction || 0)) + '%"></i></div></div>'
@@ -98,7 +98,7 @@
       ? cell('', '<span style="color:var(--g)">' + num(r.credible_wallet_share * 100, 0) + '%</span>', num(r.qualified_buyers, 0) + ' of ' + num(r.buyers_with_record_seen, 0) + ' indexed buyers · avg ' + num(r.avg_buyer_score, 0))
       : cell('', '<span style="color:var(--mut);font-size:12px">no track record yet</span>', 'ranked by buy pressure');
     var link = r.page_url ? '<a class="out" href="' + esc(r.page_url) + '" target="_blank" rel="noopener" title="Open the pool">↗</a>' : '';
-    return '<div class="fr-row" data-i="' + i + '" data-href="' + esc(r.page_url || '') + '">'
+    return '<div class="fr-row' + (i < 3 ? ' top' : '') + '" data-i="' + i + '" data-href="' + esc(r.page_url || '') + '">'
       + '<div class="rk">' + (i + 1) + '</div>'
       + '<div class="fr-tok"><div class="top"><span class="sym">' + esc(r.symbol || r.name || 'token') + '</span><span class="nm">' + esc(r.name || '') + '</span></div><div class="tags">' + tags(r) + '</div></div>'
       + '<div class="fr-c fr-conv"><b>' + num(r.conviction, 1) + '</b><div class="fr-bar2"><i style="width:' + Math.max(2, Math.min(100, r.conviction || 0)) + '%"></i></div><small>' + (r.credibility_available ? 'trader credibility' : 'buy pressure') + '</small></div>'

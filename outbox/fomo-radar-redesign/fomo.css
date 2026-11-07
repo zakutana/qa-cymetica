@@ -54,8 +54,9 @@ main.content-main { background: radial-gradient(1200px 700px at 78% 120px, rgba(
 .fr-boxes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 26px; }
 .fr-box { padding: 14px 15px 13px; border-radius: 14px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line2), 0 10px 30px rgba(0, 0, 0, .25); min-width: 0; }
 .fr-box .k { font: 700 10px var(--num); letter-spacing: .2em; color: var(--mut); }
-.fr-box .v { font: 800 24px/1.1 var(--num); margin-top: 8px; color: var(--g); white-space: nowrap; letter-spacing: -.01em; }
+.fr-box .v { display: flex; align-items: baseline; flex-wrap: nowrap; font: 800 24px/1.1 var(--num); margin-top: 8px; color: var(--g); white-space: nowrap; letter-spacing: -.01em; }
 .fr-box .v.cy { color: var(--c); } .fr-box .v.rd { color: var(--r); }
+.fr-box .v span, .fr-box .v small { white-space: nowrap; } 
 .fr-box .v small { font: 600 13px var(--num); color: var(--mut); margin-left: 3px; }
 .fr-box .s { font: 700 12px var(--num); color: #fff; margin-top: 3px; }
 .fr-box .t { font: 500 11px/1.35 var(--txt); color: var(--mut); margin-top: 6px; }
@@ -124,7 +125,7 @@ main.content-main { background: radial-gradient(1200px 700px at 78% 120px, rgba(
 .fr-row.hd > div { font: 700 10px var(--num); letter-spacing: .12em; color: var(--mut); text-transform: uppercase; }
 .fr-row.hd:hover { background: rgba(255, 255, 255, .02); }
 .fr-row .rk { font: 800 13px var(--num); color: var(--mut); text-align: center; }
-.fr-row:nth-child(2) .rk, .fr-row:nth-child(3) .rk, .fr-row:nth-child(4) .rk { color: var(--g); }
+.fr-row.top .rk { color: var(--g); }
 .fr-tok { min-width: 0; }
 .fr-tok .sym { font: 800 16px var(--num); color: #fff; letter-spacing: .01em; }
 .fr-tok .nm { font: 500 12px var(--txt); color: var(--mut); margin-left: 6px; }
@@ -284,6 +285,7 @@ main.content-main { background: radial-gradient(1200px 700px at 78% 120px, rgba(
   .fr-tabs { order: 3; width: 100%; overflow-x: auto; }
   .fr-hero { grid-template-columns: 1fr; gap: 10px; padding-top: 20px; }
   .fr-scope { order: -1; min-height: 0; aspect-ratio: 1.45; }
+  .fr-box .v { font-size: 20px; }
   .fr-boxes { grid-template-columns: 1fr 1fr; } .fr-boxes .fr-box:last-child { grid-column: 1 / -1; }
   .fr-chips { margin-left: 0; width: 100%; }
   .fr-row.hd { display: none; }
