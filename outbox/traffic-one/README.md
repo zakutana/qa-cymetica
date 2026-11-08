@@ -15,7 +15,7 @@ Asked for by the operator on 2026-11-06: *"z toho vseho udelame 1 stranku. bude 
 
 | | |
 |---|---|
-| Ticket | ET-34607, filed 2026-11-08 19:54 UTC (BB-0043), spec proposed |
+| Ticket | ET-34607, filed 2026-11-08 19:54 UTC (BB-0043), spec accepted 2026-11-08 19:55 UTC (BB-0044), deadline 2026-11-09 19:55 UTC |
 | Filed | |
 | Accepted, deadline | |
 | Shipped | |
