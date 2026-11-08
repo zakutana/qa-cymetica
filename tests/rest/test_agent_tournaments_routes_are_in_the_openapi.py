@@ -55,6 +55,9 @@ def tournament_routes(llms_text: str) -> list[str]:
         for rel in _TICKED.findall(line):
             if not rel.startswith("/api/"):
                 named.add(_norm(PREFIX + rel))
+    # 2026-11-08: the bare prefix is named as a prefix ("the API path /api/v1/agent-tournaments
+    # ... stay"), never as a route of its own; counting it failed #191 on a phrase.
+    named.discard(PREFIX)
     return sorted(named)
 
 

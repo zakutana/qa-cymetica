@@ -1038,7 +1038,7 @@
     "196": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-board-counts-what-was-paid",
@@ -1232,13 +1232,18 @@
      "report_id": 191,
      "verdict": "fail",
      "at": "2026-11-03T04:49:22+00:00"
+    },
+    {
+     "report_id": 191,
+     "verdict": "pass",
+     "at": "2026-11-08T11:11:52+00:00"
     }
    ],
    "their_status": {
     "191": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-running-table-keeps-trading",

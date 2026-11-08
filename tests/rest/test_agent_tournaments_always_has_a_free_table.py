@@ -86,6 +86,12 @@ def test_agent_tournaments_always_has_a_free_table(rest_anon):
         raise Inconclusive(f"{PREFIX}/rules no longer carries `new_tables`; the promise this "
                            "check holds them to is not published")
     tiers = said.get("tiers") or []
+    # 2026-11-08: the sentence now names its buy-ins ("$5 and $50 Flash, 100 ET10 and 1,000 ET10"),
+    # and the week tiers (`kind: week`) still listed beside them are not among them.
+    not_named = []
+    if "Flash" in promise:
+        not_named = [r.get("tier") for r in tiers if isinstance(r, dict) and r.get("kind") == "week"]
+        tiers = [r for r in tiers if not (isinstance(r, dict) and r.get("kind") == "week")]
     if not tiers:
         raise Inconclusive(f"{PREFIX}/rules lists no tiers; nothing to judge")
     lobby = rest_anon.get(f"{PREFIX}/lobby")
@@ -117,7 +123,7 @@ def test_agent_tournaments_always_has_a_free_table(rest_anon):
         right={"buyins_without_a_free_table": 0},
         population={"mode": mode, "tiers": [r.get("tier") for r in tiers if isinstance(r, dict)],
                     "tables": len(tables), "waiting_to_start": waiting, "unread": unread,
-                    "without": without},
+                    "without": without, "not_named_by_the_promise": not_named},
         sources={"promise": f"{PREFIX}/rules new_tables: {promise}",
                  "tiers": f"{PREFIX}/rules tiers", "tables": f"{PREFIX}/lobby tables"},
         claim_id=CLAIM))
