@@ -5851,12 +5851,18 @@
    ],
    "title": "Gem Screener: SaucerSwap's chart is read on Base and USD AI's on Solana, while each row's pool and liquidity are on another chain, and nothing says so",
    "filed_at": "2026-11-02T13:16:59+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 278,
+     "verdict": "pass",
+     "at": "2026-11-08T12:17:49+00:00"
+    }
+   ],
    "their_status": {
     "278": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "gem-screener-report-wording-on-chains-and-a-cut-sentence",

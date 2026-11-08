@@ -126,7 +126,9 @@ def test_a_chart_says_which_market_it_read(rest_anon):
         if not contract or not pool or not url:
             continue
         read += 1
-        if contract != pool and f"chain={contract}" in url and pool not in str(coin.get("chart") or {}):
+        # 2026-11-08: they now say it in `chart_market_note`, beside `chart`, not inside it
+        said = str(coin.get("chart") or {}) + str(coin.get("chart_market_note") or "")
+        if contract != pool and f"chain={contract}" in url and pool not in said:
             breaches.append({"what": f"{coin.get('symbol')}: the chart is read on {contract}, the row's liquidity and price on {pool}, and nothing says so"})
     if not read:
         raise Inconclusive("neither named coin carries a contract, a pool and a chart today")
