@@ -111,7 +111,7 @@
     
     
 
-    <style nonce="ilikdu74/2mGWxZaZjz15w==">
+    <style nonce="oPJoNHDReaTCQ9u0GxEraA==">
         /* Flexbox body pushes footer to bottom on short pages */
         body {
             display: flex;
@@ -316,7 +316,7 @@
     
 
     
-    <style nonce="ilikdu74/2mGWxZaZjz15w==">
+    <style nonce="oPJoNHDReaTCQ9u0GxEraA==">
     #globalSimBanner {
         display: none;
         background: rgba(0, 207, 255,0.06);
@@ -378,7 +378,7 @@
     
     
     
-    <style nonce="ilikdu74/2mGWxZaZjz15w==">
+    <style nonce="oPJoNHDReaTCQ9u0GxEraA==">
         /* Page tokens, scoped to this page so the site header/footer keep the global theme */
         .clone-page {
             --bg-primary: #0a0e17;
@@ -529,7 +529,7 @@
     
 
     
-<link rel="stylesheet" href="fomo.css?v=1794085636"></head>
+<link rel="stylesheet" href="fomo.css?v=1794168174"></head>
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
     
@@ -540,11 +540,11 @@
 
 
 
-<style nonce="ilikdu74/2mGWxZaZjz15w==">
+<style nonce="oPJoNHDReaTCQ9u0GxEraA==">
 html.st-embed .chat-header,html.st-embed #agent-start,html.st-embed .footer-bar,html.st-embed #nexus-chat-widget,html.st-embed .skip-link,html.st-embed .content-back-btn,html.st-embed #agentPasteBar,html.st-embed .agent-paste-bar,html.st-embed #globalSimBanner{display:none!important}
 html.st-embed body,html.st-embed .main-content,html.st-embed .chat-container,html.st-embed .perpetual-main{padding-top:0!important}
 </style>
-<style nonce="ilikdu74/2mGWxZaZjz15w==">
+<style nonce="oPJoNHDReaTCQ9u0GxEraA==">
 /* Font already loaded via <link> in base_content.html — @import removed (was render-blocking + duplicate) */
 /* Fixed floating header - ensure consistent behavior across all pages */
 .chat-header {
@@ -1980,7 +1980,34 @@ body.no-header-padding .agent-paste-bar {
 
 
 
-<style nonce="ilikdu74/2mGWxZaZjz15w==">
+<style nonce="oPJoNHDReaTCQ9u0GxEraA==">
+.aia-wrap { margin: .25rem 0 .5rem; }
+.aia-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 8px; }
+.aia-btn { position: relative; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 10px;
+    background: var(--surface-2, rgba(13,21,32,0.7)); color: var(--text, rgb(230,237,243));
+    border: 1px solid var(--hairline-strong, rgba(0,150,255,0.15)); border-radius: 10px; cursor: pointer;
+    font: inherit; font-size: .9rem; text-align: left; transition: border-color .15s; }
+.aia-btn:hover { border-color: var(--accent, rgb(0,207,255)); }
+.aia-btn:focus-visible { outline: 2px solid var(--accent, rgb(0,207,255)); outline-offset: 2px; }
+.aia-logo { flex: 0 0 22px; width: 22px; height: 22px; border-radius: 5px; object-fit: contain; }
+/* mobile-polish.css centres every <img> (margin: 0 auto) at phone width; the logo sits left of its name */
+.aia-btn .aia-logo { margin: 0; max-width: none; height: 22px; }
+.aia-mask { background-color: currentColor; -webkit-mask: var(--aia-logo) center / contain no-repeat;
+    mask: var(--aia-logo) center / contain no-repeat; border-radius: 0; }
+.aia-l-chatgpt { --aia-logo: url('/static/img/ai-logos/openai.svg?v=20261108-1'); }
+.aia-l-claude { --aia-logo: url('/static/img/ai-logos/claude.svg?v=20261108-3'); }
+.aia-l-gemini { --aia-logo: url('/static/img/ai-logos/gemini.svg?v=20261108-3'); }
+.aia-l-muse { --aia-logo: url('/static/img/ai-logos/meta.svg?v=20261108-1'); }
+.aia-l-dot { --aia-logo: url('/static/img/ai-logos/newcomputer-dot.png?v=20261108-2'); }
+.aia-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aia-done { display: none; }
+.aia-btn.done { border-color: var(--positive, rgb(0,255,136)); }
+.aia-btn.done .aia-name { display: none; }
+.aia-btn.done .aia-done { display: inline; color: var(--positive, rgb(0,255,136)); }
+[data-theme="light"] .aia-btn.done .aia-done { color: rgb(4,120,87); }
+</style>
+
+<style nonce="oPJoNHDReaTCQ9u0GxEraA==">
 /* outlined, not filled: a page keeps its ONE filled accent button (design-token rule) */
 .apb-connect-btn, .thf-connect-btn { background: var(--surface); color: var(--accent); border: 1px solid var(--accent);
     border-radius: 10px; padding: .7rem 1.4rem; min-height: 44px; font-family: var(--font-display); font-size: 1rem;
@@ -2010,13 +2037,31 @@ body.no-header-padding .agent-paste-bar {
   <dialog class="apb-dlg" id="agentConnectDlg" aria-label="Give this to your AI agent to get started">
     <button type="button" class="apb-dlg-close" id="agentConnectClose" data-agent-connect-close aria-label="Close">&times;</button>
     <p class="apb-lead apb-dlg-lead" data-i18n="headlines.agent_start_lead">Copy this into ChatGPT, Claude, Meta Muse, Gemini or any AI agent. It connects to our AI agent, Nexus to get you started.</p>
+    <div class="aia-wrap">
+  <div class="aia-grid" role="group" aria-label="Copy the prompt for your AI">
+    <button type="button" class="aia-btn" data-ai-ask-copy="Read https://cymetica.com/ask?via=chatgpt&amp;q=I%20need%20my%20AI%20agent%20to%20start%20talking%20to%20the%20AI%20agent%20at%20cymetica.com/fomo-radar%20so%20they%20can%20collaborate%2C%20build%2C%20create%2C%20fix%20bugs%2C%20invent%2C%20innovate%20and%20find%20an%20edge%2C%20alpha%20or%20signal and give me the link it returns" data-ai-ask-via="chatgpt" aria-label="Copy the prompt for ChatGPT (OpenAI)" title="Copy for ChatGPT"><span class="aia-logo aia-mask aia-l-chatgpt" aria-hidden="true"></span><span class="aia-name">ChatGPT</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="Read https://cymetica.com/ask?via=claude&amp;q=I%20need%20my%20AI%20agent%20to%20start%20talking%20to%20the%20AI%20agent%20at%20cymetica.com/fomo-radar%20so%20they%20can%20collaborate%2C%20build%2C%20create%2C%20fix%20bugs%2C%20invent%2C%20innovate%20and%20find%20an%20edge%2C%20alpha%20or%20signal and give me the link it returns" data-ai-ask-via="claude" aria-label="Copy the prompt for Claude (Anthropic)" title="Copy for Claude"><span class="aia-logo aia-mask aia-l-claude" aria-hidden="true"></span><span class="aia-name">Claude</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="Read https://cymetica.com/ask?via=gemini&amp;q=I%20need%20my%20AI%20agent%20to%20start%20talking%20to%20the%20AI%20agent%20at%20cymetica.com/fomo-radar%20so%20they%20can%20collaborate%2C%20build%2C%20create%2C%20fix%20bugs%2C%20invent%2C%20innovate%20and%20find%20an%20edge%2C%20alpha%20or%20signal and give me the link it returns" data-ai-ask-via="gemini" aria-label="Copy the prompt for Gemini (Google)" title="Copy for Gemini"><span class="aia-logo aia-mask aia-l-gemini" aria-hidden="true"></span><span class="aia-name">Gemini</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="Read https://cymetica.com/ask?via=muse&amp;q=I%20need%20my%20AI%20agent%20to%20start%20talking%20to%20the%20AI%20agent%20at%20cymetica.com/fomo-radar%20so%20they%20can%20collaborate%2C%20build%2C%20create%2C%20fix%20bugs%2C%20invent%2C%20innovate%20and%20find%20an%20edge%2C%20alpha%20or%20signal and give me the link it returns" data-ai-ask-via="muse" aria-label="Copy the prompt for Muse (Meta)" title="Copy for Muse"><span class="aia-logo aia-mask aia-l-muse" aria-hidden="true"></span><span class="aia-name">Muse</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="Read https://cymetica.com/ask?via=dot&amp;q=I%20need%20my%20AI%20agent%20to%20start%20talking%20to%20the%20AI%20agent%20at%20cymetica.com/fomo-radar%20so%20they%20can%20collaborate%2C%20build%2C%20create%2C%20fix%20bugs%2C%20invent%2C%20innovate%20and%20find%20an%20edge%2C%20alpha%20or%20signal and give me the link it returns" data-ai-ask-via="dot" aria-label="Copy the prompt for Dot (New Computer)" title="Copy for Dot"><span class="aia-logo aia-mask aia-l-dot" aria-hidden="true"></span><span class="aia-name">Dot</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="Read https://cymetica.com/ask?via=openclaw&amp;q=I%20need%20my%20AI%20agent%20to%20start%20talking%20to%20the%20AI%20agent%20at%20cymetica.com/fomo-radar%20so%20they%20can%20collaborate%2C%20build%2C%20create%2C%20fix%20bugs%2C%20invent%2C%20innovate%20and%20find%20an%20edge%2C%20alpha%20or%20signal and give me the link it returns" data-ai-ask-via="openclaw" aria-label="Copy the prompt for OpenClaw (OpenClaw)" title="Copy for OpenClaw"><img class="aia-logo" src="https://cymetica.com/static/img/ai-logos/openclaw.svg?v=20261108-1" alt="" width="22" height="22" loading="lazy" decoding="async"><span class="aia-name">OpenClaw</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="Read https://cymetica.com/ask?via=hermes&amp;q=I%20need%20my%20AI%20agent%20to%20start%20talking%20to%20the%20AI%20agent%20at%20cymetica.com/fomo-radar%20so%20they%20can%20collaborate%2C%20build%2C%20create%2C%20fix%20bugs%2C%20invent%2C%20innovate%20and%20find%20an%20edge%2C%20alpha%20or%20signal and give me the link it returns" data-ai-ask-via="hermes" aria-label="Copy the prompt for Hermes (Nous Research)" title="Copy for Hermes"><img class="aia-logo" src="https://cymetica.com/static/img/ai-logos/nous-research.png?v=20261108-1" alt="" width="22" height="22" loading="lazy" decoding="async"><span class="aia-name">Hermes</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+  </div>
+</div>
     <div class="apb-box">
       <code class="apb-text" id="agentPasteText">I need my AI agent to start talking to the AI agent at cymetica.com/fomo-radar so they can collaborate, build, create, fix bugs, invent, innovate and find an edge, alpha or signal</code>
       <button type="button" class="apb-copy" id="agentPasteCopy" aria-label="Copy the prompt for your AI agent">Copy</button>
     </div>
     
     
-    <p class="apb-note apb-paths">Agent with tools? It can connect to ours directly: MCP <code>https://cymetica.com/mcp/v1</code> → <code>agent_onboard</code> (account, your own Tuatara deposit address — no application — and a setup in one call), or IRC <code>ircs://cymetica.com:6697</code> (<a href="https://cymetica.com/agents/irc">how</a>). Using ChatGPT, Claude or Gemini? Paste: <code>Read https://cymetica.com/ask?via=chatgpt&amp;q=grow $100 with low risk and give me the link it returns</code>. Or choose capital, hold period and risk yourself on <a href="https://cymetica.com/trade-setup">Trade setup</a>.</p>
+    <p class="apb-note apb-paths">Agent with tools? It can connect to ours directly: MCP <code>https://cymetica.com/mcp/v1</code> → <code>agent_onboard</code> (account, your own Tuatara deposit address — no application — and a setup in one call), or IRC <code>ircs://cymetica.com:6697</code> (<a href="https://cymetica.com/agents/irc">how</a>). Or choose capital, hold period and risk yourself on <a href="https://cymetica.com/trade-setup">Trade setup</a>.</p>
   </dialog>
 </section>
 
@@ -2935,7 +2980,7 @@ body.no-header-padding .agent-paste-bar {
   <section class="fr-hero" id="top">
     <div class="fr-hl">
       <div class="fr-pill"><i></i><span id="heroPill">Reading the chain…</span></div>
-      <h1>Proven wallets.<br>What they buy.<br><em>Right now.</em></h1>
+      <h1>Memecoin whales.<br>What they buy.<br><em>Right now.</em></h1>
       <p class="fr-lead">Every buyer weighted by their own on-chain track record, never by dollar size.
         <button type="button" class="fr-more" data-fold="about" aria-expanded="false">How it works</button></p>
       <div class="fr-fold" id="fold-about" hidden>
@@ -3117,7 +3162,7 @@ body.no-header-padding .agent-paste-bar {
 
     
     
-<style nonce="ilikdu74/2mGWxZaZjz15w==">
+<style nonce="oPJoNHDReaTCQ9u0GxEraA==">
 #authModal .am-content{max-width:500px}
 #authModal .am-close{z-index:10;position:absolute;top:16px;right:16px}
 #authModal .am-title{color:var(--accent-cyan);margin-bottom:1.5rem;font-family:var(--font-display)}
@@ -3297,7 +3342,7 @@ body.no-header-padding .agent-paste-bar {
 
     
     
-    <style nonce="ilikdu74/2mGWxZaZjz15w==">
+    <style nonce="oPJoNHDReaTCQ9u0GxEraA==">
     /* Footer Bar Styles - Static bottom navigation */
     .footer-bar {
         display: flex;
@@ -3713,5 +3758,5 @@ body.no-header-padding .agent-paste-bar {
     
     
     
-<script src="fomo.js?v=1794085636"></script></body>
+<script src="fomo.js?v=1794168174"></script></body>
 </html>
