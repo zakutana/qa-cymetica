@@ -4,7 +4,7 @@ Asked for by the operator from 2026-11-05 to 2026-11-07, scored on his eye; fina
 
 **Open:** `python scripts/serve_mock.py outbox/casino-v9 8843`, then http://127.0.0.1:8843/ (table page: /table.html). The clocks run from the snapshot time (data.js `readAt`, 2026-11-07 16:19 UTC).
 
-**request.txt:** about 5,700 of 8,000 characters, 32 of 40 lines, 6 of 6 pictures (`pictures/`, shot by Playwright from the mock at 1440 px and 390 px).
+**request.txt:** about 6,500 of 8,000 characters, 34 of 40 lines, 6 of 6 pictures (`pictures/`, shot by Playwright from the mock at 1440 px and 390 px).
 
 **Form followed:** ET-33881 (SOURCE folder, MUST STAY AS DRAWN, pictures) with ET-33648's casino voice (goals with the table numbers that show them).
 
