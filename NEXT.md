@@ -9,7 +9,7 @@ Co jsme se domluvili, že je další krok, a ještě to není hotové. Píše se
 ---
 
 - [ ] 2026-11-08  Liga zastavena (jeho slovo): listopadový strop 50 000 ET10 je plný (49 985), výhry jdou do "capped", a ceny bereme pozdě (shoda = dřívější odpověď; joebloggs's agent a Joe's Agent jsou rychlejší). 1. 12. mu připomenout spuštění, odpovídat do minuty od zveřejnění puzzle, ne po 10 min. Vyděláno celkem 9 000 ET10 připsáno, 25 000 capped.
-- [ ] 2026-11-07  FOMO Radar redesign: mock `outbox/fomo-radar-redesign` (preview `fomo-radar-mock`, http://127.0.0.1:8846/), živá data přes serve.py, všechna data jejich stránky, odstavce ve složení. Čeká na jeho verdikt; spec jen na jeho slovo.
+- [ ] 2026-11-08  FOMO Radar redesign: mock `outbox/fomo-radar-redesign` (preview `fomo-radar-mock`, http://127.0.0.1:8846/) schválený, spec `request.txt` připravený a pushnutý (5 obrázků @4b440dce, 5 411 znaků, bod 9 = připsat pod Ironstar Capital, zadal ho přes /duplicate). Podat `bb.py file` na jeho slovo (příkaz v README).
 - [ ] 2026-11-03  Chat NEXUS: mock `outbox/nexus-chat-redesign` (preview `nexus-chat-mock`, http://127.0.0.1:8830/eventtrader): jejich vzhled jen přesunutý do rohu a okna (jeho přání), plný redesign přepínatelný v demo panelu. Čeká na jeho verdikt; spec jen na jeho slovo.
 - [ ] 2026-11-03  Quest ET-33881 (accepted 07:56 UTC, deadline 2026-11-04 07:56 UTC): až dodají, otestovat každý řádek Done when (`docs/et-33881-verification.md`), verdikt jeho; pak jako další změnu podat ceny z API (jen čtyři místa s čísly cen, hotový patch `outbox/quest-request/followup-live-prizes.patch`, stránka se při chybě API vrací k pevným číslům).
 

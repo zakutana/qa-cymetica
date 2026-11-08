@@ -9,7 +9,7 @@ Asked for by the operator on 2026-11-07, in their words: *"musis zachovat vesker
 - **Basic** (pictures 1, 2): the headline, the radar, Smart wallets are buying (12 cards, picture 4), Smart money selling, the launchpad promotion, and Best wallets: what they made (picture 5).
 - **Advanced** (picture 3): everything your page shows today, with every paragraph folded behind its i or How it works.
 
-**request.txt:** 5,374 of 8,000 characters, 22 of 40 lines, 5 of 6 pictures (`bb.py` checked it).
+**request.txt:** 5,411 of 8,000 characters, 22 of 40 lines, 5 of 6 pictures (`bb.py` checked it).
 
 | | |
 |---|---|
