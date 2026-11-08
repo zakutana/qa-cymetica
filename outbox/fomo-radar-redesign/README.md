@@ -13,8 +13,8 @@ Asked for by the operator on 2026-11-07, in their words: *"musis zachovat vesker
 
 | | |
 |---|---|
-| Ticket | not filed yet (waits for the operator's word) |
-| Filed | |
+| Ticket | ET-34609 (BB-0047) |
+| Filed | 2026-11-08 20:11 UTC on the operator's word ("Podej to"); BB-SPEC proposed |
 | Accepted, deadline | |
 | Shipped | |
 | Verdict | |
