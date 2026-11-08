@@ -420,3 +420,6 @@ main.content-main { background: radial-gradient(1200px 700px at 78% 120px, rgba(
   .pk-p b { font-size: 32px; }
   .fr-copygrid { grid-template-columns: 1fr 1fr; }
 }
+@media (max-width: 600px) {
+  .fr-copygrid { grid-template-columns: 1fr; }
+}

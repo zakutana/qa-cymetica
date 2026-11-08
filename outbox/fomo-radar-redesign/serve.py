@@ -22,6 +22,31 @@ API = "/api/v1/clones/fomo-radar/"
 TYPES = {".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8",
          ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png", ".webp": "image/webp"}
 QUIET = "--quiet" in sys.argv
+# --snap: answer from snapshot/ (their API read 2026-11-08 19:18 UTC, 221 tokens, window 67 min) where a file exists,
+# for pictures that do not depend on the moment; port 8847 so the live preview keeps running
+SNAP = HERE / "snapshot" if "--snap" in sys.argv else None
+if SNAP:
+    PORT = 8847
+FLAG = {"hot": "hot", "fresh": "fresh", "exits": "exit_signal"}
+
+
+def snapshot(path: str) -> bytes | None:
+    from urllib.parse import parse_qs, urlsplit
+    import json
+    u = urlsplit(path)
+    q = {k: v[0] for k, v in parse_qs(u.query).items()}
+    name = u.path[len(API):].strip("/")
+    f = SNAP / (f"{name}-{q['chain']}.json" if "chain" in q else f"{name}.json")
+    if not f.is_file():
+        return None
+    if name != "signals" or q.get("filter", "all") == "all":
+        return f.read_bytes()
+    d = json.loads(f.read_text(encoding="utf-8"))
+    d["rows"] = [r for r in d["rows"] if r.get(FLAG.get(q["filter"], ""))]
+    d["filter"], d["count"] = q["filter"], len(d["rows"])
+    return json.dumps(d).encode()
+
+
 _cache: dict[str, tuple[float, int, bytes]] = {}
 _lock = threading.Lock()
 
@@ -68,7 +93,8 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self, head: bool = False):
         path = self.path
         if path.startswith(API):
-            status, body = upstream(path)
+            snap = snapshot(path) if SNAP else None
+            status, body = (200, snap) if snap is not None else upstream(path)
             return self._send(status, "application/json; charset=utf-8", body, head)
         bare = path.split("?")[0].split("#")[0]
         rel = "index.html" if bare in ("/", "") else bare.lstrip("/")
