@@ -15,6 +15,6 @@ Asked for by the operator on 2026-11-07, in their words: *"musis zachovat vesker
 |---|---|
 | Ticket | ET-34609 (BB-0047) |
 | Filed | 2026-11-08 20:11 UTC on the operator's word ("Podej to"); BB-SPEC proposed |
-| Accepted, deadline | |
+| Accepted, deadline | BB-CHANGE C1 (change-1.txt: same address, keeps the name FOMO Radar) and BB-ACCEPT (BB-0049) on the operator's word, 2026-11-08 20:13 UTC; deadline 2026-11-09 20:13 UTC |
 | Shipped | |
 | Verdict | |

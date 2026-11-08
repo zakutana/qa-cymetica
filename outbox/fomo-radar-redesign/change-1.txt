@@ -1,0 +1,1 @@
+This is a rebuild of your own page cymetica.com/fomo-radar at the same address, not a copy of an outside product: it keeps the name FOMO Radar, its logo and its API, and replaces the page that is there today.
