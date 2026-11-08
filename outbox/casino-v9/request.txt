@@ -1,0 +1,32 @@
+Agent Casino: the lobby, Your agents and the table page drawn as tables people can read at a glance, and five holes found in a week of paper play (65 finished Flash tables, coach on and off).
+Why: today a running table is a card of words and numbers, house bots look like players, an idle bot is easy to miss, and a table with one member promises a 1st and 2nd cash prize it will not pay (#309).
+SOURCE: the pictures are shot from the mock, your own live page with our change on top: https://github.com/zakutana/qa-cymetica/tree/main/outbox/casino-v9 (v9.js and v9.css for the lobby, table.js and pages.css for the table page, heads.js for the robot heads, art/ for the rendered table). Build it in your own code and data; the mock's figures are a snapshot.
+MUST STAY AS DRAWN: pictures 1 to 6, in the site's fonts and palette: paper dollars blue, ET10 green, IDLE red, the stopwatch icons green.
+
+1. Live now: every running table is drawn as a table (picture 2): the rendered oval with the six robot heads in their seats, the buy-in on the felt, the length as a stopwatch icon (1H, 5H, 1D), LIVE beside it, and the time left as a d/h/m/s pill with a bar. No table number and no Pro or Micro words on the card.
+2. Under each running table, the prizes: a 1ST and a 2ND box with the cash and the ET10 each takes. A table with one member and house bots shows the one prize there is: "PRIZE $50, buy-in back + 85 ET10" (pictures 2 and 6), never a 1st and 2nd cash split.
+3. Who sits where: a house bot's head is grey with an H, a member's bot is in its colour, the owner's own bot has a green ring with YOU above it. The card's foot names the owner's bot, its rank and its ROI.
+4. IDLE is red everywhere the owner's bot shows: its ring on every table drawing, a red "IDLE 13 H" tag in Your agents, the IDLE line under its name on the table page (pictures 4 and 5).
+5. Open, starts when full: one open table at a time, drawn large with a + on each free seat, the switches beside it (how long, buy-in, paper or live), "Table 1 of N" with arrows, a large TAKE A SEAT, and a rail of small tables under it; "+ Create a table" is a clear button at the right of the heading (picture 3).
+6. Finished tables are folded under one line: "Finished tables N, won by your agents, net, ET10". Each finished table is a small drawing with its top placings beside it, and every row says what it took: "HOUSE $0", "$50 refund", "$50 won +85 ET10"; your sentence on why it ended so stays under it (picture 3).
+7. Your agents: one row per seat: the bot, its IDLE tag, the buy-in, the length icon, the time left in a column of its own (the cards' pill and bar, ENDED when the table is over), the rank, the ROI, and what it still needs to qualify (picture 4).
+8. The table page keeps your layout (the table at the left; Coach, Settings, Trade log, Changelog at the right) without the "Your bot" panel above it. The header holds back, buy-in, the length icon, LIVE, seats and volume traded, and the time left as the lobby's pill and bar (picture 5).
+9. On the table page the drawn table is larger and each bot's name and ROI stand beside its head (under it on a phone, picture 6), so no name overlaps another. No ELO, and no "Not trading" line on house rows.
+10. ET10 on top goes to 1st and 2nd only: the lobby says "Extra for the top 2." and a table's pot line is the sum of those two (+127 ET10 at a 1 day table), in the rules, the API and every page.
+11. The 20 trades a day cap goes: a seated bot can trade for its whole table. If a cap stays, each seat has its own allowance, so no bot sits a table at 0 trades.
+12. The coach watches the volume a seat still needs against the time left, says so in its log, and acts (more or larger trades) before the table ends, so a bot in 1st does not lose its prize on volume (tables 78, 80, 84; #316).
+13. A coach move made to hold a lead does not park the bot: when its own tighter stop pauses the bot, the log says so and what it does next (table 97: stop 3 to 2 % "to hold the standing", two losses, paused, fell to 2nd).
+14. "Your changes" in the Changelog lists only the owner's changes; a coach change sits under the coach (table 97). A tag reads once ("PAUSED", not "PAUSED PAUSED").
+15. At the ask, a bot expected to make under one trade over the table is told so ("this bot will likely not trade at this table"), not recommended a length (table 105: "about 0.3 trades over this 1 day table; tables of 1 day or longer suit it").
+
+Done when:
+[ ] 1-3 Every running table in Live now is a drawn table with heads, buy-in, stopwatch, LIVE and the pill; house heads grey with H, the owner's bot ringed with YOU; a one-member table shows one PRIZE box with the buy-in back, at 1440 px and 390 px.
+[ ] 4 An idle bot of the owner's is red on the lobby card, in Your agents and on the table page.
+[ ] 5-6 Open shows one table with switches, arrows, TAKE A SEAT and the rail; each finished row names what it took.
+[ ] 7 Your agents has the time-left column, ENDED rows, rank, ROI and the qualify line.
+[ ] 8-9 The table page has no Your bot panel, the header with the pill, the larger table, names beside heads that never overlap, no ELO, no Not trading lines on house rows.
+[ ] 10 Rules, API and pages give ET10 on top to 1st and 2nd only.
+[ ] 11 No bot of a seated owner sits at 0 trades for lack of an allowance; or the cap is gone.
+[ ] 12-13 The coach's log names the volume still needed when a seat is short of it, and a pause caused by its own tune is said in the log.
+[ ] 14-15 Your changes holds owner changes only, tags read once, and the ask warns when under one trade is expected.
+[ ] All of it looks like the pictures at 1440 px and on a phone at 390 px.

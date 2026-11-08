@@ -1,6 +1,9 @@
 /* Agent Casino v9, a table's own page: their page as it is, laid out as theirs; only the table drawing is ours, the
    rendered table of the lobby with their seats on it. Every figure is read off their own markup. Buttons do nothing. */
 (function () {
+  /* the mock's clock: it runs from when the data was read (data.js readAt), so the countdowns stay what they were */
+  var T0 = Date.parse((window.CASINO || {}).readAt || '') || Date.now(), L0 = Date.now();
+  var now = function () { return T0 + Date.now() - L0; };
   var G = window.CASINO_TABLE;
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
@@ -27,6 +30,16 @@
     var spots = $$('.at-spots .sp', tbl).slice(0, 2).map(function (sp) {
       return '<span class="sp"><i>' + esc(txt($('.k', sp))) + '</i><b>' + esc(txt($('b', sp))) + '</b><em>' + esc(txt($('.e', sp))) + '</em></span>';
     }).join('');
+    /* one member and house bots: the prize is that buy-in back, whatever the rank (/rules one_member_table, #309);
+       their felt and their prize row still list 1ST and 2ND cash, ours show the one prize there is */
+    var firstEt = txt($('.at-spots .sp .e', tbl));
+    if (seats.filter(function (s) { return !s.empty && !s.house; }).length === 1 && pot.v) {
+      var back = 'buy-in back' + (firstEt ? ' ' + firstEt : '');
+      if (firstEt) pot.s = firstEt;
+      spots = '<span class="sp"><i>PRIZE</i><b>' + esc(pot.v) + '</b><em>' + esc(back) + '</em></span>';
+      var c3 = $('.at-big .at-c3');
+      if (c3) { c3.classList.remove('two'); c3.innerHTML = '<div class="w" role="listitem"><span class="k">PRIZE</span><b>' + esc(pot.v) + '</b><span class="e">' + esc(back) + '</span></div>'; }
+    }
 
     var f = G.felt, P = function (p) { return [p[0] * PW, p[1] * PH]; };
     var a = P(f.tl), b = P(f.tr), c = P(f.br), d = P(f.bl);
@@ -75,7 +88,7 @@
   var pad = function (n) { return (n < 10 ? '0' : '') + n; };
   function tick() {
     $$('.at-cdn[data-end]').forEach(function (el) {
-      var left = Math.max(0, Date.parse(el.getAttribute('data-end')) - Date.now());
+      var left = Math.max(0, Date.parse(el.getAttribute('data-end')) - now());
       var parts = { d: Math.floor(left / 864e5), h: Math.floor(left / 36e5) % 24, m: Math.floor(left / 6e4) % 60, s: Math.floor(left / 1e3) % 60 };
       ['d', 'h', 'm', 's'].forEach(function (u) {
         var e = $('[data-u="' + u + '"]', el);
@@ -84,7 +97,7 @@
     });
     $$('.at-pb[data-start]').forEach(function (el) {
       var s = Date.parse(el.getAttribute('data-start')), e = Date.parse(el.getAttribute('data-end')), i = $('i', el);
-      if (i && e > s) i.style.width = Math.min(100, Math.max(0, (Date.now() - s) / (e - s) * 100)).toFixed(1) + '%';
+      if (i && e > s) i.style.width = Math.min(100, Math.max(0, (now() - s) / (e - s) * 100)).toFixed(1) + '%';
     });
   }
   tick(); setInterval(tick, 1000);

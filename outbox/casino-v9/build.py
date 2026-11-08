@@ -15,6 +15,7 @@ import json
 import re
 import shutil
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 from bs4 import BeautifulSoup
@@ -275,6 +276,8 @@ def leaderboard_page() -> str:
 
 def main() -> int:
     results = V7.results()
+    # the mock's clocks run from the moment the data was read, so a picture taken later still shows time left
+    results["readAt"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     page, data = assemble(anonymous_page())
     written = json.dumps(data, ensure_ascii=False)
     text = json.dumps(results, ensure_ascii=False)

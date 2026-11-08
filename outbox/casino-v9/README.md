@@ -1,0 +1,22 @@
+# Agent Casino v9 (mock and spec)
+
+Asked for by the operator from 2026-11-05 to 2026-11-07, scored on his eye; final review 2026-11-07 (*"jinak uz mi vse prijde dobre"*), spec prepared 2026-11-08 on his "Yes, prepare it". Filing is his word.
+
+**Open:** `python scripts/serve_mock.py outbox/casino-v9 8843`, then http://127.0.0.1:8843/ (table page: /table.html). The clocks run from the snapshot time (data.js `readAt`, 2026-11-07 16:19 UTC).
+
+**request.txt:** about 5,700 of 8,000 characters, 32 of 40 lines, 6 of 6 pictures (`pictures/`, shot by Playwright from the mock at 1440 px and 390 px).
+
+**Form followed:** ET-33881 (SOURCE folder, MUST STAY AS DRAWN, pictures) with ET-33648's casino voice (goals with the table numbers that show them).
+
+**File:**
+```bash
+python scripts/bb.py file --app-url https://cymetica.com/agent-casino --improvements-file outbox/casino-v9/request.txt --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/casino-v9/pictures/picture-1-lobby.webp --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/casino-v9/pictures/picture-2-live-now.webp --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/casino-v9/pictures/picture-3-open-and-finished.webp --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/casino-v9/pictures/picture-4-your-agents.webp --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/casino-v9/pictures/picture-5-table.webp --design-url https://raw.githubusercontent.com/zakutana/qa-cymetica/main/outbox/casino-v9/pictures/picture-6-phone.webp --confirm
+```
+
+| | |
+|---|---|
+| Ticket | not filed yet |
+| Filed | |
+| Accepted, deadline | |
+| Shipped | |
+| Verdict | |

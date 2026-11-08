@@ -2,6 +2,9 @@
    Finished folded, one card per table. Buttons do nothing. Every figure comes from lobby.js (their markup and the owner's)
    or data.js (our results). */
 (function () {
+  /* the mock's clock: it runs from when the data was read (data.js readAt), so the countdowns stay what they were */
+  var T0 = Date.parse((window.CASINO || {}).readAt || '') || Date.now(), L0 = Date.now();
+  var now = function () { return T0 + Date.now() - L0; };
   var L = window.CASINO_LOBBY, D = window.CASINO, G = window.CASINO_TABLE;
   var HOST = 'https://cymetica.com';
   var root = document.getElementById('v9');
@@ -37,6 +40,13 @@
     (t.seats || []).forEach(function (s) { if (s && s.bot && s.colour) faces[species(s.bot)] = { colour: s.colour, shape: s.shape }; });
   });
   D.bots.forEach(function (b) { if (b.avatar && b.avatar.color) faces[species(b.bot)] = faces[species(b.bot)] || { colour: b.avatar.color, shape: b.avatar.shape }; });
+
+  /* a running table with one paid seat pays that buy-in back, whatever the rank (/rules one_member_table, #309):
+     their card still lists 1ST and 2ND cash, so ours shows the one prize there is */
+  L.live.forEach(function (t) {
+    if (!t.buy || t.pot !== t.buy || !t.prizes || !t.prizes.length) return;
+    t.prizes = [{ place: 'PRIZE', cash: t.buy, unit: t.unit, extra: 'buy-in back ' + (t.prizes[0].extra || '') }];
+  });
 
   /* ---------------------------------------------------------------- the table: everything inside the card */
   var PW = 890, PH = PW * G.h / G.w, FW = 420, FH = 180;
@@ -77,7 +87,7 @@
      C edge: 19h 21m left in small type, the progress as a line along the card's top edge.  D quiet: 19h 21m left, nothing else. */
   var CLOCKS = { a: 'Pill', b: 'Ring', c: 'Edge', d: 'Quiet' };
   var clockStyle = 'a';
-  try { clockStyle = localStorage.getItem('v9-clock') || 'a'; } catch (e) { /* first visit */ }
+  /* A won (the pill and a bar); the B to D proposals and their switch are gone */
   function clockHtml(t) {
     var span = ' data-start="' + esc(t.start) + '" data-end="' + esc(t.end) + '"';
     if (clockStyle === 'b') return '<div class="clock cb"><svg class="v9-ring"' + span + ' viewBox="0 0 36 36" aria-hidden="true"><circle class="tr" cx="18" cy="18" r="15"/><circle class="rg" cx="18" cy="18" r="15" pathLength="100" stroke-dasharray="0 100" transform="rotate(-90 18 18)"/></svg><span class="txt">' + cdn(t.end) + '<small>left</small></span></div>';
@@ -351,7 +361,7 @@
   var pad = function (n) { return (n < 10 ? '0' : '') + n; };
   function tick() {
     $$('.at-cdn[data-end]').forEach(function (el) {
-      var left = Math.max(0, Date.parse(el.getAttribute('data-end')) - Date.now());
+      var left = Math.max(0, Date.parse(el.getAttribute('data-end')) - now());
       var parts = { d: Math.floor(left / 864e5), h: Math.floor(left / 36e5) % 24, m: Math.floor(left / 6e4) % 60, s: Math.floor(left / 1e3) % 60 };
       ['d', 'h', 'm', 's'].forEach(function (u) {
         var b = $('[data-u="' + u + '"]', el);
@@ -361,11 +371,11 @@
     $$('.at-pb[data-start]').forEach(function (el) {
       var a = Date.parse(el.getAttribute('data-start')), b = Date.parse(el.getAttribute('data-end'));
       var i = $('i', el);
-      if (i && b > a) i.style.width = Math.min(100, Math.max(0, (Date.now() - a) / (b - a) * 100)).toFixed(1) + '%';
+      if (i && b > a) i.style.width = Math.min(100, Math.max(0, (now() - a) / (b - a) * 100)).toFixed(1) + '%';
     });
     $$('.v9-ring[data-start]').forEach(function (el) {
       var a = Date.parse(el.getAttribute('data-start')), b = Date.parse(el.getAttribute('data-end')), rg = $('.rg', el);
-      if (rg && b > a) rg.setAttribute('stroke-dasharray', Math.min(100, Math.max(0, (b - Date.now()) / (b - a) * 100)).toFixed(1) + ' 100');
+      if (rg && b > a) rg.setAttribute('stroke-dasharray', Math.min(100, Math.max(0, (b - now()) / (b - a) * 100)).toFixed(1) + ' 100');
     });
   }
 
@@ -390,7 +400,6 @@
   paintLive();
   agentClocks();
   paintOpen();
-  clockPicker();
   tick();
   tab(location.hash === '#agents' ? 'agents' : 'lobby');
   setInterval(tick, 1000);
