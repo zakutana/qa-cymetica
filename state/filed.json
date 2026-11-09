@@ -6580,6 +6580,62 @@
     "317": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "traffic-column-head-tooltips-are-cut-off-by-the-table",
+   "nodeids": [],
+   "report_ids": [
+    318
+   ],
+   "title": "/traffic: the tooltip on every table column head is cut off by the table's scroll box, so what a head counts cannot be read (the six tile tooltips work)",
+   "filed_at": "2026-11-09T16:36:17+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "318": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "traffic-range-switch-panels-take-4-to-38-s",
+   "nodeids": [],
+   "report_ids": [
+    319
+   ],
+   "title": "/traffic: after a range click the Volume chart takes 3.6-6.0 s and the Apps table 3.6-38 s; /api/v1/app-usage?days=30 answers in 13.9 s and days=90 in 22.3 s",
+   "filed_at": "2026-11-09T16:36:56+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "319": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "capital-maximizer-has-uses-and-no-people-again",
+   "nodeids": [],
+   "report_ids": [
+    320
+   ],
+   "title": "Capital Maximizer: 4 to 8 uses by 0 unique visitors in every range, and 0 people against 2 on its own page (/traffic Your apps, /api/v1/company/products)",
+   "filed_at": "2026-11-09T16:37:09+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "320": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "traffic-product-shows-fewer-people-than-its-own-page-at-30-and-90-days",
+   "nodeids": [],
+   "report_ids": [
+    321
+   ],
+   "title": "/traffic Your apps: at 30 days four products show fewer unique visitors than their own page, at 90 days five (Team Dump Radar 46 against 72), under a tooltip that says this cannot happen",
+   "filed_at": "2026-11-09T16:37:33+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "321": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

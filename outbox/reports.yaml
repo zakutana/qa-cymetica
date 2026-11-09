@@ -9028,6 +9028,103 @@ reports:
       deposit platform that keeps money it admits it took in error cannot be trusted with the next deposit. Return 111.220977 USDC to
       0xC9c69CA8C4932bb6cC83d50aC9A427d10598109B, show the return in the ledger, and give the user a date. Read only; nothing was written.
 
+  - key: traffic-column-head-tooltips-are-cut-off-by-the-table
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/traffic
+    title: "/traffic: the tooltip on every table column head is cut off by the table's scroll box, so what a head counts cannot be read (the six tile tooltips work)"
+    expected: >
+      Hovering (or on a phone tapping) the ? beside a column head, for example Came back in the Apps table, shows the whole
+      tooltip text, as the tiles do.
+    actual: >
+      Read on 2026-11-09 in Chromium at 1440 px and at 390 px (touch). The ? button sits inside a div with class tl-scroll, whose
+      computed overflow is auto/auto. Its tooltip (the button's ::after, display block, width 260px, top -84px) opens above the head,
+      outside that box, so the scroll box cuts it and only a sliver of its bottom edge is drawn. The same holds for the heads of Apps,
+      Your apps, Actions taken and Your pages (all inside tl-scroll). On a phone the tap does set class "open" on the button, and the
+      box is still cut. The ? on the six tiles (not inside a scroll box) shows its text in full.
+    steps:
+      - 'Open https://cymetica.com/traffic at 1440 px wide, hover the ? next to "Came back" in the Apps table -> a thin strip of a box above the head, no readable text; element.closest(".tl-scroll") has overflow auto/auto'
+      - 'Open the page at 390 px with touch, tap the ? next to "Unique visitors" in Apps -> the button gets class open, getComputedStyle(button, "::after").display is block, the text is still not visible'
+      - 'Hover the ? on the Bots filtered tile -> the whole text shows'
+    body: >
+      The build of Build it Better request ET-34607 lists "every tile and column head shows what it counts on hover, and on a tap
+      on a phone". For column heads the text exists in the page and cannot be read. Letting the box overflow, or drawing the tip in
+      a fixed-position element outside the scroll box, would show it. Read only; nothing was written.
+
+  - key: traffic-range-switch-panels-take-4-to-38-s
+    severity: medium
+    category: performance
+    url: https://cymetica.com/traffic
+    title: "/traffic: after a range click the Volume chart takes 3.6-6.0 s and the Apps table 3.6-38 s; /api/v1/app-usage?days=30 answers in 13.9 s and days=90 in 22.3 s"
+    expected: >
+      After clicking 7, 14, 30 or 90 days the new charts are drawn within 2 s (the Done when line of Build it Better request
+      ET-34607).
+    actual: >
+      Read on 2026-11-09, anonymous Chromium at 1440 px, each range clicked on a fresh page load. Loading appears after 1 ms
+      (that part works). Time until each panel's Loading is gone: 7 days: Volume generated and What visitors do 3,624 ms, Apps
+      3,645 ms, the tiles and Visitors over time 3,728 ms. 30 days: tiles and Visitors over time 1,364 ms, Volume generated
+      5,972 ms, Apps 38,279 ms. 90 days: tiles and Visitors over time 405 ms, Apps 13,505 ms. GET with the account's key, first
+      read of each range: /api/v1/app-usage?days=7 6.13 s, days=30 13.91 s, days=90 22.31 s; /api/v1/traffic/mine?days=7 3.53 s,
+      days=30 15.80 s, days=90 12.60 s. The default 14 days answers in 0.34 s, and a range read again a minute later in about 0.4 s,
+      so it is the first read after the cache expires that waits. /api/v1/traffic/activity?days=90 answers 200 in 1.77 s (it
+      answered 503 on 6 Nov).
+    steps:
+      - 'GET https://cymetica.com/api/v1/app-usage?days=30 (first read of the range) -> 200 after 13.91 s; days=90 -> 22.31 s'
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=30 with the account''s key (first read) -> 200 after 15.80 s'
+      - 'Open https://cymetica.com/traffic, click 30 days -> Loading on every panel at once, Apps table drawn after 38 s on one run'
+    body: >
+      The chips now answer at once and the 90-day activity call no longer fails, which is the larger part of the request. The
+      Apps and Your traffic panels still sit on Loading for 4-38 s on the first click of a range. Read only; nothing was written.
+
+  - key: capital-maximizer-has-uses-and-no-people-again
+    severity: medium
+    category: logic
+    url: https://cymetica.com/traffic
+    title: "Capital Maximizer: 4 to 8 uses by 0 unique visitors in every range, and 0 people against 2 on its own page (/traffic Your apps, /api/v1/company/products)"
+    expected: >
+      A product with uses has at least one person who used it, and a product never shows fewer people than its own page.
+    actual: >
+      Read on 2026-11-09. GET /api/v1/traffic/mine?days=7, 14, 30 and 90, item Capital Maximizer (/capital-maximizer):
+      unique_visitors 0, page_unique_visitors 2, came_back_pct null, app_beacon visitors 0 and uses 4 (7 days) or 8 (14, 30 and 90
+      days). The /traffic Your apps row at 14 days reads "11 | Capital Maximizer | 0 | - | 8 | 3" (unique visitors 0, came back
+      none, uses 8, page views 3). GET /api/v1/company/products (30 days) says unique_visitors 0, visitors 0, uses 8, views 11.
+      This is the defect of bug report #252 (Infiltrator: 0 unique visitors and 18 uses), which is fixed for Infiltrator
+      (now 8 visitors and 18 uses at 30 days) and still present for Capital Maximizer.
+    steps:
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=14 with the account''s key -> items[label "Capital Maximizer"]: unique_visitors 0, page_unique_visitors 2, app_beacon {"visitors": 0, "uses": 8}'
+      - 'GET https://cymetica.com/api/v1/company/products -> products[name "Capital Maximizer"]: unique_visitors 0, uses 8, views 11'
+      - 'Open https://cymetica.com/traffic signed in, Your apps -> the Capital Maximizer row shows 0 people and 8 uses'
+    body: >
+      Eight uses cannot come from nobody, and the page's own visitor count for it is higher (2) than the product's (0). Read only;
+      nothing was written.
+
+  - key: traffic-product-shows-fewer-people-than-its-own-page-at-30-and-90-days
+    severity: medium
+    category: logic
+    url: https://cymetica.com/traffic
+    title: "/traffic Your apps: at 30 days four products show fewer unique visitors than their own page, at 90 days five (Team Dump Radar 46 against 72), under a tooltip that says this cannot happen"
+    expected: >
+      As the Unique visitors tooltip on Your apps says, "a product never shows fewer people than one of its pages", for 7, 14, 30
+      and 90 days.
+    actual: >
+      Read on 2026-11-09, GET /api/v1/traffic/mine?days=D, items of kind app, unique_visitors (the whole product) against
+      page_unique_visitors (its own page). 30 days: Chart Analyzer 120 against 121, Supply Analyzer 16 against 17, Airdrop Farmer
+      30 against 33, Infiltrator 8 against 9. 90 days: Team Dump Radar 46 against 72, Chart Analyzer 144 against 145, Supply
+      Analyzer 23 against 24, Airdrop Farmer 30 against 33, Infiltrator 8 against 9. At 7 and 14 days only Capital Maximizer fails
+      (own report). The tooltip on the Unique visitors head of Your apps reads: "The same figure as the Apps section above and the
+      Products tab of /company, so a product never shows fewer people than one of its pages." On the Your pages list the same rows
+      read "Whole product: 46 unique visitors" under a Page visitors cell of 72. Also, GET /api/v1/company/products?days=7, 14, 30
+      and 90 all answer "days": 30, so for 7, 14 and 90 days no Products-tab figure exists to be "the same figure": Agent Casino at
+      14 days is 141 on Your apps and 212 in /api/v1/company/products.
+    steps:
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=90 with the account''s key -> items[label "Team Dump Radar", kind "app"]: unique_visitors 46, page_unique_visitors 72'
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=30 -> Airdrop Farmer unique_visitors 30, page_unique_visitors 33'
+      - 'GET https://cymetica.com/api/v1/company/products?days=14 -> "days": 30'
+    body: >
+      The page promises that a product is never smaller than its own page, and for 30 and 90 days it is, by 1 to 26 people. A
+      person who opens the page and uses a tool is one person, so either the product count leaves people out or the page count
+      adds some. Read only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
