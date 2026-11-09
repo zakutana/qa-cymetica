@@ -9125,6 +9125,28 @@ reports:
       person who opens the page and uses a tool is one person, so either the product count leaves people out or the page count
       adds some. Read only; nothing was written.
 
+  - key: traffic-apps-do-not-mark-your-own-apps-green
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/traffic
+    title: "/traffic Apps: the apps you created are not marked green with a 'yours' tag as drawn in picture 1 of request ET-34607 (Build a Company, Agent Casino, Gem Screener are plain white)"
+    expected: >
+      Signed in, the rows of Apps that are apps the viewer created show their name in green with a small "yours" tag, as picture 1
+      of the request draws it (Build a Company, Agent Casino, Gem Screener and Chart Analyzer in the picture).
+    actual: >
+      Read on 2026-11-09, signed in, Basic view, 14 days, Everyone tab. All 15 rows of the Apps table have an empty class and the app
+      name link computes to rgb(255, 255, 255). Build a Company (row 6), Agent Casino (row 8) and Gem Screener (row 9) are the
+      signed-in account's own apps (they are rows 3, 2 and 1-3 of Your apps below, with the same names), and nothing marks them. The
+      page has no style rule for it (no rule with "yours" in its stylesheets) and no tag element in the rows.
+    steps:
+      - 'Open https://cymetica.com/traffic signed in as an account that created Agent Casino and Gem Screener, Basic view, Apps, Everyone -> the rows Agent Casino and Gem Screener look like every other row'
+      - 'document.querySelectorAll("#tl-apps-table tbody tr") -> every row className "", every name link color rgb(255, 255, 255)'
+      - 'Open picture 1 of the request: https://raw.githubusercontent.com/zakutana/qa-cymetica/0366df91/outbox/traffic-one/pictures/1-basic.jpg -> the account''s apps are green with a "yours" tag in the same table'
+    body: >
+      The request says Basic is "as drawn in picture 1". The green mark is how a creator sees at a glance which of the site's most
+      used apps are theirs, and it is the one thing in the Apps table that picture 1 shows and the build does not. Read only; nothing
+      was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
