@@ -19,3 +19,23 @@ Bugs filed from this build: #337, OG's top pick ZEC-USDC reads "The pool's value
 Not judged here: the look (card 3 of a levered route draws its diagram at half size and ends higher, the grid aligns to start); the spec left the look out.
 
 Score: 2 of 9 pass, 3 partial, 4 fail. FAIL sent on the operator's word, 2026-11-10 (BB-0058, `outbox/capital-maximizer/verdict-et-34229.txt`).
+
+## Re-ship, 2026-11-10 09:13 UTC
+
+Read from 09:16 UTC; their engine changed again while we read (top 3 `as_of` moved to 09:24 and route ids for PT-sUSDfr changed), so the numbers below are from a second snapshot at 09:29 UTC, `score.py` by lasting on it, `/route` for 34 route ids in each tier, and the live page (script now `capital-maximizer.js?v=20261110-1`, which renders `notes` and `rate_basis`).
+
+| # | Result | What changed |
+|---|---|---|
+| 1 | PARTIAL | PT-sUSDfr is now `pt_hold_dollar` and Medium #1; GMX house pools now answer in High. Medium's 3x still cannot be seen: no dollar loop in Medium, and High's top 3 holds no loop (Medium and High show the same three routes). |
+| 2 | FAIL | Conservative $20.54 vs $21.11 (-3%); Medium $89.84 and High $89.84 beat our $58.23 and $80.96. OG $353.42 vs Arcadia 7x on Base WETH-USDC 0.3% $454.81 (-22%): fails only through line 4. |
+| 3 | PASS | unchanged |
+| 4 | FAIL | still `listed_only_chains: ["Base"]` |
+| 5 | PARTIAL | unchanged: dCOMP direct answers in Medium ($35.09); no stUSDS loop, no Fluid smart vault |
+| 6 | PASS as written | unchanged |
+| 7 | FAIL | `r3d38c31e00` now says `median30` (median 30.44) but shows $42.92: the rate used is 19.32% = the rule's 23.18 x 5/6, not the median. Same on every route: ZEC-USDC 133.79% = median 153.78 x 0.87 (median lower), Revert 22.65% = median 27.18 x 5/6. The engine takes the lower of rule and median under the label "30-day median". Our median figure: $70.78. charts_read 79 of 860. |
+| 8 | PASS | The card shows RANGE (ZEC-USDC +-23%, full range 18%), BY THE RULE, PAST LOSS, LENDER, ONE BORROWER, MATURITY. No queued route is in any top 3 today; the script labels an EXIT note. |
+| 9 | FAIL | Page still says "A deposit is not simulated for you here". Bug #338 now hits Medium #1 and High #1 (step 1 still a Uniswap V4 swap into sUSDfr). |
+
+Bug #337 reads right on the card now ("moves with ZEC"); `exposure` is still null in `/route`. Conservative cards of Fluid now show "OG Gambler does not bar a platform for a past loss".
+
+Score: 3 of 9 pass, 2 partial, 4 fail. Verdict: the operator's word.

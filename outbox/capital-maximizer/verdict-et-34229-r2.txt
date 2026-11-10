@@ -1,0 +1,19 @@
+FAIL. Re-ship of 09:13 checked 10 Nov 2026 from 09:16 UTC; your engine changed while we read, so the figures are from a second read at 09:29 UTC: /tiers, /platforms, /top3, /route (34 route ids, each tier), score.py on the same minute's DefiLlama, Morpho and Pendle data with 30-day charts, and the live page (capital-maximizer.js?v=20261110-1).
+
+NOW HOLDS: PT-sUSDfr is a dollar and leads Medium; GMX house pools answer in High; cards show range, by-the-rule figure, past loss, lender, one-borrower and maturity notes; OG's top pick reads "moves with ZEC" (bug #337 on the card; exposure is still null in /route).
+
+DONE WHEN
+1. Partial. Medium's cap of 3 still cannot be seen: no dollar loop in Medium, and High's top 3 holds no loop (Medium and High show the same three routes).
+2. Fail. OG #1 $353.42 against Arcadia 7x on Base WETH-USDC 0.3%, $454.81: 22% under, through line 4 only. Conservative is within 3%; Medium's and High's #1 ($89.84) beat ours.
+3. Pass.
+4. Fail. listed_only_chains is still ["Base"].
+5. Partial. dCOMP direct answers ($35.09). No stUSDS loop and no Fluid smart vault returns in any tier.
+6. Pass as written; Veranta, Axis and 3Jane still have 0 routes.
+7. Fail. WETH-USDT 0.3% (r3d38c31e00) now reads rate_basis median30, median 30.44%, but shows $42.92: its rate 19.32% is the rule's 23.18% less the 1/6 cut, not the median. Every route does the same: ZEC-USDC 133.79% is its median 153.78% x 0.87 because the median is lower there; Revert's 22.65% is its median 27.18% x 5/6. The engine takes the lower of rule and median and labels it "30-day median of the base rate". On the median this pool earns $70.78: 39% under. charts_read 79 of 860.
+8. Pass. No queued route is in a top 3 today, so EXIT is seen only in your script.
+9. Fail. Your page still says "A deposit is not simulated for you here". Bug #338: Medium #1 and High #1 start with a Uniswap V4 swap into sUSDfr that cannot fill 10 USDC.
+
+ALSO
+- Fluid's Conservative cards now show "OG Gambler does not bar a platform for a past loss".
+
+Read only: no position opened, nothing sent but GETs.
