@@ -1,0 +1,1 @@
+C2. Wallet addresses are shown in the short form drawn in pictures 4 and 5 (0xe885…efb0: the first 6 and the last 4 characters), on the token cards, on Best wallets and in Top wallets. The full address stays in the link and in the tooltip, and the copy button copies the full address. This is the owner's answer to your question about pictures 4 and 5: short, as drawn.
