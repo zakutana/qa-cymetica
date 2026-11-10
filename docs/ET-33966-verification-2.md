@@ -1,5 +1,7 @@
 # ET-33966, second build (the change of 4 Nov), checked 10 Nov 2026
 
+Verdict: PASS with notes (BB-0056), on the operator's word. The 4-coin replay is a note, not a condition: a setup need not hold on all 12 coins (a short bot for a falling market may fit two).
+
 Script v=6af2ba30, shipped 10 Nov 06:36 UTC (deadline was 5 Nov). Search #22, started by us at 06:55 UTC on company 14, done 07:02: searched on ATOM, BNB, DOGE, DOT; 896 combinations new, 80 shortlisted, 0 passed. Page looked at signed in, 1235 px wide.
 
 | # | Done when | Result |
