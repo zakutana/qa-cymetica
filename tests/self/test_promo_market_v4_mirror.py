@@ -1,10 +1,11 @@
-"""The Promo Market v4 mock: two windows (the owner who posts a brief, the promoter who offers on it) over ONE sample.
+"""The Promo Market v4 mock: two windows (the owner who posts a brief, the promoter who takes it) over ONE sample.
 
 The mock holds its own state so the operator can click the whole workflow from both sides; none of it may ever reach
-cymetica.com. Every write is local, every other write is refused. A brief is a budget the owner hands out in offers
-(a promoter asks, the owner sets the amount, the promoter accepts, the rest stays in the brief); it has no end date
-and is paid for a post that stayed up 3 days and nothing else: no visitor, click or new-user number exists in
-anything it answers.
+cymetica.com. Every write is local, every other write is refused. A brief is a budget in USDC or ET10 covered by the
+owner's Cymetica credit: it has no end date, nothing is locked while it hangs, the owner can add funds to it. A
+promoter takes it with a checked X account; the owner names the amount (a suggestion from the expected reach is
+filled in) and accepting locks it; it moves to the promoter only when the owner approves a post that stayed up 3
+days. No visitor, click or new-user number exists in anything it answers.
 """
 
 from __future__ import annotations
@@ -48,7 +49,7 @@ def mock(monkeypatch):
 
     monkeypatch.setattr(serve, "fetch_upstream", no_upstream)
     serve.sample.MARKET.reset()
-    servers, running = {}, []
+    servers, running = {"market": serve.sample.MARKET}, []
     for role in ("owner", "promoter"):
         srv = ThreadingHTTPServer(("127.0.0.1", 0), serve.Handler)
         srv.role = role
@@ -81,17 +82,28 @@ def post_brief(m, **over):
     return out["brief"]["id"]
 
 
-def offer(m, bid, ask, handle="gemhunter_demo"):
-    assert call(m["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offer/check", {"handle": handle})[1]["ok"]
-    return call(m["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offer/take", {"ask": ask})
+def take(m, bid, handle="gemhunter_demo"):
+    checked = call(m["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offer/check", {"handle": handle})[1]
+    assert checked["ok"], checked
+    status, o = call(m["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offer/take", {})
+    assert status == 200, o
+    return checked, o
 
 
-def decide(m, bid, oid, decision="approve", amount=None):
+def decide(m, bid, oid, decision="accept", amount=None):
     return call(m["owner"], "POST", f"/api/v1/promo/briefs/{bid}/offers/{oid}", {"decision": decision, "amount": amount})
 
 
 def results(m, bid):
     return call(m["owner"], "GET", f"/api/v1/promo/briefs/{bid}/results")[1]
+
+
+def credit(m, cur="ET10"):
+    return call(m["owner"], "GET", "/api/v1/promo/mine")[1]["credit"][cur]
+
+
+def news(m, role):
+    return [n["text"] for n in call(m[role], "GET", "/__v4/state?since=0")[1]["news"]]
 
 
 def test_every_write_is_local_and_any_other_write_is_refused(mock):
@@ -101,73 +113,133 @@ def test_every_write_is_local_and_any_other_write_is_refused(mock):
     post_brief(mock)       # a local write, with fetch_upstream raising if it ever reaches Cymetica
 
 
-def test_the_operators_example_from_both_sides(mock):
-    """A brief for 50k ET10; the promoter asks for 50k; the owner gives 10k; the promoter accepts; 40k stays."""
+def test_the_whole_flow_from_both_sides(mock):
+    """A brief for 50k ET10 hangs unlocked; a promoter takes it; the owner accepts the suggested 12k, which locks;
+    the post stays up 3 days; the owner approves and the 12k moves; 38k is still on the market."""
     bid = post_brief(mock)
     brief = call(mock["promoter"], "GET", "/api/v1/promo/briefs")[1]["briefs"][0]
-    assert (brief["budget"], brief["left"], brief["currency"], brief["status"]) == (50000, 50000, "ET10", "open")
+    assert (brief["budget"], brief["left"], brief["locked"], brief["currency"], brief["status"]) == (50000, 50000, 0, "ET10", "open")
     assert "days" not in brief and "ends_at" not in brief
+    assert credit(mock) == {"free": 200000, "locked": 0}            # a hanging brief locks nothing
     assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offer/check", {"handle": "moonfarm_demo"})[1]["ok"] is False
-    status, o = offer(mock, bid, 50000)
-    assert status == 200 and o["state"] == "pending"
+    checked, o = take(mock, bid)
+    assert checked["suggest"] == 12000 and checked["reach_lo"] < checked["reach"] < checked["reach_hi"]
+    assert (o["state"], o["amount"]) == ("pending", None)           # the promoter names no amount
     assert results(mock, bid)["waiting"] == 1
-    status, countered = decide(mock, bid, o["id"], amount=10000)
-    assert status == 200 and (countered["state"], countered["amount"], countered["ask"]) == ("countered", 10000, 50000)
-    assert results(mock, bid)["brief"]["left"] == 40000          # the 10k is set aside, the 40k is still on the market
-    assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offers/{o['id']}/respond", {"accept": True})[1]["state"] == "approved"
-    assert call(mock["promoter"], "GET", "/api/v1/promo/briefs")[1]["briefs"][0]["left"] == 40000    # and it hangs on
-    # the promoter posts; nothing is payable until it has stayed up 3 days
-    assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/posts", {"url": POST})[0] == 200
+    assert any("wants your brief" in t for t in news(mock, "owner")) and news(mock, "promoter") == []
     pay = f"/api/v1/promo/briefs/{bid}/offers/{o['id']}/pay"
+    assert call(mock["owner"], "POST", pay, {})[0] == 409            # nothing accepted, nothing to approve
+    status, a = decide(mock, bid, o["id"], amount=results(mock, bid)["offers"][0]["suggest"])
+    assert status == 200 and (a["state"], a["amount"]) == ("approved", 12000)
+    r = results(mock, bid)["brief"]
+    assert (r["left"], r["locked"], r["paid"]) == (38000, 12000, 0)
+    assert credit(mock) == {"free": 188000, "locked": 12000}
+    assert any("locked 12,000 ET10 for you" in t for t in news(mock, "promoter"))
+    # the promoter posts; nothing moves until it has stayed up 3 days AND the owner approves
+    assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/posts", {"url": "https://example.com/x"})[0] == 422
+    assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/posts", {"url": POST})[0] == 200
     assert call(mock["owner"], "POST", pay, {})[0] == 409
     call(mock["owner"], "POST", "/__v4/skip", {"days": 2})
     assert call(mock["owner"], "POST", pay, {})[0] == 409
     call(mock["owner"], "POST", "/__v4/skip", {"days": 1})
+    assert results(mock, bid)["offers"][0]["state"] == "earned"
+    assert credit(mock) == {"free": 188000, "locked": 12000}        # three days alone move nothing
+    assert any("approve it to pay" in t for t in news(mock, "owner"))
     status, paid = call(mock["owner"], "POST", pay, {})
     assert status == 200 and paid["state"] == "paid"
-    r = results(mock, bid)
-    assert (r["brief"]["paid"], r["brief"]["left"]) == (10000, 40000)
-    taken = call(mock["promoter"], "GET", "/api/v1/promo/mine")[1]["taken"]["takes"]
-    assert [t["offer"]["state"] for t in taken] == ["paid"]
+    r = results(mock, bid)["brief"]
+    assert (r["paid"], r["locked"], r["left"], r["status"]) == (12000, 0, 38000, "open")
+    assert credit(mock) == {"free": 188000, "locked": 0}
+    mine = call(mock["promoter"], "GET", "/api/v1/promo/mine")[1]
+    assert [t["offer"]["state"] for t in mine["taken"]["takes"]] == ["paid"] and mine["earned"] == {"ET10": 12000}
+    assert call(mock["owner"], "POST", pay, {})[0] == 409            # and it cannot be paid twice
 
 
-def test_a_promoter_who_declines_the_owners_amount_gives_it_back(mock):
+def test_a_brief_in_usdc_is_covered_by_usdc_credit(mock):
+    assert call(mock["owner"], "POST", "/api/v1/promo/briefs", {**BRIEF, "currency": "USDC", "budget": 600})[0] == 409      # 500 USDC of credit
+    assert call(mock["owner"], "POST", "/api/v1/promo/briefs", {**BRIEF, "currency": "DOGE"})[0] == 422
+    bid = post_brief(mock, currency="USDC", budget=200)
+    checked, o = take(mock, bid)
+    assert (checked["currency"], checked["suggest"]) == ("USDC", 30)
+    assert decide(mock, bid, o["id"], amount=30)[0] == 200
+    assert credit(mock, "USDC") == {"free": 470, "locked": 30} and credit(mock, "ET10") == {"free": 200000, "locked": 0}
+
+
+def test_nobody_is_given_more_than_the_brief_has_left(mock):
+    bid = post_brief(mock, budget=10000)
+    _, o = take(mock, bid)
+    assert decide(mock, bid, o["id"], amount=10001)[0] == 409
+    assert decide(mock, bid, o["id"], amount=0)[0] == 422
+    assert decide(mock, bid, o["id"], amount=10000)[0] == 200
+    assert results(mock, bid)["brief"]["status"] == "full"
+    assert call(mock["promoter"], "GET", "/api/v1/promo/briefs")[1]["briefs"] == []    # all handed out: it leaves the market
+    assert call(mock["owner"], "PATCH", f"/api/v1/promo/briefs/{bid}", {"action": "add_budget", "amount": 5000})[0] == 200
+    assert call(mock["promoter"], "GET", "/api/v1/promo/briefs")[1]["briefs"][0]["left"] == 5000     # funds added: open again
+
+
+def test_add_funds_raises_what_can_be_handed_out_up_to_the_free_credit(mock):
     bid = post_brief(mock)
-    _, o = offer(mock, bid, 50000)
-    decide(mock, bid, o["id"], amount=10000)
-    assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offers/{o['id']}/respond", {"accept": False})[1]["state"] == "declined"
-    assert results(mock, bid)["brief"]["left"] == 50000
+    add = lambda n: call(mock["owner"], "PATCH", f"/api/v1/promo/briefs/{bid}", {"action": "add_budget", "amount": n})      # noqa: E731
+    status, out = add(25000)
+    assert status == 200 and (out["budget"], out["left"]) == (75000, 75000)
+    assert credit(mock) == {"free": 200000, "locked": 0}            # adding locks nothing
+    assert add(125001)[0] == 409 and add(0)[0] == 422
+    assert add(125000)[0] == 200
+    call(mock["owner"], "PATCH", f"/api/v1/promo/briefs/{bid}", {"action": "cancel"})
+    assert add(1)[0] == 409                                         # an ended brief takes no funds
 
 
-def test_nobody_can_be_given_or_ask_for_more_than_is_left(mock):
-    bid = post_brief(mock, budget=10)
-    assert offer(mock, bid, 11)[0] == 422
-    _, first = offer(mock, bid, 6, "gemhunter_demo")
-    _, second = offer(mock, bid, 6, "onchain_notes_demo")
-    assert decide(mock, bid, first["id"])[0] == 200
-    assert decide(mock, bid, second["id"])[0] == 409          # 4 are left, 6 are asked
-    assert decide(mock, bid, second["id"], amount=4)[0] == 200
-    assert call(mock["promoter"], "GET", "/api/v1/promo/briefs")[1]["briefs"] == []    # nothing left: it leaves the market
-
-
-def test_cancel_closes_what_is_left_and_agreed_ones_go_on(mock):
+def test_the_owner_takes_back_and_the_promoter_passes_only_before_the_post(mock):
     bid = post_brief(mock)
-    _, agreed = offer(mock, bid, 100, "gemhunter_demo")
-    _, waiting = offer(mock, bid, 100, "onchain_notes_demo")
-    decide(mock, bid, agreed["id"])
+    _, o = take(mock, bid)
+    decide(mock, bid, o["id"], amount=12000)
+    assert decide(mock, bid, o["id"], "decline")[1]["state"] == "declined"            # taken back: unlocked
+    assert results(mock, bid)["brief"]["left"] == 50000 and credit(mock) == {"free": 200000, "locked": 0}
+    assert any("took back the 12,000 ET10" in t for t in news(mock, "promoter"))
+    _, o = take(mock, bid)                                          # the promoter may ask again
+    assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offers/{o['id']}/pass", {})[1]["state"] == "declined"     # withdrawn while waiting
+    _, o = take(mock, bid)
+    decide(mock, bid, o["id"], amount=12000)
+    assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offers/{o['id']}/pass", {})[0] == 200                     # passed while locked
+    assert credit(mock) == {"free": 200000, "locked": 0} and any("passed" in t and "unlocked" in t for t in news(mock, "owner"))
+    _, o = take(mock, bid)
+    decide(mock, bid, o["id"], amount=12000)
+    call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/posts", {"url": POST})
+    assert decide(mock, bid, o["id"], "decline")[0] == 409           # the post is up: neither side walks away
+    assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offers/{o['id']}/pass", {})[0] == 409
+    assert credit(mock) == {"free": 188000, "locked": 12000}
+
+
+def test_cancel_ends_what_is_not_handed_out_and_accepted_ones_go_on(mock):
+    bid = post_brief(mock)
+    _, mine = take(mock, bid)
+    other = mock["market"]._offer("onchain_notes_demo")              # another promoter, still waiting
+    decide(mock, bid, mine["id"], amount=12000)
+    call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/posts", {"url": POST})
     assert call(mock["owner"], "PATCH", f"/api/v1/promo/briefs/{bid}", {"action": "cancel"})[0] == 200
     assert call(mock["promoter"], "GET", "/api/v1/promo/briefs")[1]["briefs"] == []
-    states = {o["id"]: o["state"] for o in results(mock, bid)["offers"]}
-    assert states == {agreed["id"]: "approved"}                 # the waiting one is declined, the agreed one stands
+    r = results(mock, bid)
+    assert {o["id"]: o["state"] for o in r["offers"]} == {mine["id"]: "posted"}       # the waiting one is declined, the accepted one stands
+    assert other["state"] == "declined" and (r["brief"]["status"], r["brief"]["locked"]) == ("cancelled", 12000)
+    call(mock["owner"], "POST", "/__v4/skip", {"days": 3})
+    assert call(mock["owner"], "POST", f"/api/v1/promo/briefs/{bid}/offers/{mine['id']}/pay", {})[1]["state"] == "paid"   # and is still paid
+    assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offer/take", {})[0] == 409
 
 
-def test_only_the_owner_pays_and_only_the_promoter_offers(mock):
+def test_each_side_can_do_only_its_own_part(mock):
     bid = post_brief(mock)
+    _, o = take(mock, bid)
+    offer = f"/api/v1/promo/briefs/{bid}/offers/{o['id']}"
     assert call(mock["promoter"], "POST", "/api/v1/promo/briefs", BRIEF)[0] == 403
-    assert call(mock["owner"], "POST", f"/api/v1/promo/briefs/{bid}/offer/take", {"ask": 5})[0] == 403
+    assert call(mock["promoter"], "POST", offer, {"decision": "accept", "amount": 50000})[0] == 403     # a promoter cannot accept themself
+    assert call(mock["promoter"], "POST", offer + "/pay", {})[0] == 403
     assert call(mock["promoter"], "GET", f"/api/v1/promo/briefs/{bid}/results")[0] == 403
     assert call(mock["promoter"], "PATCH", f"/api/v1/promo/briefs/{bid}", {"action": "cancel"})[0] == 403
-    assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/offers/1/pay", {})[0] == 403
+    assert call(mock["promoter"], "PATCH", f"/api/v1/promo/briefs/{bid}", {"action": "add_budget", "amount": 1})[0] == 403
+    assert call(mock["owner"], "POST", f"/api/v1/promo/briefs/{bid}/offer/take", {})[0] == 403
+    assert call(mock["owner"], "POST", offer + "/pass", {})[0] == 403
+    assert call(mock["owner"], "POST", f"/api/v1/promo/briefs/{bid}/posts", {"url": POST})[0] == 403
+    assert call(mock["promoter"], "POST", f"/api/v1/promo/briefs/{bid}/posts", {"url": POST})[0] == 409     # no post before the owner accepts
 
 
 def test_nothing_it_answers_counts_a_visitor_a_click_or_a_new_user(mock):

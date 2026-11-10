@@ -2,15 +2,16 @@
 
     python outbox/promo-market-v4/live/serve.py
         the brief's owner      http://127.0.0.1:8792/expire76#me/products
-        the promoter           http://127.0.0.1:8808/promoter#market      (a stranger: /promo-market on either)
+        the promoter           http://127.0.0.1:8808/promoter#me/today    (a stranger: /promo-market on either)
 
 The pages, styles, scripts and data are THEIR live ones, read anonymously (GET, no cookies, no key) and cached for 30
 seconds; patch.py changes only what v4 changes. The sample (sample.py) is the one place the mock keeps state, so what
-the owner does in one window is what the promoter sees in the other. The window you are in is the port you opened:
-the owner's reads on 8792, the promoter's on 8808.
+the owner does in one window is what the promoter sees in the other, by itself: each window polls /__v4/state and
+reads again when the other one wrote. The window you are in is the port you opened: the owner's reads on 8792, the
+promoter's on 8808.
 
-Nothing leaves this machine except those GETs. The writes the workflow needs (post a brief, make an offer, set an
-amount, accept, register a post, Pay, cancel) are answered HERE and change the sample only; every other write is
+Nothing leaves this machine except those GETs. The writes the workflow needs (post a brief, add funds, take a brief,
+accept with an amount, pass, register a post, approve, cancel) are answered HERE and change the sample only; every other write is
 refused before anything is sent anywhere, because a copy of a page with Pay and Post the brief buttons must never be
 able to move money or post a brief on the real one (tests/self/test_promo_market_v4_mirror.py).
 """
@@ -50,12 +51,12 @@ BRIEF = r"/api/v1/promo/briefs"
 ROUTES = (    # (method, path, who may, handler(body, *ids))
     ("POST", re.compile(rf"^{BRIEF}$"), "owner", lambda b: {"brief": M.create_brief(b)}),
     ("POST", re.compile(rf"^{BRIEF}/(\d+)/offer/check$"), None, lambda b, i: M.check(b.get("handle", ""))),
-    ("POST", re.compile(rf"^{BRIEF}/(\d+)/offer/take$"), "promoter", lambda b, i: M.take(b.get("ask"))),
+    ("POST", re.compile(rf"^{BRIEF}/(\d+)/offer/take$"), "promoter", lambda b, i: M.take()),
     ("POST", re.compile(rf"^{BRIEF}/(\d+)/offers/(\d+)$"), "owner", lambda b, i, o: M.decide(int(o), b.get("decision"), b.get("amount"))),
-    ("POST", re.compile(rf"^{BRIEF}/(\d+)/offers/(\d+)/respond$"), "promoter", lambda b, i, o: M.respond(int(o), bool(b.get("accept")))),
+    ("POST", re.compile(rf"^{BRIEF}/(\d+)/offers/(\d+)/pass$"), "promoter", lambda b, i, o: M.give_up(int(o))),
     ("POST", re.compile(rf"^{BRIEF}/(\d+)/offers/(\d+)/pay$"), "owner", lambda b, i, o: M.pay(int(o))),
     ("POST", re.compile(rf"^{BRIEF}/(\d+)/posts$"), "promoter", lambda b, i: M.register_post(b.get("url", ""))),
-    ("PATCH", re.compile(rf"^{BRIEF}/(\d+)$"), "owner", lambda b, i: M.cancel() if b.get("action") == "cancel" else _refuse(422, "The mock cancels; nothing else.")),
+    ("PATCH", re.compile(rf"^{BRIEF}/(\d+)$"), "owner", lambda b, i: _brief_act(b)),
     ("POST", re.compile(r"^/api/v1/promo/uploads$"), "owner", lambda b: {"file_id": 1, "url": sample.PREVIEW}),
     ("POST", re.compile(r"^/__v4/skip$"), None, lambda b: M.skip(b.get("days", 1)) or {"offset": M.offset}),
     ("POST", re.compile(r"^/__v4/reset$"), None, lambda b: M.reset() or {}),
@@ -63,21 +64,55 @@ ROUTES = (    # (method, path, who may, handler(body, *ids))
 )
 
 
-def _refuse(code, detail):
-    raise sample.Refused(code, detail)
+def _brief_act(b: dict):
+    if b.get("action") == "cancel":
+        return M.cancel()
+    if b.get("action") == "add_budget":
+        return M.add_budget(b.get("amount") or b.get("amount_usdc"))
+    raise sample.Refused(422, "The mock cancels a brief and adds funds to it; nothing else.")
+
+
+def state(role: str, since: int) -> dict:
+    """What a window polls: the mock's day, a counter that goes up with every write (read again when it moved), and
+    what happened for this side since the last one it saw (the pop-up)."""
+    with M.lock:
+        return {"offset": M.offset, "ver": M.ver, "last": len(M.news), "news": [n for n in M.news if n["to"] == role and n["n"] > since]}
 
 
 def fetch_upstream(path: str) -> tuple[int, str, bytes, dict]:
     """One anonymous GET to their platform; the only call here that leaves this machine."""
-    global _client
     hit = _cache.get(path)
-    if hit and time.time() - hit[0] < TTL:
-        return hit[1]
+    if not hit:
+        return _read(path)
+    if time.time() - hit[0] >= TTL and path not in _busy:
+        # their answer from a moment ago is shown at once and read again behind it: when their server takes ten
+        # seconds over a read, the two windows must not stand still for it
+        _busy.add(path)
+        threading.Thread(target=_again, args=(path,), daemon=True).start()
+    return hit[1]
+
+
+_busy: set[str] = set()
+
+
+def _again(path: str):
+    try:
+        _read(path)
+    except httpx.HTTPError:
+        pass
+    finally:
+        _busy.discard(path)
+
+
+def _read(path: str) -> tuple[int, str, bytes, dict]:
+    global _client
     if _client is None:      # built on first use, so importing this module (the tests do) opens nothing
         _client = httpx.Client(timeout=60, follow_redirects=True, headers={"User-Agent": "Mozilla/5.0 (qa-cymetica v4 mirror)"})
     r = _client.get(UPSTREAM + path)
     out = (r.status_code, r.headers.get("content-type", "application/octet-stream"), r.content, dict(r.headers))
-    _cache[path] = (time.time(), out)
+    was = _cache.get(path)
+    if r.status_code < 500 or not was:      # a 5xx of theirs does not replace a page that was read well
+        _cache[path] = (time.time(), out)
     return out
 
 
@@ -120,7 +155,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json({"detail": f"Only the {who} can do this."}, status=403)
             try:
                 body = json.loads(raw) if raw[:1] in (b"{", b"[") else {}
-                return self._json(fn(body, *m.groups()))
+                out = fn(body, *m.groups())
+                M.ver += 1          # the other window reads again
+                return self._json(out)
             except sample.Refused as e:
                 return self._json({"detail": e.detail}, status=e.code)
         body = b'{"detail":"Local copy: nothing is sent to cymetica.com from here."}'
@@ -139,7 +176,8 @@ class Handler(BaseHTTPRequestHandler):
         bare, _, query = path.split("#")[0].partition("?")
         args = parse_qs(query, keep_blank_values=True)
         if bare == "/__v4/state":
-            return self._json({"offset": M.offset}, head)
+            since = (args.get("since") or ["0"])[0]
+            return self._json(state(self.role, int(since) if since.isdigit() else 0), head)
         if bare.startswith("/__v4/"):
             name = bare[len("/__v4/"):]
             if name in OWN_FILES:
@@ -164,6 +202,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._send(status, ctype, body, headers, head=head)
         # the promoter is a made-up member: the member-only reads that have no sample are read as the operator's page, anonymously
         status, ctype, body, headers = fetch_upstream(path.replace("promoter_demo", "expire76"))
+        if bare == "/api/v1/creator/posts" and status != 200:      # a member's read: the made-up member has posted nothing, and Today opens
+            return self._json({"posts": [], "daily_cap": 3, "rule": ""}, head)
         if bare == APP_PAGE and status == 200:
             body = json.dumps(sample.fix_copy(json.loads(body), self.role)).encode("utf-8")
         if bare == SCRIPT and status == 200:
@@ -175,7 +215,10 @@ class Handler(BaseHTTPRequestHandler):
         self._send(status, ctype, body, headers, head=head)
 
     def do_GET(self):
-        self._get(False)
+        try:
+            self._get(False)
+        except httpx.HTTPError as e:      # their server did not answer in time: say so, the page reads it again
+            self._send(504, "application/json", json.dumps({"detail": f"cymetica.com did not answer: {type(e).__name__}"}).encode("utf-8"))
 
     def do_HEAD(self):
         self._get(True)
@@ -192,7 +235,10 @@ def main():
         srv.role = role
         servers.append(srv)
         threading.Thread(target=srv.serve_forever, daemon=True).start()
-    print(f"Promo Market v4: owner http://127.0.0.1:{a.owner_port}/expire76#me/products · promoter http://127.0.0.1:{a.promoter_port}/promoter#market "
+    for path in ("/expire76", "/creator-dashboard", SCRIPT, APP_PAGE + "?u=expire76"):      # read once now, so the first click does not wait for them
+        _busy.add(path)
+        threading.Thread(target=_again, args=(path,), daemon=True).start()
+    print(f"Promo Market v4: owner http://127.0.0.1:{a.owner_port}/expire76#me/products · promoter http://127.0.0.1:{a.promoter_port}/promoter#me/today "
           "(reads cymetica.com, never writes)", flush=True)
     try:
         while True:

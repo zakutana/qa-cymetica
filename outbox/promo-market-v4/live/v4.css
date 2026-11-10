@@ -10,13 +10,27 @@
 .v3amt.v4big i { height: 52px; font-size: 12px; }
 .v3amt.v4big em { text-align: left; }
 .v3nb .quick { margin-top: 8px; }
+/* half a screen (two windows side by side): their three columns squeeze the materials to nothing; two, and the preview under them */
+@media (max-width: 1180px) {
+  .nb.v3nb { grid-template-columns: repeat(2, minmax(0, 1fr)); height: auto; }
+  .nb.v3nb > .card:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 1180px) and (min-width: 721px) {
+  /* the card as a promoter sees it keeps a card's width; what posting means and the button stand beside it */
+  .nb.v3nb > .card:last-child .preview { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 20px; align-items: start; }
+  .nb.v3nb > .card:last-child .preview > .sendbar { align-self: start; align-content: start; margin: 0; }
+}
+/* half a screen: the bell keeps its size; the clock of the last read gives way to it */
+.v3bell { flex: none; }
+@media (max-width: 1180px) { #livechip { display: none; } }
+@media (max-width: 720px) { .nb.v3nb { grid-template-columns: minmax(0, 1fr); } }
 
 /* the owner's Offers: the amount to give is typed in the row */
 .v3amt.v4give { width: 148px; margin-left: auto; }
 .v3amt.v4give .in { height: 34px; font-size: 13px; }
 .v3amt.v4give i { height: 34px; }
 
-/* the promoter's steps: offer, agreed, posted, 3 days up, paid */
+/* the promoter's steps: taken, locked, posted, 3 days up, paid */
 .v4steps { display: flex; gap: 4px; margin: 12px 0 4px; }
 .v4steps span { flex: 1; display: grid; gap: 6px; font: 600 10px var(--mono); letter-spacing: .5px; text-transform: uppercase; color: var(--text3); }
 .v4steps i { height: 4px; border-radius: 4px; background: var(--line2); }
@@ -27,6 +41,119 @@
 .v4days { display: flex; gap: 6px; margin-top: 10px; }
 .v4days span { flex: 1; height: 8px; border-radius: 8px; background: var(--line2); }
 .v4days span.on { background: var(--green); box-shadow: 0 0 10px rgba(0,255,136,.5); }
-.v4pair { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 8px; margin-top: 12px; }
-.v4post { margin-top: 12px; }
+.v4post { display: grid; gap: 10px; margin-top: 4px; }
 .v4post .own { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.v4do { display: flex; align-items: center; gap: 10px; }
+.v4do .no { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 11px var(--display); color: rgb(6,9,15); background: linear-gradient(135deg, var(--cyan), var(--green)); }
+.v4do > div { flex: 1; min-width: 0; display: grid; }
+.v4do b { font: 700 13.5px var(--sans); }
+.v4do span:not(.no) { font: 500 11px var(--mono); color: var(--text3); }
+.btn.v4quiet { justify-self: start; color: var(--text3); border-color: transparent; padding-left: 0; }
+.btn.v4quiet:hover { color: var(--red); }
+
+/* what an account like this usually gets: the same figure the owner sees prefilled */
+.v4hint { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 2px 12px; padding: 12px 14px; border-radius: 12px; background: rgba(6,9,15,.6); border: 1px solid rgba(0,207,255,.3); }
+.v4hint span { font: 600 10.5px var(--mono); letter-spacing: 1px; text-transform: uppercase; color: var(--text3); }
+.v4hint b { grid-row: span 2; font: 30px/1 var(--display); color: var(--cyan); }
+.v4hint b small, .v4lock b small, .v4el b small { font: 600 11px var(--mono); color: var(--text3); margin-left: 5px; }
+.v4hint em { font: 500 11px var(--mono); font-style: normal; color: var(--text3); }
+.v4lock em { display: flex; align-items: center; gap: 6px; font: 600 11px var(--mono); font-style: normal; color: var(--text2); text-align: right; }
+.v4lock em svg { width: 14px; height: 14px; color: var(--green); }
+.v4lock:not(.paid) { border-color: rgba(0,207,255,.4); }
+.v4lock:not(.paid) b { color: var(--cyan); text-shadow: 0 0 26px rgba(0,207,255,.35); }
+
+/* the creator's dashboard: Open briefs is lit in the menu and on Market, and Today opens with what can be earned */
+.rnav a.v4open.lit { color: var(--green); background: rgba(0,255,136,.07); box-shadow: inset 0 0 0 1px rgba(0,255,136,.35), 0 0 18px rgba(0,255,136,.12); }
+.rnav a.v4open.lit svg { color: var(--green); }
+.rnav a.v4open.lit .n { color: rgb(6,9,15); background: var(--green); box-shadow: 0 0 12px rgba(0,255,136,.6); animation: v4pulse 1.8s ease-in-out infinite; }
+.tnav a .v4badge { min-width: 18px; padding: 1px 6px; border-radius: 99px; font: 700 10.5px var(--mono); text-align: center; color: rgb(6,9,15); background: var(--green); box-shadow: 0 0 10px rgba(0,255,136,.55); }
+@keyframes v4pulse { 50% { box-shadow: 0 0 2px rgba(0,255,136,.3); } }
+.v4earn { display: grid; gap: 12px; padding: 18px 20px; margin-bottom: 18px; border-color: rgba(0,255,136,.4); background: linear-gradient(180deg, rgba(0,255,136,.07), rgba(0,255,136,.01)); box-shadow: 0 0 40px rgba(0,255,136,.07); }
+.v4eh { display: flex; align-items: center; gap: 10px; }
+.v4eh .kick { color: var(--green); }
+.v4et { font: 22px/1 var(--display); }
+.v4et small { font: 600 11px var(--mono); color: var(--text3); margin: 0 4px; }
+.v4et em { font: 500 11.5px var(--mono); font-style: normal; color: var(--text3); }
+.v4er { display: grid; grid-template-columns: 112px minmax(0, 1fr) auto auto; align-items: center; gap: 16px; padding: 10px; border-radius: 12px; background: rgba(6,9,15,.55); border: 1px solid var(--line); cursor: pointer; }
+.v4er:hover { border-color: rgba(0,255,136,.45); }
+.v4er > img, .v4er > .v3noimg { width: 112px; height: 63px; border-radius: 8px; object-fit: cover; }
+.v4en { display: grid; gap: 3px; min-width: 0; }
+.v4en b { font: 18px var(--display); }
+.v4en span { font: 500 12.5px var(--sans); color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.v4el { display: grid; justify-items: end; gap: 2px; }
+.v4el b { font: 24px/1 var(--display); color: var(--green); }
+.v4el span { font: 600 10px var(--mono); letter-spacing: .6px; text-transform: uppercase; color: var(--text3); }
+.v4ef { display: flex; align-items: center; gap: 8px; font: 500 11.5px var(--mono); color: var(--text3); }
+.v4ef svg { width: 14px; height: 14px; flex: none; }
+.v4ef span { flex: 1; }
+@media (max-width: 760px) { .v4er { grid-template-columns: 72px minmax(0, 1fr); } .v4er > img, .v4er > .v3noimg { width: 72px; height: 40px; } .v4er .btn { grid-column: 1 / -1; } .v4el { justify-items: start; } }
+
+/* the owner's brief: credit, Add funds, the suggested amount, Approve */
+.note.v4credit { margin: -4px 0 16px; align-items: center; }
+.note.v4credit b { color: var(--text); font-family: var(--mono); }
+.note.v4over, .note.v4over svg { color: var(--red); }
+/* half a screen: the brief's head keeps its name on one line, its buttons go under it, and four tiles are two rows */
+@media (max-width: 1180px) {
+  .bdhead { grid-template-columns: 120px minmax(0, 1fr); }
+  .bdhead img { width: 120px; height: 68px; }
+  .bdhead .acts { grid-column: 1 / -1; justify-content: flex-start; }
+  .tiles[style*="--n:4"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* seven columns do not fit half a screen: each promoter is a block, and Accept is in sight without scrolling sideways */
+  #v3offers .v3tbl, #v3offers .v3tbl tbody, #v4prom .v3tbl, #v4prom .v3tbl tbody { display: block; width: 100%; min-width: 0; }
+  #v3offers .v3tbl thead, #v4prom .v3tbl thead { display: none; }
+  #v3offers .tbar { flex-wrap: wrap; row-gap: 8px; }
+  #v3offers .tbar h3 { flex: 1 1 100%; }
+  #v3offers .tbar .sp { display: none; }
+  #v3offers .v4sug { display: flex; align-items: center; }
+  #v3offers .v3tbl tr, #v4prom .v3tbl tr { display: grid; gap: 12px 14px; padding: 14px 16px; border-top: 1px solid var(--line); }
+  #v3offers .v3tbl tr { grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; background: rgba(0,255,136,.035); }
+  #v3offers .v3tbl td, #v4prom .v3tbl td { display: block; width: auto; padding: 0; border: 0; background: none; text-align: left; }
+  #v3offers .v3tbl td:first-child { grid-column: 1 / -1; }
+  #v3offers .v3tbl td:nth-child(n+2):nth-child(-n+5)::before { display: block; margin-bottom: 4px; font: 600 10px var(--mono); letter-spacing: .6px; text-transform: uppercase; color: var(--text3); }
+  #v3offers .v3tbl td:nth-child(2)::before { content: "Followers"; }
+  #v3offers .v3tbl td:nth-child(3)::before { content: "Views a post"; }
+  #v3offers .v3tbl td:nth-child(4)::before { content: "Real audience"; }
+  #v3offers .v3tbl td:nth-child(5)::before { content: "Expected reach"; }
+  #v3offers .v3tbl td:nth-child(6) { grid-column: 1 / 3; }
+  #v3offers .v3tbl td:nth-child(6) .v3amt.v4give { width: 100%; margin: 0; }
+  #v3offers .v3tbl td.v3act { grid-column: 3 / -1; display: flex; gap: 8px; justify-content: flex-end; }
+  #v3offers .v3tbl td.v3act .btn.g { flex: 1; height: 34px; justify-content: center; }
+  #v4prom .v3tbl tr { grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; }
+  #v4prom .v3tbl td:first-child { grid-column: 1 / 3; }
+  #v4prom .v3tbl td:nth-child(2) { text-align: right; }
+}
+.v4add { display: grid; gap: 12px; margin-bottom: 18px; border-color: rgba(0,255,136,.4); }
+.v4addrow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.v4addrow .v3amt { width: 220px; }
+.v4addrow .quick { margin: 0; }
+.v4addrow .quick button { height: 34px; padding: 0 12px; }
+#v4addmsg.neg { color: var(--red); }
+.v4reach b { display: block; font: 600 13.5px var(--mono); color: var(--cyan); white-space: nowrap; }
+.v4reach small, .v4sug { display: block; font: 500 10.5px var(--mono); color: var(--text3); }
+.v4sug { margin-top: 4px; color: var(--green); white-space: nowrap; }
+.v4sug svg { width: 10px; height: 10px; vertical-align: -1px; margin-right: 3px; }
+a.v4x { display: inline-flex; align-items: center; gap: 4px; margin-top: 3px; font: 600 11px var(--mono); }
+a.v4x svg { width: 11px; height: 11px; }
+/* the Approve box says the whole sentence: what moves, from where to where, and that it is final */
+.v4appr .statusrow { flex-wrap: wrap; height: auto; row-gap: 12px; }
+.v4appr .statusrow .grow { flex: 1 1 260px; white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.45; }
+.btn.v4sure { border-color: var(--red); color: var(--red); }
+.v3tbl small svg { display: inline-block; width: 10px; height: 10px; vertical-align: -1px; margin-right: 3px; }
+.v4appr { display: grid; gap: 12px; margin-bottom: 18px; border-color: rgba(0,255,136,.4); }
+.v4cks { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.v4ck { display: flex; align-items: center; gap: 6px; font: 600 12px var(--mono); color: var(--text2); }
+.v4ck svg { width: 14px; height: 14px; color: var(--green); }
+
+/* what the other side just did: stays until it is answered or closed */
+#v4pop { position: fixed; bottom: 122px; right: 20px; z-index: 80; display: grid; gap: 8px; width: min(440px, calc(100vw - 32px)); }
+#v4pop:empty { display: none; }
+.v4n { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; border-radius: 14px; background: rgba(10,14,23,.97); border: 1px solid rgba(0,255,136,.55); box-shadow: 0 16px 50px rgba(0,0,0,.6), 0 0 30px rgba(0,255,136,.18); animation: v4in .28s ease-out; }
+.v4ni { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: rgb(6,9,15); background: var(--green); }
+.v4ni svg { width: 18px; height: 18px; }
+.v4n > div { display: grid; gap: 2px; min-width: 0; }
+.v4n b { font: 700 13.5px/1.35 var(--sans); color: var(--text); }
+.v4n small { font: 500 10.5px var(--mono); color: var(--text3); }
+.v4n .x { width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--line); background: none; display: grid; place-items: center; color: var(--text3); cursor: pointer; }
+.v4n .x svg { width: 12px; height: 12px; }
+@keyframes v4in { from { opacity: 0; transform: translateY(8px); } }
+@media (prefers-reduced-motion: reduce) { .v4n, .rnav a.v4open.lit .n { animation: none; } }
