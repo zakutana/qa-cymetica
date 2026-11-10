@@ -1187,13 +1187,18 @@
      "report_id": 240,
      "verdict": "pass",
      "at": "2026-11-02T08:01:21+00:00"
+    },
+    {
+     "report_id": 240,
+     "verdict": "fail",
+     "at": "2026-11-10T13:54:43+00:00"
     }
    ],
    "their_status": {
     "240": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass"
+   "last_check": "fail"
   },
   {
    "key": "CYM-agent-tournaments-round-ended-inside-the-table-counts",
@@ -3645,7 +3650,7 @@
     "248": "paid"
    },
    "withdrawn": false,
-   "last_check": "pass"
+   "last_check": "fail"
   },
   {
    "key": "CYM-products-tile-people-are-people",
@@ -6448,12 +6453,18 @@
    ],
    "title": "Agent Casino: a table with one member shows 1ST and 2ND prizes, but pays that member the whole pot",
    "filed_at": "2026-11-05T12:15:56+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 309,
+     "verdict": "pass",
+     "at": "2026-11-10T13:54:47+00:00"
+    }
+   ],
    "their_status": {
     "309": "pending"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "season-counts-no-returning-visitors",
@@ -6851,6 +6862,50 @@
    "verdicts_sent": [],
    "their_status": {
     "336": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "capital-maximizer-zec-usdc-card-says-moves-with-none",
+   "nodeids": [],
+   "report_ids": [
+    337
+   ],
+   "title": "Capital Maximizer (ET-34229 build): OG Gambler's top pick, the ZEC-USDC pool, says \"The pool's value moves with None\"",
+   "filed_at": "2026-11-10T07:33:23+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "337": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "capital-maximizer-susdfr-step-1-uniswap-v4-cannot-fill",
+   "nodeids": [],
+   "report_ids": [
+    338
+   ],
+   "title": "Capital Maximizer (ET-34229 build): High Risk #1 and #2 start with \"Swap 5,000 USDC to SUSDFR on Uniswap V4\"; that pool cannot fill 10 USDC",
+   "filed_at": "2026-11-10T07:46:41+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "338": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "agent-tournaments-reward-note-says-top-two",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_reward_note_says_top_two.py::test_agent_tournaments_reward_note_says_top_two"
+   ],
+   "report_ids": [
+    339
+   ],
+   "title": "Agent Casino: /rules gives ET10 to the top 2 in one field and to the best three in another, and every table's ET10 note says three",
+   "filed_at": "2026-11-10T19:45:13+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "339": "pending"
    },
    "withdrawn": false
   }

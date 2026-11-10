@@ -56,4 +56,6 @@ After our FAIL (BB-0059, resolved 12:20 UTC) the page changed (HTML 470 KB to 48
 
 **Score now: 8 pass or pass in part, 1 fail (1), 2 not seen (13-14, 15).**
 
+**Table 81 (5H, ended 19:39 UTC), read 19:45:** rows 13-14 in part: the coach's log now carries the volume on every line ("volume $43.02 of the $2.23 a prize needs: met"), checks and tunes alike; the case of a seat short of volume was not seen (the seat was above it). No pause by its own stop and no owner change, so 14 and 15 stay unread. **New:** `/rules` `et10_reward` and every table's `et10_reward_note` still say "the best three MEMBER seats" while `et10_prizes` says the top 2: filed as #339 (goal 11 said "in the rules, the API and every page").
+
 **Old icons (the operator's screenshots, 2026-11-10):** the new robot heads are on the lobby cards, but Your agents rows, the Your agents card header and the Leaderboard still show the old round species icons. Picture 4 draws the robot head on every Your agents row, so row 8 matches the pictures only in its columns, not in its icons. The Leaderboard is in no goal or picture. Not in the second verdict.

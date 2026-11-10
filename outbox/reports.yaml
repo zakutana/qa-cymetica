@@ -8762,80 +8762,6 @@ reports:
       An owner watching the table reads a $3.34 first prize that cannot be paid. Showing the buy-in back on these tables, in the API and on the card, fixes it. Paper tables only; read-only for this report.
     check: tests/rest/test_agent_tournaments_one_member_prizes_now.py::test_agent_tournaments_one_member_prizes_now
 
-  - key: season-counts-no-returning-visitors
-    findings: [CYM-season-counts-returning-visitors]
-    check: tests/rest/test_season_counts_returning_visitors.py::test_season_counts_returning_visitors
-    severity: medium
-    category: logic
-    url: https://cymetica.com/company/app
-    title: "Season points: 0 returning visitors on every product of every company, day 5 of the season, with Gem Screener at 62, 63 and 64 people a day"
-    expected: >
-      The Products tab says "Returning visitor (signed out, same browser on 2+ days): 1 point, +0.25 per further day from the 3rd".
-      With about 60 different people a day on Gem Screener for three days, and /app-usage saying 13 % of its people came back,
-      the season counts some returning visitors.
-    actual: >
-      Read on 2026-11-05 at 14:51 UTC (computed_at). season-breakdown of company 14 reads visitors 0 on all 11 products. The season board
-      reads returning_visitors 0 on all 7 companies, while it does count active users (4 for company 14). Gem Screener's last three days in
-      /api/v1/company/products are 62, 63 and 64 people.
-    steps:
-      - 'GET https://cymetica.com/api/v1/company/14/season-breakdown -> products[].visitors 0 on all 11, season_starts 2026-11-01'
-      - 'GET https://cymetica.com/api/v1/company/season -> rows[].returning_visitors 0 on all 7 companies'
-      - 'GET https://cymetica.com/api/v1/company/products -> Gem Screener daily ends 62, 63, 64'
-      - 'GET https://cymetica.com/api/v1/app-usage -> humans[/gem-screener].came_back_pct 13'
-    body: >
-      Season points are what companies are ranked on, so please recount from the start of the season (1 November), not only from the fix.
-      Our check fails while Gem Screener reads 0 returning visitors with those daily counts; it passes when it reads at least one. It does
-      not say how many there should be. If 0 is right, please say what makes a visitor "return" in the count. GET requests only.
-
-  - key: traffic-mine-tile-over-its-own-days
-    findings: [CYM-traffic-mine-tile-fits-its-days]
-    check: tests/rest/test_traffic_mine_tile_fits_its_days.py::test_the_tile_fits_its_days
-    severity: low
-    category: logic
-    url: https://cymetica.com/traffic/mine
-    title: "/traffic/mine: the tile says 1,311 unique visitors in 14 days, and the Unique visitors line under it adds up to 645"
-    expected: >
-      Distinct people over a period cannot be more than each day's distinct people added together, so a tile and a line with one name
-      fit that, or the page says they count differently.
-    actual: >
-      Read on 2026-11-05 at 14:53 UTC, 14 days: totals.unique_visitors 1,311, sum of unique_daily 645. At 30 days: 1,720 and 1,080.
-      The note under the new chart "People per day by page" says it counts "the same way ... as Unique visitors above", and the page's
-      own note explains the column Unique but not the tile. The tile read 214 before report #251 was fixed, so it looks like the tile took the column's count and the line did not.
-    steps:
-      - 'Open https://cymetica.com/traffic/mine signed in, 14 days -> tile UNIQUE VISITORS 1,311; hover the days of the Page views per day chart and add up Unique visitors -> 645'
-      - 'GET https://cymetica.com/api/v1/traffic/mine?days=14 with an API key -> totals.unique_visitors, unique_daily'
-    body: >
-      An owner reads two figures under one name and cannot tell how many people came. Our check fails while the tile is over the sum of the
-      days by more than 2 and passes when it is not. Naming the two apart on the page also closes this; tell us and we read the page. GET requests only.
-
-  - key: altseason-retail-tile-fails-its-own-backtest
-    findings: [CYM-altseason-retail-tile-backtest]
-    check: tests/rest/test_gem_screener_retail_tile_passes_its_own_backtest.py::test_the_retail_tile_passes_its_own_backtest_or_is_the_number_the_index_uses
-    severity: low
-    category: logic
-    url: https://cymetica.com/gem-screener/app?view=start
-    title: "Altseason index: the Retail tile reads 15 ('asleep') from a measure whose own published back-test says fail, and the index is built from a different number, 39"
-    expected: >
-      The Retail tile shows a figure that passes the back-test the panel publishes for it, or the figure the index is built from.
-    actual: >
-      Read on 2026-11-05. The tile "Retail turnover" reads 15 with the word "asleep". components.retail.backtest (rules retail-v4,
-      registered 2026-10-01) is that tile's own check and its verdict is "fail": B1 fails (the 2021 autumn top window peaks at 68.2, the
-      rule needs 70) and B2 fails (the lowest weeks in the 2018/19 and 2022 low windows read 50.0 and 51.8, the rule needs 35). So the tile
-      never read "asleep" at those lows and reads it now. The index is built from euphoria_retail, 39, which the page calls "the older
-      measure, used by the index" under Expand, and which the same back-test table shows at 0.0 and 24.0 at those two lows. The page does
-      not say the tile failed its check.
-    steps:
-      - 'GET https://cymetica.com/api/v1/gem-screener/altseason -> altseason.components.retail.value 14.5, verdict "asleep"'
-      - 'Same answer -> components.retail.backtest.verdict "fail", checks B1 and B2 with pass false, tops and lows with the v4 and v3 values'
-      - 'Same answer -> components.retail.euphoria_retail 38.9, euphoria_retail_label "Retail $ volume (used by the index)"'
-      - 'Open https://cymetica.com/gem-screener/app?view=start -> tile RETAIL TURNOVER 15/100 asleep; Expand -> "retail $ volume (the older measure, used by the index) 39/100"'
-    body: >
-      A reader of the panel sees one retail number on the tile and a different one in the sentence under Expand, and only the second is what
-      the index uses. The first is the one the panel's own test rejects. Our check fails while the back-test verdict is "fail" and the tile
-      differs from the index's number by more than 1; it passes when the tile passes its own test or reads the number the index uses. It
-      does not say which of the two measures is right. If you keep the tile and say on the page that it failed its check, tell us and we
-      read the page. GET requests only.
-
   - key: agent-tournaments-lapsed-ask-locks-the-table
     severity: medium
     category: logic
@@ -8851,6 +8777,23 @@ reports:
       - 'POST /api/v1/agent-tournaments/tables/67/seat with another bot of the same owner -> HTTP 409 one_seat_per_owner, "You already have a seat at this table."'
     body: >
       Ending the owner's claim on the table when a request lapses, as Decline does, fixes it. An owner who missed the 24 hours otherwise cannot play that table at all, and the message gives no way out. Paper tables only.
+
+  - key: agent-tournaments-coach-watches-volume
+    severity: medium
+    category: logic
+    url: https://cymetica.com/agent-casino/table/80/results
+    title: "Agent Casino: the NEXUS coach lets a seat in 1st place lose its prize on volume and never mentions volume"
+    expected: >
+      With the coach on, a seat that leads its table but is short of the minimum volume (/rules min_volume) is told so by the coach, and the coach acts on it while there is time, or says it cannot.
+    actual: >
+      Three of our 1-day Flash seats with the coach on finished 1st without qualifying and took only their buy-in back: table 80 (MACD Hunter, +4.99 %, $67.37 traded), table 78 (Stochastic Striker, -3.03 %, $51.47) and table 73 (Ichimoku Empress, -0.07 %, $54.67); a $50 table needs $107.14. Their coach logs have 18, 20 and 24 entries and not one mentions volume or qualifying. On table 78 the last entry is "no change · no closed trade since; rank 1", repeated 19 times over the last hours of the table.
+    steps:
+      - 'GET /api/v1/agent-tournaments/tables/80 -> results.ranked: our seat rank 1, qualified false, volume_usdc 67.37, prize_usdc 50 (the buy-in)'
+      - 'Same response, my_tune_log: 18 entries, none with "volume" or "qualif"'
+      - 'GET /api/v1/agent-tournaments/rules -> min_volume: "at least 3x the table''s trading capital (3/7 of it at a 1-day Flash table)"'
+    body: >
+      The prize at these tables turned on volume, and the coach watched rank only. A coach that tracks the volume still needed against the time left, says it, and sizes up or trades more before the end fixes it; if the daily allowance of 20 trades makes the volume impossible, it should say that instead. Paper tables only; read-only for this report.
+    check: tests/rest/test_agent_tournaments_coach_watches_volume.py::test_agent_tournaments_coach_watches_volume
 
   - key: season-counts-no-returning-visitors
     findings: [CYM-season-counts-returning-visitors]
@@ -8979,23 +8922,6 @@ reports:
       A creator who has USDC on the account and turns extra usage on is told to deposit more, because a balance read that timed out is
       taken as zero. The POST was a real Build it Better filing the account owner asked for; nothing else was written. Related to #314
       (the same filing refused earlier as over a spend limit while extra usage was on).
-
-  - key: agent-tournaments-coach-watches-volume
-    severity: medium
-    category: logic
-    url: https://cymetica.com/agent-casino/table/80/results
-    title: "Agent Casino: the NEXUS coach lets a seat in 1st place lose its prize on volume and never mentions volume"
-    expected: >
-      With the coach on, a seat that leads its table but is short of the minimum volume (/rules min_volume) is told so by the coach, and the coach acts on it while there is time, or says it cannot.
-    actual: >
-      Three of our 1-day Flash seats with the coach on finished 1st without qualifying and took only their buy-in back: table 80 (MACD Hunter, +4.99 %, $67.37 traded), table 78 (Stochastic Striker, -3.03 %, $51.47) and table 73 (Ichimoku Empress, -0.07 %, $54.67); a $50 table needs $107.14. Their coach logs have 18, 20 and 24 entries and not one mentions volume or qualifying. On table 78 the last entry is "no change · no closed trade since; rank 1", repeated 19 times over the last hours of the table.
-    steps:
-      - 'GET /api/v1/agent-tournaments/tables/80 -> results.ranked: our seat rank 1, qualified false, volume_usdc 67.37, prize_usdc 50 (the buy-in)'
-      - 'Same response, my_tune_log: 18 entries, none with "volume" or "qualif"'
-      - 'GET /api/v1/agent-tournaments/rules -> min_volume: "at least 3x the table''s trading capital (3/7 of it at a 1-day Flash table)"'
-    body: >
-      The prize at these tables turned on volume, and the coach watched rank only. A coach that tracks the volume still needed against the time left, says it, and sizes up or trades more before the end fixes it; if the daily allowance of 20 trades makes the volume impossible, it should say that instead. Paper tables only; read-only for this report.
-    check: tests/rest/test_agent_tournaments_coach_watches_volume.py::test_agent_tournaments_coach_watches_volume
 
   - key: set-off-took-111-usdc-acknowledged-not-returned
     severity: high
@@ -9147,31 +9073,6 @@ reports:
       used apps are theirs, and it is the one thing in the Apps table that picture 1 shows and the build does not. Read only; nothing
       was written.
 
-  - key: traffic-mine-first-read-of-a-range-503-or-15-s
-    severity: medium
-    category: performance
-    url: https://cymetica.com/traffic
-    title: "GET /api/v1/traffic/mine (Your traffic): the first read of 14, 30 and 90 days answered 15.1 s, 503 and 503 after 56 s, and a repeat read of each 0.4 to 1.0 s"
-    expected: >
-      A range click redraws Your traffic within 2 s (Done when 4 of request ET-34607), and the endpoint does not answer 503.
-    actual: >
-      Read on 2026-11-10 starting 05:21 UTC with the account's key, one call per range in turn: days=7 0.45 s; days=14 15.1 s, 200;
-      days=30 503 after 1.2 s; days=90 503 after 56 s. A repeat read straight after: 14 days 1.0 s, 30 days 0.5 s, 90 days 0.5 s, all 200.
-      Eighteen later reads over 9 minutes (05:49 to 05:58) took 0.4 to 2.7 s, with one connection reset (RemoteProtocolError) on days=30
-      at 05:56. The generated_at of the answer also moves backwards: days=14 read at 05:54:39 says generated 05:39:32, after a read at
-      05:51:15 that said 05:49:35, so more than one cache serves it. The other three calls of the page (public, activity, app-usage)
-      answered 0.3 to 1.3 s for all four ranges in the same minutes, and a range click on /traffic drew every anonymous panel in 0.33 to
-      0.44 s.
-    steps:
-      - 'GET https://cymetica.com/api/v1/traffic/mine?days=14&tz=utc with the account''s key on a cache that has not been read for several minutes -> 15.1 s'
-      - 'GET https://cymetica.com/api/v1/traffic/mine?days=30&tz=utc then days=90 on the same cold cache -> 503 (1.2 s and 56 s)'
-      - 'Repeat the same three calls -> 200 in 0.5 to 1.0 s'
-    body: >
-      This is one sample of a cold read, so we state it as what happened, not as a rate: three of the three first reads were slow or
-      refused, and repeats were fast. It is the part of the page that earlier took 3.5 to 15.8 s (report on the range switch), so a
-      creator who clicks 30 or 90 days after the cache has aged out can still wait or see nothing in Your traffic. Read only; nothing
-      was written.
-
   - key: traffic-products-tab-reads-higher-than-your-apps-at-30-days
     severity: medium
     category: logic
@@ -9198,6 +9099,31 @@ reports:
       Three screens print the same word for the same count and two of them disagree for five apps. A creator who compares /company with
       /traffic sees two numbers for one app. Our guess, not checked, is that Products counts a slightly longer window (its daily list has
       30 entries and Chart Analyzer's oldest day holds 13 people), but only your code knows. Read only; nothing was written.
+
+  - key: traffic-mine-first-read-of-a-range-503-or-15-s
+    severity: medium
+    category: performance
+    url: https://cymetica.com/traffic
+    title: "GET /api/v1/traffic/mine (Your traffic): the first read of 14, 30 and 90 days answered 15.1 s, 503 and 503 after 56 s, and a repeat read of each 0.4 to 1.0 s"
+    expected: >
+      A range click redraws Your traffic within 2 s (Done when 4 of request ET-34607), and the endpoint does not answer 503.
+    actual: >
+      Read on 2026-11-10 starting 05:21 UTC with the account's key, one call per range in turn: days=7 0.45 s; days=14 15.1 s, 200;
+      days=30 503 after 1.2 s; days=90 503 after 56 s. A repeat read straight after: 14 days 1.0 s, 30 days 0.5 s, 90 days 0.5 s, all 200.
+      Eighteen later reads over 9 minutes (05:49 to 05:58) took 0.4 to 2.7 s, with one connection reset (RemoteProtocolError) on days=30
+      at 05:56. The generated_at of the answer also moves backwards: days=14 read at 05:54:39 says generated 05:39:32, after a read at
+      05:51:15 that said 05:49:35, so more than one cache serves it. The other three calls of the page (public, activity, app-usage)
+      answered 0.3 to 1.3 s for all four ranges in the same minutes, and a range click on /traffic drew every anonymous panel in 0.33 to
+      0.44 s.
+    steps:
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=14&tz=utc with the account''s key on a cache that has not been read for several minutes -> 15.1 s'
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=30&tz=utc then days=90 on the same cold cache -> 503 (1.2 s and 56 s)'
+      - 'Repeat the same three calls -> 200 in 0.5 to 1.0 s'
+    body: >
+      This is one sample of a cold read, so we state it as what happened, not as a rate: three of the three first reads were slow or
+      refused, and repeats were fast. It is the part of the page that earlier took 3.5 to 15.8 s (report on the range switch), so a
+      creator who clicks 30 or 90 days after the cache has aged out can still wait or see nothing in Your traffic. Read only; nothing
+      was written.
 
   - key: traffic-app-column-is-right-aligned-not-left-as-drawn
     severity: low
@@ -9354,34 +9280,6 @@ reports:
       eleven minutes later (its start moved from 03:44 to 04:54), and 1,248 s is the same figure at 06:24, 06:25 and 06:33 while
       updated_at advances. On the page: the Exits chip says 2, the list under it shows 0 rows; the Best wallets cards and every
       "#rank" on the token cards are redrawn from whichever snapshot arrived last. On 8 Nov the same pair was seen: 4,045 s at
-  - key: gem-screener-supply-column-says-being-fetched-after-the-batch-failed
-    findings: [CYM-gem-screener-supply-batch-failure-is-said]
-    severity: low
-    category: logic
-    url: https://cymetica.com/gem-screener/app?view=chains
-    title: "Gem Screener: when the Supply Analyzer batch answers 503, every Supply cell reads \"n/a\" with \"The supply figures are being fetched\" and the page never asks again"
-    expected: >
-      A read that failed is said as failed, or is asked again. "Being fetched" is true only while a request is under way.
-    actual: >
-      Read on 2026-11-10 between about 06:43 and 06:48 UTC, while /api/v1/gem-screener/status said refreshing true (the snapshot of
-      9 Nov 23:49 UTC was an hour past its 6-hour refresh). GET /api/v1/supply-analyzer/batch/gem-screener answered HTTP 503
-      {"error":"Service temporarily unavailable","retry_after":3} after 60 seconds, three times in a row; /api/v1/supply-analyzer/status
-      did the same. On the Chains tab opened in those minutes all 26 rows read Supply "n/a" with the tooltip "Supply: not read yet. The
-      supply figures are being fetched.", and still did more than a minute later; the Sectors and Chains loads each list one batch
-      request and no second one. The page's script explains it: loadSupply() runs once after load, turns a response that is not ok
-      into null and returns, and nothing calls it again, so supplyAt stays empty and the cell keeps the "being fetched" text. At 06:53 UTC,
-      after the snapshot of 06:52, the same route answered 200 in 18 seconds with 269 items, all 32 chains among them.
-    steps:
-      - 'Open https://cymetica.com/gem-screener/app?view=chains while GET /api/v1/supply-analyzer/batch/gem-screener answers 503 -> every Supply cell "n/a", tooltip "The supply figures are being fetched."'
-      - 'Wait: no second request for the batch is made; the cells change only after a reload'
-      - 'Read loadSupply() in the page script: one fetch after load, "r.ok ? r.json() : null", then "if (!b || !b.items) return"'
-    body: >
-      The Supply column and the Dilution line of every row and pick card are empty for as long as the batch is unavailable, and the page
-      tells the reader to wait for something that is no longer coming. One retry after the retry_after the response gives, or a cell that
-      says the figures could not be read, both close this. We hold no automated check: it needs the batch to fail. We do not know why the
-      batch answered 503 (the refresh was running, and our own read-only checks were reading the site in those minutes), so this report
-      is about what the page says when it does. GET requests only.
-
       19:18 and "last 21 min" (1,2xx s) near 21:00. In none of the reads did the window reach its 6-hour target.
     steps:
       - 'Open wss://cymetica.com/ws/fomo-radar/signals?chain=robinhood&filter=all&limit=40 and keep it open for a minute -> two snapshots with different window_seconds, tokens_tracked and traders'
@@ -9405,32 +9303,6 @@ reports:
       2026-11-10 06:44 UTC: chain=robinhood 503 in 60.8 s, chain=solana 503 in 60.8 s, body
       {"error":"Service temporarily unavailable","retry_after":3}. The same on 2026-11-08 19:25 UTC. The page (Advanced, "A $100 trade
       on every signal") then shows the badge WITHHELD and "No result yet.", which reads as the published rule (too few signals
-  - key: gem-screener-hot-sector-fell-and-lost-to-btc
-    findings: [CYM-gem-screener-hot-sector-is-rising]
-    check: tests/rest/test_gem_screener_hot_sector_is_rising.py::test_a_hot_sector_did_not_fall_and_lose_to_btc_over_the_month
-    severity: low
-    category: logic
-    url: https://cymetica.com/gem-screener/app?view=sectors
-    title: "Gem Screener Sectors: four sectors read \"Hot\" and \"Hot right now\" while all 12 sectors fell 13% to 32% over the month and all 12 lost to BTC"
-    expected: >
-      A sector shown as Hot ("Hot right now" above the table, the HOT pill in it) is one a reader can take as rising, or at least
-      not falling and losing to BTC in the same month. If Hot stays relative, the line says so with the sector's own return.
-    actual: >
-      Read on 2026-11-10, snapshot 06:52 UTC. Over the month every one of the 12 sector baskets fell (theme_4w from -12.6% to -31.6%)
-      and every one lost to BTC (rs1m from -2.1% to -23.5%). Four carry stage "hot" and are listed under "Hot right now": RWA (-22%
-      over the month, -13% against BTC, 0.8 points ahead of the median sector), DEX & perps (-21%, -11%, +2.9), DeFi lending & staking
-      (-22%, -13%, +1.1; +0.1 points over three months) and Privacy (-13%, -2%, +13.5). The line reads "Hot right now: Privacy +13% vs
-      the median sector this month · DEX & perps +3% ... · DeFi lending & staking +1% ..." with no word that the sector itself fell.
-      Hot only means ahead of the median sector on both windows; the page's own 1M arrows call anything within 3 points flat, yet a
-      lead of 0.1 points is enough for Hot.
-    steps:
-      - 'Open https://cymetica.com/gem-screener/app?view=sectors -> "Hot right now: Privacy +13% vs the median sector this month · DEX & perps +3% ... · and 1 more marked Hot"'
-      - 'The page''s snapshot -> themes[].stage "hot" for rwa, dex, defi, privacy; their theme_4w and rs1m all below 0; sector_stages.median_1m -0.229'
-    body: >
-      A degen reads Hot as money coming in; here it means falling a little less than the others. Our check fails while a Hot sector's
-      basket fell over the month and lost to BTC; it passes when no such sector is Hot, by whatever rule. If you would rather keep the
-      relative stage and say on the line that the sector itself fell (and by how much), tell us and we read the page. GET requests only.
-
       covered) and not as a failing request, and it gives none of the reasons the text promises.
     steps:
       - 'GET https://cymetica.com/api/v1/clones/fomo-radar/backtest?chain=robinhood -> 503 after about 60 s'
@@ -9482,6 +9354,34 @@ reports:
       A reader takes "made in 24 h" as a day's profit; it is weeks of it. A field such as record_since on /traders would let the page
       say the true span. Read only; nothing was written.
 
+  - key: gem-screener-supply-column-says-being-fetched-after-the-batch-failed
+    findings: [CYM-gem-screener-supply-batch-failure-is-said]
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=chains
+    title: "Gem Screener: when the Supply Analyzer batch answers 503, every Supply cell reads \"n/a\" with \"The supply figures are being fetched\" and the page never asks again"
+    expected: >
+      A read that failed is said as failed, or is asked again. "Being fetched" is true only while a request is under way.
+    actual: >
+      Read on 2026-11-10 between about 06:43 and 06:48 UTC, while /api/v1/gem-screener/status said refreshing true (the snapshot of
+      9 Nov 23:49 UTC was an hour past its 6-hour refresh). GET /api/v1/supply-analyzer/batch/gem-screener answered HTTP 503
+      {"error":"Service temporarily unavailable","retry_after":3} after 60 seconds, three times in a row; /api/v1/supply-analyzer/status
+      did the same. On the Chains tab opened in those minutes all 26 rows read Supply "n/a" with the tooltip "Supply: not read yet. The
+      supply figures are being fetched.", and still did more than a minute later; the Sectors and Chains loads each list one batch
+      request and no second one. The page's script explains it: loadSupply() runs once after load, turns a response that is not ok
+      into null and returns, and nothing calls it again, so supplyAt stays empty and the cell keeps the "being fetched" text. At 06:53 UTC,
+      after the snapshot of 06:52, the same route answered 200 in 18 seconds with 269 items, all 32 chains among them.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app?view=chains while GET /api/v1/supply-analyzer/batch/gem-screener answers 503 -> every Supply cell "n/a", tooltip "The supply figures are being fetched."'
+      - 'Wait: no second request for the batch is made; the cells change only after a reload'
+      - 'Read loadSupply() in the page script: one fetch after load, "r.ok ? r.json() : null", then "if (!b || !b.items) return"'
+    body: >
+      The Supply column and the Dilution line of every row and pick card are empty for as long as the batch is unavailable, and the page
+      tells the reader to wait for something that is no longer coming. One retry after the retry_after the response gives, or a cell that
+      says the figures could not be read, both close this. We hold no automated check: it needs the batch to fail. We do not know why the
+      batch answered 503 (the refresh was running, and our own read-only checks were reading the site in those minutes), so this report
+      is about what the page says when it does. GET requests only.
+
   - key: airdrop-farmer-your-step-pill-covers-the-card-text-on-desktop
     severity: medium
     category: ui_ux
@@ -9504,6 +9404,32 @@ reports:
     body: >
       The build's own goal was one click per farm with the user's one step shown on the card; on desktop that step is the part a user
       cannot read. Read only; nothing was written.
+
+  - key: gem-screener-hot-sector-fell-and-lost-to-btc
+    findings: [CYM-gem-screener-hot-sector-is-rising]
+    check: tests/rest/test_gem_screener_hot_sector_is_rising.py::test_a_hot_sector_did_not_fall_and_lose_to_btc_over_the_month
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=sectors
+    title: "Gem Screener Sectors: four sectors read \"Hot\" and \"Hot right now\" while all 12 sectors fell 13% to 32% over the month and all 12 lost to BTC"
+    expected: >
+      A sector shown as Hot ("Hot right now" above the table, the HOT pill in it) is one a reader can take as rising, or at least
+      not falling and losing to BTC in the same month. If Hot stays relative, the line says so with the sector's own return.
+    actual: >
+      Read on 2026-11-10, snapshot 06:52 UTC. Over the month every one of the 12 sector baskets fell (theme_4w from -12.6% to -31.6%)
+      and every one lost to BTC (rs1m from -2.1% to -23.5%). Four carry stage "hot" and are listed under "Hot right now": RWA (-22%
+      over the month, -13% against BTC, 0.8 points ahead of the median sector), DEX & perps (-21%, -11%, +2.9), DeFi lending & staking
+      (-22%, -13%, +1.1; +0.1 points over three months) and Privacy (-13%, -2%, +13.5). The line reads "Hot right now: Privacy +13% vs
+      the median sector this month · DEX & perps +3% ... · DeFi lending & staking +1% ..." with no word that the sector itself fell.
+      Hot only means ahead of the median sector on both windows; the page's own 1M arrows call anything within 3 points flat, yet a
+      lead of 0.1 points is enough for Hot.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app?view=sectors -> "Hot right now: Privacy +13% vs the median sector this month · DEX & perps +3% ... · and 1 more marked Hot"'
+      - 'The page''s snapshot -> themes[].stage "hot" for rwa, dex, defi, privacy; their theme_4w and rs1m all below 0; sector_stages.median_1m -0.229'
+    body: >
+      A degen reads Hot as money coming in; here it means falling a little less than the others. Our check fails while a Hot sector's
+      basket fell over the month and lost to BTC; it passes when no such sector is Hot, by whatever rule. If you would rather keep the
+      relative stage and say on the line that the sector itself fell (and by how much), tell us and we read the page. GET requests only.
 
   - key: capital-maximizer-zec-usdc-card-says-moves-with-none
     severity: low
@@ -9549,6 +9475,23 @@ reports:
       A user who follows step 1 on the venue it names gets nothing past 5 USDC. The step and its cost should name the path that fills
       (USDC to USDfr in an open pool, then Pendle), and the card should say that USDfr's mint is KYC-gated even though the route does not
       need the mint. Read only: eth_call and GETs; nothing signed or sent.
+
+  - key: agent-tournaments-reward-note-says-top-two
+    severity: low
+    category: documentation
+    url: https://cymetica.com/agent-casino/table/81
+    title: "Agent Casino: /rules gives ET10 to the top 2 in one field and to the best three in another, and every table's ET10 note says three"
+    expected: >
+      After the build of 10 Nov 13:58 UTC, the ET10 rule reads the same in the rules, the API and every page, as ET-34608 asked: ET10 on top goes to 1st and 2nd only.
+    actual: >
+      GET /api/v1/agent-tournaments/rules et10_prizes reads "the top 2 qualified member seats of every finished table win ET10: 600 / 300 at a 7-day table, scaled to the table's length (85 / 42 = 127 ET10 at a 1-day table)", and the lobby says "Extra for the top 2". The same /rules object has et10_reward: "The treasury ET10 on a paper table goes to the best three MEMBER seats by ROI that traded the minimum volume". GET /api/v1/agent-tournaments/tables/81 (and 106) returns the same sentence as et10_reward_note, and the table page prints it in its ET10 line and its tooltip.
+    steps:
+      - 'GET /api/v1/agent-tournaments/rules -> et10_prizes "the top 2 qualified member seats ... 85 / 42 = 127 ET10 at a 1-day table"'
+      - 'same /rules object -> et10_reward "goes to the best three MEMBER seats by ROI"; GET /api/v1/agent-tournaments/tables/81 -> et10_reward_note, the same sentence'
+      - 'Open https://cymetica.com/agent-casino/table/81 -> the ET10 line under the result card repeats "the best three MEMBER seats"'
+    body: >
+      An owner reading the table page is told three seats can earn ET10, the rules and the lobby say two. Changing the one sentence in the table object fixes it. Read only; nothing was written.
+    check: tests/rest/test_agent_tournaments_reward_note_says_top_two.py::test_agent_tournaments_reward_note_says_top_two
 
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
