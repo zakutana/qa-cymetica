@@ -38,4 +38,4 @@ Read from 09:16 UTC; their engine changed again while we read (top 3 `as_of` mov
 
 Bug #337 reads right on the card now ("moves with ZEC"); `exposure` is still null in `/route`. Conservative cards of Fluid now show "OG Gambler does not bar a platform for a past loss".
 
-Score: 3 of 9 pass, 2 partial, 4 fail. Verdict: the operator's word.
+Score: 3 of 9 pass, 2 partial, 4 fail. FAIL sent on the operator's word, 2026-11-10 (BB-0061, `outbox/capital-maximizer/verdict-et-34229-r2.txt`).
