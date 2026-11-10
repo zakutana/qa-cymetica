@@ -106,4 +106,20 @@ Goals, for the next Build it Better request.
 9. Backtest shows its date (22 Sep, old gates) and the weeks of forward record.
 10. A near miss on hover shows the same card as a pick, with the gate it fails marked (the operator's, 2 Nov).
 
+**Calculations, measured 2026-11-10 (snapshot 23:49 UTC on 9 Nov, 235 apps; not yet the operator's word)**
+11. The benchmark multiple is steadier than one coin's price. Hyperliquid's multiple by the page's own run-rate rule (reproduced: 21.9 against the
+    page's 22.05): 7.9 to 41.6 over 12 months, 21.9 to 41.6 over the last 90 days; monthly medians 10.1 (Nov 2025), 33.7 (Sep 2026), 24.5 now.
+    With today's prices and revenues the default view has 34 rows at 2.5x or more; at 10x it has 17 and 4 of the 10 picks stay cheap
+    (CARDS, GMX, PUMP, DOLO); at 41.6x it has 48. Its 12-month median is 20.0, so a median benchmark moves almost nothing today.
+12. Upside beside what reaches the token. Hyperliquid pays 100% of revenue to holders; of the 10 picks CARDS pays 3%, TWT 2%, LDO 0%, MET 16%,
+    ORCA 37% (upside times that share: 0.5x, 0.1x, 0.0x, 0.6x, 1.0x), GMX, PUMP and USUAL stay at 8.9x, 3.8x and 2.9x, DOLO and RHEA are unknown.
+    Top 30 of the default view: 15 under 5%, 3 unknown. A second figure under the multiple, never a gate or a sort input (the standing decision).
+13. Upside beside the year's new tokens. Top 10 of the default view: NEST +286% (31x on market cap, 8x after), ORE +99%, RNBW +68%, SOLV +30%;
+    GP, SECZ, CARDS and INV have no schedule. The "If all tokens out" figure is in the detail only.
+14. Strength 3M divides by the price, not the market cap (its own tooltip says so); the Supply Analyzer's schedule could correct it.
+
+Checked and left: the Growing gate (all 10 picks have their last 3 full months above the 3 before; 7 of 44 passing rows do not, none a pick);
+`earnings30d` and `printed` are legacy fields since ET-28821 (new tokens are the dilution figure); the Meteora coin route answers 200 (the tick's
+miss was transient). Doubt, unverified: Collector Crypt's revenue is pack sales net of buybacks; DefiLlama's wording does not mention the cost of the cards kept.
+
 Refused by the operator on 2 Nov, seen in the mock: the band word with its range, a flag for a collapsed price, growth with its window and fit, six gate dots on the Apps row, capped upside marked, the theme-lagging flag as one page line.
