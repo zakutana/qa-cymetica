@@ -1,0 +1,7 @@
+PASS, third read of the build shipped 2026-11-10 13:58 UTC. Checked on the live page and /rules, signed in, at 1440 px and 390 px.
+
+Pass: running-table cards with grey house heads and an H, the YOU ring, one PRIZE box; IDLE in red; Open as one large table with switches, arrows, TAKE A SEAT and the rail; Finished tables folded under one line, each row saying what it took; the Your agents tab with the time-left column, ENDED rows, rank and ROI; the table page without the Your bot panel, no ELO, no Not trading on house rows; ET10 on top for 1st and 2nd only (lobby "Extra for the top 2", /rules 85 / 42 = 127 ET10 at a 1-day table); no daily trade cap at a table (/rules, table 106 seats at 22, 21 and 20 trades); the ask warning "this bot will likely not trade at this table".
+
+Not part of this pass: goal 1 (live tables) is in the human-reviewed slot, /lobby?mode=live still answers not_open. Lines 13-14 (coach volume line, pause by its own tune) and 15 (Changelog owner changes, PAUSED once) have not been read yet; our tables run until 2026-11-11 08:11 UTC.
+
+Seen on this build: /agent-casino/approve/N now reads "trades left today of , resets 00:00 UTC", the numbers gone with the cap. Your agents rows still draw the old round icons; picture 4 draws the robot head.
