@@ -1,0 +1,51 @@
+/* The review's changes on their live page: their variables, their palette. */
+.gr-n { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin: 0 4px 0 0; border-radius: 50%;
+  background: #00cfff; color: #06090f; font: 700 9.5px/1 "IBM Plex Mono", monospace; letter-spacing: 0; vertical-align: 1px; flex: none; text-transform: none; }
+body.gr-clean .gr-n { display: none; }
+#grTour .gr-n { display: inline-flex !important; }
+
+/* a line of ours under one of their headings */
+.gr-line { margin: 6px 0 12px; font-size: 13px; line-height: 1.45; color: var(--muted); }
+.gr-line b { color: var(--ink); font-weight: 600; }
+
+/* 2 Tier List: the gate that held a coin back, under its upside */
+.tl-ico .gr-why { font: 600 8.5px/1.15 "IBM Plex Mono", monospace; letter-spacing: .02em; color: #ff4444; max-width: 100%; white-space: normal; text-transform: lowercase; }
+
+/* 3 the pick card: upside on what holders get, beside the upside */
+.gr-hold { display: flex; align-items: baseline; gap: 6px; margin: -2px 0 8px; font-size: 12px; color: var(--ink-2); }
+.gr-hold b { font: 700 15px/1 "IBM Plex Mono", monospace; color: var(--ink); }
+.gr-hold small { font-size: 11.5px; color: var(--muted); }
+.gr-bad, .gr-hold b.gr-bad { color: #ff4444; }
+.gr-good, .gr-hold b.gr-good { color: #00ff88; }
+.gr-mute, .gr-hold b.gr-mute { color: var(--muted); }
+
+/* 3 to 6, 8 to 10 a small second line under one of their cells */
+.gr-up { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+td.left .gr-up { align-items: flex-start; }
+.gr-sub { display: inline-flex; align-items: center; font: 500 10.5px/1.2 "IBM Plex Mono", monospace; color: var(--muted); white-space: nowrap; }
+.gr-sub.gr-bad { color: #ff4444; }
+.gr-sub.gr-good { color: #00ff88; }
+
+/* 7 a shrinking chain, beside its name, in the place of their Gas tag */
+.tag.gr-shrink { display: inline-flex; align-items: center; color: #ff4444; background: transparent; border: 1px solid #ff4444; margin-left: 6px; white-space: nowrap; }
+
+/* 9 the new stage, in their pill; and what today's page calls the sector */
+.stpill.st-holding { color: var(--accent); background: transparent; }
+.gr-was { display: inline-flex; align-items: center; margin-left: 8px; }
+
+/* The tour, ours only: never in a picture for them */
+#grTour { position: fixed; right: 14px; bottom: 14px; z-index: 99999; width: 318px; max-height: 78vh; overflow: auto; background: #0a0e17; border: 1px solid rgba(0, 207, 255, .5);
+  border-radius: 10px; box-shadow: 0 10px 40px rgba(0, 0, 0, .6); font: 13px/1.3 system-ui, sans-serif; color: #e6edf7; }
+#grTour header { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 8px 10px; background: #0a0e17;
+  border-bottom: 1px solid rgba(0, 207, 255, .25); font-weight: 600; }
+#grTour header button { background: none; border: 0; color: #00cfff; cursor: pointer; font: inherit; padding: 0 2px; }
+#grTour ol { list-style: none; margin: 0; padding: 4px; }
+#grTour li { display: flex; gap: 4px; align-items: flex-start; padding: 6px; border-radius: 6px; cursor: pointer; }
+#grTour li > span:last-child { display: flex; flex-direction: column; gap: 1px; }
+#grTour li small { font-size: 11px; color: #6e7f9f; }
+#grTour li:hover, #grTour li.on { background: rgba(0, 207, 255, .12); }
+#grTour footer { padding: 8px 10px; border-top: 1px solid rgba(0, 207, 255, .25); font-size: 12px; color: #6e7f9f; }
+#grTour footer a { color: #00cfff; }
+#grTour.min ol, #grTour.min footer { display: none; }
+.gr-flash { outline: 2px solid #00cfff !important; outline-offset: 3px; transition: outline-color .3s; }
+@media (max-width: 700px) { #grTour { width: calc(100vw - 28px); max-height: 42vh; right: 14px; } }

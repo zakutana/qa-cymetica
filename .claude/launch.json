@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "gem-screener-review",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/gem-screener-review/serve.py", "--quiet"],
+      "port": 8847
+    },
+    {
       "name": "promo-market-v4",
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/promo-market-v4/live/serve.py"],
