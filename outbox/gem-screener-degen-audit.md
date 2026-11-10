@@ -107,7 +107,7 @@ Goals, for the next Build it Better request.
 10. A near miss on hover shows the same card as a pick, with the gate it fails marked (the operator's, 2 Nov).
 
 **Calculations, measured 2026-11-10 (snapshot 23:49 UTC on 9 Nov, 235 apps; not yet the operator's word)**
-11. The benchmark multiple is steadier than one coin's price. Hyperliquid's multiple by the page's own run-rate rule (reproduced: 21.9 against the
+11. REFUSED by the operator on 10 Nov ("benchmark menit nechci"): the benchmark stays Hyperliquid's multiple today. Kept as a measurement only. Hyperliquid's multiple by the page's own run-rate rule (reproduced: 21.9 against the
     page's 22.05): 7.9 to 41.6 over 12 months, 21.9 to 41.6 over the last 90 days; monthly medians 10.1 (Nov 2025), 33.7 (Sep 2026), 24.5 now.
     With today's prices and revenues the default view has 34 rows at 2.5x or more; at 10x it has 17 and 4 of the 10 picks stay cheap
     (CARDS, GMX, PUMP, DOLO); at 41.6x it has 48. Its 12-month median is 20.0, so a median benchmark moves almost nothing today.
@@ -122,4 +122,34 @@ Checked and left: the Growing gate (all 10 picks have their last 3 full months a
 `earnings30d` and `printed` are legacy fields since ET-28821 (new tokens are the dilution figure); the Meteora coin route answers 200 (the tick's
 miss was transient). Doubt, unverified: Collector Crypt's revenue is pack sales net of buybacks; DefiLlama's wording does not mention the cost of the cards kept.
 
-Refused by the operator on 2 Nov, seen in the mock: the band word with its range, a flag for a collapsed price, growth with its window and fit, six gate dots on the Apps row, capped upside marked, the theme-lagging flag as one page line.
+**Every tab, measured 2026-11-10 on the snapshot of 06:52 UTC (237 apps, 32 chains, 11 picks; not yet the operator's word)**
+
+Top Picks
+15. A card says both. PUMP, USUAL and MET pass the Growing gate ("+16% / mo, grows over 6 mo") and carry "Not growing" under Watch out
+    (revenue fell over the last 90 days, or 30-day revenue is 15% to 26% of its best). 3 of 11 picks.
+16. The Tier List grades by upside alone: all 6 coins of tier A and all 7 of tier B failed a gate (thin liquidity 8, heavy dilution 5).
+17. Item 12 on this snapshot: on holders' revenue CARDS 0.4x, MET 0.6x, LDO 0.0x, TWT 0.0x, ORCA 0.9x; GMX 8.5x, PUMP 3.6x, USUAL 2.6x, SDT 1.7x; DOLO and RHEA unknown.
+18. 5 of 11 picks pass Liquid on all-venue volume with a pool slip of 3.1% to 8.7% (GMX, DOLO, TWT, LDO, USUAL). Said on the card; left.
+19. Forward record: picks against BTC -0.7% to +1.5% over the last six cohorts, the control the same. First reading 12 Nov.
+
+Chains
+20. The two yardsticks disagree: of 26 chains with both, 7 are 5x or more apart (Sui 2.1x on adoption, 0.01x on fees; Plasma 16x and 1.3x;
+    Tron 5.2x and 40x; Starknet 1.6x and 25x). Spearman 0.57. The fee figure is in the detail only.
+21. The list is led by chains that shrank: Arbitrum's DEX volume is 71% under a year ago, Plasma's 82%, OP's 31%; Chains have no gate.
+22. "Held back" cuts 10 of 32 chains by construction (the 80th percentile of turnover): Solana loses half of its DEX volume (3.2x, 3.8x without)
+    and is left out of the benchmark set for it.
+
+Sectors
+23. Hot is only "ahead of the median sector". All 12 sectors fell 13% to 32% in four weeks and all 12 lost to BTC; 4 read Hot (RWA at -22%,
+    13 points behind BTC, 0.8 ahead of the median). DeFi lending is Hot on +1.1 and +0.1 points. 10 of 12 changed stage in four weeks.
+    The page's own arrows call anything within 3 points flat; 7 of 12 sit within 3 points on one axis.
+24. Talked about rests on 817 people in a week; 2 of 12 sectors have a figure, the rest read "too few".
+
+Altseason index
+25. It rolls on Tuesday: Monday's four refreshes still showed the week of 2 Nov (24.6); 06:52 UTC on Tuesday brought 9 Nov (22.2). CoinMarketCap's
+    page for Sunday 8 Nov was there. Their own limit is 10 days, so not filed.
+26. #312 stands: the tile reads 15, the index uses 47.
+
+Filed from this pass: #334 (the Supply column says "being fetched" after its batch answered 503 and is never asked again).
+
+Refused by the operator on 10 Nov: changing the benchmark. Refused on 2 Nov, seen in the mock: the band word with its range, a flag for a collapsed price, growth with its window and fit, six gate dots on the Apps row, capped upside marked, the theme-lagging flag as one page line.
