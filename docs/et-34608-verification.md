@@ -40,3 +40,5 @@ After our FAIL (BB-0059, resolved 12:20 UTC) the page changed (HTML 470 KB to 48
 | 16 ask warns | PASS | PASS | approve/551: "Under one trade is expected over this table: this bot will likely not trade at this table" |
 
 **Score now: 7 pass or pass in part (2-4, 5, 6-7, 8, 9-10, 16), 3 fail (1, 11, 12), 3 not seen (13-14, 15).** Our FAIL went out on the first read; the structure (Your agents tab, Open as one table, Finished folded, grey house heads) was shipped after it. Not re-checked: the phone "Approve all" text overlap.
+
+**Old icons (the operator's screenshots, 2026-11-10):** the new robot heads are on the lobby cards, but Your agents rows, the Your agents card header and the Leaderboard still show the old round species icons. Picture 4 draws the robot head on every Your agents row, so row 8 matches the pictures only in its columns, not in its icons. The Leaderboard is in no goal or picture. Not in the second verdict.
