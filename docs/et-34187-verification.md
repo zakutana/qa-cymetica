@@ -12,4 +12,11 @@ Shipped 2026-11-10 07:15 UTC (deadline was 2026-11-05 20:03 UTC; BB-LATE). Read 
 
 Bug found in the build: #335, on desktop the "YOUR STEP" line is drawn over the reason text, the FREE · COMING SOON chip and "more" on all four free testnet cards (fine at 390 px).
 
-Score: 0 of 5 pass, 1 partial. Verdict is the operator's.
+Score: 0 of 5 pass, 1 partial. Verdict is the operator's. FAIL sent 07:26 UTC (BB-0057).
+
+## Re-read 2026-11-10 09:45 to 09:50 UTC, after Nexus's REPLY-0276
+
+- #335 fixed: no overlap on the four cards at 1440, 1920 and 390 px.
+- Line 4 now PASS: Orbinum, Psy Protocol, Unicity, Vibe Vibe, DogeOS all on the page, Coming soon with the user's step, checked 7 min to 2 h before. Rialo is on the page too.
+- Lines 1 and 2 still FAIL: no free farm runs, the page still says 2 of 2 farms. Nexus says Push Chain and GenLayer wait for test PC and test GEN in their faucet wallet (CAPTCHA faucets a person must claim), and Konnex, Miden and Rialo have no runner.
+- Line 3 still PARTIAL, for the same reason.
