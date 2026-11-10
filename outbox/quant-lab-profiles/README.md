@@ -4,11 +4,13 @@ Asked for by the operator on 2026-11-10, in their words: *"ale dyt my chteji na 
 
 Rests on Nexus's Flash design (REPLY-0269), his answers to our six questions (REPLY-0279, to MSG-0358), search #22 (`docs/ET-33966-verification-2.md`) and the operator's decisions since: the bot is measured alone, not against casino tables; search without a stop-loss, stop set afterwards; a signal measured as a direction call and as a candle trade; research not limited to platform markets.
 
-Decided by us, veto open: horizon choices Flash 1 h, Flash 5 h, long term (no 1-day Flash, as for casino seating); low risk = no window below -15% (the owner rule's drawdown); more than half of the unseen windows plus the pooled bar; 12 long-term 7-day windows, 200 Flash windows; a paper short lane asked for (REPLY-0279: none exists).
+Decided by us, veto open: horizon choices Flash 1 h, Flash 5 h, long term (no 1-day Flash, as for casino seating); low risk = no window below -15% (the owner rule's drawdown); more than half of the unseen windows plus the pooled bar; 12 long-term 7-day windows, 100 Flash windows; a paper short lane asked for (REPLY-0279: none exists).
+
+Changed on 2026-11-10 after measuring (Binance daily closes, the lab's 12 coins, 730 days, weekly grid, 1,236 coin-weeks): the first draft had the lab read today's market and judge on past windows of that kind. A read from before a window does not carry into it: after a week that fell over 5% the next week fell 53% (any week 57%); a 30 or 60-day read gives 54% to 61% for every label. The 9 of 12 falling windows of #22 were known only afterwards. A short that switches itself off above its 7 to 60-day average did no better than an always-on short (first year a loss with every average). So the lab does not guess the market: a winner is all-weather, a bear bot or a bull bot, the card shows both sides, and the bet is the owner's Approve.
 
 Dropped since MSG-0358: Approve as a new item (REPLY-0279: shipped 10 Nov; the button is in quant-lab.js, not seen used, no winner yet).
 
-**request.txt:** about 5,000 of 8,000 characters, 20 of 40 lines, 0 of 6 pictures.
+**request.txt:** about 6,100 of 8,000 characters, 20 of 40 lines, 0 of 6 pictures.
 
 | | |
 |---|---|
