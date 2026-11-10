@@ -430,7 +430,7 @@ def test_the_next_asks_are_one_bot_a_table_and_never_repeat():
     assert [a["variant"] for a in asks] == ["A", "B", "C1"]
 
     # [operator 2026-11-10] only 1H and 5H tables: a 1 day table takes a day to read.
-    asks = casino.next_asks([], bots, [{"id": 50, "tier": "fmicro1d"}, {"id": 51, "tier": "fpro1d"}] + tables,
+    asks = casino.next_asks([], bots, [{"id": 50, "tier": "fmicro"}, {"id": 51, "tier": "fpro"}] + tables,
                             seated=set(), spent=set(), running=0)
     assert [a["table_id"] for a in asks] == [44, 45, 43]
 
