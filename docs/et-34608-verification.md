@@ -21,3 +21,22 @@ Shipped 2026-11-10 07:55 UTC ("Live: /agent-casino"), 11 h 40 min past its deadl
 **Score: 3 pass or pass in part (2-4, 9, 16), 6 fail (1, 6-7, 8, 10, 11, 12), 4 not seen yet (5, 13-14, 15).** What the shipped look is, in one line: the cards' oval table, stopwatch and prize boxes, the robot heads on running tables, the table page without its Your bot panel; the structure (Your agents tab, Open as one table with our switches, Finished folded) is not built. What I would say: **fail**: live tables, ET10 for the top 2 and the 20/day cap are untouched, Open, Finished and the Your agents tab are not what the pictures draw, house heads are not grey with an H, ELO is still on the table page. The verdict is the operator's.
 
 **To finish:** read tables 105 and 106 once they have traded and when they end (Wed 11 Nov 08:11 UTC): IDLE red, the coach's volume line, the Changelog, "PAUSED" once. Not filed as bugs: an unbuilt goal is the verdict's business.
+
+## Second read: new build, 2026-11-10 12:30-13:00 UTC
+
+After our FAIL (BB-0059, resolved 12:20 UTC) the page changed (HTML 470 KB to 489 KB, a Your agents link in the header, `/agent-casino/agents` is now a page). `/rules` is byte-identical to the first read; `/lobby?mode=live` still `not_open`. Read signed in on tables 105, 106, 107 and at 1440 / 390 px.
+
+| Done when | First read | Now | Evidence |
+|---|---|---|---|
+| 1 live tables | FAIL | FAIL | `?mode=live` not_open, tables [] |
+| 2-4 drawn tables, house heads, prize | PASS in part | PASS | house heads grey with an H badge, YOU ring, one PRIZE "your buy-in back + 85 ET10", pill and bar; 390 px the same |
+| 5 IDLE red | NOT SEEN | PASS in part | red `#ff4444` IDLE on the lobby card and "IDLE 3 H" in Your agents; table page IDLE line not seen (no idle bot there) |
+| 6-7 Open, Finished | FAIL | PASS | one large table, switches (how long, buy-in, paper/live), "Table 1 of 2" arrows, TAKE A SEAT, rail of small tables, + Create a table right of the heading; Finished folded under "26, 10 won by your agents, net $0, +850 ET10"; rows say HOUSE $0, $50 refund, $50 won +85 ET10 |
+| 8 Your agents | FAIL | PASS | header tab, `/agent-casino/agents`: time-left column, ENDED rows, rank, ROI, TO QUALIFY, WAITING row |
+| 9-10 table page | PASS / FAIL | PASS | no Your bot panel, header with pill, names beside heads, no ELO, no Not trading on house rows (ours shows it at 20/20) |
+| 11 ET10 top 2 | FAIL | FAIL | lobby still "Extra for the top 3."; pot line +141 ET10 (85 + 42 + 14), `/rules` `et10_prizes` still top three 600/300/100; only the 1ST/2ND boxes changed |
+| 12 20/day | FAIL | FAIL | cap stays: `/rules` 20 per UTC day, approve page "20 trades left today of 20", table 106 "20/20 today, resumes 00:00 UTC". Our RSI Sniper made its 20 and then sits "NOT TRADING" with 19 h left |
+| 13-14, 15 | NOT SEEN | NOT SEEN | tables 105/106 end 11 Nov 08:11 UTC |
+| 16 ask warns | PASS | PASS | approve/551: "Under one trade is expected over this table: this bot will likely not trade at this table" |
+
+**Score now: 7 pass or pass in part (2-4, 5, 6-7, 8, 9-10, 16), 3 fail (1, 11, 12), 3 not seen (13-14, 15).** Our FAIL went out on the first read; the structure (Your agents tab, Open as one table, Finished folded, grey house heads) was shipped after it. Not re-checked: the phone "Approve all" text overlap.
