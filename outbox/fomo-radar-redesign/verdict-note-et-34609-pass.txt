@@ -1,0 +1,11 @@
+Pass. Third delivery, /static/js/fomo-radar.js?v=20261110-3, read on 2026-11-10, 11:07 to 11:15 UTC, anonymous, at 1440 and 390 px.
+
+All 9 Done-when lines pass: Basic and Advanced as drawn, a three-line headline at both widths, no horizontal scroll, the chosen view survives a reload, Robinhood | Solana switches both views (Top wallets stays filled after switching), exits as chips, the promotion with its live count, Best wallets with USD equal to realized_eth x eth_usd, FOMO Radar under Ironstar Capital.
+
+The data bugs from the first two verdicts are gone: no contract among the 25 wallets on the board, the largest ETH amount is 0.40 ETH, traders and signals answer the same window in every read, /backtest answers 200, Solana prints the record span ("made in 47.1 days") instead of 24 h.
+
+Addresses: BB-CHANGE C2 asked for the short form of pictures 4 and 5. You kept them in full on purpose; the owner has seen the full form and accepts it, so C2 is waived and not a reason to fail.
+
+Two things we saw and do not count against the pass: for the first minutes after a release the board starts empty and every token reads "Unnamed launch" until names resolve (about 4 minutes), and the Best wallets window then reads "LAST 21 MIN" because the history is kept in memory and restarts with each release.
+
+Every figure, with how it was read: https://github.com/zakutana/qa-cymetica/blob/main/docs/ET-34609-recheck-2026-11-10.md
