@@ -1,0 +1,16 @@
+Fail again. Second delivery, /static/js/fomo-radar.js?v=20261110-2, read on 2026-11-10, 10:11 to 10:23 UTC, anonymous, at 1440 and 390 px.
+
+Fixed since the first verdict: Top wallets no longer sticks after Robinhood | Solana and back (26 rows each time, still 26 after 90 s), and /backtest answers 200 in 2 to 4 s and the page draws the $100 backtest. All 9 Done-when lines pass as written.
+
+What still fails:
+1. MUST STAY AS DRAWN, pictures 4 and 5: wallet addresses are still written in full (42 characters) on the token cards and on Best wallets, at both widths. The pictures have the short form (0xe885…efb0), with the full address in the link and the tooltip. In the API, wallet_short is itself the full address.
+2. The figures the cards and Best wallets are built on are the same as in the first verdict:
+- #332: the top "wallets" are contracts. Rank 1 (0x65050a9b…) has 752 bytes of code, rank 2 (0x8f10b468…) 13,529 bytes, rank 3 (0xd6d35b56…) took 467 buys for 406 different recipients. Rank 1 is listed as a buyer on 11 of the 12 cards.
+- #327: amounts on curves quoted in other tokens are added as ETH. Rank 1 "ETH bought" is 17,039.8; the chain's own logs for its 461 buys give the same unconverted 17,039.6. Rank 6 shows 29,603.
+- #328: rank 3 shows +2.8775 ETH realized in 14 round trips; on the chain it has 1 round trip, 0 wins and -0.59 ETH. Best wallets card 4 reads "+$5,114,582" (2,443.9 ETH); the same wallet's logs give +1,092.6 ETH.
+- #333: the endpoints still answer from different windows. At 10:22:40 signals and exits answered a 1,248 s window with 2 exits, traders 17,802 s; a minute earlier the same filter held 35 exits.
+- #331: the API now says window_seconds 0, window_kind record_span, but the page still prints "made in 24.0 h" and "records up to 24.0 h" for Solana wallets whose average hold is up to 401 h.
+
+Checked and correct, as before: card order, chance equals probability_3x_72h, the score formula, win rate, leaderboard order, thin, fresh, hot, gone, usd_invested, the promotion count, exits as chips, no horizontal scroll.
+
+Every figure, with how it was read: https://github.com/zakutana/qa-cymetica/blob/95f11eda/docs/ET-34609-recheck-2026-11-10.md
