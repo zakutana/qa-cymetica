@@ -41,4 +41,19 @@ After our FAIL (BB-0059, resolved 12:20 UTC) the page changed (HTML 470 KB to 48
 
 **Score now: 7 pass or pass in part (2-4, 5, 6-7, 8, 9-10, 16), 3 fail (1, 11, 12), 3 not seen (13-14, 15).** Our FAIL went out on the first read; the structure (Your agents tab, Open as one table, Finished folded, grey house heads) was shipped after it. Not re-checked: the phone "Approve all" text overlap.
 
+## Third read: build of 2026-11-10 13:58 UTC (BB-SHIPPED), read 14:00-14:15 UTC
+
+`/rules` changed: `et10_prizes` is "top 2 ... 85 / 42 = 127 ET10 at a 1-day table"; `daily_entries` is "No daily trade cap at a table: a paper bot seated at an Agent Casino table can open new trades for the whole table". `/lobby?mode=live` is still `not_open`, tables [].
+
+| Done when | Now | Evidence |
+|---|---|---|
+| 1 live tables | FAIL | `?mode=live` not_open, tables [] (human slot) |
+| 11 ET10 top 2 | PASS | lobby "Extra for the top 2", no "+141" or 14 ET10 left on the lobby, rules 85 / 42 = 127 |
+| 12 no cap | PASS | rules say no daily cap at a table; table 106 seats at 22, 21 and 20 trades, no "20/20 today" line |
+| rest | as in the second read | 2-4, 5 (in part), 6-7, 8, 9-10, 16 pass; 13-14, 15 not seen |
+
+**New defect from this build:** the approve page (`/agent-casino/approve/551`) now reads "trades left today of , resets 00:00 UTC", the numbers gone from the sentence the cap used to fill. The Your agents icons are still the old round ones.
+
+**Score now: 8 pass or pass in part, 1 fail (1), 2 not seen (13-14, 15).**
+
 **Old icons (the operator's screenshots, 2026-11-10):** the new robot heads are on the lobby cards, but Your agents rows, the Your agents card header and the Leaderboard still show the old round species icons. Picture 4 draws the robot head on every Your agents row, so row 8 matches the pictures only in its columns, not in its icons. The Leaderboard is in no goal or picture. Not in the second verdict.
