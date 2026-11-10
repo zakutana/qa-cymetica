@@ -1,0 +1,18 @@
+FAIL. Re-ship of 12:20 checked 10 Nov 2026; your engine was redeployed near 12:30 (charts_read fell from 114 to 79), so the figures are from a read at 12:34 UTC: /top3, /route, score.py on the same minute's DefiLlama, Morpho and Pendle data with 30-day charts, and the live page (capital-maximizer.js?v=20261110-2).
+
+A note on our side first. Our 09:41 point on line 7 stood (the engine took the lower of rule and median) and you fixed it. But our own score.py read "lasting" the same way, so our comparison figures were too low. It now takes the 30-day median, as the spec says, and on it your Conservative top 3 matches ours to the cent.
+
+NOW HOLDS: rates on the 30-day median; exposure "ZEC" (bug #337 fixed); the past loss shows without the OG sentence in Conservative.
+
+DONE WHEN
+1. Partial. Medium and High show the same three routes and neither holds a loop, so the caps of 3 and 5 cannot be seen.
+2. Fail. Medium #1 $37.33 (PT-reUSDe) against Axis sUSDx $54.76 and PT-USD3-17DEC2026/USDT on Morpho at 3x, $55: 32% under. High #1 $37.33 against the same loop at 5x, $67.38: 45% under. (The loop figures are from 4 Nov rates; today's PT 15.5% and USDT borrow 5.01% make them slightly better.) OG $353.42 against Arcadia 7x on Base, $454.81: 22% under, through line 4 only. Conservative is equal. Both PT-sUSDfr routes (25.42% today, $6.3M liquidity) left every tier at the redeploy; if that answers bug #338, the route still opens through Pendle's router.
+3. Pass.
+4. Fail. listed_only_chains is still ["Base"].
+5. Partial. dCOMP direct is Medium #3. No stUSDS loop, no Fluid smart vault.
+6. Pass as written.
+7. Pass. WETH-USDT 0.3% rates on its median, 25.37% after the 1/6 cut, gross $93.78, the same as ours; $63.57 after your costs.
+8. Pass.
+9. Fail. Your page still says "A deposit is not simulated for you here".
+
+Read only: no position opened, nothing sent but GETs.

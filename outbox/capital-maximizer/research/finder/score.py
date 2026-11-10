@@ -479,7 +479,7 @@ def lasting(data: Data, cfg: dict, route: dict, leverage: float, amount: float, 
     elif fixed:
         rate = month_rate(route, route["rate"])
     elif row:
-        rate = min(route["rate"], row["median"]) * lp_share(cfg, route)
+        rate = row["median"] * lp_share(cfg, route)
     else:
         return None
     bor = max(route.get("borrow") or 0, route.get("borrow_week") or 0, route.get("lasting_borrow") or 0)

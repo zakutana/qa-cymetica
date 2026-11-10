@@ -39,3 +39,25 @@ Read from 09:16 UTC; their engine changed again while we read (top 3 `as_of` mov
 Bug #337 reads right on the card now ("moves with ZEC"); `exposure` is still null in `/route`. Conservative cards of Fluid now show "OG Gambler does not bar a platform for a past loss".
 
 Score: 3 of 9 pass, 2 partial, 4 fail. FAIL sent on the operator's word, 2026-11-10 (BB-0061, `outbox/capital-maximizer/verdict-et-34229-r2.txt`).
+
+## Re-ship, 2026-11-10 12:20 UTC
+
+Their engine was redeployed again near 12:30 (charts_read fell from 114 to 79; rates switched from the lower of rule and median to the median; both sUSDfr routes left every tier). Figures from the snapshot at 12:34 UTC (top 3 `as_of` 12:30). Page script `v=20261110-2`: one change, a note naming OG Gambler is hidden outside OG; the API now drops that sentence, so Fluid's Conservative cards show the past loss alone.
+
+Our own fix: `score.py`'s lasting figure took `min(rate, median)`, while its docstring and our spec say the 30-day median; it now takes the median. Our BB-0061 line 7 point (the lower of rule and median under a median label) was also how our scorer read it. On the median our Conservative top 3 matches theirs to the cent ($23.09, $23.04, $22.55 against $23.09, $23.03, $22.49).
+
+| # | Result | Evidence |
+|---|---|---|
+| 1 | PARTIAL | Medium and High show the same three routes; no loop in either top 3, so Medium's 3x and High's 5x cannot be seen. |
+| 2 | FAIL | Conservative equal. Medium $37.33 (PT-reUSDe) vs Axis sUSDx $54.76 and PT-USD3/USDT 3x on Morpho $55 (PT 15.5%, borrow 5.01%): -32%. High $37.33 vs the same loop at 5x $67.38: -45%. OG $353.42 vs Arcadia 7x on Base $454.81: -22%, through line 4 only. |
+| 3 | PASS | Revert Lend WETH-USDT 0.05% 4.25x is OG #3. |
+| 4 | FAIL | `listed_only_chains: ["Base"]`. |
+| 5 | PARTIAL | dCOMP direct is Medium #3; no stUSDS loop, no Fluid smart vault. |
+| 6 | PASS as written | |
+| 7 | PASS | WETH-USDT 0.3% now rates on its median (25.37% = 30.44 x 5/6), gross $93.78, the same as ours, and shows $63.57. Ours reads $78.62 only because `score.py` charges a flat 30 bp round trip on every pool (`score.py:213`, `:451`), where they charge the pool's own 0.3% in and out ($30); both are readings of our spec's "a 1% pool does not cost 0.3%". On their cost the median figure is theirs to the cent. |
+| 8 | PASS | unchanged |
+| 9 | FAIL | unchanged; #338 still reverts at 10 USDC (12:2x). Both sUSDfr routes are gone (PT 25.42% today, $6.3M liquidity). |
+
+Bug #337: fixed in the API too (`exposure: "ZEC"`). The loop figures in line 2 ($55, $67.38) are hunter rows quoted on 4 Nov; today's PT 15.5% and borrow 5.01% (5.40% then) make them slightly better.
+
+Score: 4 of 9 pass, 2 partial, 3 fail. Verdict: the operator's word.
