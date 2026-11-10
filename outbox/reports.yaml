@@ -9405,6 +9405,32 @@ reports:
       2026-11-10 06:44 UTC: chain=robinhood 503 in 60.8 s, chain=solana 503 in 60.8 s, body
       {"error":"Service temporarily unavailable","retry_after":3}. The same on 2026-11-08 19:25 UTC. The page (Advanced, "A $100 trade
       on every signal") then shows the badge WITHHELD and "No result yet.", which reads as the published rule (too few signals
+  - key: gem-screener-hot-sector-fell-and-lost-to-btc
+    findings: [CYM-gem-screener-hot-sector-is-rising]
+    check: tests/rest/test_gem_screener_hot_sector_is_rising.py::test_a_hot_sector_did_not_fall_and_lose_to_btc_over_the_month
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=sectors
+    title: "Gem Screener Sectors: four sectors read \"Hot\" and \"Hot right now\" while all 12 sectors fell 13% to 32% over the month and all 12 lost to BTC"
+    expected: >
+      A sector shown as Hot ("Hot right now" above the table, the HOT pill in it) is one a reader can take as rising, or at least
+      not falling and losing to BTC in the same month. If Hot stays relative, the line says so with the sector's own return.
+    actual: >
+      Read on 2026-11-10, snapshot 06:52 UTC. Over the month every one of the 12 sector baskets fell (theme_4w from -12.6% to -31.6%)
+      and every one lost to BTC (rs1m from -2.1% to -23.5%). Four carry stage "hot" and are listed under "Hot right now": RWA (-22%
+      over the month, -13% against BTC, 0.8 points ahead of the median sector), DEX & perps (-21%, -11%, +2.9), DeFi lending & staking
+      (-22%, -13%, +1.1; +0.1 points over three months) and Privacy (-13%, -2%, +13.5). The line reads "Hot right now: Privacy +13% vs
+      the median sector this month · DEX & perps +3% ... · DeFi lending & staking +1% ..." with no word that the sector itself fell.
+      Hot only means ahead of the median sector on both windows; the page's own 1M arrows call anything within 3 points flat, yet a
+      lead of 0.1 points is enough for Hot.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app?view=sectors -> "Hot right now: Privacy +13% vs the median sector this month · DEX & perps +3% ... · and 1 more marked Hot"'
+      - 'The page''s snapshot -> themes[].stage "hot" for rwa, dex, defi, privacy; their theme_4w and rs1m all below 0; sector_stages.median_1m -0.229'
+    body: >
+      A degen reads Hot as money coming in; here it means falling a little less than the others. Our check fails while a Hot sector's
+      basket fell over the month and lost to BTC; it passes when no such sector is Hot, by whatever rule. If you would rather keep the
+      relative stage and say on the line that the sector itself fell (and by how much), tell us and we read the page. GET requests only.
+
       covered) and not as a failing request, and it gives none of the reasons the text promises.
     steps:
       - 'GET https://cymetica.com/api/v1/clones/fomo-radar/backtest?chain=robinhood -> 503 after about 60 s'

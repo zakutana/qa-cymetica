@@ -5268,6 +5268,11 @@
      "report_id": 252,
      "verdict": "fail",
      "at": "2026-11-05T22:45:41+00:00"
+    },
+    {
+     "report_id": 252,
+     "verdict": "pass",
+     "at": "2026-11-10T06:59:57+00:00"
     }
    ],
    "their_status": {
@@ -6830,6 +6835,22 @@
    "verdicts_sent": [],
    "their_status": {
     "335": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "gem-screener-hot-sector-fell-and-lost-to-btc",
+   "nodeids": [
+    "tests/rest/test_gem_screener_hot_sector_is_rising.py::test_a_hot_sector_did_not_fall_and_lose_to_btc_over_the_month"
+   ],
+   "report_ids": [
+    336
+   ],
+   "title": "Gem Screener Sectors: four sectors read \"Hot\" and \"Hot right now\" while all 12 sectors fell 13% to 32% over the month and all 12 lost to BTC",
+   "filed_at": "2026-11-10T07:30:46+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "336": "pending"
    },
    "withdrawn": false
   }
