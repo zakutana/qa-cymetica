@@ -6650,6 +6650,34 @@
     "322": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "traffic-mine-first-read-of-a-range-503-or-15-s",
+   "nodeids": [],
+   "report_ids": [
+    323
+   ],
+   "title": "GET /api/v1/traffic/mine (Your traffic): the first read of 14, 30 and 90 days answered 15.1 s, 503 and 503 after 56 s, and a repeat read of each 0.4 to 1.0 s",
+   "filed_at": "2026-11-10T06:00:20+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "323": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "traffic-products-tab-reads-higher-than-your-apps-at-30-days",
+   "nodeids": [],
+   "report_ids": [
+    324
+   ],
+   "title": "/api/v1/company/products shows up to 10 more unique visitors than Your apps and the People tab for the same app at 30 days (Chart Analyzer 119 against 109), though tooltips say it is the same figure",
+   "filed_at": "2026-11-10T06:00:37+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "324": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

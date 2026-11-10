@@ -9147,6 +9147,58 @@ reports:
       used apps are theirs, and it is the one thing in the Apps table that picture 1 shows and the build does not. Read only; nothing
       was written.
 
+  - key: traffic-mine-first-read-of-a-range-503-or-15-s
+    severity: medium
+    category: performance
+    url: https://cymetica.com/traffic
+    title: "GET /api/v1/traffic/mine (Your traffic): the first read of 14, 30 and 90 days answered 15.1 s, 503 and 503 after 56 s, and a repeat read of each 0.4 to 1.0 s"
+    expected: >
+      A range click redraws Your traffic within 2 s (Done when 4 of request ET-34607), and the endpoint does not answer 503.
+    actual: >
+      Read on 2026-11-10 starting 05:21 UTC with the account's key, one call per range in turn: days=7 0.45 s; days=14 15.1 s, 200;
+      days=30 503 after 1.2 s; days=90 503 after 56 s. A repeat read straight after: 14 days 1.0 s, 30 days 0.5 s, 90 days 0.5 s, all 200.
+      Eighteen later reads over 9 minutes (05:49 to 05:58) took 0.4 to 2.7 s, with one connection reset (RemoteProtocolError) on days=30
+      at 05:56. The generated_at of the answer also moves backwards: days=14 read at 05:54:39 says generated 05:39:32, after a read at
+      05:51:15 that said 05:49:35, so more than one cache serves it. The other three calls of the page (public, activity, app-usage)
+      answered 0.3 to 1.3 s for all four ranges in the same minutes, and a range click on /traffic drew every anonymous panel in 0.33 to
+      0.44 s.
+    steps:
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=14&tz=utc with the account''s key on a cache that has not been read for several minutes -> 15.1 s'
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=30&tz=utc then days=90 on the same cold cache -> 503 (1.2 s and 56 s)'
+      - 'Repeat the same three calls -> 200 in 0.5 to 1.0 s'
+    body: >
+      This is one sample of a cold read, so we state it as what happened, not as a rate: three of the three first reads were slow or
+      refused, and repeats were fast. It is the part of the page that earlier took 3.5 to 15.8 s (report on the range switch), so a
+      creator who clicks 30 or 90 days after the cache has aged out can still wait or see nothing in Your traffic. Read only; nothing
+      was written.
+
+  - key: traffic-products-tab-reads-higher-than-your-apps-at-30-days
+    severity: medium
+    category: logic
+    url: https://cymetica.com/traffic
+    title: "/api/v1/company/products shows up to 10 more unique visitors than Your apps and the People tab for the same app at 30 days (Chart Analyzer 119 against 109), though tooltips say it is the same figure"
+    expected: >
+      As the Unique visitors tooltips and the API definitions say, a product shows the same figure on the Products tab of /company, on
+      Your apps and on the People tab of Apps for the same app and range (Done when 8 of request ET-34607).
+    actual: >
+      Read on 2026-11-10 at 05:47 UTC and again 28 s later, 30 days: GET /api/v1/company/products (always "days": 30) against GET
+      /api/v1/traffic/mine?days=30&tz=utc (Your apps) against GET /api/v1/app-usage?days=30 (People tab). Chart Analyzer 119 / 109 / 109,
+      Agent Casino 213 / 206 / 206, Gem Screener 165 / 162 / 162, Build a Company 161 / 160 / 160, Team Dump Radar 35 / 34 / (not in the
+      top 40). The other eight products are equal on Products and Your apps (FOMO Radar 722, Traffic 54, Cymetica Quest 40, Promo Market
+      27, Airdrop Farmer 34, Supply Analyzer 16, Infiltrator 9, Capital Maximizer 2). Your apps and the People tab agree with each other
+      for every app they both list. On 2026-11-09 all 12 products read equal at 30 days. Products is higher in all five cases, and
+      Chart Analyzer fell by 11 on Your apps since yesterday and by 1 on Products. The tooltip on Unique visitors reads: "The same
+      figure as Your apps and the Products tab of /company for the same app and range", and the Products definition reads: "Same figure
+      as /app-usage". The Products tab has no 7, 14 or 90 day figure to compare (already in the earlier report on Team Dump Radar).
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/products with the account''s key -> products[name "Chart Analyzer"].unique_visitors 119'
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=30&tz=utc -> items[label "Chart Analyzer", kind "app"].unique_visitors 109'
+      - 'GET https://cymetica.com/api/v1/app-usage?days=30 -> humans[app "Chart Analyzer"].users 109'
+    body: >
+      Three screens print the same word for the same count and two of them disagree for five apps. A creator who compares /company with
+      /traffic sees two numbers for one app. Our guess, not checked, is that Products counts a slightly longer window (its daily list has
+      30 entries and Chart Analyzer's oldest day holds 13 people), but only your code knows. Read only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
