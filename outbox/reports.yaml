@@ -9244,6 +9244,190 @@ reports:
       A creator looking for the app they built finds two names for it on one page, and the only link between them is the green tag. Read
       only; nothing was written.
 
+  - key: fomo-radar-counts-a-router-contract-as-one-smart-wallet
+    severity: high
+    category: logic
+    url: https://cymetica.com/fomo-radar
+    title: "FOMO Radar: the #1 wallet on the leaderboard is a router contract that 406 buyers traded through; a buy is credited to the contract called, not to the wallet that signed it and got the tokens"
+    expected: >
+      A wallet's track record is built from that wallet's own trades. On a CurveBuy log the buyer is the address that receives the
+      tokens (the second indexed address, which in every sample below is also the signer of the transaction). A router or bot contract
+      that many people call is not one trader, has no win rate, and is not a "smart wallet" that can vote for a token.
+    actual: >
+      Read on 2026-11-10, 06:21:45 UTC (window_seconds 9456, head_block 110673493), against the chain's own CurveBuy / CurveSell logs
+      for blocks 110586549 to 110673493 from https://rpc.mainnet.chain.robinhood.com (3,329 legs; your trades_indexed 3,300).
+      /traders row 1, 0xd6d35b56237a05afd4cd7e441226fefc3f78c4e6 (score 80.0, 14 round trips, 9 wins, realized_eth 2.412563, shown
+      on the page as "#1 +$5,099 made"), is a contract of 20,535 bytes. In the window it was the first indexed address of 462 buys,
+      in 462 transactions, whose second indexed address was 406 different wallets; it never appears as the receiver of a buy. Sampled
+      buy 0xf409c1c728edecf0274488c5203d63f304050f653ec517d079920cb0e8b22a71 (your first_buy_tx for this "wallet"): signed by
+      0x9208981da2..., sent to 0xd6d35b56..., tokens end at 0x9208981da2.... 40 of the first 40 buys have 40 different signers.
+      The same holds for 0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc (98 buys for 59 receivers; leaderboard #8 here, #1 on 8 Nov
+      with 31 round trips) and 0xb3ea566ce79eaf79b3448c3d5ec1c9449cb82832 (24 buys for 19 receivers; leaderboard #3). 1,054 of the
+      2,016 buys in the window (52%) have a caller that is not the receiver. For plain wallets your figures match the chain exactly
+      (rows 7, 12, 14 to 19 and 22 to 24: buys, sells, eth_bought and realized_eth agree to four decimals). On the 12 cards of the Basic view,
+      0x65050a9b... is listed as a smart wallet on 7 cards and 0xb3ea566c... on 4.
+    steps:
+      - 'GET https://cymetica.com/api/v1/clones/fomo-radar/traders?chain=robinhood -> row 1 0xd6d35b56237a05afd4cd7e441226fefc3f78c4e6 (when the long window answers)'
+      - 'eth_getCode(0xd6d35b56237a05afd4cd7e441226fefc3f78c4e6) on chain 4663 -> 20,535 bytes of code'
+      - 'eth_getLogs for curve 0xbe586a3773d7c68e5cd9167a10907830cec1685a (WIENER), topic 0xec36bf57...c455 (the buy) -> 462 logs with topics[1] = 0xd6d35b56..., and 406 distinct topics[2]'
+      - 'eth_getTransactionByHash(0xf409c1c728edecf0274488c5203d63f304050f653ec517d079920cb0e8b22a71) -> from 0x9208981da2..., to 0xd6d35b56...; the receipt''s token Transfer ends at 0x9208981da2...'
+    body: >
+      The page's promise is "every buyer weighted by their own on-chain track record". Half of the buys on this chain go through a few
+      contracts, so the leaderboard's top places and most of the "smart wallets" on the cards are those contracts: the record of
+      hundreds of strangers added together. Crediting the buy to topics[2] (and a sell to the transaction's signer, because the sell
+      log names only the router) would give each real buyer their own record. Read only: eth_getLogs, eth_getCode,
+      eth_getTransactionByHash and eth_getTransactionReceipt; nothing was signed or sent.
+
+  - key: fomo-radar-counts-quote-token-amounts-as-eth
+    severity: high
+    category: logic
+    url: https://cymetica.com/fomo-radar
+    title: "FOMO Radar: on curves quoted in another token (ORBIO, NVDA, SPCX, DJT, AAPL) the amounts are added up as ETH, so POLLY is the second card of the Basic view with 8,477 ORBIO counted as 8,477 ETH"
+    expected: >
+      qualified_eth in the conviction formula (raw *= 1 + log10(1 + 10 * qualified_eth), /docs) and every field named eth_* hold ETH. A
+      curve whose quote_token is not native has its amounts converted to ETH first, or is left out of the ETH terms.
+    actual: >
+      Read on 2026-11-10, 06:21:45 UTC, /signals?chain=robinhood. POLLY (token 0xfe3e86a0900db5e4b300234ee12457de4e4713df, row 3 of 40,
+      conviction 33.9, probability_3x_72h 0.048889, shown on the Basic view as card 2, "4.9% chance of 3x in 72h") has quote_token
+      0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3, whose symbol() on chain is ORBIO. Its eth_invested is 9805.592582 and its
+      usd_invested is null. Its two qualified buyers carry eth 8476.706 between them, and the published conviction recomputes exactly
+      (33.9) from your formula with qualified_eth = 8476.706: the multiplier is 1 + log10(84,768) = 5.93. With that multiplier at 1
+      the same two votes give a conviction of 8.0. 8,477 ETH would be $17.9M at your eth_usd of 2113.65. Five more rows have a
+      non-native quote: MOOVDA and SLOWLY (NVDA, "NVIDIA - Robinhood Token"), Max (SPCX), VETO (DJT), MACBOOK (AAPL). The same
+      amounts reach the wallets: /traders gives eth_bought 7535.462353 for 0xe8852602f84e04e284286d8db01a41edd0ccefb0 and
+      open_cost_eth 947.171378 for 0x8f10b468b06c6fd214b65f87778827f7d113f996, and a row's detail on the page reads
+      "1 wallet · 1,012.073 ETH".
+    steps:
+      - 'GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain=robinhood&filter=all -> rows where quote_token is not "native": eth_invested in the thousands, usd_invested null'
+      - 'eth_call symbol() on 0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3 (chain 4663) -> "ORBIO"; on 0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec -> "NVDA"'
+      - 'Recompute conviction for that row from top_buyers[].vote_weight and top_buyers[].eth with the /docs formula -> equals the published conviction only with the quote amount used as ETH'
+      - 'GET https://cymetica.com/api/v1/clones/fomo-radar/traders?chain=robinhood -> eth_bought 7535.46 on one row'
+    body: >
+      Your own row already knows the amount is not ETH: usd_invested is null there. The ETH multiplier, eth_invested, eth_bought,
+      open_cost_eth and realized_eth still take it at face value, so a token quoted in a cheap token outranks the board and a wallet's
+      size and profit are off by the price ratio of the quote token. Read only; nothing was written.
+
+  - key: fomo-radar-leaderboard-profit-contradicts-the-wallets-own-flows
+    severity: high
+    category: logic
+    url: https://cymetica.com/fomo-radar
+    title: "FOMO Radar: the leaderboard says +2.41 ETH realized for an address whose only curve shows 10.69 ETH in, 10.10 ETH out and 99.95% of the tokens sold"
+    expected: >
+      realized_eth is proceeds minus cost of the closed round trips. An address that traded one curve, sold back everything it bought
+      and received less ETH than it paid has a negative realized figure, no open position, and is not rank 1.
+    actual: >
+      Read on 2026-11-10, 06:21:45 UTC. /traders row 1, 0xd6d35b56237a05afd4cd7e441226fefc3f78c4e6: realized_eth 2.412563,
+      round_trips 14, wins 9, eth_bought 10.692982, open_positions 1, open_cost_eth 4.458909. The same address in /signals, row
+      WIENER (curve 0xbe586a3773d7c68e5cd9167a10907830cec1685a), top_buyers: tokens_bought_in_window 1, eth 10.692982, eth_out
+      10.099082, bought_tokens 1459053064.05, sold_tokens 1458329200.82, gone true. So on its only curve it paid 10.693 ETH and
+      received 10.099 ETH, a loss of 0.594 ETH, with 0.05% of the tokens left; the leaderboard shows a profit of 2.413 ETH and an
+      open position that cost 4.459 ETH. The chain's logs agree with the row, not with the leaderboard: 462 buys for 10.6983 ETH,
+      293 sells for 10.1100 ETH, token balance back to exactly zero at block 110649089, net -0.588 ETH. The Basic view prints this
+      as "#1 ... +$5,099 made in 2.6 h · +2.413 ETH · won 9 of 14 trades". Eleven minutes later (06:32:24) the same row read
+      realized_eth 2.90313 with 12 round trips: fewer round trips, more profit.
+    steps:
+      - 'GET https://cymetica.com/api/v1/clones/fomo-radar/traders?chain=robinhood -> the row of 0xd6d35b56237a05afd4cd7e441226fefc3f78c4e6: realized_eth, open_cost_eth'
+      - 'GET https://cymetica.com/api/v1/clones/fomo-radar/signals?chain=robinhood&filter=all -> row WIENER, top_buyers entry of the same address: eth, eth_out, bought_tokens, sold_tokens, gone'
+      - 'eth_out - eth = -0.594; realized_eth = +2.413'
+      - 'eth_getLogs for the curve, both trade topics, topics[1] = that address -> 10.6983 ETH in, 10.1100 ETH out, tokens in = tokens out'
+    body: >
+      This is the figure a visitor reads as "what I would have made copying this wallet". Where the address is a plain wallet with a
+      few trades your realized_eth matches the chain to the last digit, so the fault is in how cost is split across many interleaved
+      buys and sells on one curve: 4.46 ETH of cost stays on 0.05% of the tokens. (That this address is a router is reported
+      separately; the arithmetic is wrong for one address either way.) Read only; nothing was written.
+
+  - key: fomo-radar-answers-from-different-windows-at-the-same-time
+    severity: high
+    category: api
+    url: https://cymetica.com/api/v1/clones/fomo-radar/signals?chain=robinhood
+    title: "FOMO Radar (Robinhood): the same endpoints answer from different windows within a minute (9,456 s / 5,909 s / 1,248 s; 242 / 180 / 43 tokens), so the board and the leaderboard flip"
+    expected: >
+      One board at a time. window_seconds grows toward window_target_seconds (21,600) or slides at it; two reads a minute apart show
+      the same tokens and the same wallet records plus the minute's trades.
+    actual: >
+      All 2026-11-10, UTC, chain=robinhood. 06:21:45, socket snapshot /ws/fomo-radar/signals: window_seconds 9456, tokens_tracked
+      242, wallets_tracked 190, 12 exit rows, traders 25 rows, row 1 0xd6d35b56... 06:24:23, GET /signals: window_seconds 1248,
+      tokens_tracked 64, wallets_tracked 34, filter=exits 0 rows; 06:25:57, GET /traders ten times: window_seconds 1248, 12 rows,
+      row 1 0x65050a9b.... 06:32:24, GET /traders three times and a socket snapshot: window_seconds 5909, tokens_tracked 180,
+      wallets_tracked 141, 25 rows, row 1 0xd6d35b56.... 06:33:43, the next snapshot on that same socket: window_seconds 1248,
+      tokens_tracked 43, wallets_tracked 30, traders 4 rows, row 1 0xe8852602.... The window that was 9,456 s at 06:21 was 5,909 s
+      eleven minutes later (its start moved from 03:44 to 04:54), and 1,248 s is the same figure at 06:24, 06:25 and 06:33 while
+      updated_at advances. On the page: the Exits chip says 2, the list under it shows 0 rows; the Best wallets cards and every
+      "#rank" on the token cards are redrawn from whichever snapshot arrived last. On 8 Nov the same pair was seen: 4,045 s at
+      19:18 and "last 21 min" (1,2xx s) near 21:00. In none of the reads did the window reach its 6-hour target.
+    steps:
+      - 'Open wss://cymetica.com/ws/fomo-radar/signals?chain=robinhood&filter=all&limit=40 and keep it open for a minute -> two snapshots with different window_seconds, tokens_tracked and traders'
+      - 'GET https://cymetica.com/api/v1/clones/fomo-radar/traders?chain=robinhood every few minutes -> window_seconds 1248, then 5909, then 1248; row 1 changes'
+      - 'Open https://cymetica.com/fomo-radar, Advanced, click Exits when its chip shows a number -> an empty list'
+    body: >
+      A wallet's score is its record inside the window, so a wallet is rank 1 with 14 round trips in one answer and absent in the next,
+      and a token's "smart wallets" follow. It reads as several processes each holding their own index, one of them with a fixed
+      21-minute lookback. With a 21-minute window most wallets have one trade, and one trade won is a 100% win rate: 16 of the 25
+      leaderboard rows at 06:21 had exactly one round trip. Read only; nothing was written.
+
+  - key: fomo-radar-backtest-endpoint-answers-503
+    severity: medium
+    category: api
+    url: https://cymetica.com/api/v1/clones/fomo-radar/backtest?chain=robinhood
+    title: "FOMO Radar: /backtest answers 503 after 60 s for both chains (8 Nov and 10 Nov), and the page shows it as WITHHELD"
+    expected: >
+      GET /api/v1/clones/fomo-radar/backtest?chain=robinhood|solana (listed in /docs and on the page) answers 200 with the result, or
+      with the withheld state and its reasons, as the page's "What this measures" text describes.
+    actual: >
+      2026-11-10 06:44 UTC: chain=robinhood 503 in 60.8 s, chain=solana 503 in 60.8 s, body
+      {"error":"Service temporarily unavailable","retry_after":3}. The same on 2026-11-08 19:25 UTC. The page (Advanced, "A $100 trade
+      on every signal") then shows the badge WITHHELD and "No result yet.", which reads as the published rule (too few signals
+      covered) and not as a failing request, and it gives none of the reasons the text promises.
+    steps:
+      - 'GET https://cymetica.com/api/v1/clones/fomo-radar/backtest?chain=robinhood -> 503 after about 60 s'
+      - 'GET https://cymetica.com/api/v1/clones/fomo-radar/backtest?chain=solana -> 503 after about 60 s'
+      - 'Open https://cymetica.com/fomo-radar, Advanced, the $100 backtest card -> WITHHELD, No result yet.'
+    body: >
+      The backtest is the only part of the page that would say whether following the signals made money. Read only; nothing was written.
+
+  - key: fomo-radar-top-wallets-stays-loading-after-a-chain-switch
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/fomo-radar
+    title: "FOMO Radar, Advanced: after Solana and back to Robinhood, Top wallets stays on \"Loading wallets…\" (90 s and counting) while Best wallets in Basic is drawn"
+    expected: >
+      Robinhood | Solana switches both views (request ET-34609, goal 1): after switching back, Top wallets lists the Robinhood
+      leaderboard again.
+    actual: >
+      2026-11-10 06:47 UTC, 1440 px, fresh load. Advanced: Top wallets lists 25 rows. Click Solana: "Per-wallet track records for
+      Solana are unavailable right now...". Click Robinhood: Top wallets shows "Loading wallets…" and still does 10, 30, 60 and
+      90 s later, although a socket snapshot with a traders block (133,696 bytes) arrived within 10 s and the Best wallets cards of
+      the Basic view show four wallets. Seen in two separate runs. In /static/js/fomo-radar.js?v=20261110-1 the chain switch writes
+      "Loading wallets…" into #traders, and loadAll() draws the GET answer only when the chain has no stored answer yet
+      (if (d && !state.tr[chain]) applyTraders(d)).
+    steps:
+      - 'Open https://cymetica.com/fomo-radar, click Advanced, scroll to Top wallets -> 25 rows'
+      - 'Click Solana, then Robinhood'
+      - 'Top wallets -> "Loading wallets…", unchanged after 90 s; a reload brings the rows back'
+    body: >
+      Read only; nothing was written.
+
+  - key: fomo-radar-solana-leaderboard-says-a-24-hour-window-for-records-of-weeks
+    severity: low
+    category: documentation
+    url: https://cymetica.com/api/v1/clones/fomo-radar/traders?chain=solana
+    title: "FOMO Radar (Solana): /traders says window_seconds 86400 while its rows hold round trips held for 400 hours, so the page prints \"+$15,651 made in 24.0 h\""
+    expected: >
+      The window a leaderboard states is the span its figures cover. If Solana records are kept across restarts (as /docs says under
+      persistence), the response says since when, and the page can print that.
+    actual: >
+      Read on 2026-11-10 06:22 UTC. /traders?chain=solana: window_seconds 86400. Row 2 (EwnHg8KWvGY5e3Q7MYvxH2JZXPJebqB9Py3fPA7AS6XQ):
+      13 round trips, realized_sol 182.348643, avg_hold_seconds about 1,445,000 (401.5 h). Row 7
+      (9nXDunV8eNvYSVys7JSBkm2hz9Q79Q3EYeko19srVeMC): 199 round trips, realized_sol 2952.87, average hold 413 h. A closed round trip
+      held for 400 hours did not happen inside 24 hours. The Basic view prints row 2 as "+$15,651 made in 24.0 h · +182.349 SOL"
+      under "Best wallets: what they made · last 24.0 h". The same response says legs_indexed 87 next to wallets_with_record 2,633.
+    steps:
+      - 'GET https://cymetica.com/api/v1/clones/fomo-radar/traders?chain=solana (when wallet_source.status is live) -> window_seconds 86400, rows with avg_hold_seconds above 1,000,000'
+      - 'Open https://cymetica.com/fomo-radar, Solana, Best wallets -> "made in 24.0 h"'
+    body: >
+      A reader takes "made in 24 h" as a day's profit; it is weeks of it. A field such as record_since on /traders would let the page
+      say the true span. Read only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

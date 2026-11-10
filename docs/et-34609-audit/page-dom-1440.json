@@ -1,0 +1,832 @@
+{
+ "basic_rh": {
+  "h1": {
+   "lines": 3,
+   "size": "57.6px",
+   "text": "Memecoin whales.\nWhat they buy.\nRight now."
+  },
+  "mode": "fr basic",
+  "scrollW": 1440,
+  "clientW": 1440,
+  "upd": "07:21:45",
+  "pill": "242 tokens · 190 wallets scored · Robinhood Chain",
+  "mkt": "Market\nRISK-ON\n·\n242 tokens scanned",
+  "cards": [
+   {
+    "key": "0x915d4ec675d84b788c44251f0abb07e5f3c41176",
+    "name": "MRXI",
+    "sub": "Merxia",
+    "badges": [
+     "PONS · 1% fee"
+    ],
+    "p": "4.9%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "7 smart wallets",
+     "$10,816 bought",
+     "2.6h since first buy"
+    ],
+    "who": [
+     {
+      "t": "#2 | 77% | 13 | IN | 0xe8852602f84e04e284286d8db01a41edd0ccefb0 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xe8852602f84e04e284286d8db01a41edd0ccefb0",
+      "sold": false
+     },
+     {
+      "t": "#3 | 83% | 6 | IN | 0xb3ea566ce79eaf79b3448c3d5ec1c9449cb82832 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xb3ea566ce79eaf79b3448c3d5ec1c9449cb82832",
+      "sold": false
+     },
+     {
+      "t": "#4 | 67% | 12 | IN | 0x92475293e578c7d88651d160d2b0e45e04e4528b | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x92475293e578c7d88651d160d2b0e45e04e4528b",
+      "sold": false
+     }
+    ],
+    "more": "+2 more",
+    "warn": "Thin: max buy $309",
+    "go": "https://cymetica.com/launchpad/robinhood/token/0x915d4ec675d84b788c44251f0abb07e5f3c41176",
+    "gotext": "Trade MRXI ↗",
+    "w": 320
+   },
+   {
+    "key": "0xfe3e86a0900db5e4b300234ee12457de4e4713df",
+    "name": "POLLY",
+    "sub": "Polly Town",
+    "badges": [
+     "PONS · 1% fee"
+    ],
+    "p": "4.9%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "2 smart wallets",
+     "— bought",
+     "2.6h since first buy"
+    ],
+    "who": [
+     {
+      "t": "#2 | 77% | 13 | IN | 0xe8852602f84e04e284286d8db01a41edd0ccefb0 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xe8852602f84e04e284286d8db01a41edd0ccefb0",
+      "sold": false
+     },
+     {
+      "t": "#6 | 100% | 2 | IN | 0x8f10b468b06c6fd214b65f87778827f7d113f996 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x8f10b468b06c6fd214b65f87778827f7d113f996",
+      "sold": false
+     }
+    ],
+    "more": null,
+    "warn": null,
+    "go": "https://cymetica.com/launchpad/robinhood/token/0xfe3e86a0900db5e4b300234ee12457de4e4713df",
+    "gotext": "Trade POLLY ↗",
+    "w": 320
+   },
+   {
+    "key": "0x9dd0c522ee372f576d63878916eb368cf4d26802",
+    "name": "MOOVDA",
+    "sub": "Moovidia",
+    "badges": [],
+    "p": "4.9%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "4 smart wallets",
+     "— bought",
+     "22m since first buy"
+    ],
+    "who": [
+     {
+      "t": "#2 | 77% | 13 | SOLD | 0xe8852602f84e04e284286d8db01a41edd0ccefb0 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xe8852602f84e04e284286d8db01a41edd0ccefb0",
+      "sold": true
+     },
+     {
+      "t": "#3 | 83% | 6 | SOLD | 0xb3ea566ce79eaf79b3448c3d5ec1c9449cb82832 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xb3ea566ce79eaf79b3448c3d5ec1c9449cb82832",
+      "sold": true
+     },
+     {
+      "t": "#4 | 67% | 12 | IN | 0x92475293e578c7d88651d160d2b0e45e04e4528b | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x92475293e578c7d88651d160d2b0e45e04e4528b",
+      "sold": false
+     }
+    ],
+    "more": "+1 more",
+    "warn": null,
+    "go": "https://cymetica.com/launchpad/robinhood/token/0x9dd0c522ee372f576d63878916eb368cf4d26802",
+    "gotext": "Trade MOOVDA ↗",
+    "w": 320
+   },
+   {
+    "key": "0x42200daafdad1fc94328529e974a339bfa071f47",
+    "name": "CANOPIC",
+    "sub": "Canopic",
+    "badges": [
+     "PONS · 1% fee"
+    ],
+    "p": "3.5%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "3 smart wallets",
+     "$1,606 bought",
+     "1.3h since first buy"
+    ],
+    "who": [
+     {
+      "t": "#2 | 77% | 13 | SOLD | 0xe8852602f84e04e284286d8db01a41edd0ccefb0 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xe8852602f84e04e284286d8db01a41edd0ccefb0",
+      "sold": true
+     },
+     {
+      "t": "#4 | 67% | 12 | IN | 0x92475293e578c7d88651d160d2b0e45e04e4528b | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x92475293e578c7d88651d160d2b0e45e04e4528b",
+      "sold": false
+     },
+     {
+      "t": "#6 | 100% | 2 | IN | 0x8f10b468b06c6fd214b65f87778827f7d113f996 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x8f10b468b06c6fd214b65f87778827f7d113f996",
+      "sold": false
+     }
+    ],
+    "more": null,
+    "warn": "Thin: max buy $334",
+    "go": "https://cymetica.com/launchpad/robinhood/token/0x42200daafdad1fc94328529e974a339bfa071f47",
+    "gotext": "Trade CANOPIC ↗",
+    "w": 320
+   },
+   {
+    "key": "0x5fc31d3ade1f83e77cb0e02e3bed6c8c183f8269",
+    "name": "AGUARD",
+    "sub": "AgentGuard",
+    "badges": [],
+    "p": "3.5%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "3 smart wallets",
+     "$1,010 bought",
+     "2.6h since first buy"
+    ],
+    "who": [
+     {
+      "t": "#2 | 77% | 13 | IN | 0xe8852602f84e04e284286d8db01a41edd0ccefb0 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xe8852602f84e04e284286d8db01a41edd0ccefb0",
+      "sold": false
+     },
+     {
+      "t": "#3 | 83% | 6 | SOLD | 0xb3ea566ce79eaf79b3448c3d5ec1c9449cb82832 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xb3ea566ce79eaf79b3448c3d5ec1c9449cb82832",
+      "sold": true
+     },
+     {
+      "t": "#4 | 67% | 12 | IN | 0x92475293e578c7d88651d160d2b0e45e04e4528b | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x92475293e578c7d88651d160d2b0e45e04e4528b",
+      "sold": false
+     }
+    ],
+    "more": null,
+    "warn": "Thin: max buy $428",
+    "go": "https://cymetica.com/launchpad/robinhood/token/0x5fc31d3ade1f83e77cb0e02e3bed6c8c183f8269",
+    "gotext": "Trade AGUARD ↗",
+    "w": 320
+   },
+   {
+    "key": "0x4acdbf3576e90b66bea1bcfcda2effa74b5608fe",
+    "name": "PARALLAX",
+    "sub": "Parallax",
+    "badges": [
+     "FRESH",
+     "PONS · 1% fee"
+    ],
+    "p": "3.5%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "3 smart wallets",
+     "$619 bought",
+     "2.6h since first buy"
+    ],
+    "who": [
+     {
+      "t": "#2 | 77% | 13 | IN | 0xe8852602f84e04e284286d8db01a41edd0ccefb0 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xe8852602f84e04e284286d8db01a41edd0ccefb0",
+      "sold": false
+     },
+     {
+      "t": "#3 | 83% | 6 | IN | 0xb3ea566ce79eaf79b3448c3d5ec1c9449cb82832 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xb3ea566ce79eaf79b3448c3d5ec1c9449cb82832",
+      "sold": false
+     },
+     {
+      "t": "#8 | 67% | 6 | IN | 0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc",
+      "sold": false
+     }
+    ],
+    "more": null,
+    "warn": "Thin: max buy $314",
+    "go": "https://cymetica.com/launchpad/robinhood/token/0x4acdbf3576e90b66bea1bcfcda2effa74b5608fe",
+    "gotext": "Trade PARALLAX ↗",
+    "w": 320
+   },
+   {
+    "key": "0x86fb4a1bb3a909ae401f643520d635845e9bc859",
+    "name": "Max",
+    "sub": "Max",
+    "badges": [
+     "SAME NAME ×2",
+     "FRESH",
+     "PONS · 1% fee"
+    ],
+    "p": "2.4%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "1 smart wallet",
+     "— bought",
+     "40m since first buy"
+    ],
+    "who": [
+     {
+      "t": "#8 | 67% | 6 | IN | 0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc",
+      "sold": false
+     }
+    ],
+    "more": null,
+    "warn": null,
+    "go": "https://cymetica.com/launchpad/robinhood/token/0x86fb4a1bb3a909ae401f643520d635845e9bc859",
+    "gotext": "Trade Max ↗",
+    "w": 320
+   },
+   {
+    "key": "0xf2b76c1109bc23e2f6360f408aa4adcd74abc42b",
+    "name": "SWARM",
+    "sub": "Swarmfund",
+    "badges": [
+     "PONS · 1% fee"
+    ],
+    "p": "2.4%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "3 smart wallets",
+     "$605 bought",
+     "2.4h since first buy"
+    ],
+    "who": [
+     {
+      "t": "#2 | 77% | 13 | IN | 0xe8852602f84e04e284286d8db01a41edd0ccefb0 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xe8852602f84e04e284286d8db01a41edd0ccefb0",
+      "sold": false
+     },
+     {
+      "t": "#6 | 100% | 2 | IN | 0x8f10b468b06c6fd214b65f87778827f7d113f996 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x8f10b468b06c6fd214b65f87778827f7d113f996",
+      "sold": false
+     },
+     {
+      "t": "#8 | 67% | 6 | IN | 0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc",
+      "sold": false
+     }
+    ],
+    "more": null,
+    "warn": "Thin: max buy $463",
+    "go": "https://cymetica.com/launchpad/robinhood/token/0xf2b76c1109bc23e2f6360f408aa4adcd74abc42b",
+    "gotext": "Trade SWARM ↗",
+    "w": 320
+   },
+   {
+    "key": "0xc5d6c1d90c8a87a07e2670b99b1556e818803228",
+    "name": "BELL",
+    "sub": "BELL POOLS",
+    "badges": [
+     "SAME NAME ×2",
+     "PONS · 1% fee"
+    ],
+    "p": "2.4%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "2 smart wallets",
+     "$1,079 bought",
+     "2.0h since first buy"
+    ],
+    "who": [
+     {
+      "t": "#2 | 77% | 13 | IN | 0xe8852602f84e04e284286d8db01a41edd0ccefb0 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xe8852602f84e04e284286d8db01a41edd0ccefb0",
+      "sold": false
+     },
+     {
+      "t": "#8 | 67% | 6 | IN | 0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc",
+      "sold": false
+     }
+    ],
+    "more": null,
+    "warn": "Thin: max buy $374",
+    "go": "https://cymetica.com/launchpad/robinhood/token/0xc5d6c1d90c8a87a07e2670b99b1556e818803228",
+    "gotext": "Trade BELL ↗",
+    "w": 320
+   },
+   {
+    "key": "0xcbb54563ff20ed3be02ebc2d8a5bcb76145fcfe7",
+    "name": "COH",
+    "sub": "Camilo on hood",
+    "badges": [
+     "PONS · 1% fee"
+    ],
+    "p": "2.4%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "1 smart wallet",
+     "$267 bought",
+     "1m since first buy"
+    ],
+    "who": [
+     {
+      "t": "#4 | 67% | 12 | IN | 0x92475293e578c7d88651d160d2b0e45e04e4528b | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x92475293e578c7d88651d160d2b0e45e04e4528b",
+      "sold": false
+     }
+    ],
+    "more": null,
+    "warn": "Thin: max buy $287",
+    "go": "https://cymetica.com/launchpad/robinhood/token/0xcbb54563ff20ed3be02ebc2d8a5bcb76145fcfe7",
+    "gotext": "Trade COH ↗",
+    "w": 320
+   },
+   {
+    "key": "0x84423b2b6fc0a82d4ad31a454dfa5d3fb6ecb978",
+    "name": "NRDIS",
+    "sub": "Nordis Market",
+    "badges": [
+     "FRESH",
+     "PONS · 1% fee"
+    ],
+    "p": "2.4%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "2 smart wallets",
+     "$565 bought",
+     "2.2h since first buy"
+    ],
+    "who": [
+     {
+      "t": "#2 | 77% | 13 | SOLD | 0xe8852602f84e04e284286d8db01a41edd0ccefb0 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xe8852602f84e04e284286d8db01a41edd0ccefb0",
+      "sold": true
+     },
+     {
+      "t": "#8 | 67% | 6 | IN | 0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc",
+      "sold": false
+     }
+    ],
+    "more": null,
+    "warn": "Thin: max buy $178",
+    "go": "https://cymetica.com/launchpad/robinhood/token/0x84423b2b6fc0a82d4ad31a454dfa5d3fb6ecb978",
+    "gotext": "Trade NRDIS ↗",
+    "w": 320
+   },
+   {
+    "key": "0xe2a4bec7bdd858dd51d175a4b0b1ef70eb9bd4e7",
+    "name": "LOUPE",
+    "sub": "Loupe",
+    "badges": [
+     "PONS · 1% fee"
+    ],
+    "p": "2.4%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "3 smart wallets",
+     "$75 bought",
+     "35m since first buy"
+    ],
+    "who": [
+     {
+      "t": "#2 | 77% | 13 | IN | 0xe8852602f84e04e284286d8db01a41edd0ccefb0 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0xe8852602f84e04e284286d8db01a41edd0ccefb0",
+      "sold": false
+     },
+     {
+      "t": "#6 | 100% | 2 | IN | 0x8f10b468b06c6fd214b65f87778827f7d113f996 | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x8f10b468b06c6fd214b65f87778827f7d113f996",
+      "sold": false
+     },
+     {
+      "t": "#8 | 67% | 6 | IN | 0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc | ⧉",
+      "href": "https://robinhoodchain.blockscout.com/address/0x65050a9b7e5075a2ba5ced7b1b64ee66262c40dc",
+      "sold": false
+     }
+    ],
+    "more": null,
+    "warn": "Thin: max buy $230",
+    "go": "https://cymetica.com/launchpad/robinhood/token/0xe2a4bec7bdd858dd51d175a4b0b1ef70eb9bd4e7",
+    "gotext": "Trade LOUPE ↗",
+    "w": 320
+   }
+  ],
+  "exits": [
+   [
+    "WIENER",
+    "https://cymetica.com/launchpad/robinhood/token/0x1f8e3bd84c994068717683724d73943b209152a5"
+   ],
+   [
+    "INFER",
+    "https://cymetica.com/launchpad/robinhood/token/0x8dda0f45290ea3be0b1c23be02f9e69e1934875a"
+   ],
+   [
+    "HYVO",
+    "https://cymetica.com/launchpad/robinhood/token/0xa274a3e2636926390d6b47dac9a2e11206f96808"
+   ],
+   [
+    "TOAA",
+    "https://cymetica.com/launchpad/robinhood/token/0xbd6967dc625c56ac1c9c9d24d5f227383c8b039c"
+   ],
+   [
+    "mogsaicoin",
+    "https://cymetica.com/launchpad/robinhood/token/0xcb34f02df13c36774c223f517612db36dcac9a0e"
+   ],
+   [
+    "LUCY",
+    "https://cymetica.com/launchpad/robinhood/token/0x59df9bd09517d46f5f03abbea52b7f67106a8302"
+   ],
+   [
+    "PRJCLR",
+    "https://cymetica.com/launchpad/robinhood/token/0x73794e8b86fc418d1a219595895b0922bb4b573e"
+   ],
+   [
+    "TAURUS",
+    "https://cymetica.com/launchpad/robinhood/token/0x7aeccc699c173a4d5ff38607b4d9e646217aeaad"
+   ],
+   [
+    "INFERRALAB",
+    "https://cymetica.com/launchpad/robinhood/token/0xfac459fa650bb83c8d9175a9e86b4d223ccbe8fc"
+   ],
+   [
+    "ONION",
+    "https://cymetica.com/launchpad/robinhood/token/0xb57ccc3f9e55715cbf8d681ea42ab384bb030798"
+   ],
+   [
+    "FLETCH",
+    "https://cymetica.com/launchpad/robinhood/token/0x16f9db21d1013a0824f67442319475620928c7f5"
+   ],
+   [
+    "BEEPZ",
+    "https://cymetica.com/launchpad/robinhood/token/0x88081347e712749a2d01e6c597b13fe0cc2478a5"
+   ]
+  ],
+  "exitsLabel": "Smart money selling",
+  "promo": {
+   "hidden": false,
+   "text": "4×\nLOWER FEE\n37 of 40 tokens on this radar trade on PONS at a 1% fee. EventTrader charges 0.25%: $10,000 of trading costs $25, not $100. Launch free, keep 80% of every fee.\nLaunch on EventTrader →\nCompare launchpads →",
+   "links": [
+    [
+     "Launch on EventTrader →",
+     "https://cymetica.com/launchpad/robinhood"
+    ],
+    [
+     "Compare launchpads →",
+     "https://cymetica.com/launchpad/compare"
+    ]
+   ]
+  },
+  "copy": [
+   "#1 | 0xd6d35b56237a05afd4cd7e441226fefc3f78c4e6 | ⧉ | +$5,099 | made in 2.6 h · +2.413 ETH | won 9 of 14 trades | Not buying anything right now",
+   "#2 | 0xe8852602f84e04e284286d8db01a41edd0ccefb0 | ⧉ | +$110 | made in 2.6 h · +0.052 ETH | won 10 of 13 trades | Buying now: MRXI POLLY INFER HYVO",
+   "#3 | 0xb3ea566ce79eaf79b3448c3d5ec1c9449cb82832 | ⧉ | +$96 | made in 2.6 h · +0.046 ETH | won 5 of 6 trades | Buying now: MRXI INFER PARALLAX $FLETCH",
+   "#4 | 0x92475293e578c7d88651d160d2b0e45e04e4528b | ⧉ | +$262 | made in 2.6 h · +0.124 ETH | won 8 of 12 trades | Buying now: MRXI MOOVDA HYVO TOAA"
+  ],
+  "copyWin": "last 2.6 h",
+  "copyNote": "What the wallet itself made. Copying it, you buy after it, and it sells within about 56s.",
+  "empties": []
+ },
+ "basic_sol": {
+  "h1": {
+   "lines": 3,
+   "size": "57.6px",
+   "text": "Memecoin whales.\nWhat they buy.\nRight now."
+  },
+  "mode": "fr basic",
+  "scrollW": 1440,
+  "clientW": 1440,
+  "upd": "07:19:39",
+  "pill": "40 pools · 2,631 wallets with a record · Solana",
+  "mkt": "Market\nRISK-ON\n·\n40 pools scanned",
+  "cards": [
+   {
+    "key": "C5xph2yL6gMdxmuLGxJBkGpmuDFfyi5fqkBNhvL6pump",
+    "name": "BTC",
+    "sub": "BTC / WBTC",
+    "badges": [
+     "HOT"
+    ],
+    "p": "13.8%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "517 buys in 1h",
+     "$964K volume 24h",
+     "57.4d pool age"
+    ],
+    "who": [],
+    "more": null,
+    "warn": null,
+    "go": "https://dexscreener.com/solana/3M9sVgL4u6ATKaiExf3XhQqNfMB6ijvzk3meMcQaen1w",
+    "gotext": "Trade BTC ↗",
+    "w": 320
+   },
+   {
+    "key": "2zMMhcVQEXDtdE6vsFS7S7D5oUodfJHE8vd1gnBouauv",
+    "name": "PENGU",
+    "sub": "PENGU / SOL",
+    "badges": [],
+    "p": "13.8%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "0 buys in 1h",
+     "$149 volume 24h",
+     "693.7d pool age"
+    ],
+    "who": [],
+    "more": null,
+    "warn": null,
+    "go": "https://dexscreener.com/solana/4r2AGQRjuLpGL9o1vuW1mkcVHvE4DTi7YZJhqGHj2qeR",
+    "gotext": "Trade PENGU ↗",
+    "w": 320
+   },
+   {
+    "key": "CARDSccUMFKoPRZxt5vt3ksUbxEFEcnZ3H2pd3dKxYjp",
+    "name": "CARDS",
+    "sub": "CARDS / USDC",
+    "badges": [],
+    "p": "13.8%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "2 smart wallets",
+     "$3.66M volume 24h",
+     "437.5d pool age"
+    ],
+    "who": [
+     {
+      "t": "— | score 80 | 7 | IN | 52Xv94zeTfMhnv9Ns88bWkhpYQdDpKinmJkQYZwkBaiR | ⧉",
+      "href": "https://solscan.io/account/52Xv94zeTfMhnv9Ns88bWkhpYQdDpKinmJkQYZwkBaiR",
+      "sold": false
+     },
+     {
+      "t": "— | score 73 | 1 | IN | DevY6MwW43tUstcYDcs21FdzAUqrKBE2e54ETkWPUft2 | ⧉",
+      "href": "https://solscan.io/account/DevY6MwW43tUstcYDcs21FdzAUqrKBE2e54ETkWPUft2",
+      "sold": false
+     }
+    ],
+    "more": null,
+    "warn": null,
+    "go": "https://dexscreener.com/solana/HnhpJPJgBG2KwniMTNW8cVBHvk1hFog3RC3kjnyc23tD",
+    "gotext": "Trade CARDS ↗",
+    "w": 320
+   },
+   {
+    "key": "E4W3c945vWakxSHdy9TM2M8G8qi6PPmFhTSRrXESGJWz",
+    "name": "牛逼",
+    "sub": "牛逼 / SOL",
+    "badges": [
+     "FRESH"
+    ],
+    "p": "11.6%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "20 buys in 1h",
+     "$614 volume 24h",
+     "1m pool age"
+    ],
+    "who": [],
+    "more": null,
+    "warn": "Thin: max buy $359",
+    "go": "https://dexscreener.com/solana/HiWnSDqj79NFdtcWVv8fwgjyNZ9dcxLreGvKYD7Sukoa",
+    "gotext": "Trade 牛逼 ↗",
+    "w": 320
+   },
+   {
+    "key": "3MFXJmtHrrHtn7mtAB5mgk7f5AzCxuUypobABsGxpump",
+    "name": "Coge",
+    "sub": "Coge / POLYMARKET",
+    "badges": [
+     "FRESH"
+    ],
+    "p": "11.6%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "151 buys in 1h",
+     "$9,828 volume 24h",
+     "1m pool age"
+    ],
+    "who": [],
+    "more": null,
+    "warn": "Thin: max buy $125",
+    "go": "https://dexscreener.com/solana/HupVZTrAsV3Nbzz7WDT9AA3rJmHjxa84sZggGzuoGKK8",
+    "gotext": "Trade Coge ↗",
+    "w": 320
+   },
+   {
+    "key": "2zMMhcVQEXDtdE6vsFS7S7D5oUodfJHE8vd1gnBouauv",
+    "name": "PENGU",
+    "sub": "PENGU / SOL",
+    "badges": [],
+    "p": "7.8%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "4 buys in 1h",
+     "$636 volume 24h",
+     "494.8d pool age"
+    ],
+    "who": [],
+    "more": null,
+    "warn": "Thin: max buy $85",
+    "go": "https://dexscreener.com/solana/4DRwovSL7X4gWN94CrZQrDvgY2ytdMveWDHQU6LEGWg3",
+    "gotext": "Trade PENGU ↗",
+    "w": 320
+   },
+   {
+    "key": "FZxHLUGiGchY5uvvoeqh1EKiXTrGdN67WUBhUc1fLoat",
+    "name": "PUSSY",
+    "sub": "PUSSY / SOL",
+    "badges": [
+     "HOT"
+    ],
+    "p": "7.8%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "49 buys in 1h",
+     "$958K volume 24h",
+     "1.4d pool age"
+    ],
+    "who": [],
+    "more": null,
+    "warn": null,
+    "go": "https://dexscreener.com/solana/HcyYBrZVFDDVBLtLxL5C1HDJND1p86BoNA6m7MjBKE3p",
+    "gotext": "Trade PUSSY ↗",
+    "w": 320
+   },
+   {
+    "key": "ETnBbPoe7475jc9TyrSbsokVaBiPHebDpxYtdorYpump",
+    "name": "PURRPS",
+    "sub": "PURRPS / POLYMARKET",
+    "badges": [
+     "FRESH"
+    ],
+    "p": "7.8%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "26 buys in 1h",
+     "$1,924 volume 24h",
+     "56s pool age"
+    ],
+    "who": [],
+    "more": null,
+    "warn": "Thin: max buy $85",
+    "go": "https://dexscreener.com/solana/65ZZXeWnik448DFsg9QUAUtBM86SHAbSvbhrtE6f9hea",
+    "gotext": "Trade PURRPS ↗",
+    "w": 320
+   },
+   {
+    "key": "9cRCn9rGT8V2imeM2BaKs13yhMEais3ruM3rPvTGpump",
+    "name": "ANSEM",
+    "sub": "ANSEM / SOL",
+    "badges": [
+     "HOT"
+    ],
+    "p": "4.8%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "97 buys in 1h",
+     "$693K volume 24h",
+     "146.4d pool age"
+    ],
+    "who": [],
+    "more": null,
+    "warn": null,
+    "go": "https://dexscreener.com/solana/FnzKY6x7entQ1eR3D225dQyT7ybfka4PskBMQhb8L3CC",
+    "gotext": "Trade ANSEM ↗",
+    "w": 320
+   },
+   {
+    "key": "6mXFCoZ515w37YfmwXGJMPfQfiK5tr9WkihW3oN9pump",
+    "name": "PIRATE",
+    "sub": "PIRATE / SOL",
+    "badges": [
+     "HOT"
+    ],
+    "p": "4.8%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "66 buys in 1h",
+     "$429K volume 24h",
+     "7.5d pool age"
+    ],
+    "who": [],
+    "more": null,
+    "warn": null,
+    "go": "https://dexscreener.com/solana/CKuwAXUbnxmeCNurN5VvyC7kLz42JnQtyh2nyFJ8Kv1X",
+    "gotext": "Trade PIRATE ↗",
+    "w": 320
+   },
+   {
+    "key": "Hh3oTaqDCKKfdBgsQEvxp9sUwyNf8x9qmKqEMLBWpump",
+    "name": "HODL",
+    "sub": "HODL / SOL",
+    "badges": [
+     "HOT"
+    ],
+    "p": "4.8%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "127 buys in 1h",
+     "$2.50M volume 24h",
+     "270.4d pool age"
+    ],
+    "who": [],
+    "more": null,
+    "warn": null,
+    "go": "https://dexscreener.com/solana/DTdtHUx79bmNMnesv3au7pzBKAkB3mUUi8GwUdZ6Suw",
+    "gotext": "Trade HODL ↗",
+    "w": 320
+   },
+   {
+    "key": "EDXVkwiXktL82cuCPKioxh74t8cyGXk7ZNRrYQMepump",
+    "name": "ATHE",
+    "sub": "ATHE / SOL",
+    "badges": [
+     "FRESH"
+    ],
+    "p": "4.5%",
+    "plabel": "chance of 3× in 72h",
+    "stats": [
+     "4 buys in 1h",
+     "$1,552 volume 24h",
+     "35s pool age"
+    ],
+    "who": [],
+    "more": null,
+    "warn": "Thin: max buy $99",
+    "go": "https://dexscreener.com/solana/ADHLi5sZpoeDSeFbg9uJrQqyTkN5VztLerrfpgwVD9BJ",
+    "gotext": "Trade ATHE ↗",
+    "w": 320
+   }
+  ],
+  "exits": [
+   [
+    "JEANPHIL",
+    "https://dexscreener.com/solana/4R8CiMnJWDNoes3fQi1ccPFJygPXazaHaWpHrN3rZeNj"
+   ],
+   [
+    "STANK",
+    "https://dexscreener.com/solana/6hYFMyE2BYYScTErqUeCKhihQ5X9j2WD2z9waTdwy38N"
+   ],
+   [
+    "STONK",
+    "https://dexscreener.com/solana/zxTpi4BtaWX3mgdAPoezkMD1hxx8CdeCfrqXMWvSCLX"
+   ],
+   [
+    "CLAUDIA",
+    "https://dexscreener.com/solana/Fe7bpDYCs74GqiCUF14HwgUMToPKV1d9mDYVX5BTohFr"
+   ],
+   [
+    "MPM",
+    "https://dexscreener.com/solana/68i8Yqyc7Q6EsLVFuM8Z1AE4kjFgKnZn2FvZWbpjeF3X"
+   ],
+   [
+    "GREY",
+    "https://dexscreener.com/solana/7DgE52PHNtGJnxmqcodQ5dEP32Qdn2JkA837f8cYMtgo"
+   ]
+  ],
+  "exitsLabel": "Smart money selling",
+  "promo": {
+   "hidden": true,
+   "text": "4×lower fee37 of 40 tokens on this radar trade on PONS at a 1% fee. EventTrader charges 0.25%: $10,000 of trading costs $25, not $100. Launch free, keep 80% of every fee.Launch on EventTrader →Compare launchpads →",
+   "links": [
+    [
+     "Launch on EventTrader →",
+     "https://cymetica.com/launchpad/robinhood"
+    ],
+    [
+     "Compare launchpads →",
+     "https://cymetica.com/launchpad/compare"
+    ]
+   ]
+  },
+  "copy": [
+   "#1 | 8z6echJSuERDuoqNwkEbQQ2XU2Kv7uv4S7AN9yZz5X3Z | ⧉ | +$817 | made in 24.0 h · +9.518 SOL | won 15 of 15 trades | Not buying anything right now",
+   "#2 | EwnHg8KWvGY5e3Q7MYvxH2JZXPJebqB9Py3fPA7AS6XQ | ⧉ | +$15,651 | made in 24.0 h · +182.349 SOL | won 13 of 13 trades | Not buying anything right now",
+   "#3 | F73LAQ3x3dYETwQqFbKe3i1QHc9JLptAubAKAX9NVDsK | ⧉ | +$5,897 | made in 24.0 h · +68.707 SOL | won 42 of 49 trades | Not buying anything right now",
+   "#4 | 6HfVe9iCYW4hjW5gbY1wXDKv91vV4UCuYo7xNcaeT6h | ⧉ | +$85 | made in 24.0 h · +0.995 SOL | won 24 of 27 trades | Not buying anything right now"
+  ],
+  "copyWin": "last 24.0 h",
+  "copyNote": "What the wallet itself made. Copying it, you buy after it, and it sells within about 2.4h.",
+  "empties": []
+ },
+ "adv_sol_text": "FOMO\nRADAR\nSignals\nAccuracy\nTop wallets\nAPI\nBasic\nAdvanced\nLIVE\n07:19:39\nRobinhood\nSolana\n40 POOLS · 2,631 WALLETS WITH A RECORD · SOLANA\nMemecoin whales.\nWhat they buy.\nRight now.\n\nEvery buyer weighted by their own on-chain track record, never by dollar size. How it works\n\nMARKET\nRISK-ON\nexposure ×1\nmedian 24h 3.9% · 35% below their 24h open · 20 tracked tokens\nWINDOW\n24 h\nwindow complete\nSCANNED\n40\nPOOLS\n2/40\nCREDIBLE\n74\nSWAPS PARSED\nWallets with a record 2,631\nBUY\nFRESH\nEXIT\nHEIGHT = CONVICTION\nBuy signals\nTRADER-CREDIBILITY CONVICTION\ni\nAll\n40\nHot\n12\nFresh\n21\nExits\n6\n#\nTOKEN\nCONVICTION\nP(3× IN 72H)\nCREDIBLE WALLETS\nBUYS / SELLS (24H)\nVOLUME 24H\nLIQUIDITY\nPOOL AGE\n1\nBTCBTC / WBTC\nC5xph2yL6gMdxmuLGxJBkGpmuDFfyi5fqkBNhvL6pump\nHOT\n63.4\nbuy pressure\n13.8%\nraw · hot · 14.0% of 250\nno track record yet\nranked by buy pressure\n21,044 / 3,404\n1h 517 / 97 · 2,929 buyers\n$963,929\n1h $17,221\n$144,365\n57.4d\n↗\n2\nPENGUPENGU / SOL\n2zMMhcVQEXDtdE6vsFS7S7D5oUodfJHE8vd1gnBouauv\n59.8\nbuy pressure\n13.8%\nraw · base · 1.7% of 121\nno track record yet\nranked by buy pressure\n65 / 0\n1h 0 / 0 · 26 buyers\n$149\n1h $0\n$29,899\n693.7d\n↗\n3\nCARDSCARDS / USDC\nCARDSccUMFKoPRZxt5vt3ksUbxEFEcnZ3H2pd3dKxYjp\n57.7\ntrader credibility\n13.8%\nraw · base · 1.7% of 121\n40%\n2 of 5 indexed buyers · avg 76\n6,551 / 5,815\n1h 211 / 212 · 1,077 buyers\n$3,661,834\n1h $193,814\n$3,786,422\n437.5d\n↗\n4\n牛逼牛逼 / SOL\nE4W3c945vWakxSHdy9TM2M8G8qi6PPmFhTSRrXESGJWz\nFRESHTHIN\n48.4\nbuy pressure\n11.6%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n20 / 2\n1h 20 / 2 · 19 buyers\n$614\n1h $614\n$14,344\n1m\n↗\n5\nCogeCoge / POLYMARKET\n3MFXJmtHrrHtn7mtAB5mgk7f5AzCxuUypobABsGxpump\nFRESHTHIN\n43.3\nbuy pressure\n11.6%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n151 / 59\n1h 151 / 59 · 109 buyers\n$9,828\n1h $9,828\n$4,983\n1m\n↗\n6\nPENGUPENGU / SOL\n2zMMhcVQEXDtdE6vsFS7S7D5oUodfJHE8vd1gnBouauv\nTHIN\n38.3\nbuy pressure\n7.8%\nraw · base · 1.7% of 121\nno track record yet\nranked by buy pressure\n208 / 109\n1h 4 / 1 · 63 buyers\n$636\n1h $3\n$3,396\n494.8d\n↗\n7\nPUSSYPUSSY / SOL\nFZxHLUGiGchY5uvvoeqh1EKiXTrGdN67WUBhUc1fLoat\nHOT\n38\nbuy pressure\n7.8%\nraw · hot · 14.0% of 250\nno track record yet\nranked by buy pressure\n3,937 / 2,232\n1h 49 / 17 · 1,422 buyers\n$958,288\n1h $9,326\n$55,578\n1.4d\n↗\n8\nPURRPSPURRPS / POLYMARKET\nETnBbPoe7475jc9TyrSbsokVaBiPHebDpxYtdorYpump\nFRESHTHIN\n37.6\nbuy pressure\n7.8%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n26 / 8\n1h 26 / 8 · 25 buyers\n$1,924\n1h $1,924\n$3,388\n56s\n↗\n9\nANSEMANSEM / SOL\n9cRCn9rGT8V2imeM2BaKs13yhMEais3ruM3rPvTGpump\nHOT\n33.9\nbuy pressure\n4.8%\nraw · hot · 14.0% of 250\nno track record yet\nranked by buy pressure\n8,100 / 4,410\n1h 97 / 66 · 2,415 buyers\n$693,315\n1h $7,124\n$1,291,943\n146.4d\n↗\n10\nPIRATEPIRATE / SOL\n6mXFCoZ515w37YfmwXGJMPfQfiK5tr9WkihW3oN9pump\nHOT\n31.6\nbuy pressure\n4.8%\nraw · hot · 14.0% of 250\nno track record yet\nranked by buy pressure\n7,707 / 5,123\n1h 66 / 55 · 4,658 buyers\n$428,844\n1h $5,642\n$50,203\n7.5d\n↗\n11\nHODLHODL / SOL\nHh3oTaqDCKKfdBgsQEvxp9sUwyNf8x9qmKqEMLBWpump\nHOT\n31.2\nbuy pressure\n4.8%\nraw · hot · 14.0% of 250\nno track record yet\nranked by buy pressure\n15,280 / 9,450\n1h 127 / 106 · 4,403 buyers\n$2,500,431\n1h $13,205\n$301,922\n270.4d\n↗\n12\nATHEATHE / SOL\nEDXVkwiXktL82cuCPKioxh74t8cyGXk7ZNRrYQMepump\nFRESHTHIN\n28.7\nbuy pressure\n4.5%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n4 / 0\n1h 4 / 0 · 4 buyers\n$1,552\n1h $1,552\n$3,951\n35s\n↗\n13\nFAIRFAIR / SOL\nFairDR2UmRqHxsVPdPcetePCjFaDqVYv3oQX9fcQTpTg\nHOTFRESH\n27.1\nbuy pressure\n3.2%\nraw · hot · 14.0% of 250\nno track record yet\nranked by buy pressure\n15,552 / 11,333\n1h 270 / 194 · 3,952 buyers\n$1,321,319\n1h $24,699\n$32,437\n10.8h\n↗\n14\nCATECATE / SOL\nAi66LHZG9MCzg1WKdawwqduVAXpNDUuV8M3uyq5ppump\nHOT\n26.7\nbuy pressure\n3.2%\nraw · hot · 14.0% of 250\nno track record yet\nranked by buy pressure\n1,881 / 1,738\n1h 65 / 28 · 647 buyers\n$516,409\n1h $15,188\n$1,815,134\n106.6d\n↗\n15\nCBUCKSCBUCKS / USDC\nDtcicPCKTKeAh7TDEzTym3hXeoHAoMiBdYJhMYxZpump\nHOT\n25.8\nbuy pressure\n3.2%\nraw · hot · 14.0% of 250\nno track record yet\nranked by buy pressure\n1,601 / 1,233\n1h 24 / 18 · 760 buyers\n$424,490\n1h $2,114\n$217,783\n34.5d\n↗\n16\nFLOATFLOAT / SOL\nBv1a7cEj5aRnJQhMw4kRQqAFesMSd5LwcDnUzq52BMmr\nHOT\n24.7\nbuy pressure\n2.4%\nraw · hot · 14.0% of 250\nno track record yet\nranked by buy pressure\n3,781 / 3,458\n1h 74 / 43 · 1,506 buyers\n$1,234,787\n1h $13,377\n$624,111\n12.3d\n↗\n17\n$SLJK$SLJK / SOL\nnxmpyKuaqMofaaeu4fvswr4cpyNEyvdhWYkvHfKpump\nFRESHTHIN\n24.5\nbuy pressure\n2.4%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n3 / 0\n1h 3 / 0 · 3 buyers\n$17\n1h $17\n$1,922\n41s\n↗\n18\nPepetidePepetide / SOL\n22JKmY9YZfnQfb3pGYb6hctL5Jyvv3zhL3nQ8oyNuoYp\nHOT\n23.9\nbuy pressure\n2.4%\nraw · hot · 14.0% of 250\nno track record yet\nranked by buy pressure\n3,331 / 3,327\n1h 67 / 29 · 1,531 buyers\n$505,113\n1h $4,548\n$30,474\n2.3d\n↗\n19\nDESSADESSA / SOL\nnpz2FhoufQ7pKqhGpaipYWacrAkidyW2yDpVWSvpump\n22.1\nbuy pressure\n2.4%\nraw · base · 1.7% of 121\nno track record yet\nranked by buy pressure\n9,902 / 8,921\n1h 95 / 123 · 6,579 buyers\n$3,690,429\n1h $23,282\n$416,974\n14.7d\n↗\n20\nJEANPHILJEANPHIL / SOL\nGTBxUiw6wJdmmkCGZgRHLyYxqu1vG4KtRpeox6yDpump\nEXIT\n21.1\nbuy pressure\n2.4%\nraw · exit · 0.8% of 250\nno track record yet\nranked by buy pressure\n644 / 718\n1h 18 / 10 · 341 buyers\n$162,345\n1h $1,923\n$286,949\n51.5d\n↗\n21\nWEALTHWEALTH / SOL\n8Mi9E1V2bdPeAaRkR5yxUsAvpzP6UBUEEUrYmgKNpump\n21\nbuy pressure\n2.4%\nraw · base · 1.7% of 121\nno track record yet\nranked by buy pressure\n3,689 / 2,948\n1h 40 / 57 · 1,201 buyers\n$584,066\n1h $5,908\n$83,708\n4.6d\n↗\n22\nCogeCoge / POLYMARKET\nBYuWeCz2Zuc9VB8bCH68y3gvPVEnC2K6ZvN6Rcnspump\nFRESHTHIN\n19.8\nbuy pressure\n2.4%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n20 / 12\n1h 20 / 12 · 16 buyers\n$2,441\n1h $2,441\n$2,917\n1m\n↗\n23\nSTANKSTANK / STONK\n5wsjHxT5nW5jQuVupXUNnYszF3WoWCfGGk9LMcsCJzY8\nHOTEXIT\n19.7\nbuy pressure\n2.4%\nraw · exit · 0.8% of 250\nno track record yet\nranked by buy pressure\n5,235 / 6,022\n1h 68 / 52 · 1,905 buyers\n$773,792\n1h $8,182\n$101,998\n11.7d\n↗\n24\nSTONKSTONK / SOL\n6GmAFSYs4gk3FDao5FzzySQpPZaWsa4rUJHacpMpUNgx\nEXIT\n19.2\nbuy pressure\n1.4%\nraw · exit · 0.8% of 250\nno track record yet\nranked by buy pressure\n8,449 / 8,690\n1h 90 / 151 · 2,248 buyers\n$3,428,053\n1h $62,995\n$2,388,277\n89.8d\n↗\n25\n$RICHVI$RICHVI / SOL\n2h46CtenvDdnRZXYkQmJsTCcrBmcVjvb4t9rcruYpump\nFRESHTHIN\n18.7\nbuy pressure\n1.4%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n14 / 9\n1h 14 / 9 · 9 buyers\n$189\n1h $189\n$1,323\n34s\n↗\n26\nCLAUDIACLAUDIA / SOL\n2j5SaS7xy776qCBpyPQbZjyQSAtKiFgrwjfErthnW2ZM\nEXIT\n17.6\nbuy pressure\n1.2%\nraw · exit · 0.8% of 250\nno track record yet\nranked by buy pressure\n5,256 / 6,103\n1h 217 / 230 · 1,605 buyers\n$1,302,689\n1h $63,321\n$390,347\n34.2d\n↗\n27\nGOOPERGOOPER / SOL\n2hsFberkT43G8xQ2QV6rHjRr3R4YC4YEFAvYUKZzpump\nFRESHTHIN\n16.9\nbuy pressure\n1.2%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n55 / 42\n1h 55 / 42 · 14 buyers\n$874\n1h $874\n$18,159\n1m\n↗\n28\nSAVPIRSAVPIR / SOL\n9jfY91iT616QSs3c7Vb7ArYXGhfUEhJDNDxHTVWvpump\nFRESHTHIN\n14.6\nbuy pressure\n1.2%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n42 / 32\n1h 42 / 32 · 10 buyers\n$339\n1h $339\n$593\n1m\n↗\n29\nCogeCoge / SOL\nBYuRwWDRBco38mzEwVpYDQ6f2mrnRPeq59E41C1Ppump\nFRESHTHIN\n13.2\nbuy pressure\n1.2%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n90 / 82\n1h 90 / 82 · 60 buyers\n$5,696\n1h $5,696\n$2,275\n1m\n↗\n30\nCOGECOGE / SOL\nHqMuZRXhtfcL5xZRTdX4zxLcifJKVSw5kKQQX3BeKCmM\nFRESHTHIN\n12.2\nbuy pressure\n1.2%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n9 / 7\n1h 9 / 7 · 9 buyers\n$2,624\n1h $2,624\n$14,862\n32s\n↗\n31\nPOLYPOLY / POLYMARKET\n2YpQeeCBQggKi8tTqwFzdioAm9ba7RqfqzzJnnZWpump\nFRESHTHIN\n12.2\nbuy pressure\n1.2%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n1 / 0\n1h 1 / 0 · 1 buyers\n$244\n1h $244\n$2,513\n20s\n↗\n32\nBETTOORBETTOOR / POLYMARKET\n4jJ3FHedxHxrwqxCunoqa9WuB4G283ETs45h5zwppump\nFRESHTHIN\n12.2\nbuy pressure\n1.2%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n1 / 0\n1h 1 / 0 · 1 buyers\n$166\n1h $166\n$2,461\n25s\n↗\n33\nPURRPSPURRPS / POLYMARKET\nDbcnthJRssz9R7ZGFXRGskcriEWfKTEFCkSEEam7Q1QY\nFRESHTHIN\n12.2\nbuy pressure\n1.2%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n1 / 0\n1h 1 / 0 · 1 buyers\n$7\n1h $7\n$2,366\n46s\n↗\n34\nNVIDIANVIDIA / SOL\n9aWyEtt8tYydJDjYRjKpM4vmAVki7R26eFH2vhJopump\nFRESHTHIN\n12.1\nbuy pressure\n1.2%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n1 / 0\n1h 1 / 0 · 1 buyers\n$8\n1h $8\n$1,909\n32s\n↗\n35\nwApewApe / SOL\n5kpbiPi49fdLN6Wh4wipPGk2yDkZQ4ngGWjtdAE8pump\nFRESHTHIN\n9\nbuy pressure\n0.9%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n6 / 4\n1h 6 / 4 · 3 buyers\n$67\n1h $67\n$1,288\n1m\n↗\n36\nWSJWSJ / SOL\nGDVXeNwWqQFJEvBW96bBzUGHPmkbx4SE5Lj6Er3epump\nFRESHTHIN\n8.4\nbuy pressure\n0.9%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n3 / 2\n1h 3 / 2 · 3 buyers\n$92\n1h $92\n$1,905\n47s\n↗\n37\nMPMMPM / POLYMARKET\nDnPJdBsKRyrQh6QRzzjPiaTwF2JWhVhHV4FcTWnTpump\nFRESHEXITTHIN\n3.6\nbuy pressure\n0.9%\nraw · exit · 0.8% of 250\nno track record yet\nranked by buy pressure\n3 / 8\n1h 3 / 8 · 3 buyers\n$213\n1h $213\n$2,368\n1m\n↗\n38\nGREYGREY / SOL\nDCwTZ7dH7qRnAsbZbU6hMfmXY9kEH2ST5asxwkjUpump\nFRESHEXITTHIN\n2.4\nbuy pressure\n0.9%\nraw · exit · 0.8% of 250\nno track record yet\nranked by buy pressure\n1 / 5\n1h 1 / 5 · 1 buyers\n$172\n1h $172\n$1,908\n1m\n↗\n39\nGETPAIDGETPAID / SOL\n8vCYT5RkCYCVYvnvPhLV3EFooEuv9ErVpU2bfecFpump\nFRESHTHIN\n2\nbuy pressure\n0.9%\nraw · fresh · 1.6% of 250\nno track record yet\nranked by buy pressure\n2 / 2\n1h 2 / 2 · 1 buyers\n$106\n1h $106\n$1,993\n25s\n↗\n40\nGATOGATO / SOL\nHsprHxBRgiVaQdRf3TnKNuZZtaX9JUSPgMFdAkk6pump\nHOT\n0\ntrader credibility\n0.9%\nraw · hot · 14.0% of 250\n0%\n0 of 2 indexed buyers · avg 0\n12,443 / 10,888\n1h 339 / 313 · 3,476 buyers\n$1,458,511\n1h $35,837\n$353,327\n76.7d\n↗\nIs the 3× chance real?\ni\nCURRENT FIT\nLABELLED SIGNALS\n10,000\n150 needed\nBASE RATE\n2.61%\nshare of all signals that hit 3×\nBRIER, OUT OF SAMPLE\n0.0267\nlower is better\nBASE RATE BRIER\n0.0279\nthe bar to beat\nFITTED / TESTED ON\n7,000 / 3,000\nMETHOD\nisotonic-sklearn\nSAID VS WAS share that went 3× in 72 h, out of sample\n0.9\n1.2\n1.1\n1.5\n3.6\n2.6\n8.8\n12.1\n13.6\n13.6\n0–1%\nn=1,368\n1–2%\nn=713\n2–5%\nn=575\n5–10%\nn=256\n10–20%\nn=88\nSAID\nWAS\nHIT RATE BY SIGNAL TYPE rolling\nEXIT\n0.8%\n0.8% of 250\nHOT\n14.0%\n14.0% of 250\nFRESH\n1.6%\n1.6% of 250\nBASE\n1.7%\n1.7% of 121\n1\nPersist\n2\nObserve\n3\nLabel\n4\nFit\n5\nGate\nMisses & gaps\nA $100 TRADE ON EVERY SIGNAL exit-policy backtest\nWhat this measures\nWITHHELD\nNo result yet.\nTop wallets\nCLOSED ROUND TRIPS ONLY\ni\n#\nWALLET\nSCORE\nROUND TRIPS\nWIN RATE\nREALIZED\nAVG HOLD\n1\n8z6echJSuERDuoqNwkEbQQ2XU2Kv7uv4S7AN9yZz5X3Z⧉\n100\n15\n100%\n+9.5177 SOL\n2.4h\n2\nEwnHg8KWvGY5e3Q7MYvxH2JZXPJebqB9Py3fPA7AS6XQ⧉\n100\n13\n100%\n+182.3486 SOL\n16.7d\n3\nF73LAQ3x3dYETwQqFbKe3i1QHc9JLptAubAKAX9NVDsK⧉\n100\n49\n86%\n+68.7074 SOL\n10.0d\n4\n6HfVe9iCYW4hjW5gbY1wXDKv91vV4UCuYo7xNcaeT6h⧉\n100\n27\n89%\n+0.9946 SOL\n13.8d\n5\nDupzWEQ49GowYkDsiDYD7q6o9HVp6Sjd44J2iAGpAk2V⧉\n100\n15\n93%\n+16.9826 SOL\n8.1d\n6\nDy3WGhQMwQfBsqh9xP4u5JidTRzfFY3LHJJXFsDeWxvb⧉\n99.2\n18\n89%\n+7.0764 SOL\n4.0d\n7\n9nXDunV8eNvYSVys7JSBkm2hz9Q79Q3EYeko19srVeMC⧉\n98.5\n199\n79%\n+2,952.8707 SOL\n17.2d\n8\n2jHG3RfsAPbELuds9BwvhiUrcYK8ZXtc9hSoM48gLEDX⧉\n97.8\n12\n92%\n+6.4565 SOL\n15.3d\n9\n7t9kYGrqtrSbGoQ6sfhfUS2UX4wYgekKek1AKPmEnS4p⧉\n97.6\n8\n100%\n+6.8387 SOL\n9.2d\n10\nHVYUsqDi1q6mrKmyP4vDKYYPdbH1z8nRLZYdM8yA83ed⧉\n97.6\n8\n100%\n+2.9902 SOL\n8.4h\n11\n9S65CigtYTuCAgX1KeLHmtC2yPWbdjhDccwUa5vq98HA⧉\n97.5\n96\n79%\n+8.3825 SOL\n12.3h\n12\nFixukbsKfJZEr996ubcWvwTAt1b6QJ2SfP3FJsBSbH33⧉\n96.5\n11\n91%\n+9.5473 SOL\n4.2d\n13\n93mHHYnW8JtSvxkj5nx6x3knNE9E6Qir9yQVPjXqBYU⧉\n95.7\n64\n78%\n+52.8217 SOL\n5.1d\n14\n7dsm83ByzfCFgfyHmLJ5Dn28spgUK1Xzv9GfYNGE58pd⧉\n95.7\n31\n81%\n+17.5674 SOL\n19.0h\n15\n4ur8bhB8fX4jn7BWCR7QSqsyVLbm73e3Fnyj1yLMmmhc⧉\n95.4\n7\n100%\n+6.6279 SOL\n6.7d\n16\n7tY9Azuh3Ut5JDUyQysLescGmNVVQHGgXQ4i2fUZtkmK⧉\n95\n14\n86%\n+19.0728 SOL\n16.7d\n17\n6oqxLHxT3GfynLcjAsfg5MJ9fQ6KiNubs5UfseThTPgv⧉\n95\n10\n90%\n+9.1547 SOL\n3.6h\n18\nCpzqSPJgFLYFYn6auiyp5aR6rxh67EzWLuJ7AZ5c1YbB⧉\n95\n14\n86%\n+7.1856 SOL\n5.1h\n19\nGuy19bLQ6WfnQ8UDAMpbakc3kMn1wcag5qi423EFtQn1⧉\n95\n10\n90%\n+3.7782 SOL\n8.7d\n20\nMfDuWeqSHEqTFVYZ7LoexgAK9dxk7cy4DFJWjWMGVWa⧉\n94.8\n296\n75%\n+3,831.8538 SOL\n20.8d\n21\n58aRapHfsxnnL3a4zpYeyiQXQKWZCjugjoTsiV625McJ⧉\n94.2\n25\n80%\n+7.9196 SOL\n13.8h\n22\nHp7rYmw8w4SoBdsdg2T8a1H8q2bJfHphQVafuSFp1jK3⧉\n94.1\n21\n81%\n+64.7438 SOL\n19.5d\n23\n4ETcnpXZ613FqpoaN53n1wS1cMtJcVk7ZShEef6sQdGE⧉\n94.1\n75\n76%\n+52.1526 SOL\n4.4d\n24\nAJ3pjAESdpE9KubiQZemPYWdC3Q12VwiWdhhFojvKJ8X⧉\n93.7\n32\n78%\n+16.7713 SOL\n1.5d\n25\n2mAsHLnFeRfSb67uD735i1n2ufMAf9FxTauhTGHVuKdY⧉\n93.3\n24\n83%\n+0.5209 SOL\n5.7h\nJSON for agents and bots\nNO KEY REQUIRED\nsignals\n?chain=robinhood|solana&filter=all|hot|fresh|exits\ntraders\n?chain=robinhood\nentities\nthe resolved entities and the evidence that linked them\ncalibration\nthe measured score→outcome link\ndocs\nthe exact scoring formulas\n\nRobinhood Chain data is read straight from the chain-4663 bonding-curve trade logs; Solana pools come from public DEX aggregates and Solana per-wallet track records from swap transactions parsed off a public Solana RPC. Where we have not indexed enough swaps for a pool, that row keeps its pool-level buy-pressure score and says so — a trader score is never invented. Nothing here is financial advice — an on-chain track record is a description of the past, not a prediction.",
+ "adv_rh_text": "FOMO\nRADAR\nSignals\nAccuracy\nTop wallets\nClusters\nAPI\nBasic\nAdvanced\nLIVE\n07:21:45\nRobinhood\nSolana\n242 TOKENS · 190 WALLETS SCORED · ROBINHOOD CHAIN\nMemecoin whales.\nWhat they buy.\nRight now.\n\nEvery buyer weighted by their own on-chain track record, never by dollar size. How it works\n\nMARKET\nRISK-ON\nexposure ×1\nmedian 24h 3.9% · 35% below their 24h open · 20 tracked tokens\nWINDOW\n2.6 h\n/ 6.0 h\nfilling to 6.0 h\nSCANNED\n242\nTOKENS\n190\nWALLETS\n3,300\nTRADES\nEntities resolved 0\nBUY\nFRESH\nEXIT\nHEIGHT = CONVICTION\nBuy signals\nTRADER-CREDIBILITY CONVICTION\ni\nAll\n40\nHot\n0\nFresh\n16\nExits\n12\n#\nTOKEN\nCONVICTION\nP(3× IN 72H)\nQUALIFIED BUYERS\nWALLETS / ENTITIES\nETH IN\nLIQUIDITY · MAX BUY @5% · HELD\nFIRST BUY\n1\nWIENERExcited Wiener Dog\n0x1f8e3bd84c994068717683724d73943b209152a5\nFRESHEXITcredible-exitsTHIN\n47.5\n9.9%\nraw · exit · 2.8% of 250\n3 avg score 71.3\n15 / 15\nall independent\n11.212 ETH\n$23,697\n1.681 ETH $3,553\nmax @5% $178 · held $2\n1.6h\nage 1.7h\n›\n2\nMRXIMerxia\n0x915d4ec675d84b788c44251f0abb07e5f3c41176\nTHIN\n35.6\n4.9%\nraw · base · 0.8% of 250\n7 avg score 67\n32 / 32\nall independent\n5.117 ETH\n$10,816\n2.926 ETH $6,185\nmax @5% $309 · held $2,634\n2.6h\n›\n3\nPOLLYPolly Town\n0xfe3e86a0900db5e4b300234ee12457de4e4713df\n33.9\n4.9%\nraw · base · 0.8% of 250\n2 avg score 69.5\n4 / 4\nall independent\n9,805.593 ETH\n—\n— ETH —\nmax @5% — · held —\n2.6h\n›\n4\nMOOVDAMoovidia\n0x9dd0c522ee372f576d63878916eb368cf4d26802\n25.8\n4.9%\nraw · base · 0.8% of 250\n4 avg score 69.5\n11 / 11\nall independent\n6.278 ETH\n—\n— ETH —\nmax @5% — · held —\n22m\n›\n5\nINFERInferva\n0x8dda0f45290ea3be0b1c23be02f9e69e1934875a\nEXITcredible-exitsTHIN\n23.2\n3.5%\nraw · exit · 2.8% of 250\n6 avg score 67.9\n11 / 11\nall independent\n1.458 ETH\n$3,082\n3.767 ETH $7,963\nmax @5% $398 · held $4,412\n2.5h\n›\n6\nHYVOHyvo\n0xa274a3e2636926390d6b47dac9a2e11206f96808\nEXITcredible-exitsTHIN\n22.4\n3.5%\nraw · exit · 2.8% of 250\n6 avg score 67.9\n14 / 14\nall independent\n1.218 ETH\n$2,573\n3.239 ETH $6,847\nmax @5% $342 · held $3,296\n2.6h\n›\n7\nTOAAToaa Finance\n0xbd6967dc625c56ac1c9c9d24d5f227383c8b039c\nFRESHEXITnet-sellingTHIN\n18.9\n3.5%\nraw · exit · 2.8% of 250\n4 avg score 68\n10 / 10\nall independent\n0.813 ETH\n$1,719\n4.201 ETH $8,880\nmax @5% $444 · held $5,336\n1.7h\nage 12.1h\n›\n8\nmogsaicoinelon literally interacted 67coin\n0xcb34f02df13c36774c223f517612db36dcac9a0e\nFRESHEXITcredible-exitsTHIN\n18.5\n3.5%\nraw · exit · 2.8% of 250\n3 avg score 67.5\n8 / 8\nall independent\n0.135 ETH\n$286\n1.682 ETH $3,556\nmax @5% $178 · held $11\n2.1h\nage 2.1h\n›\n9\nCANOPICCanopic\n0x42200daafdad1fc94328529e974a339bfa071f47\nTHIN\n16.9\n3.5%\nraw · base · 0.8% of 250\n3 avg score 69.6\n7 / 7\nall independent\n0.76 ETH\n$1,606\n3.162 ETH $6,683\nmax @5% $334 · held $3,138\n1.3h\nage 2.7d\n›\n10\nLUCYLucy Coin\n0x59df9bd09517d46f5f03abbea52b7f67106a8302\nFRESHEXITcredible-exitsTHIN\n16.8\n3.5%\nraw · exit · 2.8% of 250\n2 avg score 69.2\n5 / 5\nall independent\n0.087 ETH\n$184\n1.769 ETH $3,738\nmax @5% $187 · held $194\n2.6h\nage 3.1h\n›\n11\nAGUARDAgentGuard\n0x5fc31d3ade1f83e77cb0e02e3bed6c8c183f8269\nTHIN\n16.2\n3.5%\nraw · base · 0.8% of 250\n3 avg score 71.9\n7 / 7\nall independent\n0.478 ETH\n$1,010\n4.051 ETH $8,562\nmax @5% $428 · held $5,012\n2.6h\n›\n12\nPRJCLRCLARA\n0x73794e8b86fc418d1a219595895b0922bb4b573e\nFRESHEXITcredible-exitsTHIN\n16.2\n3.5%\nraw · exit · 2.8% of 250\n4 avg score 68.5\n18 / 18\nall independent\n0.419 ETH\n$886\n1.697 ETH $3,587\nmax @5% $179 · held $36\n1.9h\nage 1.9h\n›\n13\nPARALLAXParallax\n0x4acdbf3576e90b66bea1bcfcda2effa74b5608fe\nFRESHTHIN\n15.3\n3.5%\nraw · fresh · 1.6% of 250\n3 avg score 69.4\n4 / 4\nall independent\n0.293 ETH\n$619\n2.969 ETH $6,275\nmax @5% $314 · held $2,727\n2.6h\nage 12.5h\n›\n14\nTAURUSTaurus\n0x7aeccc699c173a4d5ff38607b4d9e646217aeaad\nFRESHEXITcredible-exitsTHIN\n15\n3.0%\nraw · exit · 2.8% of 250\n4 avg score 67.8\n13 / 13\nall independent\n0.39 ETH\n$824\n1.709 ETH $3,612\nmax @5% $181 · held $62\n58m\nage 58m\n›\n15\nINFERRALABINFERRALAB\n0xfac459fa650bb83c8d9175a9e86b4d223ccbe8fc\nFRESHEXITcredible-exitsTHIN\n12.7\n2.4%\nraw · exit · 2.8% of 250\n4 avg score 67.8\n6 / 6\nall independent\n0.103 ETH\n$217\n1.68 ETH $3,551\nmax @5% $178 · held $0\n1.7h\nage 1.8h\n›\n16\nMaxMax\n0x86fb4a1bb3a909ae401f643520d635845e9bc859\nFRESHSAME NAME ×2\n12.2\n2.4%\nraw · fresh · 1.6% of 250\n1 avg score 62.1\n1 / 1\nall independent\n2.071 ETH\n—\n— ETH —\nmax @5% — · held —\n40m\nage 15.9h\n›\n17\nSWARMSwarmfund\n0xf2b76c1109bc23e2f6360f408aa4adcd74abc42b\nTHIN\n12.2\n2.4%\nraw · base · 0.8% of 250\n3 avg score 67.1\n6 / 6\nall independent\n0.286 ETH\n$605\n4.383 ETH $9,264\nmax @5% $463 · held $5,713\n2.4h\n›\n18\nBELLBELL POOLS\n0xc5d6c1d90c8a87a07e2670b99b1556e818803228\nTHINSAME NAME ×2\n11.5\n2.4%\nraw · base · 0.8% of 250\n2 avg score 68.5\n7 / 7\nall independent\n0.51 ETH\n$1,079\n3.54 ETH $7,481\nmax @5% $374 · held $3,936\n2.0h\nage 5.8d\n›\n19\nONIONONION\n0xb57ccc3f9e55715cbf8d681ea42ab384bb030798\nEXITcredible-exitsTHIN\n11.4\n2.4%\nraw · exit · 2.8% of 250\n2 avg score 70.2\n16 / 16\nall independent\n0.606 ETH\n$1,280\n1.68 ETH $3,551\nmax @5% $178 · held $1\n24m\n›\n20\nCOHCamilo on hood\n0xcbb54563ff20ed3be02ebc2d8a5bcb76145fcfe7\nTHIN\n10.3\n2.4%\nraw · base · 0.8% of 250\n1 avg score 69.8\n1 / 1\nall independent\n0.126 ETH\n$267\n2.718 ETH $5,745\nmax @5% $287 · held $2,196\n1m\nage 41.9d\n›\n21\nNRDISNordis Market\n0x84423b2b6fc0a82d4ad31a454dfa5d3fb6ecb978\nFRESHTHIN\n10\n2.4%\nraw · fresh · 1.6% of 250\n2 avg score 68.5\n7 / 7\nall independent\n0.267 ETH\n$565\n1.683 ETH $3,557\nmax @5% $178 · held $6\n2.2h\nage 2.2h\n›\n22\nLOUPELoupe\n0xe2a4bec7bdd858dd51d175a4b0b1ef70eb9bd4e7\nTHIN\n9.9\n2.4%\nraw · base · 0.8% of 250\n3 avg score 67.1\n3 / 3\nall independent\n0.036 ETH\n$75\n2.174 ETH $4,595\nmax @5% $230 · held $1,044\n35m\n›\n23\nBDKBLOCKDESK\n0xcce98faaf15d6a61a5fa6c42f88e075971134e79\nFRESHTHIN\n9.7\n1.9%\nraw · fresh · 1.6% of 250\n2 avg score 69.5\n7 / 7\nall independent\n0.209 ETH\n$443\n1.78 ETH $3,763\nmax @5% $188 · held $212\n1.2h\nage 1.2h\n›\n24\nVETOMr Veto\n0xaacb5dba5ac263fe842eac533b0419b3f931a852\n9.5\n1.9%\nraw · base · 0.8% of 250\n1 avg score 64.1\n1 / 1\nall independent\n0.47 ETH\n—\n— ETH —\nmax @5% — · held —\n43m\nage 9.2d\n›\n25\n$FLETCHFLETCH\n0xe004da2328a22105990cbc58a5e3e4a214e7acf9\nFRESHTHINSAME NAME ×2\n9.5\n1.9%\nraw · fresh · 1.6% of 250\n1 avg score 71\n1 / 1\nall independent\n0.01 ETH\n$21\n2.088 ETH $4,412\nmax @5% $221 · held $863\n2.3h\nage 12.2h\n›\n26\nFWAfwa.fun\n0xa8175d4bc55c2a965dda9641c06c069d023a7044\nFRESHTHIN\n9.4\n1.9%\nraw · fresh · 1.6% of 250\n2 avg score 72.4\n10 / 10\nall independent\n1.048 ETH\n$2,216\n1.68 ETH $3,552\nmax @5% $178 · held $3\n49m\nage 50m\n›\n27\nFLETCHFletch\n0x16f9db21d1013a0824f67442319475620928c7f5\nEXITnet-sellingTHINSAME NAME ×2\n9.3\n1.9%\nraw · exit · 2.8% of 250\n1 avg score 71\n3 / 3\nall independent\n0.019 ETH\n$40\n2.373 ETH $5,015\nmax @5% $251 · held $1,464\n2.2h\nage 1.7d\n›\n28\nBEEPZBEEPZ\n0x88081347e712749a2d01e6c597b13fe0cc2478a5\nFRESHEXITnet-sellingTHIN\n9.2\n1.9%\nraw · exit · 2.8% of 250\n1 avg score 71\n1 / 1\nall independent\n0.002 ETH\n$4\n3.694 ETH $7,807\nmax @5% $390 · held $4,257\n2.0h\nage 15.2h\n›\n29\nKALYXKALYX\n0xbfdd34c1a1623feaa7907badb3105d83c95ba774\nFRESHTHIN\n8.9\n1.9%\nraw · fresh · 1.6% of 250\n1 avg score 65.3\n15 / 15\nall independent\n0.34 ETH\n$718\n1.692 ETH $3,576\nmax @5% $179 · held $25\n1.9h\nage 2.0h\n›\n30\nMetrionMetrion\n0xb81f262be579707bbf78a2e3676c203a81ea23dd\nFRESHTHIN\n8.9\n1.9%\nraw · fresh · 1.6% of 250\n1 avg score 65.3\n14 / 14\nall independent\n0.27 ETH\n$571\n1.68 ETH $3,551\nmax @5% $178 · held $1\n2.5h\nage 2.5h\n›\n31\nRHIABLORHIABLO\n0xebaa0ca1a9d178550fb2f9ca4099a292375a403a\nTHIN\n7.9\n1.8%\nraw · base · 0.8% of 250\n1 avg score 69.8\n1 / 1\nall independent\n0.002 ETH\n$5\n3.527 ETH $7,456\nmax @5% $373 · held $3,905\n55m\nage 10.7d\n›\n32\nGENESISGENESIS CHAD\n0xe0ab3a7a32ef7bbd2a5142d88a73020164a4aa57\n7.7\n1.8%\nraw · base · 0.8% of 250\n1 avg score 75\n3 / 3\nall independent\n0.108 ETH\n$227\n4.835 ETH $10,219\nmax @5% $511 · held $6,670\n2.5h\nage 5.6d\n›\n33\nFETNFETCHN\n0x7eaa6d703c89036c609867bf967562baa34677df\nTHIN\n7.5\n1.8%\nraw · base · 0.8% of 250\n1 avg score 75\n1 / 1\nall independent\n0.045 ETH\n$95\n2.002 ETH $4,231\nmax @5% $212 · held $681\n1.4h\nage 7.2d\n›\n34\nKinetiqKinetiq Pad\n0x7916bd37d8fc40455a4b1a10a19c3de83ccf4498\nTHIN\n6.7\n1.8%\nraw · base · 0.8% of 250\n1 avg score 75\n2 / 2\nall independent\n0.007 ETH\n$15\n1.789 ETH $3,782\nmax @5% $189 · held $231\n2.1h\nage 4.9d\n›\n35\nPIPPAPippa Inu\n0xbcbfc8ffb6a55ee936bc552e70e9ef47141023b9\nTHIN\n6.6\n1.8%\nraw · base · 0.8% of 250\n1 avg score 64.1\n2 / 2\nall independent\n0.095 ETH\n$202\n3.895 ETH $8,232\nmax @5% $412 · held $4,684\n31m\n›\n36\nBELLBELL POOLS\n0xda45190d4d790d2f9cac3e4ef71036e48801065f\nTHINSAME NAME ×2\n6.6\n1.8%\nraw · base · 0.8% of 250\n1 avg score 75\n4 / 4\nall independent\n0.033 ETH\n$69\n1.68 ETH $3,551\nmax @5% $178 · held $0\n30m\n›\n37\nSLOWLYGet Rich Slowly\n0xd091aa2eb71d11659894ef34eccbc9a1672d1cef\n6.6\n1.8%\nraw · base · 0.8% of 250\n1 avg score 75\n2 / 2\nall independent\n0.014 ETH\n—\n— ETH —\nmax @5% — · held —\n1.0h\nage 65.5d\n›\n38\nMACBOOKMACBOOK\n0x9d22394ce6281f3f59308eab5c0f7d51ef1b0034\n6.6\n1.8%\nraw · base · 0.8% of 250\n1 avg score 75\n2 / 2\nall independent\n0.007 ETH\n—\n— ETH —\nmax @5% — · held —\n15m\nage 63.3d\n›\n39\nSHELLZEROShellZero\n0xd09a74208665d7af61ccc01e9f358903a665b08b\nTHIN\n6.6\n1.8%\nraw · base · 0.8% of 250\n1 avg score 75\n1 / 1\nall independent\n0.002 ETH\n$5\n3.37 ETH $7,124\nmax @5% $356 · held $3,573\n2.6h\nage 11.9d\n›\n40\nHOOKAGRHOOK AGGREGATOR\n0xd1286450a7ad6cc62835298a1073f5d4b5b9cee8\nTHIN\n6.6\n1.8%\nraw · base · 0.8% of 250\n1 avg score 75\n1 / 1\nall independent\n0.002 ETH\n$3\n1.697 ETH $3,586\nmax @5% $179 · held $36\n1.4h\nage 18.8d\n›\nIs the 3× chance real?\ni\nCURRENT FIT\nLABELLED SIGNALS\n10,000\n150 needed\nBASE RATE\n2.07%\nshare of all signals that hit 3×\nBRIER, OUT OF SAMPLE\n0.0224\nlower is better\nBASE RATE BRIER\n0.0225\nthe bar to beat\nFITTED / TESTED ON\n7,000 / 3,000\nMETHOD\nisotonic-sklearn\nSAID VS WAS share that went 3× in 72 h, out of sample\n1.4\n1.7\n3\n3.2\n5.3\n5.7\n12.1\n0\n1–2%\nn=2,044\n2–5%\nn=789\n5–10%\nn=158\n10–20%\nn=9\nSAID\nWAS\nHIT RATE BY SIGNAL TYPE rolling\nEXIT\n2.8%\n2.8% of 250\nHOT\ninsufficient history (19/30)\nFRESH\n1.6%\n1.6% of 250\nBASE\n0.8%\n0.8% of 250\n1\nPersist\n2\nObserve\n3\nLabel\n4\nFit\n5\nGate\nMisses & gaps\nA $100 TRADE ON EVERY SIGNAL exit-policy backtest\nWhat this measures\nWITHHELD\nNo result yet.\nTop wallets\nCLOSED ROUND TRIPS ONLY\ni\nLoading wallets…\nSibling wallets count once\nENTITY RESOLUTION\ni\n0wallets →0entities\n9 entities in the window · 0 links drawn\nFail-closed: bundle-id links (this chain publishes no bundle id) are not being drawn right now, so those wallets are counted at the address level. No link is ever guessed.\nTX\nSame atomic transaction\nTX LIVE · BLOCK LIVE\n$\nCommon non-exchange funder\nLIVE\nID\nShared bundle id\nUNAVAILABLE\n∠\nPortfolio cosine similarity\nLIVE\n1\nHow an entity votes\nONCE\nOFF\nWhen a source is down\nNO LINK\nJSON for agents and bots\nNO KEY REQUIRED\nsignals\n?chain=robinhood|solana&filter=all|hot|fresh|exits\ntraders\n?chain=robinhood\nentities\nthe resolved entities and the evidence that linked them\ncalibration\nthe measured score→outcome link\ndocs\nthe exact scoring formulas\n\nRobinhood Chain data is read straight from the chain-4663 bonding-curve trade logs; Solana pools come from public DEX aggregates and Solana per-wallet track records from swap transactions parsed off a public Solana RPC. Where we have not indexed enough swaps for a pool, that row keeps its pool-level buy-pressure score and says so — a trader score is never invented. Nothing here is financial advice — an on-chain track record is a description of the past, not a prediction.",
+ "adv_scroll": [
+  1440,
+  1440
+ ],
+ "after_reload_mode": "fr",
+ "after_reload_chain": "Robinhood",
+ "errors": []
+}

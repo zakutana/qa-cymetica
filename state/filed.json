@@ -6518,7 +6518,7 @@
    "filed_at": "2026-11-05T16:49:59+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "313": "pending"
+    "313": "paid"
    },
    "withdrawn": false
   },
@@ -6546,7 +6546,7 @@
    "filed_at": "2026-11-06T18:41:44+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "315": "pending"
+    "315": "paid"
    },
    "withdrawn": false
   },
@@ -6562,7 +6562,7 @@
    "filed_at": "2026-11-06T18:42:10+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "316": "pending"
+    "316": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -6591,7 +6591,7 @@
    "filed_at": "2026-11-09T16:36:17+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "318": "pending"
+    "318": "paid"
    },
    "withdrawn": false
   },
@@ -6605,7 +6605,7 @@
    "filed_at": "2026-11-09T16:36:56+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "319": "pending"
+    "319": "paid"
    },
    "withdrawn": false
   },
@@ -6619,7 +6619,7 @@
    "filed_at": "2026-11-09T16:37:09+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "320": "pending"
+    "320": "paid"
    },
    "withdrawn": false
   },
@@ -6633,7 +6633,7 @@
    "filed_at": "2026-11-09T16:37:33+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "321": "pending"
+    "321": "paid"
    },
    "withdrawn": false
   },
@@ -6647,7 +6647,7 @@
    "filed_at": "2026-11-09T17:02:31+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "322": "pending"
+    "322": "paid"
    },
    "withdrawn": false
   },
@@ -6704,6 +6704,104 @@
    "verdicts_sent": [],
    "their_status": {
     "326": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "fomo-radar-counts-quote-token-amounts-as-eth",
+   "nodeids": [],
+   "report_ids": [
+    327
+   ],
+   "title": "FOMO Radar: on curves quoted in another token (ORBIO, NVDA, SPCX, DJT, AAPL) the amounts are added up as ETH, so POLLY is the second card of the Basic view with 8,477 ORBIO counted as 8,477 ETH",
+   "filed_at": "2026-11-10T06:50:33+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "327": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "fomo-radar-leaderboard-profit-contradicts-the-wallets-own-flows",
+   "nodeids": [],
+   "report_ids": [
+    328
+   ],
+   "title": "FOMO Radar: the leaderboard says +2.41 ETH realized for an address whose only curve shows 10.69 ETH in, 10.10 ETH out and 99.95% of the tokens sold",
+   "filed_at": "2026-11-10T06:50:42+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "328": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "fomo-radar-backtest-endpoint-answers-503",
+   "nodeids": [],
+   "report_ids": [
+    329
+   ],
+   "title": "FOMO Radar: /backtest answers 503 after 60 s for both chains (8 Nov and 10 Nov), and the page shows it as WITHHELD",
+   "filed_at": "2026-11-10T06:50:58+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "329": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "fomo-radar-top-wallets-stays-loading-after-a-chain-switch",
+   "nodeids": [],
+   "report_ids": [
+    330
+   ],
+   "title": "FOMO Radar, Advanced: after Solana and back to Robinhood, Top wallets stays on \"Loading wallets…\" (90 s and counting) while Best wallets in Basic is drawn",
+   "filed_at": "2026-11-10T06:51:12+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "330": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "fomo-radar-solana-leaderboard-says-a-24-hour-window-for-records-of-weeks",
+   "nodeids": [],
+   "report_ids": [
+    331
+   ],
+   "title": "FOMO Radar (Solana): /traders says window_seconds 86400 while its rows hold round trips held for 400 hours, so the page prints \"+$15,651 made in 24.0 h\"",
+   "filed_at": "2026-11-10T06:51:22+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "331": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "fomo-radar-counts-a-router-contract-as-one-smart-wallet",
+   "nodeids": [],
+   "report_ids": [
+    332
+   ],
+   "title": "FOMO Radar: the #1 wallet on the leaderboard is a router contract that 406 buyers traded through; a buy is credited to the contract called, not to the wallet that signed it and got the tokens",
+   "filed_at": "2026-11-10T06:51:40+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "332": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "fomo-radar-answers-from-different-windows-at-the-same-time",
+   "nodeids": [],
+   "report_ids": [
+    333
+   ],
+   "title": "FOMO Radar (Robinhood): the same endpoints answer from different windows within a minute (9,456 s / 5,909 s / 1,248 s; 242 / 180 / 43 tokens), so the board and the leaderboard flip",
+   "filed_at": "2026-11-10T06:51:50+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "333": "pending"
    },
    "withdrawn": false
   }
