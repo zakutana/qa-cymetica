@@ -9505,6 +9505,27 @@ reports:
       The build's own goal was one click per farm with the user's one step shown on the card; on desktop that step is the part a user
       cannot read. Read only; nothing was written.
 
+  - key: capital-maximizer-zec-usdc-card-says-moves-with-none
+    severity: low
+    category: logic
+    url: https://cymetica.com/capital-maximizer
+    title: "Capital Maximizer (ET-34229 build): OG Gambler's top pick, the ZEC-USDC pool, says \"The pool's value moves with None\""
+    expected: >
+      The risk line under a pool route names what the pool's value moves with, as it does on every other pool route
+      ("moves with ETH", "moves with SOL"). For ZEC-USDC that is ZEC.
+    actual: >
+      Read on 2026-11-10 at 07:17 UTC and again an hour later. GET /api/v1/capital-maximizer/route?id=rca70095846&tier=og&amount=5000
+      returns "exposure": null and "risk_note": "No liquidation. The pool's value moves with None; impermanent loss is not in the
+      number." The page prints that sentence under card 1 of OG Gambler's top 3, the TOP PICK.
+      SOL-ZEC on the same list reads "moves with SOL", though half of that pool is ZEC too.
+    steps:
+      - 'Open https://cymetica.com/capital-maximizer, choose OG Gambler, press FIND TOP 3 STRATEGIES'
+      - 'Card 1, ZEC-USDC pool, Orca: the line under SELECT STRATEGY reads "No liquidation. The pool''s value moves with None; ..."'
+      - 'GET /api/v1/capital-maximizer/top3?tier=og&amount=5000 -> routes[0].exposure null, routes[0].risk_note as above'
+    body: >
+      The exposure of a pool whose volatile side is not ETH, BTC or SOL comes back empty and is printed as the word None. The card is
+      where a user reads what can move against them. GET requests only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

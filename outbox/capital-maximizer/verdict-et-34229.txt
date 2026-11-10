@@ -1,0 +1,21 @@
+FAIL. Checked 10 Nov 2026 from 07:17 UTC: your /tiers, /platforms, /top3 and /route (32 route ids, each tier), score.py on the same minute's DefiLlama, Morpho and Pendle data with 30-day charts, and the live page.
+
+HOLDS: the four tier lines; High's loop cap 5 and OG's lender's limit (wstETH 5.5x); a route 1.3% from liquidation shows; ZEC-USDC and SOL-ZEC lead OG; a Revert Lend levered pool is in OG's top 3; dCOMP/USDC supplied directly is Medium #2; Revert, Arcadia, Loopscale, Veranta, Axis and 3Jane are on Platforms; the LP fee cut and the 30-day median are in your formula. Your top 3 reproduces in score.py to the cent.
+
+DONE WHEN
+1. Partial. Medium shows no loop at all, so its cap of 3 cannot be seen. PT-sUSDfr (Staked Forest Road Dollar, a dollar) is classed hold_other and offered from High only: Medium misses its own $89.87 route. GMX house pools answer 404 in High, though High adds house vaults.
+2. Fail. Medium #1 $45.97 against PT-USD3/USDT on Morpho at 3x, $55 at today's PT 15.51% and borrow 5.40% (worse of now and the week): 16% under. 3Jane is on Platforms with 0 routes. OG #1 $353.44 against Arcadia 7x on Base WETH-USDC 0.3%, $455: 22% under. Without Base, ZEC-USDC is our best too. Conservative is within 3%; High's #1 beats ours.
+3. Pass.
+4. Fail. routable_chains has 16 chains and not Base; listed_only_chains is ["Base"]. Veranta has 0 routes for that reason.
+5. Partial. dCOMP direct: yes. No stUSDS loop and no Fluid smart vault returns in any tier; the old stUSDS loop id radc640001b answers 404 everywhere. Your API lists no routes, so we cannot see them otherwise.
+6. Pass as written. But Veranta, Axis and 3Jane have 0 routes each, so Medium and High gain nothing from them.
+7. Fail. WETH-USDT 0.3% (r3d38c31e00) shows $54.95 with rate_basis no_chart. Its 30-day median base rate is 30.44%; on that it earns $68.62: 20% under. counters: charts_read 55 of charts_needed 862.
+8. Fail. /route has the range (ZEC-USDC +-26%, full range 20%) and the exit (Kamino Commodity, 1-3 month queue), but the page never shows them: capital-maximizer.js?v=20261103-3 reads no notes field. The same hides the past loss the card should say (goal 3), the one-borrower line (goal 5) and the by-the-rule figure your (i) says is "shown beside it".
+9. Not met: your page says "A deposit is not simulated for you here".
+
+ALSO
+- Conservative routes carry the note "OG Gambler does not bar a platform for a past loss" (Fluid Lending, Conservative #1 and #3).
+- Revert's liquidation reads "can lose 1% of its value" next to short "pool position loses 1.3%".
+- Bug #337: OG's top pick reads "The pool's value moves with None" (exposure null).
+
+Read only: no position opened, nothing sent but GETs.
