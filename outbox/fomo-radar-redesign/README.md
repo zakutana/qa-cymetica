@@ -17,4 +17,4 @@ Asked for by the operator on 2026-11-07, in their words: *"musis zachovat vesker
 | Filed | 2026-11-08 20:11 UTC on the operator's word ("Podej to"); BB-SPEC proposed |
 | Accepted, deadline | BB-CHANGE C1 (change-1.txt: same address, keeps the name FOMO Radar) and BB-ACCEPT (BB-0049) on the operator's word, 2026-11-08 20:13 UTC; deadline 2026-11-09 20:13 UTC |
 | Shipped | 2026-11-10 05:13 UTC, 9 hours late. Verified the same day: 8 of 9 Done when lines, bugs #327 to #333 on the data ([docs/ET-34609-verification.md](../../docs/ET-34609-verification.md)) |
-| Verdict | |
+| Verdict | FAIL sent on the operator's word 2026-11-10 07:11 UTC (BB-0055; BB-0054 timed out and did not land), note in `verdict-note-et-34609.txt`; ticket back to funded |
