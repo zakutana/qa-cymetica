@@ -9526,6 +9526,30 @@ reports:
       The exposure of a pool whose volatile side is not ETH, BTC or SOL comes back empty and is printed as the word None. The card is
       where a user reads what can move against them. GET requests only; nothing was written.
 
+  - key: capital-maximizer-susdfr-step-1-uniswap-v4-cannot-fill
+    severity: medium
+    category: logic
+    url: https://cymetica.com/capital-maximizer
+    title: "Capital Maximizer (ET-34229 build): High Risk #1 and #2 start with \"Swap 5,000 USDC to SUSDFR on Uniswap V4\"; that pool cannot fill 10 USDC"
+    expected: >
+      Each step of a route can be done at the amount shown, and the swap cost is the cost of the venue the step names.
+    actual: >
+      Read on 2026-11-10 at 07:46 UTC. High Risk #1 (PT-sUSDfr-28JAN2027, $89.87) and #2 (SUSDFR fixed-yield pool, $78.57) both
+      begin "Swap 5,000 USDC to SUSDFR" with "Uniswap V4" and charge swap_usd 4.00. The only Uniswap V4 USDC/sUSDfr pool (fee 375,
+      tick spacing 4, no hook, pool id 0x1d8694445872d16931c729de06086ccbdc4089875ee73fb6119963a922c92d5a) sells 4.86 sUSDfr for 5 USDC;
+      from 10 USDC up the V4 Quoter (0x52f0e24d...1203) reverts with NotEnoughLiquidity (0x7a5ed734). The route does open another way:
+      Pendle's own router quote for 5,000 USDC goes USDC to USDfr through KyberSwap and into the SY, 5,233.82 PT at -0.20%, never
+      touching sUSDfr on Uniswap V4. Minting USDfr from USDC is KYC-gated (Cantina's review of Forest Road: "mint(usdcAmount) is
+      KYC-gated"); buying it in an open pool is not.
+    steps:
+      - 'GET /api/v1/capital-maximizer/top3?tier=high&amount=5000 -> routes[0] and routes[1]: step 1 "Swap 5,000 USDC to SUSDFR", right "Uniswap V4", costs.swap_usd 4.0'
+      - 'eth_call V4Quoter 0x52f0e24d1c21c8a0cb1e5a5dd6198556bd9e1203 quoteExactInputSingle(((USDC, sUSDfr 0xaf559d1d..., 375, 4, 0x0), true, 10000000, 0x)) -> revert 0x7a5ed734 NotEnoughLiquidity; with 5000000 -> 4.86 sUSDfr'
+      - 'Pendle GET /v2/sdk/1/convert for 5,000 USDC into PT-sUSDfr-28JAN2027 -> route via KyberSwap USDC to USDfr; its calldata runs by eth_call on the Pendle router'
+    body: >
+      A user who follows step 1 on the venue it names gets nothing past 5 USDC. The step and its cost should name the path that fills
+      (USDC to USDfr in an open pool, then Pendle), and the card should say that USDfr's mint is KYC-gated even though the route does not
+      need the mint. Read only: eth_call and GETs; nothing signed or sent.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
