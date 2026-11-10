@@ -14,9 +14,9 @@ Dropped since MSG-0358: Approve as a new item (REPLY-0279: shipped 10 Nov; the b
 
 | | |
 |---|---|
-| Ticket | not filed |
+| Ticket | ET-34884 (BB-0068) |
 | Review | |
-| Filed | |
+| Filed | 2026-11-10, on the operator's word; not reviewed by Nexus first |
 | Accepted, deadline | |
 | Shipped | |
 | Verdict | |
