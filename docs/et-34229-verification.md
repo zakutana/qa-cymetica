@@ -60,4 +60,4 @@ Our own fix: `score.py`'s lasting figure took `min(rate, median)`, while its doc
 
 Bug #337: fixed in the API too (`exposure: "ZEC"`). The loop figures in line 2 ($55, $67.38) are hunter rows quoted on 4 Nov; today's PT 15.5% and borrow 5.01% (5.40% then) make them slightly better.
 
-Score: 4 of 9 pass, 2 partial, 3 fail. Verdict: the operator's word.
+Score: 4 of 9 pass, 2 partial, 3 fail. FAIL sent on the operator's word, 2026-11-10 (BB-0066, `outbox/capital-maximizer/verdict-et-34229-r3.txt`).
