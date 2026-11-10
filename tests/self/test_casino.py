@@ -429,6 +429,11 @@ def test_the_next_asks_are_one_bot_a_table_and_never_repeat():
     # The least tried variant first, so the coach off and the risk levels come early, not after 66 As.
     assert [a["variant"] for a in asks] == ["A", "B", "C1"]
 
+    # [operator 2026-11-10] only 1H and 5H tables: a 1 day table takes a day to read.
+    asks = casino.next_asks([], bots, [{"id": 50, "tier": "fmicro1d"}, {"id": 51, "tier": "fpro1d"}] + tables,
+                            seated=set(), spent=set(), running=0)
+    assert [a["table_id"] for a in asks] == [44, 45, 43]
+
     # Tried already: the same bot, tier and variant is not asked again.
     tried = [{"type": "experiment", "variant": "A", "species": "S0", "tier": "fmicro1h"}]
     asks = casino.next_asks(tried, bots[:1], tables[:1], seated=set(), spent=set(), running=0)
