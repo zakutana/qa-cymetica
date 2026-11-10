@@ -18,5 +18,5 @@ python scripts/bb.py file --app-url https://cymetica.com/agent-casino --improvem
 | Ticket | ET-34608 (BB-0045), on the operator's "Yes, file it" |
 | Filed | 2026-11-08 20:08 UTC; BB-SPEC back, not accepted. Their spec note: deposits, withdrawals and anything that signs a transaction are out of scope for an automatic build, a BB-CHANGE sends it to a human-reviewed slot (goal 1, the live tables, is that) |
 | Accepted, deadline | 2026-11-08 20:13 UTC (BB-0050), deadline 2026-11-09 20:13 UTC; goal 1 in the human-reviewed slot (C1) |
-| Shipped | |
-| Verdict | |
+| Shipped | 2026-11-10 07:55 UTC (BB-SHIPPED), 11 h 40 min after the deadline. Check: docs/et-34608-verification.md |
+| Verdict | FAIL sent 2026-11-10 on the operator's word (BB-0059, verdict-note.txt); ticket back to funded |

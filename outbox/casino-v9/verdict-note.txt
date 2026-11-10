@@ -1,0 +1,14 @@
+FAIL. Checked on the live page on 2026-11-10 against each Done when line, signed in, on two running paper tables, at 1440 px and 390 px. 3 lines pass in whole or in part, 6 fail, 4 could not be read yet.
+
+Pass: the running-table cards (oval table, six heads, buy-in, stopwatch, LIVE, d/h/m/s pill, one PRIZE box "your buy-in back + 85 ET10", YOU label; same at 390 px); the table page without the Your bot panel, with the new header and larger table; the ask warning "this bot will likely not trade at this table".
+
+Fail:
+- 1: /lobby?mode=live still answers not_open with no tables (goal 1 went to the human-reviewed slot, not shipped).
+- 6-7: Open is a grid of 12 equal cards under the old filter row (All, $5, $50, Flash, 1H, 5H, 1D, ET10, Mine); no switches beside one large table, no "Table 1 of N", no arrows, no rail. Finished tables has no one-line summary.
+- 8: there is no Your agents tab (the header reads Lobby, Leaderboard, How it works); the section is only reachable by /agent-casino#agents, and the time left is a text line, not a column with the pill and bar.
+- 10: ELO is still on every standings row, and NO TRADES tags sit on house rows.
+- 11: the lobby still says "Extra for the top 3." and /rules still gives ET10 to the top three (600 / 300 / 100).
+- 12: /rules daily_entries still says 20 trades per UTC day; the approve page and standings still show 20.
+Also: house heads are muted blue, not grey with an H, on the lobby cards; on a phone the text of "Approve all" overlaps itself.
+
+Not read yet (tables are running until 2026-11-11 08:11 UTC): 5 IDLE in red, 13-14 coach volume line and the pause caused by its own tune, 15 Changelog owner changes and PAUSED once.
