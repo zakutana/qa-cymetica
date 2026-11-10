@@ -59,6 +59,7 @@
 .v4hint em { font: 500 11px var(--mono); font-style: normal; color: var(--text3); }
 .v4lock em { display: flex; align-items: center; gap: 6px; font: 600 11px var(--mono); font-style: normal; color: var(--text2); text-align: right; }
 .v4lock em svg { width: 14px; height: 14px; color: var(--green); }
+.v4yn { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 4px; }
 .v4lock:not(.paid) { border-color: rgba(0,207,255,.4); }
 .v4lock:not(.paid) b { color: var(--cyan); text-shadow: 0 0 26px rgba(0,207,255,.35); }
 
@@ -68,7 +69,7 @@
 .rnav a.v4open.lit .n { color: rgb(6,9,15); background: var(--green); box-shadow: 0 0 12px rgba(0,255,136,.6); animation: v4pulse 1.8s ease-in-out infinite; }
 .tnav a .v4badge { min-width: 18px; padding: 1px 6px; border-radius: 99px; font: 700 10.5px var(--mono); text-align: center; color: rgb(6,9,15); background: var(--green); box-shadow: 0 0 10px rgba(0,255,136,.55); }
 @keyframes v4pulse { 50% { box-shadow: 0 0 2px rgba(0,255,136,.3); } }
-.v4earn { display: grid; gap: 12px; padding: 18px 20px; margin-bottom: 18px; border-color: rgba(0,255,136,.4); background: linear-gradient(180deg, rgba(0,255,136,.07), rgba(0,255,136,.01)); box-shadow: 0 0 40px rgba(0,255,136,.07); }
+.v4earn { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 18px 20px; margin-bottom: 18px; border-color: rgba(0,255,136,.4); background: linear-gradient(180deg, rgba(0,255,136,.07), rgba(0,255,136,.01)); box-shadow: 0 0 40px rgba(0,255,136,.07); }
 .v4eh { display: flex; align-items: center; gap: 10px; }
 .v4eh .kick { color: var(--green); }
 .v4et { font: 22px/1 var(--display); }
@@ -82,7 +83,9 @@
 .v4en span { font: 500 12.5px var(--sans); color: var(--text3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .v4el { display: grid; justify-items: end; gap: 2px; }
 .v4el b { font: 24px/1 var(--display); color: var(--green); }
-.v4el span { font: 600 10px var(--mono); letter-spacing: .6px; text-transform: uppercase; color: var(--text3); }
+.v4el span { font: 600 10px var(--mono); letter-spacing: .6px; text-transform: uppercase; color: var(--text3); white-space: nowrap; }
+.v4el.mine b { color: var(--cyan); }
+.v4er .btn { white-space: nowrap; }
 .v4ef { display: flex; align-items: center; gap: 8px; font: 500 11.5px var(--mono); color: var(--text3); }
 .v4ef svg { width: 14px; height: 14px; flex: none; }
 .v4ef span { flex: 1; }

@@ -3,9 +3,10 @@
    * gives theirs the name with a 0. The look only: how an X account is read, how credit is locked and moved is theirs.
    * What changes (the operator, 2026-11-05 and 2026-11-10): no unique visitors, no clicks, no new users, no tracked link.
    * A brief is a budget in USDC or ET10 with no end date; the owner can add funds to it. A creator sees Open briefs lit
-   * in the dashboard's menu, takes one with their X account and posts the prepared materials. The owner is told, sees
-   * the account, its expected reach and a suggested amount, names the amount and accepts: it is locked from the owner's
-   * credit. After the post has stayed up 3 days the owner approves and the locked amount moves to the creator. ===== */
+   * in the dashboard's menu and takes one with their X handle: nothing about their account is shown to them. The owner
+   * is told, sees the account, its expected reach and a suggested amount, and sends an amount: it is locked from the
+   * owner's credit. The creator sees the amount and accepts it or not, then posts the prepared materials. After the
+   * post has stayed up 3 days the owner approves and the locked amount moves to the creator. ===== */
   const V4_ROLE = BOOT.v4role || 'market', V4_OWNER = V4_ROLE === 'owner';
   const V4_DEF = { USDC: 100, ET10: 50000 };
   const V4_QUICK = { USDC: [50, 100, 250, 500], ET10: [10000, 50000, 100000, 200000] };
@@ -18,15 +19,20 @@
   const v4hash = (v) => String(v).split(':');
   const v4state = (o, owner) => ({
     pending: owner ? 'waiting for you' : 'sent to the owner',
-    approved: owner ? 'locked · no post yet' : 'locked for you · post it',
+    offered: owner ? 'offer sent · no answer yet' : 'the owner\'s offer · answer it',
+    approved: owner ? 'accepted · no post yet' : 'accepted · post it',
     posted: 'posted · day ' + Math.min(3, o.days_up + 1) + ' of 3',
     earned: owner ? 'ready for your approval' : 'waiting for the owner\'s approval',
     paid: 'paid', declined: 'declined' }[o.state] || o.state);
-  const v4chip = (o, owner) => '<span class="chip ' + ({ pending: 'c', approved: 'c', earned: 'g', paid: 'g', posted: 'c' }[o.state] || '') + '">' + v4state(o, owner) + '</span>';
+  const v4chip = (o, owner) => '<span class="chip ' + ({ pending: 'c', offered: owner ? 'c' : 'g', approved: 'c', earned: 'g', paid: 'g', posted: 'c' }[o.state] || '') + '">' + v4state(o, owner) + '</span>';
   const v4steps = (o) => {
-    const at = { pending: 0, approved: 1, posted: 2, earned: 3, paid: 4 }[o.state] || 0;
-    return '<div class="v4steps">' + ['Taken', 'Locked', 'Posted', '3 days up', 'Paid'].map((t, k) => '<span class="' + (k < at ? 'done' : k === at ? 'now' : '') + '"><i></i>' + t + '</span>').join('') + '</div>';
+    const at = { pending: 0, offered: 1, approved: 2, posted: 3, earned: 4, paid: 5 }[o.state] || 0;
+    return '<div class="v4steps">' + ['Taken', 'Offer', 'Accepted', 'Posted', '3 days', 'Paid'].map((t, k) => '<span class="' + (k < at ? 'done' : k === at ? 'now' : '') + '"><i></i>' + t + '</span>').join('') + '</div>';
   };
+  /* the promoter's button on a brief they took: the owner's amount is the one thing that asks for an answer */
+  const v4yours = (b, o, cls) => o.state === 'offered' ?
+    '<button class="btn g ' + cls + '" data-brief="' + b.id + '">The owner offers ' + v4n(o.amount) + ' ' + esc(b.currency) + ' ' + ic('arrow') + '</button>' :
+    '<button class="btn c ' + cls + '" data-brief="' + b.id + '">' + ic('check') + 'Yours · ' + v4state(o, false) + '</button>';
   const v4credit = (cur) => ((api(MINE) || {}).credit || {})[cur] || { free: 0, locked: 0 };
   const v4takes = () => (((api(MINE) || {}).taken || {}).takes || []);
   /* the promoter's own request on a brief: what an action or the last poll said, else what Briefs I took says */
@@ -51,8 +57,8 @@
   /* above Open briefs: one line, four pills, How */
   function v3Protect() {
     const R = howAnswer().rules || [], rule = (k) => (R[k] || {}).text || '';
-    const pills = [['x', 'Real X accounts only', rule(0)], ['coin', 'The owner names the amount', rule(1)], ['lock', 'Locked at accept', rule(3)], ['clock', 'Paid after 3 days up', rule(4)]];
-    return '<section class="v3prot"><span class="v3sh">' + ic('shield') + '</span><div class="v3pt"><b>User protection</b><span>Only real accounts, locked at accept, paid after the post stayed up</span></div>' +
+    const pills = [['x', 'Real X accounts only', rule(0)], ['coin', 'The owner names the amount', rule(1)], ['lock', 'Locked with the offer', rule(3)], ['clock', 'Paid after 3 days up', rule(4)]];
+    return '<section class="v3prot"><span class="v3sh">' + ic('shield') + '</span><div class="v3pt"><b>User protection</b><span>Only real accounts, locked with the offer, paid after the post stayed up</span></div>' +
       '<div class="v3pills">' + pills.map((p) => '<span class="v3pill" tabindex="0" data-tip="' + esc(p[2]) + '">' + ic(p[0]) + p[1] + '</span>').join('') + '</div>' +
       '<button class="v3how" data-v3how="1">How ' + ic('down') + '</button></section>';
   }
@@ -70,13 +76,16 @@
     const L = v4open(); if (!L.length) return '';
     return '<div class="card v4earn"><div class="v4eh"><span class="kick">Earn now</span><span class="chip g"><i class="live"></i>' + L.length + ' open brief' + (L.length === 1 ? '' : 's') + '</span>' +
         '<span class="sp" style="flex:1"></span><span class="v4et">' + v4left() + ' <em>to hand out</em></span></div>' +
-      L.map((b) => { const o = v4mine(b.id), src = v3pic(b);
+      L.map((b) => { const o = v4mine(b.id), src = v3pic(b), has = o && o.amount != null;
+        /* once the owner named an amount, the row's number is that amount: it is the promoter's, the brief's rest is not */
         return '<div class="v4er" data-brief="' + b.id + '">' + (src ? '<img alt="" src="' + esc(src) + '">' : '<span class="v3noimg">' + ic('globe') + '</span>') +
           '<div class="v4en"><b>' + esc(shortName(b.name)) + '</b><span>' + esc(b.say_line || 'Post about it on X') + '</span></div>' +
-          '<div class="v4el"><b>' + v4n(b.left) + '<small>' + esc(b.currency) + '</small></b><span>left to hand out</span></div>' +
-          (o ? '<button class="btn c" data-brief="' + b.id + '">' + ic('check') + 'Yours · ' + v4state(o, false) + '</button>' :
+          '<div class="v4el' + (has ? ' mine' : '') + '"><b>' + v4n(has ? o.amount : b.left) + '<small>' + esc(b.currency) + '</small></b><span>' +
+            (!has ? 'left to hand out' : o.state === 'offered' ? 'offered to you' : o.state === 'paid' ? 'paid to you' : 'locked for you') + '</span></div>' +
+          (o && o.state === 'offered' ? '<button class="btn g lg" data-brief="' + b.id + '">Answer ' + ic('arrow') + '</button>' :
+           o ? v4yours(b, o, '') :
             '<button class="btn g lg" data-brief="' + b.id + '">Take it ' + ic('arrow') + '</button>') + '</div>'; }).join('') +
-      '<div class="v4ef">' + ic('x') + '<span>Take a brief with your X account, post the prepared materials. The owner locks your amount; after 3 days up it is yours.</span>' +
+      '<div class="v4ef">' + ic('x') + '<span>Take a brief with your X account. The owner sends you an amount: accept it, post the prepared materials, and after 3 days up it is yours.</span>' +
         '<a class="lnk" href="#market">all open briefs ' + ic('arrow') + '</a></div></div>';
   }
   function today() { return (V4_OWNER ? '' : v4earn()) + today0(); }
@@ -121,8 +130,8 @@
       '<div class="bd"><div class="nm"><b>' + esc(shortName(b.name)) + '</b>' + v3where(b) + '</div>' +
         (b.say_line ? '<p class="say">' + esc(b.say_line) + '</p>' : '<p class="say dim">—</p>') +
         '<div class="ufg tipl" data-tip="What the owner still has to hand out. The brief stays open until it is handed out or the owner cancels it"><span>Left <span class="i">i</span></span>' + v4amt(b.left, b.currency) + '</div>' +
-        '<div class="pays v3pays"><div><b class="v3auto">by reach</b><span>per post</span><em>the owner names it</em></div><div><b>3 days</b><span>up, then paid</span><em>locked for you first</em></div></div>' +
-        (o ? '<button class="btn c full" data-brief="' + b.id + '">' + ic('check') + 'Yours · ' + v4state(o, false) + '</button>' :
+        '<div class="pays v3pays"><div><b class="v3auto">an offer</b><span>from the owner</span><em>you accept it or not</em></div><div><b>3 days</b><span>up, then paid</span><em>locked for you first</em></div></div>' +
+        (o ? v4yours(b, o, 'full') :
           '<button class="btn g full lg" ' + (preview ? 'disabled' : 'data-brief="' + b.id + '"') + '>Take this brief ' + ic('arrow') + '</button>') +
       '</div></article>';
   }
@@ -143,7 +152,7 @@
     const b = formBrief(F), busy = F.mats.some((m) => m.busy), over = F.budget > free;
     const ok = F.budget > 0 && !over && !busy && (!site || /^https?:\/\/[^/\s]+\.[^/\s]+/.test(F.site_url));
     return '<div class="wrap"><div class="nbtop"><a class="back" href="#me/products">' + ic('arrow') + 'My products</a><h1>Post a brief</h1><span class="sp" style="flex:1"></span>' +
-        '<span class="chip g tipr" data-tip="' + esc(PAGE().products_note) + '">' + ic('lock') + 'Locked only when you accept a promoter</span></div>' +
+        '<span class="chip g tipr" data-tip="' + esc(PAGE().products_note) + '">' + ic('lock') + 'Locked only when you send an offer</span></div>' +
       '<div class="nb v3nb">' +
         '<div class="card"><div class="colh"><span class="no">1</span><b>What and pay</b></div>' +
           '<div class="pick v3pick"><button data-pick="' + V3_SITE + '" class="v3site' + (site ? ' on' : '') + '"><span class="v3g">' + ic('globe') + '</span><div><b>My own website</b><span>any site, also outside Cymetica</span></div><em>any URL</em></button>' +
@@ -153,7 +162,7 @@
           '<div class="seg v4cur">' + ['USDC', 'ET10'].map((c) => '<button data-v4cur="' + c + '" class="' + (F.cur === c ? 'on' : '') + '">' + c + '</button>').join('') + '</div>' +
           '<div class="v3amt v4big"><input class="in" id="v4budget" data-f="budget" inputmode="decimal" value="' + F.budget + '" aria-label="Budget in ' + F.cur + '"><i>' + F.cur + '</i><em id="v4eq">' + v4eq(F.budget, F.cur) + '</em></div>' +
           '<div class="quick">' + V4_QUICK[F.cur].map((v) => '<button data-v4amt="' + v + '">' + v4n(v) + '</button>').join('') + '</div>' +
-          '<div class="v3ex" style="margin-top:10px">A promoter takes the brief with their X account. You see their expected reach and a suggested amount, name the amount and accept: only then it is locked from your credit. What you do not hand out stays here; add funds any time.</div>' +
+          '<div class="v3ex" style="margin-top:10px">A promoter takes the brief with their X account. You see their expected reach and a suggested amount, and send them your amount: only then it is locked from your credit. They accept it or not. What you do not hand out stays here; add funds any time.</div>' +
           '<label class="f" style="margin-top:14px">One line for promoters to say <span class="dim" id="saycnt">(' + F.say.length + ' / 280)</span><input class="in" data-f="say" maxlength="280" value="' + esc(F.say) + '" placeholder="optional"></label></div>' +
         '<div class="card"><div class="colh"><span class="no">2</span><b>Materials for promoters</b></div>' +
           '<label class="drop" id="drop">' + ic('upload') + '<b>Drop pictures or a video for promoters</b><span>PNG, JPG, GIF, MP4 or WebM · up to 50 MB each</span><input type="file" id="files" multiple accept="image/png,image/jpeg,image/gif,image/webp,video/mp4,video/webm" hidden></label>' +
@@ -202,7 +211,7 @@
     }
     const mats = b.materials || [], o = v4mine(id), go = o && o.state === 'approved';
     $('drawer').innerHTML = '<div class="dh"><img alt="" src="' + esc(v3pic(b) || b.art) + '"><button class="x" data-act="close" aria-label="Close">' + ic('close') + '</button></div><div class="db" data-v4brief="' + id + '">' +
-      '<div class="meta"><span class="chip g tipl" data-tip="The owner\'s Cymetica credit covers what is left. Your amount is locked from it the moment the owner accepts you">' + ic('shield') + 'Covered by the owner\'s credit</span></div>' +
+      '<div class="meta"><span class="chip g tipl" data-tip="The owner\'s Cymetica credit covers what is left. An amount is locked from it the moment the owner sends you an offer">' + ic('shield') + 'Covered by the owner\'s credit</span></div>' +
       '<div><h2>' + esc(shortName(b.name)) + '</h2>' + v3where(b) + '</div>' +
       (b.say_line ? '<p class="say" style="margin:0;color:var(--text2)">“' + esc(b.say_line) + '”</p>' : '') +
       '<div class="ufg tipl" data-tip="What the owner still has to hand out. The brief stays open until it is handed out or the owner cancels it"><span>Left in the brief <span class="i">i</span></span><b>' + v4n(b.left) + '<small>of ' + v4n(b.budget) + ' ' + esc(b.currency) + '</small></b></div>' +
@@ -219,44 +228,41 @@
     const text = [t && t.body, l && l.url].filter(Boolean).join(' ') || b.say_line || b.url || '';
     return 'https://x.com/intent/post?text=' + encodeURIComponent(text);
   }
-  /* the promoter's side of one brief, step by step: X account -> take -> locked -> post -> 3 days -> paid */
+  /* the promoter's side of one brief, step by step: take with the X handle -> the owner's offer -> accept or not ->
+   * post -> 3 days -> paid. Nothing about the promoter's own account is shown here: the owner looks at it. */
   function v3OfferBox(b) {
-    const o = v4mine(b.id), c = S.v4chk[b.id], cur = esc(b.currency), pair = b.id + ':' + (o ? o.id : 0);
-    const head = '<div class="v3obh">' + ic('x') + '<b>' + (o ? 'Your brief' : 'Take this brief') + '</b><span class="sp"></span><span class="chip ' + (o && (o.state === 'approved' || o.state === 'paid') ? 'g' : 'c') + '">' + (o ? v4state(o, false) : 'with your X') + '</span></div>';
-    const st = (k, v) => '<div><span>' + k + '</span><b>' + v + '</b></div>';
-    const stats = (r) => '<div class="v3s4">' + st('Followers', fmt(r.followers)) + st('Views a post', fmt(r.views)) + st('Real audience', (r.real || 0) + ' %') + st('Account', esc(r.age)) + '</div>';
+    const o = v4mine(b.id), cur = esc(b.currency), pair = b.id + ':' + (o ? o.id : 0), err = S.v4chk[b.id + ':err'];
+    const head = '<div class="v3obh">' + ic('x') + '<b>' + (o ? 'Your brief' : 'Take this brief') + '</b><span class="sp"></span><span class="chip ' + (o && ['offered', 'approved', 'paid'].indexOf(o.state) >= 0 ? 'g' : 'c') + '">' + (o ? v4state(o, false) : 'with your X') + '</span></div>';
     const who = (r) => '<div class="v3who"><span class="v3av">' + esc(String(r.handle || '?')[0].toUpperCase()) + '</span><b>@' + esc(r.handle) + '</b></div>';
-    const reach = (r) => 'expected reach ' + v4n(r.reach_lo) + '–' + v4n(r.reach_hi) + ' real views';
     if (o) {
       let money = '', tail = '';
       if (o.state === 'pending') {
-        money = '<div class="v4hint"><span>Accounts like yours usually get about</span><b>' + v4n(o.suggest) + '<small>' + cur + '</small></b><em>' + reach(o) + ' · the owner names the final amount</em></div>';
-        tail = '<div class="v3done pos">' + ic('check') + 'Sent to the owner · you hear here when they answer</div><button class="btn gh sm v4quiet" data-v4pass="' + pair + '">Withdraw my request</button>';
+        tail = '<div class="v3done pos">' + ic('check') + 'Sent to the owner · they look at your X and send you an amount</div><button class="btn gh sm v4quiet" data-v4pass="' + pair + '" data-v4was="pending">Withdraw my request</button>';
+      } else if (o.state === 'offered') {
+        money = '<div class="v3big v4lock v4offer"><div><span>The owner offers you</span><b>' + v4n(o.amount) + '<small>' + cur + '</small></b></div>' +
+          '<em>' + ic('lock') + 'locked for you · paid after your post stayed up 3 days</em></div>';
+        tail = '<div class="v4yn"><button class="btn g lg" data-v4yes="' + pair + '">' + ic('check') + 'Accept · ' + v4n(o.amount) + ' ' + cur + '</button>' +
+          '<button class="btn gh lg" data-v4pass="' + pair + '" data-v4was="offered">No, thanks</button></div>';
       } else {
         money = '<div class="v3big v4lock' + (o.state === 'paid' ? ' paid' : '') + '"><div><span>' + (o.state === 'paid' ? 'Paid to you' : 'Locked for you') + '</span><b>' + v4n(o.amount) + '<small>' + cur + '</small></b></div>' +
           '<em>' + (o.state === 'paid' ? 'in your Cymetica credit' : ic('lock') + 'from the owner\'s credit · yours after 3 days up') + '</em></div>';
       }
-      if (o.state === 'approved') tail = '<div class="v4post"><div class="v4do"><span class="no">1</span><div><b>Post it from @' + esc(o.handle) + '</b><span>the account that was checked · the text and the link are ready</span></div>' +
+      if (o.state === 'approved') tail = '<div class="v4post"><div class="v4do"><span class="no">1</span><div><b>Post it from @' + esc(o.handle) + '</b><span>the account you took it with · the text and the link are ready</span></div>' +
           '<a class="btn g" href="' + esc(v4intent(b)) + '" target="_blank" rel="noopener">' + ic('x') + 'Open in X ↗</a></div>' +
         '<div class="v4do"><span class="no">2</span><div><b>Paste the link of your post</b><span>the 3 days start now</span></div></div>' +
         '<div class="own"><input class="in" id="v4purl" placeholder="https://x.com/…/status/…"><button class="btn c" data-v4post="' + b.id + '">Register post</button></div><div class="dim num" style="font-size:11.5px" id="v4pmsg"></div>' +
-        '<button class="btn gh sm v4quiet" data-v4pass="' + pair + '">Pass on it · unlock the amount</button></div>';
+        '<button class="btn gh sm v4quiet" data-v4pass="' + pair + '" data-v4was="approved">Pass on it · unlock the amount</button></div>';
       if (o.state === 'posted') tail = '<div class="v4days"><span class="' + (o.days_up >= 1 ? 'on' : '') + '"></span><span class="' + (o.days_up >= 2 ? 'on' : '') + '"></span><span class="' + (o.days_up >= 3 ? 'on' : '') + '"></span></div><div class="v3obnote" style="margin:6px 0 0">Day ' + Math.min(3, o.days_up + 1) + ' of 3 · keep the post up; after the third day the owner approves and it is yours. <a class="lnk" href="' + esc(o.post_url) + '" target="_blank" rel="noopener">your post ↗</a></div>';
       if (o.state === 'earned') tail = '<div class="v4days"><span class="on"></span><span class="on"></span><span class="on"></span></div><div class="v3done pos">' + ic('check') + 'It stayed up 3 days · waiting for the owner\'s approval</div>';
       if (o.state === 'paid') tail = '<div class="v3done pos">' + ic('coin') + 'Paid · ' + v4n(o.amount) + ' ' + cur + ' moved to your Cymetica credit</div>';
-      return '<div class="v3ob">' + head + who(o) + stats(o) + money + v4steps(o) + tail + '</div>';
+      return '<div class="v3ob">' + head + who(o) + money + v4steps(o) + tail + '</div>';
     }
-    if (!c) return '<div class="v3ob">' + head +
-      '<div class="v3obin"><span>@</span><input class="in" id="v4h" placeholder="your X handle" autocomplete="off" maxlength="40"><button class="btn c" data-v4check="' + b.id + '">Check my X</button></div>' +
-      (S.v4chk[b.id + ':err'] ? '<div class="v3not">' + ic('close') + '<span>' + esc(S.v4chk[b.id + ':err']) + '</span></div>' : '') +
-      '<div class="v3obnote">Cymetica reads your public X: the real views of your own last posts, your followers and the account\'s age. The owner sees the same numbers and names your amount. A bought audience is refused.</div></div>';
-    if (!c.ok) return '<div class="v3ob no">' + head + who(c) + stats(c) + '<div class="v3not">' + ic('close') + '<span><b>Not eligible.</b> ' + esc(c.why) + '</span></div>' +
-      '<button class="btn gh full" data-v4again="' + b.id + '">Try another account</button></div>';
-    return '<div class="v3ob">' + head + who(c) + stats(c) +
-      '<div class="v4hint"><span>Accounts like yours usually get about</span><b>' + v4n(c.suggest) + '<small>' + cur + '</small></b><em>' + reach(c) + ' · the owner names the final amount</em></div>' +
-      (SIGNED ? '<button class="btn g lg full" data-v4send="' + b.id + '" style="margin-top:10px">Take this brief ' + ic('arrow') + '</button>' :
-        '<a class="btn g lg full" style="margin-top:10px" href="' + esc(signInHref(location.pathname + '#brief/' + b.id)) + '">Sign in to take this brief ' + ic('arrow') + '</a>') +
-      '<div class="v3obnote">Your request goes to the owner. When they accept, the amount is locked for you: you post, and after 3 days up it is yours. <a class="lnk" data-v4again="' + b.id + '" href="#">another account</a></div></div>';
+    return '<div class="v3ob">' + head +
+      (SIGNED ? '<div class="v3obin"><span>@</span><input class="in" id="v4h" placeholder="your X handle" autocomplete="off" maxlength="40" value="' + esc(S.v4chk[b.id + ':h'] || '') + '">' +
+          '<button class="btn g" data-v4send="' + b.id + '">Take this brief ' + ic('arrow') + '</button></div>' +
+          (err ? '<div class="v3not">' + ic('close') + '<span>' + esc(err) + '</span></div>' : '') :
+        '<a class="btn g lg full" href="' + esc(signInHref(location.pathname + '#brief/' + b.id)) + '">Sign in to take this brief ' + ic('arrow') + '</a>') +
+      '<div class="v3obnote">Your request goes to the owner. They look at your X and send you an amount; you accept it or not. After your post has stayed up 3 days, it is yours.</div></div>';
   }
 
   /* ---------- the owner's brief page ---------- */
@@ -264,7 +270,7 @@
     const RU = resultsUrl(id);
     if (!need([RU, HOW])) return dash('products', waitIn('the brief'));
     const r = api(RU); if (!r || !r.brief || STATE[RU] === 'err') return dash('products', '<div class="card"><div class="empty"><b>This brief is not yours, or it does not exist.</b><a class="btn c sm" href="#me/products">My products</a></div></div>');
-    const b = r.brief, cur = b.currency, O = r.offers || [], held = O.filter((o) => ['approved', 'posted', 'earned'].indexOf(o.state) >= 0), cr = b.credit || { free: 0, locked: 0 };
+    const b = r.brief, cur = b.currency, O = r.offers || [], held = O.filter((o) => ['offered', 'approved', 'posted', 'earned'].indexOf(o.state) >= 0), cr = b.credit || { free: 0, locked: 0 };
     learn(b.path, b.preview_url, b.art);
     const open = b.status === 'open', closed = b.status === 'cancelled';
     const chipTxt = open ? '<i class="live"></i>Open · no end date' : closed ? 'Cancelled' : b.status === 'full' ? 'All handed out · add funds to open it again' : esc(b.status);
@@ -281,7 +287,7 @@
         tile('wallet', 'Budget', big(b.budget), closed ? 'the brief is ended' : 'add funds any time', 'rgb(0,207,255)') +
         // an ended brief does not say "left": that read as money held for you; what was not handed out was never locked
         tile('coin', open ? 'Left to hand out' : closed ? 'Free in your credit again' : 'Left to hand out', big(b.left), open ? 'on the market now · not locked' : closed ? 'it was never locked' : 'add funds to open it again', 'rgb(0,255,136)') +
-        tile('lock', 'Locked', big(b.locked), fmt(held.length) + ' promoter' + (held.length === 1 ? '' : 's') + ' · moves when you approve', 'rgb(0,207,255)', 'Locked from your Cymetica credit when you accepted a promoter. It moves to them when you approve their post after 3 days up, and is unlocked if they pass') +
+        tile('lock', 'Locked', big(b.locked), fmt(held.length) + ' promoter' + (held.length === 1 ? '' : 's') + ' · moves when you approve', 'rgb(0,207,255)', 'Locked from your Cymetica credit when you sent a promoter an offer. It moves to them when you approve their post after 3 days up, and is unlocked if they say no or pass') +
         tile('briefs', 'Paid', big(b.paid), 'moved to promoters', 'rgb(59,130,246)') + '</div>' +
       '<div class="note v4credit">' + ic('wallet') + '<span>Your Cymetica credit: <b>' + v4n(cr.free) + ' ' + esc(cur) + '</b> free · <b>' + v4n(cr.locked) + ' ' + esc(cur) + '</b> locked</span></div>' +
       (S.v4add && !closed ? v4addBox(b) : '') +
@@ -301,27 +307,27 @@
     const W = (r.offers || []).filter((o) => o.state === 'pending'), F = r.filtered_out || [], nf = F.reduce((s, f) => s + f[1], 0), cur = esc(b.currency);
     return '<div class="card v3offers" id="v3offers"><div class="tbar"><h3>Promoters who want this brief</h3>' + (W.length ? '<span class="chip g"><i class="live"></i>' + W.length + ' waiting for you</span>' : '') +
         '<span class="sp" style="flex:1"></span>' + (nf ? '<span class="chip r tipr" data-tip="' + esc(F.map((f) => f[1] + ' × ' + f[0]).join(' · ')) + '">' + ic('shield') + nf + ' filtered out by Cymetica</span>' : '') + '</div>' +
-      (W.length ? '<div class="tscroll"><table class="tbl v3tbl"><thead><tr><th>Promoter</th><th class="n">Followers</th><th class="n">Views a post</th><th class="n">Real audience</th><th class="n">Expected reach</th><th class="n">You give</th><th></th></tr></thead><tbody>' +
+      (W.length ? '<div class="tscroll"><table class="tbl v3tbl"><thead><tr><th>Promoter</th><th class="n">Followers</th><th class="n">Views a post</th><th class="n">Real audience</th><th class="n">Expected reach</th><th class="n">You offer</th><th></th></tr></thead><tbody>' +
         W.map((o) => '<tr class="v3wait"><td><span class="v3pm"><span class="v3av">' + esc(o.handle[0].toUpperCase()) + '</span><span><b>@' + esc(o.handle) + '</b><small>applied ' + esc(o.applied) + ' · on X ' + esc(o.age) + '</small>' +
             '<a class="lnk v4x" href="https://x.com/' + esc(o.handle) + '" target="_blank" rel="noopener">' + ic('x') + 'check on X ↗</a></span></span></td>' +
           '<td class="n">' + fmt(o.followers) + '</td><td class="n">' + fmt(o.views) + '</td><td class="n">' + o.real + ' %</td>' +
           '<td class="n v4reach"><b>' + v4n(o.reach_lo) + '–' + v4n(o.reach_hi) + '</b><small>real views</small></td>' +
-          '<td class="n"><div class="v3amt v4give"><input class="in" id="v4a-' + o.id + '" inputmode="decimal" value="' + o.suggest + '" aria-label="Amount to give in ' + cur + '"><i>' + cur + '</i></div>' +
+          '<td class="n"><div class="v3amt v4give"><input class="in" id="v4a-' + o.id + '" inputmode="decimal" value="' + o.suggest + '" aria-label="Amount to offer in ' + cur + '"><i>' + cur + '</i></div>' +
             '<small class="v4sug tipl" data-tip="Expected reach × ' + v4n(o.rate) + ' ' + cur + ' per 1,000 real views, never above what the brief has left. Change it as you like">' + ic('check') + 'suggested ' + v4n(o.suggest) + '</small></td>' +
-          '<td class="v3act"><button class="btn g sm" data-v4award="' + b.id + ':' + o.id + '">' + ic('lock') + 'Accept · lock</button><button class="btn gh sm v3x" data-v4no="' + b.id + ':' + o.id + '" aria-label="Decline" data-tip="Decline">' + ic('close') + '</button></td></tr>').join('') + '</tbody></table></div>' :
+          '<td class="v3act"><button class="btn g sm" data-v4award="' + b.id + ':' + o.id + '">' + ic('lock') + 'Send offer</button><button class="btn gh sm v3x" data-v4no="' + b.id + ':' + o.id + '" aria-label="Decline" data-tip="Decline">' + ic('close') + '</button></td></tr>').join('') + '</tbody></table></div>' :
         '<div class="empty" style="padding:22px"><span>No promoter is waiting for you.</span></div>') +
-      '<div class="v3foot">' + ic('x') + '<span>Check the account on X, then name the amount: the suggestion comes from the reach a post of theirs is expected to get. Accept locks it from your credit; it moves to the promoter only when you approve their post after 3 days up.</span></div></div>';
+      '<div class="v3foot">' + ic('x') + '<span>Check the account on X, then send your amount: the suggestion comes from the reach a post of theirs is expected to get. It is locked from your credit while the offer is out; the promoter accepts it or not. It moves to them only when you approve their post after 3 days up.</span></div></div>';
   }
   function v3Promoters(b, r) {
     const rows = (r.offers || []).filter((o) => o.state !== 'pending'), cur = esc(b.currency), pair = (o) => b.id + ':' + o.id;
-    return '<div class="card v3prom" id="v4prom"><div class="tbar"><h3 style="margin:0;font:17px var(--display)">Accepted promoters</h3><span class="chip">' + rows.length + '</span></div>' +
+    return '<div class="card v3prom" id="v4prom"><div class="tbar"><h3 style="margin:0;font:17px var(--display)">Your offers</h3><span class="chip">' + rows.length + '</span></div>' +
       (rows.length ? '<div class="tscroll"><table class="tbl v3tbl"><thead><tr><th>Promoter</th><th class="n">Amount</th><th>Where it stands</th><th>Post</th><th></th></tr></thead><tbody>' +
         rows.map((o) => '<tr><td><span class="v3pm"><span class="v3av">' + esc(o.handle[0].toUpperCase()) + '</span><span><b>@' + esc(o.handle) + '</b><small>' + fmt(o.followers) + ' followers · on X ' + esc(o.age) + '</small></span></span></td>' +
           '<td class="n"><b class="v3of" style="font-size:15px">' + v4n(o.amount) + '</b> <small class="dim">' + cur + '</small><br><small class="dim">' + (o.state === 'paid' ? 'paid' : ic('lock') + 'locked') + '</small></td>' +
           '<td>' + v4chip(o, true) + '</td><td>' + (o.post_url ? '<a class="lnk" href="' + esc(o.post_url) + '" target="_blank" rel="noopener">post ↗</a>' : '<span class="dim">—</span>') + '</td>' +
           '<td class="v3act">' + (o.state === 'earned' ? '<button class="btn sm g" data-v4pay="' + pair(o) + '">' + ic('check') + 'Approve</button>' :
-            o.state === 'approved' ? '<button class="btn sm gh" data-v4no="' + pair(o) + '" data-v4back="1" data-tip="No post yet: take it back and unlock the amount">Take back</button>' : '') + '</td></tr>').join('') + '</tbody></table></div>' :
-        '<div class="empty"><b>Nobody is accepted yet</b>' + (b.status === 'cancelled' ? '<span>The brief is ended. ' + v4n(b.left) + ' ' + cur + ' is free in your credit again.</span>' :
+            o.state === 'approved' || o.state === 'offered' ? '<button class="btn sm gh" data-v4no="' + pair(o) + '" data-v4back="1" data-tip="' + (o.state === 'offered' ? 'No answer yet' : 'No post yet') + ': take it back and unlock the amount">Take back</button>' : '') + '</td></tr>').join('') + '</tbody></table></div>' :
+        '<div class="empty"><b>No offer sent yet</b>' + (b.status === 'cancelled' ? '<span>The brief is ended. ' + v4n(b.left) + ' ' + cur + ' is free in your credit again.</span>' :
           b.status === 'open' ? '<span>It is on the market now, with ' + v4n(b.left) + ' ' + cur + ' to hand out.</span><a class="btn c sm" href="#market" style="margin-top:6px">See it on the market</a>' : '') + '</div>') + '</div>';
   }
   /* the owner's Approve: what was checked, what moves, from where to where; nothing moves until the owner confirms */
@@ -329,7 +335,7 @@
     const o = (r.offers || []).find((x) => x.id === S.v4pay.oid); if (!o || o.state !== 'earned') return '';
     const ok = (t) => '<div class="v4ck">' + ic('check') + '<span>' + t + '</span></div>';
     return '<div class="card pad v4appr" id="payouts"><div class="ch" style="margin:0"><h3>Approve and pay @' + esc(o.handle) + '</h3><span class="sp"></span><a class="btn sm" href="' + esc(o.post_url) + '" target="_blank" rel="noopener">' + ic('x') + 'See the post ↗</a></div>' +
-      '<div class="v4cks">' + ok('The post is up now') + ok('Posted from @' + esc(o.handle) + ', the account that was checked') + ok('It stayed up 3 of 3 days') + '</div>' +
+      '<div class="v4cks">' + ok('The post is up now') + ok('Posted from @' + esc(o.handle) + ', the account that took the brief') + ok('It stayed up 3 of 3 days') + '</div>' +
       '<div class="statusrow" role="dialog" aria-label="Approve and pay" style="border-color:rgba(0,255,136,.35)">' + ic('lock') +
         '<span class="grow"><b class="pos">' + v4n(o.amount) + ' ' + esc(b.currency) + '</b> moves from your locked credit to @' + esc(o.handle) + '\'s Cymetica credit. It cannot be taken back.</span>' +
         '<button class="btn g" data-v4payok="1">' + ic('check') + 'Approve · release ' + v4n(o.amount) + ' ' + esc(b.currency) + '</button><button class="btn gh sm" data-v4paycancel="1">Not yet</button></div></div>';
@@ -367,12 +373,12 @@
     const list = v4takes(), by = (states) => { const m = {}; list.filter((t) => states.indexOf(t.offer.state) >= 0).forEach((t) => { m[t.offer.currency] = (m[t.offer.currency] || 0) + t.offer.amount; });
       return Object.keys(m).length ? Object.keys(m).map((c) => '<span class="pos">' + v4n(m[c]) + '</span><small>' + esc(c) + '</small>').join(' ') : '<span class="pos">0</span>'; };
     return '<div class="tiles" style="--n:3">' + tile('briefs', 'Briefs taken', fmt(list.filter((t) => t.offer.state !== 'declined').length), '') +
-        tile('lock', 'Locked for you', by(['approved', 'posted', 'earned']), 'yours after 3 days up', 'rgb(0,207,255)') +
+        tile('lock', 'Locked for you', by(['offered', 'approved', 'posted', 'earned']), 'yours after 3 days up', 'rgb(0,207,255)') +
         tile('coin', 'Paid', by(['paid']), 'in your Cymetica credit', 'rgb(0,255,136)') + '</div>' +
       (list.length ? '<div class="card"><table class="tbl"><thead><tr><th>Brief</th><th class="n">Amount</th><th>Where it stands</th><th>Post</th></tr></thead><tbody>' +
           list.map((t) => { const b = t.brief || {}, o = t.offer;
             return '<tr data-brief="' + b.id + '"><td><div class="tw" style="gap:12px"><img alt="" src="' + esc(pic(b.path)) + '" style="width:64px;height:36px;border-radius:7px;object-fit:cover"><span class="ttl">' + esc(shortName(b.name)) + '<small>as @' + esc(o.handle) + '</small></span></div></td>' +
-            '<td class="n pos">' + (o.amount != null ? v4n(o.amount) + ' <small>' + esc(o.currency) + '</small>' : '<small class="dim">the owner names it</small>') + '</td>' +
+            '<td class="n pos">' + (o.amount != null ? v4n(o.amount) + ' <small>' + esc(o.currency) + '</small>' : '<small class="dim">the owner sends it</small>') + '</td>' +
             '<td>' + v4chip(o, false) + '</td><td>' + (o.post_url ? '<a class="lnk" href="' + esc(o.post_url) + '" target="_blank" rel="noopener">post ↗</a>' : '<span class="dim">—</span>') + '</td></tr>'; }).join('') + '</tbody></table></div>' :
         '<div class="card"><div class="empty">' + holo(46) + '<b>No brief taken yet</b><span>' + esc(PAGE().taken_empty) + '</span><a class="btn g" href="#market" style="margin-top:8px">See open briefs ' + ic('arrow') + '</a></div></div>') +
       '<div class="note">' + ic('lock') + '<span>' + esc(PAGE().taken_pay) + '</span></div>';
@@ -391,35 +397,38 @@
   document.addEventListener('click', (e) => {
     if (e.target.closest('.rnav a.v4open, .v4earn a[href="#market"]')) setTimeout(() => { const c = document.querySelector('article.bc'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 450);
   });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.id === 'v4h') { const b = document.querySelector('[data-v4check]'); if (b) b.click(); } });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.id === 'v4h') { const b = document.querySelector('[data-v4send]'); if (b) b.click(); } });
   document.addEventListener('input', (e) => {
     const t = e.target;
     if (t.id === 'v4budget' && S.form) { const q = $('v4eq'); if (q) q.innerHTML = v4eq(S.form.budget, S.form.cur); return; }
     if (/^v4/.test(t.id || '')) t.dataset.v4dirty = '1';
   });
   document.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-v4cur],[data-v4amt],[data-v4check],[data-v4again],[data-v4send],[data-v4pass],[data-v4award],[data-v4no],[data-v4post],[data-v4pay],[data-v4payok],[data-v4paycancel],[data-v4addopen],[data-v4addclose],[data-v4addq],[data-v4add],[data-v4go],[data-v4x]'); if (!t) return;
+    const t = e.target.closest('[data-v4cur],[data-v4amt],[data-v4send],[data-v4yes],[data-v4pass],[data-v4award],[data-v4no],[data-v4post],[data-v4pay],[data-v4payok],[data-v4paycancel],[data-v4addopen],[data-v4addclose],[data-v4addq],[data-v4add],[data-v4go],[data-v4x]'); if (!t) return;
     const d = t.dataset;
     if (d.v4go || d.v4x) return v4popClick(d);
     if (d.v4cur) { S.form = Object.assign(defaultForm(S.form && S.form.path), { cur: d.v4cur }); S.form.budget = V4_DEF[d.v4cur]; return rerender(); }
     if (d.v4amt) { e.preventDefault(); S.form.budget = +d.v4amt; return rerender(); }
-    if (d.v4check) {
-      const id = +d.v4check, h = (($('v4h') || {}).value || '').trim().replace(/^@/, ''); if (!h) { if ($('v4h')) $('v4h').focus(); return; }
-      return v4call('/api/v1/promo/briefs/' + id + '/offer/check', { handle: h }, t).then((r) => { if (r.ok) { S.v4chk[id] = r.j; delete S.v4chk[id + ':err']; } else S.v4chk[id + ':err'] = msgOf(r.j); openBrief(id, true); });
-    }
-    if (d.v4again) { e.preventDefault(); const id = +d.v4again; delete S.v4chk[id]; return openBrief(id, true); }
     if (d.v4send) {
-      const id = +d.v4send;
-      return v4call('/api/v1/promo/briefs/' + id + '/offer/take', {}, t).then((r) => {
+      const id = +d.v4send, h = (($('v4h') || {}).value || '').trim().replace(/^@/, ''); if (!h) { if ($('v4h')) $('v4h').focus(); return; }
+      return v4call('/api/v1/promo/briefs/' + id + '/offer/take', { handle: h }, t).then((r) => {
+        if (!r.ok) { S.v4chk[id + ':err'] = msgOf(r.j); S.v4chk[id + ':h'] = h; return openBrief(id, true); }
+        S.v4o[id] = r.j; delete S.v4chk[id + ':err']; delete S.v4chk[id + ':h']; toast('Sent to the owner · you hear here when they send an amount'); load(MINE, true); openBrief(id, true);
+      });
+    }
+    if (d.v4yes) {
+      const [bid, oid] = v4hash(d.v4yes);
+      return v4call('/api/v1/promo/briefs/' + bid + '/offers/' + oid + '/accept', {}, t).then((r) => {
         if (!r.ok) return toast(msgOf(r.j));
-        S.v4o[id] = r.j; delete S.v4chk[id]; toast('Sent to the owner · you hear here when they answer'); load(MINE, true); openBrief(id, true);
+        v4popDone(oid); S.v4o[+bid] = r.j; toast('Accepted · ' + v4n(r.j.amount) + ' ' + r.j.currency + ' is locked for you · post it'); load(MINE, true); load(BRIEFS, true); openBrief(+bid, true);
       });
     }
     if (d.v4pass) {
       const [bid, oid] = v4hash(d.v4pass);
       return v4call('/api/v1/promo/briefs/' + bid + '/offers/' + oid + '/pass', {}, t).then((r) => {
         if (!r.ok) return toast(msgOf(r.j));
-        v4popDone(oid); S.v4o[+bid] = null; toast('You passed on it · the brief is open for you again'); load(MINE, true); load(BRIEFS, true); openBrief(+bid, true);
+        v4popDone(oid); S.v4o[+bid] = null;
+        toast(({ pending: 'Request withdrawn', offered: 'You said no' }[d.v4was] || 'You passed on it') + ' · the brief is open for you again'); load(MINE, true); load(BRIEFS, true); openBrief(+bid, true);
       });
     }
     if (d.v4award || d.v4no) {
@@ -427,7 +436,7 @@
       return v4call('/api/v1/promo/briefs/' + bid + '/offers/' + oid, body, t).then((r) => {
         if (!r.ok) return toast(msgOf(r.j));
         v4popDone(oid);
-        toast(d.v4back ? 'Taken back · ' + v4n(r.j.amount) + ' ' + r.j.currency + ' is unlocked' : d.v4no ? 'Declined' : v4n(r.j.amount) + ' ' + r.j.currency + ' locked for @' + r.j.handle + ' · waiting for their post');
+        toast(d.v4back ? 'Taken back · ' + v4n(r.j.amount) + ' ' + r.j.currency + ' is unlocked' : d.v4no ? 'Declined' : 'Offer of ' + v4n(r.j.amount) + ' ' + r.j.currency + ' sent to @' + r.j.handle + ' · locked until they answer');
         v4after(bid);
       });
     }

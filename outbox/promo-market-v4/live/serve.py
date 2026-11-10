@@ -11,7 +11,7 @@ reads again when the other one wrote. The window you are in is the port you open
 promoter's on 8808.
 
 Nothing leaves this machine except those GETs. The writes the workflow needs (post a brief, add funds, take a brief,
-accept with an amount, pass, register a post, approve, cancel) are answered HERE and change the sample only; every other write is
+send an amount, accept it or not, pass, register a post, approve, cancel) are answered HERE and change the sample only; every other write is
 refused before anything is sent anywhere, because a copy of a page with Pay and Post the brief buttons must never be
 able to move money or post a brief on the real one (tests/self/test_promo_market_v4_mirror.py).
 """
@@ -50,9 +50,9 @@ M = sample.MARKET
 BRIEF = r"/api/v1/promo/briefs"
 ROUTES = (    # (method, path, who may, handler(body, *ids))
     ("POST", re.compile(rf"^{BRIEF}$"), "owner", lambda b: {"brief": M.create_brief(b)}),
-    ("POST", re.compile(rf"^{BRIEF}/(\d+)/offer/check$"), None, lambda b, i: M.check(b.get("handle", ""))),
-    ("POST", re.compile(rf"^{BRIEF}/(\d+)/offer/take$"), "promoter", lambda b, i: M.take()),
+    ("POST", re.compile(rf"^{BRIEF}/(\d+)/offer/take$"), "promoter", lambda b, i: M.take(b.get("handle", ""))),
     ("POST", re.compile(rf"^{BRIEF}/(\d+)/offers/(\d+)$"), "owner", lambda b, i, o: M.decide(int(o), b.get("decision"), b.get("amount"))),
+    ("POST", re.compile(rf"^{BRIEF}/(\d+)/offers/(\d+)/accept$"), "promoter", lambda b, i, o: M.accept(int(o))),
     ("POST", re.compile(rf"^{BRIEF}/(\d+)/offers/(\d+)/pass$"), "promoter", lambda b, i, o: M.give_up(int(o))),
     ("POST", re.compile(rf"^{BRIEF}/(\d+)/offers/(\d+)/pay$"), "owner", lambda b, i, o: M.pay(int(o))),
     ("POST", re.compile(rf"^{BRIEF}/(\d+)/posts$"), "promoter", lambda b, i: M.register_post(b.get("url", ""))),

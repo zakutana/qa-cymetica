@@ -12,19 +12,25 @@ somebody wants the brief, checks the X account and names the amount, with a sugg
 in; "jak dam accept ty fund se locknou z meho kreditu a ceka se az to postne, kdyz to postne a bude to tam po 3 dnech
 dam approve a prostredky se prevedou creatorovi".
 
+The operator, 2026-11-10, after the first walk: the promoter sees no numbers about their own account when they take
+a brief: "proste jen me se ukaze ze mam nabidku a ja si to checknu na sve strane jeho X a poslu mu zpetne kolik jsem
+ochoten mu vyplatit a jemu se to tam pak nekde zobrazi kolik nabizim a muze dat accept nebo ne".
+
 The flow of an offer:
-  pending   the promoter took the brief with a checked X account; the owner has not answered
-  approved  the owner accepted and named the amount: it is LOCKED from the owner's credit, waiting for the post
+  pending   the promoter took the brief with their X handle; the owner has not answered
+  offered   the owner looked at the account and sent an amount: it is LOCKED from the owner's credit, waiting for
+            the promoter's yes or no
+  approved  the promoter accepted the amount; waiting for the post
   posted    the promoter registered the post; 3 days run
   earned    3 days up, waiting for the owner's Approve (derived from posted)
   paid      the owner approved: the locked amount moved to the promoter's credit
-  declined  by the owner (also taking an accepted one back before a post), by the promoter (pass), or the brief was
-            cancelled while it was pending
-What is handed out (approved, posted, paid) is taken out of what the brief has left. A brief has no end date; it
-leaves the market when nothing is left or the owner cancels it, and comes back when the owner adds funds.
+  declined  by the owner (also an offer or an accepted one taken back before a post), by the promoter (no to the
+            offer, or a pass before posting), or the brief was cancelled before the promoter accepted
+What is handed out (offered, approved, posted, paid) is taken out of what the brief has left. A brief has no end
+date; it leaves the market when nothing is left or the owner cancels it, and comes back when the owner adds funds.
 
 The owner's credit: free + locked. A brief's left is always covered by free credit (posting and adding funds are
-refused above it), so an accept can always lock.
+refused above it), so an offer can always lock.
 
 Invented, all of it: the brief, the promoters (handles end in _demo), their X numbers, the credit, the rate. The X
 read is a stand-in for Cymetica's; the suggestion is expected reach (views a post x real audience) x a rate per 1,000
@@ -44,8 +50,9 @@ HOLD_DAYS = 3
 CURRENCIES = ("USDC", "ET10")
 ART = "/static/img/promo-art/gem.svg"
 PREVIEW = "/uploads/bb-previews/gem-screener.jpg?v=1792881466"
-IN_PLAY = ("approved", "posted", "paid")      # handed out: off the brief's left
-LOCKED = ("approved", "posted")               # locked from the owner's credit, not yet the promoter's
+IN_PLAY = ("offered", "approved", "posted", "paid")      # handed out: off the brief's left
+LOCKED = ("offered", "approved", "posted")               # locked from the owner's credit, not yet the promoter's
+OPEN = ("pending", "offered", "approved", "posted")      # the promoter's request is still going
 CREDIT = {"USDC": 500, "ET10": 200000}        # the owner's sample credit
 RATE = {"USDC": 5, "ET10": 2000}              # per 1,000 real views: a sample, the real rate is Cymetica's
 STEP = {"USDC": 1, "ET10": 500}               # a suggestion is a round number
@@ -60,13 +67,13 @@ ACCOUNTS = {
 }
 FILTERED = [["views far under followers: a bought audience", 4], ["X account under 30 days old", 3], ["one X account behind two Cymetica accounts", 2]]
 RULES = [
-    {"title": "Real X accounts only", "text": "An offer is accepted only after Cymetica reads the promoter's public X: followers, the real views of their own last posts and the account's age. A bought audience (views far under followers), an account under 30 days and one X account behind two Cymetica accounts are refused."},
-    {"title": "The owner names the amount", "text": "Cymetica reads the promoter's X and suggests an amount from the reach a post of theirs is expected to get. The owner checks the account and names the amount. What is not handed out stays in the brief."},
-    {"title": "Their own post", "text": "The post must be written and posted from the X account that was checked."},
-    {"title": "Locked at accept", "text": "When the owner accepts a promoter, the amount is locked from the owner's Cymetica credit and waits for the post. If the promoter passes, it is unlocked."},
+    {"title": "Real X accounts only", "text": "A brief can be taken only with an X account Cymetica can read: followers, the real views of its own last posts and its age. A bought audience (views far under followers), an account under 30 days and one X account behind two Cymetica accounts are refused."},
+    {"title": "The owner names the amount", "text": "The owner looks at the promoter's X, with a suggestion from the reach a post of theirs is expected to get, and sends an amount. The promoter accepts it or not. What is not handed out stays in the brief."},
+    {"title": "Their own post", "text": "The post must be written and posted from the X account the brief was taken with."},
+    {"title": "Locked with the offer", "text": "When the owner sends an amount, it is locked from the owner's Cymetica credit. If the promoter says no or passes before posting, it is unlocked."},
     {"title": "Paid after 3 days up", "text": "Once the post has stayed up 3 days the owner approves it and the locked amount moves to the promoter. A post taken down earlier is not paid."},
 ]
-PAYOUTS = "The amount is locked from the owner's Cymetica credit when the owner accepts, and moves to the promoter when the owner approves the post after 3 days up."
+PAYOUTS = "The amount is locked from the owner's Cymetica credit when the owner sends the offer, and moves to the promoter when the owner approves the post after 3 days up."
 _DROP = re.compile(r"visitor|click|new_user|traffic|tracked|per_user", re.I)
 
 
@@ -135,7 +142,7 @@ class Market:
 
     def reset(self):
         with self.lock:
-            self.brief, self.offers, self.offset, self.seq, self.checked = None, [], 0.0, 1, None
+            self.brief, self.offers, self.offset, self.seq = None, [], 0.0, 1
             self.credit, self.earned, self.news = dict(CREDIT), {}, []
             self.filtered = {}          # why Cymetica's X read turned accounts away from this brief, and how many
 
@@ -196,18 +203,19 @@ class Market:
             self.brief = dict(id=9001, name=name, path=path, url=body.get("site_url") if site else f"https://cymetica.com{path}", site=site,
                               art=ART, preview_url=PREVIEW, status="open", say_line=body.get("say_line") or "", currency=cur, budget=budget,
                               materials=body.get("materials") or [])
-            self.offers, self.checked, self.filtered = [], None, {}
+            self.offers, self.filtered = [], {}
             return self.brief_view()
 
     def cancel(self):
-        """Closes what is not handed out; requests still waiting are declined, accepted ones go on (their amount stays locked)."""
+        """Closes what is not handed out: requests still waiting and offers nobody accepted yet are closed (an offer's
+        amount is unlocked); accepted ones go on, their amount stays locked."""
         with self.lock:
             self.brief["status"] = "cancelled"
             for o in self.offers:
-                if o["state"] == "pending":
-                    o["state"] = "declined"
+                if o["state"] in ("pending", "offered"):
                     if o["mine"]:
-                        self._tell("promoter", f"The owner ended the brief {self.brief['name']} before answering you", "See it", o)
+                        self._tell("promoter", f"The owner ended the brief {self.brief['name']} before " + ("answering you" if o["state"] == "pending" else "you accepted"), "See it", o)
+                    o["state"] = "declined"
             return self.brief_view()
 
     def add_budget(self, amount) -> dict:
@@ -223,28 +231,30 @@ class Market:
             return self.brief_view()
 
     def decide(self, oid: int, decision: str, amount=None) -> dict:
-        """The owner's answer. accept: names the amount and locks it from the owner's credit. decline: a waiting
-        request, or an accepted one taken back while there is no post (the amount is unlocked)."""
+        """The owner's answer. accept: names the amount and sends it to the promoter as an offer; it is locked from the
+        owner's credit at once. decline: a waiting request, or an offer or an accepted one taken back while there is no
+        post (the amount is unlocked)."""
         with self.lock:
             o = self._offer_by_id(oid)
             cur = self.brief["currency"]
             if decision == "decline":
-                if o["state"] not in ("pending", "approved"):
+                if o["state"] not in ("pending", "offered", "approved"):
                     raise Refused(409, "The post is up: it cannot be taken back now." if o["state"] == "posted" else "Nothing to decline.")
                 if o["mine"]:
-                    self._tell("promoter", f"The owner took back the {o['amount']:,} {cur} locked for you" if o["state"] == "approved" else "The owner declined your request", "See it", o)
+                    self._tell("promoter", {"pending": "The owner declined your request", "offered": f"The owner withdrew the offer of {o['amount'] or 0:,} {cur}",
+                                            "approved": f"The owner took back the {o['amount'] or 0:,} {cur} locked for you"}[o["state"]], "See it", o)
                 o["state"] = "declined"
                 return self.view(o)
             if o["state"] != "pending":
                 raise Refused(409, "That request is not waiting for you.")
-            amount = _num(amount, "Say how much to give.")
+            amount = _num(amount, "Say how much to offer.")
             if amount > self.left():
-                raise Refused(409, f"Only {self.left():,} {cur} is left in the brief: give that or less, or add funds.")
+                raise Refused(409, f"Only {self.left():,} {cur} is left in the brief: offer that or less, or add funds.")
             if amount > self.free(cur):
                 raise Refused(409, f"Your free credit is {self.free(cur):,} {cur}.")
-            o.update(amount=amount, state="approved")
+            o.update(amount=amount, state="offered")
             if o["mine"]:
-                self._tell("promoter", f"The owner locked {amount:,} {cur} for you · post it and it is yours after 3 days up", "Post it", o)
+                self._tell("promoter", f"The owner offers you {amount:,} {cur} for {self.brief['name']} · accept it or not", "See the offer", o)
             return self.view(o)
 
     def pay(self, oid: int) -> dict:
@@ -262,37 +272,45 @@ class Market:
             return self.view(o)
 
     # ---- the promoter -------------------------------------------------------------------------------------------
-    def check(self, handle: str) -> dict:
-        with self.lock:
-            r = engine(handle)
-            self.checked = r["handle"] if r["ok"] else None
-            if not r["ok"] and self.brief:
-                self.filtered[r["why"]] = self.filtered.get(r["why"], 0) + 1
-            if r["ok"] and self.brief:
-                r.update(suggest(r["handle"], self.brief["currency"], self.left()), currency=self.brief["currency"])
-            return r
-
-    def take(self) -> dict:
-        """The promoter takes the brief: a request to the owner, with the X account that was checked. No amount: the owner names it."""
+    def take(self, handle: str) -> dict:
+        """The promoter takes the brief with their X handle: a request to the owner, nothing more. The promoter is shown
+        no numbers about the account and names no amount: the owner looks at the account and sends one. An account
+        Cymetica's X read turns away cannot take it, and is told why."""
         with self.lock:
             if not self.brief or self.status() != "open":
                 raise Refused(409, "This brief is not open any more.")
-            if not self.checked:
-                raise Refused(422, "Check your X account first.")
-            if any(o["mine"] and o["state"] in ("pending", "approved", "posted") for o in self.offers):
+            if not re.fullmatch(r"@?\w{1,15}", (handle or "").strip()):
+                raise Refused(422, "Write your X handle, like @yourname.")
+            if any(o["mine"] and o["state"] in OPEN for o in self.offers):
                 raise Refused(409, "You took this brief already.")
-            o = self._offer(self.checked, mine=True, applied_ago=timedelta(0))
+            r = engine(handle)
+            if not r["ok"]:
+                self.filtered[r["why"]] = self.filtered.get(r["why"], 0) + 1
+                raise Refused(422, f"@{r['handle']} cannot take briefs: {r['why']}.")
+            o = self._offer(r["handle"], mine=True, applied_ago=timedelta(0))
             self._tell("owner", f"@{o['handle']} wants your brief {self.brief['name']}", "Review", o)
             return self.view(o)
 
-    def give_up(self, oid: int) -> dict:
-        """The promoter passes: a waiting request is withdrawn, an accepted amount is unlocked. Not after the post."""
+    def accept(self, oid: int) -> dict:
+        """The promoter says yes to the owner's amount: now it waits for the post."""
         with self.lock:
             o = self._offer_by_id(oid)
-            if not o["mine"] or o["state"] not in ("pending", "approved"):
+            if not o["mine"] or o["state"] != "offered":
+                raise Refused(409, "There is no offer to accept.")
+            o["state"] = "approved"
+            self._tell("owner", f"@{o['handle']} accepted {o['amount']:,} {self.brief['currency']} · waiting for their post", "Open", o)
+            return self.view(o)
+
+    def give_up(self, oid: int) -> dict:
+        """The promoter's no: a waiting request is withdrawn, an offer is turned down, an accepted amount is passed on;
+        what was locked is unlocked. Not after the post."""
+        with self.lock:
+            o = self._offer_by_id(oid)
+            if not o["mine"] or o["state"] not in ("pending", "offered", "approved"):
                 raise Refused(409, "There is nothing to pass on.")
-            if o["state"] == "approved":
-                self._tell("owner", f"@{o['handle']} passed · {o['amount']:,} {self.brief['currency']} is unlocked", "Open", o)
+            if o["state"] != "pending":
+                did = "said no to" if o["state"] == "offered" else "passed on"
+                self._tell("owner", f"@{o['handle']} {did} {o['amount']:,} {self.brief['currency']} · it is unlocked", "Open", o)
             o["state"] = "declined"
             return self.view(o)
 
@@ -300,7 +318,7 @@ class Market:
         with self.lock:
             o = next((o for o in self.offers if o["mine"] and o["state"] == "approved"), None)
             if not o:
-                raise Refused(409, "The owner has not accepted you yet.")
+                raise Refused(409, "There is no accepted offer to post for yet.")
             if not re.match(r"^https?://(x|twitter)\.com/\S+/status/\d+", url or ""):
                 raise Refused(422, "Paste the link of your post on X: https://x.com/yourhandle/status/…")
             o.update(state="posted", post_url=url, posted_at=self.now())
@@ -368,11 +386,13 @@ class Market:
         if stage == "cancelled":
             self.cancel()
             return
-        self.checked = "gemhunter_demo"
         mine = self._offer("gemhunter_demo", applied_ago=timedelta(hours=5), mine=True)
         if stage == "requested":
             return
         self.decide(mine["id"], "accept", self.view(mine)["suggest"])          # the suggested 12,000 of 50,000: 38,000 stays in the brief
+        if stage == "offered":
+            return
+        self.accept(mine["id"])
         if stage == "approved":
             return
         mine.update(state="posted", post_url="https://x.com/gemhunter_demo/status/1004", posted_at=self.now() - timedelta(days=1, hours=2))
@@ -450,16 +470,16 @@ def fix_copy(page: dict, role: str = "owner") -> dict:
     if role == "promoter":
         page["viewer_name"] = "promoter_demo"
     put = lambda lst, i, text: lst.__setitem__(i, text) if isinstance(lst, list) and len(lst) > i else None
-    H["sub"] = "Builders post briefs for the apps they made. Take one with your X account, post the prepared materials; the owner locks your amount, and after 3 days up you are paid."
+    H["sub"] = "Builders post briefs for the apps they made. Take one with your X account; the owner sends you an amount, you accept, post the prepared materials, and after 3 days up you are paid."
     if isinstance(H.get("steps"), list) and len(H["steps"]) == 4:
-        H["steps"] = [["Pick a brief", "any open one"], ["Take it", "with your X account"], ["Post it on X", "the materials are ready"], ["Get paid", "after 3 days up"]]
+        H["steps"] = [["Take a brief", "with your X account"], ["Accept the amount", "the owner sends it"], ["Post it on X", "the materials are ready"], ["Get paid", "after 3 days up"]]
     put(H.get("owners"), 1, "Set a budget, in USDC or ET10. It stays open until it is handed out or you cancel it; add funds any time.")
-    put(H.get("owners"), 2, "A promoter takes it: check their X, name the amount, accept. It is locked from your credit and paid when you approve, after 3 days up.")
+    put(H.get("owners"), 2, "A promoter takes it: check their X and send an amount. It is locked from your credit; they accept and post, and you approve after 3 days up.")
     put(H.get("not_yet"), 0, "It never pays on its own. A locked amount moves to the promoter only when the owner approves the post, after 3 days up.")
-    put(H.get("not_yet"), 1, "Nothing is locked while a brief only hangs on the market: an amount is locked from the owner's Cymetica credit when the owner accepts a promoter.")
+    put(H.get("not_yet"), 1, "Nothing is locked while a brief only hangs on the market: an amount is locked from the owner's Cymetica credit when the owner sends a promoter an offer.")
     put(H.get("not_yet"), 2, "Only posts on X are checked.")
-    H["owners_rule"] = "Nothing is locked while the brief hangs on the market. An amount is locked from your Cymetica credit when you accept a promoter."
+    H["owners_rule"] = "Nothing is locked while the brief hangs on the market. An amount is locked from your Cymetica credit when you send a promoter an offer."
     page["taken_empty"] ="You have not taken a brief yet. Open briefs are waiting on the Promo Market."
-    page["products_note"] = "A brief is covered by your Cymetica credit. An amount is locked when you accept a promoter, and moves to them when you approve their post after 3 days up."
+    page["products_note"] = "A brief is covered by your Cymetica credit. An amount is locked when you send a promoter an offer, and moves to them when you approve their post after 3 days up."
     page["taken_pay"] = PAYOUTS
     return page
