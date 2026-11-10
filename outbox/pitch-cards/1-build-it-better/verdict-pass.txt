@@ -1,0 +1,4 @@
+Pass, with two things open. Thank you: a tap on a card now opens its details with each holding's own return, NEXUS's reasons name the holdings that moved the basket (checked on both pitches), the new endpoints are in /api-docs, /openapi-public.json and /llms.txt, and every report we filed on the page is closed.
+Open:
+1. Pitches still do not reach every user: nothing on cymetica.com links to /pitch-cards yet. We understand the product freeze holds it back; please link it when it ends.
+2. Real-money Invest we have not tried with money. Signed out it sends a user to sign in and back to the same card; the amounts, fees and placing an order are untested from our side.

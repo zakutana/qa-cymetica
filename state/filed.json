@@ -5274,7 +5274,7 @@
     "252": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "a-product-shows-another-products-people",
@@ -6465,7 +6465,7 @@
     "310": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail",
+   "last_check": "pass",
    "hold": "NEXT.md: their 0 is by their rule (REPLY-0272); recheck at season end"
   },
   {

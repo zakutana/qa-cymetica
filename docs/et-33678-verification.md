@@ -62,6 +62,18 @@ New, the operator's: a click on the card's name, number, chart or sentence does 
 
 New, ours: `/api/v1/pitch-cards`, `me/buying-power`, `me/deals`, `quote`, `invest` are in none of /api-docs, /openapi-public.json, /llms.txt. Seven checks run; the credit check fails, six pass. Nothing else on the board changed (15 funds, 39 event cards, 318 company cards, 13 themes, 100 72h cards, none at a loss).
 
+## Fifth build (shipped 2026-11-10 06:46 UTC, read 06:50 to 07:40)
+
+| Point of the fourth FAIL | Result | Evidence |
+|---|---|---|
+| 1 reach | NOT DONE | no link from /, /agent-casino, /fund-performance, /events/universe/movers, /build-it-better, /themes/performance, /airdrop-farmer |
+| 2 tap on a card | FIXED | a tap opens Details (4 figures, the holdings with weight and 5-day return, what the number is, a link to the basket page); Escape or Back returns to the same card; a drag does not open it; phone works, the list scrolls inside the card |
+| 3 reasons | FIXED | both pitches' reasons match the legs: PLBY +13.56, ABNB +12.91, RBLX +12.61, basket +5.0 % on the week; XNCR +19.89, MIRM +10.26. The credit check passes; #304 passes |
+| 4 documentation | FIXED | /api-docs, /openapi-public.json and /llms.txt list pitch-cards, me/buying-power, me/deals, quote, invest |
+| real money (C1) | UNTESTED | signed out: Invest goes to /login?next=...pitch=<key>; nothing placed by us |
+
+The deck holds 2 pitches. The board: 317 company, 41 event, 13 funds, 15 themes, 3 72h cards (8 closed in the last 30 days: the platform has not minted 72h cards since about 8 Oct); none at a loss. /fund-performance changed its table (an Outside holders column, funds without outside money gone); two of our checks skipped until the parser followed it, now they pass. All seven checks pass and #289 to #297 and #304 read pass.
+
 ## Not checked
 
 The /ws/pitch-cards push in a held-open tab. The card going behind Nexus frame by frame: stills and the unchanged code only.

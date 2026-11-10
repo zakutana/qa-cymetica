@@ -66,7 +66,9 @@ def _ranked(client) -> list[dict]:
     for tr in html.split("<tr")[1:]:
         tr = tr.split("</tr>")[0]
         cell = re.search(r'<td class="fund">(.*?)</td>', tr, re.S)
-        ret = re.search(r'<span class="(?:pos|neg)">([+\-−]?[\d.]+)%</span>\s*</td>\s*$', tr, re.S)
+        # the Return cell, wherever it sits: since 2026-11-10 an Outside holders column follows it, and a fund
+        # with no figure yet reads a dash and is left out
+        ret = re.search(r'<span class="(?:pos|neg)">([+\-−]?[\d.]+)%</span>', tr, re.S)
         if not cell or not ret:
             continue
         href = re.search(r'href="([^"]+)"', cell.group(1))
