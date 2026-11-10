@@ -9354,6 +9354,34 @@ reports:
       eleven minutes later (its start moved from 03:44 to 04:54), and 1,248 s is the same figure at 06:24, 06:25 and 06:33 while
       updated_at advances. On the page: the Exits chip says 2, the list under it shows 0 rows; the Best wallets cards and every
       "#rank" on the token cards are redrawn from whichever snapshot arrived last. On 8 Nov the same pair was seen: 4,045 s at
+  - key: gem-screener-supply-column-says-being-fetched-after-the-batch-failed
+    findings: [CYM-gem-screener-supply-batch-failure-is-said]
+    severity: low
+    category: logic
+    url: https://cymetica.com/gem-screener/app?view=chains
+    title: "Gem Screener: when the Supply Analyzer batch answers 503, every Supply cell reads \"n/a\" with \"The supply figures are being fetched\" and the page never asks again"
+    expected: >
+      A read that failed is said as failed, or is asked again. "Being fetched" is true only while a request is under way.
+    actual: >
+      Read on 2026-11-10 between about 06:43 and 06:48 UTC, while /api/v1/gem-screener/status said refreshing true (the snapshot of
+      9 Nov 23:49 UTC was an hour past its 6-hour refresh). GET /api/v1/supply-analyzer/batch/gem-screener answered HTTP 503
+      {"error":"Service temporarily unavailable","retry_after":3} after 60 seconds, three times in a row; /api/v1/supply-analyzer/status
+      did the same. On the Chains tab opened in those minutes all 26 rows read Supply "n/a" with the tooltip "Supply: not read yet. The
+      supply figures are being fetched.", and still did more than a minute later; the Sectors and Chains loads each list one batch
+      request and no second one. The page's script explains it: loadSupply() runs once after load, turns a response that is not ok
+      into null and returns, and nothing calls it again, so supplyAt stays empty and the cell keeps the "being fetched" text. At 06:53 UTC,
+      after the snapshot of 06:52, the same route answered 200 in 18 seconds with 269 items, all 32 chains among them.
+    steps:
+      - 'Open https://cymetica.com/gem-screener/app?view=chains while GET /api/v1/supply-analyzer/batch/gem-screener answers 503 -> every Supply cell "n/a", tooltip "The supply figures are being fetched."'
+      - 'Wait: no second request for the batch is made; the cells change only after a reload'
+      - 'Read loadSupply() in the page script: one fetch after load, "r.ok ? r.json() : null", then "if (!b || !b.items) return"'
+    body: >
+      The Supply column and the Dilution line of every row and pick card are empty for as long as the batch is unavailable, and the page
+      tells the reader to wait for something that is no longer coming. One retry after the retry_after the response gives, or a cell that
+      says the figures could not be read, both close this. We hold no automated check: it needs the batch to fail. We do not know why the
+      batch answered 503 (the refresh was running, and our own read-only checks were reading the site in those minutes), so this report
+      is about what the page says when it does. GET requests only.
+
       19:18 and "last 21 min" (1,2xx s) near 21:00. In none of the reads did the window reach its 6-hour target.
     steps:
       - 'Open wss://cymetica.com/ws/fomo-radar/signals?chain=robinhood&filter=all&limit=40 and keep it open for a minute -> two snapshots with different window_seconds, tokens_tracked and traders'

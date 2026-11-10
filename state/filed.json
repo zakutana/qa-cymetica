@@ -6804,6 +6804,20 @@
     "333": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "gem-screener-supply-column-says-being-fetched-after-the-batch-failed",
+   "nodeids": [],
+   "report_ids": [
+    334
+   ],
+   "title": "Gem Screener: when the Supply Analyzer batch answers 503, every Supply cell reads \"n/a\" with \"The supply figures are being fetched\" and the page never asks again",
+   "filed_at": "2026-11-10T06:54:51+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "334": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
