@@ -9222,6 +9222,28 @@ reports:
       number cells), so the text column stays left. The build seems to apply the right alignment to every column. Read only; nothing was
       written.
 
+  - key: traffic-one-app-has-two-names-fomo-radar-and-crypto-radars
+    severity: low
+    category: logic
+    url: https://cymetica.com/traffic
+    title: "/traffic: the same page /fomo-radar is called Crypto Radars in Apps and FOMO Radar in Your apps and on the Products tab, so a creator cannot tell it is one app"
+    expected: >
+      One app carries one name on the one Traffic page: the row of Apps that is the creator's own app and the row of Your apps for the
+      same path show the same name (request ET-34607, goals 3 and 10: Apps and Your apps share one format and list the same apps).
+    actual: >
+      Read on 2026-11-10, signed in, Basic view, 14 days. Apps, Everyone tab, row 4: "Crypto Radars" (path /fomo-radar, 847 unique
+      visitors, green "yours" tag). Your apps, row 4: "FOMO Radar" (path /fomo-radar, ticket ET-34609, 643 unique visitors, which is the
+      People figure of the same row, 847 minus 204 AI agents). GET /api/v1/app-usage?days=14 names it "Crypto Radars" in combined,
+      humans and ai_agents; GET /api/v1/traffic/mine?days=14&tz=utc and GET /api/v1/company/products name it "FOMO Radar". The page's
+      "yours" tag in Apps matches it to the Your apps row by path, but the two names are different words.
+    steps:
+      - 'Open https://cymetica.com/traffic signed in, Basic view -> Apps row "Crypto Radars" [yours] and, further down, Your apps row "FOMO Radar"'
+      - 'GET https://cymetica.com/api/v1/app-usage?days=14 -> combined[rank 4]: app "Crypto Radars", path "/fomo-radar"'
+      - 'GET https://cymetica.com/api/v1/traffic/mine?days=14&tz=utc with the account''s key -> items[ref "34609"]: label "FOMO Radar", path "/fomo-radar"'
+    body: >
+      A creator looking for the app they built finds two names for it on one page, and the only link between them is the green tag. Read
+      only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

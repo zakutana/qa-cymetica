@@ -6692,6 +6692,20 @@
     "325": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "traffic-one-app-has-two-names-fomo-radar-and-crypto-radars",
+   "nodeids": [],
+   "report_ids": [
+    326
+   ],
+   "title": "/traffic: the same page /fomo-radar is called Crypto Radars in Apps and FOMO Radar in Your apps and on the Products tab, so a creator cannot tell it is one app",
+   "filed_at": "2026-11-10T06:29:21+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "326": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
