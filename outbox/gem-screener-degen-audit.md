@@ -150,6 +150,9 @@ Altseason index
     page for Sunday 8 Nov was there. Their own limit is 10 days, so not filed.
 26. #312 stands: the tile reads 15, the index uses 47.
 
+Seen by the operator in the mock outbox/gem-screener-review on 10 Nov and refused: 1/15 (Not growing fails the gate: a big earner may
+stall), 2/16 (Tier List reasons), 4/13 (upside after dilution), 6/20 (fee upside on the row); "skoro nic se mi nelibi, vypada hnusne".
+
 Filed from this pass: #334 (the Supply column says "being fetched" after its batch answered 503 and is never asked again).
 
 Refused by the operator on 10 Nov: changing the benchmark. Refused on 2 Nov, seen in the mock: the band word with its range, a flag for a collapsed price, growth with its window and fit, six gate dots on the Apps row, capped upside marked, the theme-lagging flag as one page line.
