@@ -6678,6 +6678,20 @@
     "324": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "traffic-app-column-is-right-aligned-not-left-as-drawn",
+   "nodeids": [],
+   "report_ids": [
+    325
+   ],
+   "title": "/traffic Apps: the App column (head and names) is right-aligned, picture 1 of request ET-34607 draws it left-aligned, and the # head wraps its ? onto a second line",
+   "filed_at": "2026-11-10T06:27:42+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "325": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

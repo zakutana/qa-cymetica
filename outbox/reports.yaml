@@ -9199,6 +9199,29 @@ reports:
       /traffic sees two numbers for one app. Our guess, not checked, is that Products counts a slightly longer window (its daily list has
       30 entries and Chart Analyzer's oldest day holds 13 people), but only your code knows. Read only; nothing was written.
 
+  - key: traffic-app-column-is-right-aligned-not-left-as-drawn
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/traffic
+    title: "/traffic Apps: the App column (head and names) is right-aligned, picture 1 of request ET-34607 draws it left-aligned, and the # head wraps its ? onto a second line"
+    expected: >
+      As in picture 1 of the request, the App column of the Apps table (and of Your apps) reads from the left edge of its cell, next to
+      the # column, with the numbers right-aligned; the # head sits on one line.
+    actual: >
+      Read on 2026-11-10, anonymous, Basic view, 14 days, 1440 px and 390 px. In the Apps table (#tl-apps-table) the App head and every
+      App cell compute to text-align right, so the names end at the right edge of a 331 px wide cell (the first name starts 232 px
+      into it at 1440 px) and sit next to the Unique visitors figures, with a wide empty gap between # and the names. The # head is
+      40 px wide and its ? button wraps under the # (head row 56 px high at 1440, 78 px at 390), where picture 1 has a single line.
+      In picture 1 the names start at the left of the column.
+    steps:
+      - 'Open https://cymetica.com/traffic, Basic view, Apps -> the names are flush right in the App column'
+      - 'getComputedStyle(document.querySelector("#tl-apps-table th:nth-child(2)")).textAlign -> "right"; the same for td:nth-child(2) in every row'
+      - 'Open picture 1: https://raw.githubusercontent.com/zakutana/qa-cymetica/0366df91/outbox/traffic-one/pictures/1-basic.jpg -> App names left-aligned, # on one line'
+    body: >
+      The request says Basic is "as drawn in picture 1". The mock aligns only the number columns to the right (its rule is limited to the
+      number cells), so the text column stays left. The build seems to apply the right alignment to every column. Read only; nothing was
+      written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
