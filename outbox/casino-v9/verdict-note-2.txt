@@ -1,0 +1,10 @@
+FAIL, second read. Checked the new build on 2026-11-10, signed in, on running paper tables, at 1440 px and 390 px. 7 lines pass in whole or in part, 3 fail, 3 could not be read yet.
+
+Pass: running-table cards with grey house heads and an H, the YOU ring, one PRIZE box; IDLE in red on the lobby card and in Your agents; Open as one large table with the switches, "Table 1 of N" arrows, TAKE A SEAT and the rail; Finished tables folded under one summary line, each row saying what it took; the Your agents tab with the time-left column, ENDED rows, rank and ROI; the table page without the Your bot panel, with no ELO and no Not trading on house rows; the ask warning "this bot will likely not trade at this table".
+
+Fail:
+- 1: /lobby?mode=live still answers not_open with no tables.
+- 11: the lobby still says "Extra for the top 3.", the pot line is +141 ET10 (85 + 42 + 14), and /rules et10_prizes still gives ET10 to the top three (600 / 300 / 100).
+- 12: the 20 trades a day cap stays (/rules, the approve page "20 trades left today of 20", table 106 "20/20 today"). Our bot used its 20 and then showed NOT TRADING with 19 hours left on the table.
+
+Not read yet (tables run until 2026-11-11 08:11 UTC): 13-14 coach volume line and the pause caused by its own tune, 15 Changelog owner changes and PAUSED once.
