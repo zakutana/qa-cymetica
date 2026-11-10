@@ -6818,6 +6818,20 @@
     "334": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "airdrop-farmer-your-step-pill-covers-the-card-text-on-desktop",
+   "nodeids": [],
+   "report_ids": [
+    335
+   ],
+   "title": "Airdrop Farmer (ET-34187 build): on desktop the \"YOUR STEP\" line is drawn over the reason text, the \"FREE · COMING SOON\" chip and the \"more\" link on every free testnet card",
+   "filed_at": "2026-11-10T07:22:25+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "335": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

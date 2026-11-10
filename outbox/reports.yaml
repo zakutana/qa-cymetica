@@ -9456,6 +9456,29 @@ reports:
       A reader takes "made in 24 h" as a day's profit; it is weeks of it. A field such as record_since on /traders would let the page
       say the true span. Read only; nothing was written.
 
+  - key: airdrop-farmer-your-step-pill-covers-the-card-text-on-desktop
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/airdrop-farmer
+    title: "Airdrop Farmer (ET-34187 build): on desktop the \"YOUR STEP\" line is drawn over the reason text, the \"FREE · COMING SOON\" chip and the \"more\" link on every free testnet card"
+    expected: >
+      Each card's parts sit apart: the name and chips, the reason with its "more" link, and the "YOUR STEP" line, each readable in full.
+      The user step is the one thing on the card the user has to do.
+    actual: >
+      Read on 2026-11-10 about 07:20 UTC in Chrome at 1440x900 and 1920x1000, after the ET-34187 build shipped (07:15 UTC). On Konnex,
+      Push Chain, GenLayer and Miden the "YOUR STEP: ..." line overlaps other text, measured from the element boxes: Push Chain's step
+      covers its reason text over 572 px x 13 px, the "FREE · COMING SOON" chip (86 x 23 px), "more" and "no money · no estimate";
+      GenLayer's covers its reason (197 x 13 px), the chip and "more"; Konnex's and Miden's cover the chip and "more". On screen "more"
+      prints on top of the step's words ("sig more with your X account"), and Push Chain's step runs to the right edge under the FREE column.
+      At 390 px wide nothing overlaps.
+    steps:
+      - 'Open https://cymetica.com/airdrop-farmer in a desktop browser (1440 or 1920 wide) and scroll to Konnex, Push Chain, GenLayer, Miden'
+      - 'Read each card: the "YOUR STEP" line lies across the reason text, the "FREE · COMING SOON" chip and the "more" link'
+      - 'Resize to 390 px: the same cards lay out without overlap'
+    body: >
+      The build's own goal was one click per farm with the user's one step shown on the card; on desktop that step is the part a user
+      cannot read. Read only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
