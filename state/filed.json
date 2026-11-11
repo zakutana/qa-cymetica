@@ -1192,13 +1192,18 @@
      "report_id": 240,
      "verdict": "fail",
      "at": "2026-11-10T13:54:43+00:00"
+    },
+    {
+     "report_id": 240,
+     "verdict": "pass",
+     "at": "2026-11-11T10:30:40+00:00"
     }
    ],
    "their_status": {
     "240": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-agent-tournaments-round-ended-inside-the-table-counts",
@@ -3650,7 +3655,7 @@
     "248": "paid"
    },
    "withdrawn": false,
-   "last_check": "fail"
+   "last_check": "pass"
   },
   {
    "key": "CYM-products-tile-people-are-people",
@@ -6517,7 +6522,13 @@
    ],
    "title": "Altseason index: the Retail tile reads 15 ('asleep') from a measure whose own published back-test says fail, and the index is built from a different number, 39",
    "filed_at": "2026-11-05T15:03:20+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 312,
+     "verdict": "fail",
+     "at": "2026-11-11T10:30:45+00:00"
+    }
+   ],
    "their_status": {
     "312": "paid"
    },
@@ -6859,11 +6870,18 @@
    ],
    "title": "Gem Screener Sectors: four sectors read \"Hot\" and \"Hot right now\" while all 12 sectors fell 13% to 32% over the month and all 12 lost to BTC",
    "filed_at": "2026-11-10T07:30:46+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 336,
+     "verdict": "fail",
+     "at": "2026-11-11T10:30:49+00:00"
+    }
+   ],
    "their_status": {
     "336": "paid"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "fail"
   },
   {
    "key": "capital-maximizer-zec-usdc-card-says-moves-with-none",
@@ -6903,11 +6921,18 @@
    ],
    "title": "Agent Casino: /rules gives ET10 to the top 2 in one field and to the best three in another, and every table's ET10 note says three",
    "filed_at": "2026-11-10T19:45:13+00:00",
-   "verdicts_sent": [],
+   "verdicts_sent": [
+    {
+     "report_id": 339,
+     "verdict": "pass",
+     "at": "2026-11-11T10:30:54+00:00"
+    }
+   ],
    "their_status": {
     "339": "paid"
    },
-   "withdrawn": false
+   "withdrawn": false,
+   "last_check": "pass"
   },
   {
    "key": "airdrop-farmer-testnet-dialog-says-gas-comes-from-our-faucet",
