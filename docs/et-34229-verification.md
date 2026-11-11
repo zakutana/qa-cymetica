@@ -61,3 +61,23 @@ Our own fix: `score.py`'s lasting figure took `min(rate, median)`, while its doc
 Bug #337: fixed in the API too (`exposure: "ZEC"`). The loop figures in line 2 ($55, $67.38) are hunter rows quoted on 4 Nov; today's PT 15.5% and borrow 5.01% (5.40% then) make them slightly better.
 
 Score: 4 of 9 pass, 2 partial, 3 fail. FAIL sent on the operator's word, 2026-11-10 (BB-0066, `outbox/capital-maximizer/verdict-et-34229-r3.txt`).
+
+## Re-ship, 2026-11-10 23:04 UTC (release 08b7469b8)
+
+Read 2026-11-11 from 08:46 UTC: snapshot, `score.py` by lasting (median), `/route`, on-chain quotes, the page (script still `v=20261110-2`; the fresh-wallet line reaches the card as a NOTE).
+
+| # | Result | Evidence |
+|---|---|---|
+| 1 | PASS | PT-USD3-17DEC2026/USDT loop is Medium #3 at 3x ($68.93) and High #2 at 5x ($87.10); wstETH loop lev_max 5 High, 5.5 OG. |
+| 2 | FAIL | Conservative $23.00 vs $22.98; Medium $89.69 beats our $58.14; High $89.69 vs Veranta on Base $93.53 (-4%). OG $361.05 vs Arcadia 7x on Base $485.78 (-26%); off Base our best is ZEC-USDC $354.03, under theirs. Fails through line 4 only. |
+| 3 | PASS | Revert Lend WETH-USDT 0.05% 4.25x is OG #3. |
+| 4 | FAIL | `listed_only_chains: ["Base"]`; Nexus: "a standing decision of the team, not because of the engine". |
+| 5 | PARTIAL | dCOMP direct ($35.90 Medium) and the stUSDS loop (`radc640001b`: Medium 3x $31.16, High 5x $37.31, OG 7x $43.69) answer; Fluid smart vaults are not read. |
+| 6 | PASS | Axis sUSDx routes exist (Nexus); not in a top 3. |
+| 7 | PASS | WETH-USDT 0.3%: median 34.80, rate 29.0% = x 5/6, gross $105.75, $75.42 after their $30 costs. |
+| 8 | PASS | unchanged |
+| 9 | PARTIAL | Every top 3 route carries `fresh_wallet` (pool depth, vault `maxDeposit` for an empty address, no identity step); their page says it is not a simulation. Ours: Uniswap V4 USDC/USDfr (fee 375, spacing 4, pool 0x72ef9130...) quotes 5,000 USDC -> 4,991.97 USDfr and 100,000 -> 99,779.79; sUSDfr `maxDeposit` of an empty address is unlimited; Curve frxUSD/USDT and USD3/frxUSD fill 25,000 USDT -> 20,905.98 USD3 and back -> 24,951.58 USDT ($48 round trip, inside their $55). |
+
+Bug #338: fixed by the new path (USDC to USDfr on the open V4 pool, then the sUSDfr vault); their status paid. No sweep check holds it, so no verdict was posted.
+
+Score: 5 of 9 pass, 2 partial, 2 fail; both fails are Base. Verdict: the operator's word.
