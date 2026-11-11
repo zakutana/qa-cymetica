@@ -9544,6 +9544,75 @@ reports:
       chart with the same day in Apps reads two numbers again (one app on one day, 87 against 63, is the example the request names).
       We could not tell from outside whether this was a revert or an older build served again. Read only; nothing was written.
 
+  - key: capital-maximizer-leverage-route-says-eth-down-1-3-for-a-pool-position
+    severity: medium
+    category: logic
+    url: https://cymetica.com/capital-maximizer
+    title: "Capital Maximizer: OG's Leverage route says \"LIQUIDATED AT ETH down 1.3%\" for a WETH-USDT pool position with a USDC loan; by its own +20% figure ETH must fall 2.6%"
+    expected: >
+      The Leverage route box states the move that liquidates the route in the unit it names, and describes the loan the route takes.
+    actual: >
+      Read on 2026-11-11 at 09:05 UTC. GET /api/v1/capital-maximizer/tiers?amount=5000, OG leverage_route is "WETH-USDT 0.05% pool on
+      Revert Lend" at 4.25x: it holds WETH and USDT and its borrow node is USDC. liquidation.text reads "The WETH-USDT pool position
+      can lose 1.3% of its value before liquidation" (debt 3.25/4.25 against lt 0.775 gives 1.3% of the position). The same object's
+      scenarios carry liquidation_move_pct 1.3 with liquidation_move_asset "ETH" and price_basis "collateral_vs_loan", so the page
+      prints "LIQUIDATED AT ETH down 1.3%", the tree prints "liq at a 1.3% fall", and under them "This loop borrows the asset it holds
+      against, so the price of the underlying moves collateral and loan together; the liquidation move is the collateral slipping
+      against the loan." The route's own beta is 2.125 (4.25 x 0.5) and scenarios.up_usd is 2,316.08 = 5,000 x 2.125 x 20% + 191.08:
+      by that model the position moves half as far as ETH, so a 1.3% loss of the position is ETH down 2.6%, and ETH down 1.3%
+      liquidates nothing. The loan is USDC, not an asset the position holds, so the sentence describes a different kind of route.
+    steps:
+      - 'GET /api/v1/capital-maximizer/tiers?amount=5000 -> OG tier, leverage_route.liquidation.text "The WETH-USDT pool position can lose 1.3% of its value before liquidation"'
+      - 'same object -> scenarios {"up_usd": 2316.08, "liquidation_move_pct": 1.3, "liquidation_move_asset": "ETH", "price_basis": "collateral_vs_loan"}, beta 2.125, nodes: borrow USDC on Revert Lend'
+      - 'Open https://cymetica.com/capital-maximizer, OG Gambler, 5,000 USDC, FIND TOP 3 -> Leverage route: "LIQUIDATED AT ETH down 1.3%" and the sentence "This loop borrows the asset it holds against"'
+    body: >
+      A user reads that ETH may fall 1.3% before the deposit is lost; by the engine's own exposure it is 2.6%, and the explanation under
+      it is the one for a wstETH/WETH loop. For a pool position with a dollar loan, scenarios should carry the position's move and the
+      ETH move that causes it, with price_basis "underlying". Read only: GETs; nothing signed or sent.
+
+  - key: capital-maximizer-tree-prints-nan-for-the-susdfr-vault-step
+    severity: low
+    category: logic
+    url: https://cymetica.com/capital-maximizer
+    title: "Capital Maximizer: the route tree prints \"USDfr → sUSDfr +NaN%\" on the sUSDfr vault step (Medium and High Risk #1 and the sUSDfr pool route)"
+    expected: >
+      A step with no rate of its own shows no rate on its plate.
+    actual: >
+      Read on 2026-11-11 at 09:18 UTC on the live page, High Risk, 5,000 USDC, FIND TOP 3. Card 1 (PT-sUSDfr-28JAN2027 fixed yield)
+      and card 3 (sUSDfr fixed-yield pool 28JAN2027): the plate of step 2 in the tree reads "sUSDfr vault" / "USDfr → sUSDfr +NaN%"
+      in green. The node in /top3 is {"kind": "stake", "platform_name": "sUSDfr vault", "token": "sUSDfr", "from": "USDfr",
+      "mint": true} with no rate, and capital-maximizer.js?v=20261110-2 (plateText, kind "stake") always appends
+      '+' + rateTxt(n.rate), so an absent rate becomes NaN. The same card's plate for card 3 also cuts its name:
+      "sUSDfr fixed-yield poo +24.22%".
+    steps:
+      - 'Open https://cymetica.com/capital-maximizer, High Risk, 5,000 USDC, FIND TOP 3 -> card 1, tree, step 2 plate: "USDfr → sUSDfr +NaN%"'
+      - 'GET /api/v1/capital-maximizer/top3?tier=high&amount=5000 -> routes[0].nodes[1]: kind "stake", from "USDfr", token "sUSDfr", no "rate" key'
+      - 'GET /static/js/capital-maximizer.js?v=20261110-2 -> plateText: if (k === "stake") ... "+" + rateTxt(n.rate)'
+    body: >
+      A NaN in green on the top pick of two tiers. The plate should show the step without a rate when the node carries none.
+      Read only; nothing was written.
+
+  - key: capital-maximizer-levered-pool-tree-hides-the-borrow-step
+    severity: low
+    category: logic
+    url: https://cymetica.com/capital-maximizer
+    title: "Capital Maximizer: on a levered pool route the tree draws the borrow step under the Leverage diamond, so \"borrow USDC 9.74%/yr\" cannot be read"
+    expected: >
+      Every step of a route has its own place in the tree, as on a loop route (PT-USD3: borrow at its own row).
+    actual: >
+      Read on 2026-11-11 at 09:18 UTC on the live page, OG Gambler, 5,000 USDC, FIND TOP 3, card 3 (WETH-USDT 0.05% pool on Revert
+      Lend, 4.25x). The tree's nodes are drawn at: step 1 (Uniswap V3) x 180, y 108; step 2 (Revert Lend, borrow USDC 9.74%/yr)
+      x 308, y 108; step 3 (Leverage) x 308, y 108. Steps 2 and 3 share one spot: the diamond and its plate "liq at a 1.3% fall"
+      cover the borrow hexagon and its plate, whose edge and last letters show behind it. In layout() of
+      capital-maximizer.js?v=20261110-2 the lever node takes the row of the last swap (or the first spine node) and the borrow
+      node the row of the last supply (or the last spine node); a levered pool has one spine node, so both get row 1.
+    steps:
+      - 'Open https://cymetica.com/capital-maximizer, OG Gambler, 5,000 USDC, FIND TOP 3 -> card 3, tree: one plate "Leverage / liq at a 1.3% fall" with a second plate behind it'
+      - 'In the page: document.querySelectorAll("#top3 .scard")[2].querySelectorAll(".tree .nd[data-n]") -> data-n 2 and 3 both at data-x 308.0, data-y 108.0'
+    body: >
+      The borrow rate is the cost that decides a levered route, and it is the one plate the tree hides. The list under the tree still
+      shows it. Giving the borrow node the next row fixes it. Read only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "capital-maximizer-look",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/capital-maximizer/look/serve.py", "--quiet"],
+      "port": 8848
+    },
+    {
       "name": "gem-screener-review",
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/gem-screener-review/serve.py", "--quiet"],

@@ -1,0 +1,115 @@
+/* qa-cymetica look patch for Capital Maximizer's top 3 and its Leverage route. Their tokens only (cyan, green, red). */
+
+/* ---- the three cards share their rows: name, profit, facts, tree, steps, chips, button, details ---- */
+.cmx .cmx-top3 { align-items: stretch; grid-template-rows: repeat(8, auto); gap: 0 22px; }
+.cmx .cmx-top3 > .scard.lk { display: grid; grid-row: span 8; grid-template-rows: subgrid; padding: 0; overflow: hidden;
+  background: linear-gradient(180deg, rgba(17, 26, 40, .92), rgba(10, 14, 23, .98) 46%); }
+.cmx .scard.lk > * { min-width: 0; }
+
+.cmx .scard.lk .lk-head { padding: 20px 22px 0; }
+.cmx .scard.lk h3 { font-size: 18px; line-height: 1.15; overflow-wrap: anywhere; }
+.cmx .scard.lk .lk-head > div { min-width: 0; }
+.cmx .scard.lk .rankhx { flex: 0 0 34px; }
+.cmx .scard.lk .tp { flex: none; white-space: nowrap; }
+
+/* the month's profit leads */
+.cmx .lk-hero { padding: 18px 22px 18px; }
+.cmx .lk-hero .lbl { margin-bottom: 4px; }
+.cmx .lk-heroline { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.cmx .lk-hero .pm { font-family: var(--disp); font-size: clamp(38px, 3.4vw, 54px); line-height: .95; color: var(--green);
+  text-shadow: 0 0 34px rgba(0, 255, 136, .22); letter-spacing: -.01em; }
+.cmx .lk-hero .pm.neg { color: var(--red); text-shadow: none; }
+.cmx .lk-ret { text-align: right; font-family: var(--mono); display: grid; gap: 2px; padding-bottom: 3px; }
+.cmx .lk-ret b { font-size: 15px; font-weight: 700; color: var(--green); }
+.cmx .lk-ret span { font-size: 11px; color: var(--dim); }
+.cmx .lk-rule { margin: 10px 0 0; font: 500 11px var(--mono); color: var(--dim); display: flex; gap: 8px; align-items: baseline; }
+.cmx .lk-rule span { font-size: 9px; letter-spacing: .22em; color: var(--dimmer); }
+
+/* four facts on one strip */
+.cmx .lk-facts { display: grid; grid-template-columns: 1fr 1.15fr 1.7fr .9fr; border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2);
+  background: rgba(13, 21, 32, .55); }
+.cmx .lk-facts > span { padding: 11px 12px 12px; border-left: 1px solid var(--line2); min-width: 0; }
+.cmx .lk-facts > span:first-child { border-left: 0; padding-left: 22px; }
+.cmx .lk-facts small { display: block; font: 500 8.5px var(--mono); letter-spacing: .24em; color: var(--dim); margin-bottom: 5px; white-space: nowrap; }
+.cmx .lk-facts b { display: block; font: 700 13px var(--body); color: var(--txt); overflow-wrap: anywhere; }
+.cmx .lk-facts b.none { color: var(--dim); font-weight: 600; }
+.cmx .lk-facts b.neg { color: var(--red); }
+
+/* the tree: one scale on every card, the wallet at the top of each */
+.cmx .lk-stage { padding: 18px 12px 10px; display: grid; justify-items: center; align-content: start;
+  background: radial-gradient(60% 46% at 50% 0, rgba(0, 207, 255, .07), transparent 72%); }
+.cmx .lk-stage .tree { width: auto; max-width: 100%; height: auto; margin: 0; overflow: visible; }
+.cmx .lk-stage .tree > rect:first-child { display: none; }
+.cmx .lk-stage .tree .dia-t { font-size: 11px; }
+.cmx .lk-stage .tree .plate rect { fill: rgba(13, 21, 32, .92); }
+
+.cmx .scard.lk .lk-steps { margin: 0; padding: 4px 14px 0; align-self: start; }
+.cmx .scard.lk .lk-steps li { padding: 8px 10px; }
+
+/* what a route takes, as chips; the sentence is one hover or one click away */
+.cmx .lk-chips { padding: 14px 22px 0; display: flex; flex-wrap: wrap; gap: 6px; align-content: start; }
+.cmx .lk-chip { font: 600 10.5px var(--mono); letter-spacing: .02em; padding: 5px 9px; border-radius: 999px; border: 1px solid var(--line);
+  color: var(--txt); background: rgba(13, 21, 32, .7); white-space: nowrap; cursor: default; }
+.cmx .lk-chip.lk-g { color: var(--green); border-color: rgba(0, 255, 136, .4); background: rgba(0, 255, 136, .06); }
+.cmx .lk-chip.lk-i { color: var(--cyan); border-color: rgba(0, 207, 255, .35); background: rgba(0, 207, 255, .05); }
+.cmx .lk-chip.lk-w { color: var(--red); border-color: rgba(255, 68, 68, .4); background: rgba(255, 68, 68, .06); }
+.cmx .lk-chip.lk-d { color: var(--dim); }
+
+.cmx .lk-cta { padding: 16px 22px 0; align-self: end; }
+
+.cmx .lk-more { padding: 6px 22px 16px; }
+.cmx .lk-more summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 0 2px;
+  font: 600 10px var(--mono); letter-spacing: .22em; text-transform: uppercase; color: var(--dim); }
+.cmx .lk-more summary::-webkit-details-marker { display: none; }
+.cmx .lk-more summary::after { content: "+"; margin-left: auto; font-size: 14px; letter-spacing: 0; color: var(--dim); }
+.cmx .lk-more[open] summary::after { content: "−"; }
+.cmx .lk-more summary:hover, .cmx .lk-more summary:hover::after { color: var(--cyan); }
+.cmx .lk-more summary i { font-style: normal; font-size: 9.5px; letter-spacing: 0; padding: 1px 6px; border-radius: 999px; border: 1px solid var(--line); }
+.cmx .lk-notes { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 0; }
+.cmx .lk-notes li { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; padding: 8px 0; border-top: 1px solid var(--line2);
+  font-size: 12px; line-height: 1.45; color: var(--dim); }
+.cmx .lk-notes .nl { font: 500 8.5px/1.9 var(--mono); letter-spacing: .2em; color: var(--cyan); }
+.cmx .lk-notes .nk-loss .nl { color: var(--red); }
+.cmx .lk-notes .nk-fresh .nl { color: var(--green); }
+
+/* ---- the Leverage route: the same order, on one band ---- */
+.cmx .levroute.lk { margin-top: 22px; padding: 0; border-radius: 18px; overflow: hidden;
+  background: linear-gradient(180deg, rgba(17, 26, 40, .92), rgba(10, 14, 23, .98)); }
+.cmx .lk-levhead { padding: 20px 22px 16px; }
+.cmx .lk-levhead .lbl { margin-bottom: 6px; }
+.cmx .lk-levhead h3 { font-family: var(--disp); font-weight: 400; font-size: 19px; margin: 0 0 2px; }
+.cmx .lk-levhead .venue { font: 11px var(--mono); color: var(--dim); }
+.cmx .lk-levstats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--line2); border-bottom: 1px solid var(--line2);
+  background: rgba(13, 21, 32, .55); }
+.cmx .lk-levstats > span { padding: 14px 16px 15px; border-left: 1px solid var(--line2); min-width: 0; }
+.cmx .lk-levstats > span:first-child { border-left: 0; padding-left: 22px; }
+.cmx .lk-levstats small { display: block; font: 500 8.5px var(--mono); letter-spacing: .24em; color: var(--dim); margin-bottom: 6px; }
+.cmx .lk-levstats b { display: block; font: 400 clamp(18px, 1.7vw, 26px)/1.05 var(--disp); color: var(--txt); }
+.cmx .lk-levstats b.pos { color: var(--green); } .cmx .lk-levstats b.neg { color: var(--red); }
+.cmx .lk-levstats em { display: block; margin-top: 5px; font: normal 10.5px var(--mono); color: var(--dim); }
+.cmx .lk-scale { position: relative; height: 6px; margin: 26px 22px 30px; border-radius: 999px;
+  background: linear-gradient(90deg, rgba(0, 255, 136, .16), rgba(0, 255, 136, .5)); }
+.cmx .lk-scale i { position: absolute; top: 0; bottom: 0; }
+.cmx .lk-scale .lost { left: 0; border-radius: 999px 0 0 999px; background: linear-gradient(90deg, rgba(255, 68, 68, .55), rgba(255, 68, 68, .28)); }
+.cmx .lk-scale .mark { width: 2px; top: -7px; bottom: -7px; margin-left: -1px; background: var(--red); box-shadow: 0 0 10px rgba(255, 68, 68, .8); }
+.cmx .lk-scale .now { left: 50%; width: 10px; height: 10px; top: -2px; margin-left: -5px; border-radius: 50%; background: var(--txt); box-shadow: 0 0 0 3px rgba(10, 14, 23, .9); }
+.cmx .lk-scale span { position: absolute; top: 14px; font: 500 9.5px var(--mono); color: var(--dim); }
+.cmx .lk-scale .l { left: 0; } .cmx .lk-scale .c { left: 50%; transform: translateX(-50%); } .cmx .lk-scale .r { right: 0; }
+.cmx .levroute.lk .lk-chips { padding-top: 6px; }
+
+.cmx .lk-hero .lbl button.info { width: 16px; height: 16px; min-width: 0; min-height: 0; flex: 0 0 16px; }
+@media (max-width: 560px) {
+  .cmx .scard.lk h3 { font-size: 16px; }
+  .cmx .lk-facts { grid-template-columns: 1fr 1fr; }
+  .cmx .lk-facts small { font-size: 8.5px !important; letter-spacing: .2em; }
+  .cmx .lk-facts > span { padding-left: 22px; }
+  .cmx .lk-facts > span:nth-child(odd) { border-left: 0; }
+  .cmx .lk-facts > span:nth-child(n+3) { border-top: 1px solid var(--line2); }
+  .cmx .lk-notes li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+}
+@media (max-width: 1100px) {
+  .cmx .cmx-top3 { gap: 0; }
+  .cmx .cmx-top3 > .scard.lk { margin-bottom: 18px; }
+  .cmx .lk-levstats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cmx .lk-levstats > span { border-left: 0; padding-left: 22px; border-top: 1px solid var(--line2); }
+}

@@ -6422,7 +6422,7 @@
    "filed_at": "2026-11-04T16:50:34+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "307": "pending"
+    "307": "paid"
    },
    "withdrawn": false
   },
@@ -6438,7 +6438,7 @@
    "filed_at": "2026-11-05T07:55:54+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "308": "pending"
+    "308": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -6461,7 +6461,7 @@
     }
    ],
    "their_status": {
-    "309": "pending"
+    "309": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -6519,7 +6519,7 @@
    "filed_at": "2026-11-05T15:03:20+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "312": "pending"
+    "312": "paid"
    },
    "withdrawn": false,
    "last_check": "fail"
@@ -6677,7 +6677,7 @@
    "filed_at": "2026-11-10T06:00:20+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "323": "pending"
+    "323": "paid"
    },
    "withdrawn": false
   },
@@ -6691,7 +6691,7 @@
    "filed_at": "2026-11-10T06:00:37+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "324": "pending"
+    "324": "paid"
    },
    "withdrawn": false
   },
@@ -6705,7 +6705,7 @@
    "filed_at": "2026-11-10T06:27:42+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "325": "pending"
+    "325": "paid"
    },
    "withdrawn": false
   },
@@ -6719,7 +6719,7 @@
    "filed_at": "2026-11-10T06:29:21+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "326": "pending"
+    "326": "paid"
    },
    "withdrawn": false
   },
@@ -6733,7 +6733,7 @@
    "filed_at": "2026-11-10T06:50:33+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "327": "pending"
+    "327": "paid"
    },
    "withdrawn": false
   },
@@ -6747,7 +6747,7 @@
    "filed_at": "2026-11-10T06:50:42+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "328": "pending"
+    "328": "paid"
    },
    "withdrawn": false
   },
@@ -6761,7 +6761,7 @@
    "filed_at": "2026-11-10T06:50:58+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "329": "pending"
+    "329": "paid"
    },
    "withdrawn": false
   },
@@ -6775,7 +6775,7 @@
    "filed_at": "2026-11-10T06:51:12+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "330": "pending"
+    "330": "paid"
    },
    "withdrawn": false
   },
@@ -6789,7 +6789,7 @@
    "filed_at": "2026-11-10T06:51:22+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "331": "pending"
+    "331": "paid"
    },
    "withdrawn": false
   },
@@ -6803,7 +6803,7 @@
    "filed_at": "2026-11-10T06:51:40+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "332": "pending"
+    "332": "paid"
    },
    "withdrawn": false
   },
@@ -6817,7 +6817,7 @@
    "filed_at": "2026-11-10T06:51:50+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "333": "pending"
+    "333": "paid"
    },
    "withdrawn": false
   },
@@ -6831,7 +6831,7 @@
    "filed_at": "2026-11-10T06:54:51+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "334": "pending"
+    "334": "paid"
    },
    "withdrawn": false
   },
@@ -6845,7 +6845,7 @@
    "filed_at": "2026-11-10T07:22:25+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "335": "pending"
+    "335": "paid"
    },
    "withdrawn": false
   },
@@ -6861,7 +6861,7 @@
    "filed_at": "2026-11-10T07:30:46+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "336": "pending"
+    "336": "paid"
    },
    "withdrawn": false
   },
@@ -6875,7 +6875,7 @@
    "filed_at": "2026-11-10T07:33:23+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "337": "pending"
+    "337": "paid"
    },
    "withdrawn": false
   },
@@ -6889,7 +6889,7 @@
    "filed_at": "2026-11-10T07:46:41+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "338": "pending"
+    "338": "paid"
    },
    "withdrawn": false
   },
@@ -6905,7 +6905,7 @@
    "filed_at": "2026-11-10T19:45:13+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "339": "pending"
+    "339": "paid"
    },
    "withdrawn": false
   },
@@ -6934,6 +6934,48 @@
    "verdicts_sent": [],
    "their_status": {
     "342": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "capital-maximizer-leverage-route-says-eth-down-1-3-for-a-pool-position",
+   "nodeids": [],
+   "report_ids": [
+    343
+   ],
+   "title": "Capital Maximizer: OG's Leverage route says \"LIQUIDATED AT ETH down 1.3%\" for a WETH-USDT pool position with a USDC loan; by its own +20% figure ETH must fall 2.6%",
+   "filed_at": "2026-11-11T09:06:35+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "343": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "capital-maximizer-tree-prints-nan-for-the-susdfr-vault-step",
+   "nodeids": [],
+   "report_ids": [
+    344
+   ],
+   "title": "Capital Maximizer: the route tree prints \"USDfr → sUSDfr +NaN%\" on the sUSDfr vault step (Medium and High Risk #1 and the sUSDfr pool route)",
+   "filed_at": "2026-11-11T09:18:59+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "344": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "capital-maximizer-levered-pool-tree-hides-the-borrow-step",
+   "nodeids": [],
+   "report_ids": [
+    345
+   ],
+   "title": "Capital Maximizer: on a levered pool route the tree draws the borrow step under the Leverage diamond, so \"borrow USDC 9.74%/yr\" cannot be read",
+   "filed_at": "2026-11-11T09:19:04+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "345": "pending"
    },
    "withdrawn": false
   }
