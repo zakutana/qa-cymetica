@@ -7018,6 +7018,20 @@
     "345": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "airdrop-farmer-testnet-steps-says-genlayer-terms-silent-on-automation",
+   "nodeids": [],
+   "report_ids": [
+    346
+   ],
+   "title": "Airdrop Farmer, Live farms: Testnet steps labels GenLayer \"TERMS SILENT ON AUTOMATION\", while its card says its terms exclude automated-only accounts",
+   "filed_at": "2026-11-11T13:46:45+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "346": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

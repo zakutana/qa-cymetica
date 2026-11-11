@@ -9613,6 +9613,28 @@ reports:
       The borrow rate is the cost that decides a levered route, and it is the one plate the tree hides. The list under the tree still
       shows it. Giving the borrow node the next row fixes it. Read only; nothing was written.
 
+  - key: airdrop-farmer-testnet-steps-says-genlayer-terms-silent-on-automation
+    severity: low
+    category: logic
+    url: https://cymetica.com/airdrop-farmer?tab=live
+    title: "Airdrop Farmer, Live farms: Testnet steps labels GenLayer \"TERMS SILENT ON AUTOMATION\", while its card says its terms exclude automated-only accounts"
+    expected: >
+      The terms chip under Testnet steps says what the farm's card and the farm list say: GenLayer's terms exclude accounts that only
+      do automated or social tasks.
+    actual: >
+      Seen on 2026-11-11 on a signed-in account with GenLayer and Push Chain on its plan. Under Testnet steps, GenLayer carries the chip
+      "TERMS SILENT ON AUTOMATION". The same page's Your farms row says "its terms exclude accounts that only do automated or social
+      tasks: you decide", the Farms tab card says "TERMS EXCLUDE AUTOMATED-ONLY ACCOUNTS · YOU DECIDE", and /api/v1/airdrop-farm/farms
+      says the same. airdrop-farmer.js?v=20261111-1, testnetHTML(): f.automation === 'allowed' ? 'TERMS ALLOW AUTOMATION' : 'TERMS
+      SILENT ON AUTOMATION', so every value other than 'allowed', a forbidding one included, is printed as silent.
+    steps:
+      - 'Save a plan with GenLayer on https://cymetica.com/airdrop-farmer, open Live farms -> Testnet steps, GenLayer: "TERMS SILENT ON AUTOMATION"'
+      - 'Same page, Your farms, GenLayer: "its terms exclude accounts that only do automated or social tasks"'
+      - 'Read testnetHTML() in airdrop-farmer.js: two labels for three cases'
+    body: >
+      A user deciding whether to farm GenLayer is told in one place that its terms say nothing on automation. A third label for a
+      forbidding value fixes it. Read only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
