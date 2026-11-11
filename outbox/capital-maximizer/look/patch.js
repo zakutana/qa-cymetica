@@ -39,6 +39,8 @@
     rows.push('<li><span class="nl">RISK</span><span class="nt">' + esc(ev.risk_note) + '</span></li>');
     return '<details class="lk-more"><summary><span>Details</span><i>' + rows.length + '</i></summary><ul class="lk-notes">' + rows.join('') + '</ul></details>';
   }
+  // the Plan screen (after SELECT STRATEGY) draws its notes through notesHtml: it takes the same chips and Details
+  notesHtml = function (ev) { return '<div class="lk-chips lk-plan">' + lkChips(ev) + '</div>' + lkDetails(ev); };
   function lkTree(ev) {
     var svg = tree(ev, { orient: 'v', interactive: true }), vb = svg.match(/viewBox="(-?\d+) (-?\d+) (\d+) (\d+)"/);
     return vb ? svg.replace('<svg class="tree', '<svg width="' + Math.round(vb[3] * LK_U) + '" height="' + Math.round(vb[4] * LK_U) + '" class="tree') : svg;

@@ -56,6 +56,8 @@
 .cmx .lk-chip.lk-d { color: var(--dim); }
 
 .cmx .lk-cta { padding: 16px 22px 0; align-self: end; }
+.cmx .plan-notes .lk-chips.lk-plan { padding: 14px 0 0; }
+.cmx .plan-notes .lk-more { padding: 6px 0 0; max-width: 980px; }
 
 .cmx .lk-more { padding: 6px 22px 16px; }
 .cmx .lk-more summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 8px 0 2px;
@@ -99,7 +101,15 @@
 
 .cmx .lk-hero .lbl button.info { width: 16px; height: 16px; min-width: 0; min-height: 0; flex: 0 0 16px; }
 @media (max-width: 560px) {
-  .cmx .scard.lk h3 { font-size: 16px; }
+  .cmx .scard.lk .lk-head { display: grid !important; grid-template-columns: 34px minmax(0, 1fr) !important; gap: 6px 12px !important;
+    flex-direction: initial !important; align-items: center !important; text-align: left !important; }
+  .cmx .scard.lk .lk-head > div { grid-column: 2; grid-row: 1; width: auto !important; }
+  .cmx .scard.lk .tp { grid-column: 2; grid-row: 2; justify-self: start; margin: 0 !important; position: static !important; }
+  .cmx .scard.lk h3 { font-size: 16px !important; overflow-wrap: break-word; writing-mode: horizontal-tb !important; }
+  .cmx .lk-levstats small { font-size: 8.5px !important; letter-spacing: .14em !important; white-space: nowrap; }
+  .cmx .lk-levstats b { font-size: 18px !important; }
+  .cmx .lk-facts b { font-size: 13px !important; }
+  .cmx .lk-levhead h3 { font-size: 17px; }
   .cmx .lk-facts { grid-template-columns: 1fr 1fr; }
   .cmx .lk-facts small { font-size: 8.5px !important; letter-spacing: .2em; }
   .cmx .lk-facts > span { padding-left: 22px; }

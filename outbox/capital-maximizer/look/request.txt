@@ -1,0 +1,25 @@
+Capital Maximizer: the top 3 cards, the Plan notes and the Leverage route read at a glance, and the four faults still open.
+Why: today a card ends in up to seven paragraphs, six of them boxed (the fresh-wallet one word for word on every card), the three cards do not line up, the trees are drawn at different sizes, and the Revert tree hides its borrow step under the leverage diamond.
+SOURCE: the pictures are shot from your own live page with our look on top: https://github.com/zakutana/qa-cymetica/tree/main/outbox/capital-maximizer/look (README.md first). patch.css holds every style, patch.js the new card(), renderLev() and notesHtml(), and serve.py lists in EDITS six small edits to your capital-maximizer.js?v=20261110-2 (tree fixes). Build the look exactly as these files draw it, same sizes, colours, order and spacing; do not redraw or restyle it.
+MUST STAY AS DRAWN: the layout, sizes, colours and order in pictures 1 to 4, in the site's fonts and palette. The figures are your engine's snapshot of 11 Nov; every figure, the LIQUIDATED AT value and the red mark on the scale take whatever the engine gives (see 8).
+
+1. Each top 3 card reads top to bottom: rank, name and venue; MAX PROFIT / MONTH large with the return and multiplier at its right and BY THE RULE in one line under it; one strip of four facts: LEVERAGE, LIQUIDATION as "12.6% away", CHAIN or CHAINS, COSTS; the tree; the steps; the chips; SELECT STRATEGY; Details (pictures 1 and 2).
+2. The three cards share their rows: names, profits, fact strips, trees, steps, chips and buttons start at one height across the three. The trees are drawn at one scale with the wallet at the top; when the widest does not fit its card, all three shrink together.
+3. What a route takes is a row of chips, not paragraphs: Fresh wallet ✓ (green; grey "not confirmed" when fresh_wallet.ok is false), Range ±N%, Full range N%, Past loss $Nk, Matures in N d, Slow exit, One borrower N%, Bought in an open pool. Each chip's full sentence is its tooltip.
+4. Details: one fold at the foot of each card, closed, with its row count. Open, it lists every note the API sends with its label, the fresh-wallet checks in one row, the rate basis and the risk sentence (picture 3). No sentence the API sends is dropped; none stands on the closed card.
+5. The Plan screen (after SELECT STRATEGY) shows the same chips and the same Details in place of its boxed notes; the Risk and Amount screens stay as today.
+6. The Leverage route is one band (picture 1): its name and venue, five figures in a strip (LEVERAGE, MAX PROFIT / MONTH, PRICE +20%, PRICE −20% with "liquidated, the deposit is lost" under it when so, LIQUIDATED AT), a −20% to +20% scale with today's dot and a red line where it is liquidated, the chips, and Details holding the two sentences now under the figures.
+7. The tree: a levered pool's borrow node gets its own row under the leverage diamond, and the edge from the pool reaches it through the diamond (bug #345); a step with no rate of its own shows no rate, not "+NaN%" (bug #344); a plate can be 214 wide and a vault name keeps 30 letters without its date ("sUSDfr fixed-yield pool", not "sUSDfr fixed-yield poo"); the leverage diamond is 36 wide so "4.25x" sits inside it.
+8. Bug #343: for a pool position borrowed against in dollars, LIQUIDATED AT and the scale give the price move that liquidates it in the unit they name: the position losing 1.3% is ETH down about 2.6% by the route's own beta (2.125 at 4.25x), not "ETH down 1.3%". The sentence "This loop borrows the asset it holds against" appears only on a route that does.
+9. Fluid's smart vaults are read at their full rate (fees, lending, staking) and offered where a tier allows them, as ET-34229 line 5 asked and your note of 11 Nov says is not done.
+10. On a phone (390 px) each card is one column: the name beside its rank with TOP PICK under it, the facts two by two, the tree at full width, the Leverage band's figures two by two (picture 4).
+
+Done when:
+[ ] 1-2 At 1440 px, the three cards of every tier start their names, profits, fact strips, trees, steps, chips and buttons at one height each, in the order of 1, and their trees share one scale.
+[ ] 3-4 No card shows a note paragraph while Details is closed; every note the API sends for a route is inside its Details; the chips of 3 show where the API has the note.
+[ ] 5 The Plan screen shows chips and Details, no boxed notes.
+[ ] 6 OG's Leverage route is one band with the five figures, the scale with its red line, chips and Details.
+[ ] 7 No plate reads NaN; the Revert route's borrow plate is readable at its own row; no plate text runs past its plate; "4.25x" sits inside its diamond.
+[ ] 8 LIQUIDATED AT for the Revert route names the ETH move that liquidates it (about 2.6% at 4.25x today), and the loop sentence is absent from it.
+[ ] 9 /route returns a Fluid smart vault route in at least one tier, or a row says why none qualifies.
+[ ] 10 All of it looks like the pictures at 1440 px and at 390 px.
