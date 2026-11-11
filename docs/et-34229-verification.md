@@ -80,4 +80,4 @@ Read 2026-11-11 from 08:46 UTC: snapshot, `score.py` by lasting (median), `/rout
 
 Bug #338: fixed by the new path (USDC to USDfr on the open V4 pool, then the sUSDfr vault); their status paid. No sweep check holds it, so no verdict was posted.
 
-Score: 5 of 9 pass, 2 partial, 2 fail; both fails are Base. Verdict: the operator's word.
+Score: 5 of 9 pass, 2 partial, 2 fail; both fails are Base. The operator waived Base ("kdyz tam nechteji base je nebudem nutit"): PASS sent, 2026-11-11 (BB-0070, `outbox/capital-maximizer/verdict-et-34229-r4.txt`).

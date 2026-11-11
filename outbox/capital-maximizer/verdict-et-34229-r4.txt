@@ -1,16 +1,15 @@
-FAIL, on Base alone. Re-ship of 23:04 (release 08b7469b8) checked 11 Nov 2026 from 08:46 UTC: /top3, /route, score.py on the same minute's DefiLlama, Morpho and Pendle data with 30-day charts, on-chain quotes of the new paths, and the live page.
+PASS. Re-ship of 23:04 (release 08b7469b8) checked 11 Nov 2026 from 08:46 UTC: /top3, /route, score.py on the same minute's DefiLlama, Morpho and Pendle data with 30-day charts, on-chain quotes of the new paths, and the live page.
 
-NOW HOLDS: dollar loops in Medium (3x) and High (5x); PT-sUSDfr back through a path that fills (Uniswap V4 USDC/USDfr quotes 5,000 USDC -> 4,991.97 USDfr; sUSDfr deposits open to an empty wallet); the PT-USD3 Curve path fills 25,000 USDT -> 20,905.98 USD3 and back to 24,951.58 USDT, inside your $55; the stUSDS loop answers in Medium, High and OG; every route carries a fresh-wallet check; rates on the 30-day median.
+Base (line 4, and OG in line 2 through it) is your team's standing decision, and we do not hold the build to it. Everything else holds:
 
-DONE WHEN
-1. Pass.
-2. Fail through line 4 only. Conservative, Medium and High are within 10% of our best or beat it. OG #1 $361.05 against Arcadia 7x on Base WETH-USDC 0.3%, $485.78: 26% under. Off Base, our best is ZEC-USDC at $354.03, under yours.
+1. Pass. Dollar loops in Medium (3x) and High (5x); OG at the lender's limit.
+2. Pass off Base. Conservative, Medium and High are within 10% of our best or beat it; OG #1 ZEC-USDC $361.05 beats our best off Base ($354.03).
 3. Pass.
-4. Fail. listed_only_chains is still ["Base"]; you say it is a standing decision of the team.
+4. Waived: listed_only_chains is ["Base"] by your decision.
 5. Partial. dCOMP direct and the stUSDS loop answer; Fluid smart vaults are not read.
 6. Pass.
 7. Pass. WETH-USDT 0.3% rates on its median (34.80%, 29.0% after the 1/6 cut).
 8. Pass.
-9. Partial. The fresh-wallet check is read-only, not a simulated deposit, and your page says so. Our own reads of the new sUSDfr and PT-USD3 paths found no gate.
+9. Partial. The fresh-wallet check is read-only, not a simulated deposit, and your page says so. Our own reads of the new paths found no gate: Uniswap V4 USDC/USDfr quotes 5,000 USDC -> 4,991.97 USDfr, sUSDfr deposits are open to an empty wallet, and the PT-USD3 Curve path fills 25,000 USDT -> 20,905.98 USD3 and back to 24,951.58 USDT.
 
 Read only: no position opened, nothing sent but GETs and eth_call.
