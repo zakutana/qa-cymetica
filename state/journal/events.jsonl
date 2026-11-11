@@ -5330,3 +5330,4 @@
 {"at": "2026-11-11T13:46:45+00:00", "by": "agent", "http_status": 200, "key": "airdrop-farmer-testnet-steps-says-genlayer-terms-silent-on-automation", "outcome": "accepted", "report_id": 346, "source": "scripts/submit.py", "type": "filing_outcome"}
 {"at": "2026-11-11T13:49:27+00:00", "by": "agent", "key": "airdrop-farmer-genlayer-step-hides-the-faucets-mainnet-eth-rule", "nodeids": [], "source": "scripts/submit.py", "title": "Airdrop Farmer: GenLayer's one user step is \"claim test GEN\", but its faucet refuses any wallet holding under 0.01 ETH on Ethereum mainnet, which the farm wallet does not", "type": "filing_intent"}
 {"at": "2026-11-11T13:49:32+00:00", "by": "agent", "http_status": 200, "key": "airdrop-farmer-genlayer-step-hides-the-faucets-mainnet-eth-rule", "outcome": "accepted", "report_id": 347, "source": "scripts/submit.py", "type": "filing_outcome"}
+++ b/state/journal/events.jsonl
