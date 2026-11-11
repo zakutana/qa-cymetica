@@ -13,7 +13,7 @@
 The figures in the pictures are a snapshot of 11 Nov. "LIQUIDATED AT ETH down 1.3%" and the red mark on the −20 % to +20 %
 scale show your current value, which is wrong (bug #343): they take the fixed value.
 
-Filed 2026-11-11 09:50 UTC as **ET-34914** (`request.txt`, BB-0071), the numbering correction as BB-CHANGE C1 (`change-c1.txt`, BB-0072).
+Filed 2026-11-11 09:50 UTC as **ET-34914** (`request.txt`, BB-0071), the numbering correction as BB-CHANGE C1 (`change-c1.txt`, BB-0072), accepted on the operator's word (BB-0073).
 
 Run it: `python outbox/capital-maximizer/look/serve.py`, then open http://127.0.0.1:8848/capital-maximizer?tier=og
 (`?tier=` is only the copy's shortcut to a tier's top 3; it is not part of the request). Nothing is sent from the copy:
