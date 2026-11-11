@@ -51,7 +51,9 @@ EDITS = [
 ]
 _cache: dict[str, tuple[float, tuple]] = {}
 _client: httpx.Client | None = None
+TRANSIENT = {"COLLECTING", "UPSTREAM_UNAVAILABLE", "BUSY"}     # their answers that pass by themselves
 _relay_lock = threading.Lock()
+_locks: dict[str, threading.Lock] = {}
 _relays = 0
 
 
@@ -123,10 +125,11 @@ def fixture_path(q: dict) -> Path | None:
     return FIX / f"{key}-{tf}.json"
 
 
-async def _relay(sub: dict) -> list:
+async def _relay(sub: dict, hold: float = 20.0) -> list:
+    """One subscribe on their socket. `hold`: how long to stay connected after a "collecting" answer."""
     import websockets
     frames: list = []
-    async with websockets.connect(WS_URL, open_timeout=15, user_agent_header=UA) as ws:
+    async with websockets.connect(WS_URL, open_timeout=15, close_timeout=1, user_agent_header=UA) as ws:
         await ws.send(json.dumps(sub))
         t0 = time.time()
         got_analysis = None
@@ -136,6 +139,8 @@ async def _relay(sub: dict) -> list:
                 raw = await asyncio.wait_for(ws.recv(), 2)
             except asyncio.TimeoutError:
                 raw = None
+            except websockets.ConnectionClosed:      # their side hung up: what arrived so far is the answer
+                break
             if raw is not None:
                 f = json.loads(raw)
                 t = f.get("type")
@@ -144,9 +149,13 @@ async def _relay(sub: dict) -> list:
                 have.add(t)
                 if t == "analysis" and got_analysis is None:
                     got_analysis = time.time()
+                if t == "error" and f.get("code") == "COLLECTING" and time.time() - t0 < hold:
+                    continue                 # their page keeps the socket open here and the answer is pushed later
                 if t == "error":
                     await asyncio.sleep(1)
                     break
+            elif "error" in have and got_analysis is None and time.time() - t0 >= hold:
+                break                        # still collecting: the page shows their collecting card
             if got_analysis is not None and ({"pool", "trends"} <= have or time.time() - got_analysis > 6):
                 break
         try:
@@ -162,10 +171,17 @@ def frames_for(q: dict) -> tuple[int, dict]:
     if p is None:
         return 400, {"detail": "need contract+chain+tf or symbol+tf"}
     frozen = (q.get("frozen") or [""])[0] == "1"
-    with _relay_lock:
+    chip = (q.get("chip") or [""])[0] == "1"
+    with _relay_lock:                    # one lock per coin and timeframe: a chip lookup never holds up the chart
+        lock = _locks.setdefault(str(p), threading.Lock())
+    with lock:
         old = json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
-        collecting = bool(old) and any(f.get("type") == "error" and f.get("code") == "COLLECTING" for f in old["frames"])
-        if old and (frozen or time.time() - old.get("recorded_at", 0) < (600.0 if collecting else FIXTURE_TTL)):
+        collecting = bool(old) and not any(f.get("type") == "analysis" for f in old["frames"]) and any(
+            f.get("type") == "error" and f.get("code") in TRANSIENT for f in old["frames"])
+        # a passing answer ("still collecting", "try again shortly") is kept ten minutes for the trend chips and 25 s
+        # for the page's own timeframe, which retries every 30 s
+        ttl = (600.0 if chip else 25.0) if collecting else FIXTURE_TTL
+        if old and (frozen or time.time() - old.get("recorded_at", 0) < ttl):
             return 200, {**old, "source": "fixture"}
         if frozen:                       # frozen never asks their socket, even for a coin with no recording
             return 404, {"detail": "Mock: no recorded frames for this coin and timeframe."}
@@ -176,9 +192,11 @@ def frames_for(q: dict) -> tuple[int, dict]:
         try:
             _relays += 1
             sys.stderr.write("RELAY #%d %s\n" % (_relays, json.dumps(sub)))
-            frames = asyncio.run(_relay(sub))
+            frames = asyncio.run(_relay(sub, 0.0 if chip else 20.0))
             if not any(f.get("type") in ("analysis", "error") for f in frames):
                 raise RuntimeError("no analysis or error frame")
+            if any(f.get("type") == "analysis" for f in frames):      # collected while we waited: the earlier "collecting" goes
+                frames = [f for f in frames if not (f.get("type") == "error" and f.get("code") == "COLLECTING")]
         except Exception as exc:
             sys.stderr.write("relay failed: %r\n" % (exc,))
             if old:

@@ -11,6 +11,7 @@
     else if (p.symbol) u.set('symbol', p.symbol);
     u.set('tf', p.tf || p.timeframe || '1d');
     if (frozen || p.frozen) u.set('frozen', '1');
+    if (p.chip) u.set('chip', '1');
     return u.toString();
   }
 
@@ -22,7 +23,7 @@
         if (!r.ok) throw new Error('frames ' + r.status);
         return r.json();
       }).then(function (rec) {           // "still collecting" is not kept: the page asks again in 30 s
-        if ((rec.frames || []).some(function (f) { return f.type === 'error' && f.code === 'COLLECTING'; })) delete cache[q];
+        if ((rec.frames || []).some(function (f) { return f.type === 'error' && /^(COLLECTING|UPSTREAM_UNAVAILABLE|BUSY)$/.test(f.code); })) delete cache[q];
         return rec;
       }).catch(function (e) { delete cache[q]; throw e; });
     }

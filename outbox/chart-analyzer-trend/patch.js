@@ -70,6 +70,7 @@
   // ── other timeframes: the same rule on the candles that timeframe opens with ──────────────────────────
   function frames(tf) {
     var q = S.contract ? { contract: S.contract, chain: S.chain, tf: tf } : { symbol: S.sym, tf: tf };
+    q.chip = true;                                         // a lookup for the chips or a built timeframe, not the page's own subscribe
     return window.czaMockFrames(q);
   }
   function analysisOf(res) {

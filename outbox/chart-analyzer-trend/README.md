@@ -33,7 +33,7 @@ Checked against an independent Python version on three candle sets: 63 compariso
 ## Data
 
 `sock.js` stands in for their socket and plays `fixtures/` (their own frames, recorded once per coin and timeframe,
-replayed for an hour). A coin with no recording is asked of their socket once. Subscribes spent while building: 14
-(CARDS 1h/4h/1d/1w and BTC 1h/4h/1d/1w; CARDS 1h and 4h answered "collecting" every time and were asked again).
+replayed for an hour). A coin with no recording is asked of their socket once. Subscribes spent while building: at least 21
+(CARDS, BTC and SOL at 1h, 4h, 1d, 1w; CARDS 1h and 4h answered "collecting" every time and were asked again). Every exchange answer carried NO EDGE, so none of them is a row in their calls ledger. "Ask the chartist" does not answer in this copy: it is a POST, and the copy sends nothing.
 
 Not filed, no request written: that is on the operator's word.
