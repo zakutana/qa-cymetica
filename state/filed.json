@@ -6908,6 +6908,20 @@
     "339": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "airdrop-farmer-testnet-dialog-says-gas-comes-from-our-faucet",
+   "nodeids": [],
+   "report_ids": [
+    341
+   ],
+   "title": "Airdrop Farmer: the \"Start your free testnet farms\" dialog says \"Testnet gas comes from our faucet\", while the GenLayer and Push Chain cards tell the user to claim it",
+   "filed_at": "2026-11-11T08:55:44+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "341": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

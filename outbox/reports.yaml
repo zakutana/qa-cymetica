@@ -9493,6 +9493,28 @@ reports:
       An owner reading the table page is told three seats can earn ET10, the rules and the lobby say two. Changing the one sentence in the table object fixes it. Read only; nothing was written.
     check: tests/rest/test_agent_tournaments_reward_note_says_top_two.py::test_agent_tournaments_reward_note_says_top_two
 
+  - key: airdrop-farmer-testnet-dialog-says-gas-comes-from-our-faucet
+    severity: medium
+    category: logic
+    url: https://cymetica.com/airdrop-farmer
+    title: "Airdrop Farmer: the \"Start your free testnet farms\" dialog says \"Testnet gas comes from our faucet\", while the GenLayer and Push Chain cards tell the user to claim it"
+    expected: >
+      The dialog a user confirms with SAVE PLAN says the same as the cards it starts: the user claims test GEN or test PC once into
+      their own farm wallet, and the agent then runs on those tokens.
+    actual: >
+      Read on 2026-11-11 about 09:00 UTC. The dialog (airdrop-farmer.js?v=20261110-2, the "Start your free testnet farms" lead) says
+      "Your own farm wallet sends each farm's testnet transactions on a schedule. Testnet gas comes from our faucet; nothing is sent
+      from your coins and no money is used." The GenLayer card says "NEEDS YOU AT ONE STEP: claim test GEN for your farm wallet at
+      https://testnet-faucet.genlayer.foundation", and Push Chain's "claim test PC for your farm wallet at https://faucet.push.org (a
+      browser faucet; the agent never solves a CAPTCHA)". /api/v1/airdrop-farm/farms describes both as "testnet gas you claim to
+      your own farm wallet".
+    steps:
+      - 'Open https://cymetica.com/airdrop-farmer, read the GenLayer and Push Chain cards -> "claim test GEN / test PC for your farm wallet"'
+      - 'Start the free testnet farms -> the dialog says "Testnet gas comes from our faucet"'
+    body: >
+      A user who believes the dialog saves the plan and waits; with no test tokens in the farm wallet the agent has nothing to send
+      with. The one line in the dialog's lead, made to say the user claims the testnet gas once, fixes it. Read only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
