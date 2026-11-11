@@ -7032,6 +7032,20 @@
     "346": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "airdrop-farmer-genlayer-step-hides-the-faucets-mainnet-eth-rule",
+   "nodeids": [],
+   "report_ids": [
+    347
+   ],
+   "title": "Airdrop Farmer: GenLayer's one user step is \"claim test GEN\", but its faucet refuses any wallet holding under 0.01 ETH on Ethereum mainnet, which the farm wallet does not",
+   "filed_at": "2026-11-11T13:49:32+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "347": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

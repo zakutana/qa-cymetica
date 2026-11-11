@@ -9635,6 +9635,30 @@ reports:
       A user deciding whether to farm GenLayer is told in one place that its terms say nothing on automation. A third label for a
       forbidding value fixes it. Read only; nothing was written.
 
+  - key: airdrop-farmer-genlayer-step-hides-the-faucets-mainnet-eth-rule
+    severity: medium
+    category: logic
+    url: https://cymetica.com/airdrop-farmer
+    title: "Airdrop Farmer: GenLayer's one user step is \"claim test GEN\", but its faucet refuses any wallet holding under 0.01 ETH on Ethereum mainnet, which the farm wallet does not"
+    expected: >
+      A farm marked AGENT RUNS IT, FREE · NO MONEY NEEDED, whose one user step is a faucet claim, can be started by doing that step. If
+      the faucet asks for more, the card says so before the user saves the plan.
+    actual: >
+      2026-11-11. The GenLayer card says "NEEDS YOU AT ONE STEP: claim test GEN for your farm wallet at
+      https://testnet-faucet.genlayer.foundation" and "FREE · NO MONEY NEEDED". On that faucet, with the farm wallet address
+      0xf4cFbbcd6E25D6154CAb9E45a7C1a1829aED320a and the Cloudflare check passed, Claim 100 GEN answers "Your wallet must hold at least
+      0.01 ETH on Ethereum mainnet to claim GEN. Your balance: 0.000614087330195694 ETH." The faucet page lists "Requires 0.01 ETH on
+      mainnet". eth_getBalance on mainnet for that address: 0x22e82592d68ee wei (0.000614 ETH). Live farms keeps the farm at "Waiting
+      for your test GEN ... skipped".
+    steps:
+      - 'Save a plan with GenLayer, copy the farm wallet address from Live farms'
+      - 'Open https://testnet-faucet.genlayer.foundation, paste it, pass the check, Claim 100 GEN -> "must hold at least 0.01 ETH on Ethereum mainnet"'
+      - 'Read the GenLayer card -> "FREE · NO MONEY NEEDED", one step: claim test GEN'
+    body: >
+      The farm cannot start from the step the card names: the user would have to put about 0.01 ETH of real money into the farm wallet
+      first, which the card says is not needed. Either the card names that requirement, or the gas reaches the farm wallet another way.
+      Read only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
