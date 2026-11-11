@@ -8,6 +8,12 @@
       "port": 8848
     },
     {
+      "name": "chart-analyzer-trend",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/chart-analyzer-trend/serve.py", "--quiet"],
+      "port": 8849
+    },
+    {
       "name": "gem-screener-review",
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/gem-screener-review/serve.py", "--quiet"],
