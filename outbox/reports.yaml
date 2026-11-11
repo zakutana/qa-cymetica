@@ -9515,6 +9515,35 @@ reports:
       A user who believes the dialog saves the plan and waits; with no test tokens in the farm wallet the agent has nothing to send
       with. The one line in the dialog's lead, made to say the user claims the testnet gas once, fixes it. Read only; nothing was written.
 
+  - key: traffic-page-cuts-days-at-pacific-again-two-day-cuts
+    severity: medium
+    category: logic
+    url: https://cymetica.com/traffic
+    title: "/traffic is back on two day cuts: it asks the API for tz=pacific and says days end at midnight Pacific, while Apps cut at UTC; the 'One day cut ... UTC' text of 9-10 Nov is gone"
+    expected: >
+      One day cut for everything on the page, as request ET-34607 asks (goal 14 and the Done when line "The page states one day cut, and
+      today is drawn on every chart or on none") and as the page itself said on 9 and 10 Nov.
+    actual: >
+      Read on 2026-11-11 08:51 to 08:57 UTC, anonymous, three loads of GET https://cymetica.com/traffic. The page script requests
+      /api/v1/traffic/public?days=14&tz=pacific and /api/v1/traffic/activity?days=14&tz=pacific (the page of 9 and 10 Nov asked for
+      tz=utc: three occurrences, none for pacific; now four for pacific, none for utc). The footer now reads "Days end at midnight
+      Pacific time (PT) ... The Apps section is the one exception: its figures come from daily records cut at midnight UTC". The
+      Arrivals today tile is again labelled "ARRIVALS TODAY (PACIFIC)" and its tooltip says "The visitor, AI-agent, volume and Your apps
+      figures on this page cut their days at midnight Pacific". The tooltip of the Apps window says "The Apps figures are built from
+      daily records cut at midnight UTC (not Pacific like the rest of this page)". The sentence "One day cut for everything on this page:
+      days end at midnight UTC" that the page carried on 9 and 10 Nov no longer exists in its HTML. The same two calls with tz=utc
+      still answer with "tz": "UTC" and a UTC today, so the page simply does not ask for it. The first labels of the 14 day chart read
+      10-29 to 11-11 (today) with Pacific days, while Apps, Products and the People tab are UTC days, as before the ticket.
+    steps:
+      - 'GET https://cymetica.com/traffic and search the HTML for "tz=" -> tz=pacific four times, tz=utc none; search for "One day cut" -> no match'
+      - 'Open https://cymetica.com/traffic, scroll to the footer text -> "Days end at midnight Pacific time (PT) ... The Apps section is the one exception"'
+      - 'GET https://cymetica.com/api/v1/traffic/public?days=14&tz=utc -> "tz": "UTC" (the answer the page used on 9 and 10 Nov)'
+    body: >
+      On 10 Nov the build matched the request (one UTC cut, stated on the page); today it does not, and the answer to our report on the
+      Products tab (cut at Pacific, check made at UTC) is the same split in another place. A creator comparing a day on the visitors
+      chart with the same day in Apps reads two numbers again (one app on one day, 87 against 63, is the example the request names).
+      We could not tell from outside whether this was a revert or an older build served again. Read only; nothing was written.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

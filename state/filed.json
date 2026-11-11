@@ -6922,6 +6922,20 @@
     "341": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "traffic-page-cuts-days-at-pacific-again-two-day-cuts",
+   "nodeids": [],
+   "report_ids": [
+    342
+   ],
+   "title": "/traffic is back on two day cuts: it asks the API for tz=pacific and says days end at midnight Pacific, while Apps cut at UTC; the 'One day cut ... UTC' text of 9-10 Nov is gone",
+   "filed_at": "2026-11-11T08:58:39+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "342": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
