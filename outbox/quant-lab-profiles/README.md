@@ -18,5 +18,5 @@ Dropped since MSG-0358: Approve as a new item (REPLY-0279: shipped 10 Nov; the b
 | Review | |
 | Filed | 2026-11-10, on the operator's word; not reviewed by Nexus first |
 | Accepted, deadline | 2026-11-10 (BB-0069), 2026-11-11 22:01 UTC |
-| Shipped | |
+| Shipped | 2026-11-12 12:30 UTC (BB-LATE 2026-11-11 22:23); verified in `docs/et-34884-verification.md` |
 | Verdict | |
