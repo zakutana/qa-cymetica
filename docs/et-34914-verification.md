@@ -19,4 +19,5 @@ Mock: `outbox/capital-maximizer/look/` (pictures 1-4).
 Also found: High Risk #2 and #3 start again with "Swap 5,000 USDC to sUSDfr" on Uniswap V4, a pool holding only USDC (buying reverts
 at 1 USDC, selling works); their fresh-wallet tick counts the pool's value on the wrong side. Bug #349, the defect of #338 back.
 
-Score: 6 of 8 pass, 2 fail (5: SELECT STRATEGY broken; 9: Fluid not built). Verdict: the operator's word.
+Score: 6 of 8 pass, 2 fail (5: SELECT STRATEGY broken; 9: Fluid not built). FAIL sent 2026-11-12 on the operator's word (BB-0074,
+note `outbox/capital-maximizer/look/verdict-et-34914.txt`).
