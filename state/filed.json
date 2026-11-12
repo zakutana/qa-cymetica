@@ -7053,6 +7053,34 @@
     "347": "paid"
    },
    "withdrawn": false
+  },
+  {
+   "key": "capital-maximizer-select-strategy-throws-ruleHtml-is-not-defined",
+   "nodeids": [],
+   "report_ids": [
+    348
+   ],
+   "title": "Capital Maximizer (ET-34914 build): SELECT STRATEGY opens nothing on any card; the page throws \"ruleHtml is not defined\" and the Plan with START never appears",
+   "filed_at": "2026-11-12T13:18:28+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "348": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "capital-maximizer-susdfr-step-1-buys-susdfr-again-from-a-pool-that-only-sells-it",
+   "nodeids": [],
+   "report_ids": [
+    349
+   ],
+   "title": "Capital Maximizer: High Risk #2 and #3 start again with \"Swap 5,000 USDC to sUSDfr\" on Uniswap V4; that pool holds only USDC and cannot sell 1 USDC of sUSDfr",
+   "filed_at": "2026-11-12T13:18:37+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "349": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

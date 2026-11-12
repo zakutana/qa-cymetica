@@ -1,0 +1,18 @@
+FAIL. Checked 12 Nov 2026 from 12:55 UTC, signed out, at 1440 px and 390 px: OG Gambler, High Risk and Conservative at 5,000 USDC, every card's SELECT STRATEGY, /tiers and /top3. The look is built as drawn; two lines fail.
+
+HOLDS: the cards line up row by row, the trees share one scale, the notes are chips with Details, the Leverage route is one band, no NaN, the borrow plate on its own row, "4.25x" inside its diamond, LIQUIDATED AT reads ETH down 2.6% without the loop sentence, and the phone layout matches picture 4.
+
+DONE WHEN
+1-2. Pass.
+3-4. Pass.
+5. Fail. The Plan never opens: SELECT STRATEGY on every card (six tried, OG and Conservative) throws "ruleHtml is not defined". renderPlan in capital-maximizer.js?v=20261112-1 still calls ruleHtml(ev), which this build removed, so no route can reach START. Bug #348.
+6. Pass.
+7. Pass.
+8. Pass.
+9. Fail. No Fluid smart vault route, and no row on the page or in /route says why none is offered.
+10. Pass for every screen that opens; the Plan could not be seen.
+
+ALSO
+- Bug #349: High Risk #2 and #3 start again with "Swap 5,000 USDC to sUSDfr" on Uniswap V4. That pool holds only USDC: buying sUSDfr reverts at 1 USDC, and the fresh-wallet tick counts the pool's value on the side the step does not buy. The 11 Nov path (USDC to USDfr, then the sUSDfr vault) still fills.
+
+Read only: nothing pressed past SELECT STRATEGY, nothing sent but GETs and eth_call.

@@ -9659,6 +9659,52 @@ reports:
       first, which the card says is not needed. Either the card names that requirement, or the gas reaches the farm wallet another way.
       Read only; nothing was written.
 
+  - key: capital-maximizer-select-strategy-throws-ruleHtml-is-not-defined
+    severity: high
+    category: logic
+    url: https://cymetica.com/capital-maximizer
+    title: "Capital Maximizer (ET-34914 build): SELECT STRATEGY opens nothing on any card; the page throws \"ruleHtml is not defined\" and the Plan with START never appears"
+    expected: >
+      SELECT STRATEGY on a top 3 card opens the Plan screen (step 4) with the route, its leverage, liquidation, max profit and START.
+    actual: >
+      Read on 2026-11-12 at 13:04 UTC, signed out, 1440 px. OG Gambler and Conservative, 5,000 USDC, FIND TOP 3, then SELECT STRATEGY on
+      card 1, 2 and 3 (six clicks, a fresh page each): every click throws the page error "ruleHtml is not defined", the page stays on
+      "Your top 3", the stepper stays on Strategies, #start-btn is not shown and #plan-profit is empty. renderPlan() in
+      capital-maximizer.js?v=20261112-1 (line 519) builds #plan-profit with ruleHtml(ev); the build of 12 Nov removed ruleHtml from the
+      script (the cards now write BY THE RULE inline), so renderPlan stops there.
+    steps:
+      - 'Open https://cymetica.com/capital-maximizer, OG Gambler, 5,000 USDC, FIND TOP 3 STRATEGIES'
+      - 'Click SELECT STRATEGY on any card -> console: Uncaught ReferenceError: ruleHtml is not defined; the page stays on Your top 3, no START'
+      - 'GET /static/js/capital-maximizer.js?v=20261112-1 -> renderPlan uses ruleHtml(ev) for #plan-profit; no function ruleHtml in the file'
+    body: >
+      The Plan is the only way to START a route, so since the build of 12 Nov 12:30 UTC no route can be recorded as a position. Read only:
+      no START was pressed, nothing was written.
+
+  - key: capital-maximizer-susdfr-step-1-buys-susdfr-again-from-a-pool-that-only-sells-it
+    severity: medium
+    category: logic
+    url: https://cymetica.com/capital-maximizer
+    title: "Capital Maximizer: High Risk #2 and #3 start again with \"Swap 5,000 USDC to sUSDfr\" on Uniswap V4; that pool holds only USDC and cannot sell 1 USDC of sUSDfr"
+    expected: >
+      Each step can be done at the amount shown (as after the fix of #338: USDC to USDfr on the open V4 pool, then the sUSDfr vault),
+      and the fresh-wallet check of a swap step reads the side the step buys.
+    actual: >
+      Read on 2026-11-12 at 13:09 UTC. GET /api/v1/capital-maximizer/top3?tier=high&amount=5000: #2 PT-sUSDfr-28JAN2027 fixed yield
+      ($88.74) and #3 sUSDfr fixed-yield pool 28JAN2027 ($84.61) have node 1 swap on Uniswap V4 to sUSDfr (depth_usd 250053) and node 2
+      Pendle; the USDfr pool and the sUSDfr vault step are gone. Their fresh_wallet check reads "Uniswap V4: the sUSDfr pool trades and
+      holds $250,053". The V4 USDC/sUSDfr pool (fee 375, spacing 4, no hook, id 0x1d8694445872d16931c729de06086ccbdc4089875ee73fb6119963a922c92d5a)
+      holds that value in USDC only: the V4 Quoter (0x52f0e24d...1203) reverts for 1 USDC and for 1,000 USDC into sUSDfr, and quotes
+      the other way, sUSDfr worth 1 USDC -> 0.991056 USDC and worth 1,000 USDC -> 923.73 USDC. The path that filled on 11 Nov still fills:
+      the V4 USDC/USDfr pool (fee 375, spacing 4, id 0x72ef9130...7b55) quoted 5,000 USDC -> 4,991.97 USDfr, and the sUSDfr vault
+      0xaf559d1d... answers maxDeposit unlimited for an empty address.
+    steps:
+      - 'GET /api/v1/capital-maximizer/top3?tier=high&amount=5000 -> routes[1] and routes[2]: nodes[0] {kind swap, platform_name "Uniswap V4", token "sUSDfr", depth_usd 250053}; fresh_wallet.checks[0] "the sUSDfr pool trades and holds $250,053"'
+      - 'eth_call V4Quoter quoteExactInputSingle(((USDC, sUSDfr, 375, 4, 0x0), true, 1000000, 0x)) -> revert; with zeroForOne false and sUSDfr worth 1 USDC -> 0.991056 USDC'
+      - 'GeckoTerminal /networks/eth/tokens/0xaf559d1d.../pools -> the V4 pool 0x1d8694... "sUSDfr / USDC 0.038%", reserve $245,731'
+    body: >
+      A user who follows step 1 gets no sUSDfr; the card's Fresh wallet tick says the step is open because the pool's value is counted
+      without its side. It is the defect of #338 back on two of High's three routes. Read only: eth_call and GETs; nothing signed or sent.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
