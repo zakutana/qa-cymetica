@@ -1,0 +1,13 @@
+Checked 12 Nov with searches from the page's own dialog: #25 long term · low risk (one winner, StockBot Blue · BNB · SL 3 / TP 15, a bull bot), #27 Flash 1 hour · high risk (no winner).
+
+1 PASS. Two questions only; the run shows "Long term · Low risk"; the winner's worst unseen window is -4.33%.
+2 PASS. 49 long and 6 short shortlisted; all 53 windows labelled with the coin's move, none against the 2% band; the card reads BULL BOT.
+3 PASS. 16 unseen rising windows, 4 Nov 2025 to 10 Nov 2026, chosen on 6 May to 4 Nov 2025; 14 of 16, pooled +21.73% on 241 trades over a bar of 18.00%; falling: 2 of 18, mean -1.31%. Our recount agrees.
+4 PASS. BTC and ETH, 5-minute bars, 3,036 unseen 1-hour windows; each row shows its counts, calls right, unseen result and the stop kept or "no stop"; all 24 dropped under the volume floor.
+5 NOT SEEN. No short winner, so the paper short lane could not be tried.
+6 PASS. Profile, kind, both counts, the bet sentence, "BNB today: read range ... 33.3% (9 of 27)", 12 coins, paper long lane; proposal state "proposed", no bot started; the 2x is called an edge, not a forecast.
+7 FAIL. BUILD and BLAST match the run (16 rules, 5 skills, 5 combos on AVAX, BNB, BTC, LTC; 120 Flash signals on BTC and ETH); no card reads RUNNING; FOUND fits at 1235 px and "NO PROFITABLE AGENT" fits at 390 px, but with a winner at 390 px "STOCKBOT BLUE · BNB" runs past the right edge of the canvas (355 to 690 px of 666) and "+21.73%" is drawn over it.
+
+Also seen: search #23, the same answers as #25, failed at 99.6% after 67 minutes with "database connection lost"; the rerun finished.
+
+Score 5 of 7, one fail (7), one not seen (5).
