@@ -6961,7 +6961,7 @@
     }
    ],
    "their_status": {
-    "341": "pending"
+    "341": "paid"
    },
    "withdrawn": false,
    "last_check": "pass"
@@ -7036,7 +7036,7 @@
    "filed_at": "2026-11-11T13:46:45+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "346": "pending"
+    "346": "paid"
    },
    "withdrawn": false
   },
@@ -7050,7 +7050,7 @@
    "filed_at": "2026-11-11T13:49:32+00:00",
    "verdicts_sent": [],
    "their_status": {
-    "347": "pending"
+    "347": "paid"
    },
    "withdrawn": false
   }
