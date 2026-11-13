@@ -17,6 +17,6 @@ Request: `request.txt` (4,965 of 8,000 characters, 21 of 40 lines), six pictures
 | | |
 |---|---|
 | Ticket | ET-35147 (BB-0076), filed 2026-11-13 07:19 UTC on the operator's word ("podej spec") |
-| Accepted, deadline | |
+| Accepted, deadline | 2026-11-13 07:20 UTC (BB-0077), 2026-11-14 07:20 UTC |
 | Shipped | |
 | Verdict | |
