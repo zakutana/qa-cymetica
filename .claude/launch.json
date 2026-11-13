@@ -26,6 +26,12 @@
       "port": 8792
     },
     {
+      "name": "quant-lab-v4",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/quant-lab-v4/serve.py", "--quiet"],
+      "port": 8811
+    },
+    {
       "name": "quant-lab-v3",
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/quant-lab-v3/serve.py", "--quiet"],

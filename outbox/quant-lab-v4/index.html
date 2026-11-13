@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quant Lab | EventTrader</title>
+<link rel="icon" href="data:,">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/company/style.css?v=6af5da11">
+<link rel="stylesheet" href="/static/company/xp.css?v=6af5da11">
+<link rel="stylesheet" href="/static/company/quant-lab.css?v=6af5da11">
+<link rel="stylesheet" href="/v4/v4.css">
+</head>
+<body class="xp q2 v4">
+<div class="v4-wrap">
+  <div class="xcrumb"><a href="/company/app">← My Company</a><span>/</span><b>Quant Lab</b><span class="sp"></span>
+    <span class="q2-paper" id="paper" title="Paper only: nothing real is bought or sold">📄 PAPER ONLY</span></div>
+
+  <div class="app v4-app">
+    <aside class="rail">
+      <div class="me">
+        <span class="av lg v4-flask"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6.5L4.6 18.2A1.8 1.8 0 0 0 6.1 21h11.8a1.8 1.8 0 0 0 1.5-2.8L14 9.5V3"/><path d="M7.5 15h9"/></svg></span>
+        <div><b>Quant Lab</b><span id="v4-co">company</span></div>
+      </div>
+      <div class="rsec">LAB</div>
+      <nav class="rnav" id="v4-nav">
+        <a href="#ingredients" data-tab="ingredients"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><path d="M14 11v6M11 14h6"/></svg>Ingredients<span class="n" id="n-ing"></span></a>
+        <a href="#runs" data-tab="runs"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6.5"/><path d="M10 6.5V10l2.5 1.8"/></svg>Runs<span class="n" id="n-runs"></span></a>
+        <a href="#bots" data-tab="bots"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6.5" width="12" height="9" rx="2.5"/><path d="M10 3.5v3M7.5 10.5h.01M12.5 10.5h.01M8 13.5h4"/></svg>Bots<span class="n" id="n-bots"></span></a>
+        <a href="#live" data-tab="live"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6.5"/><circle cx="10" cy="10" r="2.5"/><path d="M10 10l4.6-4.6"/></svg>Live search<span class="n" id="n-live"></span></a>
+      </nav>
+      <div class="rlinks">
+        <a href="#" id="memory" data-s="memory"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h12M4 10h12M4 15h8"/></svg>What was tested <b id="memn"></b></a>
+        <a id="q-log" hidden download><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v10M6 9l4 4 4-4M4 16h12"/></svg>Log</a>
+        <details class="q2-caps"><summary id="capsbtn"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6.5"/><path d="M10 9v4.5M10 6.5h.01"/></svg>Can tune / can't</summary><div class="q2-capbody" id="caps"></div></details>
+      </div>
+    </aside>
+
+    <main class="v4-main">
+      <!-- INGREDIENTS: what a setup is built from -->
+      <section class="v4-tab" data-pane="ingredients" hidden>
+        <div class="v4-h"><h1>Ingredients</h1><span class="v4-sub" id="ing-sub"></span></div>
+        <div class="v4-seg" id="ing-seg"></div>
+        <div class="v4-ing" id="ing"></div>
+      </section>
+
+      <!-- RUNS: every search, the reactor replays the one picked -->
+      <section class="v4-tab" data-pane="runs" hidden>
+        <div class="v4-h"><h1>Runs</h1><span class="v4-sub" id="toplabel"></span><span class="v4-sub" id="topnote" hidden></span></div>
+        <section class="q2-score" id="score"></section>
+        <div class="v4-runs">
+          <div class="v4-runlist"><div class="q2-runs" id="runs"></div><span id="runsub" hidden></span></div>
+          <div class="v4-runmain">
+            <section class="q2-reactor">
+              <div class="q2-rail" id="rail"></div>
+              <div class="q2-stage"><canvas id="rx"></canvas><span class="q2-simtag" id="simtag" hidden>SIMULATED</span></div>
+            </section>
+            <div class="v4-top" id="top"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BOTS: every bot the lab found, in any run -->
+      <section class="v4-tab" data-pane="bots" hidden>
+        <div class="v4-h"><h1>Bots</h1><span class="v4-sub" id="bots-sub"></span><span class="sp"></span>
+          <div class="q2-rule" id="rule"></div>
+          <button class="q2-ib" data-q="rule" title="Your rule: what a bot must hit, window after window, to go to the Trading desk">⚙️</button>
+          <button class="q2-ib q2-gr" data-q="add" title="Clone a bot onto paper and let the lab judge it">➕ Add bot</button></div>
+        <div class="q3-paused" id="q3paused" hidden></div>
+        <div class="v4-bots" id="bots"></div>
+      </section>
+
+      <!-- LIVE: the search running now -->
+      <section class="v4-tab" data-pane="live" hidden>
+        <div class="v4-h"><h1>Live search</h1><span class="v4-sub" id="live-sub"></span></div>
+        <div class="v4-live" id="live"></div>
+        <div class="v4-live-rx" id="live-rx"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<div class="modal" id="xm" hidden><div class="modal-card wide" id="xm-card"></div></div>
+<div class="toast" id="toast" hidden></div>
+<div class="v4-scrim" id="v4-scrim" hidden></div>
+<aside class="v4-drawer" id="v4-drawer" hidden></aside>
+<script src="/v4/v4.js"></script>
+<script src="/static/company/quant-lab.js?v=6af5da11"></script>
+</body>
+</html>

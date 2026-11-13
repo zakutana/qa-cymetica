@@ -1,0 +1,1199 @@
+{
+ "items": [
+  {
+   "id": "helix",
+   "group": "models",
+   "icon": "🧬",
+   "name": "HELIX",
+   "sides": [
+    "long"
+   ],
+   "rule": null,
+   "stats": {
+    "tested": 18,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19,
+     18,
+     17
+    ],
+    "best": {
+     "pct": 5.337,
+     "market": "LINK",
+     "run": 20
+    }
+   },
+   "in": [
+    "cell_division",
+    "central_dogma"
+   ],
+   "about": "MACD 12/26/9 histogram and EMA 9/21 must agree; abstains when they disagree",
+   "source": "/api/v1/cloned-bots/available (MACD Hunter, live decision source HELIX)",
+   "family": "Biomimetic model"
+  },
+  {
+   "id": "enzyme",
+   "group": "models",
+   "icon": "⚗️",
+   "name": "ENZYME",
+   "sides": [
+    "long"
+   ],
+   "rule": [
+    "RSI 14 < 25–35"
+   ],
+   "stats": {
+    "tested": 16,
+    "won": 2,
+    "runs": [
+     25,
+     22,
+     20,
+     19,
+     17
+    ],
+    "best": {
+     "pct": 11.079,
+     "market": "AVAX",
+     "run": 20
+    }
+   },
+   "in": [
+    "central_dogma",
+    "crispr_cas9_complex"
+   ],
+   "exact": {
+    "buy": "rsi_14 < 25",
+    "sell": "rsi_14 > 70",
+    "indicators": [
+     "BB_20_2",
+     "RSI_14"
+    ]
+   },
+   "family": "Biomimetic model"
+  },
+  {
+   "id": "cortex",
+   "group": "models",
+   "icon": "♞",
+   "name": "CORTEX",
+   "sides": [
+    "long"
+   ],
+   "rule": [
+    "RSI 14 < 35–45",
+    "MACD hist > 0"
+   ],
+   "stats": {
+    "tested": 14,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 2.725,
+     "market": "ETH",
+     "run": 20
+    }
+   },
+   "in": [
+    "immune_response",
+    "neural_network"
+   ],
+   "family": "Biomimetic model"
+  },
+  {
+   "id": "immune",
+   "group": "models",
+   "icon": "🛡️",
+   "name": "IMMUNE",
+   "sides": [
+    "long"
+   ],
+   "rule": [
+    "RSI 14 < 30–40",
+    "Volume ×avg > 1.3–1.8"
+   ],
+   "stats": {
+    "tested": 14,
+    "won": 1,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 7.969,
+     "market": "AVAX",
+     "run": 19
+    }
+   },
+   "in": [
+    "immune_response"
+   ],
+   "exact": {
+    "buy": "rsi_14 < 30 and volume_ratio > 1.8",
+    "sell": "rsi_14 > 65 and volume_ratio > 1.3",
+    "indicators": [
+     "RSI_14",
+     "VOLUME_MA_20",
+     "SMA_20"
+    ]
+   },
+   "family": "Biomimetic model"
+  },
+  {
+   "id": "circadian",
+   "group": "models",
+   "icon": "⏰",
+   "name": "CIRCADIAN",
+   "sides": [
+    "long"
+   ],
+   "rule": [
+    "RSI 14 < 30–40",
+    "BB width < 416.67–575"
+   ],
+   "stats": {
+    "tested": 14,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 10.772,
+     "market": "AVAX",
+     "run": 20
+    }
+   },
+   "in": [
+    "immune_response"
+   ],
+   "family": "Biomimetic model"
+  },
+  {
+   "id": "mitosis",
+   "group": "models",
+   "icon": "🦠",
+   "name": "MITOSIS",
+   "sides": [
+    "long"
+   ],
+   "rule": null,
+   "stats": {
+    "tested": 15,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19,
+     18
+    ],
+    "best": {
+     "pct": 3.589,
+     "market": "DOT",
+     "run": 19
+    }
+   },
+   "in": [
+    "cell_division"
+   ],
+   "family": "Biomimetic model"
+  },
+  {
+   "id": "crispr",
+   "group": "models",
+   "icon": "🎯",
+   "name": "CRISPR",
+   "sides": [
+    "long"
+   ],
+   "rule": [
+    "RSI 14 < 40",
+    "MACD hist > 0",
+    "Volume ×avg > 1.04"
+   ],
+   "stats": {
+    "tested": 15,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19,
+     15
+    ],
+    "best": {
+     "pct": 13.33,
+     "market": "AVAX",
+     "run": 19
+    }
+   },
+   "in": [
+    "central_dogma",
+    "crispr_cas9_complex",
+    "neural_network"
+   ],
+   "family": "Biomimetic model"
+  },
+  {
+   "id": "prion",
+   "group": "models",
+   "icon": "🧩",
+   "name": "PRION",
+   "sides": [
+    "long"
+   ],
+   "rule": [
+    "RSI 14 < 25–35"
+   ],
+   "stats": {
+    "tested": 18,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19,
+     18,
+     17
+    ],
+    "best": {
+     "pct": 10.496,
+     "market": "AVAX",
+     "run": 20
+    }
+   },
+   "in": [
+    "crispr_cas9_complex"
+   ],
+   "family": "Biomimetic model"
+  },
+  {
+   "id": "synapse",
+   "group": "models",
+   "icon": "🧠",
+   "name": "SYNAPSE",
+   "sides": [
+    "long"
+   ],
+   "rule": [
+    "EMA 21 > EMA 50",
+    "RSI 14 < 40–50"
+   ],
+   "stats": {
+    "tested": 15,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 5.055,
+     "market": "ATOM",
+     "run": 19
+    }
+   },
+   "in": [
+    "neural_network"
+   ],
+   "family": "Biomimetic model"
+  },
+  {
+   "id": "telomere",
+   "group": "models",
+   "icon": "⏳",
+   "name": "TELOMERE",
+   "sides": [
+    "long"
+   ],
+   "rule": null,
+   "stats": {
+    "tested": 0,
+    "won": 0,
+    "runs": [],
+    "best": null
+   },
+   "in": [
+    "cell_division"
+   ],
+   "family": "Biomimetic model"
+  },
+  {
+   "id": "stockbull_blue",
+   "group": "models",
+   "icon": "📊",
+   "name": "StockBot Blue",
+   "sides": [
+    "long"
+   ],
+   "rule": [
+    "EMA 9 > EMA 21",
+    "RSI 14 < 60–70",
+    "MACD hist > 0"
+   ],
+   "stats": {
+    "tested": 27,
+    "won": 1,
+    "runs": [
+     25,
+     22,
+     20,
+     19,
+     18,
+     17
+    ],
+    "best": {
+     "pct": 21.725,
+     "market": "BNB",
+     "run": 25
+    }
+   },
+   "in": [],
+   "family": "Backtested Strategy"
+  },
+  {
+   "id": "stockbear_red",
+   "group": "models",
+   "icon": "📊",
+   "name": "StockBot Red",
+   "sides": [
+    "short"
+   ],
+   "rule": [
+    "EMA 9 < EMA 21",
+    "RSI 14 > 45–55"
+   ],
+   "stats": {
+    "tested": 13,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 1.354,
+     "market": "ATOM",
+     "run": 20
+    }
+   },
+   "in": [],
+   "family": "Backtested Strategy"
+  },
+  {
+   "id": "cryptobull_blue",
+   "group": "models",
+   "icon": "📊",
+   "name": "CryptoBull Blue",
+   "sides": [
+    "long"
+   ],
+   "rule": [
+    "RSI 14 < 25–35",
+    "Volume ×avg > 1.3–1.8"
+   ],
+   "stats": {
+    "tested": 15,
+    "won": 2,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 7.353,
+     "market": "AVAX",
+     "run": 19
+    }
+   },
+   "in": [],
+   "exact": {
+    "buy": "rsi_14 < 30 and volume_ratio > 1.5",
+    "sell": "rsi_14 > 55",
+    "indicators": [
+     "BB_20_2",
+     "RSI_14",
+     "VOLUME_MA_20",
+     "EMA_9"
+    ]
+   },
+   "family": "Backtested Strategy"
+  },
+  {
+   "id": "cryptobull_red",
+   "group": "models",
+   "icon": "📊",
+   "name": "CryptoBull Red",
+   "sides": [
+    "short"
+   ],
+   "rule": [
+    "RSI 14 > 50–60"
+   ],
+   "stats": {
+    "tested": 10,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 6.469,
+     "market": "AVAX",
+     "run": 19
+    }
+   },
+   "in": [],
+   "family": "Backtested Strategy"
+  },
+  {
+   "id": "hybrid2_blue",
+   "group": "models",
+   "icon": "📊",
+   "name": "Hybrid 2 Blue",
+   "sides": [
+    "long"
+   ],
+   "rule": [
+    "RSI 14 < 35–45",
+    "MACD hist > 0"
+   ],
+   "stats": {
+    "tested": 18,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19,
+     18,
+     17
+    ],
+    "best": {
+     "pct": 10.868,
+     "market": "AVAX",
+     "run": 20
+    }
+   },
+   "in": [],
+   "family": "Backtested Strategy"
+  },
+  {
+   "id": "hybrid2_red",
+   "group": "models",
+   "icon": "📊",
+   "name": "Hybrid 2 Red",
+   "sides": [
+    "short"
+   ],
+   "rule": [
+    "RSI 14 > 60–70",
+    "MACD hist < 0"
+   ],
+   "stats": {
+    "tested": 15,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 5.072,
+     "market": "AVAX",
+     "run": 19
+    }
+   },
+   "in": [],
+   "family": "Backtested Strategy"
+  },
+  {
+   "id": "skill:macd_crossover",
+   "group": "skills",
+   "icon": "📈",
+   "name": "MACD Crossover",
+   "sides": [
+    "long"
+   ],
+   "about": "Detects when momentum shifts from bullish to bearish (or vice versa) by watching two moving average lines cross. One of the most popular trading signals.",
+   "example": "MACD line crosses above the signal line → bullish crossover, bot buys. MACD crosses below → bearish, bot sells.",
+   "rule": null,
+   "stats": {
+    "tested": 6,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 1.978,
+     "market": "LINK",
+     "run": 19
+    }
+   },
+   "used_by": [
+    "MACD Hunter",
+    "EMA Sentinel",
+    "Delta Hunter",
+    "Sync Master"
+   ],
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:rsi_momentum",
+   "group": "skills",
+   "icon": "⚡",
+   "name": "RSI Momentum",
+   "sides": [
+    "long"
+   ],
+   "about": "Measures if something is \"overbought\" (too expensive, likely to drop) or \"oversold\" (too cheap, likely to bounce). Scale of 0-100; below 30 = oversold, above 70 = overbought.",
+   "example": "RSI drops to 25 (deeply oversold) → bot buys, expecting a bounce. RSI hits 80 (overbought) → bot sells or takes profit.",
+   "rule": [
+    "RSI 14 > 55–65"
+   ],
+   "stats": {
+    "tested": 15,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 16.13,
+     "market": "DOT",
+     "run": 19
+    }
+   },
+   "used_by": [
+    "RSI Sniper",
+    "Stochastic Striker",
+    "Delta Hunter",
+    "Sync Master",
+    "Fade the Rally"
+   ],
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:bollinger_squeeze",
+   "group": "skills",
+   "icon": "🔄",
+   "name": "Bollinger Squeeze",
+   "sides": [
+    "long"
+   ],
+   "about": "Detects when a price is coiling tightly (low volatility squeeze). Like a spring being compressed — when it releases, a big move follows. Your bot catches the breakout.",
+   "example": "Bollinger Bands are the tightest they have been in 30 days → Bollinger Squeeze alerts your bot to prepare for a breakout in either direction.",
+   "rule": [
+    "Close < BB lower",
+    "RSI 14 < 35–45"
+   ],
+   "stats": {
+    "tested": 14,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 5.649,
+     "market": "DOT",
+     "run": 20
+    }
+   },
+   "used_by": [
+    "Bollinger Bandit",
+    "Volatility Viper",
+    "Doom & Gloom"
+   ],
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:stochastic_reversal",
+   "group": "skills",
+   "icon": "🔁",
+   "name": "Stochastic Reversal",
+   "sides": [
+    "long"
+   ],
+   "about": "Combines two momentum signals in extreme zones. When both agree at an extreme level, the reversal signal is much more reliable.",
+   "example": "Stochastic K and D lines both drop below 20 and then cross upward → strong oversold reversal signal, bot buys.",
+   "rule": [
+    "Stoch %K < 15–25",
+    "Stoch %K > Stoch %D"
+   ],
+   "stats": {
+    "tested": 14,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 3.431,
+     "market": "AVAX",
+     "run": 19
+    }
+   },
+   "used_by": [
+    "RSI Sniper",
+    "Stochastic Striker"
+   ],
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:ema_trend",
+   "group": "skills",
+   "icon": "📈",
+   "name": "EMA Trend",
+   "sides": [
+    "long"
+   ],
+   "about": "Uses 3 moving averages (fast, medium, slow) to confirm trend direction. When all 3 line up pointing the same way, the trend is strong.",
+   "example": "9-day EMA > 21-day EMA > 50-day EMA and all pointing up → strong uptrend confirmed, bot only takes BUY signals.",
+   "rule": null,
+   "stats": {
+    "tested": 8,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 11.102,
+     "market": "XRP",
+     "run": 19
+    }
+   },
+   "used_by": [
+    "MACD Hunter",
+    "EMA Sentinel",
+    "Ichimoku Oracle",
+    "Sync Master",
+    "Bull McBullface"
+   ],
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:ichimoku_cloud",
+   "group": "skills",
+   "off": "the replay has no Ichimoku indicator",
+   "icon": "🧩",
+   "name": "Ichimoku Cloud",
+   "about": "An all-in-one trend indicator from Japan. Shows trend direction, momentum, and support/resistance all at once. When price is above the \"cloud,\" the trend is up.",
+   "example": "Price breaks above the Ichimoku cloud with a bullish Tenkan/Kijun cross → strong BUY signal with multiple confirmations.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:fibonacci_levels",
+   "group": "skills",
+   "off": "the live skill reads a bounce off the level over the previous bars; no candle rule yet",
+   "icon": "🧩",
+   "name": "Fibonacci Levels",
+   "about": "Auto-draws support and resistance lines based on key mathematical ratios (38.2%, 50%, 61.8%). These levels are where price often bounces or reverses.",
+   "example": "Price fell from $100 to $80. Fibonacci says $87.64 (38.2% retracement) is a key level → bot places a buy order there.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:keltner_channel",
+   "group": "skills",
+   "off": "the replay has no Keltner channel",
+   "icon": "🧩",
+   "name": "Keltner Channel",
+   "about": "Similar to Bollinger Bands but adapts to volatility better. When price breaks out of the channel with confirmation, your bot enters the trade.",
+   "example": "Price breaks above the upper Keltner Channel while EMA trend is up → bot enters a long position expecting continuation.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:volume_profile",
+   "group": "skills",
+   "off": "the replay has no volume profile",
+   "icon": "🧩",
+   "name": "Volume Profile",
+   "about": "Maps where most trading activity has happened at each price level. Heavy-volume price levels act as strong support or resistance — price tends to bounce off them.",
+   "example": "Most volume traded between $48-$52. Price drops to $48 → Volume Profile shows strong support, bot buys expecting a bounce.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:atr_volatility",
+   "group": "skills",
+   "off": "the live skill compares ATR with its own average; no candle rule yet",
+   "icon": "🧩",
+   "name": "ATR Volatility",
+   "about": "Measures how wildly a price is swinging and sizes your trades accordingly. Big swings = smaller bets. Small swings = bigger bets. Also sets stop-losses automatically.",
+   "example": "BTC volatility is 2x normal → ATR cuts position size in half and widens stop-loss to avoid getting stopped out by noise.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:volatility_filter",
+   "group": "skills",
+   "off": "a filter: it modifies another skill's entries and opens nothing on its own",
+   "icon": "🧩",
+   "name": "Volatility Filter",
+   "about": "Blocks your bot from trading during wild, unpredictable price swings. Prevents getting chopped up by whipsaws. Like staying indoors during a storm.",
+   "example": "A major hack causes 20% swings in 10 minutes. Volatility Filter blocks all trades until the storm passes.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:volume_threshold",
+   "group": "skills",
+   "off": "a filter: it modifies another skill's entries and opens nothing on its own",
+   "icon": "🧩",
+   "name": "Volume Threshold",
+   "about": "Only allows trades when enough people are trading (high volume). Low volume = unreliable price moves. It is like only playing poker when the table is full.",
+   "example": "Your bot gets a BUY signal, but volume is 80% below average → Volume Threshold blocks the trade to avoid a thin-market trap.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:global_liquidity_regime",
+   "group": "skills",
+   "off": "a filter on live macro data the replay does not have",
+   "icon": "🧩",
+   "name": "Global Liquidity Regime",
+   "about": "Monitors big-picture money supply (how much cash is sloshing around the global economy). Only lets your bot trade when conditions are favorable. Think of it as a \"macro weather check.\"",
+   "example": "The Fed is printing money (M2 supply rising) → bullish regime, bot trades aggressively. Fed is tightening → bot goes cautious.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:headline_sentiment",
+   "group": "skills",
+   "off": "needs live news the replay does not have",
+   "icon": "🧩",
+   "name": "Headline Sentiment",
+   "about": "Reads the latest news headlines and scores them as positive, negative, or neutral. Your bot reacts to news before most humans even read it.",
+   "example": "Breaking: \"Major partnership announced for Project X\" → Headline Sentiment scores it +0.85 (very positive) → bot buys.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:social_sentiment",
+   "group": "skills",
+   "off": "needs live social data the replay does not have",
+   "icon": "🧩",
+   "name": "Social Sentiment (Moltbook)",
+   "about": "Reads what the Moltbook agent community is saying and detects when the crowd mood is shifting. Early crowd mood shifts often predict price moves.",
+   "example": "Moltbook posts shift from 60% bullish to 40% bullish over 2 hours → your bot detects fading optimism and reduces position size.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:binance_websocket",
+   "group": "skills",
+   "off": "a data feed, not a rule",
+   "icon": "🧩",
+   "name": "Binance WebSocket",
+   "about": "Gives your bot super-fast price updates from Binance (the world's biggest crypto exchange). Faster data = faster reactions to price changes.",
+   "example": "Price drops 2% on Binance in under a second. Your bot sees it instantly and sells before the EventTrader price catches up.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:defillama_oracle",
+   "group": "skills",
+   "off": "a data feed, not a rule",
+   "icon": "🧩",
+   "name": "DeFiLlama Oracle",
+   "about": "Gets price data from many sources at once, making it hard for any single exchange to show a fake price. More reliable than trusting just one source.",
+   "example": "One exchange shows ETH at $3,000 but 5 others show $3,050. DeFiLlama Oracle uses the consensus price of $3,050.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:polymarket_signals",
+   "group": "skills",
+   "off": "a data feed, not a rule",
+   "icon": "🧩",
+   "name": "Polymarket Signals",
+   "about": "Reads prediction market odds from Polymarket. Can be used as a \"wisdom of the crowd\" signal — or to bet against the crowd when they are wrong.",
+   "example": "Polymarket shows 72% for an event, but your other signals say the real probability is 60% → your bot sells the overpriced YES shares.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:performance_boost",
+   "group": "skills",
+   "off": "a modifier of another rule's sizing, not a rule",
+   "icon": "🧩",
+   "name": "Performance Boost (70/30)",
+   "about": "Blends past performance data (what worked historically) with live signals (what is happening now). 70% history, 30% real-time. Best of both worlds.",
+   "example": "Historical data says this setup wins 80% of the time. Live RSI confirms oversold. Performance Boost gives it a high confidence score → BUY.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:contrarian_mode",
+   "group": "skills",
+   "off": "a modifier that inverts another rule, not a rule",
+   "icon": "🧩",
+   "name": "Contrarian Mode",
+   "about": "Flips your bot's signals: when it would normally buy, it sells instead. Useful when the crowd is usually wrong — bet against them.",
+   "example": "Everyone is piling into YES at 80%. Contrarian Mode flips to NO, betting the crowd is overpaying. If price drops back to 70%, it profits.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:momentum_rider",
+   "group": "skills",
+   "off": "a modifier of another rule's sizing, not a rule",
+   "icon": "🧩",
+   "name": "Momentum Rider",
+   "about": "When your bot is on a winning streak, it increases bet size to compound gains. Ride the hot hand — but it also knows when to pull back.",
+   "example": "Bot wins 5 trades in a row → Momentum Rider doubles position size on the 6th trade to maximize the streak. After a loss, it resets.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "skill:market_making",
+   "group": "skills",
+   "off": "quotes both sides; the candle replay trades one position at a time",
+   "icon": "🧩",
+   "name": "Market Making",
+   "about": "Your bot places both buy and sell orders around the current price, earning the spread (the gap between buy and sell prices). It profits from every trade, not from price direction.",
+   "example": "Current price is 50%. Bot places a buy at 49% and a sell at 51%. When both fill, it earns 2% spread regardless of which way the market goes.",
+   "source": "/api/v1/skills"
+  },
+  {
+   "id": "combo:cell_division",
+   "group": "combos",
+   "icon": "🦠",
+   "name": "Cell Division",
+   "parts": [
+    "MITOSIS",
+    "TELOMERE",
+    "HELIX"
+   ],
+   "sides": [
+    "long"
+   ],
+   "stats": {
+    "tested": 12,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 1.996,
+     "market": "XRP",
+     "run": 19
+    }
+   },
+   "vote": "2 of 3",
+   "source": "the lab's own rule text: each entry is the three models' entries paired, so any two of the three agreeing open it"
+  },
+  {
+   "id": "combo:central_dogma",
+   "group": "combos",
+   "icon": "🧬",
+   "name": "Central Dogma",
+   "parts": [
+    "HELIX",
+    "ENZYME",
+    "CRISPR"
+   ],
+   "sides": [
+    "long"
+   ],
+   "stats": {
+    "tested": 1,
+    "won": 0,
+    "runs": [
+     19
+    ],
+    "best": {
+     "pct": 3.964,
+     "market": "DOT",
+     "run": 19
+    }
+   },
+   "vote": "2 of 3",
+   "source": "the lab's own rule text: each entry is the three models' entries paired, so any two of the three agreeing open it"
+  },
+  {
+   "id": "combo:crispr_cas9_complex",
+   "group": "combos",
+   "icon": "🎯",
+   "name": "CRISPR-Cas9 Complex",
+   "parts": [
+    "CRISPR",
+    "PRION",
+    "ENZYME"
+   ],
+   "sides": [
+    "long"
+   ],
+   "stats": {
+    "tested": 14,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 7.953,
+     "market": "AVAX",
+     "run": 20
+    }
+   },
+   "vote": "2 of 3",
+   "source": "the lab's own rule text: each entry is the three models' entries paired, so any two of the three agreeing open it"
+  },
+  {
+   "id": "combo:immune_response",
+   "group": "combos",
+   "icon": "🛡️",
+   "name": "Immune Response",
+   "parts": [
+    "IMMUNE",
+    "CORTEX",
+    "CIRCADIAN"
+   ],
+   "sides": [
+    "long"
+   ],
+   "stats": {
+    "tested": 14,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 6.597,
+     "market": "AVAX",
+     "run": 20
+    }
+   },
+   "vote": "2 of 3",
+   "source": "the lab's own rule text: each entry is the three models' entries paired, so any two of the three agreeing open it"
+  },
+  {
+   "id": "combo:neural_network",
+   "group": "combos",
+   "icon": "🧠",
+   "name": "Neural Network",
+   "parts": [
+    "SYNAPSE",
+    "CORTEX",
+    "CRISPR"
+   ],
+   "sides": [
+    "long"
+   ],
+   "stats": {
+    "tested": 13,
+    "won": 0,
+    "runs": [
+     25,
+     22,
+     20,
+     19
+    ],
+    "best": {
+     "pct": 8.51,
+     "market": "AVAX",
+     "run": 19
+    }
+   },
+   "vote": "2 of 3",
+   "source": "the lab's own rule text: each entry is the three models' entries paired, so any two of the three agreeing open it"
+  },
+  {
+   "id": "flash:breakout",
+   "group": "flash",
+   "icon": "⚡",
+   "name": "Breakout",
+   "sides": [
+    "long",
+    "short"
+   ],
+   "examples": [
+    "long when close above the highest high of the last 48 bars; hold 30 min, 5-minute bars",
+    "short when close below the lowest low of the last 48 bars; hold 30 min, 5-minute bars"
+   ],
+   "variants": 2,
+   "stats": {
+    "tested": 4,
+    "won": 0,
+    "runs": [
+     27
+    ],
+    "best": {
+     "pct": -259.901,
+     "market": "ETH",
+     "run": 27
+    }
+   },
+   "hit": {
+    "lo": 40.7,
+    "hi": 46.53,
+    "n": 4
+   },
+   "source": "the lab's own signal labels (search #27)"
+  },
+  {
+   "id": "flash:mean_reversion",
+   "group": "flash",
+   "icon": "⚡",
+   "name": "Mean-reversion",
+   "sides": [
+    "long",
+    "short"
+   ],
+   "examples": [
+    "long when close more than 1.5 standard deviations below its 12-bar average; hold 30 min, 5-minute bars",
+    "long when close more than 1.5 standard deviations below its 48-bar average; hold 30 min, 5-minute bars",
+    "long when close more than 2.5 standard deviations below its 12-bar average; hold 15 min, 5-minute bars",
+    "short when close more than 1.5 standard deviations above its 12-bar average; hold 30 min, 5-minute bars"
+   ],
+   "variants": 7,
+   "stats": {
+    "tested": 8,
+    "won": 0,
+    "runs": [
+     27
+    ],
+    "best": {
+     "pct": -104.857,
+     "market": "BTC",
+     "run": 27
+    }
+   },
+   "hit": {
+    "lo": 50.94,
+    "hi": 57.46,
+    "n": 8
+   },
+   "source": "the lab's own signal labels (search #27)"
+  },
+  {
+   "id": "flash:momentum",
+   "group": "flash",
+   "icon": "⚡",
+   "name": "Momentum",
+   "sides": [
+    "long",
+    "short"
+   ],
+   "examples": [
+    "long when the last 12 bars rose by more than 1.5x their usual move; hold 30 min, 5-minute bars",
+    "long when the last 6 bars rose by more than 1.5x their usual move; hold 30 min, 5-minute bars",
+    "short when the last 12 bars fell by more than 1.5x their usual move; hold 30 min, 5-minute bars"
+   ],
+   "variants": 3,
+   "stats": {
+    "tested": 4,
+    "won": 0,
+    "runs": [
+     27
+    ],
+    "best": {
+     "pct": -256.837,
+     "market": "ETH",
+     "run": 27
+    }
+   },
+   "hit": {
+    "lo": 45.74,
+    "hi": 46.76,
+    "n": 4
+   },
+   "source": "the lab's own signal labels (search #27)"
+  },
+  {
+   "id": "flash:rule_ema",
+   "group": "flash",
+   "icon": "⚡",
+   "name": "Platform rule (EMA cross)",
+   "sides": [
+    "long",
+    "short"
+   ],
+   "examples": [
+    "long when EMA 9 crosses above EMA 21; hold 30 min, 5-minute bars",
+    "short when EMA 9 crosses below EMA 21; hold 30 min, 5-minute bars",
+    "short when EMA 9 crosses below EMA 21; hold 5 min, 5-minute bars"
+   ],
+   "variants": 3,
+   "stats": {
+    "tested": 4,
+    "won": 0,
+    "runs": [
+     27
+    ],
+    "best": {
+     "pct": -378.735,
+     "market": "ETH",
+     "run": 27
+    }
+   },
+   "hit": {
+    "lo": 42.89,
+    "hi": 48.58,
+    "n": 4
+   },
+   "source": "the lab's own signal labels (search #27)"
+  },
+  {
+   "id": "flash:rule_rsi",
+   "group": "flash",
+   "icon": "⚡",
+   "name": "Platform rule (RSI)",
+   "sides": [
+    "long",
+    "short"
+   ],
+   "examples": [
+    "long when RSI(14) below 30; hold 30 min, 5-minute bars",
+    "short when RSI(14) above 70; hold 30 min, 5-minute bars"
+   ],
+   "variants": 2,
+   "stats": {
+    "tested": 4,
+    "won": 0,
+    "runs": [
+     27
+    ],
+    "best": {
+     "pct": -205.582,
+     "market": "BTC",
+     "run": 27
+    }
+   },
+   "hit": {
+    "lo": 51.48,
+    "hi": 56.88,
+    "n": 4
+   },
+   "source": "the lab's own signal labels (search #27)"
+  }
+ ],
+ "flash_signals": 120
+}
