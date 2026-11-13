@@ -12,6 +12,11 @@ Descriptions in Ingredients come only from their data: skills from `/api/v1/skil
 
 Nothing is sent: every method but GET answers "This is a mock". Live search shows the idle state as it is; "preview a running search" draws a running one from the last run's numbers, marked PREVIEW.
 
+Request: `request.txt` (4,965 of 8,000 characters, 21 of 40 lines), six pictures in `pictures/` (`pictures.py`, 1440 wide). The ingredient texts are theirs to review and write, on the operator's word: *"ty vsechny ingredients at si sami udelaji review"*.
+
 | | |
 |---|---|
-| Scored by the operator | |
+| Ticket | ET-35147 (BB-0076), filed 2026-11-13 07:19 UTC on the operator's word ("podej spec") |
+| Accepted, deadline | |
+| Shipped | |
+| Verdict | |
