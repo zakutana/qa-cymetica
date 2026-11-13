@@ -77,7 +77,7 @@
       var failed = r.status === 'failed', m = mins(r);
       return '<button type="button" class="v4-run' + (r.id === cur ? ' on' : '') + (failed ? ' failed' : '') + '" data-run="' + r.id + '">' +
         '<b class="v4-rid">#' + r.id + '</b><span class="v4-rdate">' + esc(t().stamp(r.finished_at || r.requested_at)) + '</span>' +
-        (failed ? '<span class="v4-rwon down">⚠ FAILED</span>' : '<span class="v4-rwon ' + (r.won ? 'up' : 'zero') + '">' + (r.won ? '🏆 ' + r.won : '0') + '</span>') +
+        (failed ? '<span class="v4-rwon down">⚠</span>' : '<span class="v4-rwon ' + (r.won ? 'up' : 'zero') + '">' + (r.won ? '🏆 ' + r.won : '0') + '</span>') +
         '<span class="v4-rpf">' + pf(r.profile, true) + '</span>' +
         '<span class="v4-rmeta">' + (failed ? esc(r.error_label || 'stopped') : num(r.tried || 0) + ' tried' + (m ? ' · ' + m + ' min' : '')) + '</span></button>';
     }).join('');
