@@ -497,15 +497,25 @@ endpoints:
     executable_params: [source_type, source_id, custom_name]
     required_flags: [paper]
 
-  # Starting a clone. Nothing here starts one any more, so it is probe_only: the request carries no paper
-  # flag (`enabled` is a query parameter), and its description reads "bot will trade 100% on-chain". The
-  # guard's tests use it as the subject of a query-string probe.
+  # Starting a clone is never done here: the request carries no paper flag (`enabled` is a query
+  # parameter) and its description reads "bot will trade 100% on-chain". PAUSING one is open
+  # ([operator 2026-11-14] *"pauzni vsechny boty a smaz ty prodelecne"*): `required_query` holds the
+  # MUTATE request to exactly enabled=false, so enabled=true is refused at the transport.
   - id: cloned_bots.toggle_trading
     path: /api/v1/cloned-bots/{instance_id}/toggle-trading
     methods: [POST]
     component: rest.agents
-    probe_only: true
     executable_params: [enabled]
+    required_query: ["enabled=false"]
+
+  # Deleting one of our paper clones (their description: "Soft-delete a cloned bot. Sets is_active=False.
+  # Bot must be paused (not trading) first."). No params at all; scripts/clone.py reads their row first and
+  # sends it only for a paper clone of ours that is not trading.
+  - id: cloned_bots.delete
+    path: /api/v1/cloned-bots/{instance_id}
+    methods: [DELETE]
+    component: rest.agents
+    closed_body: true
 
   # Agent League, the two writes of [operator 2026-10-09] "Ucastni se". Neither moves money
   # (Phase 1: "no user deposits"; the prize is ET10 credited to the owner), so the floor is

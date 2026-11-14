@@ -97,6 +97,11 @@ class EndpointRule:
     # carries -- the settings PATCH, where `is_trading` or `onchain_pct` is
     # the danger and there is no `paper` to require (V5, 2026-09-23).
     closed_body: bool = False
+    # "key=value" strings a MUTATE request's QUERY must carry exactly, or it is refused. For a write whose
+    # direction is the whole question and rides in the query string: toggle-trading, where `enabled=false`
+    # pauses a bot and `enabled=true` starts it ("trade 100% on-chain"). Only the stop is open
+    # ([operator 2026-11-14] *"pauzni vsechny boty a smaz ty prodelecne"*).
+    required_query: frozenset[str] = frozenset()
     probe_only: bool = False
     readonly_rpc: bool = False
     forbidden_always: bool = False
@@ -132,6 +137,7 @@ class EndpointRegistry:
                     inert_params=frozenset(e.get("inert_params", [])),
                     required_flags=frozenset(e.get("required_flags", [])),
                     closed_body=bool(e.get("closed_body", False)),
+                    required_query=frozenset(e.get("required_query", [])),
                     probe_only=bool(e.get("probe_only", False)),
                     readonly_rpc=bool(e.get("readonly_rpc", False)),
                     forbidden_always=bool(e.get("forbidden_always", False)),
@@ -304,6 +310,7 @@ class SafetyTransport(httpx.BaseTransport):
                 f"not. No MUTATE test may target it, even with --allow-mutate."
             )
         self._assert_declared_flags(request, rule)
+        self._assert_required_query(request, rule)
         self._assert_closed_body(request, rule)
         host = request.url.host
         if host not in self.registry.mutate_allowed_hosts:
@@ -489,6 +496,23 @@ class SafetyTransport(httpx.BaseTransport):
                 f"absence against the account's own simulation_mode. Send it "
                 f"true, or do not send the order."
             )
+
+    def _assert_required_query(self, request, rule) -> None:
+        """Every `required_query` pair is in the query string, spelled exactly, and nothing repeats it."""
+        required = getattr(rule, "required_query", frozenset())
+        if not required:
+            return
+        pairs = request.url.params.multi_items()
+        undeclared = sorted({k for k, _ in pairs} - rule.executable_params - rule.inert_params)
+        if undeclared:
+            raise SafetyViolation(f"MUTATE {rule.id} carries {undeclared} in its query, undeclared in components.yaml.")
+        for item in sorted(required):
+            key, _, value = item.partition("=")
+            seen = [v for k, v in pairs if k == key]
+            if seen != [value]:
+                raise SafetyViolation(
+                    f"MUTATE {rule.id} must carry exactly {item} in its query string; it carries {seen!r}. "
+                    f"Only that direction of this write is open.")
 
     def _assert_closed_body(self, request, rule) -> None:
         """A `closed_body` rule's MUTATE request carries declared keys only,

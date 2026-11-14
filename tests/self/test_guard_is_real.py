@@ -1005,7 +1005,10 @@ def test_the_self_check_feels_a_tier_layer_coming_off(monkeypatch, tier_in):
 def test_a_write_nothing_calls_has_no_door(path):
     registry = EndpointRegistry.load()
     assert registry.match(path, "POST") is None, f"{path} stays declared with no caller and no floor"
-    assert registry.match("/api/v1/cloned-bots/x", "DELETE") is None
+    # DELETE of a clone was a door nobody had; it is declared since [operator 2026-11-14] (see
+    # test_a_clone_is_deleted_bare_and_only_by_delete). The other verbs stay shut.
+    assert registry.match("/api/v1/cloned-bots/x", "PUT") is None
+    assert registry.match("/api/v1/cloned-bots/x", "POST") is None
 
 
 def test_update_bot_indicators_is_not_open_at_mutate():
@@ -1022,8 +1025,36 @@ def test_update_bot_indicators_is_not_open_at_mutate():
         client.http.close()
 
 
-def test_toggle_trading_is_probe_only():
-    assert EndpointRegistry.load().match("/api/v1/cloned-bots/x/toggle-trading", "POST").probe_only
+def test_toggle_trading_only_pauses():
+    """[operator 2026-11-14] pausing a clone is open, starting one never is: MUTATE must carry exactly
+    enabled=false, so enabled=true, a missing value and a repeated key are all refused."""
+    rule = EndpointRegistry.load().match("/api/v1/cloned-bots/x/toggle-trading", "POST")
+    assert not rule.probe_only and rule.required_query == frozenset({"enabled=false"})
+    rest = _mutating_client(True)
+    url = "https://cymetica.com/api/v1/cloned-bots/abc/toggle-trading"
+    try:
+        for bad in ({"enabled": "true"}, {}, {"enabled": "True"}, {"enabled": ["false", "true"]}):
+            with as_mutate_tier(), pytest.raises(SafetyViolation, match="enabled=false"):
+                rest.post(url, params=bad)
+        with as_mutate_tier(), pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            rest.post(url, params={"enabled": "false"})
+        with as_mutate_tier(), pytest.raises(SafetyViolation, match="undeclared"):
+            rest.post(url, params={"enabled": "false", "onchain_pct": "100"})
+    finally:
+        rest.close()
+
+
+def test_a_clone_is_deleted_bare_and_only_by_delete():
+    rule = EndpointRegistry.load().match("/api/v1/cloned-bots/x", "DELETE")
+    assert rule.id == "cloned_bots.delete" and rule.closed_body and not rule.probe_only
+    rest = _mutating_client(True)
+    try:
+        with as_mutate_tier(), pytest.raises(SafetyViolation, match="not declared"):
+            rest.delete("https://cymetica.com/api/v1/cloned-bots/abc", params={"hard": "true"})
+        with as_mutate_tier(), pytest.raises(AssertionError, match="THE GUARD LET IT THROUGH"):
+            rest.delete("https://cymetica.com/api/v1/cloned-bots/abc")
+    finally:
+        rest.close()
 
 
 @pytest.mark.parametrize("path", ["/api/v1/build-it-better/requests/ET-1/accept",

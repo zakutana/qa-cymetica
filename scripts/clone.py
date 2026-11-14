@@ -352,6 +352,84 @@ def paper_by_our_record(instance_id: str, rows: list[dict] | None = None) -> boo
                and row.get("is_paper") is True for row in rows)
 
 
+SEATS = "/api/v1/agent-tournaments/my-seats"
+
+
+def _paper_rows(client) -> list[dict]:
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        mine = client.get(MY_CLONES, params={"mode": "paper"})
+    finally:
+        CURRENT_TIER.reset(token)
+    rows = clone_rows(mine.json()) if mine.status_code == 200 else None
+    if rows is None:
+        raise SystemExit(f"{MY_CLONES} answered HTTP {mine.status_code}; nothing is changed on an unreadable list.")
+    return [r for r in rows if isinstance(r, dict)]
+
+
+def _seated(client) -> set[str]:
+    """Instance ids of our bots that hold a seat at a table that has not finished."""
+    token = CURRENT_TIER.set(SafetyTier.SAFE)
+    try:
+        seats = client.get(SEATS)
+    finally:
+        CURRENT_TIER.reset(token)
+    body = seats.json() if seats.status_code == 200 else None
+    rows = body.get("seats") if isinstance(body, dict) else None
+    if rows is None:
+        raise SystemExit(f"{SEATS} answered HTTP {seats.status_code}; no bot is deleted without knowing who sits at a table.")
+    return {str(s.get("instance_id")) for s in rows if isinstance(s, dict) and s.get("table_status") != "finished"}
+
+
+def stop_or_delete(kind: str, confirm: bool) -> int:
+    """[operator 2026-11-14] *"pauzni vsechny boty a smaz ty prodelecne"*. `pause`: every paper clone that is
+    trading gets toggle-trading?enabled=false. `delete`: every paused paper clone with a negative profit and no
+    seat at an unfinished table gets DELETE. Paper only (`startable`), each write recorded intent then outcome."""
+    load_dotenv()
+    install_client_guard()
+    registry = EndpointRegistry.load()
+    registry.mutate_enabled = True
+    registry.mutate_allowed_hosts = frozenset({"cymetica.com"})
+    client = build_client(identities()["trusted"], registry, timeout=60.0)
+    rows = [r for r in _paper_rows(client) if startable(r)]
+    if kind == "pause":
+        chosen = [r for r in rows if r.get("is_trading") is True]
+    else:
+        seated = _seated(client)
+        chosen = [r for r in rows if r.get("is_trading") is False
+                  and float(r.get("total_profit_usdc") or 0) < 0 and str(r.get("id")) not in seated]
+        for r in rows:
+            if str(r.get("id")) in seated:
+                print(f"  kept (seated): {r.get('name')}")
+    for r in chosen:
+        print(f"  {kind}: {r.get('name')}  profit {r.get('total_profit_usdc')}")
+    if not confirm:
+        print(f"\n{len(chosen)} bots; nothing sent. Add --confirm.")
+        return 0
+    for r in chosen:
+        entry = _append_intent({"type": "intent", "at": _now(), "kind": kind, "instance_id": r["id"],
+                                "custom_name": r.get("name"), "paper": True})
+        token = CURRENT_TIER.set(SafetyTier.MUTATE)
+        try:
+            if kind == "pause":
+                response = client.post(f"/api/v1/cloned-bots/{r['id']}/toggle-trading", params={"enabled": "false"})
+            else:
+                response = client.delete(f"/api/v1/cloned-bots/{r['id']}")
+        except Exception as exc:  # noqa: BLE001
+            _append({"id": entry["id"], "type": "outcome", "kind": kind, "at": _now(),
+                     "outcome": _outcome_of(exc), "error": f"{type(exc).__name__}: {exc}"})
+            print(f"  {r.get('name')}: {type(exc).__name__}")
+            continue
+        finally:
+            CURRENT_TIER.reset(token)
+        served, said = _served(response)
+        _append({"id": entry["id"], "type": "outcome", "kind": kind, "at": _now(), "outcome": said,
+                 "http_status": response.status_code, "response": _recorded(response, served)[:600]})
+        print(f"  {r.get('name')}: HTTP {response.status_code} {said}")
+    client.close()
+    return 0
+
+
 def main() -> int:
     printable()
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -366,8 +444,15 @@ def main() -> int:
     one.add_argument("--confirm", action="store_true")
 
     sub.add_parser("list", help="what we have cloned")
+    for verb, text in (("pause", "pause every paper clone that is trading"),
+                       ("delete", "delete every paused paper clone with a negative profit and no open seat")):
+        stop = sub.add_parser(verb, help=text)
+        stop.add_argument("--confirm", action="store_true")
 
     args = parser.parse_args()
+
+    if args.cmd in ("pause", "delete"):
+        return stop_or_delete(args.cmd, args.confirm)
 
     if args.cmd == "available":
         load_dotenv()
