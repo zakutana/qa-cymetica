@@ -10200,6 +10200,29 @@ reports:
       The user opted out of on-chain routing and was sold through it, at a price 4.5% under the quote they were shown and inside the 10% protection
       band. Placed by the operator by hand, 100 ET10 (about $0.08). #372 says the order rests; this is how it ended.
 
+  - key: et10-pro-cancelled-post-only-order-reads-as-bought-on-chain
+    severity: medium
+    category: logic
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC: a Post-Only buy that crosses the book is cancelled (status cancelled), yet the answer says pending_swap and the page says it is being bought on-chain from your wallet now"
+    expected: >
+      A Post-Only order that would take liquidity is refused or cancelled, and the answer and the page say so: nothing is bought, no swap is pending.
+    actual: >
+      2026-11-18 13:02:14 UTC, one click on Buy ET10 (Post-Only, route CEX, 100 ET10 at 0.000898; best ask 0.000888). POST /api/v1/exchange/ET10/orders
+      answered 200 {"order_id":"50678d86-bddf-4842-912b-5e4bffd55997","fills":[],"remaining":"100","status":"cancelled","resting_order":null,
+      "amm_pending":"100","backstop_pending":true,"order_state":"pending_swap","order_state_label":"Swap pending on-chain — not filled yet",
+      "execution":{"fully_filled":false,"resting":false,"on_chain_swap_pending":true}}. The page printed "NOT FILLED YET: 100.00 ET10 is being bought
+      on-chain from your own wallet now. It reads FILLED only when the swap settles (usually under a minute); your balance updates then. Do not submit
+      it again." /orders/history has the order "cancelled" with filled 0; 50 s later ET10 (408098.341) and USDC (112.683498) are unchanged and /trades/mine
+      has no new trade. Nothing was bought and nothing was pending; the order was cancelled, as a Post-Only that crosses should be.
+    steps:
+      - "Signed in on https://cymetica.com/exchange/et10-pro, Buy -> Post-Only -> CEX, price above the best ask, amount 100, Buy ET10"
+      - "Read the POST answer: status cancelled together with order_state pending_swap and on_chain_swap_pending true"
+      - "Read the page's message under the Buy button; GET /api/v1/exchange/ET10/orders/history -> cancelled; /balance unchanged"
+    body: >
+      A trader who is told a swap is under way will wait for it, or place the order again. The same wording came with #365 and #372, where the state
+      was not a swap either (or only later). Placed by the operator by hand, 100 ET10 at 0.000898 (nothing filled).
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

@@ -7427,6 +7427,20 @@
     "373": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "et10-pro-cancelled-post-only-order-reads-as-bought-on-chain",
+   "nodeids": [],
+   "report_ids": [
+    374
+   ],
+   "title": "ET10/USDC: a Post-Only buy that crosses the book is cancelled (status cancelled), yet the answer says pending_swap and the page says it is being bought on-chain from your wallet now",
+   "filed_at": "2026-11-18T13:03:21+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "374": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
