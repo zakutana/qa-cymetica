@@ -9951,6 +9951,51 @@ reports:
     body: >
       Read only: nothing was submitted.
 
+  - key: et10-pro-stop-limit-has-no-stop-price
+    severity: high
+    category: ui_ux
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal: the Stop-Limit tab has no stop price field, and the order the page sends carries order_type stop_limit with no stop_price"
+    expected: >
+      Choosing Stop-Limit shows a Stop (trigger) price beside the limit Price, and the order the page posts carries it as stop_price, the
+      field /openapi-public.json documents on PlaceOrderRequest ("Stop price for stop-limit orders").
+    actual: >
+      Read on 2026-11-18 at 12:41 UTC, signed in. Sell -> Stop-Limit: the tab is active (class "ot-tab active", data-pro-arg "stop_limit")
+      and the visible inputs are pOrdPrice, pOrdQty and pOrdTotal only; no input on the page has stop or trigger in its id, name or
+      placeholder. In exchange-pro-JILSFFCZ.js, submitOrder posts JSON.stringify({side, order_type: s.orderType, price, quantity, route_mode,
+      dex_ack, dex_ack_price, dex_fee_ack_usd}); "stop_price" and "stopPrice" occur in none of the page's scripts (exchange-pro-JILSFFCZ.js,
+      chunk-MKSDUSZP.js, chunk-67DIKOFB.js, chunk-LZWZAJ3N.js, pro-terminal-v2.js) nor in the page. What the server does with a stop_limit
+      order that has no stop_price (refuse it, or rest it as a plain limit that fills at once) I did not test: placing it would be a live
+      order.
+    steps:
+      - "Open https://cymetica.com/exchange/et10-pro signed in, Sell -> Stop-Limit: only Price, Amount and Total are shown"
+      - "In the console: [...document.querySelectorAll('input')].filter(i => /stop|trigger/i.test(i.id + i.name + i.placeholder)) -> []"
+      - "Read submitOrder in /static/dist/js/exchange-pro-JILSFFCZ.js: the body has no stop_price"
+    body: >
+      A trader who picks Stop-Limit to protect a position cannot say where it triggers, and the page gives no hint that the order will go
+      without a trigger. Read only: nothing was submitted.
+
+  - key: et10-pro-ready-to-withdraw-differs-from-the-withdraw-dialog
+    severity: medium
+    category: logic
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal says \"$108.95 USDC ready to withdraw\"; its Withdraw button opens a dialog that says Available $102.12 USDC"
+    expected: >
+      The amount the exchange page calls ready to withdraw is the amount the Withdraw dialog it opens lets the user withdraw.
+    actual: >
+      Read on 2026-11-18 at 12:43 UTC, signed in. The order panel shows "$108.95 USDC ready to withdraw" with a Withdraw button; that is
+      GET /api/v1/exchange/ET10/balance -> quote_withdrawable_now "108.95" (quote_source.on_chain 109.624077). The button opens
+      /account?action=withdraw, whose dialog shows "Available $102.12 USDC" and "$7.50 of your USDC is reserved for trading"; that is GET
+      /api/v1/vaix/withdrawable -> withdrawable_usdc 102.124077, reserved_for_trading_usdc 7.500000. Two endpoints answer "what can I
+      withdraw now" for the same account, one second apart, $6.83 apart.
+    steps:
+      - "Open https://cymetica.com/exchange/et10-pro signed in; read \"$... USDC ready to withdraw\""
+      - "GET /api/v1/exchange/ET10/balance -> quote_withdrawable_now 108.95"
+      - "Click Withdraw -> dialog Available $102.12 USDC; GET /api/v1/vaix/withdrawable -> withdrawable_usdc 102.124077"
+    body: >
+      If the $7.50 reserved for trading is not withdrawable, the exchange figure overstates it; if it is, the dialog understates it.
+      Read only: the dialog was opened and closed; nothing was withdrawn.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

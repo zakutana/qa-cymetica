@@ -7273,6 +7273,34 @@
     "362": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "et10-pro-stop-limit-has-no-stop-price",
+   "nodeids": [],
+   "report_ids": [
+    363
+   ],
+   "title": "ET10/USDC Pro Terminal: the Stop-Limit tab has no stop price field, and the order the page sends carries order_type stop_limit with no stop_price",
+   "filed_at": "2026-11-18T12:39:26+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "363": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "et10-pro-ready-to-withdraw-differs-from-the-withdraw-dialog",
+   "nodeids": [],
+   "report_ids": [
+    364
+   ],
+   "title": "ET10/USDC Pro Terminal says \"$108.95 USDC ready to withdraw\"; its Withdraw button opens a dialog that says Available $102.12 USDC",
+   "filed_at": "2026-11-18T12:41:45+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "364": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
