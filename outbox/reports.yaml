@@ -9510,6 +9510,102 @@ reports:
       An agent that follows the prompt tells its owner this is paper and then sends the approve link. The owner approves a real $1 that the agent said was paper. The prompt for a live table is the one text a stranger's agent is told to relay, so it should say live. Read only; nothing was seated.
     check: tests/rest/test_agent_tournaments_live_table_prompt_says_paper.py::test_agent_tournaments_live_table_prompt_says_paper
 
+  - key: agent-tournaments-prompt-calls-a-short-table-one-day
+    severity: low
+    category: documentation
+    url: https://cymetica.com/agent-casino/table/64
+    title: "Agent Casino: the prompt for a 1-hour or 5-hour table says \"1 day\" (\"Flash Micro 1H, 1 day, Flash\", \"Live 5H, 1 day, Flash\")"
+    expected: >
+      The prompt an owner copies for a table names the table's real length: 1 hour, 5 hours or 1 day, as the table page says.
+    actual: >
+      Read on 2026-11-18. GET /api/v1/agent-tournaments/tables/64/prompt opens "Take a seat for me at Cymetica Agent Casino paper table #64 (Flash Micro 1H, 1 day, Flash)". GET /api/v1/agent-tournaments/tables/118/prompt: "(Live 5H, 1 day, Flash)". The same table objects say hours 1 and 5 (tier fmicro1h, l5h) and days 1. The table page and the how page say "Flash tables run 1 hour, 5 hours or 1 day, as each table says".
+    steps:
+      - 'GET /api/v1/agent-tournaments/tables/64 -> tier fmicro1h, hours 1, days 1'
+      - 'GET /api/v1/agent-tournaments/tables/64/prompt -> "(Flash Micro 1H, 1 day, Flash)"'
+      - 'GET /api/v1/agent-tournaments/tables/118/prompt -> "(Live 5H, 1 day, Flash)"'
+    body: >
+      An owner who reads the prompt thinks the 1H table is a day long and the money is tied up for a day. Using hours, not days, for the length in the first line fixes it. Read only; nothing was seated.
+    check: tests/rest/test_agent_tournaments_prompt_calls_a_short_table_one_day.py::test_agent_tournaments_prompt_calls_a_short_table_one_day
+
+  - key: agent-tournament-tools-say-et10-goes-to-top-three
+    severity: low
+    category: documentation
+    url: https://cymetica.com/mcp
+    title: "Agent Casino MCP: agent_tournaments_open_tables and agent_tournament_create_table still say ET10 goes to the top 3, /rules says the top 2"
+    expected: >
+      After the build of 10 Nov 13:58 UTC the ET10 rule reads the same in the rules, the API and the tools an agent reads: ET10 on top goes to 1st and 2nd only.
+    actual: >
+      Read on 2026-11-18 from tools/list. agent_tournaments_open_tables: "buy-in $5 / $50 paper with 1,000 ET10 on top for the top 3, 1-day Flash tables". agent_tournament_create_table: "the same ET10 on top for the top 3 as the lobby's tables". GET /api/v1/agent-tournaments/rules et10_prizes: "the top 2 qualified member seats ... 85 / 42 = 127 ET10 at a 1-day table"; the live lobby says "Extra for the top 2".
+    steps:
+      - 'tools/list -> agent_tournaments_open_tables description "... 1,000 ET10 on top for the top 3, 1-day Flash tables ..."'
+      - 'tools/list -> agent_tournament_create_table description "... the same ET10 on top for the top 3 as the lobby''s tables"'
+      - 'GET /api/v1/agent-tournaments/rules -> et10_prizes "the top 2 qualified member seats"'
+    body: >
+      An agent that plans from the tool text expects three paid ET10 places and a 1,000 ET10 pot on top; the rules pay two places, 85 and 42 ET10 at a 1-day table. The same two descriptions also say "1-day Flash tables" and "1 day"; Flash runs 1 hour, 5 hours or 1 day. Read only.
+    check: tests/mcp/test_agent_tournament_tools_say_et10_goes_to_top_three.py::test_agent_tournament_tools_say_et10_goes_to_top_three
+
+  - key: agent-tournaments-llms-says-every-table-runs-one-day
+    severity: low
+    category: documentation
+    url: https://cymetica.com/llms.txt
+    title: "Agent Casino in llms.txt: \"Every table runs ONE day\" and \"There are no 7-day tables\", while 1-hour and 5-hour tables are open and /rules and the MCP create-table tool still offer 7-day tables"
+    expected: >
+      llms.txt, /rules, the lobby and the MCP tools agree on which table lengths exist.
+    actual: >
+      Read on 2026-11-18. The Agent Casino entry of /llms.txt: "Every table runs ONE day (Flash) ... There are no 7-day tables." In the same entry: "Live tables (open): $1 at 1H, 5H and 1D". GET /api/v1/agent-tournaments/lobby?mode=paper lists open tables fmicro1h and fpro1h (1 h), fmicro5h and fpro5h (5 h) and fmicro, fpro (24 h). GET /rules: days 7, week_tiers ["micro","pro"], tiers of kind "week" with days 7, and flash "Flash tables run 1 hour, 5 hours or 1 day ... instead of 7 days". The MCP tool agent_tournament_create_table: "kind week (7 days) or flash (1 day)".
+    steps:
+      - 'GET https://cymetica.com/llms.txt -> the Agent Casino entry: "Every table runs ONE day (Flash)" and "There are no 7-day tables"'
+      - 'GET /api/v1/agent-tournaments/lobby?mode=paper -> tiers fmicro1h, fmicro5h, fmicro: hours 1, 5, 24'
+      - 'GET /api/v1/agent-tournaments/rules -> week_tiers ["micro","pro"], days 7'
+    body: >
+      An agent reading llms.txt expects one-day tables only and finds 1-hour and 5-hour ones; one reading /rules or the MCP tool expects 7-day tables that llms.txt says do not exist. Which lengths exist is yours; the four texts should say the same. Read only.
+    check: tests/rest/test_agent_tournaments_llms_says_every_table_runs_one_day.py::test_agent_tournaments_llms_says_every_table_runs_one_day
+
+  - key: agent-casino-live-lobby-promises-et10-on-top
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/agent-casino?mode=live
+    title: "Agent Casino, live lobby: the hero says \"ON TOP + ET10, Extra for the top 2\" beside the $1 live table, and live tables carry no ET10"
+    expected: >
+      The live lobby promises what a live table pays: $4 and $2 in USDC out of the pot, and nothing on top.
+    actual: >
+      Read signed out on 2026-11-18 at 1440 px. https://cymetica.com/agent-casino?mode=live (the LIVE pill is on) shows "NEXT TO FILL $1 1H OPEN", and beside it a card "ON TOP + ET10 Extra for the top 2." GET /api/v1/agent-tournaments/tables/117 (mode live) has et10_prizes [0, 0], et10_per_table 0, pot_et10 null; /rules live_note: "The whole pot is paid back out: 1st $4, 2nd $2"; the table page for 117 says nothing about ET10.
+    steps:
+      - 'Open https://cymetica.com/agent-casino?mode=live -> the hero card "ON TOP + ET10 / Extra for the top 2."'
+      - 'GET /api/v1/agent-tournaments/tables/117 -> mode "live", et10_prizes [0,0], et10_per_table 0'
+      - 'Open https://cymetica.com/agent-casino/table/117 -> prizes 1st $4, 2nd $2, no ET10'
+    body: >
+      Someone who opens the live lobby for the first time reads that ET10 comes on top of a $1 real buy-in. It does not; the card is the paper tables'. Hiding that card on live, or saying "paper tables only", fixes it. Read only; nothing was seated.
+
+  - key: agent-casino-live-table-page-shows-fee-as-ellipsis-signed-out
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/agent-casino/table/117
+    title: "Agent Casino, live table page signed out: the take-a-seat text reads \"a network fee of about $…\" with no figure"
+    expected: >
+      A visitor who is not signed in either sees the fee, or the page says it shows after signing in.
+    actual: >
+      Read signed out on 2026-11-18, 7 s after load. https://cymetica.com/agent-casino/table/117 prints "Real USDC from your EventTrader balance: $1 plus a network fee of about $…. 1st takes $4, 2nd $2". GET /api/v1/agent-tournaments/live/quote?table_id=117 answers 401 without a key (with our key: {"buyin":1.0,"fee_usd":0.0,"total":1.0}), and the table object carries no fee.
+    steps:
+      - 'Open https://cymetica.com/agent-casino/table/117 signed out, wait 7 s -> "a network fee of about $…"'
+      - 'GET /api/v1/agent-tournaments/live/quote?table_id=117 without a key -> 401'
+    body: >
+      A stranger deciding whether to spend real USDC reads a placeholder where the cost should be. Read only.
+
+  - key: agent-casino-live-lobby-coming-lists-open-tables
+    severity: low
+    category: documentation
+    url: https://cymetica.com/api/v1/agent-tournaments/lobby?mode=live
+    title: "Agent Casino: GET /lobby?mode=live carries a \"coming\" list whose three kinds (l1h, l5h, l1d) all say status \"open\""
+    expected: >
+      The key that lists live tables not yet open is empty, or gone, once they are open.
+    actual: >
+      Read on 2026-11-18. GET /api/v1/agent-tournaments/lobby?mode=live: status "open", open_tables [117, 118, 119], and coming [{"key":"l1h","status":"open","open":true}, {"key":"l5h","status":"open","open":true}, {"key":"l1d","status":"open","open":true}]. /rules live_kinds has the same three rows, also "open".
+    steps:
+      - 'GET /api/v1/agent-tournaments/lobby?mode=live -> coming: three rows, each "status": "open", "open": true'
+    body: >
+      An agent that reads `coming` as "not yet" will wait for tables that are already open. Read only.
+
   - key: airdrop-farmer-testnet-dialog-says-gas-comes-from-our-faucet
     severity: medium
     category: logic

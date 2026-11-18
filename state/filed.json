@@ -7113,6 +7113,96 @@
     "351": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "agent-tournaments-llms-says-every-table-runs-one-day",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_llms_says_every_table_runs_one_day.py::test_agent_tournaments_llms_says_every_table_runs_one_day"
+   ],
+   "report_ids": [
+    352
+   ],
+   "title": "Agent Casino in llms.txt: \"Every table runs ONE day\" and \"There are no 7-day tables\", while 1-hour and 5-hour tables are open and /rules and the MCP create-table tool still offer 7-day tables",
+   "filed_at": "2026-11-18T12:30:44+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "352": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "agent-casino-live-lobby-promises-et10-on-top",
+   "nodeids": [],
+   "report_ids": [
+    353
+   ],
+   "title": "Agent Casino, live lobby: the hero says \"ON TOP + ET10, Extra for the top 2\" beside the $1 live table, and live tables carry no ET10",
+   "filed_at": "2026-11-18T12:30:53+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "353": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "agent-casino-live-table-page-shows-fee-as-ellipsis-signed-out",
+   "nodeids": [],
+   "report_ids": [
+    354
+   ],
+   "title": "Agent Casino, live table page signed out: the take-a-seat text reads \"a network fee of about $…\" with no figure",
+   "filed_at": "2026-11-18T12:31:02+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "354": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "agent-casino-live-lobby-coming-lists-open-tables",
+   "nodeids": [],
+   "report_ids": [
+    355
+   ],
+   "title": "Agent Casino: GET /lobby?mode=live carries a \"coming\" list whose three kinds (l1h, l5h, l1d) all say status \"open\"",
+   "filed_at": "2026-11-18T12:31:13+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "355": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "agent-tournaments-prompt-calls-a-short-table-one-day",
+   "nodeids": [
+    "tests/rest/test_agent_tournaments_prompt_calls_a_short_table_one_day.py::test_agent_tournaments_prompt_calls_a_short_table_one_day"
+   ],
+   "report_ids": [
+    356
+   ],
+   "title": "Agent Casino: the prompt for a 1-hour or 5-hour table says \"1 day\" (\"Flash Micro 1H, 1 day, Flash\", \"Live 5H, 1 day, Flash\")",
+   "filed_at": "2026-11-18T12:32:24+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "356": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "agent-tournament-tools-say-et10-goes-to-top-three",
+   "nodeids": [
+    "tests/mcp/test_agent_tournament_tools_say_et10_goes_to_top_three.py::test_agent_tournament_tools_say_et10_goes_to_top_three"
+   ],
+   "report_ids": [
+    357
+   ],
+   "title": "Agent Casino MCP: agent_tournaments_open_tables and agent_tournament_create_table still say ET10 goes to the top 3, /rules says the top 2",
+   "filed_at": "2026-11-18T12:32:36+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "357": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
