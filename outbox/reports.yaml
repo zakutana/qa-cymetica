@@ -9842,6 +9842,115 @@ reports:
       not say what a company with no points should rank, or that paused ones must be listed. If a company is meant to join the board only
       after something (a first visit, a day, a product), please say what in the board's rules. GET requests only.
 
+  - key: et10-pro-account-24h-trades-counts-the-public-snapshot
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal: ACCOUNT \"24h Trades\" reads 50, the row count of the public trade snapshot; the market made 155 trades in 24 h and the signed-in account none"
+    expected: >
+      The ACCOUNT panel's "24h Trades" (beside Portfolio Value, Open Orders and Maker Rebates) is the signed-in account's number of
+      fills in the last 24 hours, read from /api/v1/exchange/ET10/trades/mine; or, if it is meant as the market's count, the number
+      of ET10/USDC trades in the last 24 hours.
+    actual: >
+      Read on 2026-11-18 at 12:30-12:35 UTC. The panel shows 50, signed in and signed out alike. The page's script sets #p24hTrades
+      from the "trades_snapshot" of the public trades channel, counting the snapshot's rows younger than 24 h, then adds 1 for every
+      public "trade" pushed after it. The snapshot holds 50 rows (oldest 06:35 UTC today), so the figure is 50 whatever happened.
+      GET /api/v1/exchange/ET10/trades?limit=500 holds 155 trades in the last 24 h (quote volume 1,523.70 USDC, equal to the
+      header's 24H VOLUME $1.52K and to /ticker quote_volume), and the signed-in account's own newest fill in
+      /api/v1/exchange/ET10/trades/mine is 2026-09-28 20:41 UTC, i.e. 0 in 24 h.
+    steps:
+      - "Open https://cymetica.com/exchange/et10-pro (signed out, or signed in on an account with no fill today) and read ACCOUNT -> 24h Trades -> 50"
+      - "GET https://cymetica.com/api/v1/exchange/ET10/trades?limit=500 -> 155 trades with timestamp in the last 24 h"
+      - "GET /api/v1/exchange/ET10/trades/mine?limit=50 (signed in) -> newest timestamp 2026-09-28T20:41:52Z"
+    body: >
+      The number sits in the ACCOUNT block, so a trader reads it as their own activity. It is neither theirs nor the market's: it is
+      the size of the snapshot. Read only: GETs and the page itself; nothing placed.
+
+  - key: et10-pro-price-and-candles-move-on-trades-no-trade-list-shows
+    severity: high
+    category: logic
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC: the price, the 1m candles and /stats last_trade_at move on 91 \"trades\" since 11:20 UTC that /trades and Time & Sales never show, all with volume 0"
+    expected: >
+      Every trade that sets the last price, a candle's trade_count or /stats last_trade_at is a trade of GET /api/v1/exchange/ET10/trades
+      and of the page's Time & Sales, and carries its size into the candle's volume.
+    actual: >
+      Read on 2026-11-18 at 12:35 UTC. GET /api/v1/exchange/ET10/trades: newest trade 11:19:37 UTC at 0.000885 (Time & Sales on the page
+      shows the same newest row). GET /api/v1/exchange/ET10/stats: price_source "last_trade", last_trade_at 12:34:20 UTC,
+      last_trade_price 0.000894 (at 12:29:46 it read 12:29:46 / 0.000894 and still had no trade after 11:19:37). GET
+      /api/v1/exchange/ET10/chart?interval=1m: the 39 candles after 11:20 UTC count 91 trades (trade_count 1-5 each) and their volume
+      is 0.0 in every one; the only candle with volume is 11:19 (4.3144, trade_count 4). The page's chart line therefore moves every minute
+      and the header PRICE is a "last trade" no trader can find. /ticker shows the same split: its 24 h quote_volume (1,523.70) equals the
+      sum of /trades exactly, but its 24 h high is 0.001009 while no trade in /trades since 2026-11-17 04:05 UTC (500 rows) is at or
+      above 0.001 (the highest in 24 h is 0.000983).
+    steps:
+      - "GET https://cymetica.com/api/v1/exchange/ET10/trades?limit=3 -> newest timestamp 2026-11-18T11:19:37Z, price 0.000885"
+      - "GET https://cymetica.com/api/v1/exchange/ET10/stats -> last_trade_at 2026-11-18T12:34:20Z, last_trade_price 0.000894, price_source last_trade"
+      - "GET https://cymetica.com/api/v1/exchange/ET10/chart?interval=1m&limit=200 -> candles with time after 11:20 UTC: 39, sum trade_count 91, sum volume 0"
+      - "GET https://cymetica.com/api/v1/exchange/ET10/ticker -> high 0.001009; GET /trades?limit=500 -> max price in the last 24 h 0.000983"
+    body: >
+      Either these are trades, and then /trades, Time & Sales and the candles' volume leave them out; or they are not trades (a quote, a
+      pool price, a mark), and then the price, last_trade_at and trade_count call them trades. Please say which. Read only: GETs; nothing
+      placed.
+
+  - key: et10-pro-chart-in-utc-time-and-sales-in-local-time
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal: the chart's time axis is UTC while Time & Sales, Order History and My Trades show browser time; the same trade sits at 11:19 on the chart and 12:19:37 in the list"
+    expected: >
+      One clock on one page (or each panel saying which zone it uses), so a trade can be found on the chart at the time the list gives it.
+    actual: >
+      Read on 2026-11-18 in a browser set to Europe/Prague (UTC+1). At server time 12:30 UTC (browser 13:31) the chart's axis ended at 12:30,
+      and its only volume bar stood at 11:19. The trade behind it, GET /api/v1/exchange/ET10/trades -> 2026-11-18T11:19:37Z, is the top row
+      of Time & Sales as "12:19:37". Order History shows the order created 2026-10-26T19:25:23Z as "Oct 26, 20:25", My Trades the fill of
+      2026-09-28T20:41:52Z as "Sep 28, 22:41": browser time, while the crosshair label on the chart reads UTC.
+    steps:
+      - "In a browser whose time zone is not UTC, open https://cymetica.com/exchange/et10-pro, interval 1m"
+      - "Compare the chart axis's last label with the clock: it is UTC"
+      - "Compare Time & Sales' top row with GET /api/v1/exchange/ET10/trades?limit=1 timestamp: it is browser time"
+    body: >
+      Read only: the page and GETs; nothing placed.
+
+  - key: et10-pro-est-fee-uses-10-bps-when-taker-fee-is-0
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal, Market order: \"Est. Fee\" shows $0.009800 on a $9.80 buy while the form says Taker Fee 0.00%; a configured 0 bps falls back to 10 bps"
+    expected: >
+      With window.EXCHANGE_CONFIG.takerFeeBps 0 (the form shows Taker Fee 0.00%), Est. Fee for a market order is $0.00, as it is for a limit
+      order.
+    actual: >
+      Read on 2026-11-18 at 12:36 UTC, signed in. Buy -> Market, Amount 10000 ET10: Total $9.80, Taker Fee 0.00%, Est. Fee $0.009800 (10 bps
+      of the total); Amount 50: Est. Fee $0.000049. window.EXCHANGE_CONFIG on the page: takerFeeBps 0, makerFeeBps 0, makerRebateBps 0. The
+      estimate in exchange-pro-JILSFFCZ.js reads `c.takerFeeBps||10`, so a fee of 0 is falsy and becomes 10 bps; the initial Taker Fee label
+      uses `parseFloat(c.takerFeeBps)||10` the same way, and the maker rebate `parseFloat(c.makerRebateBps)||2`.
+    steps:
+      - "Open https://cymetica.com/exchange/et10-pro signed in, choose Buy -> Market, type 10000 in Amount (do not submit)"
+      - "Read Taker Fee 0.00% and Est. Fee $0.009800"
+      - "In the console: window.EXCHANGE_CONFIG.takerFeeBps -> 0"
+    body: >
+      A 0 fee is a real value; `x != null ? x : default` keeps it, `x || default` does not. Read only: nothing was submitted.
+
+  - key: et10-pro-market-buy-total-priced-at-the-protection-cap
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal, Market buy: \"Total (USDC)\" for 10,000 ET10 reads $9.80, the price cap 0.000980, while the best ask holds 16,866 ET10 at 0.000891 ($8.91)"
+    expected: >
+      Total for a market buy is what the book would fill it for (here 10,000 x 0.000891 = $8.91), or the field says it is the most it could
+      cost ("up to $9.80").
+    actual: >
+      Read on 2026-11-18 at 12:36 UTC. Buy -> Market, Amount 10000: Total (USDC) $9.80 = 10,000 x 0.000980. The form's own note says "fills
+      now at the best prices, never above 0.000980 USDC (reference 0.000891 +10%)"; GET
+      /api/v1/exchange/ET10/market-order/preview?side=buy -> max_fill_price 0.000980, reference_price 0.000891; the book's best ask was
+      0.000891 with 16,866.73 ET10, enough for the whole order. The Total is 10% above the expected cost and labelled as the cost.
+    steps:
+      - "Open https://cymetica.com/exchange/et10-pro signed in, Buy -> Market, Amount 10000 (do not submit) -> Total $9.80"
+      - "Read the book's best ask: 0.000891, 16,866.73 ET10"
+    body: >
+      Read only: nothing was submitted.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
