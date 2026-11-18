@@ -7385,6 +7385,34 @@
     "370": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "et10-pro-spread-reads-crossed-when-the-book-has-no-bid",
+   "nodeids": [],
+   "report_ids": [
+    371
+   ],
+   "title": "ET10/USDC Pro Terminal: with no bid on the book the header SPREAD reads \"Crossed\" and /bbo mid_price is the ask (0.000800) with spread 0",
+   "filed_at": "2026-11-18T13:00:16+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "371": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "et10-pro-unfilled-market-sell-rests-on-the-book-instead-of-cancelling",
+   "nodeids": [],
+   "report_ids": [
+    372
+   ],
+   "title": "ET10/USDC: a market sell that finds no bid is left resting as a limit ask 10% under the market, although the page and /market-order/preview say IOC, the rest cancelled",
+   "filed_at": "2026-11-18T13:00:32+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "372": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

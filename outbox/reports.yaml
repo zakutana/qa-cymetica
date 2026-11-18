@@ -10132,6 +10132,49 @@ reports:
     body: >
       Placed by the operator by hand (100 ET10, $0.089). #359 is about what 24h Trades counts; this is that one trade is counted twice.
 
+  - key: et10-pro-unfilled-market-sell-rests-on-the-book-instead-of-cancelling
+    severity: high
+    category: logic
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC: a market sell that finds no bid is left resting as a limit ask 10% under the market, although the page and /market-order/preview say IOC, the rest cancelled"
+    expected: >
+      A market order fills what the book holds up to its protection price and the rest is cancelled, as the page says ("Anything not filled at
+      once is cancelled") and /api/v1/exchange/ET10/market-order/preview says (time_in_force "IOC", "the rest is cancelled; it cannot fill beyond it").
+    actual: >
+      2026-11-18 12:59:15 UTC, one click on Sell ET10 (Market, route CEX, 100 ET10); the form's reference was the bid 0.000888 (919 ET10 at
+      12:58). POST /api/v1/exchange/ET10/orders answered 200: order_id 1ab8ca96-20fc-4a9c-9271-d673ea05866b, fills [], status "open", order_type
+      "limit", price "0.0008", market_protection {"converted_from":"market","reference_price":"0.000888","protection_price":"0.000800","note":
+      "Market order placed as a limit at 0.000800 (best bid -10%): fills every level up to that price now; any remainder rests there."}. Seconds
+      later the CLOB book has no bid at all (GET /book bids []), its lowest ask is this order, 100 ET10 at 0.000800 (the market is 0.000889), and /bbo
+      says best_bid null, best_ask 0.000800, mid_price 0.000800. The sale is not done and not cancelled: 100 ET10 are locked in a public ask 10%
+      under the market, on an account that asked for a market order. (The bid of 0.000888 was gone when the order arrived; a market order has to
+      be able to find nothing and end cancelled.)
+    steps:
+      - "Signed in on https://cymetica.com/exchange/et10-pro, Sell -> Market -> CEX, 100 ET10, click Sell ET10 while the book holds no bid the order can take"
+      - "Read the POST answer: status open, order_type limit, price 0.0008, note \"any remainder rests there\""
+      - "GET /api/v1/exchange/ET10/book -> asks[0] 100 at 0.000800; GET /api/v1/exchange/ET10/market-order/preview?side=sell -> time_in_force IOC"
+    body: >
+      The server's note and the page's text contradict each other, and the page's wins in the user's mind: they think the order ended and it did not.
+      Placed by the operator by hand, 100 ET10 (about $0.08); we cancel it right after. The same answer also carries pending_swap "being sold
+      on-chain" with nothing swapping, as in #365.
+
+  - key: et10-pro-spread-reads-crossed-when-the-book-has-no-bid
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal: with no bid on the book the header SPREAD reads \"Crossed\" and /bbo mid_price is the ask (0.000800) with spread 0"
+    expected: >
+      A book with asks and no bids has no spread ("--") and no mid; it is not crossed (a crossed book has a bid at or above the ask).
+    actual: >
+      2026-11-18 12:59:39 UTC, GET /api/v1/exchange/ET10/bbo -> best_bid null, best_ask "0.000800", bid_size "0", ask_size "100", mid_price "0.000800",
+      spread "0"; GET /stats -> best_bid null, spread_pct null; the page header shows SPREAD "Crossed". Nothing is crossed: there is no bid. The
+      mid price is the ask, so Mid in the order form would fill 0.000800.
+    steps:
+      - "With no CLOB bid, read the header SPREAD on https://cymetica.com/exchange/et10-pro: Crossed"
+      - "GET /api/v1/exchange/ET10/bbo -> best_bid null, mid_price 0.000800, spread 0"
+    body: >
+      Seen while the order of #371 was resting as the only ask near 0.0008 with no bid under it.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
