@@ -10048,6 +10048,48 @@ reports:
       The user is told a swap from their wallet is under way when nothing is being swapped, and an order that is only resting reads as
       about to fill. Placed on the operator's account with their say-so; 100 ET10 at 0.0008, $0.08.
 
+  - key: et10-pro-open-orders-time-reads-microseconds-as-milliseconds
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal, Open Orders: two orders placed one second apart at 13:45 show Time 23:25:58 and 23:43:05; the microsecond timestamp is read as milliseconds"
+    expected: >
+      The Time column shows when each order was placed: 13:45:55 and 13:45:56 in the browser's zone (12:45:55 and 12:45:56 UTC).
+    actual: >
+      2026-11-18, browser zone Europe/Prague. GET /api/v1/exchange/ET10/orders/open -> orders be948fb5-3edc-4dbc-a581-c6f68778ff92 timestamp
+      1795005955558296 and b365971f-d1bb-4792-bfb1-f664a97c6115 timestamp 1795005956585021 (microseconds: 12:45:55.558 and 12:45:56.585 UTC).
+      The Open Orders tab shows them at 23:25:58 and 23:43:05. new Date(1795005955558296).toLocaleTimeString() is "23:25:58" and
+      new Date(1795005956585021) "23:43:05" in that zone: the value is passed to Date as if it were milliseconds, so the date is in the year
+      58,850 and orders one second apart read 17 minutes apart. Order History and My Trades, which read ISO created_at / timestamp strings,
+      show the right times.
+    steps:
+      - "Signed in with an open order on https://cymetica.com/exchange/et10-pro, open the OPEN ORDERS tab and read Time"
+      - "GET /api/v1/exchange/ET10/orders/open -> orders[].timestamp in microseconds"
+      - "In the console: new Date(<timestamp>).toLocaleTimeString() gives the time shown; new Date(<timestamp> / 1000) gives the real one"
+    body: >
+      Placed by the operator by hand, 100 ET10 at 0.0008. Read only on our side.
+
+  - key: et10-pro-depth-chart-axis-has-a-negative-price
+    severity: low
+    category: ui_ux
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal, Depth Chart: the price axis starts at -0.019120 and runs to 0.2199, so the whole book near 0.00089 is one vertical line at the left edge"
+    expected: >
+      The depth chart's price axis has no negative price and is scaled so the book around the mid (0.000888) can be read, as it was earlier
+      the same day (axis 0.000888 to 0.001010).
+    actual: >
+      Read on 2026-11-18 between 12:44 and 12:50 UTC, signed in. The Depth Chart's x axis reads -0.019027 (later -0.019120), 0.0606, 0.1402,
+      0.2199. The asks it draws include resting sell orders at 0.05, 0.06, 0.07, 0.08, 0.09, 0.10 and 0.20 USDC (GET
+      /api/v1/exchange/ET10/book, 100,000-200,000 ET10 each, 56-225 times the mid), so the axis stretches to 0.22 and pads below zero; every
+      level from 0.000800 to 0.00111, which is where all trading happens, is squeezed into the first pixel column. At 12:33 UTC, before those
+      far asks were within the chart's window, the same chart read 0.000888 to 0.001010.
+    steps:
+      - "Open https://cymetica.com/exchange/et10-pro and scroll to DEPTH CHART: the x axis starts at a negative price"
+      - "GET /api/v1/exchange/ET10/book -> asks at 0.05 to 0.20 alongside the book near 0.00089"
+    body: >
+      A price below zero is impossible, and a depth chart whose scale is set by orders 100x off the market shows nothing of the market.
+      Read only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

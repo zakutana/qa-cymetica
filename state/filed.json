@@ -7329,6 +7329,34 @@
     "366": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "et10-pro-open-orders-time-reads-microseconds-as-milliseconds",
+   "nodeids": [],
+   "report_ids": [
+    367
+   ],
+   "title": "ET10/USDC Pro Terminal, Open Orders: two orders placed one second apart at 13:45 show Time 23:25:58 and 23:43:05; the microsecond timestamp is read as milliseconds",
+   "filed_at": "2026-11-18T12:50:25+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "367": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "et10-pro-depth-chart-axis-has-a-negative-price",
+   "nodeids": [],
+   "report_ids": [
+    368
+   ],
+   "title": "ET10/USDC Pro Terminal, Depth Chart: the price axis starts at -0.019120 and runs to 0.2199, so the whole book near 0.00089 is one vertical line at the left edge",
+   "filed_at": "2026-11-18T12:50:39+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "368": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
