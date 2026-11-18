@@ -7301,6 +7301,34 @@
     "364": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "et10-pro-cex-resting-limit-said-to-be-swapping-on-chain",
+   "nodeids": [],
+   "report_ids": [
+    365
+   ],
+   "title": "ET10/USDC: a CEX-only buy limit 13% under the market is answered \"pending_swap ... being bought on-chain from your own wallet now\"; /orders/open says it rests with no swap pending",
+   "filed_at": "2026-11-18T12:48:09+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "365": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "et10-pro-retries-a-may-have-executed-order-and-places-it-twice",
+   "nodeids": [],
+   "report_ids": [
+    366
+   ],
+   "title": "ET10/USDC Pro Terminal: one click on Buy placed two orders; the page resent a 503 \"may_have_executed: true\" with the same X-Idempotency-Key and the server made it again",
+   "filed_at": "2026-11-18T12:48:26+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "366": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

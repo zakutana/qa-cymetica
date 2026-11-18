@@ -9996,6 +9996,58 @@ reports:
       If the $7.50 reserved for trading is not withdrawable, the exchange figure overstates it; if it is, the dialog understates it.
       Read only: the dialog was opened and closed; nothing was withdrawn.
 
+  - key: et10-pro-retries-a-may-have-executed-order-and-places-it-twice
+    severity: high
+    category: logic
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal: one click on Buy placed two orders; the page resent a 503 \"may_have_executed: true\" with the same X-Idempotency-Key and the server made it again"
+    expected: >
+      One click places one order. A 503 whose body says may_have_executed true and "Do NOT blindly retry: query order status by
+      request_id first" is not resent blindly; and a resend carrying the same X-Idempotency-Key returns the order already made instead
+      of making a second one.
+    actual: >
+      2026-11-18, account user_id 113, one click on "Buy ET10" (Limit, route CEX, 100 ET10 at 0.000800). Browser network log:
+      POST /api/v1/exchange/ET10/orders started 12:45:40.43 UTC and answered 503 after 12.6 s with {"detail":{"field":"routing",
+      "error":"Order processing timed out — leader is slow. Do NOT blindly retry: query order status by
+      request_id=67b1f298-637a-4563-997a-f15ee4260eea first to confirm whether your order executed.", "may_have_executed":true,
+      "hold_preserved":true}}. One second later (12:45:54.08) the page sent the POST again and got 200, order_id b365971f-d1bb-4792-bfb1-f664a97c6115.
+      GET /api/v1/exchange/ET10/orders/open then lists two open orders, be948fb5-3edc-4dbc-a581-c6f68778ff92 (timestamp 12:45:55.558) and
+      b365971f (12:45:56.585), both buy limit 100 at 0.0008, and /balance locks 0.16 USDC. In exchange-pro-JILSFFCZ.js, submitOrder builds the
+      request once (headers include "X-Idempotency-Key": N) and loops up to 7 times while the status is 502, 503, 504 or 409, with a 1 s, 2 s,
+      4 s... wait; it never reads may_have_executed. So the resend carried the same idempotency key, and the server still made a new order.
+    steps:
+      - "Signed in on https://cymetica.com/exchange/et10-pro, Buy -> Limit -> CEX, price 0.000800, amount 100, click Buy ET10 once"
+      - "When the first POST answers 503 may_have_executed true, the page resends it one second later and gets 200"
+      - "GET /api/v1/exchange/ET10/orders/open -> two orders of 100 at 0.0008"
+    body: >
+      On a resting limit at $0.08 it is a nuisance; on a market order or a large size, a slow leader turns one click into up to seven fills.
+      Two fixes, either closes it: the page stops on may_have_executed and asks for the order's status, and the server honours
+      X-Idempotency-Key across a timed-out first attempt. The two orders are still open; we will cancel them.
+
+  - key: et10-pro-cex-resting-limit-said-to-be-swapping-on-chain
+    severity: medium
+    category: logic
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC: a CEX-only buy limit 13% under the market is answered \"pending_swap ... being bought on-chain from your own wallet now\"; /orders/open says it rests with no swap pending"
+    expected: >
+      A limit order sent with route CEX ("explicit opt-out: CLOB only", PlaceOrderRequest.route_mode) and priced below the best ask rests on
+      the book, and the place-order answer and the page say so.
+    actual: >
+      2026-11-18 12:45:59 UTC, the 200 answer to POST /api/v1/exchange/ET10/orders (buy limit 100 at 0.0008, route CEX selected; best ask
+      0.000891, on-chain sellers at 0.000915): order_state "pending_swap", order_state_label "Swap pending on-chain — not filled yet",
+      amm_pending "100.000", backstop_pending true, execution.resting false, execution.on_chain_swap_pending true. The page therefore printed
+      "NOT FILLED YET: 100.00 ET10 is being bought on-chain from your own wallet now. It reads FILLED only when the swap settles (usually
+      under a minute); your balance updates then. Do not submit it again." Seconds later GET /api/v1/exchange/ET10/orders/open gives the same
+      order (b365971f-d1bb-4792-bfb1-f664a97c6115) order_state "new", "Open — resting on the book, nothing filled yet", execution.resting true,
+      on_chain_swap_pending false, dex_match "needs_approval", and minutes later it is still open and unfilled.
+    steps:
+      - "Signed in on https://cymetica.com/exchange/et10-pro, Buy -> Limit -> CEX, price well under the best ask, amount 100, Buy ET10"
+      - "Read the POST answer: order_state pending_swap, amm_pending = the whole quantity; the page says it is being bought on-chain now"
+      - "GET /api/v1/exchange/ET10/orders/open -> the same order resting, on_chain_swap_pending false"
+    body: >
+      The user is told a swap from their wallet is under way when nothing is being swapped, and an order that is only resting reads as
+      about to fill. Placed on the operator's account with their say-so; 100 ET10 at 0.0008, $0.08.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
