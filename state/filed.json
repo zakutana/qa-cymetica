@@ -7413,6 +7413,20 @@
     "372": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "et10-pro-cex-only-market-sell-ends-as-an-on-chain-swap-4-percent-under",
+   "nodeids": [],
+   "report_ids": [
+    373
+   ],
+   "title": "ET10/USDC: a market sell sent with route CEX (\"CLOB only\") rested 33 s with no bid, then filled as an on-chain swap at 0.000848, 4.5% under the 0.000888 reference",
+   "filed_at": "2026-11-18T13:01:43+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "373": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

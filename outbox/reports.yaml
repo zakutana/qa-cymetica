@@ -10173,7 +10173,32 @@ reports:
       - "With no CLOB bid, read the header SPREAD on https://cymetica.com/exchange/et10-pro: Crossed"
       - "GET /api/v1/exchange/ET10/bbo -> best_bid null, mid_price 0.000800, spread 0"
     body: >
-      Seen while the order of #371 was resting as the only ask near 0.0008 with no bid under it.
+      Seen while the order of #372 was resting as the only ask near 0.0008 with no bid under it (the earlier text of this report said #371,
+      which is this report's own number).
+
+  - key: et10-pro-cex-only-market-sell-ends-as-an-on-chain-swap-4-percent-under
+    severity: high
+    category: logic
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC: a market sell sent with route CEX (\"CLOB only\") rested 33 s with no bid, then filled as an on-chain swap at 0.000848, 4.5% under the 0.000888 reference"
+    expected: >
+      An order sent with route CEX ("explicit opt-out: CLOB only", PlaceOrderRequest.route_mode) is matched only against orders on the central
+      limit order book; with no bid it is cancelled (a market order is IOC), and nothing is sold on-chain.
+    actual: >
+      Follows #372 (the same order, 1ab8ca96-20fc-4a9c-9271-d673ea05866b: 100 ET10, Market, CEX selected in the form, reference 0.000888, floor
+      0.000800). It was created at 12:59:18 UTC with amm_pending "100.000", backstop_pending true and order_state "pending_swap", rested as the only
+      ask on a book with no bid, and at 12:59:51.26 UTC GET /api/v1/exchange/ET10/trades/mine shows b1e30e9a-464a-4beb-9878-be09c89e0234: sell,
+      100 ET10 at 0.0008477100, role "taker", fee 0, "onchain": true, tx_hash null. /orders/history: the order "filled" at 12:59:51.26. USDC rose from
+      112.598727 to 112.683498 (+0.084771 = 100 x 0.00084771), 4.54% less than the 0.088800 the page's reference promised. The public
+      /trades lists the fill as the newest (SELL 0.000848), the header price and tab title read $0.000848, while /stats at 13:01 still says
+      price_usd 0.000894 with last_trade_at 13:00:44 (a later time than the fill, and the price of no trade since 12:56:04; as in #358).
+    steps:
+      - "Signed in on https://cymetica.com/exchange/et10-pro, Sell -> Market -> CEX, 100 ET10, Sell ET10, with no CLOB bid"
+      - "GET /api/v1/exchange/ET10/trades/mine -> the sell with \"onchain\": true about 30 s after the order; /orders/history -> filled"
+      - "Compare its price with the reference in the order's market_protection (0.000888)"
+    body: >
+      The user opted out of on-chain routing and was sold through it, at a price 4.5% under the quote they were shown and inside the 10% protection
+      band. Placed by the operator by hand, 100 ET10 (about $0.08). #372 says the order rests; this is how it ended.
 
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
