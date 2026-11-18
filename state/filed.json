@@ -7357,6 +7357,20 @@
     "368": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "et10-pro-open-orders-table-keeps-cancelled-orders",
+   "nodeids": [],
+   "report_ids": [
+    369
+   ],
+   "title": "ET10/USDC Pro Terminal: after both Cancels succeed, the Open Orders table keeps showing the two orders as OPEN with a spinning button, while ACCOUNT says Open Orders 0",
+   "filed_at": "2026-11-18T12:55:04+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "369": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }

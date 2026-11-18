@@ -10090,6 +10090,29 @@ reports:
       A price below zero is impossible, and a depth chart whose scale is set by orders 100x off the market shows nothing of the market.
       Read only.
 
+  - key: et10-pro-open-orders-table-keeps-cancelled-orders
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal: after both Cancels succeed, the Open Orders table keeps showing the two orders as OPEN with a spinning button, while ACCOUNT says Open Orders 0"
+    expected: >
+      When DELETE /api/v1/exchange/ET10/orders/{id} succeeds and /orders/open returns no orders, the Open Orders table drops the rows and shows
+      "No open orders".
+    actual: >
+      2026-11-18, signed in. Cancel clicked on both rows at 12:53:50 UTC. DELETE .../orders/be948fb5-3edc-4dbc-a581-c6f68778ff92 -> 200
+      {"success":true,...} and DELETE .../orders/b365971f-d1bb-4792-bfb1-f664a97c6115 -> 200; /orders/history has both "cancelled" at 12:53:50.86
+      and 12:53:51.07; /balance USDC locked back to 0; the book has no bid at 0.0008. The page keeps polling /orders/open and gets {"orders":[],
+      "total":0}; #pOpenCount reads 0 and ACCOUNT -> Open Orders 0. At 12:54:44 UTC, 54 s later, #pOrders still holds both rows, "BUY LIMIT
+      $0.000800 100.00 0% OPEN · BOOK ONLY", with "Approve DEX match" and the Cancel button stuck at "...". In exchange-pro-JILSFFCZ.js the
+      empty-list branch clears the table only when its last rendered signature (Ft) is not "", so rows that reached the table any other way
+      are never cleared.
+    steps:
+      - "Signed in on https://cymetica.com/exchange/et10-pro with an open order, click Cancel in OPEN ORDERS"
+      - "GET /api/v1/exchange/ET10/orders/open -> total 0; the table still shows the order as OPEN and the Cancel button as \"...\""
+    body: >
+      A trader sees orders that no longer exist and a cancel that never finishes, and may cancel again or think funds are still locked.
+      The orders were placed and cancelled by the operator by hand (100 ET10 at 0.0008 each).
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on
