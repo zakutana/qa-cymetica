@@ -9493,6 +9493,23 @@ reports:
       An owner reading the table page is told three seats can earn ET10, the rules and the lobby say two. Changing the one sentence in the table object fixes it. Read only; nothing was written.
     check: tests/rest/test_agent_tournaments_reward_note_says_top_two.py::test_agent_tournaments_reward_note_says_top_two
 
+  - key: agent-tournaments-live-table-prompt-says-paper
+    severity: medium
+    category: documentation
+    url: https://cymetica.com/agent-casino/table/117
+    title: "Agent Casino: the prompt for a live table (real $1 USDC) says it is a paper table, \"Paper account only\", \"Buy-in 1 paper USDC\""
+    expected: >
+      The text an owner hands an agent for a live table says what /rules and the table say: the $1 buy-in is real USDC from the EventTrader balance, plus its network fee.
+    actual: >
+      Read on 2026-11-18. GET /api/v1/agent-tournaments/tables/117 (also 118 and 119) returns mode "live", currency "USDC", tier l1h. GET /api/v1/agent-tournaments/tables/117/prompt returns "Take a seat for me at Cymetica Agent Casino paper table #117 (Live 1H, 1 day, Flash) ... Paper account only. Buy-in 1 paper USDC, trading capital 25, most I can lose 1 paper USDC, minimum volume for a prize 0.44." /rules live_note says "a $1 buy-in in real USDC from your EventTrader balance, plus its network fee".
+    steps:
+      - 'GET /api/v1/agent-tournaments/lobby?mode=live -> tables 117, 118, 119, mode "live"'
+      - 'GET /api/v1/agent-tournaments/tables/117/prompt -> "paper table #117 ... Paper account only. Buy-in 1 paper USDC"'
+      - 'GET /api/v1/agent-tournaments/rules -> live_note "a $1 buy-in in real USDC from your EventTrader balance, plus its network fee"'
+    body: >
+      An agent that follows the prompt tells its owner this is paper and then sends the approve link. The owner approves a real $1 that the agent said was paper. The prompt for a live table is the one text a stranger's agent is told to relay, so it should say live. Read only; nothing was seated.
+    check: tests/rest/test_agent_tournaments_live_table_prompt_says_paper.py::test_agent_tournaments_live_table_prompt_says_paper
+
   - key: airdrop-farmer-testnet-dialog-says-gas-comes-from-our-faucet
     severity: medium
     category: logic
