@@ -10223,6 +10223,24 @@ reports:
       A trader who is told a swap is under way will wait for it, or place the order again. The same wording came with #365 and #372, where the state
       was not a swap either (or only later). Placed by the operator by hand, 100 ET10 at 0.000898 (nothing filled).
 
+  - key: et10-pro-stop-limit-order-from-the-page-always-answers-400
+    severity: high
+    category: logic
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal: every Stop-Limit order the page sends is refused with 400 \"Stop-limit orders require a stop_price > 0\"; the tab cannot place one"
+    expected: >
+      The Stop-Limit tab places a stop-limit order: it has a stop price field and sends stop_price, which PlaceOrderRequest documents.
+    actual: >
+      Completes #363, which said what the server does with such an order was not tested. 2026-11-18 13:04:24 UTC, one click on Buy ET10 (Stop-Limit,
+      route CEX, 100 ET10, price 0.000800; the tab has no stop price field): POST /api/v1/exchange/ET10/orders -> 400 {"detail":{"field":"stop_price",
+      "error":"Stop-limit orders require a stop_price > 0"}}. The page shows "Stop-limit orders require a stop_price > 0" under the button, with no
+      field to fill it in. Nothing was placed: no open order, balances unchanged. So a trader who picks Stop-Limit can only ever get this error.
+    steps:
+      - "Signed in on https://cymetica.com/exchange/et10-pro, Buy -> Stop-Limit, price and amount, click Buy ET10"
+      - "POST /api/v1/exchange/ET10/orders -> 400 field stop_price; the form has no stop price input"
+    body: >
+      Placed by the operator by hand, 100 ET10 at 0.000800; refused, nothing filled.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

@@ -7441,6 +7441,20 @@
     "374": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "et10-pro-stop-limit-order-from-the-page-always-answers-400",
+   "nodeids": [],
+   "report_ids": [
+    375
+   ],
+   "title": "ET10/USDC Pro Terminal: every Stop-Limit order the page sends is refused with 400 \"Stop-limit orders require a stop_price > 0\"; the tab cannot place one",
+   "filed_at": "2026-11-18T13:04:53+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "375": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
