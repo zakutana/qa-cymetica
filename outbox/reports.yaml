@@ -10113,6 +10113,25 @@ reports:
       A trader sees orders that no longer exist and a cancel that never finishes, and may cancel again or think funds are still locked.
       The orders were placed and cancelled by the operator by hand (100 ET10 at 0.0008 each).
 
+  - key: et10-pro-one-fill-counted-twice-on-the-page
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal: one 100 ET10 fill shows on the 1m candle as Vol 0.1780 (the API candle says 0.089) and raises \"24h Trades\" from 50 to 52"
+    expected: >
+      A trade pushed to the open page is counted once: the live candle's volume rises by its 0.089 USDC and "24h Trades" by 1.
+    actual: >
+      2026-11-18, one market buy of 100 ET10 filled at 12:56:04 UTC at 0.000890 (trades/mine fbf2da98-56, 0.089 USDC; public /trades shows it
+      once). On the open page, Time & Sales lists it once, but the chart legend for the 12:56 candle reads "O 0.000890 H 0.000890 L 0.000890
+      C 0.000890 +0.00% Vol 0.1780", while GET /api/v1/exchange/ET10/chart?interval=1m gives the 12:56 candle volume 0.089; and ACCOUNT ->
+      24h Trades went from 50 (before the fill) to 52. Both are twice the one trade, as if the trade event were applied two times.
+    steps:
+      - "Keep https://cymetica.com/exchange/et10-pro open, note 24h Trades; let one trade happen (here our 100 ET10 market buy)"
+      - "Read the chart legend's Vol for that minute and 24h Trades: twice the trade"
+      - "GET /api/v1/exchange/ET10/chart?interval=1m -> that minute's volume is the trade's quote amount once"
+    body: >
+      Placed by the operator by hand (100 ET10, $0.089). #359 is about what 24h Trades counts; this is that one trade is counted twice.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

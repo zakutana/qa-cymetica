@@ -7371,6 +7371,20 @@
     "369": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "et10-pro-one-fill-counted-twice-on-the-page",
+   "nodeids": [],
+   "report_ids": [
+    370
+   ],
+   "title": "ET10/USDC Pro Terminal: one 100 ET10 fill shows on the 1m candle as Vol 0.1780 (the API candle says 0.089) and raises \"24h Trades\" from 50 to 52",
+   "filed_at": "2026-11-18T12:58:57+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "370": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
