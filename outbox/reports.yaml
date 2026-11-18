@@ -10054,5 +10054,6 @@ footer: >
   them, read-only except in paper mode. What we do execute is paper only and recorded: paper event-card
   orders, paper bot clones funded from the practice balance, and prompts
   sent to the site's own NEXUS chat on the paper account (which places paper
-  orders). No live trading, no order against a real book, no deposit or withdrawal, no cleanup,
+  orders). No live trading by the agent: an order on a real book is placed by the account's owner by hand,
+  small, and the report says so. No deposit or withdrawal, no cleanup,
   no duplicate tickets. Figures are read from the live service, and each finding ships with how to reproduce it.
