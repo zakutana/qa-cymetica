@@ -9722,6 +9722,30 @@ reports:
       A user who follows step 1 gets no sUSDfr; the card's Fresh wallet tick says the step is open because the pool's value is counted
       without its side. It is the defect of #338 back on two of High's three routes. Read only: eth_call and GETs; nothing signed or sent.
 
+  - key: season-board-leaves-out-an-active-company
+    findings: [CYM-season-board-lists-every-active-company]
+    check: tests/rest/test_season_board_lists_every_active_company.py::test_season_board_lists_every_active_company
+    severity: low
+    category: logic
+    url: https://cymetica.com/company
+    title: "Season 1 leaderboard ranks 7 companies; the Universe lists an 8th, active one (company 20, 5 days old) that is not on it"
+    expected: >
+      Every active company is a row of the Season board, as the 0-point companies Research Intelligence, ASYMMETRY CAPITAL and Atalaya
+      Signals are. The board's rules ("Top 3 by points this month", "100+ points in the month") do not say a company must have scored to
+      be listed.
+    actual: >
+      Read on 2026-11-18 at 12:25 UTC (computed_at 12:01:34). GET /api/v1/company/universe lists 8 companies (ids 6, 11, 12, 14, 15, 16, 19, 20);
+      GET /api/v1/company/season has rows for 7 of them and none for company 20 "QA Stranger Co" (status active, 2 departments, 5 days old,
+      owner Cytest02, not public). Company 19 (14 days old, 0 points) is on the board; company 20 (5 days, 0 points) is not. A newly made
+      company therefore does not appear on the leaderboard in the Universe.
+    steps:
+      - 'GET https://cymetica.com/api/v1/company/universe -> companies[].id 6, 11, 12, 14, 15, 16, 19, 20; id 20 status active, days 5'
+      - 'GET https://cymetica.com/api/v1/company/season -> rows[].company_id 14, 16, 12, 15, 6, 11, 19 (7 rows), computed_at 2026-11-18T12:01:34Z'
+    body: >
+      Our check fails while an active company of the Universe has no row on the board; it passes when every active company has one. It does
+      not say what a company with no points should rank, or that paused ones must be listed. If a company is meant to join the board only
+      after something (a first visit, a day, a product), please say what in the board's rules. GET requests only.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

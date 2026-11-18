@@ -7097,6 +7097,22 @@
     "350": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "season-board-leaves-out-an-active-company",
+   "nodeids": [
+    "tests/rest/test_season_board_lists_every_active_company.py::test_season_board_lists_every_active_company"
+   ],
+   "report_ids": [
+    351
+   ],
+   "title": "Season 1 leaderboard ranks 7 companies; the Universe lists an 8th, active one (company 20, 5 days old) that is not on it",
+   "filed_at": "2026-11-18T12:26:02+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "351": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
