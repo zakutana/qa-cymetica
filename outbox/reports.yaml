@@ -10241,6 +10241,29 @@ reports:
     body: >
       Placed by the operator by hand, 100 ET10 at 0.000800; refused, nothing filled.
 
+  - key: et10-pro-stop-limit-with-a-stop-price-answers-500-dataerror
+    severity: high
+    category: logic
+    url: https://cymetica.com/exchange/et10-pro
+    title: "ET10/USDC Pro Terminal: a Stop-Limit order with a trigger price (the fix for #363/#375) is refused with 500 \"Order processing failed\", debug DataError; the page repeats it three times"
+    expected: >
+      A Buy Stop-Limit with trigger 0.001000 and limit 0.001000, far above the last price 0.000895, rests as a pending stop order and shows in Open Orders; it fires when the last trade reaches 0.001000.
+    actual: >
+      2026-11-19 after your 01:36 UTC restart, two clicks on Buy ET10 on the Stop-Limit tab (route CEX, 100 ET10, Trigger price 0.001000, Price 0.001000).
+      Each click: POST /api/v1/exchange/ET10/orders with body {"side":"buy","order_type":"stop_limit","price":"0.001000","quantity":"100","stop_price":"0.001000","route_mode":"cex","dex_ack":false,"dex_ack_price":null,"dex_fee_ack_usd":null}
+      and header X-Idempotency-Key pro-1795078195014-0rf1b3j2o (second click pro-1795078249991-82xzp2byu) -> 500 {"detail":{"field":"internal","error":"Order processing failed — please retry","debug":"DataError"}}.
+      The page re-sent each click with the same key and got 500 every time: the second click was sent 6 times (6 x 500) while the page showed "Order queue busy — retrying (3/6)..." up to (6/6),
+      so it presents a database DataError as a busy queue; the first click was seen with at least 3 x 500. GET /orders/open afterwards: 0 orders; balances unchanged
+      (ET10 432098.341, USDC 112.683498). A limit order on the same page, same pair and amount, was accepted on 2026-11-18, so the 500 is specific to stop_limit.
+      DataError reads like a database value that does not fit (a column that does not exist or is too narrow for stop_price, or a null where a value is required),
+      not a user input problem: both prices are plain 6-decimal strings.
+    steps:
+      - "Signed in on https://cymetica.com/exchange/et10-pro, Buy -> Stop-Limit, route CEX, Trigger price 0.001000, Price 0.001000, Amount 100, click Buy ET10"
+      - "POST /api/v1/exchange/ET10/orders with stop_price 0.001000 -> 500 debug DataError; repeat, same result; GET /orders/open -> empty"
+    body: >
+      Placed by the operator by hand, 100 ET10 at 0.001000, a price far from the market so that it could not fire. Nothing was placed. This is the follow-up to the
+      Stop-Limit fix reported live on 2026-11-19: the tab now has the field and sends stop_price, and the server cannot store the order. Tested only the Buy side and only route CEX.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

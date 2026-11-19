@@ -7455,6 +7455,20 @@
     "375": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "et10-pro-stop-limit-with-a-stop-price-answers-500-dataerror",
+   "nodeids": [],
+   "report_ids": [
+    376
+   ],
+   "title": "ET10/USDC Pro Terminal: a Stop-Limit order with a trigger price (the fix for #363/#375) is refused with 500 \"Order processing failed\", debug DataError; the page repeats it three times",
+   "filed_at": "2026-11-19T08:51:38+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "376": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
