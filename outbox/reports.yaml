@@ -10264,6 +10264,43 @@ reports:
       Placed by the operator by hand, 100 ET10 at 0.001000, a price far from the market so that it could not fire. Nothing was placed. This is the follow-up to the
       Stop-Limit fix reported live on 2026-11-19: the tab now has the field and sends stop_price, and the server cannot store the order. Tested only the Buy side and only route CEX.
 
+  - key: eth-pro-dex-market-buy-after-confirmation-answers-500-valueerror
+    severity: high
+    category: logic
+    url: https://cymetica.com/exchange/eth-pro
+    title: "ETH/USDC Pro Terminal: a DEX market buy of 0.001 ETH is refused with 500 \"Order processing failed\" (ValueError) after the swap confirmation; the page repeats it 7 times as \"Order queue busy\""
+    expected: >
+      Market Buy 0.001 ETH, route DEX, confirmed in the fee-ceiling dialog, starts the on-chain swap (about 1803.26 USDC per ETH, about 1.80 USDC, gas ceiling 0.0970 USD) and the order shows "Swap pending on-chain".
+    actual: >
+      2026-11-19 08:58 UTC, signed in, ETH/USDC, Buy, Market, route DEX, Amount 0.001. First click: POST /api/v1/exchange/ETH/orders -> 428 DEX_SWAP_CONFIRMATION_REQUIRED, the dialog opens
+      ("Approve fee ceiling $0.0970 & buy now at about 1803.26 USDC"). The operator clicked it: POST with {"side":"buy","order_type":"market","price":"0","quantity":"0.001","route_mode":"dex","dex_ack":true,"dex_ack_price":"1803.26","dex_fee_ack_usd":"0.0970"}
+      and X-Idempotency-Key pro-1795078717057-j8vcoc3vy -> 500 {"detail":{"field":"internal","error":"Order processing failed — please retry","debug":"ValueError"}}.
+      The page re-sent the same body 7 times (08:58:41 to 08:59:18, all 500) while it showed "Order queue busy — retrying (n/6)...", so a server error is presented as a busy queue, and the counter says 6 while 7 were sent.
+      Afterwards GET /orders/open is empty and the balances are unchanged (USDC 112.683498, ETH 0.000001433). Nothing was bought. The ETH balance is 0.0000014, so the page also says "Low ETH balance - a small amount of your USDC/USDT will be auto-converted to cover network gas";
+      if that conversion is what raises the ValueError, the order should say so instead of 500.
+    steps:
+      - "Signed in on https://cymetica.com/exchange/eth-pro, Buy -> Market, route DEX, Amount 0.001, click Buy ETH, then click Approve in the confirmation dialog"
+      - "POST /api/v1/exchange/ETH/orders with dex_ack true -> 500 debug ValueError, repeated; GET /orders/open -> empty"
+    body: >
+      Placed by the operator by hand, the smallest allowed amount (0.001 ETH, about 1.80 USDC), with the gas ceiling approved by the operator. Nothing was executed on chain, as far as the account shows. Tested only this one order, Buy side.
+
+  - key: eth-pro-chart-shows-a-16-day-old-trade-as-the-live-price
+    severity: medium
+    category: ui_ux
+    url: https://cymetica.com/exchange/eth-pro
+    title: "ETH/USDC Pro Terminal: the live chart is a flat line at 2266.12 (a trade from 3 November) while the header price is 1,799.94 and the on-chain reference 1,803"
+    expected: >
+      When the last trade is stale, the chart and its price tag say so or follow the same price as the header; the header, the chart and the order book do not disagree by 20 percent.
+    actual: >
+      2026-11-19 08:56 UTC. Header Price $1,799.94 (/stats price_source "index"); order book spread around 1,801 to 1,803 (outside liquidity); the 1m chart is one flat line with the price tag $2266.12 and the Time & Sales list ends on 3 November
+      (/stats last_trade_at 2026-11-03T02:53:25Z, last_trade_stale true, volume_24h_usd 0, /ticker last 2266.1244 last_source "last_fill"). So the chart's "live" line sits 26 percent above the price the page uses everywhere else, and the 24h change reads +0.00%.
+      The API says last_stale true; the chart does not use it.
+    steps:
+      - "Open https://cymetica.com/exchange/eth-pro signed in or out; compare the header Price, the chart's right-hand price tag and the order book"
+      - "GET /api/v1/exchange/ETH/stats and /ticker: last_trade_price 2266.12, last_trade_stale true, price_usd 1799.94"
+    body: >
+      Seen while testing the DEX buy above; no order involved.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

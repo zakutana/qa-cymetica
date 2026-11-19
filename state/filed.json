@@ -7469,6 +7469,34 @@
     "376": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "eth-pro-dex-market-buy-after-confirmation-answers-500-valueerror",
+   "nodeids": [],
+   "report_ids": [
+    377
+   ],
+   "title": "ETH/USDC Pro Terminal: a DEX market buy of 0.001 ETH is refused with 500 \"Order processing failed\" (ValueError) after the swap confirmation; the page repeats it 7 times as \"Order queue busy\"",
+   "filed_at": "2026-11-19T09:00:02+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "377": "pending"
+   },
+   "withdrawn": false
+  },
+  {
+   "key": "eth-pro-chart-shows-a-16-day-old-trade-as-the-live-price",
+   "nodeids": [],
+   "report_ids": [
+    378
+   ],
+   "title": "ETH/USDC Pro Terminal: the live chart is a flat line at 2266.12 (a trade from 3 November) while the header price is 1,799.94 and the on-chain reference 1,803",
+   "filed_at": "2026-11-19T09:00:22+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "378": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
