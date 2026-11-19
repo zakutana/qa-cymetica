@@ -10301,6 +10301,30 @@ reports:
     body: >
       Seen while testing the DEX buy above; no order involved.
 
+  - key: sbio-pro-limit-buy-above-the-amm-price-never-fills-even-after-dex-approval
+    severity: high
+    category: logic
+    url: https://cymetica.com/exchange/sbio-pro
+    title: "SBIO/USDC Pro Terminal: a limit buy priced above the on-chain price stays 'BOOK ONLY', is not filled after Approve DEX match, and nothing tells the trader why while other buys fill below it"
+    expected: >
+      A buy limit at 0.000650, above the on-chain price (about 0.000513 to 0.000573), is either filled at the better on-chain price when the trader approves the DEX match, or the order says in plain words what it is waiting for and why it does not fill.
+    actual: >
+      2026-11-19, signed in, SBIO/USDC, Buy, Limit, route CEX, 10 SBIO at 0.000650 (placed by the operator by hand, about 0.0065 USDC). The order rests: POST /orders -> 200, status open,
+      order_state_label "Open - resting on the book, nothing filled yet", and the same response says "onchain_route":{"status":"ready","message":"Your wallet can pay for on-chain fills of this order.","approval_needed":false}.
+      Seconds later GET /orders/open says "dex_match":"needs_approval" and the page shows OPEN - BOOK ONLY with an "Approve DEX match" button at the very bottom of the page, so one response says no approval is needed and the next says it is.
+      The operator clicked Approve DEX match: POST /orders/{id}/dex-ack {"dex_ack_price":"0.000512527","dex_fee_ack_usd":"0.3257"} -> 200 {"dex_match":"approved","approved":true}. The fee ceiling approved was 0.3257 USD for an order worth 0.0065 USD.
+      After that the order stayed open with filled 0 and on_chain_swap_pending false for the 110 seconds we watched (16:30:03 to 16:31:51 UTC), while GET /market-order/preview and /stats put the on-chain reference at 0.0005125 to 0.000573, 12 to 21 percent below the limit.
+      Meanwhile every one of the last 25 public trades is a buy filled through the AMM at 0.00038 to 0.00058 (2026-11-18), below the resting CLOB bids at 0.000700 and 0.000590. A trader with a bid above those prices sees other buys filled lower and his own order untouched.
+      That matches the complaint "Why did my SBIO limit order not fill when numerous lower bids filled?"; this is our reproduction, we do not know that trader's order.
+    steps:
+      - "Signed in on https://cymetica.com/exchange/sbio-pro, Buy -> Limit, route CEX, Price 0.000650, Amount 10, click Buy SBIO"
+      - "POST /api/v1/exchange/SBIO/orders -> 200 with onchain_route.approval_needed false; GET /api/v1/exchange/SBIO/orders/open -> dex_match needs_approval"
+      - "Click Approve DEX match (bottom of the page, Open Orders table) -> POST /orders/{id}/dex-ack -> 200 approved; watch GET /orders/open: still open, filled 0"
+    body: >
+      Three separate problems in one trace: the order response and the open-orders response disagree about approval, the approved order is still not matched against an on-chain price that is better than its limit,
+      and the status text never says the order is waiting for a swap approval, so a trader cannot tell it from a normal resting bid. The fee ceiling 0.3257 USD against an order of 0.0065 USD is 50 times the order.
+      Tested with one order, route CEX only; the order is still open when this is filed and the operator will cancel it.
+
 footer: >
   Reported by an independent QA agent. Scope of this work: verification of the
   REST API, MCP, the machine-readable discovery surfaces and the pages built on

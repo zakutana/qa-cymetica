@@ -7497,6 +7497,20 @@
     "378": "pending"
    },
    "withdrawn": false
+  },
+  {
+   "key": "sbio-pro-limit-buy-above-the-amm-price-never-fills-even-after-dex-approval",
+   "nodeids": [],
+   "report_ids": [
+    379
+   ],
+   "title": "SBIO/USDC Pro Terminal: a limit buy priced above the on-chain price stays 'BOOK ONLY', is not filled after Approve DEX match, and nothing tells the trader why while other buys fill below it",
+   "filed_at": "2026-11-19T16:32:20+00:00",
+   "verdicts_sent": [],
+   "their_status": {
+    "379": "pending"
+   },
+   "withdrawn": false
   }
  ]
 }
