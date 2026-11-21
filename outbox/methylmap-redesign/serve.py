@@ -7,8 +7,9 @@ redesign.css and redesign.js are added after their own files. Their markup, scri
   /?orig       their page as it is live, the demo report opened (to compare)
 
 Only three things are read from biomiv.com: the page, /static/* and /api/v1/healthspan/evidence (gene name only).
-Everything else is answered here with an empty reply, and POST, PUT, PATCH and DELETE are refused, so nothing is
-sent from a copy and no view of ours is counted. Every reply is Cache-Control: no-store.
+Everything else is answered here with an empty reply, and POST, PUT, PATCH and DELETE are refused, so the browser
+sends nothing to biomiv.com (checked 2026-11-21: it talks to this server and Google Fonts only). This server reads
+their page at most once a minute. Every reply is Cache-Control: no-store.
 """
 from __future__ import annotations
 

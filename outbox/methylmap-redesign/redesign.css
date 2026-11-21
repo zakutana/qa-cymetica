@@ -60,7 +60,7 @@ html[data-site="biomiv"] .rd-genes-h h2 { font-size: 22px; margin: 0 0 4px; }
 .rd .mm-tile .mm-word { margin: 0; white-space: nowrap; }
 .rd .mm-tile .rd-role { grid-column: 1 / -1; font-size: 13px; line-height: 1.4; color: var(--text-2);
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.8em; }
-.rd .mm-tile .mm-sub { grid-column: 1 / -1; margin-top: 6px; color: var(--text-3); display: flex; justify-content: space-between; gap: 8px; white-space: nowrap; }
+.rd .mm-tile .mm-sub { grid-column: 1 / -1; margin-top: 6px; color: var(--text-3); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0 8px; white-space: nowrap; }
 
 /* the opened gene is as tall as the list beside it and scrolls inside, so the page keeps its length */
 .rd-detail { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--bm-line); border-radius: 16px; background: var(--bg); }
