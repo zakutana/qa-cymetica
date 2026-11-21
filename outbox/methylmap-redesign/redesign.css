@@ -1,0 +1,132 @@
+/* MethylMap redesign: layout only. House tokens only, as their methylmap.css (no new colour): the tints are
+   color-mix of their own tokens, the way biomiv-site.css builds --bm-tint. Loaded after their stylesheets. */
+
+/* ── width: the report gets the screen, the start panel and the guides keep their reading column ─────────── */
+html[data-site="biomiv"] .hs.mm { max-width: 1240px; }
+html[data-site="biomiv"] main.mm > :not(#mmReport) { max-width: 860px; margin-left: auto; margin-right: auto; }
+
+/* ── the report: full-width panels, the four small tools two by two ──────────────────────────────────────── */
+#mmReport.rd:not([hidden]) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+#mmReport.rd > .mm-panel { margin: 0; grid-column: 1 / -1; padding: clamp(20px, 2.4vw, 32px); background: var(--bg);
+  border: 1px solid var(--bm-line); border-radius: 16px; box-shadow: var(--bm-shadow); }
+#mmReport.rd > .rd-empty { display: none; }
+/* medicines and the doctor's questions on the left, the blood panel beside both, the follow-up under them */
+#mmReport.rd > [aria-labelledby="mmMedH"], #mmReport.rd > [aria-labelledby="mmDocH"] { grid-column: 1; }
+#mmReport.rd > [aria-labelledby="mmBloodH"] { grid-column: 2; grid-row: span 2; }
+#mmReport.rd > [aria-labelledby="mmFollowH"] { order: 1; }
+#mmReport.rd > [aria-labelledby="mmKeepH"] { order: 2; }
+.rd .mm-chart { max-width: 760px; }
+
+/* ── first screen: title and actions, then the four counts ───────────────────────────────────────────────── */
+.rd-top { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: flex-start; justify-content: space-between; }
+.rd-title { min-width: 0; }
+html[data-site="biomiv"] .rd-title h2 { margin: 0 0 6px; }
+.rd-title .mm-cover { font-size: 18px; margin: 0; }
+.rd-title .mm-meta { margin: 2px 0 0; }
+.rd-top > .mm-row { justify-content: flex-end; }
+
+.rd-head > .mm-legend { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 0; }
+.rd-head > .mm-legend li { flex: var(--n, 1) 1 0; min-width: 136px; display: flex; flex-direction: column; gap: 4px;
+  padding: 16px 18px 14px; border-radius: 14px; background: color-mix(in srgb, var(--mm) 10%, var(--bg));
+  font-size: 15px; font-weight: 600; color: var(--text); line-height: 1.2; }
+.rd-head > .mm-legend li::before { display: none; }
+.rd-head > .mm-legend .mm-c2 { order: 0; }
+.rd-head > .mm-legend .mm-c1 { order: 1; }
+.rd-head > .mm-legend .mm-c0 { order: 2; }
+.rd-head > .mm-legend .mm-cn { order: 3; }
+.rd-n { font-size: clamp(44px, 4.4vw, 64px); line-height: 1; font-weight: 600; letter-spacing: -0.03em; color: var(--mm);
+  font-variant-numeric: tabular-nums; }
+
+/* ── genes: the list on the left, the opened gene beside it ──────────────────────────────────────────────── */
+.rd-genes-h { margin: 36px 0 14px; }
+html[data-site="biomiv"] .rd-genes-h h2 { font-size: 22px; margin: 0 0 4px; }
+.rd-genes-h .mm-lede { margin: 0; font-size: 15px; }
+.rd-split { display: grid; grid-template-columns: minmax(0, 484px) minmax(0, 1fr); gap: 20px; align-items: stretch; }
+.rd-split .mm-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; align-self: start; }
+
+.rd .mm-tile { border: 1px solid var(--bm-line); border-radius: 14px; padding: 0; background: var(--bg);
+  transition: border-color .15s, box-shadow .15s; }
+.rd .mm-tile.mm-c2 { order: 0; }
+.rd .mm-tile.mm-c1 { order: 1; }
+.rd .mm-tile.mm-c0 { order: 2; }
+.rd .mm-tile.mm-cn { order: 3; }
+.rd .mm-tile:hover { border-color: var(--bm-line-strong); }
+.rd .mm-tile.rd-on { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 16%, transparent); }
+.rd .mm-tile button { position: relative; box-sizing: border-box; padding: 12px 14px 11px 20px;
+  display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; align-items: baseline; }
+.rd .mm-tile button::before { content: ""; position: absolute; left: 8px; top: 12px; bottom: 12px; width: 4px;
+  border-radius: 99px; background: var(--mm); }
+.rd .mm-tile b { font-size: 18px; letter-spacing: -0.01em; }
+.rd .mm-tile .mm-word { margin: 0; white-space: nowrap; }
+.rd .mm-tile .rd-role { grid-column: 1 / -1; font-size: 13px; line-height: 1.4; color: var(--text-2);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.8em; }
+.rd .mm-tile .mm-sub { grid-column: 1 / -1; margin-top: 6px; color: var(--text-3); display: flex; justify-content: space-between; gap: 8px; white-space: nowrap; }
+
+/* the opened gene is as tall as the list beside it and scrolls inside, so the page keeps its length */
+.rd-detail { position: relative; min-width: 0; overflow: hidden; border: 1px solid var(--bm-line); border-radius: 16px; background: var(--bg); }
+.rd-detail::after { content: ""; position: absolute; left: 1px; right: 14px; bottom: 0; height: 40px; pointer-events: none;
+  background: linear-gradient(transparent, var(--bg)); }
+.rd-detail .mm-gene { display: none; border: 0; margin: 0; border-radius: 0; background: none; }
+.rd-detail .mm-gene.rd-on { display: block; position: absolute; inset: 0; overflow-y: auto; scrollbar-width: thin; }
+.rd-detail .mm-gene > summary { pointer-events: none; padding: 22px 26px 6px; align-items: center; gap: 4px 14px; }
+.rd-detail .mm-gene > summary::after { content: none; }
+.rd-detail .mm-gene > summary b { font-size: 32px; line-height: 1.1; letter-spacing: -0.025em; }
+.rd-detail .mm-gene > summary .mm-word { font-size: 14px; padding: 4px 12px; border-radius: 99px;
+  background: color-mix(in srgb, var(--mm) 12%, var(--bg)); }
+.rd-detail .mm-gene > summary .mm-word::before, .rd-nut h3 .mm-word::before { content: ""; display: inline-block; width: 10px;
+  height: 10px; border-radius: 50%; background: var(--mm); margin-right: 6px; vertical-align: -1px; }
+.rd-detail .mm-gene > summary .mm-small { flex-basis: 100%; font-size: 14px; }
+.rd-detail .mm-gene-body { padding: 8px 26px 44px; }
+.rd-detail .mm-gene-body > p { margin: 14px 0; font-size: 15.5px; }
+.rd-detail .mm-gene-body > p > strong:first-child { display: block; font-size: 13px; font-weight: 600; color: var(--text-2); margin-bottom: 2px; }
+.rd-detail .mm-gene-body > h3 { margin: 24px 0 8px; padding-top: 18px; border-top: 1px solid var(--bm-line); font-size: 17px; }
+.rd-detail .mm-table-wrap { margin: 18px 0; padding: 4px 14px; border-radius: 12px; background: var(--surface); }
+.rd-detail .mm-table th, .rd-detail .mm-table td { border-bottom-color: var(--bm-line); padding: 9px 8px; }
+.rd-detail .mm-table tr:last-child td { border-bottom: 0; }
+
+/* ── the map: at full width, led by the sentence that names the slow steps ───────────────────────────────── */
+.rd-map .rd-slow { font-size: clamp(18px, 1.6vw, 21px); font-weight: 600; line-height: 1.4; color: var(--text); margin: 0 0 8px; text-wrap: balance; }
+.rd-map .mm-lede { max-width: 95ch; }
+.rd-map .mm-legend { margin: 16px 0 4px; }
+.rd-map .mm-map { overflow: visible; }
+.rd-map .mm-map svg { min-width: 0; }
+.rd-map .mm-small { max-width: 110ch; }
+
+/* ── combinations: side by side ──────────────────────────────────────────────────────────────────────────── */
+.rd-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+.rd-combos .mm-caution { margin: 0; padding: 16px 18px; border: 1px solid var(--bm-line); border-left: 4px solid var(--mm-two);
+  border-radius: 14px; background: var(--bg); font-size: 15px; line-height: 1.55; }
+.rd-combos .mm-caution > strong { display: block; font-size: 17px; line-height: 1.3; margin-bottom: 6px; }
+.rd-combos .mm-caution p { margin: 10px 0 0; }
+.rd-combos .mm-boundary { margin: 18px 0 0; }
+
+/* ── raw materials: a card per gene ──────────────────────────────────────────────────────────────────────── */
+.rd-nuts { columns: 3 330px; column-gap: 18px; margin-top: 18px; }
+.rd-nut { break-inside: avoid; margin: 0 0 18px; padding: 16px 18px 6px; border: 1px solid var(--bm-line); border-radius: 14px; background: var(--bg); }
+html[data-site="biomiv"] .rd-nut h3 { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 10px; font-size: 20px; }
+.rd-nut h3 .mm-word { font-size: 13px; font-weight: 600; white-space: nowrap; }
+.rd-nut ul { list-style: none; margin: 0; padding: 0; }
+.rd-nut li { margin: 0; padding: 10px 0; border-top: 1px solid var(--bm-line); font-size: 14.5px; line-height: 1.5; color: var(--text-2); }
+.rd-nu strong { display: block; font-size: 15px; color: var(--text); margin-bottom: 2px; }
+.rd-kv { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; }
+.rd-k { font-weight: 600; color: var(--text); }
+
+/* ── narrower windows: one column ────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1040px) {
+  .rd-split { grid-template-columns: minmax(0, 1fr); }
+  .rd-split .mm-tiles { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .rd-detail .mm-gene.rd-on { position: static; overflow: visible; }
+  .rd-detail::after { content: none; }
+  #mmReport.rd > .mm-panel[aria-labelledby] { grid-column: 1 / -1; grid-row: auto; }
+}
+
+/* ── print: every gene, one under the other, as their print view ─────────────────────────────────────────── */
+@media print {
+  #mmReport.rd:not([hidden]) { display: block; }
+  #mmReport.rd > .mm-panel { border: 0; box-shadow: none; padding: 0; margin: 10px 0; }
+  .rd-split { display: block; }
+  .rd-split .mm-tiles { margin-bottom: 12px; }
+  .rd-detail { border: 0; overflow: visible; }
+  .rd-detail::after { content: none; }
+  .rd-detail .mm-gene, .rd-detail .mm-gene.rd-on { display: block; position: static; overflow: visible; break-inside: avoid; }
+}

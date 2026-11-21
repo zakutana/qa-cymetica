@@ -2,6 +2,12 @@
   "version": "0.0.1",
   "configurations": [
     {
+      "name": "methylmap-redesign",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outbox/methylmap-redesign/serve.py", "--quiet"],
+      "port": 8850
+    },
+    {
       "name": "capital-maximizer-look",
       "runtimeExecutable": "python",
       "runtimeArgs": ["outbox/capital-maximizer/look/serve.py", "--quiet"],

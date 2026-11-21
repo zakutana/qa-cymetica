@@ -1,0 +1,3300 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-theme-default="light" data-site="biomiv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="view-transition" content="same-origin">
+    <title>MethylMap: 13-Gene Methylation Report from Your Own DNA File | Biomiv</title>
+    
+    
+<meta name="description" content="Upload the raw DNA file you already have (23andMe, AncestryDNA, MyHeritage, FamilyTreeDNA, Living DNA, tellmeGen or a VCF) and get a 13-gene methylation report in plain words, with the research behind every line. Your file is read in your browser and never uploaded.">
+<link rel="canonical" href="https://biomiv.com/healthbuilder/apps/methylmap">
+<meta property="og:title" content="MethylMap: 13-gene methylation report from your own DNA file">
+<meta property="og:description" content="MTHFR, COMT, MTR, MTRR, CBS, VDR and 7 more genes read from the raw DNA file you already have, in your browser, with a source for every line.">
+<meta property="og:url" content="https://biomiv.com/healthbuilder/apps/methylmap">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Biomiv">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="MethylMap: 13-gene methylation report from your own DNA file">
+<meta name="twitter:description" content="MTHFR, COMT, MTR, MTRR, CBS, VDR and 7 more genes read from the raw DNA file you already have, in your browser, with a source for every line.">
+
+    
+    
+    
+    <link rel="alternate" hreflang="x-default" href="https://biomiv.com/healthbuilder/apps/methylmap">
+    <link rel="alternate" hreflang="en" href="https://biomiv.com/healthbuilder/apps/methylmap?lang=en">
+    <link rel="alternate" hreflang="es" href="https://biomiv.com/healthbuilder/apps/methylmap?lang=es">
+    <link rel="alternate" hreflang="zh" href="https://biomiv.com/healthbuilder/apps/methylmap?lang=zh">
+    <link rel="alternate" hreflang="pt" href="https://biomiv.com/healthbuilder/apps/methylmap?lang=pt">
+    
+    
+<meta property="og:image" content="https://biomiv.com/static/img/og/bio/methylmap.png?v=20261120-1">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Biomiv MethylMap: 13 methylation genes from your own DNA file">
+<meta name="twitter:image" content="https://biomiv.com/static/img/og/bio/methylmap.png?v=20261120-1">
+<meta name="twitter:image:alt" content="Biomiv MethylMap: 13 methylation genes from your own DNA file">
+
+
+    
+    
+    <script type="application/ld+json">
+    {"@context": "https://schema.org", "@type": "Organization", "name": "Cymetica Biosciences", "alternateName": "Biomiv",
+     "url": "https://biomiv.com", "parentOrganization": {"@type": "Organization", "name": "Cymetica"},
+     "slogan": "AI Optimized Health"}
+    </script>
+    
+
+    
+    
+    <meta name="theme-color" content="#00cfff">
+
+    
+    
+    <link rel="icon" type="image/svg+xml" href="/static/biomiv-favicon.svg?v=20261116-1">
+
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/icon-180x180.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Biomiv">
+
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cymetica.com" crossorigin>
+    <link rel="dns-prefetch" href="//cymetica.com">
+    
+    <link id="gfonts" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" media="print">
+    <script>document.getElementById('gfonts').addEventListener('load',function(){this.media='all';});</script>
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
+
+    
+    <link rel="stylesheet" href="/static/css/tokens.css?v=20261013-1">
+
+    
+    
+    <link rel="stylesheet" href="/static/css/main.css?v=20261101-1">
+    
+    
+    
+    <link rel="preload" as="style" href="/static/css/premium-chat.css?v=20260915-1">
+    <link rel="preload" as="style" href="/static/css/mobile-polish.css?v=20261103-2">
+    <link rel="preload" as="style" href="/static/css/mobile-responsive.css?v=20261101-1">
+    <link rel="stylesheet" href="/static/css/premium-chat.css?v=20260915-1" media="print" data-defer-css>
+    <link rel="stylesheet" href="/static/css/mobile-polish.css?v=20261103-2" media="print" data-defer-css>
+    <link rel="stylesheet" href="/static/css/mobile-responsive.css?v=20261101-1" media="print" data-defer-css>
+    <script>document.querySelectorAll('link[data-defer-css]:not([data-defer-css-armed])').forEach(function(l){l.setAttribute('data-defer-css-armed','1');if(l.sheet){l.media='all';}else{l.addEventListener('load',function(){this.media='all';});}});</script>
+    <noscript>
+    <link rel="stylesheet" href="/static/css/premium-chat.css?v=20260915-1">
+    <link rel="stylesheet" href="/static/css/mobile-polish.css?v=20261103-2">
+    <link rel="stylesheet" href="/static/css/mobile-responsive.css?v=20261101-1">
+    </noscript>
+    
+    <link rel="stylesheet" href="/static/css/i18n.css?v=20260519-1">
+    
+
+    
+    <style>#headerModeIndicator, #nexusSubBtn, #nexusSubPanel, #eli5Toggle, #globalSimBanner { display: none !important; }</style>
+    
+    <script>(function(){var t=localStorage.getItem('theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');})();</script>
+    <script>(function(){try{if(localStorage.getItem('theme')==='dark')document.documentElement.removeAttribute('data-theme');}catch(e){}})();</script>
+    <style>html[data-theme="light"] {
+  --bg: #FFFFFF !important;
+  --bg-primary: #FFFFFF !important;
+  --surface: #F5F5F7 !important;
+  --bg-secondary: #F5F5F7 !important;
+  --surface-2: #ECECF0 !important;
+  --bg-tertiary: #ECECF0 !important;
+  --panel-bg: rgba(255, 255, 255, 1) !important;
+  --hairline: rgba(29, 29, 31, 0.10) !important;
+  --panel-border: rgba(29, 29, 31, 0.10) !important;
+  --text: #1D1D1F !important;
+  --text-primary: #1D1D1F !important;
+  --text-heading: #1D1D1F !important;
+  --text-2: #5E6470 !important;
+  --text-secondary: #5E6470 !important;
+  --accent: #0066CC !important;
+  --accent-cyan: #0066CC !important;
+  --pos: #059669 !important;
+  --positive-color: #059669 !important;
+  --neg: #DC2626 !important;
+  --negative-color: #DC2626 !important;
+}
+body { background: var(--bg-primary) !important; }</style>
+    <style>html {
+  --bg: #070B10 !important;
+  --bg-primary: #070B10 !important;
+  --surface: #0D141C !important;
+  --bg-secondary: #0D141C !important;
+  --surface-2: #121C26 !important;
+  --bg-tertiary: #121C26 !important;
+  --panel-bg: rgba(13, 20, 28, 0.85) !important;
+  --hairline: #1E2A36 !important;
+  --panel-border: #1E2A36 !important;
+  --text: #E9EFF5 !important;
+  --text-primary: #E9EFF5 !important;
+  --text-heading: #E9EFF5 !important;
+  --text-2: #A4B3C2 !important;
+  --text-secondary: #A4B3C2 !important;
+  --accent: #00CFFF !important;
+  --accent-cyan: #00CFFF !important;
+  --pos: #3DDC8A !important;
+  --positive-color: #3DDC8A !important;
+  --neg: #FF6B6B !important;
+  --negative-color: #FF6B6B !important;
+}
+body { background: var(--bg-primary) !important; }</style>
+
+    
+    <script>
+    window.getAuthToken = function() {
+        return localStorage.getItem('accessToken')
+            || localStorage.getItem('access_token')
+            || localStorage.getItem('auth_token')
+            || sessionStorage.getItem('accessToken')
+            || sessionStorage.getItem('access_token')
+            || sessionStorage.getItem('auth_token');
+    };
+    // Audit #20: the credential is an httpOnly cookie, so getAuthToken() is null
+    // for a perfectly valid session. auth.js defines the same helpers, but it is
+    // `defer`red — every inline page gate runs BEFORE it, saw no hasSession(),
+    // fell back to token truthiness and bounced logged-in users to /login.
+    // Define them here, synchronously, where the gates actually run.
+    window.hasSessionCookie = window.hasSessionCookie || function() {
+        try { return /(^|;\s*)et_session=/.test(document.cookie); } catch (e) { return false; }
+    };
+    window.hasSession = window.hasSession || function() {
+        try {
+            if (window.authManager && window.authManager.accessToken) return true;
+            if (window.getAuthToken()) return true;
+        } catch (e) { /* storage blocked — fall through to the cookie */ }
+        return window.hasSessionCookie();
+    };
+    // Bug #878 fix: helper for page scripts to safely defer init until auth.js (defer) has run.
+    // Usage: window.whenAuthReady(function() { loadData(); });
+    // Runs callback after DOMContentLoaded (which fires after all defer scripts including auth.js).
+    window.whenAuthReady = function(fn) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fn, { once: true });
+        } else {
+            fn();
+        }
+    };
+    // Phase 3 (INP): cooperative scheduling helper. Long loops should
+    //   `await window.yieldToMain()` periodically so taps/scrolls stay < 200ms.
+    // Uses the native scheduler.yield() where available, setTimeout fallback.
+    window.yieldToMain = function() {
+        if (window.scheduler && typeof window.scheduler.yield === 'function') {
+            return window.scheduler.yield();
+        }
+        return new Promise(function(resolve) { setTimeout(resolve, 0); });
+    };
+    </script>
+
+    
+    
+    <script src="/static/js/safe-errors.js?v=20260424-1" defer></script>
+    <script src="/static/js/sticky-table.js?v=20261013-1" defer></script>
+    
+
+    
+    <script>
+    (function(){
+        var _alert = window.alert;
+        window.alert = function(msg) {
+            var text;
+            if (Array.isArray(msg)) {
+                text = msg.map(function(e){ return (typeof e === 'object' && e !== null) ? (e.msg || e.message || JSON.stringify(e)) : String(e); }).join(', ');
+            } else if (typeof msg === 'object' && msg !== null) {
+                var d = msg.detail;
+                if (Array.isArray(d)) {
+                    text = d.map(function(e){ return (typeof e === 'object' && e !== null) ? (e.msg || e.message || JSON.stringify(e)) : String(e); }).join(', ');
+                } else if (typeof d === 'string') {
+                    text = d;
+                } else {
+                    text = msg.message || (typeof d === 'object' && d !== null ? (d.message || JSON.stringify(d)) : null) || (msg.error && msg.error.message) || JSON.stringify(msg);
+                }
+            } else {
+                text = String(msg);
+            }
+            if (window.showToast) { window.showToast(text, 'info'); return; }
+            var d = document.createElement('div');
+            var isLight = document.documentElement.getAttribute('data-theme') === 'light';
+            d.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:99999;padding:0.75rem 1.25rem;border-radius:6px;font-family:monospace;font-size:0.85rem;max-width:400px;word-break:break-word;animation:_ta .3s ease;' + (isLight ? 'background:#ffffff;border:1px solid rgba(0,80,160,0.15);color:#0f172a;box-shadow:0 4px 20px rgba(0,0,0,0.08)' : 'background:#1a1f2e;border:1px solid #3b82f6;color:#e5e7eb;box-shadow:0 4px 20px rgba(0,0,0,0.5)');
+            d.textContent = text;
+            document.body.appendChild(d);
+            setTimeout(function(){ d.style.opacity='0'; d.style.transition='opacity .3s'; setTimeout(function(){ d.remove(); }, 300); }, 3500);
+        };
+        /** Extract human-readable error message from API response data */
+        window.extractApiError = function(data, fallback) {
+            var d = data && data.detail;
+            if (Array.isArray(d)) return d.map(function(e){ return e.msg || e.message || JSON.stringify(e); }).join(', ');
+            if (typeof d === 'object' && d !== null) return d.message || d.msg || JSON.stringify(d);
+            if (typeof d === 'string') return d;
+            if (data && data.error && data.error.message) return data.error.message;
+            if (data && data.message) return data.message;
+            return fallback || 'An error occurred';
+        };
+        if (!document.getElementById('_taStyle')) {
+            var s = document.createElement('style');
+            s.id = '_taStyle';
+            s.textContent = '@keyframes _ta{from{opacity:0;transform:translateX(100%)}to{opacity:1;transform:translateX(0)}}';
+            document.head.appendChild(s);
+        }
+    })();
+    </script>
+
+    
+    
+    <script src="/static/js/auth.js?v=20261021-1" defer></script>
+    <script src="/static/js/i18n.js?v=20261025-1" defer></script>
+    
+    
+    <script src="/static/js/csp-delegation.js?v=20260807-1" defer></script>
+    <script src="/static/js/csp-utilities.js?v=20260517-1" defer></script>
+    <script>
+    (function(){document.addEventListener('click',function(ev){var el=ev.target.closest('[data-click]');if(!el)return;var n=el.getAttribute('data-click');if(!n||n.indexOf('.')===-1)return;var p=n.split('.'),o=window,par=null;for(var i=0;i<p.length;i++){par=o;o=o[p[i]];if(!o)return}if(typeof o!=='function')return;ev.preventDefault();ev.stopImmediatePropagation();var a=el.getAttribute('data-click-args');if(a){try{var args=JSON.parse(a);if(Array.isArray(args)){o.apply(par,args);return}}catch(e){}}o.call(par)},true)})();
+    </script>
+
+    <style>
+        /* Flexbox body pushes footer to bottom on short pages */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+        /* Mobile-web 2026-09-22: a page is often one line of text until its API answers, so
+           the footer sat in the first screen and was thrown out when content landed (RUM named
+           `div.footer-bar` on /microfunds/588, /headlines, /prop, /microfunds …; 0.344 on the
+           first). Reserving one viewport for the content keeps the footer below the fold in
+           every end state, so nothing that lands later can move it. `vh` first for browsers
+           without `svh`. */
+        .content-main { min-height: 100vh; min-height: 100dvh; min-height: 100svh; }
+
+        /* Content pages: always show frosted glass header (no transparent hero) */
+        .chat-header {
+            background: var(--scrolled-header-bg, rgba(10, 15, 25, 0.5)) !important;
+            background-color: var(--scrolled-header-bg, rgba(10, 15, 25, 0.5)) !important;
+            backdrop-filter: blur(8px) !important;
+            -webkit-backdrop-filter: blur(8px) !important;
+            border-bottom: 1px solid var(--panel-border) !important;
+            box-shadow: none !important;
+        }
+
+        
+        :root { --nexus-bar-height: 65px; }
+        /* Content pages: horizontal padding only (body padding-top clears fixed header) */
+        .content-main {
+            padding-top: 0;
+            padding-left: var(--spacing-lg, 2rem);
+            padding-right: var(--spacing-lg, 2rem);
+            
+            padding-bottom: calc(var(--nexus-bar-height) + env(safe-area-inset-bottom, 0px));
+            max-width: 100%;
+            box-sizing: border-box;
+            flex: 1;
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+            color: var(--text-primary);
+        }
+
+        
+        :root:not([data-theme="light"]) .content-main {
+            background:
+                radial-gradient(900px 520px at 16% 0%, rgba(0,150,200,.14), transparent 62%),
+                linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+        }
+        :root:not([data-theme="light"]) .has-field {
+            position: relative;
+            isolation: isolate;
+            padding-bottom: 130px;
+            overflow-x: clip;
+        }
+        :root:not([data-theme="light"]) .has-field::after {
+            content: "";
+            position: absolute;
+            left: -30%;
+            right: -30%;
+            bottom: 0;
+            height: 260px;
+            z-index: -1;
+            pointer-events: none;
+            background-image: radial-gradient(circle, rgba(130,215,240,.9) 1.6px, transparent 2.2px);
+            background-size: 18px 18px;
+            transform: perspective(700px) rotateX(58deg);
+            transform-origin: 50% 100%;
+            -webkit-mask-image: linear-gradient(to top, transparent 0%, #000 30%, rgba(0,0,0,.4) 65%, transparent 90%);
+            mask-image: linear-gradient(to top, transparent 0%, #000 30%, rgba(0,0,0,.4) 65%, transparent 90%);
+            opacity: .55;
+        }
+        :root:not([data-theme="light"]) .raise {
+            box-shadow: 0 26px 70px -18px rgba(0,0,0,.8), 0 0 0 1px rgba(0,207,255,.3);
+        }
+
+        /* Shared panel style for all content pages */
+        .content-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: var(--panel-radius, 12px);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        
+        h1, h2, h3 {
+            font-family: var(--font-display);
+        }
+        .content-panel h2, .content-panel h3 {
+            font-family: var(--font-display);
+            color: var(--text-heading);
+            margin-top: 0;
+        }
+        /* Back button for all content pages */
+        .content-back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent-cyan, #00cfff);
+            text-decoration: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            padding: 6px 0;
+            margin-bottom: 8px;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.15s;
+        }
+        .content-back-btn:hover {
+            opacity: 1;
+        }
+        .content-back-btn svg {
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-main {
+                padding-top: 0;
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+                overflow-x: clip;
+            }
+        }
+
+        /* Phase 6: opt-in render-skipping for offscreen content. Add class="cv-auto"
+           to long below-the-fold panels — the browser skips their layout/paint
+           until they scroll near the viewport, cutting first-paint cost + INP. */
+        .cv-auto {
+            content-visibility: auto;
+            contain-intrinsic-size: auto 600px;
+        }
+
+        /* Remove button outlines from header (matches landing page index.html) */
+        .chat-header-btn {
+            border: 1px solid transparent !important;
+            background: transparent !important;
+        }
+        .chat-header-btn.login-btn,
+        .chat-header-btn.signup-btn {
+            border: 1px solid transparent !important;
+        }
+        #language-selector-container,
+        #language-selector-container .language-selector,
+        #language-selector-container .language-btn {
+            background: transparent !important;
+            border: 1px solid transparent !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+        /* Mobile-web 2026-09-22: the two wrappers carried that 1 px transparent border too, so
+           the rendered selector was 4 px taller and wider than its button and the header row grew
+           44 -> 48 px once i18n.js ran (see the slot reserve in partials/chat-header.html). The
+           button keeps its border for the hover ring; the wrappers never showed one. */
+        #language-selector-container,
+        #language-selector-container .language-selector {
+            border: 0 !important;
+        }
+        #language-selector-container .language-btn:focus,
+        #language-selector-container .language-btn:active,
+        #language-selector-container .language-btn:focus-visible {
+            box-shadow: none !important;
+            outline: none !important;
+            border-color: transparent !important;
+        }
+        .hamburger-btn {
+            background: transparent !important;
+            border: none !important;
+        }
+        .chat-header-btn:hover,
+        #language-selector-container .language-btn:hover,
+        .hamburger-btn:hover {
+            background: rgba(0, 207, 255, 0.1) !important;
+        }
+
+        /* Light theme overrides for content pages */
+        [data-theme="light"] .content-main {
+            background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+            color: var(--text-primary);
+        }
+        [data-theme="light"] .chat-header {
+            background: var(--scrolled-header-bg) !important;
+            background-color: var(--scrolled-header-bg) !important;
+            border-bottom: 1px solid rgba(0, 100, 180, 0.1) !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+        }
+        [data-theme="light"] .content-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+        }
+        [data-theme="light"] .content-panel h2,
+        [data-theme="light"] .content-panel h3 {
+            color: var(--text-heading);
+        }
+        [data-theme="light"] .chat-header-btn:hover,
+        [data-theme="light"] #language-selector-container .language-btn:hover,
+        [data-theme="light"] .hamburger-btn:hover {
+            background: rgba(0, 120, 200, 0.08) !important;
+        }
+    </style>
+
+    
+    
+    <link rel="preload" href="/static/js/auth.js?v=20261021-1" as="script">
+    
+
+    
+    <style>
+    #globalSimBanner {
+        display: none;
+        background: rgba(0, 207, 255,0.06);
+        border-bottom: 1px solid var(--panel-border-hover);
+        padding: 0.4rem 1rem;
+        text-align: center;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.75rem;
+        color: #00cfff;
+        text-shadow: 0 0 8px rgba(0,207,255,0.5);
+        letter-spacing: 0.05em;
+    }
+    #globalSimBanner a {
+        color: #00cfff;
+        text-decoration: underline;
+    }
+    /* Board review finding 06: the skip link became visible through onfocus/onblur
+       attributes. Inline handler attributes do not run under a nonce script-src
+       without 'unsafe-hashes', and this site's Content-Security-Policy-Report-Only
+       is already a nonce policy with no 'unsafe-hashes' — so the moment that policy
+       is enforced, a keyboard user would tab into a control parked at left:-9999px.
+       No JS is needed for this at all: :focus is a CSS state. */
+    .skip-link {
+        position: absolute;
+        left: -9999px;
+        top: auto;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        z-index: 9999;
+    }
+    .skip-link:focus {
+        position: static;
+        left: 0;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        display: inline-block;
+        padding: 8px 16px;
+        background: #111a28;
+        color: #00cfff;
+        border: 1px solid #00cfff;
+        border-radius: 0 0 8px 0;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.875rem;
+        text-decoration: none;
+    }
+    </style>
+    
+    <meta name="ai-agent" content="welcome">
+    
+    <meta name="ai-agent-discovery" content="https://biomiv.com/llms.txt">
+    <meta name="ai-agent-mcp" content="https://biomiv.com/.well-known/mcp.json">
+    <link rel="ai-plugin" type="application/json" href="https://biomiv.com/.well-known/ai-plugin.json">
+    <link rel="llms" type="text/plain" href="https://biomiv.com/llms.txt">
+    <link rel="agent-card" type="application/json" href="https://biomiv.com/.well-known/agent-card.json">
+    <link rel="alternate" type="text/markdown" href="https://biomiv.com/healthbuilder/apps/methylmap?format=md">
+    <link rel="sitemap" type="application/xml" href="https://biomiv.com/sitemap.xml">
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "alternateName": "Biomiv AI Optimized Health", "name": "Biomiv", "potentialAction": {"@type": "SearchAction", "query-input": "required name=search_term_string", "target": {"@type": "EntryPoint", "urlTemplate": "https://biomiv.com/healthspan/score?q={search_term_string}"}}, "publisher": {"@type": "Organization", "name": "Cymetica Biosciences", "url": "https://biomiv.com"}, "url": "https://biomiv.com"}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "applicationCategory": "HealthApplication", "description": "Biomiv is the health research site of Cymetica Biosciences. Its AI agent, BioAI, answers a health condition, symptom or goal with a diet engineered for it by the BIOMIC-42 algorithm, research cards with citations, and live clinical trials.", "name": "BioAI", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "operatingSystem": "Any", "provider": {"@type": "Organization", "name": "Cymetica Biosciences", "url": "https://biomiv.com"}, "url": "https://biomiv.com/discoveries"}</script>
+    
+    
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "url": "https://biomiv.com/healthbuilder/apps/methylmap",
+        "name": "Biomiv — AI Optimized Health",
+        "description": "Health research as it is published, from Cymetica Biosciences.",
+        "potentialAction": {
+            "@type": "Action",
+            "name": "Ask BioAI as an AI agent",
+            "description": "Biomiv is agent-native. Read https://biomiv.com/llms.txt, then open https://biomiv.com/ask?q=<condition> for BioAI's answer as text, connect an MCP client to https://biomiv.com/mcp/v1 (no key), or send A2A message/send to https://biomiv.com/a2a.",
+            "target": "https://biomiv.com/mcp/v1"
+        }
+    }
+    </script>
+    
+
+    
+    
+    
+<link rel="stylesheet" href="/static/css/healthspan.css?v=20261121-1">
+<link rel="stylesheet" href="/static/css/methylmap.css?v=20261120-2">
+
+    <link rel="stylesheet" href="/static/css/biomiv-site.css?v=20261118-1">
+
+    
+    
+    <meta name="google-client-id" content="946266285469-t2qhco2i4cvthc0qotgefotnbhvll54u.apps.googleusercontent.com">
+    
+
+    
+    
+    
+
+    
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    
+    
+
+<link rel="stylesheet" href="/static/css/nexus-subscription.css?v=20261022-1" media="print" data-defer-css>
+<script>document.querySelectorAll('link[data-defer-css]:not([data-defer-css-armed])').forEach(function(l){l.setAttribute('data-defer-css-armed','1');if(l.sheet){l.media='all';}else{l.addEventListener('load',function(){this.media='all';});}});</script>
+
+<script>(function(){try{var t=window.top;if(t!==window.self&&t.location.origin===window.location.origin&&(/^\/station(\/|$)/.test(t.location.pathname)||/^\/pro-charts(\/|$)/.test(t.location.pathname)||/^\/nexus-panel(\/|$)/.test(window.parent.location.pathname))){document.documentElement.classList.add('st-embed');}}catch(e){}})();</script>
+<style>
+html.st-embed .chat-header,html.st-embed #agent-start,html.st-embed .footer-bar,html.st-embed #nexus-chat-widget,html.st-embed .skip-link,html.st-embed .content-back-btn,html.st-embed #agentPasteBar,html.st-embed .agent-paste-bar,html.st-embed #globalSimBanner{display:none!important}
+html.st-embed body,html.st-embed .main-content,html.st-embed .chat-container,html.st-embed .perpetual-main{padding-top:0!important}
+</style>
+<style>
+/* Font already loaded via <link> in base_content.html — @import removed (was render-blocking + duplicate) */
+/* Fixed floating header - ensure consistent behavior across all pages */
+.chat-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: calc(1rem + env(safe-area-inset-top, 0px)) 1.5rem 1rem 1.5rem;
+    background: transparent;
+    backdrop-filter: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+[data-theme="light"] .chat-header {
+    border-bottom-color: rgba(0, 0, 0, 0.12);
+}
+.chat-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.chat-header-right {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+}
+
+html body .chat-header .chat-header-right { gap: 8px !important; }
+/* Mobile-web 2026-09-22: the language selector is an EMPTY div until i18n.js renders it, so the
+   header row was 44 px at first paint and grew when the button arrived (48 px: its own 44 + the
+   two transparent wrapper borders that base_content.html has since dropped) — a 2–4 px move of
+   every page's content on every load, in every CLS attribution row. The slot keeps the button's
+   box from the start: 62 px wide at desktop (flag + arrow), 44 on phones, where the mobile rules
+   force the button to 44 × 44. */
+#language-selector-container { min-height: 44px; min-width: 62px; }
+@media (max-width: 768px) { #language-selector-container { min-width: 44px; } }
+
+/* Logo, title, subtitle — self-contained so pages without critical.css still render */
+.chat-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #00cfff;
+    flex-shrink: 0;
+}
+.chat-header-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    /* Reserve the populated height so the title/subtitle settling in late
+       (deferred i18n/auth scripts) does not grow the header and shove the
+       whole page down — that reflow measured ~0.15 CLS on the landing page. */
+    min-height: 44px;
+    justify-content: center;
+}
+.chat-title {
+    /* Review item N5: no font-weight here. --font-display is Archivo Black, a
+       single-weight (400) family — a `font-weight: 200` declaration cannot be
+       honoured and only invites a synthesised/faux-light render. Never declare
+       a weight below 400 on a --font-display element. */
+    font-family: var(--font-display, 'Archivo Black', sans-serif);
+    font-size: 1.25rem;
+    margin: 0;
+    color: #ffffff;
+}
+.chat-subtitle {
+    /* Colour lives in the CSP-safe block below (#ffffff, 19.17:1) — that is the
+       one that renders. Board review finding 11: an rgba(0,207,255,0.4) rule sat
+       here at equal specificity and had been doing nothing for some time. */
+    font-size: 0.75rem;
+}
+
+
+:root { --site-header-h: calc(88px + env(safe-area-inset-top, 0px)); }
+@media (max-width: 768px) {
+    :root { --site-header-h: calc(61px + env(safe-area-inset-top, 0px)); }
+}
+@media (min-width: 769px) {
+    .chat-header-left, .chat-header-left > a, .chat-header-info { min-width: 0; }
+    .chat-subtitle { white-space: nowrap; overflow: hidden; }
+    html body .chat-header #headerUserInfo .username {
+        display: inline-block; max-width: 14ch; white-space: nowrap; overflow: hidden;
+        text-overflow: ellipsis; vertical-align: middle;
+    }
+}
+@media (min-width: 769px) and (max-width: 1279px) {
+    /* visibility (not display): the line box stays, so the header is exactly as tall as at 1280+ */
+    html body .chat-header .chat-subtitle { visibility: hidden; }
+}
+@media (min-width: 769px) and (max-width: 1023px) {
+    /* Signed in, the right cluster (user, log out, mode, NEXUS, ...) was wider than 769-850px in
+       French/German and pushed the menu button off-screen: icon-only there, as on phones. */
+    html body .chat-header.is-logged-in #headerUserInfo .username,
+    html body .chat-header.is-logged-in .logout-btn .auth-text { display: none; }
+}
+
+/* Header buttons — base styling */
+.chat-header-btn {
+    min-width: 44px;
+    min-height: 44px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: rgba(0,207,255,0.72);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.chat-header-btn:hover {
+    border-color: #00cfff;
+    color: #00cfff;
+    background: rgba(0, 207, 255, 0.1);
+}
+.chat-header-btn[hidden] { display: none; }
+.chat-header-btn#headerPinBtn { position: relative; z-index: 2; }  
+.chat-header-btn#headerPinBtn[aria-pressed="true"] { border-color: #00cfff; color: #00cfff; background: rgba(0, 207, 255, 0.14); }
+.chat-header-btn#headerPinBtn[aria-pressed="true"] svg { fill: currentColor; }
+.chat-header-btn.mm-header-copied {
+    border-color: #00ff88;
+    color: #00ff88;
+}
+.chat-header-btn svg {
+    width: 20px;
+    height: 20px;
+}
+/* Theme toggle icon visibility */
+.theme-icon-moon { display: none; }
+.theme-icon-sun { display: block; }
+[data-theme="light"] .theme-icon-moon { display: block; }
+[data-theme="light"] .theme-icon-sun { display: none; }
+/* Light theme header text overrides */
+[data-theme="light"] .chat-title { color: #0f172a; }
+[data-theme="light"] .chat-subtitle { color: #475569; }
+[data-theme="light"] .chat-header-btn { color: #475569; }
+[data-theme="light"] .chat-header-btn:hover { color: #0369a1; border-color: #0369a1; background: rgba(3, 105, 161, 0.06); }
+[data-theme="light"] .chat-avatar { color: #0369a1; background: radial-gradient(circle, rgba(3, 105, 161, 0.04), transparent) !important; }
+
+[data-theme="light"] .chat-header-btn.login-btn .auth-text { color: #0369a1; }
+[data-theme="light"] .chat-header-btn.signup-btn .auth-text { color: #047857; }
+[data-theme="light"] .chat-header-btn.login-btn svg { stroke: #0369a1; }
+[data-theme="light"] .chat-header-btn.signup-btn svg { stroke: #047857; }
+/* Light theme slide menu */
+[data-theme="light"] .slide-menu { background: #f8f9fc; border-left: 1px solid rgba(0, 80, 160, 0.10); box-shadow: -4px 0 24px rgba(0, 0, 0, 0.06); }
+[data-theme="light"] .slide-menu-title { color: #0f172a; }
+[data-theme="light"] .slide-menu-section-title { color: #475569; }
+[data-theme="light"] .slide-menu-link { color: #0f172a; }
+[data-theme="light"] .slide-menu-link:hover { background: rgba(3, 105, 161, 0.06); color: #0369a1; }
+[data-theme="light"] .slide-menu-divider { border-color: rgba(0, 80, 160, 0.08); }
+[data-theme="light"] .slide-menu-close { color: #475569; }
+.chat-header-btn.auth-btn {
+    width: auto;
+    padding: 8px 16px;
+    border-radius: 8px !important;
+}
+.chat-header-btn.login-btn {
+    background: linear-gradient(135deg, rgba(0, 207, 255, 0.15), rgba(0, 150, 200, 0.25)) !important;
+    border: 1px solid var(--panel-border-hover) !important;
+    border-radius: 8px !important;
+}
+.chat-header-btn.signup-btn {
+    background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 255, 136, 0.25)) !important;
+    border: 1px solid rgba(0, 255, 136, 0.3) !important;
+    border-radius: 8px !important;
+}
+.chat-header-btn.logout-btn {
+    background: rgba(255, 68, 68, 0.15);
+    border: 1px solid rgba(255, 68, 68, 0.5);
+    border-radius: 8px;
+    color: #ff4444;
+}
+.chat-header-btn.logout-btn:hover {
+    background: rgba(255, 68, 68, 0.25);
+    border-color: rgba(255, 68, 68, 0.7);
+    color: #ff4444;
+}
+.chat-header-btn.logout-btn svg {
+    stroke: #ff4444;
+}
+.chat-header-btn.logout-btn .auth-text {
+    color: #ff4444;
+}
+.auth-text { font-weight: 500; }
+.chat-header-btn.login-btn .auth-text { color: #00cfff; }
+.chat-header-btn.signup-btn .auth-text { color: #00ff88; }
+.chat-header-btn.login-btn svg { stroke: #00cfff; }
+.chat-header-btn.signup-btn svg { stroke: #00ff88; }
+
+/* Global ELI5 toggle — plain-English tooltip mode */
+.eli5-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--panel-border);
+    background: transparent;
+    color: rgba(0,207,255,0.72);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, opacity 0.2s, transform 0.2s;
+}
+.eli5-toggle:hover { color: #e5e7eb; border-color: rgba(0, 207, 255, 0.4); }
+.eli5-toggle[aria-pressed="true"] { color: #00cfff; border-color: rgba(0, 207, 255, 0.6); }
+.eli5-toggle .eli5-switch {
+    width: 24px; height: 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.12);
+    position: relative;
+    transition: background 0.2s;
+}
+.eli5-toggle[aria-pressed="true"] .eli5-switch { background: rgba(0, 207, 255, 0.35); }
+.eli5-toggle .eli5-dot {
+    position: absolute; top: 1px; left: 1px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(0,207,255,0.4);
+    transition: transform 0.2s, background 0.2s;
+}
+.eli5-toggle[aria-pressed="true"] .eli5-dot { transform: translateX(12px); background: #00cfff; }
+[data-theme="light"] .eli5-toggle { color: #475569; border-color: rgba(0, 80, 160, 0.15); }
+[data-theme="light"] .eli5-toggle:hover { color: #0f172a; border-color: rgba(3, 105, 161, 0.4); }
+[data-theme="light"] .eli5-toggle[aria-pressed="true"] { color: #0369a1; border-color: rgba(3, 105, 161, 0.6); }
+[data-theme="light"] .eli5-toggle[aria-pressed="true"] .eli5-switch { background: rgba(3, 105, 161, 0.3); }
+[data-theme="light"] .eli5-toggle[aria-pressed="true"] .eli5-dot { background: #0369a1; }
+
+/* Global metric-tip tooltip — ? icon with hover/tap popup. Pages add data-eli5 attr for ELI5 mode */
+.metric-tip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 1px solid var(--panel-border-hover);
+    color: rgba(0,207,255,0.72);
+    font-family: var(--font-mono, monospace);
+    font-size: 0.75rem;
+    cursor: help;
+    flex-shrink: 0;
+    vertical-align: middle;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: normal;
+}
+.metric-tip:hover { border-color: #00cfff; color: #00cfff; }
+.metric-tip .tip-text {
+    visibility: hidden; opacity: 0;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0d1520;
+    border: 1px solid var(--panel-border-hover);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    color: #e5e7eb;
+    white-space: normal;
+    width: 220px;
+    max-width: calc(100vw - 32px);
+    line-height: 1.4;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: normal;
+    z-index: 10000;
+    transition: opacity 0.15s;
+    pointer-events: none;
+}
+.metric-tip:hover .tip-text,
+.metric-tip.tip-open .tip-text { visibility: visible; opacity: 1; }
+.metric-tip.tip-open .tip-text { pointer-events: auto; }
+[data-theme="light"] .metric-tip .tip-text {
+    background: #fff;
+    border-color: rgba(0, 80, 160, 0.15);
+    color: #0f172a;
+}
+
+/* Trading Mode Indicator */
+.mode-indicator {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+    border: 1px solid;
+    font-family: var(--font-mono, monospace);
+}
+.mode-indicator.paper {
+    background: rgba(0, 207, 255, 0.10);
+    border-color: rgba(0, 207, 255, 0.35);
+    color: #00cfff;
+}
+.mode-indicator.paper:hover {
+    background: rgba(0, 207, 255, 0.18);
+}
+.mode-indicator.live {
+    background: rgba(0, 255, 136, 0.1);
+    border-color: rgba(0, 255, 136, 0.4);
+    color: #00ff88;
+}
+.mode-indicator.live:hover {
+    background: rgba(0, 255, 136, 0.18);
+}
+.mode-indicator .mode-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+.mode-indicator.paper .mode-dot { background: #00cfff; }
+.mode-indicator.live .mode-dot { background: #00ff88; }
+@media (max-width: 768px) {
+    /* EVE-1547: Extra spacing between logout and mode toggle to prevent accidental taps */
+    .mode-indicator { margin-left: 12px; min-width: 64px; }
+    .chat-header-btn.logout-btn { margin-right: 8px; }
+    .chat-header-btn[data-click="toggleAuth"] { margin-right: 8px; }
+}
+
+/* Header 50% glass effect on scroll down */
+.chat-header.header-scrolled-down {
+    background: rgba(10, 15, 25, 0.5) !important;
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
+    transition: background 0.3s ease, backdrop-filter 0.3s ease;
+}
+[data-theme="light"] .chat-header.header-scrolled-down {
+    background: var(--scrolled-header-bg, rgba(255, 255, 255, 0.92)) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+    border-bottom-color: rgba(0, 80, 160, 0.08) !important;
+}
+
+/* Remove button outlines - override any cached CSS (except auth buttons which have their own borders above) */
+.chat-header-btn:not(.login-btn):not(.signup-btn):not(.logout-btn) {
+    border: 1px solid transparent !important;
+}
+
+/* Hamburger Menu Styles */
+.hamburger-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: rgba(0,207,255,0.72);
+    transition: color 0.2s ease;
+    outline: none;
+}
+.hamburger-btn:hover {
+    color: #00cfff;
+}
+.hamburger-btn:focus {
+    outline: none;
+}
+.hamburger-btn:focus-visible {
+    outline: none;
+}
+.hamburger-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Slide-out Menu */
+.slide-menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9995;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.slide-menu-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+.slide-menu {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 85vw;
+    background: linear-gradient(180deg, #0a0f19 0%, #111827 100%);
+    border-left: 1px solid var(--panel-border-hover);
+    z-index: 9996;
+    transform: translateX(100%);
+    transition: transform 0.3s ease, visibility 0.3s ease;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto !important;
+    overflow-x: clip;
+    overscroll-behavior: contain;
+    /* Safari iOS: touch-action on menu AND children must allow vertical pan.
+       mobile-polish.css sets touch-action:manipulation on all <a>/<button> which
+       can block scroll-through on Safari. Override here. */
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 0 calc(80px + env(safe-area-inset-bottom, 0px));
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 207, 255, 0.2) transparent;
+    visibility: hidden;
+}
+/* Override mobile-polish.css touch-action:manipulation on children so
+   vertical pan (scroll) works on Safari iOS inside the fixed menu */
+.slide-menu a,
+.slide-menu button,
+.slide-menu .slide-menu-link,
+.slide-menu .slide-menu-section-title {
+    touch-action: pan-y !important;
+}
+.slide-menu::-webkit-scrollbar { width: 4px; }
+.slide-menu::-webkit-scrollbar-track { background: transparent; }
+.slide-menu::-webkit-scrollbar-thumb { background: rgba(0, 207, 255, 0.2); border-radius: 2px; }
+.slide-menu.active {
+    transform: translateX(0);
+    visibility: visible;
+}
+.slide-menu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px 20px;
+    border-bottom: 1px solid var(--panel-border);
+    margin-bottom: 10px;
+}
+.slide-menu-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #00cfff;
+    font-family: 'JetBrains Mono', monospace;
+}
+.slide-menu-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: rgba(0,207,255,0.72);
+    transition: color 0.2s ease;
+}
+.slide-menu-close:hover {
+    color: #00cfff;
+}
+.slide-menu-section {
+    padding: 4px 0;
+}
+.slide-menu-section[hidden] { display: none; }
+/* Finding 03: the panel's own search. Same interaction as the /exchange
+   universal-search box, filtering the panel's links instead of markets. */
+.slide-menu-search {
+    padding: 4px 20px 10px;
+}
+.slide-menu-search-label {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip-path: inset(50%);
+    white-space: nowrap; border: 0;
+}
+.slide-menu-search-input {
+    width: 100%;
+    min-height: 44px;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--panel-border);
+    background: rgba(17, 24, 39, 0.6);
+    color: #e5e7eb;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+}
+/* 2026-09-21 (WS8 8.4, mobile-web audit section 4): 0.875rem (14px) is below
+   iOS Safari's 16px zoom-on-focus threshold. Today that's rescued only by an
+   UNRELATED cross-file !important in mobile-responsive.css
+   (`input[type="search"] { font-size: 16px !important; }`) — setting it
+   directly here, scoped to the same <=768px breakpoint that rule already
+   uses, makes the fix load-bearing in its own file instead of depending on
+   that unrelated block continuing to exist. Desktop (>768px) is unchanged. */
+@media (max-width: 768px) {
+    .slide-menu-search-input {
+        /* rem so it follows the reader's text size like the rest of the menu;
+           the 16px floor is what stops iOS zooming the page on focus. */
+        font-size: max(1rem, 16px);
+    }
+}
+.slide-menu-search-input::placeholder { color: rgba(0,207,255,0.72); }
+.slide-menu-search-input:focus {
+    outline: none;
+    border-color: #00cfff;
+    box-shadow: 0 0 0 2px rgba(0, 207, 255, 0.25);
+}
+.slide-menu-search-empty {
+    margin: 8px 2px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: rgba(0,207,255,0.72);
+}
+.slide-menu-link.sm-active {
+    background: rgba(0, 207, 255, 0.14);
+    color: #00cfff;
+    outline: 1px solid rgba(0, 207, 255, 0.45);
+    outline-offset: -1px;
+}
+.slide-menu-link[hidden] { display: none; }
+.slide-menu-new-date { margin-left: auto; font-size: 0.72rem; color: var(--text-dim, rgba(226,232,240,0.6)); white-space: nowrap; }
+
+.wn-ver { display: inline-flex; align-items: center; gap: 3px; flex: 0 0 auto; margin-left: 6px; padding: 0 5px; height: 15px; border-radius: 999px; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; line-height: 1; letter-spacing: 0.02em; color: rgba(226,232,240,0.42); border: 1px solid rgba(148,163,184,0.18); background: transparent; }
+.wn-ver::before { content: ""; width: 4px; height: 4px; border-radius: 50%; background: currentColor; opacity: 0.7; }
+.wn-ver.wn-ver-new { color: #00cfff; border-color: rgba(0,207,255,0.55); background: rgba(0,207,255,0.12); box-shadow: 0 0 6px rgba(0,207,255,0.45); }
+.wn-ver.wn-ver-new::before { opacity: 1; box-shadow: 0 0 4px #00cfff; }
+.wn-row-new > svg { stroke: #00cfff; filter: drop-shadow(0 0 3px rgba(0,207,255,0.6)); }
+[data-theme="light"] .wn-ver { color: rgba(15,23,42,0.45); border-color: rgba(15,23,42,0.15); }
+[data-theme="light"] .wn-ver.wn-ver-new { color: #0369a1; border-color: rgba(3,105,161,0.5); background: rgba(3,105,161,0.08); box-shadow: 0 0 5px rgba(3,105,161,0.35); }
+
+.slide-menu-new-title { min-width: 0; flex: 1 1 auto; white-space: normal; overflow-wrap: anywhere; overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.3; }
+.slide-menu-eli5-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+}
+.slide-menu-eli5-label {
+    color: rgba(0,207,255,0.72);
+    font-size: 0.8rem;
+}
+[data-theme="light"] .slide-menu-search-input {
+    background: #ffffff;
+    border-color: rgba(0, 80, 160, 0.15);
+    color: #0f172a;
+}
+[data-theme="light"] .slide-menu-search-input::placeholder,
+[data-theme="light"] .slide-menu-search-empty,
+[data-theme="light"] .slide-menu-eli5-label { color: #475569; }
+.slide-menu-section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: rgba(0,207,255,0.72);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0 20px 6px;
+    font-family: 'JetBrains Mono', monospace;
+}
+.slide-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    color: #E5E7EB;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-family: 'JetBrains Mono', monospace;
+    transition: background 0.2s ease, color 0.2s ease;
+    min-height: 44px;
+    white-space: nowrap;
+}
+.slide-menu-link:hover {
+    background: rgba(0, 207, 255, 0.1);
+    color: #00cfff;
+}
+.slide-menu-link svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+/* Pinned apps inside the hamburger menu (expire76, General 2026-10-07 07:56 UTC:
+   "those pinned links has some black almost invisible icons"): the pinned
+   app's sanitized SVG is appended straight into the link with no .dock-icon
+   wrapper, so the dock's stroke/fill rule never reached it and the paths
+   rendered in the SVG default — black fill, no stroke — on the dark menu.
+   Give the menu copy the same outline treatment as the dock. */
+#slideMenuPinnedLinks .slide-menu-link svg {
+    stroke: #00cfff;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+[data-theme="light"] #slideMenuPinnedLinks .slide-menu-link svg { stroke: #0369a1; }
+
+#slideMenuPinnedLinks .pin-row { display: flex; align-items: center; position: relative; }
+#slideMenuPinnedLinks .pin-row .slide-menu-link { flex: 1 1 auto; min-width: 0; }
+
+.slide-menu-link .slide-menu-sub { display: block; font-size: 0.7rem; opacity: 0.7; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 14rem; }
+#slideMenuPinnedLinks .pin-row .pin-start { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 1.6rem; height: 1.6rem; padding: 0; margin-left: 0.3rem; border: 0; border-radius: 6px; background: transparent; color: var(--text-2); cursor: pointer; }
+/* The start-page house shows only on the row that IS the start page, or when a row is hovered/focused (expire76 2026-10-21: a house on every row was noise; the Account section's Start page row sets it too). */
+#slideMenuPinnedLinks .pin-row .pin-start:not([aria-pressed="true"]) { opacity: 0; }
+#slideMenuPinnedLinks .pin-row:hover .pin-start, #slideMenuPinnedLinks .pin-row:focus-within .pin-start, #slideMenuPinnedLinks .pin-row .pin-start:focus-visible { opacity: 1; }
+#slideMenuPinnedLinks .pin-row .pin-start:hover { color: #00cfff; }
+#slideMenuPinnedLinks .pin-row .pin-start[aria-pressed="true"] { color: #00cfff; background: rgba(0,207,255,0.14); }
+#slideMenuPinnedLinks .pin-row, .slide-menu-section > a.slide-menu-link, .app-dock-item {
+    -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+}
+.sort-active { cursor: grabbing; }
+.sort-lifted {
+    position: relative; z-index: 2;
+    background: rgba(0, 207, 255, 0.12) !important;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 207, 255, 0.45);
+    border-radius: 8px;
+    transform: scale(1.02);
+    transition: none !important;
+}
+.app-dock-item.sort-lifted { opacity: 0.75; transform: none; }
+[data-theme="light"] .sort-lifted { background: rgba(3, 105, 161, 0.08) !important; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(3, 105, 161, 0.35); }
+/* Pin from any menu row: a star at the end of the row. Desktop shows it on hover/focus,
+   touch shows it faintly; a pinned row keeps it lit. */
+.slide-menu-link .sm-pin {
+    margin-left: auto; flex: 0 0 auto; width: 28px; height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 6px; color: #00cfff; opacity: 0; cursor: pointer;
+}
+.slide-menu-link .sm-pin svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; }
+.slide-menu-link:hover .sm-pin, .slide-menu-link:focus-within .sm-pin, .slide-menu-link .sm-pin:focus { opacity: 0.6; }
+.slide-menu-link .sm-pin:hover { opacity: 1; background: rgba(0, 207, 255, 0.1); }
+.slide-menu-link .sm-pin.sm-pinned { opacity: 1; }
+.slide-menu-link .sm-pin.sm-pinned svg { fill: currentColor; }
+.slide-menu-link .sm-pin.sm-pin-full { opacity: 1; color: #ff4444; }
+@media (hover: none) { .slide-menu-link .sm-pin { opacity: 0.35; } .slide-menu-link .sm-pin.sm-pinned { opacity: 1; } }
+[data-theme="light"] .slide-menu-link .sm-pin { color: #0369a1; }
+.slide-menu-divider {
+    height: 1px;
+    background: rgba(0, 207, 255, 0.1);
+    margin: 2px 20px;
+}
+.slide-menu-apps-link { color: #00cfff; }
+[data-theme="light"] .slide-menu-apps-link { color: #0369a1; }
+
+/* Hamburger Menu Language Selector */
+.hamburger-language-selector {
+    padding: 0 10px;
+}
+.hamburger-language-selector .language-selector {
+    width: 100%;
+}
+.hamburger-language-selector .language-btn {
+    width: 100%;
+    justify-content: space-between;
+    padding: 14px 20px;
+    background: rgba(0, 207, 255, 0.05);
+    border: 1px solid rgba(0, 207, 255, 0.2);
+    border-radius: 8px;
+    min-height: 52px;
+}
+.hamburger-language-selector .language-btn:hover {
+    background: rgba(0, 207, 255, 0.1);
+}
+.hamburger-language-selector .lang-code {
+    display: inline !important;
+    margin-left: 8px;
+}
+.hamburger-language-selector .language-dropdown {
+    position: relative;
+    top: 8px;
+    left: 0;
+    right: 0;
+    max-height: 0;
+    overflow: hidden;
+    border-radius: 8px;
+    transform: none;
+    border: none;
+    padding: 0;
+    box-shadow: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-height 0.25s ease, opacity 0.25s ease, visibility 0.25s ease, padding 0.25s ease;
+}
+.hamburger-language-selector .language-dropdown.open {
+    transform: none;
+    max-height: none;
+    overflow-y: auto;
+    opacity: 1;
+    visibility: visible;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+.hamburger-language-selector .language-option {
+    padding: 12px 16px;
+}
+
+/* Hamburger Menu User Info */
+.slide-menu-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 8px;
+    margin: 0 10px 10px 10px;
+    transition: opacity 0.3s ease;
+}
+/* Smooth header auth state transitions */
+.user-info, .logout-btn, .login-btn, .signup-btn {
+    transition: opacity 0.2s ease;
+}
+.slide-menu-user-info svg {
+    width: 24px;
+    height: 24px;
+    stroke: #00ff88;
+    flex-shrink: 0;
+}
+.slide-menu-username {
+    flex: 1;
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 0.9375rem;
+}
+.slide-menu-logged-in-badge {
+    font-size: 0.75rem;
+    color: #00ff88;
+    background: rgba(0, 255, 136, 0.15);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.slide-menu-logout {
+    color: #ff4444 !important;
+    background: rgba(255, 68, 68, 0.1) !important;
+    border: 1px solid rgba(255, 68, 68, 0.3) !important;
+    margin: 0 10px;
+    border-radius: 8px;
+}
+.slide-menu-logout:hover {
+    background: rgba(255, 68, 68, 0.2) !important;
+}
+.slide-menu-logout svg {
+    stroke: #ff4444;
+}
+
+/* Profile menu: dropdown under the profile icon. Fixed-position so no header
+   overflow rule can clip it; JS places it under the icon. 44px rows. */
+.profile-menu {
+    position: fixed;
+    top: 56px;
+    right: 8px;
+    min-width: 220px;
+    max-width: calc(100vw - 16px);
+    background: #0d1520;
+    border: 1px solid rgba(0, 150, 255, 0.15);
+    border-radius: 10px;
+    padding: 6px;
+    z-index: 10050;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+.profile-menu[hidden] { display: none; }
+.profile-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 12px;
+    box-sizing: border-box;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    color: #E5E7EB;
+    text-decoration: none;
+    text-align: left;
+    font-size: 0.875rem;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+}
+.profile-menu-item svg { stroke: #00cfff; flex-shrink: 0; }
+.profile-menu-item:hover, .profile-menu-item:focus-visible {
+    background: rgba(0, 207, 255, 0.12);
+    color: #00cfff;
+    outline: none;
+}
+.profile-menu-item:focus-visible { box-shadow: 0 0 0 2px #00cfff inset; }
+.profile-menu-sep { height: 1px; margin: 6px 4px; background: rgba(0, 150, 255, 0.15); }
+.profile-menu-logout[aria-busy="true"] { opacity: 0.6; cursor: progress; }
+.profile-menu-status { margin: 6px 8px 4px; padding: 8px 10px; font-size: 0.8rem; font-weight: 600; color: #E5E7EB; border: 1px solid #00cfff; border-radius: 6px; }
+.profile-menu-status[hidden] { display: none; }
+[data-theme="light"] .profile-menu { background: #ffffff; border-color: rgba(0, 80, 160, 0.2); }
+[data-theme="light"] .profile-menu-item { color: #0f172a; }
+
+/* Mobile header fixes */
+@media (max-width: 768px) {
+    .chat-header {
+        padding: 0.5rem 0.75rem !important;
+        /* Home-screen (standalone) iPhone: black-translucent status bar draws over the page,
+           so the header must keep the notch inset or the clock/battery sit on the logo/menu. */
+        padding-top: calc(0.5rem + env(safe-area-inset-top, 0px)) !important;
+        justify-content: space-between !important;
+        gap: 0.25rem !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+    }
+    /* Show logo + brand text on mobile */
+    .chat-header-left {
+        display: flex !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+    .chat-header-left a {
+        gap: 8px !important;
+    }
+    .chat-header-left .chat-avatar {
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        flex-shrink: 0 !important;
+    }
+    .chat-header-left .chat-avatar svg {
+        width: 22px !important;
+        height: 22px !important;
+    }
+    .chat-header-left .chat-header-info {
+        display: flex !important;
+        overflow: visible !important;
+        min-width: 0 !important;
+    }
+    html body .chat-header-left .chat-title,
+    html body .chat-header .chat-title {
+        font-size: 0.85rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        width: auto !important;
+        min-width: 0 !important;
+        max-width: 150px !important;
+    }
+    .chat-header-left .chat-subtitle {
+        display: none !important;
+    }
+    .chat-header {
+        max-width: 100% !important;
+        overflow-x: visible !important;
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+    }
+    .chat-header-right {
+        flex: 0 1 auto !important;
+        justify-content: flex-end !important;
+        gap: 0.25rem !important;
+        flex-wrap: nowrap !important;
+        min-width: 0 !important;
+    }
+    /* Hide most header buttons on mobile */
+    .chat-header .social-btn,
+    .chat-header .signup-btn,
+    .chat-header .user-info,
+    .chat-header .logout-btn,
+    .chat-header .wallet-btn,
+    .chat-header .eli5-toggle {
+        display: none !important;
+    }
+    /* Login button stays visible on mobile with text */
+    .chat-header .chat-header-btn {
+        display: none !important;
+    }
+    
+    .chat-header .chat-header-btn#headerPinBtn:not([hidden]) {
+        display: inline-flex !important;
+        flex: 0 0 auto;
+        width: 34px; height: 40px; min-width: 34px; padding: 0; margin: 0 -4px;
+        align-items: center; justify-content: center;
+    }
+    html body .chat-header .chat-header-btn.login-btn,
+    html body .chat-header #headerLoginBtn,
+    html body header .chat-header-btn.login-btn {
+        display: flex !important;
+        padding: 6px 12px !important;
+        white-space: nowrap !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        height: 44px !important;
+    }
+    html body .chat-header .login-btn .auth-text {
+        display: inline !important;
+        font-size: 0.8rem !important;
+    }
+    html body .chat-header .login-btn svg,
+    html body header .login-btn svg {
+        width: 16px !important;
+        height: 16px !important;
+        min-width: 16px !important;
+        min-height: 16px !important;
+    }
+    /* When logged in on mobile: hide login, show user info + logout */
+    html body .chat-header.is-logged-in #headerLoginBtn,
+    html body .chat-header.is-logged-in .login-btn {
+        display: none !important;
+    }
+    html body .chat-header.is-logged-in #headerUserInfo {
+        display: flex !important;
+        padding: 6px 8px !important;
+        white-space: nowrap !important;
+        min-width: 0 !important;
+        min-height: 44px !important;
+        height: 44px !important;
+        align-items: center !important;
+        gap: 4px !important;
+        flex-shrink: 1 !important;
+        overflow: hidden !important;
+    }
+    html body .chat-header.is-logged-in #headerUserInfo .username {
+        display: inline !important;
+        font-size: 0.8rem !important;
+        max-width: 60px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    html body .chat-header.is-logged-in #headerLogoutBtn {
+        display: flex !important;
+        padding: 6px 8px !important;
+        white-space: nowrap !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        height: 44px !important;
+        flex-shrink: 0 !important;
+    }
+    html body .chat-header.is-logged-in .logout-btn .auth-text {
+        display: none !important;
+    }
+    /* Language selector: show compact flag icon on mobile */
+    #language-selector-container {
+        display: flex !important;
+    }
+    #language-selector-container .language-btn {
+        min-width: 44px !important;
+        min-height: 44px !important;
+        width: 44px !important;
+        height: 44px !important;
+        padding: 10px !important;
+        justify-content: center !important;
+        gap: 0 !important;
+    }
+    #language-selector-container .language-btn .lang-code,
+    #language-selector-container .language-btn .lang-arrow {
+        display: none !important;
+    }
+    #language-selector-container .language-btn .lang-flag {
+        display: inline-flex !important;
+        font-size: 18px !important;
+    }
+    /* Hamburger button stays visible */
+    html body .chat-header .hamburger-btn,
+    html body header .hamburger-btn {
+        display: flex !important;
+        width: 44px !important;
+        height: 44px !important;
+        min-width: 44px !important;
+        min-height: 44px !important;
+        padding: 10px !important;
+        flex-shrink: 0 !important;
+    }
+    html body .chat-header .hamburger-btn svg,
+    html body header .hamburger-btn svg {
+        width: 20px !important;
+        height: 20px !important;
+        min-width: 20px !important;
+        min-height: 20px !important;
+    }
+}
+
+/* MOBILE: Hide chat controls on ALL mobile devices */
+@media screen and (max-width: 768px) {
+    /* Chat controls - History, New Conversation, TTS, Voice Input */
+    .chat-controls-bar,
+    .chat-control-btn,
+    #chat-history-btn,
+    #chat-new-btn,
+    #chat-tts-btn,
+    #wta-new-chat-btn,
+    #wta-tts-btn,
+    .voice-btn,
+    #voiceBtn,
+    .tts-btn,
+    button[title="Conversation History"],
+    button[title="New Conversation"],
+    button[title="Text-to-Speech"],
+    button[title="Voice Input"],
+    button[title="Voice"],
+    a[title="Conversation History"],
+    a[title="New Conversation"],
+    a[href="/chat/history"] {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        position: absolute !important;
+        left: -9999px !important;
+    }
+
+    /* MOBILE: Show header login button (icon only), hide signup to save space */
+    .chat-header .login-btn,
+    #headerLoginBtn {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        width: auto !important;
+        height: auto !important;
+        overflow: visible !important;
+        position: relative !important;
+        left: auto !important;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 8px !important;
+    }
+
+    /* Hide signup on mobile - available via hamburger menu */
+    .chat-header .signup-btn,
+    .chat-header .register-btn,
+    #headerSignupBtn {
+        display: none !important;
+    }
+}
+
+/* Narrow portrait: compress header so hamburger stays visible */
+@media (max-width: 480px) {
+    html body .chat-header.is-logged-in #headerUserInfo .username {
+        display: none !important;
+    }
+    html body .chat-header.is-logged-in #headerUserInfo {
+        
+        padding: 0 !important;
+        min-width: 44px !important;
+        width: 44px !important;
+        justify-content: center !important;
+    }
+    html body .chat-header.is-logged-in #headerLogoutBtn {
+        display: none !important;
+    }
+    .mode-indicator .mode-label {
+        display: none !important;
+    }
+    .mode-indicator {
+        padding: 4px 8px !important;
+        min-width: auto !important;
+    }
+}
+
+/* CSP-safe: moved from inline styles to avoid nonce-based CSP blocking */
+.chat-header-left > a {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.chat-subtitle {
+    color: #ffffff;
+}
+#notificationBell {
+    display: none;
+    position: relative;
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 6px;
+}
+#notifBadge {
+    display: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    background: #ff4444;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    line-height: 16px;
+}
+#headerUserInfo {
+    display: none;
+    text-decoration: none;
+    color: inherit;
+}
+#headerLogoutBtn {
+    display: none;
+}
+#headerModeIndicator {
+    display: none;
+}
+.slide-menu-divider {
+    margin: 8px 0;
+    border-color: rgba(255,255,255,0.04);
+}
+.slide-menu-link-accent {
+    color: #00cfff;
+}
+#slideMenuCreateFund span { white-space: normal; line-height: 1.3; }
+.slide-menu-link-quest { color: var(--accent); font-weight: 600; }
+.slide-menu-link-quest svg { stroke: var(--accent); }
+[data-theme="light"] .slide-menu-link-quest, [data-theme="light"] .slide-menu-link-quest svg { color: #0369a1; stroke: #0369a1; }
+.slide-menu-link.slide-menu-active {
+    background: rgba(0,207,255,0.1);
+    border-left: 2px solid #00cfff;
+    color: #00cfff;
+}
+
+/* v2 design — neutral borders, tighter radii */
+.slide-menu { border-left: 1px solid var(--panel-border); }
+.slide-menu-section { border-bottom: 1px solid var(--panel-border); }
+.nav-dropdown-menu { border: 1px solid var(--panel-border); border-radius: var(--panel-radius); }
+.nav-dropdown-section { border-bottom: 1px solid var(--panel-border); }
+.chat-header-btn.signup-btn { border-radius: var(--panel-radius); }
+.chat-header-btn.login-btn { border: 1px solid var(--panel-border); border-radius: var(--panel-radius); }
+.chat-header-btn.login-btn:hover { border-color: var(--panel-border-hover); }
+
+/* ─── macOS-style App Dock (header-inline) ─── */
+
+.app-dock-wrapper {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    margin: 0 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+    z-index: 1;
+}
+.app-dock-wrapper > .app-dock { flex: 0 0 auto; }
+.app-dock-wrapper.dock-hidden { display: none; }
+
+.app-dock-wrapper.dock-centred { position: absolute; left: var(--dock-left, 50%); top: 50%; transform: translateY(-50%); flex: 0 0 auto; margin: 0; width: auto; }
+.app-dock {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 4px 8px;
+    background: rgba(20, 28, 40, 0.55);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+    min-height: 40px;
+}
+[data-theme="light"] .app-dock {
+    background: rgba(255, 255, 255, 0.65);
+    border-color: rgba(0, 80, 160, 0.10);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+.app-dock-items {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 32px;
+}
+.app-dock-items:empty + .app-dock-divider { display: none; }
+.app-dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    transition: transform 0.2s ease-out;
+    transform-origin: center center;
+    position: relative;
+    padding: 2px;
+    cursor: pointer;
+}
+.app-dock-item .dock-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(0, 207, 255, 0.10);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease-out, background 0.2s, box-shadow 0.2s;
+}
+[data-theme="light"] .app-dock-item .dock-icon { background: rgba(3, 105, 161, 0.08); }
+.app-dock-item .dock-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: #00cfff;
+    fill: none;
+    stroke-width: 2;
+    transition: stroke 0.18s;
+}
+[data-theme="light"] .app-dock-item .dock-icon svg { stroke: #0369a1; }
+.app-dock-item .dock-label {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.95);
+    background: rgba(10, 14, 23, 0.92);
+    color: #e5e7eb;
+    font-size: 0.65rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s, transform 0.15s;
+    z-index: 10;
+}
+[data-theme="light"] .app-dock-item .dock-label { background: rgba(15, 23, 42, 0.88); color: #f0f0f0; }
+.app-dock-item:hover .dock-label { opacity: 1; transform: translateX(-50%) scale(1); }
+.app-dock-item .dock-dot {
+    position: absolute;
+    bottom: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(0, 207, 255, 0.5);
+    opacity: 0;
+    transition: opacity 0.18s;
+}
+.app-dock-item.dock-active .dock-dot { opacity: 1; }
+.app-dock-item .dock-unpin {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: rgba(255, 68, 68, 0.85);
+    color: #fff;
+    font-size: 10px;
+    line-height: 16px;
+    text-align: center;
+    cursor: pointer;
+    /* Review item N3: opacity:0 alone leaves a real <button> invisible but still
+       hit-testable — a click anywhere near the dock tile's top-right corner
+       unpinned the app. visibility:hidden removes it from hit-testing (and from
+       the tab order) until the tile is hovered or something inside it is
+       focused. Deliberately NOT paired with tabIndex=-1 / aria-hidden (the /apps
+       fix did that and made pinning mouse-only): :focus-within keeps the button
+       keyboard-reachable and announced the moment it takes focus. */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.12s, transform 0.12s, visibility 0.12s;
+    z-index: 5;
+    border: none;
+    padding: 0;
+    font-weight: 700;
+}
+.app-dock-item:hover .dock-unpin,
+.app-dock-item:focus-within .dock-unpin { opacity: 1; visibility: visible; }
+.app-dock-item:hover .dock-unpin:hover { transform: scale(1.2); }
+.app-dock-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.10);
+    margin: 0 4px;
+    align-self: center;
+    flex-shrink: 0;
+}
+[data-theme="light"] .app-dock-divider { background: rgba(0, 80, 160, 0.10); }
+.app-dock-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(0,207,255,0.72);
+    text-decoration: none;
+    transition: background 0.2s ease-out, color 0.2s, transform 0.2s ease-out;
+    transform-origin: center center;
+    flex-shrink: 0;
+    align-self: center;
+}
+.app-dock-add:hover { background: rgba(0, 207, 255, 0.12); color: #00cfff; }
+.app-dock-add svg { width: 20px; height: 20px; }
+[data-theme="light"] .app-dock-add { background: rgba(0, 80, 160, 0.04); color: #475569; }
+[data-theme="light"] .app-dock-add:hover { background: rgba(3, 105, 161, 0.10); color: #0369a1; }
+@media (max-width: 768px) {
+    .app-dock-wrapper { display: none; }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+    .app-dock { padding: 3px 6px; border-radius: 12px; min-height: 34px; }
+    .app-dock-item .dock-icon { width: 30px; height: 30px; border-radius: 7px; }
+    .app-dock-item .dock-icon svg { width: 16px; height: 16px; }
+    .app-dock-add { width: 30px; height: 30px; border-radius: 7px; }
+    .app-dock-divider { height: 20px; }
+}
+
+.agent-paste-bar {
+    position: relative;
+    margin: env(safe-area-inset-top, 0px) 0 0 0;
+    background: rgba(17,24,39,0.6);
+    border-bottom: 1px solid rgba(0,207,255,0.15);
+    padding: 0.55rem 1rem;
+    font-family: var(--font-body);
+    font-size: max(0.72rem, 12px);
+    color: #9fb2c4;
+    /* In-flow page content, so it stacks at the sticky level: BELOW the fixed
+       header and the fixed NEXUS widget (--z-chat). At 900 (tooltip level) its
+       Copy button covered the NEXUS toggle on short phones (320x480 /station,
+       aBugSlayerQA 2026-10-19). Pinned by tests/test_agent_paste_bar_below_nexus.py. */
+    z-index: var(--z-sticky, 200);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+.agent-paste-bar .apb-label {
+    color: #00cfff;
+    font-weight: 600;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
+.agent-paste-bar .apb-text {
+    font-family: var(--font-mono);
+    flex: 1 1 320px;
+    min-width: 0;
+    color: #cfe0ef;
+    background: rgba(10,14,23,0.7);
+    border: 1px solid rgba(0,207,255,0.12);
+    border-radius: 4px;
+    padding: 0.35rem 0.55rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    user-select: all;
+}
+.agent-paste-bar .apb-copy {
+    flex: 0 0 auto;
+    cursor: pointer;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--hairline-strong);
+    border-radius: 4px;
+    padding: 0 0.7rem;
+    font: inherit;
+    font-family: var(--font-body);
+    font-weight: 600;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+}
+.agent-paste-bar .apb-copy:hover { background: var(--surface); border-color: var(--text-3); }
+body.no-header-padding .agent-paste-bar {
+    margin-top: calc(90px + env(safe-area-inset-top, 0px));
+}
+@media (max-width: 600px) {
+    .agent-paste-bar { padding: 0.5rem 0.75rem; }
+    .agent-paste-bar .apb-label { flex-basis: 100%; }
+}
+
+.agent-paste-bar .apb-note { flex-basis: 100%; margin: 0; color: var(--text-2); font-size: max(0.68rem, 11px);
+    line-height: 1.45; word-break: break-word; overflow-wrap: anywhere; }
+.apb-card .apb-note { margin: .5rem 0 0; }
+
+.agent-paste-bar.apb-card { display: block; padding: 1rem 1rem 1.1rem; border-bottom: 1px solid rgba(0,150,255,0.15); }
+.apb-card .apb-inner { max-width: 1080px; margin: 0 auto; }
+.apb-card .apb-title { color: var(--text-heading, #fff); font-family: var(--font-display); font-weight: 700;
+    font-size: 1.35rem; letter-spacing: 1.5px; line-height: 1.2; margin: 0 0 .3rem; }
+.apb-card .apb-lead { color: var(--text-secondary, #9fb3c8); margin: 0 0 .6rem; font-size: 13px; line-height: 1.5;
+    font-family: var(--font-body); }
+.apb-card .apb-box { display: flex; align-items: center; gap: .75rem; background: rgba(17,24,39,0.6);
+    border: 1px solid rgba(0,150,255,0.15); border-radius: 8px; padding: 10px 10px 10px 14px; }
+.apb-card .apb-text { flex: 1 1 auto; background: transparent; border: 0; padding: 0; white-space: normal;
+    overflow-wrap: anywhere; overflow: visible; color: #e6f1ff; font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.apb-card .apb-copy { background: var(--surface-2); color: var(--text); border: 1px solid var(--hairline-strong);
+    border-radius: 8px; padding: 0 18px; font-weight: 700; font-size: 14px; }
+.apb-card .apb-copy:hover { background: var(--surface); border-color: var(--text-3); }
+/* "Copied" is the word the copy script writes into the button, not a colour. */
+[data-theme="light"] .apb-card .apb-box { background: #f3f7fb; border-color: rgba(3, 105, 161,0.25); }
+[data-theme="light"] .apb-card .apb-text { color: #0f172a; }
+[data-theme="light"] .agent-paste-bar { background: #f3f7fb; border-bottom-color: rgba(0,80,160,0.18); color: #475569; }
+[data-theme="light"] .agent-paste-bar .apb-label { color: #0369a1; }
+[data-theme="light"] .agent-paste-bar .apb-text { color: #0f172a; background: #ffffff; border-color: rgba(0,80,160,0.22); }
+@media (max-width: 600px) {
+    .apb-card .apb-title { font-size: 1.1rem; letter-spacing: 1px; }
+    .apb-card .apb-box { flex-direction: column; align-items: stretch; }
+    .apb-card .apb-copy { width: 100%; }
+}
+/* The title is a <div>, not an <h2>: it sits above each page's h1. The mobile heading rules in
+   mobile-polish.css (max-width 768, !important) used to size it as an h2; keep those numbers here. */
+@media (max-width: 768px) {
+    .apb-card .apb-title { font-size: 24px; font-weight: 600; line-height: 1.4; margin: 20px auto 10px;
+        max-width: calc(100% - 32px); }
+}
+
+.agent-paste-bar.apb-connect { padding: .75rem 1rem; }
+.apb-connect .apb-inner { display: flex; justify-content: center; }
+
+.agent-paste-bar.apb-connect-own { padding: 0; margin: 0; border: 0; background: none; }
+.apb-card .apb-dlg .apb-dlg-lead { margin: 0 2.25rem .75rem 0; text-align: left; }   /* first line clears the close button */
+</style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<style>
+.aia-wrap { margin: .25rem 0 .5rem; }
+.aia-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); gap: 8px; }
+.aia-btn { position: relative; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 10px;
+    background: var(--surface-2, rgba(13,21,32,0.7)); color: var(--text, rgb(230,237,243));
+    border: 1px solid var(--hairline-strong, rgba(0,150,255,0.15)); border-radius: 10px; cursor: pointer;
+    font: inherit; font-size: .9rem; text-align: left; transition: border-color .15s; }
+.aia-btn:hover { border-color: var(--accent, rgb(0,207,255)); }
+.aia-btn:focus-visible { outline: 2px solid var(--accent, rgb(0,207,255)); outline-offset: 2px; }
+.aia-logo { flex: 0 0 22px; width: 22px; height: 22px; border-radius: 5px; object-fit: contain; }
+/* mobile-polish.css centres every <img> (margin: 0 auto) at phone width; the logo sits left of its name */
+.aia-btn .aia-logo { margin: 0; max-width: none; height: 22px; }
+.aia-mask { background-color: currentColor; -webkit-mask: var(--aia-logo) center / contain no-repeat;
+    mask: var(--aia-logo) center / contain no-repeat; border-radius: 0; }
+.aia-l-chatgpt { --aia-logo: url('/static/img/ai-logos/openai.svg?v=20261108-1'); }
+.aia-l-claude { --aia-logo: url('/static/img/ai-logos/claude.svg?v=20261108-3'); }
+.aia-l-gemini { --aia-logo: url('/static/img/ai-logos/gemini.svg?v=20261108-3'); }
+.aia-l-muse { --aia-logo: url('/static/img/ai-logos/meta.svg?v=20261108-1'); }
+.aia-l-dot { --aia-logo: url('/static/img/ai-logos/newcomputer-dot.png?v=20261108-2'); }
+.aia-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aia-done { display: none; }
+.aia-btn.done { border-color: var(--positive, rgb(0,255,136)); }
+.aia-btn.done .aia-name { display: none; }
+.aia-btn.done .aia-done { display: inline; color: var(--positive, rgb(0,255,136)); }
+[data-theme="light"] .aia-btn.done .aia-done { color: rgb(4,120,87); }
+</style>
+<script>
+(function(){
+  if (window.__aiAskWired) return;
+  window.__aiAskWired = true;
+  function flash(b){ b.classList.add('done'); setTimeout(function(){ b.classList.remove('done'); }, 1600); }
+  function fallback(txt, b){
+    try { var ta = document.createElement('textarea'); ta.value = txt; ta.setAttribute('readonly', '');
+          ta.style.position = 'fixed'; ta.style.opacity = '0'; (b.closest('dialog') || document.body).appendChild(ta);
+          ta.select(); if (document.execCommand('copy')) flash(b); ta.remove(); } catch (e) { /* nothing to do */ }
+  }
+  document.addEventListener('click', function(e){
+    var b = e.target && e.target.closest ? e.target.closest('[data-ai-ask-copy]') : null;
+    if (!b) return;
+    var txt = b.getAttribute('data-ai-ask-copy') || '';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(function(){ flash(b); }).catch(function(){ fallback(txt, b); });
+    } else { fallback(txt, b); }
+  });
+})();
+</script>
+<style>
+/* outlined, not filled: a page keeps its ONE filled accent button (design-token rule) */
+.apb-connect-btn, .thf-connect-btn { background: var(--surface); color: var(--accent); border: 1px solid var(--accent);
+    border-radius: 10px; padding: .7rem 1.4rem; min-height: 44px; font-family: var(--font-display); font-size: 1rem;
+    letter-spacing: .02em; cursor: pointer; }
+.apb-connect-btn:hover, .thf-connect-btn:hover { background: var(--surface-2); }
+.apb-connect-btn:focus-visible, .thf-connect-btn:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.apb-connect-row { display: flex; justify-content: center; margin: 12px 0 18px; }
+/* margin: auto centres the modal — main.css's global `* { margin: 0 }` reset otherwise beats the
+   browser's dialog:modal centring and pins the box to the top-left corner (measured 2026-11-06). */
+.apb-dlg { margin: auto; width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); overflow: auto;
+    background: var(--surface); color: var(--text); border: 1px solid var(--hairline-strong); border-radius: 12px;
+    padding: 1.25rem 1.25rem 1.1rem; box-sizing: border-box; }
+.apb-dlg::backdrop { background: rgba(10,14,23,0.72); }
+[data-theme="light"] .apb-dlg::backdrop { background: rgba(15,23,42,0.4); }
+.apb-dlg-close { position: absolute; top: .6rem; right: .6rem; width: 44px; height: 44px; background: transparent;
+    color: var(--text-2); border: 0; border-radius: 8px; font-size: 1.5rem; line-height: 1; cursor: pointer; }
+.apb-dlg-close:hover { color: var(--text); background: var(--surface-2); }
+.apb-dlg-lead { margin: 0 2.25rem .75rem 0; text-align: left; }   /* first line clears the close button */
+</style>
+<script>
+(function(){
+  if (window.__agentConnectWired) return;
+  window.__agentConnectWired = true;
+  function open(d){ if (d.showModal) { if (!d.open) d.showModal(); } else { d.setAttribute('open', ''); } }
+  function close(d){ if (d.close) { d.close(); } else { d.removeAttribute('open'); } }
+  document.addEventListener('click', function(e){
+    var el = e.target;
+    if (!el || !el.closest) return;
+    var t = el.closest('[data-agent-connect]');
+    if (t) {
+      var id = t.getAttribute('data-agent-connect') || t.getAttribute('aria-controls') || 'agentConnectDlg';
+      var d = document.getElementById(id);
+      if (d) { e.preventDefault(); open(d); }
+      return;
+    }
+    var c = el.closest('[data-agent-connect-close]');
+    if (c) { var cd = c.closest('dialog'); if (cd) close(cd); return; }
+    if (el.tagName === 'DIALOG' && el.classList.contains('apb-dlg')) {   // the backdrop, not the box's padding
+      var r = el.getBoundingClientRect();
+      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) close(el);
+    }
+  });
+})();
+</script>
+
+
+
+
+
+<section class="agent-paste-bar apb-card apb-connect" id="agentPasteBar" data-agent-prompt="I want to improve my health and need my AI agent to start talking to BioAI, the AI agent at biomiv.com, so I can ask it about my health right here without leaving this chat. Open https://biomiv.com/ask?q=connect and follow what it says. For the rest of this chat, each time I ask about a condition, symptom, food, supplement or drug, ask BioAI the way that page says, relay its answer with its cautions, and open the ready links its answers give for more or to check on anything still being worked out." aria-label="Connect your AI">
+  
+  <div class="apb-inner"><button type="button" class="apb-connect-btn" id="agentConnectOpen" data-agent-connect="agentConnectDlg" aria-haspopup="dialog" aria-controls="agentConnectDlg">Connect your AI</button></div>
+  
+  <dialog class="apb-dlg" id="agentConnectDlg" aria-label="Give this to your AI agent to get started">
+    <button type="button" class="apb-dlg-close" id="agentConnectClose" data-agent-connect-close aria-label="Close">&times;</button>
+    <p class="apb-lead apb-dlg-lead">Copy this into ChatGPT, Claude, Meta Muse, Gemini or any AI agent. Your AI then talks to BioAI, the Biomiv AI agent, for you, so you can ask about your health without leaving your chat.</p>
+    
+    <div class="aia-wrap">
+  <div class="aia-grid" role="group" aria-label="Copy the prompt for your AI">
+    <button type="button" class="aia-btn" data-ai-ask-copy="I want to improve my health and need my AI agent to start talking to BioAI, the AI agent at biomiv.com, so I can ask it about my health right here without leaving this chat. Open https://biomiv.com/ask?via=chatgpt&amp;q=connect and follow what it says. For the rest of this chat, each time I ask about a condition, symptom, food, supplement or drug, ask BioAI the way that page says, relay its answer with its cautions, and open the ready links its answers give for more or to check on anything still being worked out." data-ai-ask-via="chatgpt" aria-label="Copy the prompt for ChatGPT (OpenAI)" title="Copy for ChatGPT"><span class="aia-logo aia-mask aia-l-chatgpt" aria-hidden="true"></span><span class="aia-name">ChatGPT</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="I want to improve my health and need my AI agent to start talking to BioAI, the AI agent at biomiv.com, so I can ask it about my health right here without leaving this chat. Open https://biomiv.com/ask?via=claude&amp;q=connect and follow what it says. For the rest of this chat, each time I ask about a condition, symptom, food, supplement or drug, ask BioAI the way that page says, relay its answer with its cautions, and open the ready links its answers give for more or to check on anything still being worked out." data-ai-ask-via="claude" aria-label="Copy the prompt for Claude (Anthropic)" title="Copy for Claude"><span class="aia-logo aia-mask aia-l-claude" aria-hidden="true"></span><span class="aia-name">Claude</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="I want to improve my health and need my AI agent to start talking to BioAI, the AI agent at biomiv.com, so I can ask it about my health right here without leaving this chat. Open https://biomiv.com/ask?via=gemini&amp;q=connect and follow what it says. For the rest of this chat, each time I ask about a condition, symptom, food, supplement or drug, ask BioAI the way that page says, relay its answer with its cautions, and open the ready links its answers give for more or to check on anything still being worked out." data-ai-ask-via="gemini" aria-label="Copy the prompt for Gemini (Google)" title="Copy for Gemini"><span class="aia-logo aia-mask aia-l-gemini" aria-hidden="true"></span><span class="aia-name">Gemini</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="I want to improve my health and need my AI agent to start talking to BioAI, the AI agent at biomiv.com, so I can ask it about my health right here without leaving this chat. Open https://biomiv.com/ask?via=muse&amp;q=connect and follow what it says. For the rest of this chat, each time I ask about a condition, symptom, food, supplement or drug, ask BioAI the way that page says, relay its answer with its cautions, and open the ready links its answers give for more or to check on anything still being worked out." data-ai-ask-via="muse" aria-label="Copy the prompt for Muse (Meta)" title="Copy for Muse"><span class="aia-logo aia-mask aia-l-muse" aria-hidden="true"></span><span class="aia-name">Muse</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="I want to improve my health and need my AI agent to start talking to BioAI, the AI agent at biomiv.com, so I can ask it about my health right here without leaving this chat. Open https://biomiv.com/ask?via=dot&amp;q=connect and follow what it says. For the rest of this chat, each time I ask about a condition, symptom, food, supplement or drug, ask BioAI the way that page says, relay its answer with its cautions, and open the ready links its answers give for more or to check on anything still being worked out." data-ai-ask-via="dot" aria-label="Copy the prompt for Dot (New Computer)" title="Copy for Dot"><span class="aia-logo aia-mask aia-l-dot" aria-hidden="true"></span><span class="aia-name">Dot</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="I want to improve my health and need my AI agent to start talking to BioAI, the AI agent at biomiv.com, so I can ask it about my health right here without leaving this chat. Open https://biomiv.com/ask?via=openclaw&amp;q=connect and follow what it says. For the rest of this chat, each time I ask about a condition, symptom, food, supplement or drug, ask BioAI the way that page says, relay its answer with its cautions, and open the ready links its answers give for more or to check on anything still being worked out." data-ai-ask-via="openclaw" aria-label="Copy the prompt for OpenClaw (OpenClaw)" title="Copy for OpenClaw"><img class="aia-logo" src="/static/img/ai-logos/openclaw.svg?v=20261108-1" alt="" width="22" height="22" loading="lazy" decoding="async"><span class="aia-name">OpenClaw</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+    <button type="button" class="aia-btn" data-ai-ask-copy="I want to improve my health and need my AI agent to start talking to BioAI, the AI agent at biomiv.com, so I can ask it about my health right here without leaving this chat. Open https://biomiv.com/ask?via=hermes&amp;q=connect and follow what it says. For the rest of this chat, each time I ask about a condition, symptom, food, supplement or drug, ask BioAI the way that page says, relay its answer with its cautions, and open the ready links its answers give for more or to check on anything still being worked out." data-ai-ask-via="hermes" aria-label="Copy the prompt for Hermes (Nous Research)" title="Copy for Hermes"><img class="aia-logo" src="/static/img/ai-logos/nous-research.png?v=20261108-1" alt="" width="22" height="22" loading="lazy" decoding="async"><span class="aia-name">Hermes</span><span class="aia-done" aria-hidden="true">Copied</span>
+    </button>
+  </div>
+</div>
+    <div class="apb-box">
+      <code class="apb-text" id="agentPasteText">I want to improve my health and need my AI agent to start talking to BioAI, the AI agent at biomiv.com, so I can ask it about my health right here without leaving this chat. Open https://biomiv.com/ask?q=connect and follow what it says. For the rest of this chat, each time I ask about a condition, symptom, food, supplement or drug, ask BioAI the way that page says, relay its answer with its cautions, and open the ready links its answers give for more or to check on anything still being worked out.</code>
+      <button type="button" class="apb-copy" id="agentPasteCopy" aria-label="Copy the prompt for your AI agent">Copy</button>
+    </div>
+    
+    
+
+  </dialog>
+</section>
+
+
+
+<script>
+(function(){
+  var btn = document.getElementById('agentPasteCopy');
+  var bar = document.getElementById('agentPasteBar');
+  if(!btn || !bar) return;
+  btn.addEventListener('click', function(){
+    var txt = bar.getAttribute('data-agent-prompt') || '';
+    var done = function(){ var o = btn.textContent; btn.textContent = 'Copied'; btn.classList.add('done'); setTimeout(function(){ btn.textContent = o; btn.classList.remove('done'); }, 1500); };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(done).catch(function(){ fallback(); });
+    } else { fallback(); }
+    function fallback(){
+      try {
+        var r = document.createRange(); r.selectNodeContents(document.getElementById('agentPasteText'));
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        if(document.execCommand('copy')){ done(); }
+      } catch(e){}
+    }
+  });
+})();
+</script>
+
+<div class="chat-header">
+    <div class="chat-header-left">
+        <a href="/">
+            <div class="chat-avatar chat-avatar-biomiv">
+                <svg viewBox="0 0 48 48" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Biomiv">
+                    <path d="M22 15l10.400 6v12L22 39l-10.400-6V21z"></path>
+                    <path d="M22 19.600l6.400 3.700M28.400 30.700L22 34.400M15.600 30.700v-7.400" stroke-width="1.600"></path>
+                    <path d="M32.400 21l3.600-4.200M11.600 33l-5 2.900M22 15V9.500"></path>
+                    <path d="M35.200 17.600c-.800-6.400 3-10.800 9.800-11.600.900 6.800-3.400 11.200-9.800 11.600z" fill="currentColor" fill-opacity="0.22"></path>
+                    <path d="M36 16.800l5-6.200" stroke-width="1.400"></path>
+                    <circle cx="22" cy="7.500" r="2.300" fill="currentColor" stroke="none"></circle>
+                    <circle cx="5" cy="36.800" r="2.300" fill="currentColor" stroke="none"></circle>
+                </svg>
+            </div>
+            <div class="chat-header-info">
+                <div class="chat-title">Biomiv</div>
+                <span class="chat-subtitle">AI for Healthspan</span>
+            </div>
+        </a>
+    </div>
+
+    
+    <div class="app-dock-wrapper" id="appDockWrapper">
+        <div class="app-dock" id="appDock" role="toolbar" aria-label="Pinned apps">
+            <div class="app-dock-items" id="appDockItems"></div>
+            <div class="app-dock-divider"></div>
+            
+            <a href="/apps" class="app-dock-add" id="appDockAdd" title="Browse Apps">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            </a>
+            
+        </div>
+    </div>
+
+    <div class="chat-header-right">
+        
+        
+        <a href="/apps" class="chat-header-btn" title="AI Apps" aria-label="AI Apps" data-i18n-aria="accessibility.ai_apps">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+            </svg>
+        </a>
+        
+
+        
+        <button class="chat-header-btn" id="headerCopyLinkBtn" type="button" title="Copy page link" aria-label="Copy page link" data-i18n-aria="accessibility.copy_page_link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+        </button>
+        <script>
+        (function(){
+          var btn = document.getElementById('headerCopyLinkBtn');
+          if (!btn) return;
+          btn.addEventListener('click', function(){
+            var text = window.location.href;
+            function done(){
+              btn.setAttribute('title', 'Copied!');
+              btn.classList.add('mm-header-copied');
+              setTimeout(function(){ btn.setAttribute('title', 'Copy page link'); btn.classList.remove('mm-header-copied'); }, 1500);
+            }
+            function fallback(){
+              try {
+                var ta = document.createElement('textarea');
+                ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+                document.body.appendChild(ta); ta.focus(); ta.select();
+                document.execCommand('copy'); document.body.removeChild(ta);
+                done();
+              } catch (e) {}
+            }
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done).catch(fallback);
+              } else { fallback(); }
+            } catch (e) { fallback(); }
+          });
+        })();
+        </script>
+
+        
+        
+        
+
+        
+        <button class="chat-header-btn" id="notificationBell" title="Notifications" aria-label="Notifications" data-no-translate>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span id="notifBadge" data-no-translate></span>
+        </button>
+
+        
+        <div id="language-selector-container" class="language-selector compact dark"></div>
+
+        
+        <button class="chat-header-btn theme-toggle-btn" id="themeToggleBtn" title="Toggle Theme" aria-label="Toggle theme" aria-pressed="true" data-i18n-aria="accessibility.toggle_theme">
+            <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </button>
+
+        
+        
+        
+        <a href="/login?next=/healthbuilder/apps/methylmap" class="chat-header-btn auth-btn login-btn" id="headerLoginBtn" title="Log In" data-cta="login">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                <polyline points="10 17 15 12 10 7"></polyline>
+                <line x1="15" y1="12" x2="3" y2="12"></line>
+            </svg>
+            <span class="auth-text" data-i18n="header.login">Log In</span>
+        </a>
+        <a href="/signup?next=/healthbuilder/apps/methylmap" class="chat-header-btn auth-btn signup-btn" id="headerSignupBtn" title="Sign Up" data-cta="signup">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
+            <span class="auth-text" data-i18n="header.signup">Sign Up</span>
+        </a>
+
+        
+        <a href="/profile" class="chat-header-btn user-info" id="headerUserInfo" title="My Profile" role="button" aria-haspopup="menu" aria-expanded="false" aria-controls="profileMenu" aria-label="My Profile" data-i18n-aria="header.profile_menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span class="username" id="headerUsername"></span>
+        </a>
+        <button class="chat-header-btn logout-btn" id="headerLogoutBtn" title="Log Out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span class="auth-text" data-i18n="header.logout">Log Out</span>
+        </button>
+
+        
+        <div class="profile-menu" id="profileMenu" role="menu" aria-labelledby="headerUserInfo" hidden>
+            <a href="/account" class="profile-menu-item" role="menuitem" tabindex="-1" id="profileMenuAccount">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                <span data-i18n="header.my_account">My Account</span>
+            </a>
+            <a href="/profile" class="profile-menu-item" role="menuitem" tabindex="-1" id="profileMenuSettings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span data-i18n="header.settings">Settings</span>
+            </a>
+            <div class="profile-menu-sep" role="separator"></div>
+            <button type="button" class="profile-menu-item profile-menu-logout" role="menuitem" tabindex="-1" id="profileMenuLogout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span data-i18n="header.logout">Log Out</span>
+            </button>
+            <p class="profile-menu-status" id="profileMenuStatus" role="alert" aria-live="assertive" hidden></p>
+            <span id="profileMenuFailText" data-i18n="header.logout_failed" hidden>Log out failed. You are still signed in. Please try again.</span>
+            <span id="profileMenuBusyText" data-i18n="header.logging_out" hidden>Logging out...</span>
+        </div>
+
+        
+        <div class="mode-indicator" id="headerModeIndicator" title="Click to switch trading mode">
+            <span class="mode-dot"></span>
+            <span class="mode-label">PAPER</span>
+        </div>
+
+        
+        <button type="button" class="eli5-toggle" id="eli5Toggle" aria-pressed="false" title="Toggle plain-English explanations">
+            <span class="eli5-label">ELI5</span>
+            <span class="eli5-switch" aria-hidden="true"><span class="eli5-dot"></span></span>
+        </button>
+
+        
+        <button type="button" class="chat-header-btn nexus-sub-btn" id="nexusSubBtn" title="NEXUS AI plan and build usage" aria-label="NEXUS AI plan and build usage" style="display:none;">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span class="nexus-sub-text" id="nexusSubText"></span>
+        </button>
+
+        
+        <div class="nexus-sub-panel" id="nexusSubPanel" style="display:none;">
+            <div class="nexus-sub-panel-header">
+                <span>NEXUS AI</span>
+                <button type="button" class="nexus-sub-close" id="nexusSubClose" aria-label="Close subscription panel">&times;</button>
+            </div>
+            <div class="nexus-sub-panel-body" id="nexusSubBody"></div>
+        </div>
+
+        
+        <button class="hamburger-btn" id="hamburgerMenuBtn" aria-label="Menu" title="Menu" data-testid="hamburger-menu" data-i18n-aria="accessibility.toggle_menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+</div>
+
+
+<div class="slide-menu-overlay" id="slideMenuOverlay"></div>
+
+
+<div class="slide-menu" id="slideMenu">
+    <div class="slide-menu-header">
+        <span class="slide-menu-title" data-i18n="menu.menu">Menu</span>
+        <button class="slide-menu-close" id="slideMenuClose" aria-label="Close menu" data-i18n-aria="accessibility.menu_close">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    
+    
+    
+    <div id="slideMenuSections">
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    <div class="slide-menu-section" id="slideMenuBioSection">
+        <a href="/healthbuilder" class="slide-menu-link slide-menu-link-accent" id="slideMenuHealthBuilder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14"></path><path d="M5 12h14"></path></svg>
+            <span data-i18n="menu.health_builder">Health Builder</span>
+        </a>
+        
+        <a href="/apps" class="slide-menu-link" id="slideMenuCommunityApps">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+            <span>Community Built Apps</span>
+        </a>
+        
+        <a href="/discoveries/features" class="slide-menu-link" id="slideMenuBioFeatures">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M7 4h10v5a5 5 0 0 1-10 0z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3"></path><path d="M7 5H4v2a3 3 0 0 0 3 3"></path></svg>
+            <span data-i18n="menu.feature_leaderboard">Feature Leaderboard</span>
+        </a>
+        <a href="/healthspan" class="slide-menu-link" id="slideMenuHealthspan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+            <span data-i18n="menu.health_span">Health Span</span>
+        </a>
+        <a href="https://cymetica.com/apps" class="slide-menu-link" id="slideMenuBioApps">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3z"></path><path d="M14 3h7v7h-7z"></path><path d="M14 14h7v7h-7z"></path><path d="M3 14h7v7H3z"></path></svg>
+            <span data-i18n="menu.apps">Apps</span>
+        </a>
+        
+        
+    </div>
+    <div class="slide-menu-divider"></div>
+    
+
+    <div class="slide-menu-section" id="slideMenuAccountSection">
+        <div class="slide-menu-section-title" data-i18n="menu.account">Account</div>
+        
+        
+        <a href="/account" class="slide-menu-link" id="slideMenuBioAccount">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>Your account</span>
+        </a>
+        
+        <a href="/pricing" class="slide-menu-link" id="slideMenuBioPricing">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+            </svg>
+            <span>Plans and pricing</span>
+        </a>
+        
+    </div>
+
+    <div class="slide-menu-divider"></div>
+
+    
+    <div class="slide-menu-section" id="slideMenuBioBlogSection">
+        
+        <a href="/blog" class="slide-menu-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            <span data-i18n="menu.blog">Blog</span>
+        </a>
+    </div>
+    <div class="slide-menu-section" id="slideMenuCareersSection">
+        <div class="slide-menu-section-title" data-i18n="menu.careers">Careers</div>
+        <a href="https://cymetica.com/careers" class="slide-menu-link">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"></path>
+            </svg>
+            <span data-i18n="menu.careers_open">Open roles</span>
+        </a>
+    </div>
+    
+    
+    <div class="slide-menu-section" id="slideMenuAppsSection" hidden>
+        <div class="slide-menu-section-title" data-i18n="menu.all_apps">All apps</div>
+        <div id="slideMenuAppsLinks"></div>
+    </div>
+
+    </div>
+
+    
+    <div class="slide-menu-section">
+        <div id="hamburger-language-selector" class="hamburger-language-selector"></div>
+    </div>
+
+    <div class="slide-menu-divider"></div>
+
+    
+    <div class="slide-menu-section">
+        <div class="slide-menu-eli5-row">
+            <span class="slide-menu-eli5-label" data-i18n="menu.dark_mode">Dark Mode</span>
+            <button type="button" class="eli5-toggle" id="themeToggleMobile" aria-pressed="false" title="Toggle dark mode">
+                <span class="eli5-label" data-i18n="menu.theme">Theme</span>
+                <span class="eli5-switch" aria-hidden="true"><span class="eli5-dot"></span></span>
+            </button>
+        </div>
+        <div class="slide-menu-eli5-row">
+            <span class="slide-menu-eli5-label" data-i18n="menu.plain_english_mode">Plain English Mode</span>
+            <button type="button" class="eli5-toggle" id="eli5ToggleMobile" aria-pressed="false" title="Toggle plain-English explanations">
+                <span class="eli5-label">ELI5</span>
+                <span class="eli5-switch" aria-hidden="true"><span class="eli5-dot"></span></span>
+            </button>
+        </div>
+    </div>
+    <div class="slide-menu-section" id="slideMenuLogoutSection" hidden>
+        <button type="button" class="slide-menu-link slide-menu-logout" id="slideMenuLogout" style="min-height:44px;width:calc(100% - 20px);cursor:pointer;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            <span data-i18n="header.logout">Log Out</span>
+        </button>
+    </div>
+    
+    
+</div>
+
+<script>
+// Session-only cleanup: if user logged in without "Remember Me" and this is a new
+// browser session (sessionStorage is empty), clear stale localStorage tokens.
+(function() {
+    if (localStorage.getItem('sessionOnly') === 'true' && !sessionStorage.getItem('accessToken')) {
+        ['auth_token', 'accessToken', 'access_token', 'refreshToken', 'refresh_token', 'user'].forEach(function(k) {
+            localStorage.removeItem(k);
+        });
+        localStorage.removeItem('sessionOnly');
+    }
+})();
+
+// Global auth token helper — checks both storages, all key variants
+window.getAuthToken = window.getAuthToken || function() {
+    return localStorage.getItem('auth_token')
+        || localStorage.getItem('accessToken')
+        || localStorage.getItem('access_token')
+        || sessionStorage.getItem('auth_token')
+        || sessionStorage.getItem('accessToken')
+        || sessionStorage.getItem('access_token');
+};
+
+</script>
+<script src="/static/js/header-auth-state.js?v=20261116-1" defer></script>
+<script src="/static/js/whats-new.js?v=20261027-1" defer></script>
+<script src="/static/js/nexus-usage.js?v=20261031-1" defer></script>
+
+
+
+<script src="/static/js/nexus-subscription.js?v=20261030-1" defer></script>
+
+<script src="/static/js/caveman-mode.js?v=20260921-1" defer></script>
+    
+
+    
+    
+
+    <main class="content-main" id="main-content">
+        
+        
+<main class="hs mm" id="mm">
+  <section class="hs-hero">
+    <p class="hs-kicker"><a href="/healthbuilder/apps" data-i18n="hsa_title">Health Apps</a></p>
+    <h1>MethylMap</h1>
+    <p class="hs-sub">A 13-gene methylation report from the raw DNA file you already have. Your file is read here in your browser and is never uploaded. Every line comes with its source.</p>
+    <p class="hs-credit"><span data-i18n="hsa_built_by">Built by</span> Cymetica Biosciences with <a href="/healthbuilder">Health Builder</a></p>
+  </section>
+
+  <p class="mm-boundary" id="mmBoundaryTop">Information only, not medical advice. Talk to a doctor or pharmacist before changing anything.</p>
+  <div id="mmEmergency" class="mm-emerg" role="alert" hidden></div>
+
+  <section class="mm-panel mm-noprint" aria-labelledby="mmStartH">
+    <h2 id="mmStartH">Start</h2>
+    <p class="mm-lede">See a made-up demo first, or read your own file. Nothing leaves this device.</p>
+    <div class="mm-row">
+      <button type="button" class="hs-btn mm-btn-primary" id="mmDemo">See the demo report</button>
+      <button type="button" class="hs-btn" id="mmTypedOpen">Type genotypes by hand</button>
+      <button type="button" class="hs-btn" id="mmLoadSaved" hidden>Open my saved report</button>
+    </div>
+    <label class="mm-drop" id="mmDrop" for="mmFile">
+      <strong>Choose or drop your raw DNA file</strong>
+      <span class="mm-small">23andMe, AncestryDNA, MyHeritage, FamilyTreeDNA, Living DNA, tellmeGen, Nebula, Dante or any VCF: .txt, .csv, .zip, .vcf, .gz</span>
+      <input type="file" id="mmFile" accept=".txt,.csv,.tsv,.zip,.vcf,.gz,.pdf,image/*">
+    </label>
+    <div class="mm-row mm-gap">
+      <label class="mm-field">Sex at birth (for MAO-A, on the X chromosome)
+        <select id="mmSex"><option value="">Not stated</option><option value="female">Female</option><option value="male">Male</option></select>
+      </label>
+      <label class="mm-small"><input type="checkbox" id="mmVcfRef"> My VCF lists only the places where I differ from the reference genome (most whole-genome VCFs): count markers missing from it as the reference genotype.</label>
+    </div>
+    <div class="mm-progress" hidden id="mmProgWrap"><span id="mmProg"></span></div>
+    <p class="mm-status" id="mmStatus" role="status" aria-live="polite"></p>
+    <div id="mmTyped" hidden>
+      <h3>Type genotypes by hand</h3>
+      <p class="mm-small">Copy each genotype from your report as two letters, for example <span class="mm-mono">AG</span>. Write them as your raw-data file or lab report shows them; a genotype written on the other DNA strand is turned round for you. Leave a box empty if your report does not have it. Reading a PDF or a photo of a lab report is not supported yet, so typing is the way to use one.</p>
+      <div class="mm-typed" id="mmTypedFields"></div>
+      <div class="mm-row mm-gap"><button type="button" class="hs-btn mm-btn-primary" id="mmTypedGo">Make my report</button></div>
+    </div>
+  </section>
+
+  <section id="mmReport" hidden aria-live="polite"></section>
+
+  <section class="mm-panel" aria-labelledby="mmGuideH" id="mmGuide">
+    <h2 id="mmGuideH">Get your raw DNA file</h2>
+    <p>If you have not taken a DNA test, any of the consumer tests below gives a raw file that works here; they sell kits in many countries. If you already tested, download the file from your account:</p>
+    <div class="mm-table-wrap"><table class="mm-table mm-guide"><thead><tr><th>Where you tested</th><th>How to download the raw file</th></tr></thead><tbody>
+      <tr><td>23andMe</td><td>Settings, then 23andMe Data, then request your raw data. It arrives as a .zip with a .txt inside.</td></tr><tr><td>AncestryDNA</td><td>Settings, then Download DNA data. The link arrives by email; the .zip holds a .txt.</td></tr><tr><td>MyHeritage</td><td>DNA, then Manage DNA kits, then Download raw DNA data (.csv, often zipped).</td></tr><tr><td>FamilyTreeDNA</td><td>myDNA, then Family Finder, then Download raw data (build 37 .csv.gz).</td></tr><tr><td>Living DNA</td><td>Your profile, then Download data (.txt or .csv).</td></tr><tr><td>tellmeGen</td><td>Your profile, then Raw data, then Download (.txt or .zip).</td></tr><tr><td>Nebula / DNA Complete, Dante Labs, any whole-genome test</td><td>Download the VCF (.vcf or .vcf.gz) from your results page. BAM and FASTQ files are too large; ask for the VCF.</td></tr>
+    </tbody></table></div>
+    <p class="mm-small">Menu names change from time to time; each provider's help pages say where the download is today.</p>
+  </section>
+
+  <section class="mm-panel" aria-labelledby="mmPrivH" id="mmPrivacy">
+    <h2 id="mmPrivH">Your privacy, in plain words</h2>
+    <ul>
+      <li><strong>Your DNA file stays on your device.</strong> It is read by this page in your browser. It is not uploaded, not sent to us and not sent to any AI model. Only the methylation markers in the table below are kept in memory.</li>
+      <li><strong>Research lookups use gene names only.</strong> When you open a gene, this page asks our research service for papers about that gene by name (for example "MTHFR"). Your genotype is not in the question.</li>
+      <li><strong>Ask BioAI is your choice.</strong> The Ask BioAI button opens our research chat with a question that names your genes and results in words (no raw genotypes). Nothing is sent until you press it.</li>
+      <li><strong>Saving is optional and encrypted.</strong> If you press Save, your markers, answers, blood results and check-ins are encrypted (AES-GCM, with a key made by and kept inside this browser) and stored on this device only. Anyone who can use this browser profile can open the page and see them, so do not save on a shared computer.</li>
+      <li><strong>Export and delete in one click.</strong> Download everything as JSON or CSV, or delete everything this page stored.</li>
+      <li><strong>No third-party analytics or ad trackers</strong> run on this site.</li>
+      <li>We make no HIPAA, GDPR or other certification claim for this app. The site's full <a href="/privacy">Privacy Policy</a> applies.</li>
+    </ul>
+  </section>
+
+  <section class="mm-panel" aria-labelledby="mmNotH">
+    <h2 id="mmNotH">What MethylMap does not do</h2>
+    <ul>
+      <li>It does not diagnose anything. A variant is a tendency, not a disease.</li>
+      <li>It gives no doses and no prescriptions.</li>
+      <li>It cannot tell your biological age: that needs an epigenetic (DNA methylation) test of a blood or saliva sample, not a genotype file.</li>
+      <li>It does not read a PDF or a photo of a lab report yet: type the genotypes from the report instead.</li>
+      <li>It reads only the 22 markers in the table below, not your whole genome.</li>
+    </ul>
+  </section>
+
+  <section class="mm-panel" aria-labelledby="mmMarkH">
+    <h2 id="mmMarkH">The 22 markers it reads</h2>
+    <p class="mm-small">Alleles are on the plus strand of the genome, the strand raw-data files use. Positions were checked in dbSNP for both genome builds.</p>
+    <div class="mm-table-wrap"><table class="mm-table"><thead><tr><th>Gene</th><th>Marker</th><th>rsID</th><th>No variant</th><th>Counted copy</th><th>Evidence</th></tr></thead><tbody>
+      <tr><td>MTHFR</td><td>C677T (Ala222Val)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs1801133" target="_blank" rel="noopener" class="mm-mono">rs1801133</a></td><td class="mm-mono">G</td><td class="mm-mono">A</td><td>strong</td></tr><tr><td>MTHFR</td><td>A1298C (Glu429Ala)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs1801131" target="_blank" rel="noopener" class="mm-mono">rs1801131</a></td><td class="mm-mono">T</td><td class="mm-mono">G</td><td>mixed</td></tr><tr><td>MTR</td><td>A2756G (Asp919Gly)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs1805087" target="_blank" rel="noopener" class="mm-mono">rs1805087</a></td><td class="mm-mono">A</td><td class="mm-mono">G</td><td>mixed</td></tr><tr><td>MTRR</td><td>A66G (Ile22Met)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs1801394" target="_blank" rel="noopener" class="mm-mono">rs1801394</a></td><td class="mm-mono">A</td><td class="mm-mono">G</td><td>mixed</td></tr><tr><td>MTRR</td><td>C524T (Ser175Leu)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs1532268" target="_blank" rel="noopener" class="mm-mono">rs1532268</a></td><td class="mm-mono">C</td><td class="mm-mono">T</td><td>weak</td></tr><tr><td>COMT</td><td>Val158Met (G472A)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs4680" target="_blank" rel="noopener" class="mm-mono">rs4680</a></td><td class="mm-mono">G</td><td class="mm-mono">A</td><td>strong</td></tr><tr><td>COMT</td><td>His62His (C186T)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs4633" target="_blank" rel="noopener" class="mm-mono">rs4633</a></td><td class="mm-mono">C</td><td class="mm-mono">T</td><td>weak</td></tr><tr><td>AHCY</td><td>AHCY rs819147</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs819147" target="_blank" rel="noopener" class="mm-mono">rs819147</a></td><td class="mm-mono">T</td><td class="mm-mono">C</td><td>weak</td></tr><tr><td>AHCY</td><td>AHCY rs819171</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs819171" target="_blank" rel="noopener" class="mm-mono">rs819171</a></td><td class="mm-mono">T</td><td class="mm-mono">C</td><td>weak</td></tr><tr><td>CBS</td><td>C699T (Tyr233Tyr)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs234706" target="_blank" rel="noopener" class="mm-mono">rs234706</a></td><td class="mm-mono">G</td><td class="mm-mono">A</td><td>mixed</td></tr><tr><td>CBS</td><td>A360A (C1080T)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs1801181" target="_blank" rel="noopener" class="mm-mono">rs1801181</a></td><td class="mm-mono">G</td><td class="mm-mono">A</td><td>weak</td></tr><tr><td>BHMT</td><td>G742A (Arg239Gln)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs3733890" target="_blank" rel="noopener" class="mm-mono">rs3733890</a></td><td class="mm-mono">G</td><td class="mm-mono">A</td><td>mixed</td></tr><tr><td>BHMT</td><td>BHMT rs567754</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs567754" target="_blank" rel="noopener" class="mm-mono">rs567754</a></td><td class="mm-mono">C</td><td class="mm-mono">T</td><td>weak</td></tr><tr><td>MTHFD1</td><td>G1958A (Arg653Gln)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs2236225" target="_blank" rel="noopener" class="mm-mono">rs2236225</a></td><td class="mm-mono">G</td><td class="mm-mono">A</td><td>mixed</td></tr><tr><td>SHMT1</td><td>C1420T (Leu474Phe)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs1979277" target="_blank" rel="noopener" class="mm-mono">rs1979277</a></td><td class="mm-mono">G</td><td class="mm-mono">A</td><td>weak</td></tr><tr><td>MAO-A</td><td>R297R (G941T)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs6323" target="_blank" rel="noopener" class="mm-mono">rs6323</a></td><td class="mm-mono">G</td><td class="mm-mono">T</td><td>weak</td></tr><tr><td>NOS3</td><td>G894T (Glu298Asp)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs1799983" target="_blank" rel="noopener" class="mm-mono">rs1799983</a></td><td class="mm-mono">G</td><td class="mm-mono">T</td><td>mixed</td></tr><tr><td>NOS3</td><td>T-786C (promoter)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs2070744" target="_blank" rel="noopener" class="mm-mono">rs2070744</a></td><td class="mm-mono">T</td><td class="mm-mono">C</td><td>mixed</td></tr><tr><td>VDR</td><td>FokI (Met1Thr)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs2228570" target="_blank" rel="noopener" class="mm-mono">rs2228570</a></td><td class="mm-mono">G</td><td class="mm-mono">A</td><td>mixed</td></tr><tr><td>VDR</td><td>BsmI</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs1544410" target="_blank" rel="noopener" class="mm-mono">rs1544410</a></td><td class="mm-mono">C</td><td class="mm-mono">T</td><td>mixed</td></tr><tr><td>VDR</td><td>TaqI (Ile352Ile)</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs731236" target="_blank" rel="noopener" class="mm-mono">rs731236</a></td><td class="mm-mono">A</td><td class="mm-mono">G</td><td>mixed</td></tr><tr><td>ACAT1</td><td>ACAT1 rs3741049</td><td><a href="https://www.ncbi.nlm.nih.gov/snp/rs3741049" target="_blank" rel="noopener" class="mm-mono">rs3741049</a></td><td class="mm-mono">G</td><td class="mm-mono">A</td><td>weak</td></tr>
+    </tbody></table></div>
+  </section>
+
+  <p class="hs-boundary">Information only, not medical advice. Talk to a doctor or pharmacist before changing anything. Research questions: <a href="/healthspan">ask BioAI</a>.</p>
+</main>
+<script type="application/json" id="mmData">{"blood": [{"direction": "high", "genes": ["MTHFR", "MTR", "MTRR", "CBS", "BHMT"], "id": "hcy", "label": "Homocysteine", "note": "Genes in this pathway push homocysteine up; MTHFR 677TT adds about 2.8 \u00b5mol/L on average (Colson 2017, PMID 26497154). Compare with the range printed on your lab report.", "ref": null, "units": ["\u00b5mol/L"]}, {"direction": "low", "genes": ["MTR", "MTRR"], "id": "b12", "label": "Vitamin B12", "note": "Low B12 slows MTR and MTRR whatever your genes.", "ref": {"below": 150, "pmid": "20488910", "text": "below 150 pmol/L (about 203 pg/mL) was the deficiency level used in de Jager 2010", "unit": "pmol/L"}, "units": ["pmol/L", "pg/mL"]}, {"direction": "low", "genes": ["MTHFR", "MTHFD1", "SHMT1"], "id": "folate", "label": "Folate (serum)", "note": "MTHFR 677TT had lower serum folate on average (Colson 2017, PMID 26497154). Compare with the range printed on your lab report.", "ref": null, "units": ["nmol/L", "ng/mL"]}, {"direction": "low", "genes": ["VDR"], "id": "vitd", "label": "Vitamin D, 25(OH)D", "note": "VDR variants change how strongly the receptor responds, not your vitamin D level.", "ref": {"below": 20, "pmid": "21118827", "text": "20 ng/mL (50 nmol/L) meets the needs of at least 97.5% of people (Ross 2011)", "unit": "ng/mL"}, "units": ["ng/mL", "nmol/L"]}], "boundary": "Information only, not medical advice. Talk to a doctor or pharmacist before changing anything.", "combos": [{"alternatives": "Non-methylated forms often listed beside the methylated ones: folinic acid (a reduced folate), hydroxocobalamin or adenosylcobalamin (B12), and folate from food. Start any change with your doctor or pharmacist.", "id": "methyl-donor", "needs_any": ["COMT"], "pmids": ["18988738"], "text": "Some people with this combination, and some practitioners, report anxiety, poor sleep, irritability or a racing heart after starting methyl donors (methylfolate, methyl-B12, SAMe). We found no published trial testing this, so treat it as a report, not a finding. COMT and MTHFR variants do interact in brain studies (Roffman 2008, in schizophrenia).", "title": "Slow COMT together with an MTHFR variant", "with_any": ["MTHFR"]}, {"alternatives": "", "id": "mthfr-compound", "needs_markers": ["rs1801133", "rs1801131"], "pmids": ["9719624"], "text": "People with one copy of each had 50-60% of control MTHFR activity in lymphocytes (Weisberg 1998).", "title": "One copy each of MTHFR 677T and 1298C"}, {"alternatives": "", "id": "mthfr-mtrr", "needs_any": ["MTRR"], "pmids": ["10444342"], "text": "In mothers, the MTRR variant raised spina bifida risk when the MTHFR variant was also present or B12 was low (Wilson 1999). This matters for pregnancy planning.", "title": "MTRR 66G together with an MTHFR variant", "with_any": ["MTHFR"]}], "demo": {"rs1532268": "CT", "rs1544410": "CC", "rs1799983": "GG", "rs1801131": "TG", "rs1801133": "AG", "rs1801181": "GG", "rs1801394": "GG", "rs1805087": "AA", "rs1979277": "GG", "rs2070744": "TC", "rs2228570": "GA", "rs2236225": "GA", "rs234706": "GA", "rs3733890": "GG", "rs4633": "TT", "rs4680": "AA", "rs6323": "GT", "rs731236": "AA", "rs819147": "TT", "rs819171": "CT"}, "genes": [{"changes": "The 677T and 1298C variants make a less active enzyme. Two copies of 677T raise homocysteine a little on average, mostly when folate intake is low.", "cut": ["Heavy drinking, which lowers folate", "Relying on fortified foods alone, if your doctor finds low folate"], "evidence": "strong", "foods": ["Leafy greens (spinach, romaine)", "Beans, lentils, chickpeas", "Asparagus, broccoli, avocado", "Eggs, dairy and mushrooms for riboflavin"], "full": "Methylenetetrahydrofolate reductase", "id": "MTHFR", "label": "MTHFR", "lifestyle": ["Alcohol: keep it low; it works against folate.", "Smoking raises homocysteine; stopping helps the whole pathway."], "nutrients": [["Folate from food, or methylfolate / folinic acid", "Reduced folate forms do not need the MTHFR step to be made from folic acid. People with two copies of 677T responded less to folic acid on blood folate (Colson 2017, PMID 26497154)."], ["Riboflavin (vitamin B2)", "MTHFR uses FAD, made from riboflavin (UniProt P42898). Riboflavin lowered homocysteine in people with two copies of 677T only (McNulty 2006, PMID 16380544) and lowered blood pressure in treated hypertension with that genotype (Wilson 2013, PMID 23608654)."]], "pmids": ["7647779", "9719624", "26497154"], "query": "MTHFR polymorphism homocysteine folate", "questions": ["Should my homocysteine and folate be checked?", "Is the folate form in my multivitamin or prenatal vitamin right for me?"], "reports": "Most people with these variants feel nothing. Higher homocysteine is the measurable sign doctors look at.", "role": "Turns folate into its active methyl form (5-methylfolate), the form the body uses to recycle homocysteine back into methionine.", "uniprot": "P42898"}, {"changes": "The 2756G (919Gly) variant has only a modest link to homocysteine; in one study the common A/A genotype had slightly higher homocysteine.", "cut": ["Repeated recreational nitrous oxide (laughing gas)"], "evidence": "mixed", "foods": ["Fish, shellfish, meat, eggs, dairy", "B12-fortified foods for plant-based diets"], "full": "Methionine synthase", "id": "MTR", "label": "MTR", "lifestyle": ["Plant-based diets need a reliable B12 source."], "nutrients": [["Vitamin B12 (methyl-, hydroxo- or adenosyl- forms, or cyanocobalamin)", "MTR uses methylcobalamin (a B12 form) as its cofactor (UniProt Q99707); nitrous oxide inactivates it (Kinsella 1995, PMID 7644061)."]], "pmids": ["10520212"], "query": "methionine synthase MTR polymorphism homocysteine", "questions": ["Should my B12 be checked, especially if I take metformin or an acid reducer?"], "reports": "No consistent symptoms are reported for this variant.", "role": "Uses vitamin B12 and 5-methylfolate to turn homocysteine back into methionine.", "uniprot": "Q99707"}, {"changes": "The 66G (22Met) variant needs more MTRR to keep methionine synthase fully on. Combined with low B12 it was linked to spina bifida risk in pregnancy.", "cut": [], "evidence": "mixed", "foods": ["Fish, eggs, dairy, meat for B12", "Eggs, dairy, almonds, mushrooms for riboflavin"], "full": "Methionine synthase reductase", "id": "MTRR", "label": "MTRR", "lifestyle": ["Planning a pregnancy: ask about B12 as well as folate."], "nutrients": [["Vitamin B12", "The variant raised spina bifida risk when B12 status was low (Wilson 1999, PMID 10444342)."], ["Riboflavin (B2)", "MTRR uses FAD and FMN, both made from riboflavin (UniProt Q9UBK8)."]], "pmids": ["12416982", "10444342"], "query": "MTRR A66G polymorphism vitamin B12", "questions": ["Is my B12 high enough, especially if I am planning a pregnancy?"], "reports": "No consistent symptoms are reported; B12 status matters most.", "role": "Keeps methionine synthase switched on by recharging its vitamin B12.", "uniprot": "Q9UBK8"}, {"changes": "Val158Met: the Met form (A) is the slower enzyme, a three-to-four-fold range of activity. Slower COMT leaves more dopamine in the front of the brain.", "cut": ["Large amounts of caffeine if you notice jitters or poor sleep"], "evidence": "strong", "foods": ["Nuts, seeds, beans, whole grains and leafy greens for magnesium"], "full": "Catechol-O-methyltransferase", "id": "COMT", "label": "COMT", "lifestyle": ["Stress: regular sleep and exercise help the stress-hormone side of the pathway.", "Caffeine: notice how you respond and adjust."], "nutrients": [["Magnesium", "COMT uses magnesium as its cofactor (UniProt P21964)."]], "pmids": ["8807664", "15457404", "17185601"], "query": "COMT Val158Met enzyme activity", "questions": ["Could my COMT result matter for a medicine I take (for example levodopa)?"], "reports": "Studies link the slow form to differences in pain sensitivity, stress response and thinking tasks; effects are small and differ between people.", "role": "Uses a methyl group (from SAMe) to break down dopamine, adrenaline, noradrenaline and estrogens.", "uniprot": "P21964"}, {"changes": "No published effect is known for the common markers read here. Severe AHCY deficiency is a rare disorder caused by other, rare variants (Baric 2004).", "cut": [], "evidence": "weak", "foods": [], "full": "S-adenosylhomocysteine hydrolase", "id": "AHCY", "label": "AHCY", "lifestyle": [], "nutrients": [], "pmids": ["15024124"], "query": "AHCY S-adenosylhomocysteine hydrolase methylation", "questions": [], "reports": "Nothing consistent is reported for the common markers.", "role": "Clears SAH, the leftover of every methylation reaction, into homocysteine. If SAH builds up it slows methylation.", "uniprot": "P23526"}, {"changes": "699T (A on the plus strand) went with LOWER homocysteine after a methionine load, not higher. Online claims that it \u0027upregulates\u0027 CBS and needs a low-sulfur diet are not backed by the abstracts we checked.", "cut": [], "evidence": "mixed", "foods": ["Poultry, fish, potatoes, chickpeas and bananas for B6"], "full": "Cystathionine beta-synthase", "id": "CBS", "label": "CBS", "lifestyle": [], "nutrients": [["Vitamin B6 (pyridoxine or P5P)", "CBS uses the active form of vitamin B6, pyridoxal 5\u0027-phosphate, as its cofactor (UniProt P35520)."]], "pmids": ["11149614", "21957013"], "query": "cystathionine beta-synthase CBS polymorphism homocysteine", "questions": [], "reports": "No consistent symptoms are reported for these common markers.", "role": "Sends homocysteine down the transsulfuration path toward cysteine and glutathione, using vitamin B6.", "uniprot": "P35520"}, {"changes": "The 239Gln variant did not change homocysteine in a study of 504 people.", "cut": [], "evidence": "mixed", "foods": ["Beets, spinach, quinoa and whole wheat for betaine", "Eggs, fish and soy for choline"], "full": "Betaine-homocysteine methyltransferase", "id": "BHMT", "label": "BHMT", "lifestyle": [], "nutrients": [["Betaine (TMG) and choline", "Betaine supplementation lowered homocysteine by about 1.2 \u00b5mol/L in a meta-analysis (McRae 2013, PMID 23997720)."]], "pmids": ["12818402", "23997720"], "query": "BHMT betaine homocysteine methyltransferase", "questions": ["If my homocysteine is high, should betaine or choline be part of the plan?"], "reports": "No consistent symptoms are reported.", "role": "A second route from homocysteine back to methionine, using betaine (made from choline) instead of folate.", "uniprot": "Q93088"}, {"changes": "The 1958A (653Gln) form moved fewer methyl groups into purine building blocks in cells, and two copies in mothers went with more neural tube defects.", "cut": [], "evidence": "mixed", "foods": ["Leafy greens, beans, eggs"], "full": "Methylenetetrahydrofolate dehydrogenase 1", "id": "MTHFD1", "label": "MTHFD1", "lifestyle": ["Planning a pregnancy: folate before conception is the standard advice."], "nutrients": [["Folate and choline", "Both feed the one-carbon pool this enzyme fills."]], "pmids": ["36913067", "16552426"], "query": "MTHFD1 R653Q polymorphism", "questions": ["Does my MTHFD1 result change anything in my pregnancy planning?"], "reports": "No consistent symptoms are reported; it matters most around pregnancy.", "role": "Loads one-carbon units onto folate for making DNA building blocks and for the methyl cycle.", "uniprot": "P11586"}, {"changes": "The 474Phe form works at normal speed but holds one folate form less tightly.", "cut": [], "evidence": "weak", "foods": ["Leafy greens, beans, poultry, fish"], "full": "Serine hydroxymethyltransferase 1", "id": "SHMT1", "label": "SHMT1", "lifestyle": [], "nutrients": [["Folate and vitamin B6", "SHMT1 uses pyridoxal 5\u0027-phosphate (active B6) as its cofactor and works on folate (UniProt P34896)."]], "pmids": ["16137637"], "query": "SHMT1 C1420T polymorphism folate", "questions": [], "reports": "No consistent symptoms are reported.", "role": "Moves a one-carbon unit from the amino acid serine onto folate, feeding both DNA building and methylation.", "uniprot": "P34896"}, {"changes": "The marker read here tags gene versions linked to big activity differences in cells, but which allele is faster is not stated in the source, so MethylMap does not call it fast or slow.", "cut": [], "evidence": "weak", "foods": ["Eggs, dairy, mushrooms, almonds"], "full": "Monoamine oxidase A", "id": "MAOA", "label": "MAO-A", "lifestyle": [], "nutrients": [["Riboflavin (B2)", "MAO-A uses FAD, made from riboflavin, as its cofactor (UniProt P21397)."]], "pmids": ["1678250"], "query": "MAOA monoamine oxidase A polymorphism", "questions": ["If I take an antidepressant or MAO inhibitor, does my MAO-A result matter?"], "reports": "Nothing consistent can be said for this marker alone.", "role": "Breaks down serotonin, noradrenaline and dopamine. The gene is on the X chromosome: men have one copy, women two.", "uniprot": "P21397"}, {"changes": "The 298Asp form is cut up inside cells, and the -786C promoter form makes less of the enzyme. Both go with more coronary artery disease in large meta-analyses.", "cut": ["Smoking, which damages the vessel lining"], "evidence": "mixed", "foods": ["Beetroot, rocket (arugula), spinach, celery"], "full": "Endothelial nitric oxide synthase (eNOS)", "id": "NOS3", "label": "NOS3", "lifestyle": ["Regular exercise and not smoking are standard advice for blood-vessel health (general advice).", "Blood pressure: have it checked regularly."], "nutrients": [["Nitrate-rich vegetables", "Beetroot and leafy greens carry nitrate, which the body can turn into nitric oxide without eNOS (general nutrition science; ask BioAI for papers)."]], "pmids": ["10717002", "10359729", "25409023"], "query": "NOS3 Glu298Asp T-786C endothelial nitric oxide", "questions": ["Should my blood pressure and cholesterol be checked more often?"], "reports": "No symptoms on their own; blood pressure and vessel health are what doctors watch.", "role": "Makes nitric oxide in blood-vessel walls, which relaxes the vessels. It needs the cofactor BH4 (tetrahydrobiopterin) as well as FAD and FMN (UniProt P29474).", "uniprot": "P29474"}, {"changes": "FokI: the longer receptor (f) works about 1.7-fold less in a lab test. BsmI and TaqI are probably not functional themselves.", "cut": [], "evidence": "mixed", "foods": ["Oily fish, egg yolks, fortified milk", "Sunlight on skin"], "full": "Vitamin D receptor", "id": "VDR", "label": "VDR", "lifestyle": ["Sun: short regular exposure, without burning."], "nutrients": [["Vitamin D", "Only blood 25(OH)D shows your actual status; 20 ng/mL (50 nmol/L) meets the needs of at least 97.5% of people (Ross 2011, PMID 21118827)."]], "pmids": ["9169350", "15315818"], "query": "vitamin D receptor FokI polymorphism", "questions": ["Should my vitamin D (25-hydroxyvitamin D) be checked?"], "reports": "Bone density was the main finding in early studies; results since are mixed.", "role": "The receptor that vitamin D works through, in bone, gut, immune cells and many other tissues.", "uniprot": "P11473"}, {"changes": "No published effect is known for the common marker read here. Rare ACAT1 variants cause a ketone-handling disorder.", "cut": [], "evidence": "weak", "foods": [], "full": "Acetyl-CoA acetyltransferase 1 (mitochondrial)", "id": "ACAT1", "label": "ACAT1", "lifestyle": [], "nutrients": [], "pmids": ["31268215"], "query": "ACAT1 acetoacetyl-CoA thiolase", "questions": [], "reports": "Nothing consistent is reported for the common marker.", "role": "Handles ketone bodies and the amino acid isoleucine in mitochondria. Methylation panels list it because acetyl-CoA feeds energy use alongside the methyl cycle.", "uniprot": "P24752"}], "guide": [{"how": "Settings, then 23andMe Data, then request your raw data. It arrives as a .zip with a .txt inside.", "provider": "23andMe"}, {"how": "Settings, then Download DNA data. The link arrives by email; the .zip holds a .txt.", "provider": "AncestryDNA"}, {"how": "DNA, then Manage DNA kits, then Download raw DNA data (.csv, often zipped).", "provider": "MyHeritage"}, {"how": "myDNA, then Family Finder, then Download raw data (build 37 .csv.gz).", "provider": "FamilyTreeDNA"}, {"how": "Your profile, then Download data (.txt or .csv).", "provider": "Living DNA"}, {"how": "Your profile, then Raw data, then Download (.txt or .zip).", "provider": "tellmeGen"}, {"how": "Download the VCF (.vcf or .vcf.gz) from your results page. BAM and FASTQ files are too large; ask for the VCF.", "provider": "Nebula / DNA Complete, Dante Labs, any whole-genome test"}], "interactions": [{"genes": ["MTR", "MTRR", "MTHFR"], "id": "metformin", "match": ["metformin", "glucophage", "glumetza", "fortamet", "janumet", "synjardy", "xigduo"], "pmid": "20488910", "text": "Long-term metformin lowered B12 by about 19% and raised the risk of B12 deficiency, with higher homocysteine (de Jager 2010). Your MTR, MTRR and MTHFR steps depend on B12 and folate.", "title": "Metformin and vitamin B12"}, {"genes": ["MTHFR", "MTHFD1", "SHMT1"], "id": "methotrexate", "match": ["methotrexate", "trexall", "otrexup", "rasuvo", "xatmep"], "pmid": "23728635", "text": "Methotrexate works against folate. In rheumatoid arthritis, folic or folinic acid cut stomach side effects by about a quarter and liver-test rises sharply (Shea 2013). Never add or stop folate with methotrexate without your prescriber: in cancer treatment the timing is set by the team.", "title": "Methotrexate and folate"}, {"genes": ["MTR", "MTRR"], "id": "acid", "match": ["omeprazole", "esomeprazole", "lansoprazole", "pantoprazole", "rabeprazole", "dexlansoprazole", "prilosec", "nexium", "prevacid", "protonix", "ranitidine", "famotidine", "pepcid", "cimetidine", "ppi"], "pmid": "24327038", "text": "Two years or more of proton pump inhibitors (odds ratio 1.65) or H2 blockers (1.25) went with more B12 deficiency (Lam 2013).", "title": "Acid reducers and vitamin B12"}, {"genes": ["MTR"], "id": "n2o", "match": ["nitrous oxide", "laughing gas", "whippet", "nos ", "n2o"], "pmid": "7644061", "text": "Nitrous oxide inactivates the B12-dependent enzyme methionine synthase (MTR) and can cause nerve damage (Kinsella 1995). Tell the anaesthetist about your result before surgery.", "title": "Nitrous oxide and vitamin B12"}, {"genes": ["MTHFR"], "id": "ocp", "match": ["oral contraceptive", "birth control pill", "the pill", "ethinyl estradiol", "levonorgestrel", "norethindrone", "drospirenone", "yasmin", "yaz"], "pmid": "26168104", "text": "Oral contraceptives lowered blood folate in a meta-analysis of 17 studies (Shere 2015).", "title": "Oral contraceptives and folate"}, {"genes": ["COMT", "MTHFR"], "id": "levodopa", "match": ["levodopa", "carbidopa", "sinemet", "rytary", "madopar", "entacapone", "opicapone", "stalevo"], "pmid": "21533995", "text": "Breaking down levodopa through COMT uses methyl groups and makes homocysteine (M\u00fcller 2011). Your COMT and MTHFR results may be worth mentioning to your neurologist.", "title": "Levodopa, COMT and homocysteine"}], "markers": [{"b37": 11856378, "b38": 11796321, "chr": "1", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs1801133", "effect": "A", "evidence": "strong", "figure": "Reduced enzyme activity and increased thermolability with one or two copies; people with two copies had significantly higher plasma homocysteine (Frosst 1995). In a meta-analysis, two copies (TT) meant about 2.8 \u00b5mol/L higher homocysteine than CC (Colson 2017, PMID 26497154).", "figure_pmid": "26497154", "gene": "MTHFR", "name": "C677T (Ala222Val)", "other": "G", "pmid": "7647779", "ref37": "G", "ref38": "G", "rsid": "rs1801133", "slows": true}, {"b37": 11854476, "b38": 11794419, "chr": "1", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs1801131", "effect": "G", "evidence": "mixed", "figure": "Two copies (1298CC): about 60% of control enzyme activity in lymphocytes. One copy of 677T plus one copy of 1298C: 50-60% of control activity (Weisberg 1998).", "figure_pmid": "9719624", "gene": "MTHFR", "name": "A1298C (Glu429Ala)", "other": "T", "pmid": "9719624", "ref37": "T", "ref38": "T", "rsid": "rs1801131", "slows": true}, {"b37": 237048500, "b38": 236885200, "chr": "1", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs1805087", "effect": "G", "evidence": "mixed", "figure": "No published activity figure. Homocysteine study: the common DD (A/A) genotype went with modestly HIGHER homocysteine; the G allele did not (Harmon 1999).", "gene": "MTR", "name": "A2756G (Asp919Gly)", "other": "A", "pmid": "10520212", "ref37": "A", "ref38": "A", "rsid": "rs1805087", "slows": false}, {"b37": 7870973, "b38": 7870860, "chr": "5", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs1801394", "effect": "G", "evidence": "mixed", "figure": "Not a lower top speed: the 22Met enzyme needs a 3-4-fold higher ratio of MTRR to MTR to reach full methionine synthase activity (Olteanu 2002).", "gene": "MTRR", "name": "A66G (Ile22Met)", "other": "A", "pmid": "12416982", "ref37": "A", "ref38": "A", "rsid": "rs1801394", "slows": true}, {"b37": 7878179, "b38": 7878066, "chr": "5", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs1532268", "effect": "T", "evidence": "weak", "figure": "No published activity figure for this variant alone. In the lab the 175Leu form also needed a 3-4-fold higher MTRR to MTR ratio (Olteanu 2002).", "gene": "MTRR", "name": "C524T (Ser175Leu)", "other": "C", "pmid": "12416982", "ref37": "C", "ref38": "C", "rsid": "rs1532268", "slows": false}, {"b37": 19951271, "b38": 19963748, "chr": "22", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs4680", "effect": "A", "evidence": "strong", "figure": "The Val158Met change explains a three-to-four-fold variation in COMT enzyme activity; Met (A) is the lower-activity form (Lachman 1996; Chen 2004, PMID 15457404).", "gene": "COMT", "name": "Val158Met (G472A)", "other": "G", "pmid": "8807664", "ref37": "G", "ref38": "G", "rsid": "rs4680", "slows": true}, {"b37": 19950235, "b38": 19962712, "chr": "22", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs4633", "effect": "T", "evidence": "weak", "figure": "No published activity figure for this marker alone. It is part of the COMT haplotypes that change COMT protein levels (Nackley 2006).", "gene": "COMT", "name": "His62His (C186T)", "other": "C", "pmid": "17185601", "ref37": "C", "ref38": "C", "rsid": "rs4633", "slows": false}, {"b37": 32889704, "b38": 34301898, "chr": "20", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs819147", "effect": "C", "evidence": "weak", "figure": "No published activity figure and no paper naming this marker was found in the research databases we searched. Shown because premium methylation panels read it; the allele counted is simply the less common one.", "gene": "AHCY", "name": "AHCY rs819147", "other": "T", "pmid": "15024124", "ref37": "C", "ref38": "C", "rsid": "rs819147", "slows": false}, {"b37": 32867984, "b38": 34280178, "chr": "20", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs819171", "effect": "C", "evidence": "weak", "figure": "No published activity figure and no paper naming this marker was found in the research databases we searched. Shown because premium methylation panels read it; the allele counted is simply the less common one.", "gene": "AHCY", "name": "AHCY rs819171", "other": "T", "pmid": "15024124", "ref37": "C", "ref38": "C", "rsid": "rs819171", "slows": false}, {"b37": 44485350, "b38": 43065240, "chr": "21", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs234706", "effect": "A", "evidence": "mixed", "figure": "No published activity figure. The 699T allele (A on the plus strand) went with LOWER homocysteine after a methionine load, significant for two copies (Aras 2000).", "gene": "CBS", "name": "C699T (Tyr233Tyr)", "other": "G", "pmid": "11149614", "ref37": "G", "ref38": "G", "rsid": "rs234706", "slows": false}, {"b37": 44480616, "b38": 43060506, "chr": "21", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs1801181", "effect": "A", "evidence": "weak", "figure": "No published activity figure. Studied alongside 699C\u003eT (Aras 2000, PMID 11149614; Tilley 2012).", "gene": "CBS", "name": "A360A (C1080T)", "other": "G", "pmid": "21957013", "ref37": "G", "ref38": "G", "rsid": "rs1801181", "slows": false}, {"b37": 78421959, "b38": 79126136, "chr": "5", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs3733890", "effect": "A", "evidence": "mixed", "figure": "No published activity figure. The variant did not change plasma homocysteine in 504 people (Weisberg 2003).", "gene": "BHMT", "name": "G742A (Arg239Gln)", "other": "G", "pmid": "12818402", "ref37": "G", "ref38": "G", "rsid": "rs3733890", "slows": false}, {"b37": 78416416, "b38": 79120593, "chr": "5", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs567754", "effect": "T", "evidence": "weak", "figure": "No published activity figure and no paper naming this marker was found in the research databases we searched. Shown because premium methylation panels read it.", "gene": "BHMT", "name": "BHMT rs567754", "other": "C", "pmid": "23997720", "ref37": "C", "ref38": "C", "rsid": "rs567754", "slows": false}, {"b37": 64908845, "b38": 64442127, "chr": "14", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs2236225", "effect": "A", "evidence": "mixed", "figure": "No published human activity figure. In cells the 653Gln form reduced the flow of methyl groups into purine building blocks (Rao 2023). Two copies in mothers went with more neural tube defects (odds ratio 1.49; Parle-McDermott 2006, PMID 16552426).", "gene": "MTHFD1", "name": "G1958A (Arg653Gln)", "other": "G", "pmid": "36913067", "ref37": "G", "ref38": "G", "rsid": "rs2236225", "slows": true}, {"b37": 18232096, "b38": 18328782, "chr": "17", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs1979277", "effect": "A", "evidence": "weak", "figure": "No published activity figure: speed on serine was normal, but the 474Phe form held one folate form less tightly (Fu 2005).", "gene": "SHMT1", "name": "C1420T (Leu474Phe)", "other": "G", "pmid": "16137637", "ref37": "G", "ref38": "G", "rsid": "rs1979277", "slows": false}, {"b37": 43591036, "b38": 43731789, "chr": "X", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs6323", "effect": "T", "evidence": "weak", "figure": "No published activity figure for one allele. This marker sits in a gene version tied to a 30-fold difference in MAO-A activity between cell lines, but the abstract does not say which allele is the faster one (Hotamisligil 1991). MethylMap therefore never calls this result fast or slow.", "gene": "MAOA", "name": "R297R (G941T)", "other": "G", "pmid": "1678250", "ref37": "G", "ref38": "G", "rsid": "rs6323", "slows": false}, {"b37": 150696111, "b38": 150999023, "chr": "7", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs1799983", "effect": "T", "evidence": "mixed", "figure": "The 298Asp form (T) is cut inside cells, the 298Glu form (G) is not (Tesauro 2000). In a meta-analysis of 69,235 people the variant went with more coronary artery disease (odds ratios 1.28-1.52; Rai 2014, PMID 25409023).", "gene": "NOS3", "name": "G894T (Glu298Asp)", "other": "G", "pmid": "10717002", "ref37": "T", "ref38": "T", "rsid": "rs1799983", "slows": true}, {"b37": 150690079, "b38": 150992991, "chr": "7", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs2070744", "effect": "C", "evidence": "mixed", "figure": "The -786C form significantly reduced eNOS gene promoter activity in a reporter test; the abstract gives no percentage (Nakayama 1999).", "gene": "NOS3", "name": "T-786C (promoter)", "other": "T", "pmid": "10359729", "ref37": "C", "ref38": "C", "rsid": "rs2070744", "slows": true}, {"b37": 48272895, "b38": 47879112, "chr": "12", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs2228570", "effect": "A", "evidence": "mixed", "figure": "The longer receptor (the f form, A on the plus strand) activated a vitamin D reporter about 1.7-fold less than the shorter form (Arai 1997).", "gene": "VDR", "name": "FokI (Met1Thr)", "other": "G", "pmid": "9169350", "ref37": "A", "ref38": "A", "rsid": "rs2228570", "slows": true}, {"b37": 48239835, "b38": 47846052, "chr": "12", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs1544410", "effect": "T", "evidence": "mixed", "figure": "No published activity figure: BsmI is probably not functional itself and is studied because it travels with other variants (Uitterlinden 2004).", "gene": "VDR", "name": "BsmI", "other": "C", "pmid": "15315818", "ref37": "C", "ref38": "C", "rsid": "rs1544410", "slows": false}, {"b37": 48238757, "b38": 47844974, "chr": "12", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs731236", "effect": "G", "evidence": "mixed", "figure": "No published activity figure: TaqI is probably not functional itself and is studied because it travels with other variants (Uitterlinden 2004).", "gene": "VDR", "name": "TaqI (Ile352Ile)", "other": "A", "pmid": "15315818", "ref37": "A", "ref38": "A", "rsid": "rs731236", "slows": false}, {"b37": 108009927, "b38": 108139200, "chr": "11", "dbsnp": "https://www.ncbi.nlm.nih.gov/snp/rs3741049", "effect": "A", "evidence": "weak", "figure": "No published activity figure and no paper naming this marker was found in the research databases we searched. Shown because premium methylation panels read it; the allele counted is the less common one.", "gene": "ACAT1", "name": "ACAT1 rs3741049", "other": "G", "pmid": "31268215", "ref37": "G", "ref38": "G", "rsid": "rs3741049", "slows": false}], "refs": {"10359729": {"cite": "Nakayama et al., Circulation 1999", "title": "T-786-\u003eC mutation in the 5\u0027-flanking region of the endothelial nitric oxide synthase gene is associated with coronary spasm."}, "10444342": {"cite": "Wilson et al., Mol Genet Metab 1999", "title": "A common variant in methionine synthase reductase combined with low cobalamin (vitamin B12) increases risk for spina bifida."}, "10520212": {"cite": "Harmon et al., Genet Epidemiol 1999", "title": "Methionine synthase D919G polymorphism is a significant but modest determinant of circulating homocysteine concentrations."}, "10717002": {"cite": "Tesauro et al., PNAS 2000", "title": "Intracellular processing of endothelial nitric oxide synthase isoforms associated with differences in severity of cardiopulmonary diseases: cleavage of proteins with aspartate vs. glutamate at position 298."}, "11149614": {"cite": "Aras et al., Clin Genet 2000", "title": "Influence of 699C-\u003eT and 1080C-\u003eT polymorphisms of the cystathionine beta-synthase gene on plasma homocysteine levels."}, "12416982": {"cite": "Olteanu et al., Biochemistry 2002", "title": "Differences in the efficiency of reductive activation of methionine synthase and exogenous electron acceptors between the common polymorphic variants of human methionine synthase reductase."}, "12818402": {"cite": "Weisberg et al., Atherosclerosis 2003", "title": "Investigations of a common genetic variant in betaine-homocysteine methyltransferase (BHMT) in coronary artery disease."}, "15024124": {"cite": "Baric et al., PNAS 2004", "title": "S-adenosylhomocysteine hydrolase deficiency in a human: a genetic disorder of methionine metabolism."}, "15315818": {"cite": "Uitterlinden et al., Gene 2004", "title": "Genetics and biology of vitamin D receptor polymorphisms."}, "15457404": {"cite": "Chen et al., Am J Hum Genet 2004", "title": "Functional analysis of genetic variation in catechol-O-methyltransferase (COMT): effects on mRNA, protein, and enzyme activity in postmortem human brain."}, "16137637": {"cite": "Fu et al., Arch Biochem Biophys 2005", "title": "Properties of human and rabbit cytosolic serine hydroxymethyltransferase are changed by single nucleotide polymorphic mutations."}, "16380544": {"cite": "McNulty et al., Circulation 2006", "title": "Riboflavin lowers homocysteine in individuals homozygous for the MTHFR 677C-\u003eT polymorphism."}, "16552426": {"cite": "Parle-McDermott et al., Eur J Hum Genet 2006", "title": "Confirmation of the R653Q polymorphism of the trifunctional C1-synthase enzyme as a maternal risk for neural tube defects in the Irish population."}, "1678250": {"cite": "Hotamisligil \u0026 Breakefield, Am J Hum Genet 1991", "title": "Human monoamine oxidase A gene determines levels of enzyme activity."}, "17185601": {"cite": "Nackley et al., Science 2006", "title": "Human catechol-O-methyltransferase haplotypes modulate protein expression by altering mRNA secondary structure."}, "18988738": {"cite": "Roffman et al., PNAS 2008", "title": "MTHFR 677C-\u003eT genotype disrupts prefrontal function in schizophrenia through an interaction with COMT 158Val-\u003eMet."}, "20488910": {"cite": "de Jager et al., BMJ 2010", "title": "Long term treatment with metformin in patients with type 2 diabetes and risk of vitamin B-12 deficiency: randomised placebo controlled trial."}, "21118827": {"cite": "Ross et al., J Clin Endocrinol Metab 2011", "title": "The 2011 report on dietary reference intakes for calcium and vitamin D from the Institute of Medicine: what clinicians need to know."}, "21533995": {"cite": "M\u00fcller et al., Naunyn Schmiedebergs Arch Pharmacol 2011", "title": "Inhibition of catechol-O-methyltransferase modifies acute homocysteine rise during repeated levodopa application in patients with Parkinson\u0027s disease."}, "21957013": {"cite": "Tilley et al., Birth Defects Res A 2012", "title": "Genetic studies of the cystathionine beta-synthase gene and myelomeningocele."}, "23608654": {"cite": "Wilson et al., Hypertension 2013", "title": "Blood pressure in treated hypertensive individuals with the MTHFR 677TT genotype is responsive to intervention with riboflavin: findings of a targeted randomized trial."}, "23728635": {"cite": "Shea et al., Cochrane 2013", "title": "Folic acid and folinic acid for reducing side effects in patients receiving methotrexate for rheumatoid arthritis."}, "23997720": {"cite": "McRae, J Chiropr Med 2013", "title": "Betaine supplementation decreases plasma homocysteine in healthy adult participants: a meta-analysis."}, "24327038": {"cite": "Lam et al., JAMA 2013", "title": "Proton pump inhibitor and histamine 2 receptor antagonist use and vitamin B12 deficiency."}, "25409023": {"cite": "Rai et al., PLoS One 2014", "title": "Association of endothelial nitric oxide synthase gene polymorphisms with coronary artery disease: an updated meta-analysis and systematic review."}, "26168104": {"cite": "Shere et al., J Obstet Gynaecol Can 2015", "title": "Association Between Use of Oral Contraceptives and Folate Status: A Systematic Review and Meta-Analysis."}, "26497154": {"cite": "Colson et al., Eur J Nutr 2017", "title": "The impact of MTHFR 677 C/T genotypes on folate status markers: a meta-analysis of folic acid intervention studies."}, "31268215": {"cite": "Abdelkreem et al., Hum Mutat 2019", "title": "Mutation update on ACAT1 variants associated with mitochondrial acetoacetyl-CoA thiolase (T2) deficiency."}, "36913067": {"cite": "Rao et al., Cell Oncol 2023", "title": "The negative effect of G1958A polymorphism on MTHFD1 protein stability and HCC growth."}, "7644061": {"cite": "Kinsella \u0026 Green, Neurology 1995", "title": "\u0027Anesthesia paresthetica\u0027: nitrous oxide-induced cobalamin deficiency."}, "7647779": {"cite": "Frosst et al., Nat Genet 1995", "title": "A candidate genetic risk factor for vascular disease: a common mutation in methylenetetrahydrofolate reductase."}, "8807664": {"cite": "Lachman et al., Pharmacogenetics 1996", "title": "Human catechol-O-methyltransferase pharmacogenetics: description of a functional polymorphism and its potential application to neuropsychiatric disorders."}, "9169350": {"cite": "Arai et al., J Bone Miner Res 1997", "title": "A vitamin D receptor gene polymorphism in the translation initiation codon: effect on protein activity and relation to bone mineral density in Japanese women."}, "9545395": {"cite": "van der Put et al., Am J Hum Genet 1998", "title": "A second common mutation in the methylenetetrahydrofolate reductase gene: an additional risk factor for neural-tube defects?"}, "9719624": {"cite": "Weisberg et al., Mol Genet Metab 1998", "title": "A second genetic polymorphism in methylenetetrahydrofolate reductase (MTHFR) associated with decreased enzyme activity."}}, "version": "2026-11-20"}</script>
+
+    </main>
+
+    
+
+    
+    
+<style>
+#authModal .am-content{max-width:500px}
+
+[data-theme="light"] #authModal{--text-secondary:#1e293b;--text-dim:#334155;--text-tertiary:#334155;--text-muted:#334155}
+[data-theme="light"] #authModal .am-link,[data-theme="light"] #authModal .am-consent-link{color:#0c4a6e}
+#authModal .am-close{z-index:10;position:absolute;top:16px;right:16px}
+#authModal .am-title{color:var(--accent-cyan);margin-bottom:1.5rem;font-family:var(--font-display)}
+#authModal .am-title-signup{color:var(--accent-green)}
+#authModal .am-remember{display:flex;align-items:center;gap:8px;margin-top:0.5rem}
+#authModal .am-check{accent-color:var(--accent-cyan);width:16px;height:16px;cursor:pointer}
+#authModal .am-check-top{margin-top:4px;cursor:auto}
+#authModal .am-remember-label{color:var(--text-secondary);font-size:0.85em;cursor:pointer;user-select:none}
+#authModal .am-error{padding:0.75rem 1rem;margin-top:0.5rem;background:rgba(255,68,68,0.1);border:1px solid var(--accent-red,var(--negative-color));border-radius:6px;color:var(--accent-red,var(--negative-color));font-size:0.9em;text-align:center}
+#authModal .am-submit{width:100%;margin-top:1rem}
+#authModal .am-or{display:flex;align-items:center;gap:15px;margin:16px 0 8px}
+#authModal .am-or-line{flex:1;height:1px;background:var(--border-color)}
+#authModal .am-or-text{font-size:12px;color:var(--text-dim);text-transform:uppercase}
+#authModal .am-gsi{display:flex;justify-content:center}
+#authModal .am-foot{text-align:center;color:var(--text-secondary)}
+#authModal .am-foot-sm{margin-top:0.5rem}
+#authModal .am-foot-md{margin-top:1rem}
+#authModal .am-foot-lg{margin-top:1.5rem}
+#authModal .am-link{color:var(--accent-cyan);text-decoration:none;font-weight:700}
+#authModal .am-link-muted{color:var(--text-tertiary);text-decoration:none;font-size:0.9em}
+#authModal .am-lede{color:var(--text-secondary);margin-bottom:1.5rem;text-align:center}
+#authModal .am-success{text-align:center;padding:1.5rem;background:rgba(0,255,136,0.1);border:1px solid var(--accent-green);border-radius:8px;margin-top:1rem}
+#authModal .am-success-text{color:var(--accent-green);margin:0}
+#authModal .am-mt-8{margin-top:8px}
+#authModal .am-mt-4{margin-top:4px}
+#authModal .am-consent{display:flex;align-items:flex-start;gap:8px;font-weight:400;cursor:pointer}
+#authModal .am-consent-text{font-size:0.85rem;line-height:1.4;color:var(--text-secondary)}
+#authModal .am-consent-link{color:var(--accent-cyan)}
+[data-theme="light"] #authModal .am-error{background:var(--bg-secondary)}
+[data-theme="light"] #authModal .am-success{background:var(--bg-secondary)}
+</style>
+
+<div id="authModal" class="modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content am-content">
+        <button class="modal-close am-close" id="authModalClose" title="Close" aria-label="Close authentication modal">&times;</button>
+
+        
+        <div id="loginForm" style="display: none;">
+            <h2 class="am-title">
+                <span class="bracket">[</span> LOGIN <span class="bracket">]</span>
+            </h2>
+            <form id="loginFormElement" class="terminal-form">
+                <div class="form-group">
+                    <label class="form-label" for="loginUsername">USERNAME</label>
+                    <input type="text" id="loginUsername" class="terminal-input" placeholder="Username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="loginPassword">PASSWORD</label>
+                    <input type="password" id="loginPassword" class="terminal-input" placeholder="Password" required autocomplete="current-password">
+                </div>
+                <div class="am-remember">
+                    <input type="checkbox" id="rememberUsername" class="am-check">
+                    <label for="rememberUsername" class="am-remember-label">Remember username</label>
+                </div>
+                <div id="loginError" class="am-error" style="display: none;"></div>
+                <button type="submit" class="terminal-btn primary am-submit">
+                    <span class="btn-text">LOGIN</span>
+                    <span class="btn-glow"></span>
+                </button>
+            </form>
+            
+            <div class="am-or">
+                <span class="am-or-line"></span>
+                <span class="am-or-text">or</span>
+                <span class="am-or-line"></span>
+            </div>
+            <div id="googleSigninBtnModal" class="am-gsi"></div>
+            
+            <p class="am-foot am-foot-md">
+                <a href="#" id="switchToForgot" class="am-link-muted">Forgot password?</a>
+            </p>
+            <p class="am-foot am-foot-sm">
+                Don't have an account?
+                <a href="#" id="switchToSignup" class="am-link">Sign up</a>
+            </p>
+        </div>
+
+        
+        <div id="forgotPasswordForm" style="display: none;">
+            <h2 class="am-title">
+                <span class="bracket">[</span> RESET PASSWORD <span class="bracket">]</span>
+            </h2>
+            <p class="am-lede">
+                Enter your email address and we'll send you a link to reset your password.
+            </p>
+            <form id="forgotPasswordFormElement" class="terminal-form">
+                <div class="form-group">
+                    <label class="form-label" for="forgotEmail">EMAIL</label>
+                    <input type="email" id="forgotEmail" class="terminal-input" placeholder="your@email.com" required autocomplete="email">
+                </div>
+                <button type="submit" class="terminal-btn primary am-submit">
+                    <span class="btn-text">SEND RESET LINK</span>
+                    <span class="btn-glow"></span>
+                </button>
+            </form>
+            <div id="forgotPasswordSuccess" class="am-success" style="display: none;">
+                <p class="am-success-text">
+                    If this email is registered, you will receive a password reset link shortly.
+                </p>
+            </div>
+            <p class="am-foot am-foot-lg">
+                Remember your password?
+                <a href="#" id="backToLogin" class="am-link">Login</a>
+            </p>
+        </div>
+
+        
+        <div id="signupForm" style="display: none;">
+            <h2 class="am-title am-title-signup">
+                <span class="bracket">[</span> SIGN UP <span class="bracket">]</span>
+            </h2>
+            <form id="signupFormElement" class="terminal-form">
+                <div class="form-group">
+                    <label class="form-label" for="signupEmail">EMAIL</label>
+                    <input type="email" id="signupEmail" class="terminal-input" placeholder="your@email.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signupUsername">USERNAME</label>
+                    <input type="text" id="signupUsername" class="terminal-input" placeholder="Choose a username" required autocomplete="username" pattern="[a-zA-Z0-9_\-]{3,50}" title="Username must be 3-50 characters: letters, numbers, hyphens, or underscores">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signupFullName">FULL NAME</label>
+                    <input type="text" id="signupFullName" class="terminal-input" placeholder="Your full name" autocomplete="name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signupPassword">PASSWORD</label>
+                    <input type="password" id="signupPassword" class="terminal-input" placeholder="Minimum 8 characters" required autocomplete="new-password" minlength="8" maxlength="72">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="signupPasswordConfirm">CONFIRM PASSWORD</label>
+                    <input type="password" id="signupPasswordConfirm" class="terminal-input" placeholder="Re-enter password" required autocomplete="new-password">
+                </div>
+                
+                <div class="form-group am-mt-8">
+                    <label class="am-consent">
+                        <input type="checkbox" id="signupTosAccepted" name="signupTosAccepted" required class="am-check am-check-top">
+                        <span class="am-consent-text">
+                            I have read and agree to the
+                            <a href="/terms" target="_blank" rel="noopener" class="am-consent-link">Terms of Service</a>.
+                        </span>
+                    </label>
+                </div>
+                <div class="form-group am-mt-4">
+                    <label class="am-consent">
+                        <input type="checkbox" id="signupPrivacyAccepted" name="signupPrivacyAccepted" required class="am-check am-check-top">
+                        <span class="am-consent-text">
+                            I have read and agree to the
+                            <a href="/privacy" target="_blank" rel="noopener" class="am-consent-link">Privacy Policy</a>,
+                            including how my data is processed.
+                        </span>
+                    </label>
+                </div>
+                <button type="submit" class="terminal-btn primary am-submit">
+                    <span class="btn-text">CREATE ACCOUNT</span>
+                    <span class="btn-glow"></span>
+                </button>
+            </form>
+            
+            <div class="am-or">
+                <span class="am-or-line"></span>
+                <span class="am-or-text">or</span>
+                <span class="am-or-line"></span>
+            </div>
+            <div id="googleSignupBtnModal" class="am-gsi"></div>
+            
+            <p class="am-foot am-foot-lg">
+                Already have an account?
+                <a href="#" id="switchToLogin" class="am-link">Login</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+
+<script>
+(function(){
+    if (document.querySelector('meta[name="google-client-id"]')) return;
+    var m = document.createElement('meta');
+    m.name = 'google-client-id';
+    m.content = "946266285469-t2qhco2i4cvthc0qotgefotnbhvll54u.apps.googleusercontent.com";
+    document.head.appendChild(m);
+    // the GSI library itself loads when the modal opens (auth.js initGoogleSignIn)
+})();
+</script>
+
+    
+    
+    <style>
+    /* Footer Bar Styles - Static bottom navigation */
+    .footer-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 32px;
+        padding: 8px 16px;
+        padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); /* Clear fixed nexus chat bar + iPhone home indicator */
+        background: linear-gradient(to top, rgba(10, 15, 25, 0.95), rgba(10, 15, 25, 0.8));
+        border-top: 1px solid var(--panel-border);
+        font-family: 'JetBrains Mono', monospace;
+        /* Board review finding 05: declared in px, these labels ignored a reader's
+           browser font setting while the header's rem type followed it. */
+        font-size: 0.75rem;
+    }
+
+    .footer-bar .footer-link {
+        /* Board review finding 04: rgba(0,207,255,0.4) composites to #085f79 on this
+           ground and measures 2.52:1 against a 4.5:1 body floor. 0.72 clears it and
+           still reads as the quiet colour. */
+        color: rgba(0,207,255,0.72);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: color 0.2s ease;
+        padding: 4px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        /* WCAG touch target minimum 44x44px */
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .footer-bar .footer-link:hover {
+        color: #00cfff;
+        background: rgba(0, 207, 255, 0.1);
+    }
+
+    .footer-bar .footer-link svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .footer-divider {
+        width: 1px;
+        height: 16px;
+        background: rgba(100, 116, 139, 0.3);
+    }
+
+    .footer-ai-logos {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        opacity: 0.5;
+        filter: grayscale(60%);
+        transition: opacity 0.2s ease;
+    }
+
+    .footer-ai-logos:hover {
+        opacity: 0.8;
+        filter: grayscale(20%);
+    }
+
+    .footer-ai-logos .ai-logo svg {
+        width: 20px;
+        height: 20px;
+        fill: rgba(0,207,255,0.4);
+    }
+
+    .footer-bar .footer-social {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+        .footer-bar {
+            gap: 16px;
+            font-size: 0.75rem;
+            padding: 6px 12px 80px; /* preserve bottom padding to clear nexus bar */
+            flex-wrap: wrap;
+        }
+
+        .footer-bar .footer-link {
+            padding: 8px 10px;
+            /* Ensure 44px touch targets on mobile */
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        .footer-bar .footer-link svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .footer-ai-logos {
+            gap: 8px;
+        }
+
+        .footer-ai-logos .ai-logo svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .footer-divider {
+            height: 12px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .footer-bar {
+            gap: 8px;
+            font-size: 0.75rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        
+        html body .footer-bar { gap: 8px !important; }
+        html body .footer-bar .footer-social {
+            gap: 8px !important;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .footer-bar .footer-link {
+            min-height: 44px;
+            min-width: 44px;
+            padding: 8px 6px;
+        }
+
+        /* Board review finding 10: this used to be `span { display:none }`, which
+           turned thirteen links into seventeen unlabelled icon squares — a compass,
+           a lightning bolt, two chart arrows — wrapping across the bottom of every
+           phone. The four entries that also live in the menu's LEARN section (Blog,
+           Press, Careers, Consulting) were dropped from the footer instead, and what
+           is left keeps its label and wraps. */
+        .footer-bar .footer-link svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .footer-divider {
+            display: none !important;
+        }
+
+        .footer-ai-logos {
+            display: none !important;
+        }
+    }
+
+    /* Light theme */
+    [data-theme="light"] .footer-bar {
+        background: linear-gradient(to top, #e8ecf4, #f0f2f8);
+        border-top: 1px solid rgba(0, 80, 160, 0.08);
+    }
+    [data-theme="light"] .footer-bar .footer-link {
+        color: #475569;
+    }
+    [data-theme="light"] .footer-bar .footer-link:hover {
+        color: #0369a1;
+        background: rgba(3, 105, 161, 0.06);
+    }
+    [data-theme="light"] .footer-divider {
+        background: rgba(0, 80, 160, 0.10);
+    }
+    [data-theme="light"] .footer-ai-logos .ai-logo svg {
+        fill: #475569;
+    }
+
+    /* v2 design overrides */
+    .footer-bar { border-top: 1px solid var(--panel-border); background: linear-gradient(to top, rgba(8,10,19,0.95), rgba(8,10,19,0.8)); }
+    [data-theme="light"] .footer-bar { border-top: 1px solid var(--panel-border); background: linear-gradient(to top, rgba(240,242,247,0.95), rgba(240,242,247,0.8)); }
+
+    
+    .footer-bar .footer-lang { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary, #94a3b8); }
+    .footer-bar .footer-lang svg { width: 16px; height: 16px; flex: 0 0 auto; }
+    .footer-bar .footer-lang select {
+        appearance: none; -webkit-appearance: none;
+        background: rgba(17,24,39,0.6); color: var(--text-secondary, #94a3b8);
+        border: 1px solid rgba(0,150,255,0.15); border-radius: 6px;
+        padding: 4px 22px 4px 8px; font: inherit; font-size: 0.75rem; line-height: 1.2; min-height: 28px;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300cfff' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
+        background-repeat: no-repeat; background-position: right 6px center; background-size: 12px;
+        cursor: pointer;
+    }
+    .footer-bar .footer-lang select:hover, .footer-bar .footer-lang select:focus { color: #00cfff; border-color: rgba(0,207,255,0.5); outline: none; }
+    [data-theme="light"] .footer-bar .footer-lang select { background-color: rgba(255,255,255,0.8); color: #334155; }
+    
+    .footer-bar .footer-partner { display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; color: var(--text-secondary, #94a3b8); white-space: nowrap; padding: 0 6px; }
+    .footer-bar .footer-partner a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+    .footer-bar .footer-partner a:hover, .footer-bar .footer-partner a:focus-visible { color: var(--accent, #00cfff); }
+    @media (max-width: 768px) { .footer-bar .footer-lang svg { display: none; } .footer-bar .footer-lang select { font-size: 0.6875rem; padding-right: 18px; } }
+</style>
+
+
+<div class="footer-bar">
+    
+    <a href="/discoveries" class="footer-link" title="Discoveries related to your health, happening now"><span data-i18n="footer.bio_discoveries">Discoveries</span></a>
+    <a href="/healthbuilder" class="footer-link" title="Health Builder"><span data-i18n="menu.health_builder">Health Builder</span></a>
+    <a href="/healthbuilder/apps" class="footer-link" title="Health Apps"><span data-i18n="menu.health_apps">Health Apps</span></a>
+    <a href="/healthspan" class="footer-link" title="Health Span"><span data-i18n="menu.health_span">Health Span</span></a>
+    <div class="footer-divider"></div>
+    <a href="/contact" class="footer-link" title="Contact Us" data-i18n-title="footer.contact_us"><span data-i18n="footer.contact">Contact</span></a>
+    <a href="/privacy" class="footer-link" title="Privacy"><span data-i18n="footer.bio_privacy">Privacy</span></a>
+    <a href="/terms" class="footer-link" title="Terms"><span data-i18n="footer.bio_terms">Terms</span></a>
+    <a href="/traffic" class="footer-link" title="Traffic on biomiv.com"><span>Traffic</span></a>
+    <a href="/ai-agents" class="footer-link" title="For AI agents: MCP, A2A and the API"><span>AI agents</span></a>
+    <div class="footer-divider"></div>
+    <span class="footer-partner">In partnership with <a href="https://vectorspacebio.science" target="_blank" rel="noopener" title="Vector Space Biosciences">Vector Space Biosciences</a></span>
+    
+    <div class="footer-divider"></div>
+
+    
+    <label class="footer-lang" title="Language" data-i18n-title="company_menu.language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+        </svg>
+        <select id="footer-language-select" aria-label="Language" data-i18n-aria-label="company_menu.language">
+            <option value="en" lang="en">English</option>
+            <option value="es" lang="es">Español</option>
+            <option value="zh" lang="zh">中文</option>
+            <option value="pt" lang="pt">Português</option>
+            <option value="fr" lang="fr">Français</option>
+            <option value="de" lang="de">Deutsch</option>
+            <option value="it" lang="it">Italiano</option>
+            <option value="nl" lang="nl">Nederlands</option>
+            <option value="pl" lang="pl">Polski</option>
+            <option value="ru" lang="ru">Русский</option>
+            <option value="tr" lang="tr">Türkçe</option>
+            <option value="ar" lang="ar">العربية</option>
+            <option value="hi" lang="hi">हिन्दी</option>
+            <option value="bn" lang="bn">বাংলা</option>
+            <option value="id" lang="id">Bahasa Indonesia</option>
+            <option value="ja" lang="ja">日本語</option>
+            <option value="ko" lang="ko">한국어</option>
+            <option value="th" lang="th">ไทย</option>
+            <option value="vi" lang="vi">Tiếng Việt</option>
+            <option value="sw" lang="sw">Kiswahili</option>
+            <option value="eu" lang="eu">Euskara</option>
+            <option value="eo" lang="eo">Esperanto</option>
+        </select>
+    </label>
+</div>
+<script>
+(function () {
+    var sel = document.getElementById('footer-language-select');
+    if (!sel) return;
+    function current() {
+        try {
+            var m = document.cookie.match(/(?:^|;\s*)et_lang=([a-z]{2})(?:;|$)/);
+            if (m) return m[1];
+            var s = localStorage.getItem('event_trader_language');
+            if (s) return s;
+        } catch (e) { /* private mode */ }
+        return (document.documentElement.lang || 'en').slice(0, 2);
+    }
+    var cur = current();
+    if ([].some.call(sel.options, function (o) { return o.value === cur; })) sel.value = cur;
+    window.addEventListener('languageChanged', function (e) {
+        var l = e && e.detail && e.detail.language;
+        if (l && sel.value !== l) sel.value = l;
+    });
+    sel.addEventListener('change', function () {
+        var v = sel.value;
+        if (window.EventTraderI18n && typeof EventTraderI18n.setLanguage === 'function') {
+            EventTraderI18n.setLanguage(v);
+            return;
+        }
+        try { localStorage.setItem('event_trader_language', v); } catch (e) { /* private mode */ }
+        document.cookie = 'et_lang=' + v + '; path=/; max-age=31536000; SameSite=Lax';
+        location.reload();
+    });
+})();
+</script>
+
+
+<script defer src="/static/js/vendor/web-vitals.iife.js?v=20260521-1"></script>
+<script defer src="/static/js/perf/web-vitals-rum.js?v=20260921-4"></script>
+
+
+<script type="speculationrules">
+{
+  "prefetch": [{
+    "source": "document",
+    "where": { "and": [
+      { "href_matches": "/*" },
+      { "not": { "href_matches": "/logout*" } },
+      { "not": { "href_matches": "/withdraw*" } },
+      { "not": { "href_matches": "/deposit*" } },
+      { "not": { "href_matches": "/wallet/*" } },
+      { "not": { "href_matches": "/admin*" } },
+      { "not": { "href_matches": "/api/*" } },
+      { "not": { "href_matches": "/swap*" } },
+      { "not": { "href_matches": "/prop/payout*" } },
+      { "not": { "selector_matches": "[href*=\"withdraw\" i]" } },
+      { "not": { "selector_matches": "[href*=\"deposit\" i]" } },
+      { "not": { "selector_matches": "[data-no-prefetch]" } },
+      { "not": { "selector_matches": "[rel~=nofollow]" } },
+      { "not": { "selector_matches": "[href*=\"logout\"]" } }
+    ]},
+    "eagerness": "moderate"
+  }]
+}
+</script>
+    
+
+    
+    
+    
+    <script src="/static/js/touch-physics.js?v=20260427-2" defer></script>
+    <script src="/static/js/haptics.js?v=20260427-2" defer></script>
+    <script src="/static/js/pull-to-refresh.js?v=20261022-1" defer></script>
+    
+    
+
+    
+    
+    
+    
+    
+    <link rel="stylesheet" href="/static/css/nexus-chat.css?v=20261027-1" media="print" data-defer-css>
+    <script>document.querySelectorAll('link[data-defer-css]:not([data-defer-css-armed])').forEach(function(l){l.setAttribute('data-defer-css-armed','1');if(l.sheet){l.media='all';}else{l.addEventListener('load',function(){this.media='all';});}});</script>
+    <noscript><link rel="stylesheet" href="/static/css/nexus-chat.css?v=20261027-1"></noscript>
+    <script src="/static/js/nexus-chat.js?v=20261119-1" defer></script>
+    
+    <script src="/static/js/notification-center.js?v=20261103-1" defer></script>
+
+    
+    <script src="/static/js/ux-logger.js?v=20260921-1" defer></script>
+    <script src="/static/js/attribution-tracker.js?v=20260425-1" defer></script>
+    
+    
+
+    
+    
+    
+<script>
+(function() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+    // station page itself registers the same worker for the same scope, so N panels made N
+    // redundant registrations.
+    if (!document.documentElement.classList.contains('st-embed')) {
+        navigator.serviceWorker.register('/static/sw.js').catch(function() {});
+    }
+
+    // Bell icon click handler
+    window.initPushNotifications = function() {
+        var token = (window.getAuthToken ? window.getAuthToken() : null) || ((typeof window.hasSession === 'function' ? window.hasSession() : /(^|;\s*)et_session=/.test(document.cookie)) ? '' : null);
+        if (token === null) return;
+
+        if (Notification.permission === 'granted') {
+            subscribeToPush(token);
+        } else if (Notification.permission !== 'denied') {
+            Notification.requestPermission().then(function(perm) {
+                if (perm === 'granted') subscribeToPush(token);
+            });
+        }
+    };
+
+    function subscribeToPush(authToken) {
+        fetch('/api/v1/push/vapid-key')
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                if (!data || !data.vapid_public_key) return;
+                return navigator.serviceWorker.ready.then(function(reg) {
+                    return reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(data.vapid_public_key)
+                    });
+                });
+            })
+            .then(function(sub) {
+                if (!sub) return;
+                var key = sub.getKey('p256dh');
+                var auth = sub.getKey('auth');
+                return fetch('/api/v1/push/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({
+                        endpoint: sub.endpoint,
+                        p256dh_key: btoa(String.fromCharCode.apply(null, new Uint8Array(key))),
+                        auth_key: btoa(String.fromCharCode.apply(null, new Uint8Array(auth))),
+                        device_type: 'web'
+                    })
+                });
+            })
+            .catch(function(e) {});
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+        var padding = '='.repeat((4 - base64String.length % 4) % 4);
+        var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        var rawData = atob(base64);
+        var outputArray = new Uint8Array(rawData.length);
+        for (var i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    // Auto-subscribe on page load if already permitted (skip if already subscribed this session)
+    if (Notification.permission === 'granted' && !sessionStorage.getItem('push_subscribed')) {
+        var t = window.getAuthToken ? window.getAuthToken() : null;
+        if (t) {
+            subscribeToPush(t);
+            sessionStorage.setItem('push_subscribed', '1');
+        }
+    }
+})();
+</script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded',function(){var b=document.getElementById('contentBackBtn');if(b)b.addEventListener('click',function(e){e.preventDefault();window.history.length>1?window.history.back():window.location.href='/';});});
+    </script>
+    
+    
+    
+    <script src="/static/js/biomiv-reveal.js?v=20261119-1" defer></script>
+    
+<script src="/static/js/vendor/fflate-0.8.2.min.js?v=20261120-1" defer></script>
+<script src="/static/js/methylmap-parse.js?v=20261120-1" defer></script>
+<script src="/static/js/hb-methylmap.js?v=20261120-2" defer></script>
+
+</body>
+</html>
